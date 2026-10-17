@@ -1,0 +1,49 @@
+name: Build IPA
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "Resources/www/**"
+      - "README.md"
+
+jobs:
+  build:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      - name: Build app (unsigned)
+        run: |
+          xcodebuild \
+            -project Archero2Guide.xcodeproj \
+            -target Archero2Guide \
+            -configuration Release \
+            -sdk iphoneos \
+            SYMROOT="$PWD/build" \
+            A2_CONTENT_URL="https://raw.githubusercontent.com/${{ github.repository }}/${{ github.ref_name }}/Resources/www/index.html" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            build
+
+      - name: Package IPA
+        run: |
+          mkdir -p Payload
+          cp -R build/Release-iphoneos/Archero2Guide.app Payload/
+          zip -qry Archero2Guide.ipa Payload
+          ls -lh Archero2Guide.ipa
+
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: Archero2Guide-ipa
+          path: Archero2Guide.ipa
+          retention-days: 30
