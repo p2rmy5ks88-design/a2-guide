@@ -1217,13 +1217,29 @@ function fishVisual(){
     ${txt(cx,cy-22,"light green = best fish","var(--muted)","middle",500,11)}
   </svg>`;
 
-  /* 3. grade by starting height */
-  const gx=[40,140,240], top=18, H=124, W=40;
-  const gauges = FISH.map(([n,,where,p,c],i)=>{ const x=gx[i], h=Math.round(p*H), y=top+H-h;
-    return `<rect x="${x}" y="${top}" width="${W}" height="${H}" rx="8" style="fill:var(--raised);stroke:var(--line)"/>
-      <rect x="${x}" y="${y}" width="${W}" height="${h}" rx="8" style="fill:var(${c})" opacity=".9"/>
-      <path d="M${x-14} ${y-7} L${x-3} ${y} L${x-14} ${y+7} Z" style="fill:var(--fg)"/>
-      ${txt(x+W/2,top+H+20,n,`var(${c})`,"middle",700,14)}${txt(x+W/2,top+H+36,where,"var(--muted)","middle",500,11)}`; }).join("");
+  /* 3. grade by starting height: three mini "bite moment" scenes drawn like the in-game curved bar */
+  const scene=(name,fill,col,say)=>{
+    const sc=74, sy=92, sr=58, a0=160, a1=20, aF=a0-(a0-a1)*fill;
+    const [ex,ey]=P(aF,sr,sc,sy), [ox,oy]=P(aF,sr+20,sc,sy);
+    return `<div style="display:grid;grid-template-columns:150px minmax(0,1fr);gap:10px;align-items:center;padding:10px;border-radius:14px;background:var(--surface);border:1px solid var(--hair)">
+      <svg viewBox="0 0 150 112" role="img" aria-label="${name}: the bar starts ${Math.round(fill*100)} percent full" style="width:150px;height:auto">
+        ${arc(a0,a1,sr,sc,sy,"#26324A",16)}
+        ${arc(a0,aF,sr,sc,sy,col,16)}
+        <circle cx="${ex.toFixed(1)}" cy="${ey.toFixed(1)}" r="9" fill="none" stroke="#fff" stroke-width="2.5"/>
+        <circle cx="${sc}" cy="${sy+2}" r="15" fill="#E8A93A"/><circle cx="${sc}" cy="${sy+2}" r="15" fill="none" stroke="#7A5A2A" stroke-width="3"/>
+        ${txt(sc,sy+6,"HOLD","#3A2405","middle",800,8)}
+      </svg>
+      <div style="display:grid;gap:3px;min-width:0">
+        <span style="font:800 1.05rem var(--f-body);color:${col}">${name}</span>
+        <span style="font-weight:600">Bar starts ${fill<.4?"LOW":fill<.7?"in the MIDDLE":"HIGH"}</span>
+        <span class="src" style="font-size:.84rem">${say}</span>
+      </div></div>`;
+  };
+  const bite=`<div style="display:grid;gap:8px">
+    ${scene("Rare",.22,"#7CB8F0","Only a little of the curve is filled. Easy, lots of time.")}
+    ${scene("Epic",.55,"#C08CF5","About half the curve is filled. Watch your timing.")}
+    ${scene("Legendary",.85,"#E8B04B","Almost the whole curve is filled. Short, careful pulses. Never let it snap.")}
+  </div>`;
 
   /* 4. tension arc */
   const tSegs=[[160,96,"#F2C14E"],[96,58,"#F28A3A"],[58,20,"#F2706A"]];
@@ -1258,9 +1274,9 @@ function fishVisual(){
     <p style="margin:0">A yellow needle swings across the arc. Tap <b>Tap to cast rod</b> when it's in the <b style="color:#9BE86F">light green</b>. Brighter green means better odds of a rare fish.</p>
     ${cast}
     ${step(3,"A fish bites: read where the bar starts")}
-    <p style="margin:0">Right after the bite, the starting height of the bar tells you the fish.</p>
-    <svg viewBox="0 0 320 180" role="img" aria-label="Gauge start height: Rare low, Epic middle, Legendary high" style="width:100%;max-width:360px;height:auto">${gauges}</svg>
-    <dl class="kv">${FISH.map(([n,,where,,c,say])=>`<dt><span class="pill" style="color:var(${c})">${n}</span></dt><dd>Bar ${where}. ${say}</dd>`).join("")}</dl>
+    <p style="margin:0">When the fish bites, the screen switches to <b>Hold down to reel in</b> and a <b>curved bar</b> appears above the button. Before you press anything, look at <b>how much of that curve is already filled</b> (the white ring in the pictures). That tells you which fish you hooked.</p>
+    ${bite}
+    <p class="src" style="margin:0">The more filled the curve is at the start, the rarer and stronger the fish. The fill amounts drawn here are approximate.</p>
     ${step(4,"Reel in: hold, let go, hold")}
     <p style="margin:0"><b>Hold</b> the button to pull the fish closer; the tension bar fills. <b>Let go</b> when it reaches orange so the tension drops. If the bar fills to the end, the line snaps.</p>
     ${tension}
