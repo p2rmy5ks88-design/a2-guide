@@ -527,6 +527,7 @@ const SOURCES = {
   hubw:["Archero 2 Hub — Sky Tower Rewards","https://archero2hub.com/en/achievement/rewards/tower"],
   hubev:["Archero 2 Hub — Events","https://archero2hub.com/en/event"],
   hubf:["Archero 2 Hub — Fishing Guide","https://archero2hub.com/en/event/fishing/guide"],
+  hubtc:["Archero 2 Hub — Twin Core Efficiency","https://archero2hub.com/en/event/fishing/twin-core"],
   hubfs:["Archero 2 Hub — Fishing Shop","https://archero2hub.com/en/event/fishing/shop"],
   hubd:["Archero 2 Hub — Dice Guide","https://archero2hub.com/en/event/dice/guide"],
   hubm:["Archero 2 Hub — Contract Mystling","https://archero2hub.com/en/event/contract-mystling/guide"],
@@ -819,7 +820,7 @@ const RUNEPKG = {echoes:"Main weapon (Arrow of Echoes)",orb:"Orb / Circle",strik
 const EVENTS = [
   {name:"Angler's Bounty (Fishing)",cyc:"monthly",label:"Occasional · ~monthly",src:["hubf","hubfs","wikf"],visual:"fish",
    what:"Catch fish in a gauge mini-game. Sets of 40 fish (1 Legendary); the final zone, Polar Glacier, has 80 per set (2 Legendary). Completing a set moves you on.",
-   tips:[["Higher bait multipliers (1×–50×) raise grade odds but burn bait faster. 1 bait = 1 gem.",1],
+   tips:[["Higher bait multipliers (1×–50×) raise grade odds but burn bait faster. Extra bait costs gems (see the Twinborn Core section).",1],
          ["Rod upgrades widen the gauge tolerance, which makes Legendary catches more consistent. Buy Rod Packages 1 and 2 first.",1],
          ["You can reach the final zone with free bait alone.",1],
          ["Main free source of Etched runes (about 2 Epic from missions) and the shop for Twinborn Cores.",1]],
@@ -1264,7 +1265,7 @@ function fishVisual(){
     ${[0,50,110].map(m=>`<text x="${sx(m)}" y="48" text-anchor="${m===0?"start":m===110?"end":"middle"}" style="fill:var(--muted);font:500 11px var(--f-mono)">${m} m</text>`).join("")}
     ${txt(sx(40),27,"SAFE","#0A0C11","middle",700,11)}${txt(sx(105),10,"SNAP!","var(--bad)","middle",700,11)}</svg>`;
 
-  const legend=[["Bait counter","Each cast uses bait. 1 bait = 1 gem."],["x10","Bait multiplier: better fish odds, but uses 10 bait per cast."],["+","Buy more bait."],["Total Catches → Next Goal","Total kg caught. 30 kg unlocks the Superior Fishing Rod."],["Lakehouse ▶","Fishing spot. New spots unlock as you go; the last is Polar Glacier."],["Tasks","Free bait every day (about 222 over the event)."],["Exchange Shop","Spend your fishing tickets (buying order below)."]];
+  const legend=[["Bait counter","Each cast uses bait. Free bait comes from Tasks; extra bait costs gems."],["x10","Bait multiplier: better fish odds, but uses 10 bait per cast."],["+","Buy more bait."],["Total Catches → Next Goal","Total kg caught. 30 kg unlocks the Superior Fishing Rod."],["Lakehouse ▶","Fishing spot. New spots unlock as you go; the last is Polar Glacier."],["Tasks","Free bait every day (about 222 over the event)."],["Exchange Shop","Spend your fishing tickets (buying order below)."]];
 
   return `<div class="card" style="gap:16px;background:var(--raised)">
     <h3 style="font-size:1.05rem">Fishing, step by step</h3>
@@ -1295,6 +1296,52 @@ function fishVisual(){
     <p class="src" style="margin:0">Gauge start heights, rod tolerance and the 110 m snap: ${srcLink("hubf")} (the older wiki says 125 m; play safe at 110). Green cast zone, tension, red→yellow icon and releasing Rares: ${srcLink("wikf")}. Hold/let-go controls and the 30 kg rod goal are from the in-game screens. The orange "let go" point and the color zones on the meters are this app's safety margins, not exact game values.</p>
   </div>`;
 }
+const CORES=[ // kg, free track, premium track
+  [0,0,1],[500,1,0],[1500,2,1],[3000,8,2],[4500,8,2],[5800,8,2],[7500,8,2],[10000,16,4],[12500,16,4],[15000,16,4],[18500,20,5],[22000,20,5],[25000,20,5],[29000,16,4]];
+const BAITCOST=[[1500,80,"12,000",""],[3000,420,"63,000",""],[4500,750,"112,500",""],[5800,1040,"150,000 (cap)","≈ $10"],[7500,1420,"150,000 (cap)","≈ $81"],[10000,1970,"150,000 (cap)","≈ $207"],[12500,2530,"150,000 (cap)","≈ $360"]];
+function coreBlock(){
+  const fmt=n=>n.toLocaleString("en-US");
+  let f=0,a=0;
+  const rows=CORES.map(([kg,n,p])=>{f+=n;a+=n+p;const per=kg?((n+p)/((kg-(CORES[CORES.findIndex(r=>r[0]===kg)-1]||[0])[0])/1000)).toFixed(2):"—";
+    const tag=a>=80&&a-(n+p)<80?' <span class="tag t-src">Blessing fusion</span>':a>=40&&a-(n+p)<40?' <span class="tag t-src">Enh/Ability fusion</span>':"";
+    return `<tr><td class="n">${kg?fmt(kg)+" kg":"Start"}</td><td class="n">${n?"+"+n:"—"}</td><td class="n">${p?"+"+p:"—"}</td><td class="n"><b>${f}</b></td><td class="n"><b>${a}</b>${tag}</td><td class="n">${per}</td></tr>`;}).join("");
+  /* bar chart: cumulative cores (both tracks) vs kg */
+  const W=300,H=150,L=34,B=24,maxKg=29000,maxC=200;
+  const X=kg=>L+(kg/maxKg)*(W-L-8), Y=c=>H-B-(c/maxC)*(H-B-10);
+  let s1=0,s2=0; const ptsA=[],ptsF=[];
+  CORES.forEach(([kg,n,p])=>{s1+=n;s2+=n+p;ptsA.push(`${X(kg).toFixed(1)},${Y(s2).toFixed(1)}`);ptsF.push(`${X(kg).toFixed(1)},${Y(s1).toFixed(1)}`);});
+  const grid=[0,50,100,150,200].map(c=>`<line x1="${L}" x2="${W-8}" y1="${Y(c)}" y2="${Y(c)}" stroke="rgba(255,255,255,.06)"/><text x="${L-6}" y="${Y(c)+4}" text-anchor="end" style="fill:var(--muted);font:500 10px var(--f-mono)">${c}</text>`).join("");
+  const xt=[0,10000,20000,29000].map(k=>`<text x="${X(k)}" y="${H-6}" text-anchor="middle" style="fill:var(--muted);font:500 10px var(--f-mono)">${k?k/1000+"k":"0"}</text>`).join("");
+  const mark=(c,lab)=>`<line x1="${L}" x2="${W-8}" y1="${Y(c)}" y2="${Y(c)}" stroke="var(--accent)" stroke-dasharray="3 3" opacity=".7"/><text x="${W-10}" y="${Y(c)-4}" text-anchor="end" style="fill:var(--accent);font:700 10px var(--f-body)">${lab}</text>`;
+  const chart=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Cumulative Twinborn Cores by kilograms fished" style="width:100%;max-width:420px;height:auto">${grid}${xt}${mark(40,"40 = 1 Enh/Ability fusion")}${mark(80,"80 = 1 Blessing fusion")}
+    <polyline points="${ptsF.join(" ")}" fill="none" stroke="var(--muted)" stroke-width="2" stroke-dasharray="4 3"/>
+    <polyline points="${ptsA.join(" ")}" fill="none" stroke="var(--accent)" stroke-width="2.5"/>
+    ${ptsA.map(p=>`<circle cx="${p.split(",")[0]}" cy="${p.split(",")[1]}" r="2.6" fill="var(--accent)"/>`).join("")}</svg>
+    <p class="src" style="margin:0">Solid line: free + premium track. Dashed: free track only. Kilograms fished on the bottom, total cores up the side.</p>`;
+  const cost=BAITCOST.map(([kg,b,g,m])=>`<tr><td class="n">${fmt(kg)} kg</td><td class="n">${fmt(b)}</td><td class="n">${g}</td><td>${m||"—"}</td></tr>`).join("");
+  return `<div class="card" style="gap:14px;background:var(--raised)">
+    <h3 style="font-size:1.05rem">Twinborn Core milestones</h3>
+    <p style="margin:0">Every kilogram you catch counts toward these milestones. Twinborn Cores fuse two runes into one slot (<b>40 cores</b> for an Enhancement or Ability pair, <b>80</b> for a Blessing pair).</p>
+    ${chart}
+    <div class="tablewrap"><table style="min-width:440px">
+      <thead><tr><th>Total caught</th><th>Free</th><th>Premium</th><th>Total free</th><th>Total both</th><th>Cores / 1,000 kg</th></tr></thead>
+      <tbody>${rows}</tbody></table></div>
+    <p class="src" style="margin:0">"Premium" is the second reward track, likely the paid fishing pass; the source doesn't say. "Total free" assumes you only get the free track.</p>
+    <h3>Gems needed to reach each weight</h3>
+    <p style="margin:0">Bait bought with gems beyond your free bait. Buying is capped at 150,000 gems per event; past about 5,800 kg the rest needs paid packs.</p>
+    <div class="tablewrap"><table style="min-width:400px">
+      <thead><tr><th>Target</th><th>Bait to buy</th><th>Gems</th><th>Plus real money</th></tr></thead>
+      <tbody>${cost}</tbody></table></div>
+    <dl class="kv">
+      <dt>Free player</dt><dd>Use free bait and tasks only; expect roughly the first milestones (500–1,500 kg, 2–5 cores).</dd>
+      <dt>Gem player</dt><dd><b>~63,000 gems → 3,000 kg</b> (15 cores). <b>~112,500 → 4,500 kg</b> (25). The full 150,000-gem cap gets you just short of 5,800 kg; that milestone needs about $10 more.</dd>
+      <dt>One fusion</dt><dd>With both tracks, 40 cores arrive at <b>7,500 kg</b> (45 total): the gem cap plus ≈ $81 in packs. On the free track alone you reach 40 at <b>10,000 kg</b> (51).</dd>
+      <dt>Best value</dt><dd>10,000–15,000 kg and 25,000 kg give the most cores per kg (8+ per 1,000 kg). After 25,000 kg value drops to 5.</dd>
+    </dl>
+    <p class="src" style="margin:0">Data: ${srcFull("hubtc")}. Gem and money figures are the site's own estimates; the money column was partly garbled on the page, so treat it as approximate.</p>
+  </div>`;
+}
+
 const DICE = [["Defensive","3× on 7,8,19,20,6,9,18,21",348,401,468],["Balanced","5× on 7,8,19,20 · 3× on 6,9,18,21",332,391,469],["Aggressive","10× on 7,8,19,20 · 5× on 6,9,18,21",300,375,488]];
 function diceVisual(have){
   const sx = v => 40 + (v-280)*(260/220);
@@ -1341,7 +1388,7 @@ function renderEvents(){
     <summary><div><h3>${esc(e.name)}</h3><div class="sub">${esc(e.label)}</div></div><span class="cyc">${esc(e.cyc)}</span></summary>
     <div class="body">
       <p style="margin:0">${esc(e.what)}</p>
-      ${e.visual==="fish"?fishVisual():e.visual==="dice"?diceBlock():""}
+      ${e.visual==="fish"?fishVisual()+coreBlock():e.visual==="dice"?diceBlock():""}
       ${e.tips.length?`<div style="display:grid;gap:6px"><span class="label">Tips</span><ul class="reasons">${e.tips.map(([t,s])=>`<li style="grid-template-columns:1fr"><span><span class="tag ${s?"t-src":"t-inf"}">${s?"Sourced":"Inferred"}</span> ${esc(t)}</span></li>`).join("")}</ul></div>`:""}
       ${e.buy.length?`<div style="display:grid;gap:6px"><span class="label">What to buy</span><dl class="kv">${e.buy.map(([a,b])=>`<dt>${esc(a)}</dt><dd>${esc(b)}</dd>`).join("")}</dl></div>`:""}
       ${e.spend?`<p class="f2p" style="margin:0"><b>Spending:</b> ${esc(e.spend)}</p>`:""}
