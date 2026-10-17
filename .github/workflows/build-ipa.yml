@@ -7,6 +7,7 @@ on:
     paths-ignore:
       - "Resources/www/**"
       - "README.md"
+      - "index.html"
 
 jobs:
   build:
