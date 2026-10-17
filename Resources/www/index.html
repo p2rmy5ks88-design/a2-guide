@@ -1318,7 +1318,16 @@ function coreBlock(){
     <polyline points="${ptsA.join(" ")}" fill="none" stroke="var(--accent)" stroke-width="2.5"/>
     ${ptsA.map(p=>`<circle cx="${p.split(",")[0]}" cy="${p.split(",")[1]}" r="2.6" fill="var(--accent)"/>`).join("")}</svg>
     <p class="src" style="margin:0">Solid line: free + premium track. Dashed: free track only. Kilograms fished on the bottom, total cores up the side.</p>`;
-  const cost=BAITCOST.map(([kg,b,g,m])=>`<tr><td class="n">${fmt(kg)} kg</td><td class="n">${fmt(b)}</td><td class="n">${g}</td><td>${m||"—"}</td></tr>`).join("");
+  /* step-by-step: fresh bait/gems/money needed from one milestone to the next */
+  const money={5800:10,7500:81,10000:207,12500:360};
+  const coresAt=kg=>{let f=0,a=0;for(const [k,n,p] of CORES){if(k>kg)break;f+=n;a+=n+p;}return [f,a];};
+  const steps=BAITCOST.map(([kg,bait,g],i)=>{
+    const prevKg=i?BAITCOST[i-1][0]:0, prevBait=i?BAITCOST[i-1][1]:0;
+    const gTot=Math.min(bait*150,150000), gPrev=Math.min(prevBait*150,150000);
+    const dGems=gTot-gPrev, dMoney=(money[kg]||0)-(money[prevKg]||0);
+    const [f1,a1]=coresAt(kg),[f0,a0]=coresAt(prevKg);
+    return {from:prevKg,to:kg,bait:bait-prevBait,gems:dGems,money:dMoney,cf:f1-f0,ca:a1-a0};});
+  const cost=steps.map(r=>`<tr><td class="n">${r.from?fmt(r.from):"Start"} → <b>${fmt(r.to)}</b></td><td class="n">${fmt(r.bait)}</td><td class="n"><b>${r.gems?fmt(r.gems):"0 (cap hit)"}</b></td><td class="n">${r.money?"≈ $"+r.money:"—"}</td><td class="n">+${r.cf} / +${r.ca}</td></tr>`).join("");
   return `<div class="card" style="gap:14px;background:var(--raised)">
     <h3 style="font-size:1.05rem">Twinborn Core milestones</h3>
     <p style="margin:0">Every kilogram you catch counts toward these milestones. Twinborn Cores fuse two runes into one slot (<b>40 cores</b> for an Enhancement or Ability pair, <b>80</b> for a Blessing pair).</p>
@@ -1327,18 +1336,19 @@ function coreBlock(){
       <thead><tr><th>Total caught</th><th>Free</th><th>Premium</th><th>Total free</th><th>Total both</th><th>Cores / 1,000 kg</th></tr></thead>
       <tbody>${rows}</tbody></table></div>
     <p class="src" style="margin:0">"Premium" is the second reward track, likely the paid fishing pass; the source doesn't say. "Total free" assumes you only get the free track.</p>
-    <h3>Gems needed to reach each weight</h3>
-    <p style="margin:0">Bait bought with gems beyond your free bait. Buying is capped at 150,000 gems per event; past about 5,800 kg the rest needs paid packs.</p>
-    <div class="tablewrap"><table style="min-width:400px">
-      <thead><tr><th>Target</th><th>Bait to buy</th><th>Gems</th><th>Plus real money</th></tr></thead>
+    <h3>Fresh gems from one milestone to the next</h3>
+    <p style="margin:0">How much <b>more</b> you need to go from where you are to the next milestone, not the running total. Bait costs about 150 gems each. Gem buying stops at 150,000 per event; after that only paid packs give bait.</p>
+    <div class="tablewrap"><table style="min-width:460px">
+      <thead><tr><th>From → to (kg)</th><th>Extra bait</th><th>Extra gems</th><th>Extra money</th><th>Cores gained free / both</th></tr></thead>
       <tbody>${cost}</tbody></table></div>
     <dl class="kv">
       <dt>Free player</dt><dd>Use free bait and tasks only; expect roughly the first milestones (500–1,500 kg, 2–5 cores).</dd>
-      <dt>Gem player</dt><dd><b>~63,000 gems → 3,000 kg</b> (15 cores). <b>~112,500 → 4,500 kg</b> (25). The full 150,000-gem cap gets you just short of 5,800 kg; that milestone needs about $10 more.</dd>
+      <dt>Example</dt><dd>Already at 3,000 kg: <b>49,500 more gems</b> gets you to 4,500 kg (+8 free / +10 both). Then <b>37,500</b> more to 5,800 kg, where you hit the 150,000 cap and need about $10 in packs to finish it.</dd>
+      <dt>Gem player</dt><dd>From zero: <b>~63,000 gems → 3,000 kg</b> (15 cores), <b>~112,500 → 4,500 kg</b> (25). The full 150,000-gem cap gets you just short of 5,800 kg; that milestone needs about $10 more.</dd>
       <dt>One fusion</dt><dd>With both tracks, 40 cores arrive at <b>7,500 kg</b> (45 total): the gem cap plus ≈ $81 in packs. On the free track alone you reach 40 at <b>10,000 kg</b> (51).</dd>
       <dt>Best value</dt><dd>10,000–15,000 kg and 25,000 kg give the most cores per kg (8+ per 1,000 kg). After 25,000 kg value drops to 5.</dd>
     </dl>
-    <p class="src" style="margin:0">Data: ${srcFull("hubtc")}. Gem and money figures are the site's own estimates; the money column was partly garbled on the page, so treat it as approximate.</p>
+    <p class="src" style="margin:0">Data: ${srcFull("hubtc")}. Step amounts are worked out from the site's running totals at about 150 gems per bait; gem and money figures are the site's estimates; the money column was partly garbled on the page, so treat it as approximate.</p>
   </div>`;
 }
 
