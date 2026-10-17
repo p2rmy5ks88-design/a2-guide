@@ -1,0 +1,1204 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;font:14px/1.4 system-ui,-apple-system,sans-serif;-webkit-tap-highlight-color:transparent}
+img{max-width:100%}[hidden]{display:none!important}
+</style>
+<title>Archero 2 Field Guide</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="A2 Guide">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: phone-first app shell — sticky header, one scrolling panel per tab, fixed 5-tab bar. Dark-first "dungeon stone + ember" palette; rune slot colors follow the in-game slot types. */
+:root{
+  --bg:#13161d; --surface:#1b2029; --raised:#232a35; --line:#2f3745;
+  --fg:#e8e4da; --muted:#9aa1ad; --accent:#f0a83a; --accent-ink:#1a1206;
+  --good:#5cc489; --warn:#e6b84a; --bad:#e2665a; --info:#7ab3e8;
+  --etched:#e2665a; --bless:#c58af0; --enh:#f0a83a; --abil:#7ab3e8;
+  --f-display:"Cinzel","Trajan Pro",Georgia,serif;
+  --f-body:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: light){ :root:not([data-theme="dark"]){
+  --bg:#f3f0e8; --surface:#fbf9f4; --raised:#ece7db; --line:#d8d0bf;
+  --fg:#1f1d19; --muted:#5f5b52; --accent:#b06a0c; --accent-ink:#fffaf0;
+  --good:#1f8a52; --warn:#9a6a00; --bad:#b83b2f; --info:#2a6aa8;
+  --etched:#b83b2f; --bless:#8a3fc0; --enh:#a8650a; --abil:#2a6aa8; color-scheme:light } }
+:root[data-theme="light"]{
+  --bg:#f3f0e8; --surface:#fbf9f4; --raised:#ece7db; --line:#d8d0bf;
+  --fg:#1f1d19; --muted:#5f5b52; --accent:#b06a0c; --accent-ink:#fffaf0;
+  --good:#1f8a52; --warn:#9a6a00; --bad:#b83b2f; --info:#2a6aa8;
+  --etched:#b83b2f; --bless:#8a3fc0; --enh:#a8650a; --abil:#2a6aa8; color-scheme:light }
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:15px/1.5 var(--f-body);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.wrap{max-width:720px;margin:0 auto}
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:14px 10px;border-bottom:1px solid var(--line);display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+h1{font:700 1.2rem/1.1 var(--f-display);letter-spacing:.06em;margin:0}
+h1 span{color:var(--accent)}
+.ver{font:500 .7rem var(--f-mono);color:var(--muted);text-align:right}
+h2{font:700 1.12rem/1.2 var(--f-display);letter-spacing:.04em;margin:0;text-wrap:balance}
+h3{font-size:1rem;margin:0}
+.lede{color:var(--muted);margin:6px 0 0;max-width:62ch}
+.label{font:600 .7rem var(--f-body);text-transform:uppercase;letter-spacing:.09em;color:var(--muted)}
+section.panel{display:grid;gap:18px;padding-block:18px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;display:grid;gap:12px;min-width:0}
+.field{display:grid;gap:6px;min-width:0}
+select,input.in{font:500 .95rem var(--f-body);color:var(--fg);background:var(--raised);border:1px solid var(--line);border-radius:10px;padding:10px 11px;width:100%;min-width:0}
+select:focus-visible,input:focus-visible,button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media (max-width:480px){.grid2{grid-template-columns:1fr}.grid3{grid-template-columns:1fr 1fr}}
+.stat{display:grid;gap:2px}
+.stat b{font:500 1.15rem var(--f-mono);font-variant-numeric:tabular-nums}
+.verdict{display:flex;align-items:center;gap:14px}
+.meter{font:700 2rem/1 var(--f-mono);font-variant-numeric:tabular-nums}
+.meter small{font-size:.9rem;color:var(--muted)}
+.pill{display:inline-flex;align-items:center;gap:6px;font:700 .74rem var(--f-body);letter-spacing:.05em;text-transform:uppercase;padding:3px 9px;border-radius:999px;border:1px solid currentColor;white-space:nowrap}
+.p-good{color:var(--good)} .p-warn{color:var(--warn)} .p-bad{color:var(--bad)} .p-info{color:var(--info)}
+.reasons{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.reasons li{display:grid;grid-template-columns:20px 1fr;gap:8px;align-items:start}
+.reasons li b{font-family:var(--f-mono);font-weight:500}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:.82rem;background:var(--raised);border:1px solid var(--line);border-radius:6px;padding:3px 8px}
+.chip.no{text-decoration:line-through;color:var(--muted)}
+.kv{display:grid;grid-template-columns:110px 1fr;gap:6px 12px;align-items:start}
+.kv dt{color:var(--muted);font-size:.85rem}
+.kv dd{margin:0;min-width:0}
+@media (max-width:420px){.kv{grid-template-columns:1fr}.kv dt{margin-top:6px}}
+.src{font-size:.78rem;color:var(--muted)}
+.tag{font:600 .64rem var(--f-body);letter-spacing:.08em;text-transform:uppercase;padding:2px 6px;border-radius:4px;vertical-align:middle;white-space:nowrap}
+.t-src{background:color-mix(in srgb,var(--good) 18%,transparent);color:var(--good)}
+.t-inf{background:color-mix(in srgb,var(--warn) 20%,transparent);color:var(--warn)}
+.btn{font:600 .88rem var(--f-body);border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);border-radius:10px;padding:9px 13px;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--accent)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.between{justify-content:space-between}
+details.fold{background:var(--surface);border:1px solid var(--line);border-radius:12px}
+details.fold summary{cursor:pointer;list-style:none;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+details.fold summary::-webkit-details-marker{display:none}
+details.fold summary .sub{color:var(--muted);font-size:.82rem}
+details.fold[open] > summary{border-bottom:1px solid var(--line)}
+details.fold .body{padding:14px 16px;display:grid;gap:12px}
+.applies{display:flex;gap:6px;flex-wrap:wrap}
+.applies span{font-size:.75rem;padding:2px 7px;border-radius:5px;border:1px solid var(--line)}
+.applies .on{color:var(--good);border-color:color-mix(in srgb,var(--good) 50%,transparent)}
+.applies .off{color:var(--bad);border-color:color-mix(in srgb,var(--bad) 50%,transparent);text-decoration:line-through}
+/* rune board */
+.board{display:grid;gap:10px}
+.slotgrp{display:grid;grid-template-columns:96px 1fr;gap:10px;align-items:start}
+@media (max-width:420px){.slotgrp{grid-template-columns:1fr}}
+.slotgrp .label{padding-top:6px;display:flex;align-items:center;gap:6px}
+.dot{width:9px;height:9px;border-radius:2px;transform:rotate(45deg);flex:none}
+.slots{display:flex;flex-wrap:wrap;gap:6px}
+.rune{font-size:.84rem;padding:5px 9px;border-radius:7px;background:var(--raised);border:1px solid var(--line);border-left:3px solid var(--c)}
+.rune small{display:block;color:var(--muted);font-size:.72rem;line-height:1.3}
+.rune.miss{border-style:dashed;border-left-style:solid}
+.rune.ok{box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--good) 45%,transparent)}
+.c-etched{--c:var(--etched)} .c-bless{--c:var(--bless)} .c-enh{--c:var(--enh)} .c-abil{--c:var(--abil)}
+.myslots{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+@media (min-width:560px){.myslots.four{grid-template-columns:repeat(4,minmax(0,1fr))}.myslots.three{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.myslots select{border-left:3px solid var(--c);font-size:.85rem;padding:8px}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
+table{border-collapse:collapse;width:100%;min-width:520px;font-size:.88rem}
+th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{font:600 .7rem var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);background:var(--raised)}
+td.t,td.n{font:500 .85rem var(--f-mono);white-space:nowrap;font-variant-numeric:tabular-nums}
+tr:last-child td{border-bottom:0}
+tr.me td{background:color-mix(in srgb,var(--accent) 14%,transparent)}
+td.tS{color:var(--accent)} td.tA{color:var(--good)} td.tB{color:var(--info)} td.tC{color:var(--bad)}
+.stars{color:var(--accent);letter-spacing:2px;font-size:.85rem}
+.stars i{color:var(--line);font-style:normal}
+.search{font:500 1rem var(--f-body);color:var(--fg);background:var(--raised);border:1px solid var(--line);border-radius:10px;padding:10px 12px;width:100%}
+.check{display:grid;gap:6px}
+.check label{display:grid;grid-template-columns:22px 1fr auto;gap:10px;align-items:start;padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:var(--raised);cursor:pointer}
+.check input{width:18px;height:18px;margin-top:2px;accent-color:var(--accent)}
+.check label:has(input:checked) span.t{text-decoration:line-through;color:var(--muted)}
+.prog{height:6px;border-radius:3px;background:var(--raised);overflow:hidden}
+.prog i{display:block;height:100%;background:var(--accent)}
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--surface);border-top:1px solid var(--line);
+  padding:6px max(6px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(6px,env(safe-area-inset-left,0px));
+  display:grid;grid-template-columns:repeat(5,1fr);gap:2px}
+nav.tabs button{background:none;border:0;color:var(--muted);font:600 .68rem var(--f-body);padding:6px 1px;border-radius:8px;display:grid;justify-items:center;gap:3px;cursor:pointer}
+nav.tabs button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8}
+nav.tabs button[aria-selected="true"]{color:var(--accent);background:var(--raised)}
+.saved{display:grid;gap:8px}
+.saved .item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--raised);flex-wrap:wrap}
+.saved .item button{background:none;border:0;color:var(--muted);cursor:pointer;font-size:.85rem}
+.empty{color:var(--muted);font-size:.9rem}
+.note{border-left:3px solid var(--warn);padding:8px 12px;background:color-mix(in srgb,var(--warn) 8%,transparent);border-radius:0 8px 8px 0;font-size:.88rem}
+.note.good{border-color:var(--good);background:color-mix(in srgb,var(--good) 8%,transparent)}
+ol.prio{margin:0;padding-left:20px;display:grid;gap:6px}
+a{color:var(--accent)}
+.subnav{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+.subnav button{font:600 .8rem var(--f-body);white-space:nowrap;border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:999px;padding:6px 12px;cursor:pointer}
+.subnav button[aria-pressed="true"]{color:var(--accent-ink);background:var(--accent);border-color:var(--accent)}
+</style>
+<style>
+.setpick{display:flex;gap:6px;flex-wrap:wrap}
+.setpick button{font:600 .8rem var(--f-body);border:1px solid var(--line);background:var(--raised);color:var(--fg);border-radius:8px;padding:6px 11px;cursor:pointer}
+.setpick button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.evhead{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.cyc{font:600 .66rem var(--f-body);letter-spacing:.08em;text-transform:uppercase;padding:2px 7px;border-radius:4px;background:var(--raised);border:1px solid var(--line);color:var(--muted)}
+.f2p{font-size:.85rem}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>Archero <span>2</span> Field Guide</h1>
+    <div class="ver">v1.1.9 meta<br>checked 17 Oct 2026</div>
+  </header>
+
+  <!-- ================= BUILD ================= -->
+  <section class="panel" id="p-build" role="tabpanel">
+    <div>
+      <h2>Build checker</h2>
+      <p class="lede">Pick a hero, gear set, rune package and mode. The checker grades the combo against current guides and shows the full 13-rune preset for your set in that mode.</p>
+    </div>
+    <div class="card">
+      <div class="grid2">
+        <div class="field"><label class="label" for="b-hero">Hero</label><select id="b-hero"></select></div>
+        <div class="field"><label class="label" for="b-mode">Game mode</label><select id="b-mode"></select></div>
+        <div class="field"><label class="label" for="b-set">Gear set / weapon</label><select id="b-set"></select></div>
+        <div class="field"><label class="label" for="b-rune">Rune package</label><select id="b-rune"></select></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label class="label" for="b-star">Hero stars</label><select id="b-star"></select></div>
+        <div class="field"><label class="label" for="b-skin">Skin / outfit</label><select id="b-skin"></select></div>
+        <div class="field"><label class="label" for="b-grade">Gear grade (most pieces)</label><select id="b-grade"></select></div>
+        <div class="field"><label class="label" for="b-forge">Godforge stars</label><select id="b-forge"></select></div>
+      </div>
+    </div>
+    <div class="card" id="result" aria-live="polite"></div>
+
+    <details class="fold">
+      <summary><div><h3>Compare your runes</h3><div class="sub">Enter your 13 equipped runes to see which slots to change</div></div><span class="src" id="myCount"></span></summary>
+      <div class="body">
+        <div id="myRunes" class="board"></div>
+        <div class="row"><button class="btn ghost" id="copyPreset">Fill with the preset above</button><button class="btn ghost" id="clearRunes">Clear</button></div>
+        <p class="src" style="margin:0">Saved on this device only.</p>
+      </div>
+    </details>
+
+    <div class="card">
+      <div class="row between"><h3>Saved loadouts</h3><button class="btn" id="save">Save this loadout</button></div>
+      <div class="saved" id="savedList"></div>
+    </div>
+  </section>
+
+  <!-- ================= MODES ================= -->
+  <section class="panel" id="p-modes" role="tabpanel" hidden>
+    <div>
+      <h2>Best builds by mode</h2>
+      <p class="lede">What counts in each mode, the full 13-rune preset, gear, heroes and skills. Chapter and Sky Tower modes let you switch between Dragoon, Oracle and Griffin. <span class="tag t-src">Sourced</span> = a guide states it. <span class="tag t-inf">Inferred</span> = follows from sourced facts.</p>
+    </div>
+    <div id="modeList" style="display:grid;gap:10px"></div>
+  </section>
+
+  <!-- ================= CHAPTERS ================= -->
+  <section class="panel" id="p-chapters" role="tabpanel" hidden>
+    <div>
+      <h2>Chapters</h2>
+      <p class="lede">Every chapter is harder than the last. Chapters are grouped into bands, each with a difficulty rating, the rune preset for your gear set, unlocks and milestone rewards.</p>
+    </div>
+    <div class="card" style="gap:10px">
+      <span class="label">Your gear set</span>
+      <div class="setpick" role="group" aria-label="Gear set for chapter presets" id="chapSet"></div>
+    </div>
+    <div class="subnav" role="group" aria-label="Chapter list">
+      <button aria-pressed="true" data-cview="normal">Normal</button>
+      <button aria-pressed="false" data-cview="hard">Hard</button>
+      <button aria-pressed="false" data-cview="tower">Sky Tower</button>
+    </div>
+    <div id="chapView" style="display:grid;gap:12px"></div>
+  </section>
+
+  <!-- ================= EVENTS ================= -->
+  <section class="panel" id="p-events" role="tabpanel" hidden>
+    <div>
+      <h2>Events</h2>
+      <p class="lede">How each recurring and limited event works, what to buy, and how far free play gets you. Most events run on a roughly monthly cycle; event points expire at the end, but King Fishing Tickets and Dice carry over.</p>
+    </div>
+    <div class="subnav" role="group" aria-label="Event filter" id="evFilter">
+      <button aria-pressed="true" data-ev="all">All</button>
+      <button aria-pressed="false" data-ev="daily">Daily</button>
+      <button aria-pressed="false" data-ev="weekly">Weekly</button>
+      <button aria-pressed="false" data-ev="monthly">Monthly</button>
+      <button aria-pressed="false" data-ev="limited">Limited</button>
+    </div>
+    <div id="eventList" style="display:grid;gap:10px"></div>
+    <p class="src">Upcoming dates are announced in-game and on the official Discord (discord.gg/archero2). Guide numbers come from fan testing, not official Habby data.</p>
+  </section>
+
+  <!-- ================= MORE ================= -->
+  <section class="panel" id="p-more" role="tabpanel" hidden>
+    <div class="subnav" role="group" aria-label="More sections">
+      <button aria-pressed="true" data-mview="daily">Daily</button>
+      <button aria-pressed="false" data-mview="runes">Runes</button>
+      <button aria-pressed="false" data-mview="prio">Priorities</button>
+      <button aria-pressed="false" data-mview="heroes">Heroes</button>
+      <button aria-pressed="false" data-mview="sets">Gear sets</button>
+      <button aria-pressed="false" data-mview="sources">Sources</button>
+    </div>
+
+    <div id="m-daily" style="display:grid;gap:12px">
+      <div><h2>Daily &amp; weekly checklist</h2><p class="lede">Ticks reset each day, and weekly items each Monday. Stored on this device.</p></div>
+      <div class="card"><div class="row between"><h3>Today</h3><span class="src" id="dailyCount"></span></div><div class="prog"><i id="dailyBar" style="width:0"></i></div><div class="check" id="dailyList"></div></div>
+      <div class="card"><div class="row between"><h3>This week</h3><span class="src" id="weeklyCount"></span></div><div class="check" id="weeklyList"></div></div>
+    </div>
+
+    <div id="m-runes" hidden style="display:grid;gap:12px">
+      <div><h2>Rune presets</h2><p class="lede">A full loadout is 13 runes: 3 Etched, 2 Blessing, 4 Enhancement and 4 Ability.</p></div>
+      <div class="card">
+        <h3>Slot rules</h3>
+        <dl class="kv">
+          <dt>Etched slots</dt><dd>Slot 1 opens when all equipped runes are Epic, slot 2 at Legendary, slot 3 at Legendary+2. <span class="src">· <span data-src="hube"></span></span></dd>
+          <dt>Etched order</dt><dd>Arrow of Echoes first in every build. Griffin/Oracle: Echoes → Pulsing Orb → Orbital Orb → Elemental Crit. Dragoon: Echoes → Elemental Crit → Meteor Split → Potion Spring. <span class="src">· <span data-src="hube"></span></span></dd>
+          <dt>Fusing</dt><dd>3 runes of the same rarity fuse into the next tier.</dd>
+          <dt>Enchants</dt><dd>Enchantment Stones come from Shackled Jungle (clear by hand; auto-skip gives about 90% fewer) and Guild Raid's Frenzy Challenge.</dd>
+        </dl>
+      </div>
+      <div id="presetList" style="display:grid;gap:12px"></div>
+      <div class="card">
+        <h3>Twinborn runes — free up slots</h3>
+        <p style="margin:0">Fuse two runes of the same series into one slot, then fill the freed slot. Sharp Arrow, Arrow Rain and Revive have no partner, so they are the usual fill.</p>
+        <dl class="kv">
+          <dt>Unlock</dt><dd>Own any one Mythic rune.</dd>
+          <dt>Requires</dt><dd>Same type, same series, both Legendary+2 or higher, plus Runic Remnant and Twinborn Cores (40 for Enhancement/Ability, 80 for Blessing).</dd>
+          <dt>Undo</dt><dd>Twinborn Split refunds everything.</dd>
+          <dt>Cores</dt><dd>Sold in the Fishing Exchange Shop.</dd>
+        </dl>
+        <div class="tablewrap"><table>
+          <thead><tr><th>Group</th><th>Type</th><th>Pair</th><th></th></tr></thead>
+          <tbody id="twinRows"></tbody>
+        </table></div>
+        <p class="src" style="margin:0">Group names from <span data-src="hubt"></span>. Pairs marked Inferred are matched by rune family.</p>
+      </div>
+    </div>
+
+    <div id="m-prio" hidden style="display:grid;gap:12px">
+      <div><h2>Upgrade priorities</h2><p class="lede">Where resources go first, and the mistakes that stall accounts.</p></div>
+      <div class="card"><h3>Order</h3><ol class="prio" id="prioList"></ol></div>
+      <div class="card"><h3>Character resonance</h3><div id="resList" style="display:grid;gap:10px"></div></div>
+      <div class="card"><h3>Gear set swap</h3><dl class="kv">
+        <dt>Condition</dt><dd>All 6 pieces at Mythic+3 (about 60 S-tier gear), then swap to another set.</dd>
+        <dt>Cooldown</dt><dd>30 days after each swap.</dd>
+        <dt>Timeline</dt><dd>F2P earns roughly 8 S-gear a month; Full Chaotic needs 84.</dd>
+        <dt>Pulls</dt><dd>Mythstone Chest lets you pick the set. Chromatic Chest is random across all three.</dd>
+      </dl><span class="src">Source: <span data-src="hubg"></span></span></div>
+      <div class="card"><h3>Avoid</h3><div class="chips" id="avoidList"></div></div>
+    </div>
+
+    <div id="m-heroes" hidden style="display:grid;gap:12px">
+      <div><h2>Heroes</h2><p class="lede">Tier lists disagree, so three are shown side by side. AllClash (Sep 2026) is the most recent.</p></div>
+      <input class="search" id="heroSearch" type="search" placeholder="Search heroes" aria-label="Search heroes">
+      <div class="tablewrap"><table>
+        <thead><tr><th>Hero</th><th>AllClash<br>Sep 26</th><th>AllThings<br>v1.1.6</th><th>PocketGamer<br>Oct 26</th><th>Known for</th></tr></thead>
+        <tbody id="heroRows"></tbody>
+      </table></div>
+      <p class="src">AllClash notes any hero can run any build; gear and runes matter more. Blank = not ranked by that source.</p>
+    </div>
+
+    <div id="m-sets" hidden style="display:grid;gap:12px">
+      <div><h2>Gear sets</h2><p class="lede">The three S-tier sets plus the PvP mix.</p></div>
+      <div id="setCards" style="display:grid;gap:12px"></div>
+    </div>
+
+    <div id="m-sources" hidden style="display:grid;gap:12px">
+      <div><h2>Sources</h2><p class="lede">Every recommendation links back to one of these. Some guides use translated rune names; this app uses the English in-game names.</p></div>
+      <div class="card"><ul id="srcList" style="margin:0;padding-left:18px;display:grid;gap:4px;font-size:.88rem"></ul></div>
+      <div class="card"><h3>Name mapping</h3><div class="tablewrap"><table><thead><tr><th>Name in guide</th><th>In-game name used here</th></tr></thead><tbody id="mapRows"></tbody></table></div></div>
+    </div>
+  </section>
+</div>
+
+<nav class="tabs" role="tablist" aria-label="Sections">
+  <button role="tab" data-tab="build" aria-selected="true"><svg viewBox="0 0 24 24"><path d="M14 4l6 6-9 9H5v-6z"/><path d="M12 6l6 6"/></svg>Build</button>
+  <button role="tab" data-tab="modes" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M4 20V9l8-5 8 5v11"/><path d="M9 20v-6h6v6"/></svg>Modes</button>
+  <button role="tab" data-tab="chapters" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5z"/><path d="M9 10h6M9 14h6"/></svg>Chapters</button>
+  <button role="tab" data-tab="events" aria-selected="false"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>Events</button>
+  <button role="tab" data-tab="more" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>More</button>
+</nav>
+
+<script>
+/* =================== DATA (edit here when the meta shifts) =================== */
+const SOURCES = {
+  ac:  ["AllClash — Best Characters (13 Oct 2026)","https://www.allclash.com/best-characters-in-archero-2/"],
+  pgg: ["Pro Game Guides — Tier List v1.1.9","https://progameguides.com/archero-2/archero-2-tier-list/"],
+  at:  ["AllThings.How — Tier List v1.1.6","https://allthings.how/archero-2-tier-list-june-2026-best-characters-gear-and-skills/"],
+  pg:  ["PocketGamer — Tier List","https://www.pocketgamer.com/archero-2/tier-list/"],
+  wiko:["Game Vault Wiki — Oracle Build","https://archero-2.game-vault.net/wiki/Guide:Archer_Build"],
+  hubr:["Archero 2 Hub — Rune Builds","https://archero2hub.com/en/rune/combination"],
+  hube:["Archero 2 Hub — Etched Rune Guide","https://archero2hub.com/en/guide/etched-rune"],
+  hubt:["Archero 2 Hub — Twinborn Rune Guide","https://archero2hub.com/en/guide/twinborn-runes"],
+  hubg:["Archero 2 Hub — Gear Sets Guide","https://archero2hub.com/en/guide/gear-sets"],
+  hubj:["Archero 2 Hub — Shackled Jungle","https://archero2hub.com/en/guide/shackled-jungle"],
+  hubp:["Archero 2 Hub — Magic Plant Defense","https://archero2hub.com/en/guide/magic-plant-defense"],
+  hubb:["Archero 2 Hub — Beginner's Roadmap","https://archero2hub.com/en/guide/beginner"],
+  hubs:["Archero 2 Hub — Character Resonance","https://archero2hub.com/en/character/resonance"],
+  hubc:["Archero 2 Hub — Chapter Rewards","https://archero2hub.com/en/achievement/rewards/chapter"],
+  hubw:["Archero 2 Hub — Sky Tower Rewards","https://archero2hub.com/en/achievement/rewards/tower"],
+  hubev:["Archero 2 Hub — Events","https://archero2hub.com/en/event"],
+  hubf:["Archero 2 Hub — Fishing Guide","https://archero2hub.com/en/event/fishing/guide"],
+  hubfs:["Archero 2 Hub — Fishing Shop","https://archero2hub.com/en/event/fishing/shop"],
+  hubd:["Archero 2 Hub — Dice Guide","https://archero2hub.com/en/event/dice/guide"],
+  hubm:["Archero 2 Hub — Contract Mystling","https://archero2hub.com/en/event/contract-mystling/guide"],
+  hubsu:["Archero 2 Hub — Summon Event","https://archero2hub.com/en/event/summon/guide"],
+  hubv:["Archero 2 Hub — Vibrant Voyage","https://archero2hub.com/en/event/balloon/efficiency"],
+  hubgr:["Archero 2 Hub — Guild Raid","https://archero2hub.com/en/guild/raid"],
+  hubu:["Archero 2 Hub — Umbral Tempest Classes","https://archero2hub.com/en/umbral-tempest/class"],
+  mtpa:["mTurboGamer — Peak Arena (15 Oct 2026)","https://mturbogamer.com/2026/10/archero-2-peak-arena/"],
+  wiki:["Game Vault Wiki — Skills","https://archero-2.game-vault.net/wiki/Skills"],
+  wikc:["Game Vault Wiki — Campaign","https://archero-2.game-vault.net/wiki/Campaign"],
+  wikg:["Game Vault Wiki — Gold Cave","https://archero-2.game-vault.net/wiki/Gold_Cave"],
+  wikr:["Game Vault Wiki — Rune Ruins","https://archero-2.game-vault.net/wiki/Rune_Ruins"],
+  wikk:["Game Vault Wiki — Demon King Clash","https://archero-2.game-vault.net/wiki/Demon_King_Clash"],
+  wikf:["Game Vault Wiki — Fishing","https://archero-2.game-vault.net/wiki/Fishing"],
+  thb: ["Theria Games — Blast Build","https://theriagames.com/guide/archero-2-blast-build/"],
+  tht: ["Theria Games — Abyssal Tide","https://theriagames.com/guide/archero-2-abyssal-tide-guide/"],
+  pgb: ["Pro Game Guides — Beginner's Guide","https://progameguides.com/archero-2/archero-2-beginners-guide/"],
+  ytrl:["YouTube — Rumble Ladder Guide","https://www.youtube.com/watch?v=CLWjHrchUMM"],
+  ytel:["YouTube — Eternal Lode Guide","https://www.youtube.com/watch?v=k_JahcWlkGk"]
+};
+
+const HEROES = [
+  ["Morty","S+","","",""],
+  ["Thor","S+","S","S","Attacks while moving; Plant Defense pick. Hub's top starter hero; needed for Umbral Tempest Ranger/Diviner."],
+  ["Artemis","S+","","A",""],
+  ["Wukong","S+","SS","","Core resonance for Dragoon, Griffin and Oracle (5★+)."],
+  ["Demeter","S+","","A",""],
+  ["Rick","S","","",""],
+  ["Cleo","S","","","Burst damage; core resonance for every set; Jungle and Plant pick."],
+  ["Demon King Atreus","S","S","S","Solid defensive base stats."],
+  ["Otta","A+","A","A","Best in Close builds per AllClash. Likely the 'Tata' in Hub's resonance lists (2★+)."],
+  ["Nezha","A","SS","",""],
+  ["Phynx","A","A","A",""],
+  ["Loki","A","","","Attack-speed buffs; premium PvP. Shards in Peak Arena shop."],
+  ["Dracoola","B+","S","S","Lifesteal / HP recovery. Jungle and PvP pick."],
+  ["Rolla","B","A","A",""],
+  ["Hou Yi","B","S","S","Best in Combo builds per AllClash."],
+  ["Mymu","B","A","A","Flexible resonance slot."],
+  ["Hela","B","A","A","Raises party attack power; premium PvP."],
+  ["Helix","C+","","","Absolute Counter: more ATK and ATK SPD as HP drops. Top F2P PvP pick."],
+  ["Seraph","C","","S","At 8★ boosts Valkyrie and skill proc rates; helps roll Tracking Eye."],
+  ["Nyanja","D+","A","A","Extra Movement Speed, starts with Swift Wind. AllClash: Blast/Close B, Combo C."],
+  ["Alex","D+","","","At 8★ guaranteed crits after taking damage; budget PvP."]
+];
+
+const SETS = {
+  dragoon:{name:"Dragoon set (full)",short:"Dragoon",weapon:"Crossbow of the Dragoon",style:"Ranged · blast",
+    perks:["Area explosions on hit, applies Dragonflame","Explosion DMG up, chance of 2–4× Explosive Strike","Best boss DPS of the three sets (PGG)","Reworked in v1.1.9; you can switch back to the old version"],
+    verdict:"Strong boss damage and the PvP pick. Free Crossbow from the Carnival missions.",src:["hubg","pgg"]},
+  oracle:{name:"Oracle set (full)",short:"Oracle",weapon:"Oracle Light Spear",style:"Ranged · combo",
+    perks:["Damage and crit rate rise with combo count","Armor: extra diagonal arrows every 5 combo","Amulet: next attack 2× every 3–5 combo","Helmet (Chaotic): crits can add multishot"],
+    verdict:"Best PvE set: chapters, Sky Tower, bosses. Avoid in Peak Arena.",src:["hubg","pgg"]},
+  griffin:{name:"Griffin set (full)",short:"Griffin",weapon:"Griffin Claw",style:"Melee · close range",
+    perks:["Damage and crit rise the closer you are","Chaotic weapon: 20% less melee damage taken","Chaotic Amulet: healing hearts when hit nearby"],
+    verdict:"Weak until Chaotic. Finish Oracle or Dragoon first, then take the Griffin Amulet.",src:["hubg"]},
+  mix:{name:"Dragoon + Oracle/Griffin mix",short:"Mix",weapon:"Crossbow of the Dragoon",style:"PvP hybrid",
+    perks:["Dragoon Crossbow, Helmet, Boots","Oracle or Griffin Armor, Ring, Amulet","Griffin Amulet + Oracle Armor heart/shield synergy at Chaotic"],
+    verdict:"Recommended PvP layout; PGG also suggests mixing Dragoon with Griffin pieces.",src:["mtpa","pgg","hubg"]}
+};
+
+/* ---- Hero stars, skins, gear grades ---- */
+const RARITY = {Legendary:["Rick","Morty","Artemis","Demeter","Wukong","Cleo","Thor","Demon King Atreus","Otta"],
+  Epic:["Nezha","Phynx","Loki","Rolla","Dracoola","Seraph"], Rare:["Hou Yi","Mymu","Hela","Helix","Nyanja","Alex"]};
+const rarityOf = n => Object.keys(RARITY).find(r=>RARITY[r].includes(n)) || "";
+/* Every hero: 1★/4★/7★ = account-wide "All" stat, 2★/5★/8★ = skill level up, 3★ = resonance unlock, 6★ = resonance slot +1 */
+const HERO_STARS = {
+  Thor:{0:"Weapon detaches and auto-attacks.",1:"All Thunder DMG +30%",2:"Chance to summon homing Mjolnir while moving (100% DMG)",5:"Attacks deal Lightning DMG; Mjolnir inherits CRIT; crits can paralyze 0.5s",8:"Paralyzing fires 3 extra Mini-Mjolnirs"},
+  Nyanja:{0:"MOV SPD +10%; Swift Wind pushes back and damages",1:"All MOV SPD +2%",2:"Swift Wind range up, DMG doubled",5:"Swift Wind explodes on enemy contact",8:"Swift Wind cycle much shorter"},
+  Cleo:{0:"Attacks greatly enhanced by Fire",1:"All Fire DMG +30%",2:"Every 20 Fire hits marks a target for a 300% cross explosion",5:"Explosion also at her position; ATK +40% for 3s after marking",8:"Marked enemies are Frightened (−50% ATK; −35% for players)"},
+  Wukong:{0:"Summons 3 permanent Monkey Mirages",1:"All CRIT DMG +20%",2:"Chance to summon extra Mirages (up to 6)",5:"Each Mirage gives +3.5% ATK, DMG reduction and Control RES",8:"Mirages can steal Hearts/Potions: ATK +20% for 7s"},
+  Helix:{0:"Lower HP raises ATK, up to +20%",1:"All ATK +3%",2:"ATK SPD +20% for 5s after taking DMG",5:"ATK PWR +20% for 10s after taking DMG",8:"ATK SPD +20% while HP < 50%"},
+  Seraph:{0:"50% chance to meet the Valkyrie at the start",1:"All CRIT DMG Reduce +15%",2:"Chance of a bonus skill when picking Healing from the Angel",5:"Chance Max HP isn't reduced by Devil Pacts",8:"Higher-quality skills more likely"}
+};
+const STAR_ROLE = {1:"All-stat bonus",2:"Skill Lv.2",3:"Resonance unlocked",4:"All-stat bonus",5:"Skill Lv.3",6:"Resonance slot +1",7:"All-stat bonus",8:"Skill Lv.4"};
+const SKINS = {
+  Nyanja:[["Shinobill","Below 20% HP, summons a clone with 35% of your max HP to draw aggro"]],
+  Helix:[["Harelix","Each 20% HP lost summons a rabbit: 2s invincibility and +30% ATK SPD for allies"]],
+  Wukong:[["Awakened Stone Monkey","At 5★ its clones gain HP recovery and debuff removal"]],
+  Seraph:[["Golden Velvet Carol","With Seraph 5★, raises odds of Tracking Eye and Energy Beam"],["Seraduckus","With Seraph 5★, raises odds of Tracking Eye and Energy Beam"]],
+  Cleo:[["Eternal Nightglow",""]], Rolla:[["Gingerbread Tale",""]], Hela:[["Reindeer Plush",""]],
+  Artemis:[["Moonwake Shimmer",""]], Demeter:[["Silkveil Harvest",""]],
+  Otta:[["Signature skin","Archero 2 Hub: Otta needs its skin to complete its core build"]],
+  Mymu:[["Signature skin","Archero 2 Hub: Mymu needs its skin to complete its core build"]]
+};
+const GRADES = ["Epic","Legendary","Legendary+3","Mythic","Mythic+3","Chaotic"];
+const GRADE_PERKS = {
+  dragoon:{Epic:"Weapon: 75% chance of area explosion + Dragonflame; Explosion DMG +100%; 10% chance of 2–4× Explosive Strike",Mythic:"Weapon: Dragonflame deals 50% of the last 5s of explosion DMG every 5s",Chaotic:"Weapon: every 10 explosions, Main Weapon DMG +5% (max 10 stacks)"},
+  oracle:{Epic:"Weapon CRIT +2%/5 combo · Amulet 2× hit every 5 combo · Armor +2 diagonal arrows/5 combo · Helmet 2× combo on CRIT",Mythic:"Weapon CRIT +4%/5 combo · Amulet 2× hit every 3 combo · Armor +4 diagonal arrows · Boots CRIT DMG +48% after 20 combo",Chaotic:"Helmet: crits can add Multishot · Armor: hearts can give a 2s shield · Amulet: >40 combo, projectiles split +3"},
+  griffin:{Epic:"Weapon: CRIT rate up to +9% the closer the enemy",Mythic:"Weapon: CRIT rate up to +18% the closer the enemy",Chaotic:"Weapon: 20% less melee DMG taken · Amulet: healing hearts when hit within 7m"}
+};
+const GRADE_STAT = {"Legendary":"Each piece: ATK or Max HP +10%","Legendary+3":"Base stats +20%","Mythic+3":"Base stats about +30%; Godforge and set swap unlock"};
+const FORGE = ["","ATK +10%","Max HP +10%","ATK +10%","Max HP +10%","Descent activated (Dragoon: Dragon Soul Descent · Oracle: Divine Descent · Griffin: Griffin Descent)"];
+const gradeIdx = g => GRADES.indexOf(g);
+
+const CATALOG = {
+  etched:["Arrow of Echoes","Echo Scythe","Elemental Crit","Elemental Domain","Meteor Split","Potion Spring","Pulsing Orb","Orbital Orb","Sword Strike Split","Swordstrike Aerie","Sprite's Awe","Sprite Assist","Wave of Life"],
+  bless:["Revive","Rabbit's Foot","Lucky Shadow","Guardian","Resilience","Intelligence","Demon Pact"],
+  enh:["Sharp Arrow","Flamenox Seal","Frostshock Seal","Giant Meteor","Potion Magnet","Dragonflight Sword","Ricochet Strike","Spin SPD Up","Sawblade Circle","Sprite Link","Sprite Multishot"],
+  abil:["Arrow Rain","Flamenox Touch","Frostshock Touch","Ring of Agony","Circle","Star of Fury","Star of Time","Sword of Time","Strike Potion","Healing Sprite","Melee Sprite"]
+};
+const SLOT_META = {etched:["Etched",3],bless:["Blessing",2],enh:["Enhancement",4],abil:["Ability",4]};
+
+const PRESETS = {
+  /* ---- Dragoon ---- */
+  dkChapter:{name:"Dragoon · Chapters & Sky Tower",set:"dragoon",for:"Normal chapters, Sky Tower",sourced:false,
+    etched:[["Arrow of Echoes","always first; Legendary adds a free Diagonal Arrow"],["Elemental Crit",""],["Meteor Split","or Potion Spring"]],
+    bless:[["Revive","best blessing in the game"],["Rabbit's Foot","better skills on level-up; better Valkyrie odds"]],
+    enh:[["Sharp Arrow","enchant: main weapon DMG +30%"],["Flamenox Seal","elemental crit"],["Frostshock Seal","elemental crit"],["Giant Meteor","or Potion Magnet"]],
+    abil:[["Arrow Rain","enchant: main weapon DMG +30%"],["Flamenox Touch","elemental DMG"],["Frostshock Touch","elemental DMG"],["Ring of Agony","enemies inside take +20% DMG"]],
+    notes:["Built from Hub's Dragoon build with PvE swaps from PGG: Rabbit's Foot in, Guardian out; Sharp Arrow and Arrow Rain in, Star of Fury out (it only fires when you get hit).","Valkyrie appears after every Sky Tower room and on chapter stages ending in 5, so Rabbit's Foot pays off here."]},
+  dkHard:{name:"Dragoon · Hard chapters & survival",set:"dragoon",for:"Hard chapters, Abyssal Tide, chapter walls",sourced:false,
+    etched:[["Arrow of Echoes",""],["Elemental Crit",""],["Meteor Split",""]],
+    bless:[["Revive","second life per run"],["Lucky Shadow","Luck + Dodge (Mythic: +15% / +10%)"]],
+    enh:[["Sharp Arrow",""],["Flamenox Seal",""],["Frostshock Seal","freeze stops dangerous mobs"],["Giant Meteor",""]],
+    abil:[["Healing Sprite","sustain while you attack"],["Flamenox Touch",""],["Frostshock Touch","freezes a random monster every 2s (Legendary)"],["Arrow Rain",""]],
+    notes:["Chapter core traded toward survival: Lucky Shadow for dodge, Healing Sprite for sustain.","Use it when a chapter keeps killing you rather than running out of time."]},
+  dkBoss:{name:"Dragoon · Boss damage",set:"dragoon",for:"Seal Battle, Monster Invasion",sourced:false,
+    etched:[["Arrow of Echoes",""],["Elemental Crit",""],["Swordstrike Aerie","or Meteor Split"]],
+    bless:[["Revive",""],["Rabbit's Foot","Valkyrie every 15s from 0:20 to 1:20 here"]],
+    enh:[["Sharp Arrow","main weapon DMG"],["Flamenox Seal","burn is the best boss element"],["Frostshock Seal",""],["Dragonflight Sword","best Strike rune for PvE"]],
+    abil:[["Arrow Rain",""],["Flamenox Touch",""],["Frostshock Touch",""],["Sword of Time","Strike sword every 3s → 1.5s"]],
+    notes:["Single-target fights reward steady boss damage; meteor procs are random and mob-focused.","PGG: Flame is the best elemental modifier against bosses; Dragonflight Sword is the best Strike rune for PvE."]},
+  dkMeteor:{name:"Dragoon · Elemental + Meteor (PvP)",set:"dragoon",for:"Arena, Peak Arena",sourced:true,src:"hubr",
+    etched:[["Elemental Crit",""],["Meteor Split",""],["Potion Spring",""]],
+    bless:[["Revive","enchant: elemental DMG reduction +15%"],["Guardian","enchant: elemental DMG reduction +15%"]],
+    enh:[["Potion Magnet","enchant: meteor crit +30%"],["Giant Meteor","enchant: meteor cooldown −50%"],["Frostshock Seal","enchant: elemental crit +30%"],["Flamenox Seal","enchant: elemental crit +30%"]],
+    abil:[["Star of Fury","enchant: its meteors become Giant Meteors"],["Flamenox Touch","enchant: elemental DMG +30%"],["Frostshock Touch","enchant: elemental DMG +30%"],["Ring of Agony","enchant: enemies inside deal −20% ATK"]],
+    notes:["Resonance on Hub's build page: Cleo + Otta required, Wukong recommended.","Twinborn tip: fuse Giant Meteor + Potion Magnet to free an Enhancement slot for Sharp Arrow."]},
+  /* ---- Oracle ---- */
+  orChapter:{name:"Oracle · Chapters & Sky Tower",set:"oracle",for:"Normal chapters, Sky Tower, bosses",sourced:true,src:"wiko",
+    etched:[["Arrow of Echoes",""],["Pulsing Orb",""],["Elemental Domain","or Orbital Orb / Elemental Crit"]],
+    bless:[["Revive",""],["Rabbit's Foot",""]],
+    enh:[["Sharp Arrow",""],["Frostshock Seal",""],["Spin SPD Up",""],["Sawblade Circle",""]],
+    abil:[["Arrow Rain",""],["Frostshock Touch","optional — see note"],["Circle",""],["Ring of Agony",""]],
+    notes:["This is the Game Vault wiki's Oracle PvE rune page, slot for slot.","Wiki tip: swapping Frostshock Touch for any low-rarity rune cuts down freeze/bolt skill offers and raises your odds of Tracking Eye. Circle runes carry you when Tracking Eye doesn't show.","Core skills: Tracking Eye first, then Diagonal Arrows, Rapid Fire, Front Arrow and +ATK / +ATK SPD picks."]},
+  orHard:{name:"Oracle · Hard chapters & survival",set:"oracle",for:"Hard chapters, Abyssal Tide, chapter walls",sourced:false,
+    etched:[["Arrow of Echoes",""],["Pulsing Orb",""],["Orbital Orb","steady AoE while you dodge"]],
+    bless:[["Revive",""],["Lucky Shadow","dodge"]],
+    enh:[["Sharp Arrow",""],["Frostshock Seal",""],["Spin SPD Up",""],["Sawblade Circle",""]],
+    abil:[["Arrow Rain",""],["Healing Sprite","sustain"],["Circle",""],["Ring of Agony",""]],
+    notes:["Oracle chapter preset traded toward survival: Lucky Shadow for Rabbit's Foot, Healing Sprite for Frostshock Touch.","Oracle's combo resets when you get hit, so staying safe keeps your damage up too."]},
+  /* ---- Griffin ---- */
+  grChapter:{name:"Griffin · Circle",set:"griffin",for:"Normal chapters, Sky Tower",sourced:true,src:"hubr",
+    etched:[["Arrow of Echoes",""],["Pulsing Orb",""],["Elemental Crit",""]],
+    bless:[["Revive","enchant: elemental DMG reduction +15%"],["Guardian","or Lucky Shadow"]],
+    enh:[["Sharp Arrow","enchant: main weapon DMG +30%"],["Sawblade Circle","enchant: orb crit +30%"],["Spin SPD Up","enchant: orb crit +30%"],["Flamenox Seal","enchant: elemental crit +30%"]],
+    abil:[["Arrow Rain","enchant: main weapon DMG +30%"],["Circle","enchant: orb DMG +30%"],["Ring of Agony","great with Claw builds"],["Frostshock Touch","or Flamenox Touch"]],
+    notes:["Hub's Griffin + Circle build, slot for slot. Thor is listed as required resonance; Cleo and Wukong recommended.","Core skills: Corrosive Field, Circling Orbs Boost, Super Circle, Fire Circle, Ice Circle. Short-range Strike is free damage here.","Griffin is weak before Chaotic grade; finish Oracle or Dragoon first if you're early."]},
+  grHard:{name:"Griffin · Hard chapters & survival",set:"griffin",for:"Hard chapters, Abyssal Tide",sourced:false,
+    etched:[["Arrow of Echoes",""],["Pulsing Orb",""],["Orbital Orb",""]],
+    bless:[["Revive",""],["Lucky Shadow","dodge while in melee"]],
+    enh:[["Sharp Arrow",""],["Sawblade Circle",""],["Spin SPD Up",""],["Frostshock Seal","freeze keeps melee safe"]],
+    abil:[["Ring of Agony",""],["Circle",""],["Healing Sprite","sustain"],["Frostshock Touch",""]],
+    notes:["Melee takes more hits, so this swaps toward freeze, dodge and sustain. Ice Circle's freeze on hit is the safest Circle skill."]},
+  /* ---- Mode-specific ---- */
+  plant:{name:"Magic Plant Defense",set:"any",for:"Magic Plant Defense",sourced:"partial",src:"hubp",
+    etched:[["Orbital Orb","steady AoE that stacks (Hub)"],["Arrow of Echoes",""],["Elemental Crit",""]],
+    bless:[["Revive",""],["Rabbit's Foot",""]],
+    enh:[["Sharp Arrow","enchant: main weapon Bounce +4 (Hub)"],["Dragonflight Sword","enchant: Cannon Dragonflight (Hub)"],["Flamenox Seal",""],["Frostshock Seal","freeze the rushing bombers"]],
+    abil:[["Arrow Rain","AoE every 7 shots"],["Frostshock Touch",""],["Flamenox Touch",""],["Sword of Time",""]],
+    notes:["Hub names three runes for this mode: Sharp Arrow, Dragonflight Sword and Orbital Orb. The other ten are inferred to keep AoE and freeze.","Party mode multiplies monster HP by 1.5."]},
+  jungleOrb:{name:"Shackled Jungle · Orb",set:"any",for:"Shackled Jungle (no Dragonflight Sword yet)",sourced:"partial",src:"hubj",
+    etched:[["Pulsing Orb",""],["Orbital Orb",""],["Arrow of Echoes",""]],
+    bless:[["Revive",""],["Guardian","not Rabbit's Foot — it weakens Energy Ring"]],
+    enh:[["Sawblade Circle",""],["Spin SPD Up",""],["Flamenox Seal",""],["Frostshock Seal",""]],
+    abil:[["Circle",""],["Ring of Agony",""],["Flamenox Touch",""],["Frostshock Touch",""]],
+    notes:["Etched trio from Hub's Jungle guide; the rest follows Hub's Circle builds.","Gear and resonance are off here, so this preset works whatever set you wear."]},
+  jungleStrike:{name:"Shackled Jungle · Strike",set:"any",for:"Shackled Jungle (own Dragonflight Sword + Warfire Dragons)",sourced:"partial",src:"hubj",
+    etched:[["Sword Strike Split",""],["Swordstrike Aerie",""],["Arrow of Echoes",""]],
+    bless:[["Revive",""],["Guardian",""]],
+    enh:[["Dragonflight Sword","Warfire Dragons enchant is the key"],["Ricochet Strike",""],["Flamenox Seal",""],["Frostshock Seal",""]],
+    abil:[["Sword of Time",""],["Strike Potion",""],["Flamenox Touch",""],["Frostshock Touch",""]],
+    notes:["Always pick Beam Strike when offered; it is the boss damage of this setup."]},
+  orPvp:{name:"Oracle · PvP (Spear)",set:"oracle",for:"Arena with Oracle Spear",sourced:true,src:"wiko",
+    etched:[["Sprite's Awe",""],["Sprite Assist",""],["Pulsing Orb",""]],
+    bless:[["Revive",""],["Lucky Shadow",""]],
+    enh:[["Sharp Arrow",""],["Frostshock Seal",""],["Sprite Multishot",""],["Sprite Link",""]],
+    abil:[["Star of Fury",""],["Frostshock Touch",""],["Melee Sprite",""],["Healing Sprite",""]],
+    notes:["Wiki PvP page for Staff/Spear. Set distance preference to distant; resonance Helix with Atreus, Otta, Dracoola or Alex.","Do not bring the Oracle Spear to Peak Arena."]}
+};
+const SET_PRESET = {
+  chapter:{dragoon:"dkChapter",mix:"dkChapter",oracle:"orChapter",griffin:"grChapter"},
+  hard:{dragoon:"dkHard",mix:"dkHard",oracle:"orHard",griffin:"grHard"},
+  boss:{dragoon:"dkBoss",mix:"dkBoss",oracle:"orChapter",griffin:"grChapter"},
+  pvp:{dragoon:"dkMeteor",mix:"dkMeteor",oracle:"orPvp",griffin:"dkMeteor"}
+};
+const resolvePreset = (m, set) => SET_PRESET[m.preset] ? SET_PRESET[m.preset][set||"dragoon"] : m.preset;
+
+const TWIN = [
+  ["Meteor Magnet","Enhancement","Giant Meteor + Potion Magnet",true],
+  ["Twin Meteors","Ability","Star of Fury + Star of Time",true],
+  ["Quadra Seal","Enhancement","Flamenox Seal + Frostshock Seal",false],
+  ["Quadra Touch","Ability","Flamenox Touch + Frostshock Touch",false],
+  ["Sawspinner","Enhancement","Sawblade Circle + Spin SPD Up",false],
+  ["Circle of Agony","Ability","Circle + Ring of Agony",false],
+  ["Swordwyrm","Enhancement","Dragonflight Sword + Ricochet Strike",false],
+  ["Edge of Time","Ability","Sword of Time + Strike Potion",false],
+  ["Sprite Array","Enhancement","Sprite Link + Sprite Multishot",false],
+  ["Bloodsprite","Ability","Healing Sprite + Melee Sprite",false],
+  ["Thornbind / Bloomgrave","Enh / Ability","Plant runes (not mapped)",false],
+  ["Bulwark · Lucky Pact · Fortune Shade","Blessing","Blessing pairs (not mapped)",false],
+  ["No partner","—","Sharp Arrow, Arrow Rain, Revive",true]
+];
+const MAP = [["Resurrection / Revive Rune","Revive"],["Rage Star","Star of Fury"],["Potion Gravity","Potion Magnet"],["Frost Thunder Mark / Frost-Thunder Seal","Frostshock Seal"],["Poison Mark","Flamenox Seal"],["Frost Thunder Contact / Frost-Thunder Touch","Frostshock Touch"],["Poison Contact","Flamenox Touch"],["Spinning Orb","Circle"],["Rotating SPD Up","Spin SPD Up"],["Swablade Circle","Sawblade Circle"],["Blade Potion","Strike Potion"],["Dragon Knight","Dragoon"],["Tata","Otta (likely)"],["Muira","Mymu (likely)"]];
+
+const MODES = [
+  {key:"normal",name:"Normal chapters",sub:"Campaign · up to ch. 210",applies:{gear:1,runes:1,res:1},
+   set:{oracle:3,dragoon:2,griffin:1,mix:2},rune:{echoes:3,orb:3,strike:2,meteor:1,sprite:1,elemental:3},
+   heroes:["Thor","Wukong","Cleo","Nezha"],bestSet:"Oracle (full); Dragoon also clears well",bestRune:"echoes",preset:"chapter",setPick:true,
+   skills:["Tracking Eye","Rapid Fire","Front Arrow","Diagonal Arrows","Power Trio","Warrior's Soul","Soul of Swiftness","Revive","Long-Range Power"],
+   avoid:["Soul of Strength","Rotating Web","Meteor potions"],
+   tips:[["s","Oracle is the recommended set for PvE content like chapters and Sky Tower.","hubg"],
+         ["s","Rabbit's Foot raises high-quality skill odds and Valkyrie roulette odds.","pgg"],
+         ["s","Hit a wall? Check gear rarity and enhancement, fix skill picks, farm earlier chapters at 2–3× speed.","hubb"]]},
+  {key:"hard",name:"Hard chapters",sub:"v1.1.9 adds hard ch. 186–195",applies:{gear:1,runes:1,res:1},
+   set:{oracle:3,dragoon:2,griffin:1,mix:2},rune:{echoes:3,orb:3,strike:2,meteor:1,sprite:1,elemental:3},
+   heroes:["Thor","Wukong","Demon King Atreus","Dracoola"],bestSet:"Oracle (full); Dragoon also works",bestRune:"echoes",preset:"hard",setPick:true,
+   skills:["Revive","Tracking Eye","Rapid Fire","Sacred Protection","Invincibility Potion","Bane of Bosses","Power Trio"],
+   avoid:["Giant's Strength (slows you)","Soul of Strength","Meteor potions"],
+   tips:[["s","Revive (skill and rune) is rated broken in both PvE and PvP.","pgg"],
+         ["i","Hard stages punish mistakes more than damage checks, so take one defensive pick early.",null],
+         ["s","Bane of Bosses fully heals before boss fights and raises boss damage.","pgg"]]},
+  {key:"tower",name:"Sky Tower",sub:"Floor climb · gates chapters and altars",applies:{gear:1,runes:1,res:1},
+   set:{oracle:3,dragoon:2,griffin:1,mix:2},rune:{echoes:3,orb:3,strike:2,meteor:1,sprite:1,elemental:3},
+   heroes:["Thor","Wukong","Nezha"],bestSet:"Oracle (full); Dragoon for wave floors",bestRune:"echoes",preset:"chapter",setPick:true,
+   skills:["Tracking Eye","Rapid Fire","Diagonal Arrows","Front Arrow","Soul of Swiftness","Demon Slayer"],
+   avoid:["Bane of Bosses on floors with no boss","Meteor skills"],
+   tips:[["s","The wiki calls Oracle arguably the best for chapter and Sky Tower clearing.","wiko"],
+         ["s","Blast (Dragoon) builds clear waves well in Sky Tower.","thb"],
+         ["s","Valkyrie shows up after every cleared room.","wiki"],
+         ["s","Enemy stats rise steeply per floor; push your peak gradually as gear improves.","hubw"]]},
+  {key:"invasion",name:"Monster Invasion",sub:"Guild boss · damage race",applies:{gear:1,runes:1,res:1},
+   set:{oracle:2,dragoon:3,griffin:1,mix:2},rune:{echoes:3,orb:2,strike:2,meteor:0,sprite:0,elemental:3},
+   heroes:["Thor","Wukong","Cleo"],bestSet:"Dragoon (full)",bestRune:"elemental",preset:"boss",
+   skills:["Bane of Bosses","Flame + Super Flame","Long-Range Power","Stand Strong","Warrior's Soul","Rapid Fire"],
+   avoid:["Demon Slayer (mob-only)","Ricocheting Arrow","Demon Slaying Meteor","Sprites"],
+   tips:[["s","Rewards scale with damage; spend Guild Coins in the Guild Store.","pgb"],
+         ["s","Dragoon has the best boss DPS of the three sets.","pgg"],
+         ["s","Valkyrie appears every 15 seconds from 0:20 to 1:20 here and in Seal Battle.","wiki"]]},
+  {key:"seal",name:"Seal Battle",sub:"Boss damage · twice per day",applies:{gear:1,runes:1,res:1},
+   set:{oracle:2,dragoon:3,griffin:1,mix:2},rune:{echoes:3,orb:2,strike:2,meteor:0,sprite:0,elemental:3},
+   heroes:["Thor","Wukong","Cleo"],bestSet:"Dragoon (full)",bestRune:"elemental",preset:"boss",
+   skills:["Bane of Bosses","Flame + Super Flame","Long-Range Power","Stand Strong","Rapid Fire","Power Trio"],
+   avoid:["Demon Slayer","Sprites","Mob-clear skills"],
+   tips:[["s","Sprites get outclassed in Seal Battles where raw DPS decides.","pgg"],
+         ["s","Clear twice a day; both runs give a guaranteed Wish Coin and 100 gems.","pgb"]]},
+  {key:"plant",name:"Magic Plant Defense",sub:"Pet eggs · solo or 2-player",applies:{gear:1,runes:1,res:1},
+   set:{oracle:2,dragoon:2,griffin:1,mix:2},rune:{echoes:3,orb:2,strike:3,meteor:0,sprite:1,elemental:2},
+   heroes:["Cleo","Seraph","Thor"],bestSet:"Your strongest PvE set",bestRune:"strike",preset:"plant",
+   skills:["Tracking Eye","Energy Ring","Energy Beam"],avoid:["Single-target picks when bombers rush the plant"],
+   tips:[["s","Every upgrade applies: resonance, gear, runes and enchants.","hubp"],
+         ["s","If the plant dies you fail; freeze or burst the fast bomb monsters.","hubp"],
+         ["s","White stars speed up boss spawns. Low on boss damage? Skip them and level first.","hubp"],
+         ["s","Higher stages give better eggs (stages 191–200: 6% Legendary).","hubp"]]},
+  {key:"arena",name:"Arena",sub:"1v1 · automated · ~60s rounds",applies:{gear:1,runes:1,res:1},
+   set:{oracle:1,dragoon:3,griffin:2,mix:3},rune:{echoes:3,orb:2,strike:1,meteor:3,sprite:2,elemental:3},
+   heroes:["Helix","Dracoola","Loki","Hela","Alex"],bestSet:"Dragoon, or the Dragoon + Griffin mix",bestRune:"meteor",preset:"pvp",
+   skills:["Auto-assigned, three per round"],avoid:[],
+   tips:[["s","Rounds last about 60 seconds, so stacking runes beat burst picks.","pgg"],
+         ["s","Revive is essential; Lucky Shadow is the best PvP blessing after it.","pgg"],
+         ["s","Hub recommends Dragoon for PvP; PGG names Griffin. Both agree Oracle is the PvE set.","hubg"],
+         ["s","Stay Transcendent or Supreme or you lose Peak Arena access.","mtpa"]]},
+  {key:"peak",name:"Peak Arena",sub:"3v3 · resonance disabled",applies:{gear:1,runes:1,res:0},
+   set:{oracle:0,dragoon:3,griffin:2,mix:3},rune:{echoes:2,orb:2,strike:1,meteor:3,sprite:2,elemental:3},
+   heroes:["Helix","Alex","Loki","Hela","Thor","Demon King Atreus","Dracoola"],bestSet:"Dragoon Crossbow + Helmet + Boots, Oracle/Griffin Armor + Ring + Amulet",bestRune:"meteor",preset:"dkMeteor",
+   skills:["Auto battle — build for raw stats"],avoid:["Oracle Light Spear (loses to much weaker teams)"],
+   tips:[["s","Power of Fusion: each unique hero, gear piece and rune across your three slots adds ATK/HP to all. Avoid duplicates.","mtpa"],
+         ["s","Meta: one fully geared main hero plus two slots of unique leftover gear and runes.","mtpa"],
+         ["s","Unlocks at Transcendent/Supreme. Losses cost only the ticket (1 per 2h, cap 6).","mtpa"]]},
+  {key:"jungle",name:"Shackled Jungle",sub:"Enchantment Stones · Mon/Wed/Fri/Sun",applies:{gear:0,runes:1,res:0},
+   set:null,rune:{echoes:2,orb:3,strike:3,meteor:0,sprite:2,elemental:1},
+   heroes:["Dracoola","Cleo"],bestSet:"Gear is disabled here",bestRune:"orb",preset:"jungleOrb",alt:"jungleStrike",
+   skills:["Tracking Eye","Energy Ring","Energy Beam","Holy Shield","Multishot","Warrior's Soul","Power Trio"],
+   avoid:["Swift Arrow","Energy Arrow","Rabbit's Foot (weakens Energy Ring)"],
+   tips:[["s","Only runes and rune enchants count.","hubj"],
+         ["s","Bosses at 2, 4 and 6 minutes; kill the 6-minute boss to clear.","hubj"],
+         ["s","Clear by hand. A Rune Rating auto-skip gives about 90% fewer stones.","hubj"]]},
+  {key:"tide",name:"Abyssal Tide",sub:"Survival waves · 2 free runs/day",applies:{gear:1,runes:1,res:1},
+   set:{oracle:2,dragoon:2,griffin:1,mix:2},rune:{echoes:2,orb:2,strike:2,meteor:1,sprite:2,elemental:3},
+   heroes:["Dracoola","Demon King Atreus","Nyanja"],bestSet:"Your strongest PvE set",bestRune:"elemental",preset:"hard",setPick:true,
+   skills:["Revive","Sacred Protection","Invincibility Potion","Wind Blessing","Soul of Swiftness","Diagonal Arrows"],
+   avoid:["Giant's Strength","Wounded Warrior"],
+   tips:[["s","Prioritize endurance; about 7.5 minutes unlocks all three chests.","tht"],
+         ["s","Abyssal Stonework permanently raises hero HP and ATK.","tht"],
+         ["i","Movement-speed heroes like Nyanja suit a long, dodge-heavy run.",null]]}
+];
+const RUNEPKG = {echoes:"Main weapon (Arrow of Echoes)",orb:"Orb / Circle",strike:"Strike (swords)",meteor:"Meteor + Elemental",sprite:"Sprite",elemental:"Elemental seals"};
+
+/* =================== EVENTS =================== */
+const EVENTS = [
+  {name:"Angler's Bounty (Fishing)",cyc:"monthly",label:"Occasional · ~monthly",src:["hubf","hubfs","wikf"],visual:"fish",
+   what:"Catch fish in a gauge mini-game. Sets of 40 fish (1 Legendary); the final zone, Polar Glacier, has 80 per set (2 Legendary). Completing a set moves you on.",
+   tips:[["Higher bait multipliers (1×–50×) raise grade odds but burn bait faster. 1 bait = 1 gem.",1],
+         ["Rod upgrades widen the gauge tolerance, which makes Legendary catches more consistent. Buy Rod Packages 1 and 2 first.",1],
+         ["You can reach the final zone with free bait alone.",1],
+         ["Main free source of Etched runes (about 2 Epic from missions) and the shop for Twinborn Cores.",1]],
+   buy:[["No etched slots yet","Random Blessing Rune (4,050 tickets, max 4) → Epic Etched Rune (32,400) → Rare Etched Rune (9,000; three fuse to Epic)"],
+        ["Slots open, missing etchings","Symphony Legendary Etching first, then Epic Etched Runes"],
+        ["Etchings complete","Mythic artifacts Tidal Conch and Pan Flute; level them evenly"]],
+   spend:"Rod Packages 1 and 2 first; Bait Package 5 if you need more casts.",f2p:"Final zone and about 2 Epic Etched runes are reachable free."},
+  {name:"Island Treasure (Dice)",cyc:"monthly",label:"Permanent · resets every 28 days",src:["hubd","hubev"],visual:"dice",
+   what:"Roll around a 24-tile board to build score. Where you place multipliers matters more than how many dice you roll.",
+   tips:[["Put 5× on tiles 7, 8, 19, 20 and 3× on 6, 9, 18, 21 (balanced). Leave the other 16 tiles at 1×.",1],
+         ["Tiles 1 and 24 miss about 47% of the time; keep multipliers off them.",1],
+         ["Low on dice? Go defensive (3× on all eight). Use 10×/5× only with spare dice.",1],
+         ["Claim the free daily dice pack (1 die a day for 28 days).",1],
+         ["Aim for 100,000 points. At 400,000 the shop sells universal Legendary hero shards — the best star-up source once you own your legendaries.",1]],
+   buy:[["Best value","Pack 3 (5 dice, 750 gems, ×7) and Pack 4 (5 dice, 99 Aurora, ×10)"],["Skip","Pack 9 (200 dice) unless you are a heavy spender"]],
+   spend:"Above 100,000 points costs climb steeply; set a stopping point.",f2p:"Free dice plus a balanced layout gets close to 100,000."},
+  {name:"Contract Mystling",cyc:"monthly",label:"Rotates monthly",src:["hubm"],
+   what:"Gift hearts to a limited Mystling (currently the Joker). Each draw banks hearts toward milestones; crits multiply only the banked hearts.",
+   tips:[["Milestones: 60 hearts → 4 Epic Mystling Eggs, 120 → 2 Legendary Eggs, 180 → Mystling Fool (+1 every 60 after).",1],
+         ["Crit odds: 1× 85%, 2× 8.3%, 3× 4%, 5× 1.5%. Plan on about 1.2 hearts per draw.",1],
+         ["Claim the daily free draw and every mission heart.",1],
+         ["Free-only median is about 108 hearts: 60 is safe, 120 is hard, 180 needs the fund.",1]],
+   buy:[["If you want the Mystling","The 7-day fund (1,499 Aurora, +50 draws) brings the median to about 180"]],
+   spend:"Top up only for what's missing near the end.",f2p:"Reach the 60-heart tier; the Fool needs spending."},
+  {name:"Summon Event (Ancient Core)",cyc:"monthly",label:"Limited · recurring",src:["hubsu"],
+   what:"Gacha where every pull adds to a Luck Count with milestones. Core drop rate is 0.12% per pull; 400 total pulls guarantee one.",
+   tips:[["Milestones: 145 pulls → 10 Legendary Artifact Shards, 200 → Gear Series Choice Chest, 300 → Rune Series Choice Chest, 400 → Legendary Blessing Rune + guaranteed Core.",1],
+         ["The Luck Count carries over between events, so pity builds across months.",1],
+         ["Buy the 21 diamond pulls (6,300 gems) — without them free play gets 55 pulls instead of 76.",1]],
+   buy:[["Fastest route","Fund (1,499 Aurora) + Package 4 (499 Aurora) each event → pity in about 3 months"]],
+   spend:"Free: about 6 months to pity. Fund only: about 4.",f2p:"76 pulls per event with the diamond buys."},
+  {name:"Vibrant Voyage (balloon bingo)",cyc:"monthly",label:"Limited · recurring",src:["hubv","hubev"],
+   what:"Spend draws for travel badges and milestone rewards; trade for Star Cores or relic shards (2 cores = 1 shard).",
+   tips:[["About 108 free tickets per 7 days (90 missions, 11 fund, 7 daily).",1],
+         ["Gold Wind Tickets cost 280 gems, capped at 500 per event.",1],
+         ["Force-completing a line refunds 5 tickets.",1],
+         ["For Star Cores, Starfall Disc is about 1.3× more efficient at the gem cap.",1]],
+   buy:[["Order","Free tickets → gems → packages only past 500 draws"]],
+   spend:"Efficiency improves with volume (about 33 draws per core at 200 draws, 19 at 3,000).",f2p:"The first 500 draws are coverable with free tickets and gems."},
+  {name:"Guild Raid",cyc:"weekly",label:"Up to 3 raids a week",src:["hubgr"],
+   what:"Guild co-op map of Normal, Elite and Boss nodes. Each raid lasts 72 hours; each member gets 2 attempts a day.",
+   tips:[["Clear Elite nodes first — each gives the whole guild a damage buff for the rest of the raid.",1],
+         ["Leaders: only open a difficulty with 80% of its recommended power, and settle early once the boss is dead and 24h have passed.",1],
+         ["Difficulty V's Frenzy Challenge pays up to 10,000 Enchantment Stones per member.",1],
+         ["Bring a ranged build against Slow Domain or Reflect Domain bosses.",1],
+         ["Attempt at least once and stay in the guild at settlement to get rewards.",1]],
+   buy:[],spend:"",f2p:"Free; only needs your daily attempts."},
+  {name:"Gold Cave",cyc:"daily",label:"Regular · daily tickets",src:["wikg"],
+   what:"Clear 10 waves; kills drop gold. Floors alternate waves and roulettes with Gear Scrolls, Gold and Gems. Wave 9 is a boss; wave 10 pays double.",
+   tips:[["Run the highest level you can clear — rewards scale with difficulty.",1],
+         ["Watch the ad for an extra daily ticket.",1],
+         ["Use an AoE build; it's a wave clear.",0]],
+   buy:[],spend:"",f2p:"Free daily."},
+  {name:"Rune Ruins",cyc:"daily",label:"Regular · shovels",src:["wikr","hubb"],
+   what:"Dig a 3×3 grid for rune chests. Two Upgrade tiles raise rune rarity, two ×2 tiles double chests, and two Keys end the dig.",
+   tips:[["Use Ruin Shovels from Sky Tower milestones and events.",1],
+         ["Don't spend gems on digs (200 each) early on.",1],
+         ["The five-dig option multiplies the final reward.",1]],
+   buy:[],spend:"",f2p:"Shovels come free from Sky Tower and events."},
+  {name:"Carnival (Seasons 1 & 2)",cyc:"limited",label:"One-time · new accounts",src:["hubb","hubg"],
+   what:"Starter event. Season 1 opens at ch. 14, Season 2 at ch. 21. Clearing it gives your first S-tier weapon, the Dragoon Crossbow.",
+   tips:[["The bottleneck is Chromatic Chest Keys: 70 for Season 1, 140 for Season 2. Point gems at keys first.",1],
+         ["Season 2 also rewards the Magic Harp (Legendary artifact).",1]],
+   buy:[],spend:"",f2p:"Fully clearable free with planned gem use."},
+  {name:"Umbral Tempest",cyc:"limited",label:"Seasonal",src:["hubu"],
+   what:"Seasonal mode where you pick one of four classes for the whole season: Ranger, Alchemist, Druid or Diviner.",
+   tips:[["You can't change class mid-season, so check your roster first.",1],
+         ["Ranger: top pick only if you own Thor 5★ and Cleo.",1],
+         ["Alchemist: best for Solitary Trial speed and damage rankings, and AoE content.",1],
+         ["Druid: the safest pick for F2P and new players; doesn't need Thor.",1],
+         ["Diviner: fine if you have Thor but lack Cleo or Thor 5★.",1]],
+   buy:[],spend:"",f2p:"Druid is the F2P default."},
+  {name:"Demon King Clash",cyc:"limited",label:"Limited · last ran Apr 2025",src:["wikk"],
+   what:"Play as Demon King Atreus through 7 battle stages (once a day each) for Clash Badges; spin with summon tickets.",
+   tips:[["About 55 free tickets from daily tasks — Gold Cave, Arena, Seal Battle and kills all count.",1],
+         ["Spin milestones: 145 → Legendary artifact, 200 → Epic S gear, 300 → Legendary rune, 400 → Legendary Blessing rune.",1],
+         ["The Luck Meter carries over to the next Demon King event.",1]],
+   buy:[],spend:"",f2p:"Do every task and stage daily."},
+  {name:"Starmoon Vow (Mid-Autumn)",cyc:"limited",label:"Seasonal · ended 2 Oct 2026",src:["pgg"],
+   what:"Ran 19 Sep–2 Oct 2026 with Legendary skins for Artemis and Demeter, the Fullmoon Pool fishing ground and the Dragon Gate Koi Mystling.",
+   tips:[["Seasonal events tend to return yearly; save gems ahead of them.",0]],
+   buy:[],spend:"",f2p:""},
+  {name:"Rumble Ladder",cyc:"limited",label:"In game now · video guides only",src:["ytrl"],
+   what:"Ladder event shown on the campaign banner. No written guide found yet; the video guide covers rules and rewards.",
+   tips:[],buy:[],spend:"",f2p:""},
+  {name:"Eternal Lode",cyc:"limited",label:"Recurring · video guides only",src:["ytel"],
+   what:"Mining event on the campaign side bar. No written guide found yet; the video guide covers rewards and strategy.",
+   tips:[],buy:[],spend:"",f2p:""}
+];
+
+/* =================== CHAPTERS =================== */
+const CH_NAMES = ["Moonlight Forest","Cloud Dreamland","Autumn Ruins","Breeze Prairie","Shadow King City","Crystal Altar","Molten Grotto","Treasure Island","Beast Territory","Ice and Snow Land","Maple Bridge Valley","Dawn Jungle","Lost Castle","Green Shade Ruins","Gold and Silver Island","Azure Sky Hill","Coral Reef","Windstorm Desert","Hanging Bridge Gully","Autumn Pasture","River of Lava","Frost Dungeon","Crystal Mine Cave","Twilight Estate","Cloud Isolated Island","Crimson Territory","Nightfall Icefield","Pharaoh Chamber","Forbidden Dungeon","Nightfall Ruins","Splendid Castle","Beanstalk Island","Whispering Forest","Undersea World","Nightfall Suspension Bridge","Dragon Spine Cliff","Gloomy Forest","Evil Spirit Arena","Mysterious Canyon","Enchanted Fair","Breeze Island","Evil Spirit Castle","Silent Castle","City in the Clouds","Sky Stronghold","Void Abyss","Vampire Estate","Frozen Mountain","Nightfall Beanstalk Island","Fairytale Fortress","Autumn Forest","Amber Cavern","Bounteous Land","Mind Chasm","Elf Village","Ancient Ruins","Dragon Lizard Mine","Floating Oasis","Cursed Hollow","Exotic Palace","Desert Hamlet","Hermit Grove","Wintry Ravine","Tropical Isle","Darkdusk Bridge","Springfield Meadows","Shadowed Sanctuary","Newspring Yard","Dusk Glacier","Serenity Pool","Tangled Turf","Tangled Ruins","Saintwater Domain","Wasteland Dunes","Silent Hollow","Moonlit Bamboo Grove","Treasure Grotto","Secret Garden","Tranquil Ruins","Castle Drawbridge","Dusktown","Dawnlight Grounds","Lucky Lodge","Abyssal Adit","Serenity Pond","Twilight Plains","Silent Isle","Drill Grounds","Serene Abyss","Palace Ruins","Silent Reach","Deepwood Temple","Dusken Isle","Chamber of Riches","Bloodlit Altar"];
+const CH_EXTRA = {126:"Nethershade Woods",127:"Exotic Sunset"};
+const CH_FMT = {82:"Timed",84:"Rooms"};
+const CH_EVENTS = {5:"Unlocks Guild",6:"Unlocks events",14:"Carnival Season 1",21:"Carnival Season 2",127:"Azure Serpent Altar gate (with Sky Tower 1550)"};
+const CH_REWARD = n=>{ if(n<55||n%5) return ""; if(n<=75) return n===55?"5 Fantasy Chest Keys":"10 Fantasy Chest Keys";
+  if(n<=95) return "1 Random Collectible Gold"; if(n===100) return "1 Random Enhancement Rune"; if(n===120) return "1 Random Blessing Rune";
+  if(n<=130) return "15 Legendary Artifact Shards"; return "20 Legendary Artifact Shards"; };
+const BANDS = [
+  {from:1,to:20,name:"Starter",stars:1,kind:"chapter",note:"Learn dodging. Join a guild at ch. 5. Push chapters first — they give the biggest early rewards.",runes:"Any runes you own; get Revive and Rabbit's Foot as soon as they drop."},
+  {from:21,to:60,name:"Early",stars:2,kind:"chapter",note:"Carnival Season 2 at ch. 21 gives the Dragoon Crossbow. Commit to one S-tier set now.",runes:"Get every rune to Epic to open Etched slot 1 for Arrow of Echoes."},
+  {from:61,to:100,name:"Mid",stars:3,kind:"chapter",note:"Gear walls start. Chapter farming caps gear at Legendary+3; Mythic needs S-tier pulls.",runes:"Push runes to Legendary for Etched slot 2. Ch. 100 gives a random Enhancement rune."},
+  {from:101,to:150,name:"Late",stars:4,kind:"chapter",note:"Ch. 127 plus Sky Tower 1550 opens the Azure Serpent Altar. Switch to the Hard preset on chapters that keep killing you.",runes:"Legendary+2 opens Etched slot 3. Start Twinborn fusions to free slots. Ch. 120 gives a Blessing rune."},
+  {from:151,to:210,name:"Endgame",stars:5,kind:"hard",note:"Chaotic gear and Godforge territory. v1.1.9 added ch. 201–210.",runes:"Mythic runes with enchants; Twinborn pairs to fit Sharp Arrow and Arrow Rain."}
+];
+const HARD_BANDS = [{from:1,to:60,name:"Hard I",stars:3,kind:"chapter"},{from:61,to:120,name:"Hard II",stars:4,kind:"hard"},{from:121,to:195,name:"Hard III",stars:5,kind:"hard"}];
+const TOWER = [[25,"25 Diamonds"],[50,"Ruin Shovel"],[100,"Ruin Shovel (every 50 to 300)"],[350,"2 Ruin Shovels"],[400,"Wish Coins / Fantasy Chest Keys alternate every 50 floors to 1200"],[1250,"Random Ability or Enhancement Rune"],[1500,"Random Collectible Gold"],[1550,"Azure Serpent Altar gate (with ch. 127)"],[1750,"Random Collectible Gold"],[2000,"Random Collectible Gold"],[2250,"Random Collectible Gold"],[2500,"10 Legendary Artifact Shards"],[3000,"15 Legendary Artifact Shards"],[3500,"20 Legendary Artifact Shards"],[4000,"20 Legendary Artifact Shards (highest listed)"]];
+
+const DAILY = [
+  ["Spend energy 2–3 times (it stops regenerating above the cap)","hubb"],
+  ["Daily quests + ad bonuses (~300 gems)","hubb"],
+  ["Guild donation ×5 (200 gems)","hubb"],
+  ["Monster Invasion / guild boss ×2","hubb"],
+  ["Guild Raid ×2 attempts (when a raid is open)","hubgr"],
+  ["Seal Battle ×2 (Wish Coin + 100 gems)","pgb"],
+  ["Gold Cave (+ ad ticket)","wikg"],
+  ["Abyssal Tide ×2 free runs","tht"],
+  ["Arena — use all tickets","pgb"],
+  ["Peak Arena — don't sit at 6 tickets","mtpa"],
+  ["Shackled Jungle (Mon/Wed/Fri/Sun) — clear by hand","hubj"],
+  ["Magic Plant Defense daily-mission ticket","hubp"],
+  ["Island Treasure free daily dice","hubd"],
+  ["Event freebies: Contract Mystling draw, Summon/Voyage daily tickets","hubev"],
+  ["Buy main-hero shards in the daily shop","hubb"]
+];
+const WEEKLY = [
+  ["Guild Expedition","hubb"],
+  ["Guild Raid — all 3 raids used","hubgr"],
+  ["Magic Plant: 10 solo + 10 party clears (use tickets before Monday's top-up)","hubp"],
+  ["Peak Arena shop: Swapping Orbs, then Loki Shards","mtpa"],
+  ["Stay Transcendent+ in Arena for Peak Arena","mtpa"]
+];
+const PRIO = [
+  ["Chapters first — they pay the most early.","hubb"],
+  ["One main hero to 5★; Rare/Epic heroes to 6★ for 2 resonance slots.","hubb"],
+  ["One S-tier set completed before starting another. Enhancement levels carry over when you swap gear.","hubb"],
+  ["Runes: fill 4 Enhancement, 4 Ability, 2 Blessing; Revive and Rabbit's Foot first.","hubb"],
+  ["Etched: Arrow of Echoes first in every build. Fishing is the main free source.","hube"],
+  ["Godforge: weapon first.","hubg"],
+  ["Gems: Chromatic/Mythstone Chest keys first, then guild donations and Carnival missions.","hubb"]
+];
+const AVOID = ["Obsidian Chest Keys","Gems on gold or scrolls","Prayer Coins","Rune Ruins digs with gems early","Splitting S-gear across sets","Letting energy cap out","Rune Rating skips in Jungle","Dice multipliers on tiles 1 and 24"];
+const RESON = [
+  ["Dragoon",[["S","Cleo, Wukong (5★+), Otta (2★+)"],["A","Cleo, Otta (2★+), Phynx (8★)"],["B","Cleo, Otta (2★+), Thor, Helix or Mymu"]]],
+  ["Griffin",[["S","Cleo, Wukong (5★+), Thor"],["A","Thor, Wukong (5★+), Otta (2★+), Helix or Mymu"]]],
+  ["Oracle",[["A","Cleo, Wukong (5★+), Otta (2★+)"]]]
+];
+
+/* =================== HELPERS =================== */
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const chips = (arr, cls="") => `<div class="chips">${arr.map(x=>`<span class="chip ${cls}">${esc(x)}</span>`).join("")}</div>`;
+const srcLink = k => { if(!k||!SOURCES[k]) return ""; const [n,u]=SOURCES[k]; return `<a href="${u}" target="_blank" rel="noopener">${esc(n.split(" — ")[0])}</a>`; };
+const srcFull = k => { if(!k||!SOURCES[k]) return ""; const [n,u]=SOURCES[k]; return `<a href="${u}" target="_blank" rel="noopener">${esc(n)}</a>`; };
+const ls = { get(k,d){ try { const v=localStorage.getItem(k); return v?JSON.parse(v):d; } catch(e){ return d; } },
+             set(k,v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} } };
+const heroByName = n => HEROES.find(h => h[0]===n);
+const modeByKey = k => MODES.find(m => m.key===k);
+const TIER_PTS = {"SS":3,"S+":3,"S":2,"A+":2,"A":1,"B+":1,"B":0,"C+":-1,"C":-1,"D+":-1,"D":-1};
+const presetNames = p => Object.keys(SLOT_META).flatMap(t => p[t].map(r=>r[0]));
+const tagFor = p => p.sourced===true?`<span class="tag t-src">Sourced</span>`:p.sourced==="partial"?`<span class="tag t-src">Partly sourced</span>`:`<span class="tag t-inf">Inferred</span>`;
+const PICK_SETS = ["dragoon","oracle","griffin"];
+let myRunes = ls.get("a2-runes", null);
+let chapSet = ls.get("a2-chapset","oracle");
+const modeSet = ls.get("a2-modeset",{});
+
+function presetBoard(key, mine){
+  const p = PRESETS[key];
+  return `<div class="board">${Object.entries(SLOT_META).map(([t,[label]])=>`
+    <div class="slotgrp"><span class="label"><span class="dot" style="background:var(--${t})"></span>${label}</span>
+    <div class="slots">${p[t].map(([n,note])=>{ let st=""; if(mine) st = mine[t].includes(n)?" ok":" miss";
+      return `<span class="rune c-${t}${st}">${esc(n)}${note?`<small>${esc(note)}</small>`:""}</span>`;}).join("")}</div></div>`).join("")}</div>`;
+}
+function presetBlock(key, mine){
+  const p = PRESETS[key];
+  return `<div class="row between"><h3>${esc(p.name)}</h3>${tagFor(p)}</div>${presetBoard(key,mine)}
+    <ul style="margin:0;padding-left:18px;display:grid;gap:4px;font-size:.86rem">${p.notes.map(n=>`<li>${esc(n)}</li>`).join("")}</ul>
+    ${p.src?`<span class="src">Source: ${srcLink(p.src)}</span>`:""}`;
+}
+const setPicker = (cur, attr) => PICK_SETS.map(s=>`<button type="button" ${attr}="${s}" aria-pressed="${s===cur}">${SETS[s].short}</button>`).join("");
+
+/* =================== BUILDER =================== */
+function fillSelects(){
+  $("#b-hero").innerHTML = HEROES.map(h=>`<option>${esc(h[0])}</option>`).join("");
+  $("#b-mode").innerHTML = MODES.map(m=>`<option value="${m.key}">${esc(m.name)}</option>`).join("");
+  $("#b-set").innerHTML = Object.entries(SETS).map(([k,s])=>`<option value="${k}">${esc(s.name)}</option>`).join("");
+  $("#b-rune").innerHTML = Object.entries(RUNEPKG).map(([k,n])=>`<option value="${k}">${esc(n)}</option>`).join("");
+  $("#b-star").innerHTML = Array.from({length:9},(_,i)=>`<option value="${i}">${i}★${STAR_ROLE[i]?" · "+STAR_ROLE[i]:" · base"}</option>`).join("");
+  $("#b-grade").innerHTML = GRADES.map(g=>`<option>${g}</option>`).join("");
+  $("#b-forge").innerHTML = [0,1,2,3,4,5].map(i=>`<option value="${i}">${i?i+"★":"None"}</option>`).join("");
+  const st = Object.assign({h:"Thor",s:"oracle",r:"echoes",m:"normal",star:5,skin:"",g:"Mythic",f:0}, ls.get("a2-builder",{}));
+  $("#b-hero").value=st.h; $("#b-set").value=st.s; $("#b-rune").value=st.r in RUNEPKG?st.r:"echoes"; $("#b-mode").value=st.m;
+  $("#b-star").value=st.star; $("#b-grade").value=GRADES.includes(st.g)?st.g:"Mythic"; $("#b-forge").value=st.f;
+  fillSkins(st.skin); syncForge();
+}
+function fillSkins(sel=""){
+  const h=$("#b-hero").value, list=SKINS[h]||[];
+  $("#b-skin").innerHTML = `<option value="">No skin / unknown</option>` + list.map(([n])=>`<option${n===sel?" selected":""}>${esc(n)}</option>`).join("") + `<option value="other"${sel==="other"?" selected":""}>Other skin</option>`;
+}
+function syncForge(){ const ok = gradeIdx($("#b-grade").value) >= gradeIdx("Mythic+3"); $("#b-forge").disabled=!ok; if(!ok) $("#b-forge").value="0"; }
+function opts(){ return {star:+$("#b-star").value, skin:$("#b-skin").value, grade:$("#b-grade").value, forge:+$("#b-forge").value}; }
+function evaluate(heroN, setK, runeK, modeK, o){
+  o = Object.assign({star:5,skin:"",grade:"Mythic",forge:0}, o||{});
+  const m = modeByKey(modeK), h = heroByName(heroN)||["","B"], reasons = [];
+  let score = 0, max = 0; const gearOn = !!m.set;
+  if(gearOn){ let sf = m.set[setK]; const set = SETS[setK]; const best = m.bestSet.split(";")[0];
+    if(setK==="griffin" && gradeIdx(o.grade)<gradeIdx("Chaotic") && sf>0){ sf -= 1; reasons.push(["warn",`Griffin below Chaotic loses its melee damage reduction; guides say it struggles until then.`]); }
+    score += sf; max += 3;
+    if(sf===3) reasons.push(["good",`${set.name} is a top pick for ${m.name}.`]);
+    else if(sf===2) reasons.push(["warn",`${set.name} works here; ${best} is stronger.`]);
+    else if(sf===1) reasons.push(["bad",`${set.name} is weak for ${m.name}. ${setK==="griffin"?"Griffin struggles until Chaotic. ":""}Prefer ${best}.`]);
+    else reasons.push(["bad",`${set.name} is not recommended in ${m.name}${setK==="oracle"?": Oracle Spear teams lose to much weaker opponents here":""}.`]);
+  } else reasons.push(["info",`Gear and resonance are disabled in ${m.name}; only runes count.`]);
+  const rf = m.rune[runeK]; const w = gearOn?1:2; score += rf*w; max += 3*w;
+  const rn = RUNEPKG[runeK], best = RUNEPKG[m.bestRune];
+  if(rf===3) reasons.push(["good",`${rn} runes are a recommended package here.`]);
+  else if(rf===2) reasons.push(["warn",`${rn} runes are workable. Best here: ${best}.`]);
+  else if(rf===1) reasons.push(["bad",`${rn} runes underperform here${runeK==="meteor"?" (PGG rates Meteor runes very poor for PvE)":""}. Best: ${best}.`]);
+  else reasons.push(["bad",`${rn} runes are rated very poor in this mode. Switch to ${best}.`]);
+  max += 1;
+  if(m.heroes.includes(heroN)){ score += 1; reasons.push(["good",`${heroN} is recommended for ${m.name}.`]); }
+  else { const t=h[1]; const pts=TIER_PTS[t]??0;
+    if(pts>=2){ score+=1; reasons.push(["good",`${heroN} is ${t} tier overall (AllClash).`]); }
+    else if(pts<=-1) reasons.push(["warn",`${heroN} is ${t} on AllClash${h[2]?` but ${h[2]} on AllThings`:""}. Heroes matter less than gear and runes.`]);
+    else reasons.push(["info",`${heroN} is a neutral pick. Recommended: ${m.heroes.slice(0,3).join(", ")}.`]); }
+  /* progression: hero stars + gear grade */
+  max += 1;
+  if(o.star>=5){ score += 1; reasons.push(["good",`${heroN} at ${o.star}★ has Skill Lv.${o.star>=8?4:3}${o.star>=6?" and 2 resonance slots":""}.`]); }
+  else if(o.star>=3) reasons.push(["warn",`${heroN} at ${o.star}★: resonance is open, but 5★ (Skill Lv.3) is the main power spike. Hub's advice: get your main hero to 5★.`]);
+  else reasons.push(["bad",`${heroN} at ${o.star}★ has no resonance yet (3★) and only ${o.star>=2?"Skill Lv.2":"base skill"}. Push your main hero to 5★.`]);
+  if(m.applies.res===0) reasons.push(["info",`Resonance is disabled in ${m.name}; only ${heroN}'s own skill counts.`]);
+  if(gearOn){ max += 1; const gi = gradeIdx(o.grade);
+    if(gi>=gradeIdx("Mythic")){ score += 1; reasons.push(["good",`${o.grade} gear unlocks the set's Mythic perks${gi>=gradeIdx("Mythic+3")?", Godforge and set swap":""}.`]); }
+    else reasons.push(["warn",`${o.grade} gear: the big set perks arrive at Mythic. Chapter farming stops at Legendary+3; Mythic needs S-tier gear from Mythstone or Chromatic chests.`]);
+    if(["arena","peak"].includes(m.key) && gi<gradeIdx("Chaotic")) reasons.push(["info",`PvP results swing a lot on whether Chaotic is complete (Archero 2 Hub).`]);
+    if(o.forge>=5) reasons.push(["good",`Godforge 5★: Descent is active.`]); }
+  if(o.skin && o.skin!=="other"){ const sk=(SKINS[heroN]||[]).find(s=>s[0]===o.skin); if(sk&&sk[1]) reasons.push(["good",`${o.skin}: ${sk[1]}.`]); }
+  const pct = score/max;
+  const grade = pct>=0.8 ? ["Strong","p-good"] : pct>=0.5 ? ["Workable","p-warn"] : ["Weak","p-bad"];
+  return {score,max,grade,reasons,m};
+}
+let currentPreset = "orChapter";
+function renderResult(){
+  const H=$("#b-hero").value, S=$("#b-set").value, R=$("#b-rune").value, M=$("#b-mode").value;
+  const o = opts();
+  ls.set("a2-builder",{h:H,s:S,r:R,m:M,star:o.star,skin:o.skin,g:o.grade,f:o.forge});
+  const e = evaluate(H,S,R,M,o); const m=e.m; currentPreset = resolvePreset(m, m.set?S:null); const p=PRESETS[currentPreset];
+  const icon = {good:"✓",warn:"!",bad:"✕",info:"i"};
+  const mine = hasMyRunes()?myRunes:null; let match="";
+  if(mine){ const have=Object.values(mine).flat(); const hit=presetNames(p).filter(n=>have.includes(n)).length;
+    match = `<span class="pill ${hit>=10?"p-good":hit>=6?"p-warn":"p-bad"}">${hit}/13 runes match</span>`; }
+  $("#result").innerHTML = `
+    <div class="verdict"><div class="meter">${e.score}<small>/${e.max}</small></div>
+      <div style="display:grid;gap:4px"><div class="row"><span class="pill ${e.grade[1]}">${e.grade[0]}</span>${match}</div>
+      <span class="src">${esc(H)} · ${esc(m.set?SETS[S].name:"runes only")} · ${esc(RUNEPKG[R])} · ${esc(m.name)}</span></div></div>
+    <ul class="reasons">${e.reasons.map(([k,t])=>`<li class="p-${k}"><b>${icon[k]}</b><span style="color:var(--fg)">${esc(t)}</span></li>`).join("")}</ul>
+    ${progressPanel(H,S,o,m)}
+    ${mine?`<p class="src" style="margin:0">Green outline = you already run it. Dashed = change this slot.</p>`:""}
+    ${presetBlock(currentPreset, mine)}
+    <dl class="kv"><dt>Gear</dt><dd>${esc(m.set?m.bestSet:"Disabled in this mode")}</dd><dt>Take skills</dt><dd>${chips(m.skills)}</dd>${m.avoid.length?`<dt>Skip</dt><dd>${chips(m.avoid,"no")}</dd>`:""}</dl>
+    <p class="src" style="margin:0">Grade = set fit + rune fit + hero fit, summarized from the guides under More → Sources. It is not a damage simulation.</p>`;
+}
+function progressPanel(H,S,o,m){
+  const hs = HERO_STARS[H]||{};
+  const starRows = [0,1,2,3,4,5,6,7,8].map(i=>{
+    const txt = hs[i] || (i===0?"Base skill":i===3?"Resonance unlocked":i===6?"Resonance slot +1":[1,4,7].includes(i)?"All-stat bonus (applies account-wide)":`Skill Lv.${i===2?2:i===5?3:4}`);
+    const on = i<=o.star; return `<li style="grid-template-columns:34px 1fr;${on?"":"opacity:.45"}"><b class="${on?"p-good":""}">${i}★</b><span>${esc(txt)}</span></li>`; }).join("");
+  const setKey = S==="mix"?"dragoon":S; const gp = GRADE_PERKS[setKey]||{}; const gi = gradeIdx(o.grade);
+  const gearRows = GRADES.map((g,i)=>{ const txt = gp[g] || GRADE_STAT[g] || ""; if(!txt) return "";
+    const on = i<=gi; return `<li style="grid-template-columns:96px 1fr;${on?"":"opacity:.45"}"><b class="${on?"p-good":""}">${g}</b><span>${esc(txt)}</span></li>`; }).join("");
+  const forgeRows = o.forge? `<li style="grid-template-columns:96px 1fr"><b class="p-good">Godforge</b><span>${esc(FORGE.slice(1,o.forge+1).join(" · "))}</span></li>`:"";
+  const sk = (SKINS[H]||[]).find(s=>s[0]===o.skin);
+  return `<details class="fold" style="background:var(--raised)"><summary><div><h3>What your ${o.star}★ ${esc(H)} and ${esc(o.grade)} gear unlock</h3><div class="sub">${esc(rarityOf(H))} hero${o.skin?` · ${esc(o.skin==="other"?"other skin":o.skin)}`:""}</div></div></summary>
+    <div class="body">
+      <span class="label">Hero stars${HERO_STARS[H]?"":" (general pattern; exact text not published for this hero)"}</span>
+      <ul class="reasons">${starRows}</ul>
+      ${sk&&sk[1]?`<p style="margin:0"><b>${esc(sk[0])}:</b> ${esc(sk[1])}</p>`:o.skin?`<p class="src" style="margin:0">This skin's battle effect isn't published in the guides used here. Owned outfits also give small permanent HP/ATK bonuses.</p>`:""}
+      ${m.set?`<span class="label">${esc(SETS[S].short)} gear by grade</span><ul class="reasons">${gearRows}${forgeRows}</ul>`:`<p class="src" style="margin:0">Gear is disabled in ${esc(m.name)}.</p>`}
+      <p class="src" style="margin:0">Star effects: Archero 2 Hub character catalog. Gear perks: Hub gear sets and gear effects pages; the Legendary/Mythic+3 stat steps are from Oracle's table and look shared across sets.</p>
+    </div></details>`;
+}
+function hasMyRunes(){ return myRunes && Object.values(myRunes).flat().some(Boolean); }
+function emptyRunes(){ return {etched:["","",""],bless:["",""],enh:["","","",""],abil:["","","",""]}; }
+function renderMyRunes(){
+  const r = myRunes || emptyRunes();
+  $("#myRunes").innerHTML = Object.entries(SLOT_META).map(([t,[label,n]])=>`
+    <div class="field"><span class="label" style="display:flex;gap:6px;align-items:center"><span class="dot" style="background:var(--${t})"></span>${label}</span>
+    <div class="myslots ${n===4?"four":n===3?"three":""}">${Array.from({length:n},(_,i)=>`<select class="c-${t}" id="mr-${t}-${i}" aria-label="${label} slot ${i+1}" data-t="${t}" data-i="${i}">
+      <option value="">— empty —</option>${CATALOG[t].map(x=>`<option${r[t][i]===x?" selected":""}>${esc(x)}</option>`).join("")}</select>`).join("")}</div></div>`).join("");
+  $("#myCount").textContent = `${Object.values(r).flat().filter(Boolean).length}/13 set`;
+}
+$("#myRunes").addEventListener("change", e=>{ const s=e.target; if(!s.dataset.t) return;
+  myRunes = myRunes || emptyRunes(); myRunes[s.dataset.t][+s.dataset.i]=s.value; ls.set("a2-runes",myRunes);
+  $("#myCount").textContent = `${Object.values(myRunes).flat().filter(Boolean).length}/13 set`; renderResult(); });
+$("#copyPreset").onclick = ()=>{ const p=PRESETS[currentPreset]; myRunes={}; Object.keys(SLOT_META).forEach(t=>myRunes[t]=p[t].map(x=>x[0])); ls.set("a2-runes",myRunes); renderMyRunes(); renderResult(); };
+$("#clearRunes").onclick = ()=>{ myRunes=null; ls.set("a2-runes",null); renderMyRunes(); renderResult(); };
+function renderSaved(){
+  const list = ls.get("a2-saved",[]);
+  $("#savedList").innerHTML = list.length ? list.map((b,i)=>{ const e=evaluate(b.h,b.s,b.r in RUNEPKG?b.r:"echoes",b.m,{star:b.star??5,skin:b.skin||"",grade:b.g||"Mythic",forge:b.f||0});
+    return `<div class="item"><div><b>${esc(b.h)} ${b.star??5}★</b> · ${esc(modeByKey(b.m).name)}<br><span class="src">${esc(SETS[b.s].name)} (${esc(b.g||"Mythic")}) · ${esc(RUNEPKG[b.r]||"")}</span></div>
+      <div class="row"><span class="pill ${e.grade[1]}">${e.grade[0]}</span><button data-load="${i}">Load</button><button data-del="${i}">Delete</button></div></div>`;
+  }).join("") : `<p class="empty">No saved loadouts yet. Saved loadouts stay on this device only.</p>`;
+}
+
+/* =================== MODES =================== */
+function modeBody(m){
+  const s = m.setPick ? (modeSet[m.key]||"oracle") : null;
+  const pk = resolvePreset(m, s);
+  const ap=(on,l)=>`<span class="${on?"on":"off"}">${l}</span>`;
+  return `<div class="applies">${ap(m.applies.gear,"Gear")}${ap(m.applies.runes,"Runes")}${ap(m.applies.res,"Resonance")}</div>
+    ${m.setPick?`<div style="display:grid;gap:6px"><span class="label">Rune preset for your set</span><div class="setpick" data-mode="${m.key}">${setPicker(s,"data-mset")}</div></div>`:""}
+    ${presetBlock(pk)}
+    ${m.alt?`<p class="src" style="margin:0">Alternative: <b>${esc(PRESETS[m.alt].name)}</b> (More → Runes).</p>`:""}
+    <dl class="kv"><dt>Gear set</dt><dd>${esc(m.bestSet)}</dd><dt>Heroes</dt><dd>${chips(m.heroes)}</dd><dt>Take</dt><dd>${chips(m.skills)}</dd>${m.avoid.length?`<dt>Skip</dt><dd>${chips(m.avoid,"no")}</dd>`:""}</dl>
+    <ul class="reasons">${m.tips.map(([t,txt,src])=>`<li style="grid-template-columns:1fr"><span><span class="tag ${t==="s"?"t-src":"t-inf"}">${t==="s"?"Sourced":"Inferred"}</span> ${esc(txt)} ${src?`<span class="src">· ${srcLink(src)}</span>`:""}</span></li>`).join("")}</ul>
+    <div class="row"><button class="btn ghost" data-try="${m.key}">Open in build checker</button></div>`;
+}
+function renderModes(){
+  $("#modeList").innerHTML = MODES.map(m=>`<details class="fold" id="mode-${m.key}">
+    <summary><div><h3>${esc(m.name)}</h3><div class="sub">${esc(m.sub)}</div></div><span class="label" style="text-align:right">${esc(m.set?m.bestSet.split(/[;,]/)[0]:"Runes only")}</span></summary>
+    <div class="body" id="mb-${m.key}">${modeBody(m)}</div></details>`).join("");
+}
+$("#modeList").addEventListener("click", e=>{
+  const sb = e.target.closest("[data-mset]");
+  if(sb){ const key=sb.closest("[data-mode]").dataset.mode; modeSet[key]=sb.dataset.mset; ls.set("a2-modeset",modeSet); $("#mb-"+key).innerHTML = modeBody(modeByKey(key)); return; }
+  const k=e.target.dataset.try; if(!k) return; const m=modeByKey(k);
+  $("#b-mode").value=k; $("#b-rune").value=m.bestRune; if(m.setPick && modeSet[k]) $("#b-set").value=modeSet[k];
+  renderResult(); showTab("build");
+});
+
+/* =================== CHAPTERS =================== */
+let cview = "normal";
+const chName = n => CH_EXTRA[n] || CH_NAMES[n-1] || "";
+const starStr = s => "★".repeat(s)+`<i>${"★".repeat(5-s)}</i>`;
+const bandPreset = kind => SET_PRESET[kind][chapSet];
+function renderChapters(){
+  $("#chapSet").innerHTML = setPicker(chapSet,"data-cset");
+  if(cview==="normal"){
+    $("#chapView").innerHTML = `
+      <div class="card"><h3>Stage formats</h3><dl class="kv">
+        <dt>Rooms</dt><dd>50 rooms, boss every 10th. Best: Oracle tracking builds; Rabbit's Foot (Valkyrie on stages ending in 5).</dd>
+        <dt>Waves</dt><dd>1 room, 50 waves, boss every 10th. Best: AoE — Dragoon explosions, Arrow Rain, Diagonal Arrows, Circle.</dd>
+        <dt>Timed</dt><dd>6 minutes of survival, 2 bosses every 3 minutes. Best: AoE plus one survival pick.</dd>
+      </dl><span class="src">Formats: ${srcLink("wikc")}. The chapter card in-game shows each chapter's format icon.</span></div>
+      ${BANDS.map(b=>{ const rows=[]; for(let n=b.from;n<=b.to;n++){ const r=CH_REWARD(n), ev=CH_EVENTS[n], f=CH_FMT[n];
+          rows.push(`<tr><td class="n">${n}</td><td>${esc(chName(n)||"—")}</td><td>${f?esc(f):""}</td><td>${esc([ev,r].filter(Boolean).join(" · "))}</td></tr>`); }
+        const pk = bandPreset(b.kind);
+        return `<details class="fold"><summary><div><h3>Ch. ${b.from}–${b.to} · ${b.name}</h3><div class="sub">Difficulty <span class="stars">${starStr(b.stars)}</span></div></div><span class="label">${esc(SETS[chapSet].short)}</span></summary>
+          <div class="body"><p style="margin:0">${esc(b.note)}</p>
+            <div class="note good"><b>Runes at this stage:</b> ${esc(b.runes)}</div>
+            ${presetBlock(pk)}
+            ${b.kind==="chapter"?`<p class="src" style="margin:0">Stuck on a chapter? Switch to <b>${esc(PRESETS[SET_PRESET.hard[chapSet]].name)}</b> (Hard tab).</p>`:""}
+            <div class="tablewrap"><table><thead><tr><th>#</th><th>Chapter</th><th>Format</th><th>Unlock / milestone reward</th></tr></thead><tbody>${rows.join("")}</tbody></table></div>
+          </div></details>`; }).join("")}
+      <p class="src">Names: chapters 1–95 from ${srcLink("wikc")}; 126–127 read from the game. No public list names chapters 96–125 or 128–210 yet. Milestone rewards (every 5 from ch. 55) from ${srcLink("hubc")}; chapters 1–210 also pay 800 diamonds in total. Difficulty stars are this app's banding.</p>`;
+  } else if(cview==="hard"){
+    $("#chapView").innerHTML = `
+      <div class="card"><h3>Hard mode</h3><p style="margin:0">Hard chapters replay the campaign with stronger enemies, up to ch. 195 in v1.1.9. Mistakes cost more than damage, so later bands use the survival preset.</p>
+        <dl class="kv"><dt>Always</dt><dd>Revive (rune and skill), one defensive skill early (Sacred Protection or Invincibility Potion), Bane of Bosses.</dd>
+        <dt>Skip</dt><dd>Giant's Strength (slows you), Soul of Strength, Meteor potions.</dd></dl></div>
+      ${HARD_BANDS.map(b=>`<details class="fold"><summary><div><h3>Hard ${b.from}–${b.to} · ${b.name}</h3><div class="sub">Difficulty <span class="stars">${starStr(b.stars)}</span></div></div><span class="label">${esc(SETS[chapSet].short)}</span></summary>
+        <div class="body">${presetBlock(bandPreset(b.kind))}</div></details>`).join("")}
+      <p class="src">Hard bands and difficulty are this app's grouping.</p>`;
+  } else {
+    $("#chapView").innerHTML = `
+      <div class="card"><h3>Sky Tower</h3><p style="margin:0">Floor-based PvE where enemy stats rise steeply each floor. Valkyrie appears after every cleared room. Some floors have no boss, so Bane of Bosses is wasted there. Floor 1550 plus ch. 127 opens the Azure Serpent Altar.</p></div>
+      <div class="card">${presetBlock(bandPreset("chapter"))}</div>
+      <div class="tablewrap"><table><thead><tr><th>Floor</th><th>Milestone reward</th></tr></thead><tbody>
+        ${TOWER.map(([f,r])=>`<tr><td class="n">${f}</td><td>${esc(r)}</td></tr>`).join("")}</tbody></table></div>
+      <p class="src">Milestones from ${srcLink("hubw")}.</p>`;
+  }
+}
+$("#chapSet").addEventListener("click", e=>{ const b=e.target.closest("[data-cset]"); if(!b) return; chapSet=b.dataset.cset; ls.set("a2-chapset",chapSet); renderChapters(); });
+document.querySelector('[aria-label="Chapter list"]').addEventListener("click", e=>{
+  const b=e.target.closest("button"); if(!b) return; cview=b.dataset.cview;
+  $$('[data-cview]').forEach(x=>x.setAttribute("aria-pressed",String(x===b))); renderChapters(); });
+
+/* =================== EVENT VISUALS =================== */
+const FISH = [["Rare","Blue fish","starts LOW",0.25,"--info","Easy. Lots of time."],["Epic","Purple fish","starts in the MIDDLE",0.55,"--bless","Careful. Watch the timing."],["Legendary","Gold fish","starts HIGH",0.85,"--accent","Be very fast!"]];
+function fishVisual(){
+  const gx=[40,140,240], top=18, H=124, W=40;
+  const gauges = FISH.map(([n,,where,p,c],i)=>{ const x=gx[i], h=Math.round(p*H), y=top+H-h;
+    return `<rect x="${x}" y="${top}" width="${W}" height="${H}" rx="8" style="fill:var(--raised);stroke:var(--line)"/>
+      <rect x="${x}" y="${y}" width="${W}" height="${h}" rx="8" style="fill:var(${c})" opacity=".9"/>
+      <path d="M${x-14} ${y-7} L${x-3} ${y} L${x-14} ${y+7} Z" style="fill:var(--fg)"/>
+      <text x="${x+W/2}" y="${top+H+20}" text-anchor="middle" style="fill:var(${c});font:700 14px var(--f-body)">${n}</text>
+      <text x="${x+W/2}" y="${top+H+36}" text-anchor="middle" style="fill:var(--muted);font:500 11px var(--f-body)">${where}</text>`; }).join("");
+  const sx = m => 10 + m*(290/110);
+  const dist = `<rect x="${sx(0)}" y="14" width="${sx(80)-sx(0)}" height="18" rx="4" style="fill:var(--good)"/>
+    <rect x="${sx(80)}" y="14" width="${sx(100)-sx(80)}" height="18" style="fill:var(--warn)"/>
+    <rect x="${sx(100)}" y="14" width="${sx(110)-sx(100)}" height="18" rx="4" style="fill:var(--bad)"/>
+    ${[0,50,100,110].map(m=>`<text x="${sx(m)}" y="48" text-anchor="${m===0?"start":m===110?"end":"middle"}" style="fill:var(--muted);font:500 11px var(--f-mono)">${m} m</text>`).join("")}
+    <text x="${sx(40)}" y="27" text-anchor="middle" style="fill:var(--bg);font:700 11px var(--f-body)">SAFE</text>
+    <text x="${sx(105)}" y="10" text-anchor="middle" style="fill:var(--bad);font:700 11px var(--f-body)">SNAP!</text>`;
+  return `<div class="card" style="gap:14px;background:var(--raised)">
+    <h3>Fishing, super simple</h3>
+    <ol class="prio" style="font-size:1rem">
+      <li><b>Throw.</b> Tap when the pointer is in the <span style="color:var(--good);font-weight:700">light green</span> part. Green = better fish.</li>
+      <li><b>Look at the bar when a fish bites.</b> Where it starts tells you the fish.</li>
+    </ol>
+    <svg viewBox="0 0 320 180" role="img" aria-label="Gauge start height: Rare low, Epic middle, Legendary high" style="width:100%;max-width:380px;height:auto">${gauges}</svg>
+    <dl class="kv">${FISH.map(([n,col,where,,c,say])=>`<dt><span class="pill" style="color:var(${c})">${n}</span></dt><dd>Bar ${where.replace("starts ","starts ")}. ${say}</dd>`).join("")}</dl>
+    <p style="margin:0">Another clue: the fish icon starts <span style="color:var(--bad);font-weight:700">red</span> and turns <span style="color:var(--warn);font-weight:700">yellow</span>. Rarer fish stay red longer.</p>
+    <ol class="prio" start="3" style="font-size:1rem">
+      <li><b>Don't pull too hard, don't let it swim too far.</b> Too much line tension, or too much distance, and the line snaps.</li>
+    </ol>
+    <svg viewBox="0 0 320 54" role="img" aria-label="Distance meter: safe up to about 80 metres, snaps at 110 metres" style="width:100%;max-width:380px;height:auto">${dist}</svg>
+    <ol class="prio" start="4" style="font-size:1rem">
+      <li><b>Break the line on purpose?</b>
+        <dl class="kv" style="margin-top:6px">
+          <dt><span class="pill" style="color:var(--accent)">Legendary</span></dt><dd><b>Never.</b> These give the big tickets.</dd>
+          <dt><span class="pill" style="color:var(--bless)">Epic</span></dt><dd><b>No.</b> Reel it in.</dd>
+          <dt><span class="pill" style="color:var(--info)">Rare</span></dt><dd><b>Usually no.</b> The bait is gone either way. The wiki says you can let a Rare go and trade the broken line for a new one in the shop, but those trades are limited.</dd>
+        </dl></li>
+    </ol>
+    <p class="src" style="margin:0">Gauge start heights and the 110 m snap: ${srcLink("hubf")} (the older wiki page says 125 m; play safe at 110). Green cast zone, tension, red→yellow icon and releasing Rares: ${srcLink("wikf")}. The green/yellow/red distance zones are this app's safety margin, not exact game values.</p>
+  </div>`;
+}
+const DICE = [["Defensive","3× on 7,8,19,20,6,9,18,21",348,401,468],["Balanced","5× on 7,8,19,20 · 3× on 6,9,18,21",332,391,469],["Aggressive","10× on 7,8,19,20 · 5× on 6,9,18,21",300,375,488]];
+function diceVisual(have){
+  const sx = v => 40 + (v-280)*(260/220);
+  const rows = DICE.map(([n,,lo,avg,hi],i)=>{ const y=30+i*34;
+    return `<text x="40" y="${y-9}" style="fill:var(--fg);font:600 12px var(--f-body)">${n} <tspan style="fill:var(--muted);font-weight:500">avg ${avg}</tspan></text>
+      <line x1="${sx(lo)}" y1="${y}" x2="${sx(hi)}" y2="${y}" style="stroke:var(--accent);stroke-width:6;stroke-linecap:round" opacity=".45"/>
+      <circle cx="${sx(avg)}" cy="${y}" r="6" style="fill:var(--accent)"/>`; }).join("");
+  const ticks = [300,350,400,450,500].map(v=>`<line x1="${sx(v)}" y1="112" x2="${sx(v)}" y2="116" style="stroke:var(--muted)"/><text x="${sx(v)}" y="128" text-anchor="middle" style="fill:var(--muted);font:500 11px var(--f-mono)">${v}</text>`).join("");
+  const mark = have && have>=280 ? `<line x1="${sx(Math.min(have,500))}" y1="8" x2="${sx(Math.min(have,500))}" y2="112" style="stroke:var(--good);stroke-width:2;stroke-dasharray:4 3"/><text x="${sx(Math.min(have,500))}" y="8" text-anchor="${have>460?"end":"start"}" dx="${have>460?-4:4}" style="fill:var(--good);font:700 11px var(--f-body)">you: ${have}</text>` : "";
+  return `<svg viewBox="0 0 320 134" role="img" aria-label="Dice needed for 100,000 points by playstyle" style="width:100%;max-width:420px;height:auto">
+    <line x1="${sx(280)}" y1="112" x2="${sx(500)}" y2="112" style="stroke:var(--line)"/>${ticks}${rows}${mark}</svg>`;
+}
+function diceAdvice(n){
+  if(!n) return `Enter how many dice you have saved.`;
+  if(n>=488) return `<b style="color:var(--good)">Safe even on Aggressive.</b> You can hit 100,000 on almost any run. Use spare dice to push past it.`;
+  if(n>=469) return `<b style="color:var(--good)">Go Balanced.</b> That covers 95% of runs, including unlucky ones.`;
+  if(n>=391) return `<b style="color:var(--warn)">Go Balanced.</b> You reach 100,000 on most runs, but an unlucky run can fall short. Grab the 750-gem dice packs if you get close.`;
+  if(n>=348) return `<b style="color:var(--warn)">Only lucky runs make it.</b> Play Defensive or Balanced and keep collecting free dice before you roll.`;
+  return `<b style="color:var(--bad)">Not enough yet.</b> 100,000 usually needs at least about 390 dice. Keep saving, or roll for the lower milestones only.`;
+}
+function diceBlock(){
+  const have = ls.get("a2-dice",0);
+  return `<div class="card" style="gap:12px;background:var(--raised)">
+    <h3>How many dice to save for 100,000 points</h3>
+    <div class="grid3" style="text-align:left">
+      <div class="stat"><span class="label">Typical</span><b>~390</b></div>
+      <div class="stat"><span class="label">Safe (95%)</span><b>~470</b></div>
+      <div class="stat"><span class="label">Lucky run</span><b>~330</b></div>
+    </div>
+    <p style="margin:0">Numbers are for the Balanced layout. Each line below runs from a lucky run (left) to an unlucky one (right); the dot is the average.</p>
+    <div id="diceChart">${diceVisual(have)}</div>
+    <div class="field" style="max-width:240px"><label class="label" for="diceHave">Dice I have saved</label><input class="in" id="diceHave" type="number" inputmode="numeric" min="0" value="${have||""}" placeholder="e.g. 420"></div>
+    <p style="margin:0" id="diceAdvice">${diceAdvice(have)}</p>
+    <dl class="kv">${DICE.map(([n,l])=>`<dt>${n}</dt><dd>${esc(l)}; 1× everywhere else</dd>`).join("")}</dl>
+    <p class="src" style="margin:0">Free dice: the daily free pack gives 28 over the event; other free sources (missions) aren't counted by the guide. The full recommended paid set (Packs 3 and 4, about 5,250 gems + $9) adds 113. Dice carry over between events, so saving across cycles works. Data: ${srcLink("hubd")}. The "safe" figure is the worst 5% of simulated runs.</p>
+  </div>`;
+}
+
+/* =================== EVENTS =================== */
+let evFilter = "all";
+function renderEvents(){
+  const list = EVENTS.filter(e=>evFilter==="all"||e.cyc===evFilter);
+  $("#eventList").innerHTML = list.map(e=>`<details class="fold"${e.visual?" open":""}>
+    <summary><div><h3>${esc(e.name)}</h3><div class="sub">${esc(e.label)}</div></div><span class="cyc">${esc(e.cyc)}</span></summary>
+    <div class="body">
+      <p style="margin:0">${esc(e.what)}</p>
+      ${e.visual==="fish"?fishVisual():e.visual==="dice"?diceBlock():""}
+      ${e.tips.length?`<div style="display:grid;gap:6px"><span class="label">Tips</span><ul class="reasons">${e.tips.map(([t,s])=>`<li style="grid-template-columns:1fr"><span><span class="tag ${s?"t-src":"t-inf"}">${s?"Sourced":"Inferred"}</span> ${esc(t)}</span></li>`).join("")}</ul></div>`:""}
+      ${e.buy.length?`<div style="display:grid;gap:6px"><span class="label">What to buy</span><dl class="kv">${e.buy.map(([a,b])=>`<dt>${esc(a)}</dt><dd>${esc(b)}</dd>`).join("")}</dl></div>`:""}
+      ${e.spend?`<p class="f2p" style="margin:0"><b>Spending:</b> ${esc(e.spend)}</p>`:""}
+      ${e.f2p?`<div class="note good f2p"><b>Free-to-play:</b> ${esc(e.f2p)}</div>`:""}
+      <span class="src">Source: ${e.src.map(srcFull).join(", ")}</span>
+    </div></details>`).join("") || `<p class="empty">No events in this group.</p>`;
+}
+$("#eventList").addEventListener("input", e=>{ if(e.target.id!=="diceHave") return;
+  const n = Math.max(0, parseInt(e.target.value,10)||0); ls.set("a2-dice",n);
+  $("#diceChart").innerHTML = diceVisual(n); $("#diceAdvice").innerHTML = diceAdvice(n); });
+$("#evFilter").addEventListener("click", e=>{ const b=e.target.closest("button"); if(!b) return; evFilter=b.dataset.ev;
+  $$("#evFilter button").forEach(x=>x.setAttribute("aria-pressed",String(x===b))); renderEvents(); });
+
+/* =================== MORE =================== */
+const today = ()=>{ const d=new Date(); return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`; };
+function weekKey(){ const d=new Date(); d.setDate(d.getDate()-((d.getDay()+6)%7)); return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`; }
+function renderChecks(){
+  const dk="a2-daily-"+today(), wk="a2-weekly-"+weekKey(); const ds=ls.get(dk,[]), ws=ls.get(wk,[]);
+  const jungleDay = [0,1,3,5].includes(new Date().getDay());
+  $("#dailyList").innerHTML = DAILY.map(([t,s],i)=>{ const off = t.startsWith("Shackled") && !jungleDay;
+    return `<label for="d-${i}"><input type="checkbox" id="d-${i}" data-k="${dk}" data-i="${i}"${ds.includes(i)?" checked":""}${off?" disabled":""}><span class="t">${esc(t)}${off?" — closed today":""}</span><span class="src">${srcLink(s)}</span></label>`; }).join("");
+  $("#weeklyList").innerHTML = WEEKLY.map(([t,s],i)=>`<label for="w-${i}"><input type="checkbox" id="w-${i}" data-k="${wk}" data-i="${i}"${ws.includes(i)?" checked":""}><span class="t">${esc(t)}</span><span class="src">${srcLink(s)}</span></label>`).join("");
+  $("#dailyCount").textContent=`${ds.length}/${DAILY.length}`; $("#weeklyCount").textContent=`${ws.length}/${WEEKLY.length}`;
+  $("#dailyBar").style.width = (ds.length/DAILY.length*100)+"%";
+}
+$("#m-daily").addEventListener("change", e=>{ const c=e.target; if(!c.dataset.k) return;
+  let s=ls.get(c.dataset.k,[]); const i=+c.dataset.i; s = c.checked ? [...new Set([...s,i])] : s.filter(x=>x!==i); ls.set(c.dataset.k,s); renderChecks(); });
+function renderMore(){
+  $("#presetList").innerHTML = ["dragoon","oracle","griffin","any"].map(g=>{
+    const items = Object.entries(PRESETS).filter(([,p])=>p.set===g);
+    return `<h3 style="margin-top:4px">${g==="any"?"Mode-specific (any set)":SETS[g].short}</h3>` + items.map(([k,p])=>`<details class="fold">
+      <summary><div><h3>${esc(p.name)}</h3><div class="sub">${esc(p.for)}</div></div>${tagFor(p)}</summary>
+      <div class="body">${presetBlock(k)}</div></details>`).join(""); }).join("");
+  $("#twinRows").innerHTML = TWIN.map(([g,t,p,s])=>`<tr><td><b>${esc(g)}</b></td><td>${esc(t)}</td><td>${esc(p)}</td><td>${s?`<span class="tag t-src">Sourced</span>`:`<span class="tag t-inf">Inferred</span>`}</td></tr>`).join("");
+  $("#prioList").innerHTML = PRIO.map(([t,s])=>`<li>${esc(t)} <span class="src">· ${srcLink(s)}</span></li>`).join("");
+  $("#avoidList").innerHTML = AVOID.map(a=>`<span class="chip no">${esc(a)}</span>`).join("");
+  $("#resList").innerHTML = RESON.map(([n,rows])=>`<div><b>${esc(n)}</b><dl class="kv" style="margin-top:6px">${rows.map(([t,c])=>`<dt><span class="pill ${t==="S"?"p-good":t==="A"?"p-info":"p-warn"}">${t}</span></dt><dd>${esc(c)}</dd>`).join("")}</dl></div>`).join("")
+    + `<span class="src">Source: ${srcLink("hubs")}. Hub writes "Tata" and "Muira"; read as Otta and Mymu. Resonance is off in Peak Arena and Shackled Jungle.</span>`;
+  $("#setCards").innerHTML = Object.values(SETS).map(s=>`<div class="card">
+    <div class="row between"><h3>${esc(s.name)}</h3><span class="label">${esc(s.style)}</span></div>
+    <dl class="kv"><dt>Weapon</dt><dd>${esc(s.weapon)}</dd><dt>Key perks</dt><dd><ul style="margin:0;padding-left:18px">${s.perks.map(p=>`<li>${esc(p)}</li>`).join("")}</ul></dd><dt>Verdict</dt><dd>${esc(s.verdict)}</dd></dl>
+    <span class="src">Sources: ${s.src.map(srcLink).join(", ")}</span></div>`).join("");
+  $("#srcList").innerHTML = Object.values(SOURCES).map(([n,u])=>`<li><a href="${u}" target="_blank" rel="noopener">${esc(n)}</a></li>`).join("");
+  $("#mapRows").innerHTML = MAP.map(([a,b])=>`<tr><td>${esc(a)}</td><td>${esc(b)}</td></tr>`).join("");
+  $$("[data-src]").forEach(el=>el.innerHTML=srcLink(el.dataset.src));
+}
+document.querySelector('[aria-label="More sections"]').addEventListener("click", e=>{
+  const b=e.target.closest("button"); if(!b) return;
+  $$('[data-mview]').forEach(x=>{ x.setAttribute("aria-pressed",String(x===b)); $("#m-"+x.dataset.mview).hidden = x!==b; }); });
+function renderHeroes(q=""){
+  const rows = HEROES.filter(h=>h[0].toLowerCase().includes(q.toLowerCase()));
+  const tc = t => t[0]==="S" ? "tS" : t[0]==="A" ? "tA" : t[0]==="B" ? "tB" : "tC";
+  const cell = t => t?`<td class="t ${tc(t)}">${t}</td>`:`<td class="t src">—</td>`;
+  $("#heroRows").innerHTML = rows.map(h=>`<tr><td><b>${esc(h[0])}</b></td>${cell(h[1])}${cell(h[2])}${cell(h[3])}<td>${esc(h[4]||"—")}</td></tr>`).join("")
+    || `<tr><td colspan="5" class="empty">No hero matches “${esc(q)}”.</td></tr>`;
+}
+
+/* =================== TABS & EVENTS =================== */
+const TABS = ["build","modes","chapters","events","more"];
+function showTab(t){
+  $$("nav.tabs button").forEach(b=>b.setAttribute("aria-selected", String(b.dataset.tab===t)));
+  TABS.forEach(k=>{ $("#p-"+k).hidden = k!==t; }); ls.set("a2-tab",t); window.scrollTo(0,0);
+}
+document.querySelector("nav.tabs").addEventListener("click", e=>{ const b=e.target.closest("button"); if(b) showTab(b.dataset.tab); });
+["#b-set","#b-rune","#b-mode","#b-star","#b-skin","#b-forge"].forEach(s=>$(s).addEventListener("change", renderResult));
+$("#b-hero").addEventListener("change", ()=>{ fillSkins(); renderResult(); });
+$("#b-grade").addEventListener("change", ()=>{ syncForge(); renderResult(); });
+$("#save").addEventListener("click", ()=>{
+  const o=opts(); const list = ls.get("a2-saved",[]); const b = {h:$("#b-hero").value,s:$("#b-set").value,r:$("#b-rune").value,m:$("#b-mode").value,star:o.star,skin:o.skin,g:o.grade,f:o.forge};
+  if(!list.some(x=>JSON.stringify(x)===JSON.stringify(b))) list.unshift(b);
+  ls.set("a2-saved",list.slice(0,20)); renderSaved();
+  $("#save").textContent="Saved"; setTimeout(()=>$("#save").textContent="Save this loadout",1200);
+});
+$("#savedList").addEventListener("click", e=>{
+  const l=e.target.dataset.load, d=e.target.dataset.del, list=ls.get("a2-saved",[]);
+  if(l!==undefined){ const b=list[+l]; $("#b-hero").value=b.h; $("#b-set").value=b.s; $("#b-rune").value=b.r in RUNEPKG?b.r:"echoes"; $("#b-mode").value=b.m;
+    $("#b-star").value=b.star??5; $("#b-grade").value=GRADES.includes(b.g)?b.g:"Mythic"; fillSkins(b.skin||""); syncForge(); $("#b-forge").value=b.f||0; renderResult(); window.scrollTo(0,0); }
+  if(d!==undefined){ list.splice(+d,1); ls.set("a2-saved",list); renderSaved(); }
+});
+$("#heroSearch").addEventListener("input", e=>renderHeroes(e.target.value));
+
+try { localStorage.removeItem("a2-acct"); } catch(e){}
+fillSelects(); renderMyRunes(); renderResult(); renderSaved(); renderModes(); renderChapters(); renderEvents(); renderChecks(); renderMore(); renderHeroes();
+const hsh = location.hash.replace("#","");
+const start = TABS.includes(hsh) ? hsh : ls.get("a2-tab","build");
+if(TABS.includes(start) && start!=="build") showTab(start);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,39 @@
+name: Archero2Guide
+options:
+  bundleIdPrefix: com.a2guide
+  deploymentTarget:
+    iOS: "15.0"
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    MARKETING_VERSION: "1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    # Where the app downloads guide updates from. The GitHub build fills this in for you.
+    A2_CONTENT_URL: ""
+targets:
+  Archero2Guide:
+    type: application
+    platform: iOS
+    sources:
+      - path: Sources
+      - path: Resources/Assets.xcassets
+      - path: Resources/www
+        type: folder
+        buildPhase: resources
+    info:
+      path: Sources/Info.plist
+      properties:
+        CFBundleDisplayName: A2 Guide
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        UIRequiresFullScreen: true
+        ITSAppUsesNonExemptEncryption: false
+        A2ContentURL: $(A2_CONTENT_URL)
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.a2guide.fieldguide
+        TARGETED_DEVICE_FAMILY: "1"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
