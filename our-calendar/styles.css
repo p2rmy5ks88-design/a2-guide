@@ -1,4 +1,4 @@
-/* Our Calendar — styled after the Canva mockup: warm peach ground, white calendar card with hairline grid,
+/* Our Calendar — always the bright Canva look (no dark mode): warm peach ground, white calendar card with hairline grid,
    coral (him) / sage (her) / plum (both), floating pill tab bar, big coral add button. */
 :root{
   --bg:#fbf3ea; --bg2:#f6e7d8; --card:#ffffff; --line:#efe3d6; --ink:#2e2925; --muted:#8b8079; --soft:#fdf7f1;
@@ -7,11 +7,6 @@
   --font:"Plus Jakarta Sans", -apple-system, "SF Pro Text", system-ui, sans-serif;
   color-scheme:light;
 }
-@media (prefers-color-scheme: dark){:root{
-  --bg:#1b1715; --bg2:#2a221e; --card:#252019; --line:#372f29; --ink:#f4ece4; --muted:#a99c92; --soft:#2b241f;
-  --a:#f08a6a; --a-soft:#4a2b22; --b:#98b89a; --b-soft:#2b3a2c; --both:#b89ad6; --both-soft:#382c46;
-  --shadow:0 10px 30px rgba(0,0,0,.35), 0 2px 6px rgba(0,0,0,.25);
-  color-scheme:dark}}
 
 *{box-sizing:border-box}
 html,body{margin:0;min-height:100%}
