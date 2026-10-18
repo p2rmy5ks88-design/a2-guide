@@ -279,13 +279,18 @@ a{color:var(--accent)}
           <dt>Unlock</dt><dd>Own any one Mythic rune.</dd>
           <dt>Requires</dt><dd>Same type, same series, both Legendary+2 or higher, plus Runic Remnant and Twinborn Cores (40 for Enhancement/Ability, 80 for Blessing).</dd>
           <dt>Undo</dt><dd>Twinborn Split refunds everything.</dd>
-          <dt>Cores</dt><dd>Sold in the Fishing Exchange Shop.</dd>
+          <dt>Cores</dt><dd>From Fishing event kg milestones (see Events → Fishing) and the Fishing Exchange Shop.</dd>
         </dl>
-        <div class="tablewrap"><table>
-          <thead><tr><th>Group</th><th>Type</th><th>Pair</th><th></th></tr></thead>
-          <tbody id="twinRows"></tbody>
+        <h3 style="margin-top:4px">Which runes combine</h3>
+        <p style="margin:0">Only these exact pairs can fuse. Each pair takes one slot instead of two.</p>
+        <div id="twinList" style="display:grid;gap:14px"></div>
+        <div class="note"><b>Can't be fused:</b> <span id="twinNo"></span>. These have no partner, so they're the usual runes to put in the slot a Twinborn frees up.</div>
+        <h3 style="margin-top:4px">Runic Remnant cost</h3>
+        <div class="tablewrap"><table style="min-width:380px">
+          <thead><tr><th>Quality of the two runes</th><th>Enhancement / Ability</th><th>Blessing</th></tr></thead>
+          <tbody id="twinCost"></tbody>
         </table></div>
-        <p class="src" style="margin:0">Group names from <span data-src="hubt"></span>. Pairs marked Inferred are matched by rune family.</p>
+        <p class="src" style="margin:0">Pairs and costs from <span data-src="hubt"></span> and Archero 2 Hub's Twinborn Runes page. "Hub name" is how that site writes the rune when it differs from the name used in this app.</p>
       </div>
     </div>
 
@@ -719,22 +724,27 @@ const SET_PRESET = {
 };
 const resolvePreset = (m, set) => SET_PRESET[m.preset] ? SET_PRESET[m.preset][set||"dragoon"] : m.preset;
 
+/* Twinborn pairs: [group, type, runeA, runeB, hubA, hubB, use]. In-game English names; hub names as listed on Archero 2 Hub. */
 const TWIN = [
-  ["Meteor Magnet","Enhancement","Giant Meteor + Potion Magnet",true],
-  ["Twin Meteors","Ability","Star of Fury + Star of Time",true],
-  ["Quadra Seal","Enhancement","Flamenox Seal + Frostshock Seal",false],
-  ["Quadra Touch","Ability","Flamenox Touch + Frostshock Touch",false],
-  ["Sawspinner","Enhancement","Sawblade Circle + Spin SPD Up",false],
-  ["Circle of Agony","Ability","Circle + Ring of Agony",false],
-  ["Swordwyrm","Enhancement","Dragonflight Sword + Ricochet Strike",false],
-  ["Edge of Time","Ability","Sword of Time + Strike Potion",false],
-  ["Sprite Array","Enhancement","Sprite Link + Sprite Multishot",false],
-  ["Bloodsprite","Ability","Healing Sprite + Melee Sprite",false],
-  ["Thornbind / Bloomgrave","Enh / Ability","Plant runes (not mapped)",false],
-  ["Bulwark · Lucky Pact · Fortune Shade","Blessing","Blessing pairs (not mapped)",false],
-  ["No partner","—","Sharp Arrow, Arrow Rain, Revive",true]
+  ["Sawspinner","enh","Sawblade Circle","Spin SPD Up","Swablade Circle","Spin SPD Up","Circle / Griffin builds"],
+  ["Swordwyrm","enh","Dragonflight Sword","Ricochet Strike","Dragonflight Sword","Blade Bounce","Strike builds, Shackled Jungle"],
+  ["Sprite Array","enh","Sprite Multishot","Sprite Link","Fairy Multishot","Fairy Combo","Sprite builds"],
+  ["Meteor Magnet","enh","Giant Meteor","Potion Magnet","Giant Meteor","Potion Gravity","Dragoon Meteor / PvP"],
+  ["Quadra Seal","enh","Frostshock Seal","Flamenox Seal","Frost Thunder Mark","Poison Mark","Elemental builds (most useful pair)"],
+  ["Thornbind","enh","Root Guard","Vine Bind","Root Guard","Vine Bind","Plant builds"],
+  ["Circle of Agony","abil","Circle","Ring of Agony","Spinning Orb","Ring of Agony","Circle / Griffin, PvP"],
+  ["Edge of Time","abil","Sword of Time","Strike Potion","Sword of Time","Blade Potion","Strike builds"],
+  ["Bloodsprite","abil","Melee Sprite","Healing Sprite","Melee Fairy","Healing Fairy","Sustain"],
+  ["Twin Meteors","abil","Star of Time","Star of Fury","Star of Time","Rage Star","Dragoon Meteor / PvP"],
+  ["Quadra Touch","abil","Frostshock Touch","Flamenox Touch","Frost Thunder Contact","Poison Contact","Elemental builds (most useful pair)"],
+  ["Bloomgrave","abil","Plant Summon","Spider Lily","Plant Summon","Spider Lily","Plant builds"],
+  ["Bulwark","bless","Guardian","Steadfast","Guardian","Steadfast","PvP survival"],
+  ["Lucky Pact","bless","Demon Pact","Rabbit's Foot","Devil Pact","Rabbit's Foot","PvE skill quality"],
+  ["Fortune Shade","bless","Lucky Shadow","Intelligence","Lucky Shadow","Intelligence","Dodge + XP"]
 ];
-const MAP = [["Resurrection / Revive Rune","Revive"],["Rage Star","Star of Fury"],["Potion Gravity","Potion Magnet"],["Frost Thunder Mark / Frost-Thunder Seal","Frostshock Seal"],["Poison Mark","Flamenox Seal"],["Frost Thunder Contact / Frost-Thunder Touch","Frostshock Touch"],["Poison Contact","Flamenox Touch"],["Spinning Orb","Circle"],["Rotating SPD Up","Spin SPD Up"],["Swablade Circle","Sawblade Circle"],["Blade Potion","Strike Potion"],["Dragon Knight","Dragoon"],["Tata","Otta (likely)"],["Muira","Mymu (likely)"]];
+const TWIN_NOPAIR = ["Sharp Arrow","Arrow Rain","Revive"];
+const TWIN_COST = [["Legendary+2 + Legendary+2","5,000","10,000"],["Legendary+2 + Legendary+3","7,500","15,000"],["Legendary+3 + Legendary+3","10,000","20,000"],["Legendary+2 + Mythic","12,500","25,000"],["Legendary+3 + Mythic","15,000","30,000"],["Mythic + Mythic","20,000","40,000"]];
+const MAP = [["Resurrection / Revive Rune","Revive"],["Rage Star","Star of Fury"],["Potion Gravity","Potion Magnet"],["Frost Thunder Mark / Frost-Thunder Seal","Frostshock Seal"],["Poison Mark","Flamenox Seal"],["Frost Thunder Contact / Frost-Thunder Touch","Frostshock Touch"],["Poison Contact","Flamenox Touch"],["Spinning Orb","Circle"],["Rotating SPD Up","Spin SPD Up"],["Swablade Circle","Sawblade Circle"],["Blade Potion","Strike Potion"],["Blade Bounce","Ricochet Strike"],["Fairy Multishot / Fairy Combo","Sprite Multishot / Sprite Link"],["Melee Fairy / Healing Fairy","Melee Sprite / Healing Sprite"],["Devil Pact","Demon Pact"],["Dragon Knight","Dragoon"],["Tata","Otta (likely)"],["Muira","Mymu (likely)"]];
 
 const MODES = [
   {key:"normal",name:"Normal chapters",sub:"Campaign · up to ch. 210",applies:{gear:1,runes:1,res:1},
@@ -1453,7 +1463,13 @@ function renderMore(){
     return `<h3 style="margin-top:4px">${g==="any"?"Mode-specific (any set)":SETS[g].short}</h3>` + items.map(([k,p])=>`<details class="fold">
       <summary><div><h3>${esc(p.name)}</h3><div class="sub">${esc(p.for)}</div></div>${tagFor(p)}</summary>
       <div class="body">${presetBlock(k)}</div></details>`).join(""); }).join("");
-  $("#twinRows").innerHTML = TWIN.map(([g,t,p,s])=>`<tr><td><b>${esc(g)}</b></td><td>${esc(t)}</td><td>${esc(p)}</td><td>${s?`<span class="tag t-src">Sourced</span>`:`<span class="tag t-inf">Inferred</span>`}</td></tr>`).join("");
+  const TT={enh:["Enhancement","enh",40],abil:["Ability","abil",40],bless:["Blessing","bless",80]};
+  $("#twinList").innerHTML = ["enh","abil","bless"].map(t=>`<div style="display:grid;gap:8px"><span class="label" style="display:flex;gap:6px;align-items:center"><span class="dot" style="background:var(--${t})"></span>${TT[t][0]} pairs · ${TT[t][2]} Twinborn Cores each</span>
+    ${TWIN.filter(r=>r[1]===t).map(([g,,a,b,ha,hb,use])=>`<div class="c-${t}" style="display:grid;gap:6px;padding:11px 12px;border-radius:12px;background:linear-gradient(90deg,color-mix(in srgb,var(--c) 10%,transparent),transparent 70%),var(--raised);border:1px solid var(--hair)">
+      <div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px"><span class="rune c-${t}" style="padding:4px 9px">${esc(a)}</span><b style="color:var(--muted)">+</b><span class="rune c-${t}" style="padding:4px 9px">${esc(b)}</span><b style="color:var(--muted)">→</b><span style="font-weight:700;color:var(--c)">Twinborn · ${esc(g)}</span></div>
+      <span class="src">${esc(use)}${(ha!==a||hb!==b)?` · Hub name: ${esc(ha)} + ${esc(hb)}`:""}</span></div>`).join("")}</div>`).join("");
+  $("#twinNo").textContent = TWIN_NOPAIR.join(", ");
+  $("#twinCost").innerHTML = TWIN_COST.map(([q,e,bl])=>`<tr><td>${q}</td><td class="n">${e}</td><td class="n">${bl}</td></tr>`).join("");
   $("#prioList").innerHTML = PRIO.map(([t,s])=>`<li>${esc(t)} <span class="src">· ${srcLink(s)}</span></li>`).join("");
   $("#avoidList").innerHTML = AVOID.map(a=>`<span class="chip no">${esc(a)}</span>`).join("");
   $("#resList").innerHTML = RESON.map(([n,rows])=>`<div><b>${esc(n)}</b><dl class="kv" style="margin-top:6px">${rows.map(([t,c])=>`<dt><span class="pill ${t==="S"?"p-good":t==="A"?"p-info":"p-warn"}">${t}</span></dt><dd>${esc(c)}</dd>`).join("")}</dl></div>`).join("")
