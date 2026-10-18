@@ -527,6 +527,9 @@ const SOURCES = {
   hubw:["Archero 2 Hub — Sky Tower Rewards","https://archero2hub.com/en/achievement/rewards/tower"],
   hubev:["Archero 2 Hub — Events","https://archero2hub.com/en/event"],
   hubf:["Archero 2 Hub — Fishing Guide","https://archero2hub.com/en/event/fishing/guide"],
+  clash:["Clashiverse — All-Star Cup Guide (Feb 2026)","https://clashiverse.com/archero-2-all-star-cup-guide/"],
+  ytasc:["YouTube — All-Star Cup F2P Guide (Grinnn)","https://www.youtube.com/watch?v=WxpoE_Kwk7c"],
+  ytvote:["YouTube — All-Star Cup Voting Guide (Grinnn)","https://www.youtube.com/watch?v=8ldiJqzdRbE"],
   hubtc:["Archero 2 Hub — Twin Core Efficiency","https://archero2hub.com/en/event/fishing/twin-core"],
   hubfs:["Archero 2 Hub — Fishing Shop","https://archero2hub.com/en/event/fishing/shop"],
   hubd:["Archero 2 Hub — Dice Guide","https://archero2hub.com/en/event/dice/guide"],
@@ -885,6 +888,23 @@ const EVENTS = [
    tips:[["The bottleneck is Chromatic Chest Keys: 70 for Season 1, 140 for Season 2. Point gems at keys first.",1],
          ["Season 2 also rewards the Magic Harp (Legendary artifact).",1]],
    buy:[],spend:"",f2p:"Fully clearable free with planned gem use."},
+  {name:"All-Star Cup",cyc:"limited",label:"Seasonal PvE cup · Mega All-Star Cup for top players",src:["clash","ytasc","ytvote","pgg"],
+   what:"A seasonal competition run on a build the game assigns for that season. You pick an elimination-round time slot, play a timed run against bosses with unlimited revives, and score by how far you get before the clock runs out. Your own heroes, gear, runes, skins and resonance still count, so stronger accounts go further.",
+   setup:[["Season build","Changes every season and is given to you. The Feb 2026 season used Circle + Sword Strike; v1.1.9 brought a Plant Build season for the All-Star Cup and Mega All-Star Cup."],
+          ["Heroes","Thor (reliable raw damage), Nyanja (solid survival and damage), Otta with its Epic skin (best free option: Invincibility Potion windows plus revives). Avoid heroes whose value is control, positioning or long survival."],
+          ["Gear","Griffin set is best: you stand on the boss and trade hits. Dragoon is fine. Oracle gives little here."],
+          ["Runes (Circle season)","All Circle runes plus Pulsing Orb are core. Optional: a second Circle rune, Potion Spring (only with Otta + Epic skin). Elemental runes only on the left side; right-side effects are wasted."],
+          ["Runes (Plant season)","Lean into the Plant line: Wave of Life etched and the Thornbind / Bloomgrave plant runes, plus your strongest damage runes. Plant runes also give occasional shields."],
+          ["Boss pick (floor 5+)","Alex: best, walks into you so you hit him every respawn. Helix: OK but slower, he moves a lot. Sarif: never, he goes invincible and ruins the revive plan."]],
+   tips:[["Bosses can't be stunned or frozen, so control runes and heroes (freeze, Frostshock, Rolla) do nothing.",1],
+         ["Revives are unlimited, so damage matters more than survival.",1],
+         ["Respawn loop: let the boss kill you, respawn with a spawn shield, dump damage while invincible, repeat until time runs out.",1],
+         ["The qualifier is a 10-minute, 10-floor run with fixed base health.",1],
+         ["Pick an elimination time slot when you can play without interruptions.",1],
+         ["Do the daily quests and the guessing (voting) picks every day: they pay rewards even if you don't go deep.",1],
+         ["For the Plant season, check which build the game hands you before investing in runes; the Plant rune picks above are inferred, not from a Plant-season guide.",0]],
+   buy:[],spend:"Don't spend gems chasing a higher placement unless you're already near the top; the mode favors big accounts.",
+   f2p:"Reaching floor 6–7 before time runs out is normal. Focus on daily quest points, guessing rewards and passive items rather than wins."},
   {name:"Umbral Tempest",cyc:"limited",label:"Seasonal",src:["hubu"],
    what:"Seasonal mode where you pick one of four classes for the whole season: Ranger, Alchemist, Druid or Diviner.",
    tips:[["You can't change class mid-season, so check your roster first.",1],
@@ -1400,6 +1420,7 @@ function renderEvents(){
       <p style="margin:0">${esc(e.what)}</p>
       ${e.visual==="fish"?fishVisual()+coreBlock():e.visual==="dice"?diceBlock():""}
       ${e.tips.length?`<div style="display:grid;gap:6px"><span class="label">Tips</span><ul class="reasons">${e.tips.map(([t,s])=>`<li style="grid-template-columns:1fr"><span><span class="tag ${s?"t-src":"t-inf"}">${s?"Sourced":"Inferred"}</span> ${esc(t)}</span></li>`).join("")}</ul></div>`:""}
+      ${e.setup?`<div style="display:grid;gap:6px"><span class="label">Recommended setup</span><dl class="kv">${e.setup.map(([a,b])=>`<dt>${esc(a)}</dt><dd>${esc(b)}</dd>`).join("")}</dl></div>`:""}
       ${e.buy.length?`<div style="display:grid;gap:6px"><span class="label">What to buy</span><dl class="kv">${e.buy.map(([a,b])=>`<dt>${esc(a)}</dt><dd>${esc(b)}</dd>`).join("")}</dl></div>`:""}
       ${e.spend?`<p class="f2p" style="margin:0"><b>Spending:</b> ${esc(e.spend)}</p>`:""}
       ${e.f2p?`<div class="note good f2p"><b>Free-to-play:</b> ${esc(e.f2p)}</div>`:""}
