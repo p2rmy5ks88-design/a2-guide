@@ -325,7 +325,7 @@ a{color:var(--accent)}
     <div id="m-sources" hidden style="display:grid;gap:12px">
       <div><h2>Sources</h2><p class="lede">Every recommendation links back to one of these. Some guides use translated rune names; this app uses the English in-game names.</p></div>
       <div class="card"><ul id="srcList" style="margin:0;padding-left:18px;display:grid;gap:4px;font-size:.88rem"></ul></div>
-      <div class="card"><h3>Name mapping</h3><div class="tablewrap"><table><thead><tr><th>Name in guide</th><th>In-game name used here</th></tr></thead><tbody id="mapRows"></tbody></table></div></div>
+      <div class="card"><h3>Name mapping</h3><p style="margin:0">Guides and translations use different names for the same rune. This app uses the names from the Game Vault wiki; if you see a name in the left column somewhere else, it means the rune on the right.</p><div class="tablewrap"><table style="min-width:440px"><thead><tr><th>Other name you may see</th><th>Name in this app</th><th>What it is</th></tr></thead><tbody id="mapRows"></tbody></table></div><p class="src" style="margin:0">Names checked against <span data-src="wikru"></span>. "Best match" means no source states the link directly.</p></div>
     </div>
   </section>
 </div>
@@ -745,7 +745,39 @@ const TWIN = [
 ];
 const TWIN_NOPAIR = ["Sharp Arrow","Arrow Rain","Revive"];
 const TWIN_COST = [["Legendary+2 + Legendary+2","5,000","10,000"],["Legendary+2 + Legendary+3","7,500","15,000"],["Legendary+3 + Legendary+3","10,000","20,000"],["Legendary+2 + Mythic","12,500","25,000"],["Legendary+3 + Mythic","15,000","30,000"],["Mythic + Mythic","20,000","40,000"]];
-const MAP = [["Resurrection / Revive Rune","Revive"],["Rage Star","Star of Fury"],["Potion Gravity","Potion Magnet"],["Frost Thunder Mark / Frostshock Seal","Frost-Thunder Seal"],["Poison Mark / Flamenox Seal","Flame-Poison Seal"],["Frost Thunder Contact / Frostshock Touch","Frost-Thunder Touch"],["Poison Contact / Flamenox Touch","Flame-Poison Touch"],["Spinning Orb","Circle"],["Spin SPD Up","Rotating SPD Up"],["Swablade Circle","Sawblade Circle"],["Blade Potion","Strike Potion"],["Blade Bounce / Ricochet Strike","Ricocheting Strike"],["Fairy Multishot / Fairy Combo","Sprite Multishot / Sprite Link"],["Melee Fairy / Healing Fairy","Melee Sprite / Healing Sprite"],["Demon Pact","Devil Pact"],["Root Guard","Rootguard"],["Spider Lily","Equinox Bloom"],["Steadfast","Resilience"],["Wave of Life","Life Surge"],["Swordstrike Aerie","Sword Strike Aerie"],["Dragon Knight","Dragoon"],["Tata","Otta (likely)"],["Muira","Mymu (likely)"]];
+/* [other name you may see, name used in this app (Game Vault wiki), what it is, confidence] */
+const MAP = [
+  ["Frostshock Seal","Frost-Thunder Seal","Enhancement rune (Frostshock Seal is its enchantment)",1],
+  ["Frost Thunder Mark","Frost-Thunder Seal","Enhancement rune",1],
+  ["Flamenox Seal","Flame-Poison Seal","Enhancement rune (Flamenox Seal is its enchantment)",1],
+  ["Poison Mark","Flame-Poison Seal","Enhancement rune",1],
+  ["Spin SPD Up","Rotating SPD Up","Enhancement rune (Spin SPD Up is its enchantment)",1],
+  ["Swablade Circle","Sawblade Circle","Enhancement rune",1],
+  ["Ricochet Strike","Ricocheting Strike","Enhancement rune (Ricochet Strike is its enchantment)",1],
+  ["Blade Bounce","Ricocheting Strike","Enhancement rune",1],
+  ["Potion Gravity","Potion Magnet","Enhancement rune",1],
+  ["Fairy Multishot","Sprite Multishot","Enhancement rune",1],
+  ["Fairy Combo","Sprite Link","Enhancement rune",0],
+  ["Root Guard","Rootguard","Enhancement rune (plant)",1],
+  ["Frostshock Touch","Frost-Thunder Touch","Ability rune (Frostshock Touch is its enchantment)",1],
+  ["Frost Thunder Contact","Frost-Thunder Touch","Ability rune",1],
+  ["Flamenox Touch","Flame-Poison Touch","Ability rune (Flamenox Touch is its enchantment)",1],
+  ["Poison Contact","Flame-Poison Touch","Ability rune",1],
+  ["Spinning Orb","Circle","Ability rune",1],
+  ["Blade Potion","Strike Potion","Ability rune",1],
+  ["Rage Star","Star of Fury","Ability rune",1],
+  ["Melee Fairy","Melee Sprite","Ability rune",1],
+  ["Healing Fairy","Healing Sprite","Ability rune",1],
+  ["Spider Lily","Equinox Bloom","Ability rune (plant)",1],
+  ["Resurrection / Revive Rune","Revive","Blessing rune",1],
+  ["Demon Pact","Devil Pact","Blessing rune",1],
+  ["Steadfast","Resilience","Blessing rune (Twinborn partner of Guardian)",0],
+  ["Wave of Life","Life Surge","Etched rune (plant)",1],
+  ["Swordstrike Aerie","Sword Strike Aerie","Etched rune",1],
+  ["Dragon Knight / Dragonrider","Dragoon","Gear set",1],
+  ["Tata","Otta","Hero",0],
+  ["Muira","Mymu","Hero",0]
+];
 
 const MODES = [
   {key:"normal",name:"Normal chapters",sub:"Campaign · up to ch. 210",applies:{gear:1,runes:1,res:1},
@@ -1480,7 +1512,7 @@ function renderMore(){
     <dl class="kv"><dt>Weapon</dt><dd>${esc(s.weapon)}</dd><dt>Key perks</dt><dd><ul style="margin:0;padding-left:18px">${s.perks.map(p=>`<li>${esc(p)}</li>`).join("")}</ul></dd><dt>Verdict</dt><dd>${esc(s.verdict)}</dd></dl>
     <span class="src">Sources: ${s.src.map(srcLink).join(", ")}</span></div>`).join("");
   $("#srcList").innerHTML = Object.values(SOURCES).map(([n,u])=>`<li><a href="${u}" target="_blank" rel="noopener">${esc(n)}</a></li>`).join("");
-  $("#mapRows").innerHTML = MAP.map(([a,b])=>`<tr><td>${esc(a)}</td><td>${esc(b)}</td></tr>`).join("");
+  $("#mapRows").innerHTML = MAP.map(([a,b,k,sure])=>`<tr><td>${esc(a)}</td><td><b>${esc(b)}</b>${sure?"":` <span class="tag t-inf">Best match</span>`}</td><td class="src">${esc(k)}</td></tr>`).join("");
   $$("[data-src]").forEach(el=>el.innerHTML=srcLink(el.dataset.src));
 }
 document.querySelector('[aria-label="More sections"]').addEventListener("click", e=>{
