@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Our Calendar</title>
+<meta name="theme-color" content="#fbf3ea" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1b1715" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Our Calendar">
+<meta name="robots" content="noindex,nofollow">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- Setup needed (config.js not filled in) -->
+<main class="center" id="setup" hidden>
+  <div class="card narrow">
+    <div class="logo"><img src="icons/icon-192.png" alt=""></div>
+    <h1>Almost there</h1>
+    <p class="muted">Paste your Firebase settings into <code>config.js</code> in the GitHub repo. The README walks you through it in about ten minutes.</p>
+  </div>
+</main>
+
+<!-- Sign in -->
+<main class="center" id="login" hidden>
+  <form class="card narrow" id="loginForm">
+    <div class="logo"><img src="icons/icon-192.png" alt=""></div>
+    <h1>Our Calendar</h1>
+    <p class="muted">Sign in to see your shared plans.</p>
+    <label for="lEmail">Email<input class="field" id="lEmail" type="email" autocomplete="username" required></label>
+    <label for="lPass">Password<input class="field" id="lPass" type="password" autocomplete="current-password" required></label>
+    <p class="err" id="lErr" hidden></p>
+    <button class="primary" type="submit" id="lBtn">Sign in</button>
+    <button class="linkbtn" type="button" id="lForgot">Forgot password?</button>
+  </form>
+</main>
+
+<!-- App -->
+<div id="app" hidden>
+  <header class="top">
+    <button class="iconbtn plain" id="menuBtn" aria-label="Settings">
+      <svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+    </button>
+    <h1>Our Calendar</h1>
+    <div class="avatars" id="avatars"></div>
+  </header>
+
+  <main class="wrap">
+    <section id="v-cal">
+      <div class="monthpill">
+        <button class="iconbtn plain" id="prevM" aria-label="Previous month"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+        <button class="monthlabel" id="todayBtn" aria-label="Jump to today">
+          <svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>
+          <span id="monthTitle"></span>
+        </button>
+        <button class="iconbtn plain" id="nextM" aria-label="Next month"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
+      </div>
+
+      <div class="calcard">
+        <div class="cgrid dowrow" id="dow"></div>
+        <div class="cgrid" id="grid"></div>
+      </div>
+
+      <div class="legend">
+        <span class="lg"><i class="dot a"></i><span class="nameA"></span></span>
+        <span class="lg"><i class="dot b"></i><span class="nameB"></span></span>
+        <span class="lg"><i class="dot both"></i>Both</span>
+        <span class="hint" id="liveTxt">Connecting…</span>
+      </div>
+
+      <h2 class="dayhead" id="selLabel"></h2>
+      <div class="list" id="dayList"></div>
+    </section>
+
+    <section id="v-agenda" hidden>
+      <h2 class="pagehead">Upcoming</h2>
+      <div id="agenda"></div>
+    </section>
+
+    <section id="v-todo" hidden>
+      <h2 class="pagehead">To-do</h2>
+      <form class="quick" id="quickTodo">
+        <input class="field" id="quickTodoInput" placeholder="Add something to do…" autocomplete="off" aria-label="New to-do">
+        <button class="primary" type="submit">Add</button>
+      </form>
+      <div class="list" id="todos"></div>
+      <h3 class="sublabel" id="doneLabel" hidden>Completed</h3>
+      <div class="list" id="todosDone"></div>
+    </section>
+  </main>
+
+  <button class="fab" id="fab" aria-label="Add">
+    <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+  </button>
+
+  <nav class="tabbar" role="tablist">
+    <button role="tab" data-v="cal" aria-selected="true"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>Calendar</button>
+    <button role="tab" data-v="agenda" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1.2"/><circle cx="4.5" cy="12" r="1.2"/><circle cx="4.5" cy="18" r="1.2"/></svg>Agenda</button>
+    <button role="tab" data-v="todo" aria-selected="false"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="4"/><path d="M8 12.5l3 3 5-6"/></svg>To-do</button>
+  </nav>
+</div>
+
+<div class="scrim" id="scrim" hidden></div>
+<div class="sheet" id="sheet" hidden role="dialog" aria-modal="true"><div class="grab"></div><div class="sheetin" id="sheetIn"></div></div>
+<div class="popup" id="popup" hidden role="status"></div>
+<div class="toast" id="toast" hidden role="status"></div>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>
