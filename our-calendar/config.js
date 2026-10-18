@@ -2,12 +2,12 @@
 // (Firebase console → Project settings → General → Your apps → Web app → SDK setup and configuration → Config).
 // These values are not secret: access to your plans is protected by sign-in and the rules in firestore.rules.
 export const firebaseConfig = {
-  apiKey: "PASTE_HERE",
-  authDomain: "PASTE_HERE",
-  projectId: "PASTE_HERE",
-  storageBucket: "PASTE_HERE",
-  messagingSenderId: "PASTE_HERE",
-  appId: "PASTE_HERE"
+  apiKey: "AIzaSyCFp1hDvzq-D7O4XMUzki9BOEbibICOxmU",
+  authDomain: "our-calendar-3d152.firebaseapp.com",
+  projectId: "our-calendar-3d152",
+  storageBucket: "our-calendar-3d152.firebasestorage.app",
+  messagingSenderId: "517769560566",
+  appId: "1:517769560566:web:b6b59485084b63468887d7"
 };
 
 // Who is who. Emails are stored as SHA-256 fingerprints so they don't appear in this public repo.

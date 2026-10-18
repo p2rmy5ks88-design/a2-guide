@@ -1,6 +1,6 @@
 // Keeps the app shell available offline so it opens instantly from the Home Screen.
 // Your plans themselves are cached by Firebase, not here.
-const CACHE = "our-calendar-v1";
+const CACHE = "our-calendar-v2";
 const SHELL = ["./", "index.html", "styles.css", "app.js", "config.js", "manifest.webmanifest", "icons/icon-180.png", "icons/icon-192.png", "icons/icon-512.png"];
 
 self.addEventListener("install", (e) => {
