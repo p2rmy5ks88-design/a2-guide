@@ -290,7 +290,7 @@ a{color:var(--accent)}
           <thead><tr><th>Quality of the two runes</th><th>Enhancement / Ability</th><th>Blessing</th></tr></thead>
           <tbody id="twinCost"></tbody>
         </table></div>
-        <p class="src" style="margin:0">Pairs and costs from <span data-src="hubt"></span> and Archero 2 Hub's Twinborn Runes page. "Hub name" is how that site writes the rune when it differs from the name used in this app.</p>
+        <p class="src" style="margin:0">Pairs and costs from <span data-src="hubt"></span>; names checked against <span data-src="wikru"></span>. Rune names follow the Game Vault wiki. Some guides call a rune by its enchantment name (for example Flamenox Seal), shown in brackets.</p>
       </div>
     </div>
 
@@ -535,6 +535,7 @@ const SOURCES = {
   clash:["Clashiverse — All-Star Cup Guide (Feb 2026)","https://clashiverse.com/archero-2-all-star-cup-guide/"],
   ytasc:["YouTube — All-Star Cup F2P Guide (Grinnn)","https://www.youtube.com/watch?v=WxpoE_Kwk7c"],
   ytvote:["YouTube — All-Star Cup Voting Guide (Grinnn)","https://www.youtube.com/watch?v=8ldiJqzdRbE"],
+  wikru:["Game Vault Wiki — Runes","https://archero-2.game-vault.net/wiki/Runes"],
   hubtc:["Archero 2 Hub — Twin Core Efficiency","https://archero2hub.com/en/event/fishing/twin-core"],
   hubfs:["Archero 2 Hub — Fishing Shop","https://archero2hub.com/en/event/fishing/shop"],
   hubd:["Archero 2 Hub — Dice Guide","https://archero2hub.com/en/event/dice/guide"],
@@ -631,10 +632,10 @@ const FORGE = ["","ATK +10%","Max HP +10%","ATK +10%","Max HP +10%","Descent act
 const gradeIdx = g => GRADES.indexOf(g);
 
 const CATALOG = {
-  etched:["Arrow of Echoes","Echo Scythe","Elemental Crit","Elemental Domain","Meteor Split","Potion Spring","Pulsing Orb","Orbital Orb","Sword Strike Split","Swordstrike Aerie","Sprite's Awe","Sprite Assist","Wave of Life"],
-  bless:["Revive","Rabbit's Foot","Lucky Shadow","Guardian","Resilience","Intelligence","Demon Pact"],
-  enh:["Sharp Arrow","Flamenox Seal","Frostshock Seal","Giant Meteor","Potion Magnet","Dragonflight Sword","Ricochet Strike","Spin SPD Up","Sawblade Circle","Sprite Link","Sprite Multishot"],
-  abil:["Arrow Rain","Flamenox Touch","Frostshock Touch","Ring of Agony","Circle","Star of Fury","Star of Time","Sword of Time","Strike Potion","Healing Sprite","Melee Sprite"]
+  etched:["Arrow of Echoes","Echo Scythe","Elemental Crit","Elemental Domain","Meteor Split","Potion Spring","Pulsing Orb","Orbital Orb","Sword Strike Split","Sword Strike Aerie","Sprite's Awe","Sprite Assist","Life Surge"],
+  bless:["Revive","Rabbit's Foot","Lucky Shadow","Guardian","Resilience","Intelligence","Devil Pact"],
+  enh:["Sharp Arrow","Flame-Poison Seal","Frost-Thunder Seal","Giant Meteor","Potion Magnet","Dragonflight Sword","Ricocheting Strike","Rotating SPD Up","Sawblade Circle","Sprite Link","Sprite Multishot","Rootguard","Vine Bind"],
+  abil:["Arrow Rain","Flame-Poison Touch","Frost-Thunder Touch","Ring of Agony","Circle","Star of Fury","Star of Time","Sword of Time","Strike Potion","Healing Sprite","Melee Sprite","Plant Summon","Equinox Bloom"]
 };
 const SLOT_META = {etched:["Etched",3],bless:["Blessing",2],enh:["Enhancement",4],abil:["Ability",4]};
 
@@ -643,77 +644,77 @@ const PRESETS = {
   dkChapter:{name:"Dragoon · Chapters & Sky Tower",set:"dragoon",for:"Normal chapters, Sky Tower",sourced:false,
     etched:[["Arrow of Echoes","always first; Legendary adds a free Diagonal Arrow"],["Elemental Crit",""],["Meteor Split","or Potion Spring"]],
     bless:[["Revive","best blessing in the game"],["Rabbit's Foot","better skills on level-up; better Valkyrie odds"]],
-    enh:[["Sharp Arrow","enchant: main weapon DMG +30%"],["Flamenox Seal","elemental crit"],["Frostshock Seal","elemental crit"],["Giant Meteor","or Potion Magnet"]],
-    abil:[["Arrow Rain","enchant: main weapon DMG +30%"],["Flamenox Touch","elemental DMG"],["Frostshock Touch","elemental DMG"],["Ring of Agony","enemies inside take +20% DMG"]],
+    enh:[["Sharp Arrow","enchant: main weapon DMG +30%"],["Flame-Poison Seal","elemental crit"],["Frost-Thunder Seal","elemental crit"],["Giant Meteor","or Potion Magnet"]],
+    abil:[["Arrow Rain","enchant: main weapon DMG +30%"],["Flame-Poison Touch","elemental DMG"],["Frost-Thunder Touch","elemental DMG"],["Ring of Agony","enemies inside take +20% DMG"]],
     notes:["Built from Hub's Dragoon build with PvE swaps from PGG: Rabbit's Foot in, Guardian out; Sharp Arrow and Arrow Rain in, Star of Fury out (it only fires when you get hit).","Valkyrie appears after every Sky Tower room and on chapter stages ending in 5, so Rabbit's Foot pays off here."]},
   dkHard:{name:"Dragoon · Hard chapters & survival",set:"dragoon",for:"Hard chapters, Abyssal Tide, chapter walls",sourced:false,
     etched:[["Arrow of Echoes",""],["Elemental Crit",""],["Meteor Split",""]],
     bless:[["Revive","second life per run"],["Lucky Shadow","Luck + Dodge (Mythic: +15% / +10%)"]],
-    enh:[["Sharp Arrow",""],["Flamenox Seal",""],["Frostshock Seal","freeze stops dangerous mobs"],["Giant Meteor",""]],
-    abil:[["Healing Sprite","sustain while you attack"],["Flamenox Touch",""],["Frostshock Touch","freezes a random monster every 2s (Legendary)"],["Arrow Rain",""]],
+    enh:[["Sharp Arrow",""],["Flame-Poison Seal",""],["Frost-Thunder Seal","freeze stops dangerous mobs"],["Giant Meteor",""]],
+    abil:[["Healing Sprite","sustain while you attack"],["Flame-Poison Touch",""],["Frost-Thunder Touch","freezes a random monster every 2s (Legendary)"],["Arrow Rain",""]],
     notes:["Chapter core traded toward survival: Lucky Shadow for dodge, Healing Sprite for sustain.","Use it when a chapter keeps killing you rather than running out of time."]},
   dkBoss:{name:"Dragoon · Boss damage",set:"dragoon",for:"Seal Battle, Monster Invasion",sourced:false,
-    etched:[["Arrow of Echoes",""],["Elemental Crit",""],["Swordstrike Aerie","or Meteor Split"]],
+    etched:[["Arrow of Echoes",""],["Elemental Crit",""],["Sword Strike Aerie","or Meteor Split"]],
     bless:[["Revive",""],["Rabbit's Foot","Valkyrie every 15s from 0:20 to 1:20 here"]],
-    enh:[["Sharp Arrow","main weapon DMG"],["Flamenox Seal","burn is the best boss element"],["Frostshock Seal",""],["Dragonflight Sword","best Strike rune for PvE"]],
-    abil:[["Arrow Rain",""],["Flamenox Touch",""],["Frostshock Touch",""],["Sword of Time","Strike sword every 3s → 1.5s"]],
+    enh:[["Sharp Arrow","main weapon DMG"],["Flame-Poison Seal","burn is the best boss element"],["Frost-Thunder Seal",""],["Dragonflight Sword","best Strike rune for PvE"]],
+    abil:[["Arrow Rain",""],["Flame-Poison Touch",""],["Frost-Thunder Touch",""],["Sword of Time","Strike sword every 3s → 1.5s"]],
     notes:["Single-target fights reward steady boss damage; meteor procs are random and mob-focused.","PGG: Flame is the best elemental modifier against bosses; Dragonflight Sword is the best Strike rune for PvE."]},
   dkMeteor:{name:"Dragoon · Elemental + Meteor (PvP)",set:"dragoon",for:"Arena, Peak Arena",sourced:true,src:"hubr",
     etched:[["Elemental Crit",""],["Meteor Split",""],["Potion Spring",""]],
     bless:[["Revive","enchant: elemental DMG reduction +15%"],["Guardian","enchant: elemental DMG reduction +15%"]],
-    enh:[["Potion Magnet","enchant: meteor crit +30%"],["Giant Meteor","enchant: meteor cooldown −50%"],["Frostshock Seal","enchant: elemental crit +30%"],["Flamenox Seal","enchant: elemental crit +30%"]],
-    abil:[["Star of Fury","enchant: its meteors become Giant Meteors"],["Flamenox Touch","enchant: elemental DMG +30%"],["Frostshock Touch","enchant: elemental DMG +30%"],["Ring of Agony","enchant: enemies inside deal −20% ATK"]],
+    enh:[["Potion Magnet","enchant: meteor crit +30%"],["Giant Meteor","enchant: meteor cooldown −50%"],["Frost-Thunder Seal","enchant: elemental crit +30%"],["Flame-Poison Seal","enchant: elemental crit +30%"]],
+    abil:[["Star of Fury","enchant: its meteors become Giant Meteors"],["Flame-Poison Touch","enchant: elemental DMG +30%"],["Frost-Thunder Touch","enchant: elemental DMG +30%"],["Ring of Agony","enchant: enemies inside deal −20% ATK"]],
     notes:["Resonance on Hub's build page: Cleo + Otta required, Wukong recommended.","Twinborn tip: fuse Giant Meteor + Potion Magnet to free an Enhancement slot for Sharp Arrow."]},
   /* ---- Oracle ---- */
   orChapter:{name:"Oracle · Chapters & Sky Tower",set:"oracle",for:"Normal chapters, Sky Tower, bosses",sourced:true,src:"wiko",
     etched:[["Arrow of Echoes",""],["Pulsing Orb",""],["Elemental Domain","or Orbital Orb / Elemental Crit"]],
     bless:[["Revive",""],["Rabbit's Foot",""]],
-    enh:[["Sharp Arrow",""],["Frostshock Seal",""],["Spin SPD Up",""],["Sawblade Circle",""]],
-    abil:[["Arrow Rain",""],["Frostshock Touch","optional — see note"],["Circle",""],["Ring of Agony",""]],
-    notes:["This is the Game Vault wiki's Oracle PvE rune page, slot for slot.","Wiki tip: swapping Frostshock Touch for any low-rarity rune cuts down freeze/bolt skill offers and raises your odds of Tracking Eye. Circle runes carry you when Tracking Eye doesn't show.","Core skills: Tracking Eye first, then Diagonal Arrows, Rapid Fire, Front Arrow and +ATK / +ATK SPD picks."]},
+    enh:[["Sharp Arrow",""],["Frost-Thunder Seal",""],["Rotating SPD Up",""],["Sawblade Circle",""]],
+    abil:[["Arrow Rain",""],["Frost-Thunder Touch","optional — see note"],["Circle",""],["Ring of Agony",""]],
+    notes:["This is the Game Vault wiki's Oracle PvE rune page, slot for slot.","Wiki tip: swapping Frost-Thunder Touch for any low-rarity rune cuts down freeze/bolt skill offers and raises your odds of Tracking Eye. Circle runes carry you when Tracking Eye doesn't show.","Core skills: Tracking Eye first, then Diagonal Arrows, Rapid Fire, Front Arrow and +ATK / +ATK SPD picks."]},
   orHard:{name:"Oracle · Hard chapters & survival",set:"oracle",for:"Hard chapters, Abyssal Tide, chapter walls",sourced:false,
     etched:[["Arrow of Echoes",""],["Pulsing Orb",""],["Orbital Orb","steady AoE while you dodge"]],
     bless:[["Revive",""],["Lucky Shadow","dodge"]],
-    enh:[["Sharp Arrow",""],["Frostshock Seal",""],["Spin SPD Up",""],["Sawblade Circle",""]],
+    enh:[["Sharp Arrow",""],["Frost-Thunder Seal",""],["Rotating SPD Up",""],["Sawblade Circle",""]],
     abil:[["Arrow Rain",""],["Healing Sprite","sustain"],["Circle",""],["Ring of Agony",""]],
-    notes:["Oracle chapter preset traded toward survival: Lucky Shadow for Rabbit's Foot, Healing Sprite for Frostshock Touch.","Oracle's combo resets when you get hit, so staying safe keeps your damage up too."]},
+    notes:["Oracle chapter preset traded toward survival: Lucky Shadow for Rabbit's Foot, Healing Sprite for Frost-Thunder Touch.","Oracle's combo resets when you get hit, so staying safe keeps your damage up too."]},
   /* ---- Griffin ---- */
   grChapter:{name:"Griffin · Circle",set:"griffin",for:"Normal chapters, Sky Tower",sourced:true,src:"hubr",
     etched:[["Arrow of Echoes",""],["Pulsing Orb",""],["Elemental Crit",""]],
     bless:[["Revive","enchant: elemental DMG reduction +15%"],["Guardian","or Lucky Shadow"]],
-    enh:[["Sharp Arrow","enchant: main weapon DMG +30%"],["Sawblade Circle","enchant: orb crit +30%"],["Spin SPD Up","enchant: orb crit +30%"],["Flamenox Seal","enchant: elemental crit +30%"]],
-    abil:[["Arrow Rain","enchant: main weapon DMG +30%"],["Circle","enchant: orb DMG +30%"],["Ring of Agony","great with Claw builds"],["Frostshock Touch","or Flamenox Touch"]],
+    enh:[["Sharp Arrow","enchant: main weapon DMG +30%"],["Sawblade Circle","enchant: orb crit +30%"],["Rotating SPD Up","enchant: orb crit +30%"],["Flame-Poison Seal","enchant: elemental crit +30%"]],
+    abil:[["Arrow Rain","enchant: main weapon DMG +30%"],["Circle","enchant: orb DMG +30%"],["Ring of Agony","great with Claw builds"],["Frost-Thunder Touch","or Flame-Poison Touch"]],
     notes:["Hub's Griffin + Circle build, slot for slot. Thor is listed as required resonance; Cleo and Wukong recommended.","Core skills: Corrosive Field, Circling Orbs Boost, Super Circle, Fire Circle, Ice Circle. Short-range Strike is free damage here.","Griffin is weak before Chaotic grade; finish Oracle or Dragoon first if you're early."]},
   grHard:{name:"Griffin · Hard chapters & survival",set:"griffin",for:"Hard chapters, Abyssal Tide",sourced:false,
     etched:[["Arrow of Echoes",""],["Pulsing Orb",""],["Orbital Orb",""]],
     bless:[["Revive",""],["Lucky Shadow","dodge while in melee"]],
-    enh:[["Sharp Arrow",""],["Sawblade Circle",""],["Spin SPD Up",""],["Frostshock Seal","freeze keeps melee safe"]],
-    abil:[["Ring of Agony",""],["Circle",""],["Healing Sprite","sustain"],["Frostshock Touch",""]],
+    enh:[["Sharp Arrow",""],["Sawblade Circle",""],["Rotating SPD Up",""],["Frost-Thunder Seal","freeze keeps melee safe"]],
+    abil:[["Ring of Agony",""],["Circle",""],["Healing Sprite","sustain"],["Frost-Thunder Touch",""]],
     notes:["Melee takes more hits, so this swaps toward freeze, dodge and sustain. Ice Circle's freeze on hit is the safest Circle skill."]},
   /* ---- Mode-specific ---- */
   plant:{name:"Magic Plant Defense",set:"any",for:"Magic Plant Defense",sourced:"partial",src:"hubp",
     etched:[["Orbital Orb","steady AoE that stacks (Hub)"],["Arrow of Echoes",""],["Elemental Crit",""]],
     bless:[["Revive",""],["Rabbit's Foot",""]],
-    enh:[["Sharp Arrow","enchant: main weapon Bounce +4 (Hub)"],["Dragonflight Sword","enchant: Cannon Dragonflight (Hub)"],["Flamenox Seal",""],["Frostshock Seal","freeze the rushing bombers"]],
-    abil:[["Arrow Rain","AoE every 7 shots"],["Frostshock Touch",""],["Flamenox Touch",""],["Sword of Time",""]],
+    enh:[["Sharp Arrow","enchant: main weapon Bounce +4 (Hub)"],["Dragonflight Sword","enchant: Cannon Dragonflight (Hub)"],["Flame-Poison Seal",""],["Frost-Thunder Seal","freeze the rushing bombers"]],
+    abil:[["Arrow Rain","AoE every 7 shots"],["Frost-Thunder Touch",""],["Flame-Poison Touch",""],["Sword of Time",""]],
     notes:["Hub names three runes for this mode: Sharp Arrow, Dragonflight Sword and Orbital Orb. The other ten are inferred to keep AoE and freeze.","Party mode multiplies monster HP by 1.5."]},
   jungleOrb:{name:"Shackled Jungle · Orb",set:"any",for:"Shackled Jungle (no Dragonflight Sword yet)",sourced:"partial",src:"hubj",
     etched:[["Pulsing Orb",""],["Orbital Orb",""],["Arrow of Echoes",""]],
     bless:[["Revive",""],["Guardian","not Rabbit's Foot — it weakens Energy Ring"]],
-    enh:[["Sawblade Circle",""],["Spin SPD Up",""],["Flamenox Seal",""],["Frostshock Seal",""]],
-    abil:[["Circle",""],["Ring of Agony",""],["Flamenox Touch",""],["Frostshock Touch",""]],
+    enh:[["Sawblade Circle",""],["Rotating SPD Up",""],["Flame-Poison Seal",""],["Frost-Thunder Seal",""]],
+    abil:[["Circle",""],["Ring of Agony",""],["Flame-Poison Touch",""],["Frost-Thunder Touch",""]],
     notes:["Etched trio from Hub's Jungle guide; the rest follows Hub's Circle builds.","Gear and resonance are off here, so this preset works whatever set you wear."]},
   jungleStrike:{name:"Shackled Jungle · Strike",set:"any",for:"Shackled Jungle (own Dragonflight Sword + Warfire Dragons)",sourced:"partial",src:"hubj",
-    etched:[["Sword Strike Split",""],["Swordstrike Aerie",""],["Arrow of Echoes",""]],
+    etched:[["Sword Strike Split",""],["Sword Strike Aerie",""],["Arrow of Echoes",""]],
     bless:[["Revive",""],["Guardian",""]],
-    enh:[["Dragonflight Sword","Warfire Dragons enchant is the key"],["Ricochet Strike",""],["Flamenox Seal",""],["Frostshock Seal",""]],
-    abil:[["Sword of Time",""],["Strike Potion",""],["Flamenox Touch",""],["Frostshock Touch",""]],
+    enh:[["Dragonflight Sword","Warfire Dragons enchant is the key"],["Ricocheting Strike",""],["Flame-Poison Seal",""],["Frost-Thunder Seal",""]],
+    abil:[["Sword of Time",""],["Strike Potion",""],["Flame-Poison Touch",""],["Frost-Thunder Touch",""]],
     notes:["Always pick Beam Strike when offered; it is the boss damage of this setup."]},
   orPvp:{name:"Oracle · PvP (Spear)",set:"oracle",for:"Arena with Oracle Spear",sourced:true,src:"wiko",
     etched:[["Sprite's Awe",""],["Sprite Assist",""],["Pulsing Orb",""]],
     bless:[["Revive",""],["Lucky Shadow",""]],
-    enh:[["Sharp Arrow",""],["Frostshock Seal",""],["Sprite Multishot",""],["Sprite Link",""]],
-    abil:[["Star of Fury",""],["Frostshock Touch",""],["Melee Sprite",""],["Healing Sprite",""]],
+    enh:[["Sharp Arrow",""],["Frost-Thunder Seal",""],["Sprite Multishot",""],["Sprite Link",""]],
+    abil:[["Star of Fury",""],["Frost-Thunder Touch",""],["Melee Sprite",""],["Healing Sprite",""]],
     notes:["Wiki PvP page for Staff/Spear. Set distance preference to distant; resonance Helix with Atreus, Otta, Dracoola or Alex.","Do not bring the Oracle Spear to Peak Arena."]}
 };
 const SET_PRESET = {
@@ -726,25 +727,25 @@ const resolvePreset = (m, set) => SET_PRESET[m.preset] ? SET_PRESET[m.preset][se
 
 /* Twinborn pairs: [group, type, runeA, runeB, hubA, hubB, use]. In-game English names; hub names as listed on Archero 2 Hub. */
 const TWIN = [
-  ["Sawspinner","enh","Sawblade Circle","Spin SPD Up","Swablade Circle","Spin SPD Up","Circle / Griffin builds"],
-  ["Swordwyrm","enh","Dragonflight Sword","Ricochet Strike","Dragonflight Sword","Blade Bounce","Strike builds, Shackled Jungle"],
-  ["Sprite Array","enh","Sprite Multishot","Sprite Link","Fairy Multishot","Fairy Combo","Sprite builds"],
-  ["Meteor Magnet","enh","Giant Meteor","Potion Magnet","Giant Meteor","Potion Gravity","Dragoon Meteor / PvP"],
-  ["Quadra Seal","enh","Frostshock Seal","Flamenox Seal","Frost Thunder Mark","Poison Mark","Elemental builds (most useful pair)"],
-  ["Thornbind","enh","Root Guard","Vine Bind","Root Guard","Vine Bind","Plant builds"],
-  ["Circle of Agony","abil","Circle","Ring of Agony","Spinning Orb","Ring of Agony","Circle / Griffin, PvP"],
-  ["Edge of Time","abil","Sword of Time","Strike Potion","Sword of Time","Blade Potion","Strike builds"],
-  ["Bloodsprite","abil","Melee Sprite","Healing Sprite","Melee Fairy","Healing Fairy","Sustain"],
-  ["Twin Meteors","abil","Star of Time","Star of Fury","Star of Time","Rage Star","Dragoon Meteor / PvP"],
-  ["Quadra Touch","abil","Frostshock Touch","Flamenox Touch","Frost Thunder Contact","Poison Contact","Elemental builds (most useful pair)"],
-  ["Bloomgrave","abil","Plant Summon","Spider Lily","Plant Summon","Spider Lily","Plant builds"],
-  ["Bulwark","bless","Guardian","Steadfast","Guardian","Steadfast","PvP survival"],
-  ["Lucky Pact","bless","Demon Pact","Rabbit's Foot","Devil Pact","Rabbit's Foot","PvE skill quality"],
-  ["Fortune Shade","bless","Lucky Shadow","Intelligence","Lucky Shadow","Intelligence","Dodge + XP"]
+  ["Sawspinner","enh","Sawblade Circle","Rotating SPD Up","","enchant: Spin SPD Up","Circle / Griffin builds"],
+  ["Swordwyrm","enh","Dragonflight Sword","Ricocheting Strike","","enchant: Ricochet Strike","Strike builds, Shackled Jungle"],
+  ["Sprite Array","enh","Sprite Multishot","Sprite Link","","","Sprite builds"],
+  ["Meteor Magnet","enh","Giant Meteor","Potion Magnet","","","Dragoon Meteor / PvP"],
+  ["Quadra Seal","enh","Frost-Thunder Seal","Flame-Poison Seal","enchant: Frostshock Seal","enchant: Flamenox Seal","Elemental builds (most useful pair)"],
+  ["Thornbind","enh","Rootguard","Vine Bind","","","Plant builds"],
+  ["Circle of Agony","abil","Circle","Ring of Agony","","","Circle / Griffin, PvP"],
+  ["Edge of Time","abil","Sword of Time","Strike Potion","","","Strike builds"],
+  ["Bloodsprite","abil","Melee Sprite","Healing Sprite","","","Sustain"],
+  ["Twin Meteors","abil","Star of Time","Star of Fury","","","Dragoon Meteor / PvP"],
+  ["Quadra Touch","abil","Frost-Thunder Touch","Flame-Poison Touch","enchant: Frostshock Touch","enchant: Flamenox Touch","Elemental builds (most useful pair)"],
+  ["Bloomgrave","abil","Plant Summon","Equinox Bloom","","","Plant builds"],
+  ["Bulwark","bless","Guardian","Resilience","","","PvP survival"],
+  ["Lucky Pact","bless","Devil Pact","Rabbit's Foot","","","PvE skill quality"],
+  ["Fortune Shade","bless","Lucky Shadow","Intelligence","","","Dodge + XP"]
 ];
 const TWIN_NOPAIR = ["Sharp Arrow","Arrow Rain","Revive"];
 const TWIN_COST = [["Legendary+2 + Legendary+2","5,000","10,000"],["Legendary+2 + Legendary+3","7,500","15,000"],["Legendary+3 + Legendary+3","10,000","20,000"],["Legendary+2 + Mythic","12,500","25,000"],["Legendary+3 + Mythic","15,000","30,000"],["Mythic + Mythic","20,000","40,000"]];
-const MAP = [["Resurrection / Revive Rune","Revive"],["Rage Star","Star of Fury"],["Potion Gravity","Potion Magnet"],["Frost Thunder Mark / Frost-Thunder Seal","Frostshock Seal"],["Poison Mark","Flamenox Seal"],["Frost Thunder Contact / Frost-Thunder Touch","Frostshock Touch"],["Poison Contact","Flamenox Touch"],["Spinning Orb","Circle"],["Rotating SPD Up","Spin SPD Up"],["Swablade Circle","Sawblade Circle"],["Blade Potion","Strike Potion"],["Blade Bounce","Ricochet Strike"],["Fairy Multishot / Fairy Combo","Sprite Multishot / Sprite Link"],["Melee Fairy / Healing Fairy","Melee Sprite / Healing Sprite"],["Devil Pact","Demon Pact"],["Dragon Knight","Dragoon"],["Tata","Otta (likely)"],["Muira","Mymu (likely)"]];
+const MAP = [["Resurrection / Revive Rune","Revive"],["Rage Star","Star of Fury"],["Potion Gravity","Potion Magnet"],["Frost Thunder Mark / Frostshock Seal","Frost-Thunder Seal"],["Poison Mark / Flamenox Seal","Flame-Poison Seal"],["Frost Thunder Contact / Frostshock Touch","Frost-Thunder Touch"],["Poison Contact / Flamenox Touch","Flame-Poison Touch"],["Spinning Orb","Circle"],["Spin SPD Up","Rotating SPD Up"],["Swablade Circle","Sawblade Circle"],["Blade Potion","Strike Potion"],["Blade Bounce / Ricochet Strike","Ricocheting Strike"],["Fairy Multishot / Fairy Combo","Sprite Multishot / Sprite Link"],["Melee Fairy / Healing Fairy","Melee Sprite / Healing Sprite"],["Demon Pact","Devil Pact"],["Root Guard","Rootguard"],["Spider Lily","Equinox Bloom"],["Steadfast","Resilience"],["Wave of Life","Life Surge"],["Swordstrike Aerie","Sword Strike Aerie"],["Dragon Knight","Dragoon"],["Tata","Otta (likely)"],["Muira","Mymu (likely)"]];
 
 const MODES = [
   {key:"normal",name:"Normal chapters",sub:"Campaign · up to ch. 210",applies:{gear:1,runes:1,res:1},
@@ -904,7 +905,7 @@ const EVENTS = [
           ["Heroes","Thor (reliable raw damage), Nyanja (solid survival and damage), Otta with its Epic skin (best free option: Invincibility Potion windows plus revives). Avoid heroes whose value is control, positioning or long survival."],
           ["Gear","Griffin set is best: you stand on the boss and trade hits. Dragoon is fine. Oracle gives little here."],
           ["Runes (Circle season)","All Circle runes plus Pulsing Orb are core. Optional: a second Circle rune, Potion Spring (only with Otta + Epic skin). Elemental runes only on the left side; right-side effects are wasted."],
-          ["Runes (Plant season)","Lean into the Plant line: Wave of Life etched and the Thornbind / Bloomgrave plant runes, plus your strongest damage runes. Plant runes also give occasional shields."],
+          ["Runes (Plant season)","Lean into the Plant line: Life Surge etched and the Thornbind / Bloomgrave plant runes, plus your strongest damage runes. Plant runes also give occasional shields."],
           ["Boss pick (floor 5+)","Alex: best, walks into you so you hit him every respawn. Helix: OK but slower, he moves a lot. Sarif: never, he goes invincible and ruins the revive plan."]],
    tips:[["Bosses can't be stunned or frozen, so control runes and heroes (freeze, Frostshock, Rolla) do nothing.",1],
          ["Revives are unlimited, so damage matters more than survival.",1],
@@ -1467,7 +1468,7 @@ function renderMore(){
   $("#twinList").innerHTML = ["enh","abil","bless"].map(t=>`<div style="display:grid;gap:8px"><span class="label" style="display:flex;gap:6px;align-items:center"><span class="dot" style="background:var(--${t})"></span>${TT[t][0]} pairs · ${TT[t][2]} Twinborn Cores each</span>
     ${TWIN.filter(r=>r[1]===t).map(([g,,a,b,ha,hb,use])=>`<div class="c-${t}" style="display:grid;gap:6px;padding:11px 12px;border-radius:12px;background:linear-gradient(90deg,color-mix(in srgb,var(--c) 10%,transparent),transparent 70%),var(--raised);border:1px solid var(--hair)">
       <div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px"><span class="rune c-${t}" style="padding:4px 9px">${esc(a)}</span><b style="color:var(--muted)">+</b><span class="rune c-${t}" style="padding:4px 9px">${esc(b)}</span><b style="color:var(--muted)">→</b><span style="font-weight:700;color:var(--c)">Twinborn · ${esc(g)}</span></div>
-      <span class="src">${esc(use)}${(ha!==a||hb!==b)?` · Hub name: ${esc(ha)} + ${esc(hb)}`:""}</span></div>`).join("")}</div>`).join("");
+      <span class="src">${esc(use)}${(ha||hb)?` · ${esc([ha&&a+" "+ha.replace("enchant:","(enchant:")+")",hb&&b+" "+hb.replace("enchant:","(enchant:")+")"].filter(Boolean).join(", "))}`:""}</span></div>`).join("")}</div>`).join("");
   $("#twinNo").textContent = TWIN_NOPAIR.join(", ");
   $("#twinCost").innerHTML = TWIN_COST.map(([q,e,bl])=>`<tr><td>${q}</td><td class="n">${e}</td><td class="n">${bl}</td></tr>`).join("");
   $("#prioList").innerHTML = PRIO.map(([t,s])=>`<li>${esc(t)} <span class="src">· ${srcLink(s)}</span></li>`).join("");
