@@ -155,14 +155,14 @@ a{color:var(--accent)}
       <span class="mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2.5 21.5 12 12 21.5 2.5 12Z"/><path d="M12 8 16 12 12 16 8 12Z" class="core"/><path d="M5 19 19 5M15.5 5H19v3.5"/></svg></span>
       <div class="brand-text"><span class="brand-eyebrow">Field Guide</span><h1>Archero <span>II</span></h1></div>
     </div>
-    <div class="ver"><span class="ver-pill">v1.1.9</span><span class="ver-date">Checked 17 Oct 2026</span></div>
+    <button class="ver" id="verBtn" type="button" aria-label="What's new"><span class="ver-pill" id="verPill">v1.1.9</span><span class="ver-date" id="verDate">Checked 18 Oct 2026</span></button>
   </header>
 
   <!-- ================= BUILD ================= -->
   <section class="panel" id="p-build" role="tabpanel">
     <header class="hero">
       <span class="hero-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M14 4l6 6-9 9H5v-6z"/><path d="M12 6l6 6"/></svg></span>
-      <div class="hero-text"><span class="eyebrow">Loadout lab</span><h2>Build checker</h2><p class="lede">Pick a hero, gear set, rune package and mode. The checker grades the combo against current guides and shows the full 13-rune preset for your set in that mode.</p></div>
+      <div class="hero-text"><span class="eyebrow">Loadout lab</span><h2>Build checker</h2><p class="lede">Pick a hero, gear set, rune package and mode. The checker grades the combo against a few core rules from current guides and shows a proven 13-rune starting preset for your set in that mode.</p></div>
     </header>
     <div class="card">
       <div class="grid2">
@@ -199,7 +199,7 @@ a{color:var(--accent)}
   <section class="panel" id="p-modes" role="tabpanel" hidden>
     <header class="hero">
       <span class="hero-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 20V9l8-5 8 5v11"/><path d="M9 20v-6h6v6"/></svg></span>
-      <div class="hero-text"><span class="eyebrow">Game modes</span><h2>Best builds by mode</h2><p class="lede">What counts in each mode, the full 13-rune preset, gear, heroes and skills. Chapter and Sky Tower modes let you switch between Dragoon, Oracle and Griffin. <span class="tag t-src">Sourced</span> = a guide states it. <span class="tag t-inf">Inferred</span> = follows from sourced facts.</p></div>
+      <div class="hero-text"><span class="eyebrow">Game modes</span><h2>Starting builds by mode</h2><p class="lede">Proven starting points, not the only way to play. What counts in each mode, the full 13-rune preset, gear, heroes and skills. Chapter and Sky Tower modes let you switch between Dragoon, Oracle and Griffin. <span class="tag t-src">Sourced</span> = a guide states it. <span class="tag t-inf">Inferred</span> = follows from sourced facts.</p></div>
     </header>
     <div id="modeList" style="display:grid;gap:10px"></div>
   </section>
@@ -252,6 +252,7 @@ a{color:var(--accent)}
       <button aria-pressed="false" data-mview="heroes">Heroes</button>
       <button aria-pressed="false" data-mview="sets">Gear sets</button>
       <button aria-pressed="false" data-mview="sources">Sources</button>
+      <button aria-pressed="false" data-mview="news">What's new</button>
     </div>
 
     <div id="m-daily" style="display:grid;gap:12px">
@@ -327,6 +328,26 @@ a{color:var(--accent)}
       <div class="card"><ul id="srcList" style="margin:0;padding-left:18px;display:grid;gap:4px;font-size:.88rem"></ul></div>
       <div class="card"><h3>Name mapping</h3><p style="margin:0">Guides and translations use different names for the same rune. This app uses the names from the Game Vault wiki; if you see a name in the left column somewhere else, it means the rune on the right.</p><div class="tablewrap"><table style="min-width:440px"><thead><tr><th>Other name you may see</th><th>Name in this app</th><th>What it is</th></tr></thead><tbody id="mapRows"></tbody></table></div><p class="src" style="margin:0">Names checked against <span data-src="wikru"></span>. "Best match" means no source states the link directly.</p></div>
     </div>
+
+    <div id="m-news" hidden style="display:grid;gap:12px">
+      <div><h2>What's new</h2><p class="lede">Every change to the guide, newest first. Updates reach the app by themselves when you open it online.</p></div>
+      <div class="card">
+        <h3>How to read this guide</h3>
+        <dl class="kv">
+          <dt><span class="tag t-src">Sourced</span></dt><dd>A named guide or the wiki states it. Tap the source to check.</dd>
+          <dt><span class="tag t-inf">Inferred</span></dt><dd>Follows from sourced facts but no guide says it outright. Treat it as a good bet, not a rule.</dd>
+          <dt><span class="tag t-inf">Best match</span></dt><dd>A name or link we could not confirm directly.</dd>
+          <dt>Checked date</dt><dd>When that card was last compared with current guides and the game version shown.</dd>
+        </dl>
+        <p style="margin:0">Builds are <b>strong starting points</b>. Your gear, stars and runes change what works best, so adjust from there. The checker scores a setup on a few rules (set fit, rune fit for the mode, hero fit, stars and gear grade); it is not a damage simulation.</p>
+      </div>
+      <div class="card report-card">
+        <h3>Spotted something outdated?</h3>
+        <p style="margin:0">The game changes often. If a build, event or name is wrong after a patch, report it and the fix goes out to everyone's app.</p>
+        <div class="row"><a class="btn" id="reportGeneral" target="_blank" rel="noopener">Report outdated info</a></div>
+      </div>
+      <div class="card"><h3>Changelog</h3><div id="newsList" class="news"></div></div>
+    </div>
   </section>
 </div>
 
@@ -340,6 +361,25 @@ a{color:var(--accent)}
 
 <style id="premium">
 [hidden]{display:none!important}
+/* ---- trust: checked dates, report links, changelog ---- */
+button.ver{background:none;border:0;padding:0;cursor:pointer;font:inherit;color:inherit}
+button.ver:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:8px}
+.fresh{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 12px;padding-top:10px;margin-top:2px;border-top:1px dashed var(--hair, var(--line))}
+.fresh-meta{display:inline-flex;align-items:center;gap:7px;font:500 .72rem var(--f-body);color:var(--muted)}
+.fresh-dot{width:7px;height:7px;border-radius:50%;background:var(--good);box-shadow:0 0 0 3px color-mix(in srgb,var(--good) 22%,transparent)}
+.fresh.old .fresh-dot{background:var(--warn);box-shadow:0 0 0 3px color-mix(in srgb,var(--warn) 22%,transparent)}
+.fresh.old .fresh-meta{color:var(--warn)}
+a.report{font:600 .74rem var(--f-body);color:var(--accent);text-decoration:none;padding:5px 10px;border-radius:999px;border:1px solid color-mix(in srgb,var(--accent) 40%,transparent);white-space:nowrap}
+a.report::before{content:"⚑ ";}
+a.report:active{background:color-mix(in srgb,var(--accent) 14%,transparent)}
+a.btn{display:inline-block;text-decoration:none}
+.news{display:grid;gap:14px}
+.news-item{display:grid;gap:6px;padding-left:14px;border-left:2px solid color-mix(in srgb,var(--accent) 45%,transparent)}
+.news-head{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.news-date{font:600 .7rem var(--f-mono);color:var(--muted)}
+.news-item ul{margin:0;padding-left:18px;display:grid;gap:3px;font-size:.88rem}
+.report-card{border-color:color-mix(in srgb,var(--accent) 35%,var(--line))}
+
 /* ===== Premium theme ==================================================
    Layout: unchanged app shell. Look: obsidian base, glass header + tab bar,
    one signature color per section (Build gold, Modes violet, Chapters jade,
@@ -746,6 +786,35 @@ const TWIN = [
 const TWIN_NOPAIR = ["Sharp Arrow","Arrow Rain","Revive"];
 const TWIN_COST = [["Legendary+2 + Legendary+2","5,000","10,000"],["Legendary+2 + Legendary+3","7,500","15,000"],["Legendary+3 + Legendary+3","10,000","20,000"],["Legendary+2 + Mythic","12,500","25,000"],["Legendary+3 + Mythic","15,000","30,000"],["Mythic + Mythic","20,000","40,000"]];
 /* [other name you may see, name used in this app (Game Vault wiki), what it is, confidence] */
+const GAME = {ver:"v1.1.9", checked:"2026-10-18"};
+const REPORT_URL = "https://github.com/p2rmy5ks88-design/a2-guide/issues/new";
+/* Last time each card was compared with current guides. Anything not listed uses GAME.checked. */
+const CHECKED = {
+  "mode:normal":"2026-10-17","mode:hard":"2026-10-17","mode:invasion":"2026-10-17","mode:tower":"2026-10-17","mode:seal":"2026-10-17",
+  "mode:plant":"2026-10-17","mode:arena":"2026-10-17","mode:peak":"2026-10-17","mode:jungle":"2026-10-17","mode:tide":"2026-10-17",
+  "event:Angler's Bounty (Fishing)":"2026-10-18","event:All-Star Cup":"2026-10-18","event:Island Treasure (Dice)":"2026-10-17",
+  "runes":"2026-10-18","chapters":"2026-10-17","heroes":"2026-10-17"
+};
+const CHANGELOG = [
+  ["2026-10-18","Trust & freshness",["\"Checked\" date and game version on every mode, event and preset","Report outdated info button on each card","This What's new page, with a guide to the Sourced / Inferred labels","Builds now described as starting points, with the reason they work"]],
+  ["2026-10-18","Runes",["Rune names matched to the Game Vault wiki (Rotating SPD Up, Rootguard, Equinox Bloom and more)","Name mapping table rebuilt: other names you may see → name used here","Full Twinborn pair list and Runic Remnant costs"]],
+  ["2026-10-18","Events",["All-Star Cup guide with season setup","Fishing: Twinborn Core milestones and gems needed per milestone step"]],
+  ["2026-10-17","Fishing",["Step-by-step cast, tension and reel guide with gauge colors","Picture guide for reading the fish grade at the bite"]],
+  ["2026-10-17","Design",["New look with a signature color per section","Web link version for sharing"]],
+  ["2026-10-17","Build checker",["Hero stars, skins and gear grade options","Oracle and Griffin presets alongside Dragoon in chapter modes","Events guide, chapter list with difficulty, Island Treasure dice planner"]]
+];
+const fmtDate = d => { const [y,m,dd]=d.split("-").map(Number); return `${dd} ${["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][m-1]} ${y}`; };
+const ageDays = d => Math.floor((Date.now()-new Date(d+"T12:00:00").getTime())/864e5);
+function reportHref(what, d){
+  const title = `Outdated: ${what}`;
+  const body = `**Card:** ${what}\n**Guide version:** ${GAME.ver} (checked ${fmtDate(d)})\n\n**What's wrong or changed:**\n\n\n**What it should say / where you saw it (patch notes, screenshot, link):**\n`;
+  return `${REPORT_URL}?title=${encodeURIComponent(title)}&body=${encodeURIComponent(body)}&labels=outdated`;
+}
+function freshKey(key){ return CHECKED[key] || GAME.checked; }
+function fresh(key, what){
+  const d = freshKey(key), age = ageDays(d), old = age > 45;
+  return `<div class="fresh${old?" old":""}"><span class="fresh-meta"><span class="fresh-dot" aria-hidden="true"></span>Checked ${fmtDate(d)} · game ${GAME.ver}${old?" · may be out of date":""}</span><a class="report" href="${reportHref(what, d)}" target="_blank" rel="noopener">Report outdated</a></div>`;
+}
 const MAP = [
   ["Frostshock Seal","Frost-Thunder Seal","Enhancement rune (Frostshock Seal is its enchantment)",1],
   ["Frost Thunder Mark","Frost-Thunder Seal","Enhancement rune",1],
@@ -1145,7 +1214,8 @@ function renderResult(){
     ${mine?`<p class="src" style="margin:0">Green outline = you already run it. Dashed = change this slot.</p>`:""}
     ${presetBlock(currentPreset, mine)}
     <dl class="kv"><dt>Gear</dt><dd>${esc(m.set?m.bestSet:"Disabled in this mode")}</dd><dt>Take skills</dt><dd>${chips(m.skills)}</dd>${m.avoid.length?`<dt>Skip</dt><dd>${chips(m.avoid,"no")}</dd>`:""}</dl>
-    <p class="src" style="margin:0">Grade = set fit + rune fit + hero fit, summarized from the guides under More → Sources. It is not a damage simulation.</p>`;
+    <p class="src" style="margin:0">Grade = set fit + rune fit + hero fit, summarized from the guides under More → Sources. It is not a damage simulation. The preset is a proven starting point; adjust it to your own runes.</p>
+    ${fresh("mode:"+m.key, `Build checker — ${H} / ${m.set?SETS[S].name:"runes only"} / ${m.name}`)}`;
 }
 function progressPanel(H,S,o,m){
   const hs = HERO_STARS[H]||{};
@@ -1200,7 +1270,8 @@ function modeBody(m){
     ${m.alt?`<p class="src" style="margin:0">Alternative: <b>${esc(PRESETS[m.alt].name)}</b> (More → Runes).</p>`:""}
     <dl class="kv"><dt>Gear set</dt><dd>${esc(m.bestSet)}</dd><dt>Heroes</dt><dd>${chips(m.heroes)}</dd><dt>Take</dt><dd>${chips(m.skills)}</dd>${m.avoid.length?`<dt>Skip</dt><dd>${chips(m.avoid,"no")}</dd>`:""}</dl>
     <ul class="reasons">${m.tips.map(([t,txt,src])=>`<li style="grid-template-columns:1fr"><span><span class="tag ${t==="s"?"t-src":"t-inf"}">${t==="s"?"Sourced":"Inferred"}</span> ${esc(txt)} ${src?`<span class="src">· ${srcLink(src)}</span>`:""}</span></li>`).join("")}</ul>
-    <div class="row"><button class="btn ghost" data-try="${m.key}">Open in build checker</button></div>`;
+    <div class="row"><button class="btn ghost" data-try="${m.key}">Open in build checker</button></div>
+    ${fresh("mode:"+m.key, "Mode — "+m.name)}`;
 }
 function renderModes(){
   $("#modeList").innerHTML = MODES.map(m=>`<details class="fold" id="mode-${m.key}">
@@ -1468,6 +1539,7 @@ function renderEvents(){
       ${e.spend?`<p class="f2p" style="margin:0"><b>Spending:</b> ${esc(e.spend)}</p>`:""}
       ${e.f2p?`<div class="note good f2p"><b>Free-to-play:</b> ${esc(e.f2p)}</div>`:""}
       <span class="src">Source: ${e.src.map(srcFull).join(", ")}</span>
+      ${fresh("event:"+e.name, "Event — "+e.name)}
     </div></details>`).join("") || `<p class="empty">No events in this group.</p>`;
 }
 $("#eventList").addEventListener("input", e=>{ if(e.target.id!=="diceHave") return;
@@ -1495,7 +1567,7 @@ function renderMore(){
     const items = Object.entries(PRESETS).filter(([,p])=>p.set===g);
     return `<h3 style="margin-top:4px">${g==="any"?"Mode-specific (any set)":SETS[g].short}</h3>` + items.map(([k,p])=>`<details class="fold">
       <summary><div><h3>${esc(p.name)}</h3><div class="sub">${esc(p.for)}</div></div>${tagFor(p)}</summary>
-      <div class="body">${presetBlock(k)}</div></details>`).join(""); }).join("");
+      <div class="body">${presetBlock(k)}${fresh("runes","Rune preset — "+p.name)}</div></details>`).join(""); }).join("");
   const TT={enh:["Enhancement","enh",40],abil:["Ability","abil",40],bless:["Blessing","bless",80]};
   $("#twinList").innerHTML = ["enh","abil","bless"].map(t=>`<div style="display:grid;gap:8px"><span class="label" style="display:flex;gap:6px;align-items:center"><span class="dot" style="background:var(--${t})"></span>${TT[t][0]} pairs · ${TT[t][2]} Twinborn Cores each</span>
     ${TWIN.filter(r=>r[1]===t).map(([g,,a,b,ha,hb,use])=>`<div class="c-${t}" style="display:grid;gap:6px;padding:11px 12px;border-radius:12px;background:linear-gradient(90deg,color-mix(in srgb,var(--c) 10%,transparent),transparent 70%),var(--raised);border:1px solid var(--hair)">
@@ -1514,7 +1586,10 @@ function renderMore(){
   $("#srcList").innerHTML = Object.values(SOURCES).map(([n,u])=>`<li><a href="${u}" target="_blank" rel="noopener">${esc(n)}</a></li>`).join("");
   $("#mapRows").innerHTML = MAP.map(([a,b,k,sure])=>`<tr><td>${esc(a)}</td><td><b>${esc(b)}</b>${sure?"":` <span class="tag t-inf">Best match</span>`}</td><td class="src">${esc(k)}</td></tr>`).join("");
   $$("[data-src]").forEach(el=>el.innerHTML=srcLink(el.dataset.src));
+  $("#newsList").innerHTML = CHANGELOG.map(([d,t,items],i)=>`<div class="news-item"><div class="news-head"><span class="news-date">${fmtDate(d)}</span><b>${esc(t)}</b>${i===0?`<span class="tag t-src">Latest</span>`:""}</div><ul>${items.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`).join("");
+  $("#reportGeneral").href = `${REPORT_URL}?title=${encodeURIComponent("Outdated info")}&body=${encodeURIComponent(`**Guide version:** ${GAME.ver}\n\n**Which tab / card:**\n\n**What's wrong or changed:**\n\n**Source (patch notes, screenshot, link):**\n`)}&labels=outdated`;
 }
+function openNews(){ showTab("more"); $$('[data-mview]').forEach(x=>{ const on=x.dataset.mview==="news"; x.setAttribute("aria-pressed",String(on)); $("#m-"+x.dataset.mview).hidden=!on; }); }
 document.querySelector('[aria-label="More sections"]').addEventListener("click", e=>{
   const b=e.target.closest("button"); if(!b) return;
   $$('[data-mview]').forEach(x=>{ x.setAttribute("aria-pressed",String(x===b)); $("#m-"+x.dataset.mview).hidden = x!==b; }); });
@@ -1527,6 +1602,8 @@ function renderHeroes(q=""){
 }
 
 /* =================== TABS & EVENTS =================== */
+$("#verPill").textContent = GAME.ver; $("#verDate").textContent = "Checked "+fmtDate(GAME.checked);
+$("#verBtn").addEventListener("click", openNews);
 const TABS = ["build","modes","chapters","events","more"];
 document.documentElement.dataset.section="build";
 function showTab(t){
