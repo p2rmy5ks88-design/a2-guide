@@ -289,6 +289,7 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--navy);outline-o
 @media (max-height:420px){.dface{width:44px;height:44px;padding:5px}#diceHud b{font-size:28px}}
 
 #radio{position:absolute;left:max(16px,env(safe-area-inset-left,0px));bottom:calc(max(12px,env(safe-area-inset-bottom,0px)) + 40px);display:flex;align-items:center;gap:7px;padding:6px 12px 6px 9px;border-radius:999px;border:none;background:rgba(19,40,74,.78);color:#fff;font-weight:800;font-size:11.5px}
+#radio .rl{display:flex;flex-direction:column;line-height:1.1;text-align:left;max-width:200px}#radio .rl b{font:10px var(--display);letter-spacing:.08em;color:#ffc61a}
 #radio .eq{display:flex;gap:2px;align-items:flex-end;height:12px}#radio .eq i{width:3px;height:4px;background:#ffc61a;border-radius:1px}
 #radio.on .eq i{animation:eq .9s ease-in-out infinite}#radio.on .eq i:nth-child(2){animation-delay:.2s}#radio.on .eq i:nth-child(3){animation-delay:.45s}
 @keyframes eq{50%{height:12px}}
@@ -466,11 +467,9 @@ function netWorth(p){let v=p.cash;for(const i of propsOf(p.id)){const o=G.own[i]
 
 /* ================= SOUND ================= */
 let AC=null,muted=false;
-let SPEECH_OK=false;
-function unlockSpeech(){if(SPEECH_OK||!window.speechSynthesis)return;try{const u=new SpeechSynthesisUtterance(' ');u.volume=0;speechSynthesis.speak(u);SPEECH_OK=true;speechSynthesis.getVoices()}catch(e){}}
 let SILENT=null;function audioSession(){try{if(navigator.audioSession)navigator.audioSession.type='playback'}catch(e){}
   try{if(!SILENT){SILENT=new Audio('data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=');SILENT.setAttribute('playsinline','');SILENT.volume=0.01;SILENT.play().catch(()=>{})}}catch(e){}}
-function initAudio(){unlockSpeech();audioSession();if(AC){if(AC.state==='suspended'&&!document.hidden)AC.resume().catch(()=>{});return}try{AC=new (window.AudioContext||window.webkitAudioContext)()}catch(e){AC=null}if(AC)setTimeout(syncAudio,0)}
+function initAudio(){audioSession();if(AC){if(AC.state==='suspended'&&!document.hidden)AC.resume().catch(()=>{});return}try{AC=new (window.AudioContext||window.webkitAudioContext)()}catch(e){AC=null}if(AC)setTimeout(syncAudio,0)}
 function tone(f,d,type='sine',v=.08,when=0){if(!AC)return;const t=AC.currentTime+when,o=AC.createOscillator(),g=AC.createGain();o.type=type;o.frequency.setValueAtTime(f,t);g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g).connect(sfxBus());o.start(t);o.stop(t+d+.02)}
 function noise(d,v=.1,when=0){if(!AC)return;const n=AC.sampleRate*d,b=AC.createBuffer(1,n,AC.sampleRate),a=b.getChannelData(0);for(let i=0;i<n;i++)a[i]=(Math.random()*2-1)*(1-i/n);const s=AC.createBufferSource(),g=AC.createGain(),f=AC.createBiquadFilter();f.type='bandpass';f.frequency.value=1800;s.buffer=b;g.gain.value=v;s.connect(f).connect(g).connect(sfxBus());s.start(AC.currentTime+when)}
 function sfx(k){if(!AC||FAST||!PREF.audio.sfx)return;try{
@@ -1715,26 +1714,15 @@ function applyTheme(k){
 }
 
 /* ================= STREET SOUND + RADIO ================= */
-PREF.audio=Object.assign({sfx:true,amb:true,voices:true,radio:false,vol:.8},PREF.audio||{});
+PREF.audio=Object.assign({sfx:true,amb:true,radio:false,vol:.8},PREF.audio||{});delete PREF.audio.voices;
 const AUD={buses:null,ambOn:false,radioOn:false,timers:[],talk:[],radioT:0,djT:0,voice:null};
 function buses(){if(!AC)return null;if(AUD.buses)return AUD.buses;const m=AC.createGain();m.gain.value=PREF.audio.vol;m.connect(AC.destination);
   const sfx=AC.createGain();sfx.connect(m);const amb=AC.createGain();amb.gain.value=.0;amb.connect(m);
-  const rad=AC.createGain();rad.gain.value=0;const bp=AC.createBiquadFilter();bp.type='peaking';bp.frequency.value=2200;bp.gain.value=4;const hp=AC.createBiquadFilter();hp.type='highpass';hp.frequency.value=90;rad.connect(hp).connect(bp).connect(m);
+  const rad=AC.createGain();rad.gain.value=0;rad.connect(m);
   AUD.buses={m,sfx,amb,rad};return AUD.buses}
 function sfxBus(){const b=buses();return b?b.sfx:AC.destination}
 let NOISE=null;function noiseBuf(){if(NOISE)return NOISE;const n=AC.sampleRate*2;NOISE=AC.createBuffer(1,n,AC.sampleRate);const a=NOISE.getChannelData(0);for(let i=0;i<n;i++)a[i]=Math.random()*2-1;return NOISE}
 function later(fn,min,max){const t=setTimeout(()=>{AUD.timers=AUD.timers.filter(x=>x!==t);fn()},min+Math.random()*(max-min));AUD.timers.push(t)}
-function voicePick(){if(AUD.voice!==null)return AUD.voice;const vs=(window.speechSynthesis&&speechSynthesis.getVoices())||[];
-  AUD.voice=vs.find(v=>/^yo/i.test(v.lang))||vs.find(v=>/en[-_]NG/i.test(v.lang))||vs.find(v=>/en[-_](ZA|KE|GH)/i.test(v.lang))||vs.find(v=>/en[-_]GB/i.test(v.lang))||vs.find(v=>/^en/i.test(v.lang))||null;return AUD.voice}
-try{window.speechSynthesis&&speechSynthesis.addEventListener&&speechSynthesis.addEventListener('voiceschanged',()=>{AUD.voice=null})}catch(e){}
-function say(t,o={}){if(!PREF.audio.voices||!window.speechSynthesis||document.hidden)return;try{if(speechSynthesis.paused)speechSynthesis.resume();if(o.force)speechSynthesis.cancel();else if(speechSynthesis.speaking||speechSynthesis.pending)return;const u=new SpeechSynthesisUtterance(t);const v=voicePick();if(v){u.voice=v;u.lang=v.lang}
-  u.pitch=o.pitch||(.75+Math.random()*.6);u.rate=o.rate||(.95+Math.random()*.25);u.volume=Math.min(1,(o.vol||.55)*PREF.audio.vol);
-  if(AUD.radioOn&&AUD.buses){AUD.buses.rad.gain.setTargetAtTime(.25*PREF.audio.vol,AC.currentTime,.2);u.onend=()=>{if(AUD.radioOn)AUD.buses.rad.gain.setTargetAtTime(.9,AC.currentTime,.4)}}
-  speechSynthesis.speak(u)}catch(e){}}
-const CALLS=['Oshodi! Oshodi! Oshodi!','C M S! C M S! Obalende!','Ojuelegba! Enter with your change o!','Wọlé! Wọlé! Wọlé!','Ọ̀wà! Ọ̀wà! Make we go!','Yaba! Yaba! Straight!','Ikeja along! Ikeja along!','Mile two! Mile two! One chance!','Owa o! Ẹ wọlé, ẹ wọlé!','Lekki! Ajah! Ajah! Ajah!'];
-const PIDGIN=['How far, my guy?','I dey o, I no fit complain.','Wetin dey happen for here?','Abeg, no vex.','Oga, I don pay you o!','No wahala, everything dey kampe.','Na so we see am.','Driver, I dey drop for bus stop!','Change dey? Abeg find change.','E don do, make we go!','This one na wahala o!','You don chop?','Shine your eye!','Una well done o!','Oga, reduce the price small now!','Na God dey run am.'];
-const CHAT=['Ẹ kú àárọ̀ o!','Báwo ni?','Ṣé àlàáfíà ni?','Kò sí wàhálà.','Ẹ ṣé gan an!','Ó dàbọ̀!','Ẹ jọ̀ọ́, ẹ dúró díẹ̀.','Owó mi dà?','Abeg, shift small!','Na wa o!','Oya, make we dey go!','Haba! This traffic no get part two!'];
-const SELL={beach:['Coconut! Fresh coconut!','Buy your cold zobo!','Oga, you go buy groundnut?','Pure water! Pure water!','Gala! Gala! Buy gala!','Agege bread! Hot bread!'],night:['Suya! Hot suya!','Roasted corn! Corn!','Asun dey here o!'],harmattan:['Ankara! Buy your ankara here!','Ẹ wá ra ọjà!','Come and buy, I go dash you!','Aso oke! Aso oke!'],rainy:['Umbrella! Umbrella!','Rain don come o!','Raincoat! Buy raincoat!'],obudu:['Fresh milk from the ranch!','Welcome to Obudu!']};
 function ambTalkers(on){const b=buses();if(!b)return;
   if(on&&!AUD.talk.length){for(let k=0;k<4;k++){const s=AC.createBufferSource();s.buffer=noiseBuf();s.loop=true;s.playbackRate.value=.9+k*.07;const f1=AC.createBiquadFilter();f1.type='bandpass';f1.Q.value=6;f1.frequency.value=500;const f2=AC.createBiquadFilter();f2.type='bandpass';f2.Q.value=8;f2.frequency.value=1600;
       const g1=AC.createGain(),g2=AC.createGain();g1.gain.value=0;g2.gain.value=0;s.connect(f1).connect(g1).connect(b.amb);s.connect(f2).connect(g2).connect(b.amb);s.start();AUD.talk.push({s,f1,f2,g1,g2,base:110+k*35})}
@@ -1760,41 +1748,36 @@ function ambLoop(){if(!AUD.ambOn)return;const th=CUR_THEME;const r=Math.random()
   else if(th==='harmattan'){r<.3?bell():r<.6?horn():r<.75?okada():0}
   else{r<.45?horn():r<.7?okada():0}
   later(ambLoop,1800,5200)}
-function voiceLoop(){if(!AUD.ambOn)return;const th=CUR_THEME;const pool=th==='obudu'?SELL.obudu.concat(['Ẹ kú àárọ̀ o!','How far, my guy?','This place cold o!','Una well done o!']):[].concat(th==='harmattan'?SELL[th].concat(SELL[th]):SELL[th]||[],CALLS,CALLS,CHAT,PIDGIN,PIDGIN);
-  if(PREF.audio.voices)say(pool[Math.floor(Math.random()*pool.length)]);later(voiceLoop,th==='obudu'?20000:7000,th==='harmattan'?12000:17000)}
-function startAmb(){if(AUD.ambOn||!AC)return;AUD.ambOn=true;const b=buses();b.amb.gain.setTargetAtTime(1,AC.currentTime,.8);ambTalkers(true);bedNoise();later(ambLoop,800,2000);later(voiceLoop,1200,2500)}
-function stopAmb(){if(!AUD.ambOn)return;AUD.ambOn=false;AUD.timers.forEach(clearTimeout);AUD.timers=[];ambTalkers(false);if(AUD.bed){try{AUD.bed.s.stop()}catch(e){}AUD.bed=null}try{speechSynthesis.cancel()}catch(e){}}
+function startAmb(){if(AUD.ambOn||!AC)return;AUD.ambOn=true;const b=buses();b.amb.gain.setTargetAtTime(1,AC.currentTime,.8);ambTalkers(true);bedNoise();later(ambLoop,800,2000)}
+function stopAmb(){if(!AUD.ambOn)return;AUD.ambOn=false;AUD.timers.forEach(clearTimeout);AUD.timers=[];ambTalkers(false);if(AUD.bed){try{AUD.bed.s.stop()}catch(e){}AUD.bed=null}}
 function ambTheme(){if(AUD.ambOn)bedNoise()}
-/* radio: Eko Estates FM 97.3, an original afrobeats loop */
-const RNOTE=n=>440*Math.pow(2,(n-69)/12);
-const PROG=[[57,60,64],[53,57,60],[48,52,55],[55,59,62]];
-function rKick(t){const b=AUD.buses,o=AC.createOscillator(),g=AC.createGain();o.frequency.setValueAtTime(140,t);o.frequency.exponentialRampToValueAtTime(42,t+.18);g.gain.setValueAtTime(.55,t);g.gain.exponentialRampToValueAtTime(.001,t+.32);o.connect(g).connect(b.rad);o.start(t);o.stop(t+.34)}
-function rNoise(t,f,type,dur,v){const b=AUD.buses,s=AC.createBufferSource();s.buffer=noiseBuf();const fl=AC.createBiquadFilter();fl.type=type;fl.frequency.value=f;const g=AC.createGain();g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+dur);s.connect(fl).connect(g).connect(b.rad);s.start(t,Math.random());s.stop(t+dur+.02)}
-function rTone(t,f,type,dur,v,bend){const b=AUD.buses,o=AC.createOscillator(),g=AC.createGain();o.type=type;o.frequency.setValueAtTime(f,t);if(bend)o.frequency.exponentialRampToValueAtTime(f*bend,t+dur);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+.008);g.gain.exponentialRampToValueAtTime(.001,t+dur);o.connect(g).connect(b.rad);o.start(t);o.stop(t+dur+.02)}
-function radioStep(t,s){const bar=Math.floor(s/16)%4,st=s%16,ch=PROG[bar];
-  if([0,3,8,11].includes(st))rKick(t);
-  if([4,12].includes(st))rNoise(t,1600,'bandpass',.14,.35);
-  if([7,10,15].includes(st))rNoise(t,3200,'bandpass',.05,.18);
-  rNoise(t,7000,'highpass',.035,st%2?.1:.05);
-  if([2,6,13].includes(st)||(bar===3&&st>=12))rTone(t,st%2?240:200,'sine',.22,.35,.65);
-  const bassPat={0:0,3:0,6:7,8:0,10:12,14:7};if(st in bassPat)rTone(t,RNOTE(ch[0]-24+bassPat[st]),'triangle',.24,.42);
-  const gp={0:2,2:1,4:0,7:2,9:1,11:0,14:1};if(st in gp)rTone(t,RNOTE(ch[gp[st]]+12),'triangle',.16,.12);
-  if(st===0)ch.forEach(n=>rTone(t,RNOTE(n),'sawtooth',1.7,.018))}
-const DJ=['Good evening Lagos! Na your favourite station, Eko Estates F M. Make una no touch that dial o!','Abeg, if you dey Lekki, Third Mainland don free small. Oya go home!','You dey listen to Eko Estates F M, ninety seven point three! Lagos, how una dey?','Eko Estates F M. The sound of the city. Buy property, collect rent, no dull yourself!','Traffic update: Third Mainland Bridge dey move small small. Oshodi, e don clear!','This na Eko Estates F M. Ẹ kú alẹ́ o, and keep the jams coming!'];
-function startRadio(){if(AUD.radioOn||!AC)return;const b=buses();AUD.radioOn=true;b.rad.gain.setTargetAtTime(.9,AC.currentTime,.5);let next=AC.currentTime+.15,step=0;const spb=60/104/4;
-  AUD.radioT=setInterval(()=>{while(next<AC.currentTime+.25){radioStep(next,step);next+=spb;step=(step+1)%64}},50);
-  const dj=()=>{if(!AUD.radioOn)return;say(DJ[Math.floor(Math.random()*DJ.length)],{pitch:.85,rate:1.05,vol:.7,force:false});AUD.djT=setTimeout(dj,45000+Math.random()*30000)};AUD.djT=setTimeout(dj,4000);renderRadioPill()}
-function stopRadio(){if(!AUD.radioOn)return;AUD.radioOn=false;clearInterval(AUD.radioT);clearTimeout(AUD.djT);if(AUD.buses)AUD.buses.rad.gain.setTargetAtTime(0,AC.currentTime,.2);renderRadioPill()}
-function renderRadioPill(){const p=$('#radio');if(!p)return;p.hidden=!AC;p.classList.toggle('on',AUD.radioOn);p.innerHTML=`<span class="eq"><i></i><i></i><i></i></span><span>${AUD.radioOn?'Eko Estates FM 97.3':'Radio off'}</span>`}
-function syncAudio(){if(!AC)return;const b=buses();b.m.gain.setTargetAtTime(PREF.audio.vol,AC.currentTime,.1);
-  PREF.audio.amb?startAmb():stopAmb();PREF.audio.radio?startRadio():stopRadio();if(!PREF.audio.voices)try{speechSynthesis.cancel()}catch(e){}renderRadioPill()}
+/* radio: Eko Estates FM 97.3 plays the owner's own Kenstylez mix */
+const FM_SRC='audio/eko-fm-mix.mp3';
+const FM_TRACKS=[[0,'Station ident'],[0.7,'You’re My Home · Kenstylez'],[177,'Red Room · Kenstylez'],[318.3,'Chances Trap · Kenstylez']];
+let FM=null,FM_POS=null;
+function fmEl(){if(FM)return FM;FM=new Audio();FM.src=FM_SRC;FM.preload='none';FM.loop=true;FM.setAttribute('playsinline','');
+  try{const node=AC.createMediaElementSource(FM);node.connect(buses().rad);FM.routed=true}catch(e){FM.routed=false}
+  FM.addEventListener('timeupdate',renderRadioPill);FM.addEventListener('error',()=>{AUD.radioOn=false;PREF.audio.radio=false;renderRadioPill();toast('The radio couldn’t load. Check your connection and try again.')});
+  return FM}
+function fmTrack(){if(!FM||!isFinite(FM.currentTime))return '';let n=FM_TRACKS[1][1];for(const[t,name]of FM_TRACKS.slice(1))if(FM.currentTime>=t)n=name;return n}
+function startRadio(){if(AUD.radioOn||!AC)return;const el=fmEl();AUD.radioOn=true;const b=buses();
+  if(el.routed){b.rad.gain.setTargetAtTime(1,AC.currentTime,.4);el.volume=1}else el.volume=Math.min(1,PREF.audio.vol);
+  if(FM_POS==null){FM_POS=0;el.addEventListener('loadedmetadata',()=>{try{if(el.duration>60&&Math.random()<.67)el.currentTime=FM_TRACKS[2+Math.floor(Math.random()*2)][0]}catch(e){}},{once:true})}
+  el.play().catch(()=>{AUD.radioOn=false;renderRadioPill()});renderRadioPill()}
+function stopRadio(){if(!AUD.radioOn)return;AUD.radioOn=false;if(FM)FM.pause();if(AUD.buses)AUD.buses.rad.gain.setTargetAtTime(0,AC.currentTime,.2);renderRadioPill()}
+function fmSkip(){if(!FM||!AUD.radioOn)return;const t=FM.currentTime;const nx=FM_TRACKS.slice(1).find(x=>x[0]>t+2);try{FM.currentTime=nx?nx[0]:0}catch(e){}renderRadioPill()}
+let lastPill='';
+function renderRadioPill(){const p=$('#radio');if(!p)return;p.hidden=!AC;p.classList.toggle('on',AUD.radioOn);const label=AUD.radioOn?(fmTrack()||'Eko Estates FM 97.3'):'Radio off';
+  if(label===lastPill&&p.childElementCount)return;lastPill=label;p.innerHTML=`<span class="eq"><i></i><i></i><i></i></span><span class="rl"><b>${AUD.radioOn?'EKO FM 97.3':'EKO FM'}</b>${esc(label)}</span>`}
+function syncAudio(){if(!AC)return;const b=buses();b.m.gain.setTargetAtTime(PREF.audio.vol,AC.currentTime,.1);if(FM&&!FM.routed)FM.volume=Math.min(1,PREF.audio.vol);
+  PREF.audio.amb?startAmb():stopAmb();PREF.audio.radio?startRadio():stopRadio();renderRadioPill()}
 document.addEventListener('visibilitychange',()=>{if(!AC)return;try{document.hidden?AC.suspend():AC.resume()}catch(e){}});
 async function openSound(){
-  const rows=[['sfx','Game sounds','Dice, coins, footsteps on the board.'],['amb','Street ambience','Crowd chatter, danfo horns, okadas, birds or rain to match the location.'],['voices','Voices','Danfo conductors, Yoruba greetings, Pidgin chatter, hawkers and the radio DJ. Uses your device’s speech voice.'],['radio','Eko Estates FM 97.3','An afrobeats radio station that plays while you build your empire.']];
+  const rows=[['sfx','Game sounds','Dice, coins, footsteps on the board.'],['amb','Street ambience','Crowd chatter, danfo horns, okadas, birds or rain to match the location.'],['radio','Eko Estates FM 97.3','A non-stop mix of Kenstylez: You’re My Home, Red Room and Chances Trap.']];
   initAudio();
-  await modal({cls:'wide',html:`<div class="mh">Sound</div><div class="rchips" id="sndChips"></div><label class="vol"><span>Volume</span><input type="range" id="sndVol" min="0" max="1" step="0.05"></label><div class="olrow"><button class="btn" id="sndTest">Test voices</button><span class="mtxt muted" id="sndMsg">On iPhone, flip the silent switch off and turn the volume up.</span></div>`,btns:[{k:'x',label:'Done',primary:true}],onMount:(pn)=>{
+  await modal({cls:'wide',html:`<div class="mh">Sound</div><div class="rchips" id="sndChips"></div><label class="vol"><span>Volume</span><input type="range" id="sndVol" min="0" max="1" step="0.05"></label><div class="olrow"><button class="btn" id="sndSkip">Next track</button><span class="mtxt muted">On iPhone, flip the silent switch off and turn the volume up.</span></div>`,btns:[{k:'x',label:'Done',primary:true}],onMount:(pn)=>{
     const draw=()=>{const E=pn.querySelector('#sndChips');E.innerHTML='';rows.forEach(([k,l,d])=>{const b=el('button','rchip'+(PREF.audio[k]?' on':''),`<b>${l}</b><small>${d}</small>`);b.setAttribute('aria-pressed',PREF.audio[k]?'true':'false');b.onclick=()=>{PREF.audio[k]=!PREF.audio[k];savePref();syncAudio();draw()};E.append(b)})};draw();
-    pn.querySelector('#sndTest').onclick=()=>{initAudio();if(!window.speechSynthesis){pn.querySelector('#sndMsg').textContent='This browser has no speech voice, so voices can’t play.';return}const was=PREF.audio.voices;PREF.audio.voices=true;say('Oshodi! Oshodi! How far, my guy? Ẹ kú àárọ̀ o!',{force:true,vol:1,pitch:1,rate:1});PREF.audio.voices=was;if(!was)pn.querySelector('#sndMsg').textContent='Voices are off. Turn on the Voices tile to hear them during play.'};
+    pn.querySelector('#sndSkip').onclick=()=>{initAudio();if(!AUD.radioOn){PREF.audio.radio=true;savePref();syncAudio();draw()}else fmSkip()};
     const v=pn.querySelector('#sndVol');v.value=PREF.audio.vol;v.oninput=()=>{PREF.audio.vol=+v.value;savePref();syncAudio()}}});
 }
 

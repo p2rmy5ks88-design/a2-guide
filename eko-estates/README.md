@@ -13,7 +13,7 @@ A Lagos-themed property trading game for phones and tablets, played in landscape
   - Harmattan / Balogun Market
   - Rainy Season / Oshodi
   - Obudu Highlands
-- **Sound**: street ambience, danfo conductor calls, Yoruba and Pidgin voices (through the device's speech engine) and *Eko Estates FM 97.3*, an original afrobeats loop with a DJ. Each part can be switched on and off.
+- **Sound**: street ambience that matches each location, and *Eko Estates FM 97.3*, a continuous mix of Kenstylez tracks. Each part can be switched on and off.
 - **Players**: 2 to 6 per game, as pass-and-play humans, AI landlords (Easy, Normal or Hard), or online friends.
 
 ## Files
@@ -36,3 +36,7 @@ When `index.html` is opened anywhere else, local and AI play work normally and t
 3. Commit and push.
 
 To publish it as a website, turn on GitHub Pages for this repo and point it at the `eko-estates/` folder.
+
+## Radio audio
+
+The radio plays `audio/eko-fm-mix.mp3`, a Kenstylez mix of You're My Home, Red Room and Chances Trap. The file isn't stored in this public repo; put it in `eko-estates/audio/` next to `index.html` when hosting the game.
