@@ -219,11 +219,10 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--navy);outline-o
 #acts .pills{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
 .pill.pri{background:var(--danfo);color:var(--danfo-ink);box-shadow:0 3px 0 var(--danfo-deep)}
 #ui{z-index:3}
-#ui::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;transition:box-shadow .6s;
-  box-shadow:inset 0 0 0 5px var(--turn,transparent),inset 0 0 80px 10px color-mix(in srgb,var(--turn,transparent) 45%,transparent)}
+
 .pcard{position:relative}
-.pcard.cur{transform:translateX(10px) scale(1.07);box-shadow:0 0 0 4px var(--pc),0 6px 0 rgba(19,40,74,.25);animation:curpulse 1.6s ease-in-out infinite}
-@keyframes curpulse{50%{box-shadow:0 0 0 6px var(--pc),0 6px 0 rgba(19,40,74,.25)}}
+.pcard.cur{transform:translateX(10px) scale(1.07);box-shadow:0 0 0 4px var(--pc),0 6px 0 rgba(19,40,74,.25);}
+
 .nowtag{position:absolute;left:44px;top:-9px;padding:1px 7px;border-radius:999px;background:var(--pc);color:#fff;font:10px/14px var(--display);letter-spacing:.08em;text-shadow:0 1px 0 rgba(0,0,0,.25)}
 .tag.you{background:var(--navy);color:#fff}
 .pg{gap:3px;max-width:150px}
@@ -467,7 +466,11 @@ function netWorth(p){let v=p.cash;for(const i of propsOf(p.id)){const o=G.own[i]
 
 /* ================= SOUND ================= */
 let AC=null,muted=false;
-function initAudio(){if(AC){if(AC.state==='suspended'&&!document.hidden)AC.resume().catch(()=>{});return}try{AC=new (window.AudioContext||window.webkitAudioContext)()}catch(e){AC=null}if(AC)setTimeout(syncAudio,0)}
+let SPEECH_OK=false;
+function unlockSpeech(){if(SPEECH_OK||!window.speechSynthesis)return;try{const u=new SpeechSynthesisUtterance(' ');u.volume=0;speechSynthesis.speak(u);SPEECH_OK=true;speechSynthesis.getVoices()}catch(e){}}
+let SILENT=null;function audioSession(){try{if(navigator.audioSession)navigator.audioSession.type='playback'}catch(e){}
+  try{if(!SILENT){SILENT=new Audio('data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=');SILENT.setAttribute('playsinline','');SILENT.volume=0.01;SILENT.play().catch(()=>{})}}catch(e){}}
+function initAudio(){unlockSpeech();audioSession();if(AC){if(AC.state==='suspended'&&!document.hidden)AC.resume().catch(()=>{});return}try{AC=new (window.AudioContext||window.webkitAudioContext)()}catch(e){AC=null}if(AC)setTimeout(syncAudio,0)}
 function tone(f,d,type='sine',v=.08,when=0){if(!AC)return;const t=AC.currentTime+when,o=AC.createOscillator(),g=AC.createGain();o.type=type;o.frequency.setValueAtTime(f,t);g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g).connect(sfxBus());o.start(t);o.stop(t+d+.02)}
 function noise(d,v=.1,when=0){if(!AC)return;const n=AC.sampleRate*d,b=AC.createBuffer(1,n,AC.sampleRate),a=b.getChannelData(0);for(let i=0;i<n;i++)a[i]=(Math.random()*2-1)*(1-i/n);const s=AC.createBufferSource(),g=AC.createGain(),f=AC.createBiquadFilter();f.type='bandpass';f.frequency.value=1800;s.buffer=b;g.gain.value=v;s.connect(f).connect(g).connect(sfxBus());s.start(AC.currentTime+when)}
 function sfx(k){if(!AC||FAST||!PREF.audio.sfx)return;try{
@@ -699,7 +702,7 @@ function buildLandmarks(G0){
   G0.islandPalms=[];for(let k=0;k<14;k++){const a=k/14*Math.PI*2+.2,r=7.6+(k%3)*.7;G0.islandPalms.push(palm(Math.cos(a)*r,Math.sin(a)*r,1.1+(k%2)*.3))}
   G0.buses=[0,.5].map(t0=>{const b=busModel('#ffc61a',.55);ROOT.add(b);return{n:b,t:t0}});
   G0.boats=[];G0.centers={};
-  G0.clouds=[];for(let k=0;k<8;k++){const c=new Node().at(-30+k*8,9+Math.random()*4,-18+Math.random()*12);for(let j=0;j<4;j++)c.add(N(geo.sph,M.cloud,(j-1.5)*.9,Math.random()*.3,Math.random()*.6).sc(1+Math.random()*.6,.6+Math.random()*.3,.9));ROOT.add(c);G0.clouds.push(c)}
+  G0.clouds=[];
 }
 function landmarkFor(i,pl,G0){const geo=G0.geo,M=G0.M,s=SQ[i];
   if(i===5){const bl=mat('#2e6fd6',{spec:.5});pl.add(N(geo.box,mat('#d8d2c4'),0,.03,0).sc(.66,.06,.46),N(geo.box,M.white,0,.32,-.08).sc(.66,.03,.26),N(geo.box,M.dark,-.3,.18,-.08).sc(.03,.28,.03),N(geo.box,M.dark,.3,.18,-.08).sc(.03,.28,.03),N(geo.box,bl,0,.14,.12).sc(.6,.15,.15),N(geo.box,mat('#1f2a36',{spec:.6}),0,.17,.12).sc(.61,.05,.155),N(geo.box,M.white,0,.08,.12).sc(.61,.02,.155));return .45}
@@ -1724,7 +1727,7 @@ function later(fn,min,max){const t=setTimeout(()=>{AUD.timers=AUD.timers.filter(
 function voicePick(){if(AUD.voice!==null)return AUD.voice;const vs=(window.speechSynthesis&&speechSynthesis.getVoices())||[];
   AUD.voice=vs.find(v=>/^yo/i.test(v.lang))||vs.find(v=>/en[-_]NG/i.test(v.lang))||vs.find(v=>/en[-_](ZA|KE|GH)/i.test(v.lang))||vs.find(v=>/en[-_]GB/i.test(v.lang))||vs.find(v=>/^en/i.test(v.lang))||null;return AUD.voice}
 try{window.speechSynthesis&&speechSynthesis.addEventListener&&speechSynthesis.addEventListener('voiceschanged',()=>{AUD.voice=null})}catch(e){}
-function say(t,o={}){if(!PREF.audio.voices||!window.speechSynthesis||document.hidden)return;try{if(speechSynthesis.speaking&&!o.force)return;const u=new SpeechSynthesisUtterance(t);const v=voicePick();if(v){u.voice=v;u.lang=v.lang}
+function say(t,o={}){if(!PREF.audio.voices||!window.speechSynthesis||document.hidden)return;try{if(speechSynthesis.paused)speechSynthesis.resume();if(o.force)speechSynthesis.cancel();else if(speechSynthesis.speaking||speechSynthesis.pending)return;const u=new SpeechSynthesisUtterance(t);const v=voicePick();if(v){u.voice=v;u.lang=v.lang}
   u.pitch=o.pitch||(.75+Math.random()*.6);u.rate=o.rate||(.95+Math.random()*.25);u.volume=Math.min(1,(o.vol||.55)*PREF.audio.vol);
   if(AUD.radioOn&&AUD.buses){AUD.buses.rad.gain.setTargetAtTime(.25*PREF.audio.vol,AC.currentTime,.2);u.onend=()=>{if(AUD.radioOn)AUD.buses.rad.gain.setTargetAtTime(.9,AC.currentTime,.4)}}
   speechSynthesis.speak(u)}catch(e){}}
@@ -1759,7 +1762,7 @@ function ambLoop(){if(!AUD.ambOn)return;const th=CUR_THEME;const r=Math.random()
   later(ambLoop,1800,5200)}
 function voiceLoop(){if(!AUD.ambOn)return;const th=CUR_THEME;const pool=th==='obudu'?SELL.obudu.concat(['Ẹ kú àárọ̀ o!','How far, my guy?','This place cold o!','Una well done o!']):[].concat(th==='harmattan'?SELL[th].concat(SELL[th]):SELL[th]||[],CALLS,CALLS,CHAT,PIDGIN,PIDGIN);
   if(PREF.audio.voices)say(pool[Math.floor(Math.random()*pool.length)]);later(voiceLoop,th==='obudu'?20000:7000,th==='harmattan'?12000:17000)}
-function startAmb(){if(AUD.ambOn||!AC)return;AUD.ambOn=true;const b=buses();b.amb.gain.setTargetAtTime(1,AC.currentTime,.8);ambTalkers(true);bedNoise();later(ambLoop,800,2000);later(voiceLoop,2500,5000)}
+function startAmb(){if(AUD.ambOn||!AC)return;AUD.ambOn=true;const b=buses();b.amb.gain.setTargetAtTime(1,AC.currentTime,.8);ambTalkers(true);bedNoise();later(ambLoop,800,2000);later(voiceLoop,1200,2500)}
 function stopAmb(){if(!AUD.ambOn)return;AUD.ambOn=false;AUD.timers.forEach(clearTimeout);AUD.timers=[];ambTalkers(false);if(AUD.bed){try{AUD.bed.s.stop()}catch(e){}AUD.bed=null}try{speechSynthesis.cancel()}catch(e){}}
 function ambTheme(){if(AUD.ambOn)bedNoise()}
 /* radio: Eko Estates FM 97.3, an original afrobeats loop */
@@ -1789,8 +1792,9 @@ document.addEventListener('visibilitychange',()=>{if(!AC)return;try{document.hid
 async function openSound(){
   const rows=[['sfx','Game sounds','Dice, coins, footsteps on the board.'],['amb','Street ambience','Crowd chatter, danfo horns, okadas, birds or rain to match the location.'],['voices','Voices','Danfo conductors, Yoruba greetings, Pidgin chatter, hawkers and the radio DJ. Uses your device’s speech voice.'],['radio','Eko Estates FM 97.3','An afrobeats radio station that plays while you build your empire.']];
   initAudio();
-  await modal({cls:'wide',html:`<div class="mh">Sound</div><div class="rchips" id="sndChips"></div><label class="vol"><span>Volume</span><input type="range" id="sndVol" min="0" max="1" step="0.05"></label>`,btns:[{k:'x',label:'Done',primary:true}],onMount:(pn)=>{
+  await modal({cls:'wide',html:`<div class="mh">Sound</div><div class="rchips" id="sndChips"></div><label class="vol"><span>Volume</span><input type="range" id="sndVol" min="0" max="1" step="0.05"></label><div class="olrow"><button class="btn" id="sndTest">Test voices</button><span class="mtxt muted" id="sndMsg">On iPhone, flip the silent switch off and turn the volume up.</span></div>`,btns:[{k:'x',label:'Done',primary:true}],onMount:(pn)=>{
     const draw=()=>{const E=pn.querySelector('#sndChips');E.innerHTML='';rows.forEach(([k,l,d])=>{const b=el('button','rchip'+(PREF.audio[k]?' on':''),`<b>${l}</b><small>${d}</small>`);b.setAttribute('aria-pressed',PREF.audio[k]?'true':'false');b.onclick=()=>{PREF.audio[k]=!PREF.audio[k];savePref();syncAudio();draw()};E.append(b)})};draw();
+    pn.querySelector('#sndTest').onclick=()=>{initAudio();if(!window.speechSynthesis){pn.querySelector('#sndMsg').textContent='This browser has no speech voice, so voices can’t play.';return}const was=PREF.audio.voices;PREF.audio.voices=true;say('Oshodi! Oshodi! How far, my guy? Ẹ kú àárọ̀ o!',{force:true,vol:1,pitch:1,rate:1});PREF.audio.voices=was;if(!was)pn.querySelector('#sndMsg').textContent='Voices are off. Turn on the Voices tile to hear them during play.'};
     const v=pn.querySelector('#sndVol');v.value=PREF.audio.vol;v.oninput=()=>{PREF.audio.vol=+v.value;savePref();syncAudio()}}});
 }
 
@@ -1799,7 +1803,7 @@ $('#radio').onclick=()=>{initAudio();PREF.audio.radio=!AUD.radioOn;savePref();sy
 let rotDismissed=false;
 function checkRotate(){$('#rotate').hidden=rotDismissed||innerWidth>=innerHeight}
 $('#rotOk').onclick=()=>{rotDismissed=true;checkRotate()};addEventListener('resize',checkRotate);
-document.addEventListener('pointerdown',initAudio,{once:true});
+['pointerdown','touchend','click'].forEach(ev=>document.addEventListener(ev,initAudio,{passive:true}));
 
 /* ================= TEST HOOK ================= */
 window.__sim=async function(n=20,players=4){
