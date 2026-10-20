@@ -1978,7 +1978,7 @@ function ambTheme(){if(AUD.ambOn)bedNoise()}
 /* radio: Eko Estates FM 97.3 plays the owner's own tracks as a shuffled, crossfaded playlist */
 const FM_LIST=[['youre-my-home','You’re My Home','Kenstylez'],['red-room','Red Room','Kenstylez'],['chances-trap','Chances Trap','Kenstylez'],
   ['grinding-all-my-life','Grinding All My Life','Kenstylez'],['mans-not-hot','Man’s Not Hot','Kenstylez'],['area-don-lock','Area Don Lock','Kenstylez'],
-  ['papa-devine-bella','Papa Devine Bella','Kenstylez'],['bigstan-in-love','Bigstan in Love (Stan-tastic)','Kenstylez'],['dusty-shoes','Dusty Shoes','Kenstylez']];
+  ['papa-devine-bella','Papa Devine Bella','Kenstylez'],['bigstan-in-love','Bigstan in Love (Stan-tastic)','Kenstylez'],['dusty-shoes','Dusty Shoes','Kenstylez'],['sanctuary-and-battlefield','Sanctuary and Battlefield','Kenstylez'],['lifestyle','Lifestyle','Kenstylez'],['comfort','Comfort','Kenstylez'],['intro','Intro','Kenstylez']];
 const FM_XF=6;
 const FMS={slots:[],cur:-1,order:[],idx:-1,xfading:false,routed:false};
 function fmSlot(){const a=new Audio();a.preload='auto';a.setAttribute('playsinline','');const s={a,g:null};
@@ -2010,7 +2010,7 @@ function syncAudio(){if(!AC)return;const b=buses();b.m.gain.setTargetAtTime(PREF
   PREF.audio.amb?startAmb():stopAmb();PREF.audio.radio?startRadio():stopRadio();renderRadioPill()}
 document.addEventListener('visibilitychange',()=>{if(!AC)return;try{document.hidden?AC.suspend():AC.resume()}catch(e){}});
 async function openSound(){
-  const rows=[['sfx','Game sounds','Dice, coins, footsteps on the board.'],['amb','Street ambience','Crowd chatter, danfo horns, okadas, birds or rain to match the location.'],['radio','City radio','Each city has its own station, from Eko Estates FM in Lagos to Edo Heritage in Benin City. Plays a shuffled, DJ-blended mix of 9 Kenstylez tracks.']];
+  const rows=[['sfx','Game sounds','Dice, coins, footsteps on the board.'],['amb','Street ambience','Crowd chatter, danfo horns, okadas, birds or rain to match the location.'],['radio','City radio','Each city has its own station, from Eko Estates FM in Lagos to Edo Heritage in Benin City. Plays a shuffled, DJ-blended mix of 13 Kenstylez tracks.']];
   initAudio();
   await modal({cls:'wide',html:`<div class="mh">Sound</div><div class="rchips" id="sndChips"></div><label class="vol"><span>Volume</span><input type="range" id="sndVol" min="0" max="1" step="0.05"></label><div class="olrow"><button class="btn" id="sndSkip">Next track</button><span class="mtxt muted">On iPhone, flip the silent switch off and turn the volume up.</span></div>`,btns:[{k:'x',label:'Done',primary:true}],onMount:(pn)=>{
     const draw=()=>{const E=pn.querySelector('#sndChips');E.innerHTML='';rows.forEach(([k,l,d])=>{const b=el('button','rchip'+(PREF.audio[k]?' on':''),`<b>${l}</b><small>${d}</small>`);b.setAttribute('aria-pressed',PREF.audio[k]?'true':'false');b.onclick=()=>{PREF.audio[k]=!PREF.audio[k];savePref();syncAudio();draw()};E.append(b)})};draw();
@@ -2620,7 +2620,7 @@ function paneLearn(T){
     <div class="lcard"><i>🎉</i><div><b>City events</b><p>Every two rounds: power cuts (no utility rent), owambe weekend (+25% street rent), fuel scarcity (double transport rent), tax holiday, or an esusu payout of ₦50M each.</p></div></div></div>
     <h3>PROGRESS</h3><div class="learn"><div class="lcard"><i>🏙️</i><div><b>Cities and tokens</b><p>Earn achievements to unlock six more cities and six more tokens. Each city has 15 achievements and Bronze, Silver and Gold medals.</p></div></div>
     <div class="lcard"><i>⭐</i><div><b>XP and levels</b><p>Earn XP for every game, rent, achievement, daily mission and wheel spin. Level up from JJC to Landlord of Naija and unlock golden rewards.</p></div></div></div>`}
-function paneSettings(T){const rows=[['sfx','Game sounds','Dice, coins and token movement.'],['amb','Street ambience','Crowd chatter, horns, okadas, birds or rain to match the city.'],['radio','City radio','Each city’s own station, playing a shuffled mix of 9 Kenstylez tracks.']];
+function paneSettings(T){const rows=[['sfx','Game sounds','Dice, coins and token movement.'],['amb','Street ambience','Crowd chatter, horns, okadas, birds or rain to match the city.'],['radio','City radio','Each city’s own station, playing a shuffled mix of 13 Kenstylez tracks.']];
   T.innerHTML=`<div class="phead"><h2>Settings</h2></div>
     <div class="card"><div class="ch">Sound</div><div class="rchips" id="sChips"></div><label class="vol"><span>Volume</span><input type="range" id="sVol" min="0" max="1" step="0.05"></label></div>
     <div class="card"><div class="ch">Defaults</div><div class="opts"><span>AI skill</span><div class="seg" id="sAi"></div><span>Game speed</span><div class="seg" id="sSpd"></div><span>Camera</span><div class="seg" id="sCam"></div></div></div>

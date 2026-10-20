@@ -17,7 +17,7 @@ A Lagos-themed property trading game for phones and tablets, played in landscape
   - Harmattan / Balogun Market
   - Rainy Season / Oshodi
   - Obudu Highlands
-- **Sound**: street ambience that matches each location, and *Eko Estates FM 97.3*, a shuffled, crossfaded playlist of 9 Kenstylez tracks. Each part can be switched on and off.
+- **Sound**: street ambience that matches each location, and *Eko Estates FM 97.3*, a shuffled, crossfaded playlist of 13 Kenstylez tracks. Each part can be switched on and off.
 - **Tokens** each move their own way: the danfo drives and sways, the keke rocks, the okada zips and leans, the talking drum bounces, the jollof pot waddles and the eagle flies.
 - **Turn timer**: an optional 90-second limit per turn, chosen when starting a game.
 - **Players**: 2 to 6 per game, as pass-and-play humans, AI landlords (Easy, Normal or Hard), or online friends.

@@ -46,5 +46,5 @@ Eko Estates is a 3D property trading board game set in real Nigerian cities. Rol
 Good shots: the Lagos beach board with a hotel row, a trade offer with "Completes your set!", Benin City's palace, the Calabar carnival, the achievements screen and the Owambe Wheel.
 
 ## Before you submit
-- Confirm you own or have licensed all 9 radio tracks for commercial distribution.
+- Confirm you own or have licensed all 13 radio tracks for commercial distribution.
 - Online multiplayer is hidden in the app. It currently runs only inside claude.ai and needs its own server before it can ship in the stores.
