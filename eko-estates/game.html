@@ -305,6 +305,18 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--navy);outline-o
 #timer.low circle.fg{stroke:var(--bad)}#timer.low b{color:var(--bad)}#timer.low{animation:tpulse 1s ease-in-out infinite}
 @keyframes tpulse{50%{transform:scale(1.08)}}
 @media (max-height:420px){#timer{right:calc(max(16px,env(safe-area-inset-right,0px)) + 54px)}}
+
+.ahd{display:flex;align-items:center;justify-content:space-between;gap:10px;position:sticky;top:-14px;background:#fff;z-index:2;padding:4px 0 6px;margin-top:-4px;flex-wrap:wrap}
+.cashbar{display:flex;align-items:baseline;gap:8px;padding:6px 12px;border-radius:12px;background:#e9f7ef;color:var(--green)}
+.cashbar span{font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase}
+.cashbar b{font:22px var(--display);color:var(--navy);font-variant-numeric:tabular-nums}
+.cashbar em{font-style:normal;font-weight:800;font-size:12px}.cashbar em.dn{color:var(--bad)}.cashbar em.up{color:var(--green)}
+.cashbar.flash{animation:cflash .6s ease-out}@keyframes cflash{0%{transform:scale(1.08);background:#fff3c4}100%{transform:scale(1)}}
+.sm small{display:block;font-size:9.5px;font-weight:700;opacity:.8}
+.hint{display:inline-block;margin-top:3px;font-style:normal;font-size:11px;font-weight:800;padding:2px 7px;border-radius:999px;background:var(--panel2);color:var(--navy)}
+.hint.good{background:#e1f6ea;color:var(--green)}.hint.bad{background:#fdecea;color:var(--bad)}
+.tchip .hint{display:table}
+.pchip{border-left-color:var(--g,var(--line))}
 </style>
 
 <canvas id="gl" aria-label="3D game board"></canvas>
@@ -692,7 +704,7 @@ function initScene(){
   G0.dice=[0,1].map(k=>{const d=N(dgeo,dm,k?.4:-.4,.29,1).sc(.58);d.sh=shadow(0,0,.5);d.visible=false;d.sh.visible=false;ROOT.add(d);return d});
   // highlight + marker
   G0.hl=N(geo.plane,M.hl,0,.02,0);ROOT.add(G0.hl);
-  G0.marker=new Node();G0.marker.add(N(geo.cone,mat('#ffc61a',{em:.45,spec:.6}),0,0,0).rot(Math.PI,0,0).sc(.13,.26,.13),N(geo.sph,mat('#ffc61a',{em:.45}),0,.17,0).sc(.085));G0.marker.visible=false;ROOT.add(G0.marker);G0.ring=N(geo.torus,mat('#ffffff'),0,.03,0).rot(Math.PI/2,0,0).sc(.32);G0.ring.visible=false;ROOT.add(G0.ring);
+  G0.markMat=mat('#ffc61a',{em:.45,spec:.6});G0.markRim=mat('#ffffff',{em:.6});G0.marker=new Node();G0.marker.add(N(geo.cone,G0.markRim,0,-.005,0).rot(Math.PI,0,0).sc(.155,.3,.155),N(geo.cone,G0.markMat,0,0,0).rot(Math.PI,0,0).sc(.13,.26,.13),N(geo.sph,G0.markMat,0,.17,0).sc(.085));G0.marker.visible=false;ROOT.add(G0.marker);G0.ring=N(geo.torus,mat('#ffffff'),0,.03,0).rot(Math.PI/2,0,0).sc(.32);G0.ring.visible=false;ROOT.add(G0.ring);
   // input
   const cv=$('#gl');let down=null;
   cv.addEventListener('pointerdown',e=>{down={x:e.clientX,y:e.clientY,yaw:camT.yaw,moved:false,id:e.pointerId};try{cv.setPointerCapture(e.pointerId)}catch(_){}});
@@ -828,7 +840,7 @@ function frame(now){
     S3.clouds.forEach(c=>{c.p[0]+=dt*.35;if(c.p[0]>34)c.p[0]=-34});
     S3.palms.forEach((p,k)=>{p.crown.r=[Math.sin(time*1.2+k)*.05,0,Math.cos(time*.9+k)*.05]});updateCity(dt,time);
     S3.plots.forEach(o=>{if(o&&o.flag)o.flag.cloth.r=[0,Math.sin(time*4+o.node.p[0])*.35,0]});
-    if(G&&!G.over&&tok3[G.turn]&&$('#title').hidden){const t=tok3[G.turn];S3.marker.visible=t.visible;S3.marker.p=[t.p[0],t.p[1]+.62+Math.sin(time*3)*.06,t.p[2]];S3.marker.r=[0,time*2,0];const rc=P(G.turn).col;if(S3.ring.col!==rc){S3.ring.mat=mat(rc,{em:.6,spec:.4});S3.ring.col=rc}S3.ring.visible=t.visible;const ps=.34+Math.sin(time*4)*.035;S3.ring.p=[t.p[0],.03,t.p[2]];S3.ring.s=[ps,ps,ps*.55]}else{S3.marker.visible=false;S3.ring.visible=false}
+    if(G&&!G.over&&tok3[G.turn]&&$('#title').hidden){const t=tok3[G.turn];S3.marker.visible=t.visible;S3.marker.p=[t.p[0],t.p[1]+.62+Math.sin(time*3)*.06,t.p[2]];S3.marker.r=[0,time*2,0];const rc=P(G.turn).col;if(S3.ring.col!==rc){S3.ring.mat=mat(rc,{em:.6,spec:.4});S3.markMat.c=hex(rc);S3.ring.col=rc}S3.ring.visible=t.visible;const ps=.34+Math.sin(time*4)*.035;S3.ring.p=[t.p[0],.03,t.p[2]];S3.ring.s=[ps,ps,ps*.55]}else{S3.marker.visible=false;S3.ring.visible=false}
     if(!$('#title').hidden){camT.yaw+=dt*.07;camT.rate=2;camT.L=Math.max(16,7.4/(Math.tan(19*Math.PI/180)*aspect()));camT.pitch=.8;camT.look=[0,0,0]}
   }
   camUpdate(dt);drawScene(time);
@@ -1042,11 +1054,12 @@ function auctionUI(i,order){
 /* ================= ASSETS ================= */
 function openAssets(p,opts={}){
   const debt=opts.debt||0,ro=!!opts.readonly;
-  return modal({cls:'wide',tdef:ro?undefined:debt?'auto':'done',html:'<div class="mh"></div><div class="ahead"></div><div class="alist"></div><div class="mbar foot"></div>',onMount:(pn,close)=>{
+  return modal({cls:'wide',tdef:ro?undefined:debt?'auto':'done',html:'<div class="ahd"><div class="mh"></div><div class="cashbar"></div></div><div class="ahead"></div><div class="alist"></div><div class="mbar foot"></div>',onMount:(pn,close)=>{
     const draw=()=>{
       pn.querySelector('.mh').textContent=ro?`${p.name}’s portfolio`:'Your properties';
       const ownGroups=Object.keys(GROUPS).filter(g=>ownsAll(p.id,g)).map(g=>GNAME[g]);
-      pn.querySelector('.ahead').innerHTML=(debt?`<div class="debt">${opts.who?'<b>'+esc(p.name)+'</b>: ':''}You owe <b>${fmt(debt)}</b>${opts.to?' to '+esc(opts.to.name):''}. Cash: <b>${fmt(p.cash)}</b>. ${p.cash>=debt?'You can pay now.':`Raise <b>${fmt(debt-p.cash)}</b> more by selling buildings or mortgaging. You could raise up to ${fmt(liquidity(p))} in total.`}</div>`:`<div class="mtxt">Cash <b>${fmt(p.cash)}</b> · Net worth <b>${fmt(netWorth(p))}</b>${p.goojf.length?` · ${p.goojf.length} get-out-of-jail card${p.goojf.length>1?'s':''}`:''}${ownGroups.length?`<br><span class="muted">Full sets: ${ownGroups.join(', ')}. Build houses evenly across a set.</span>`:''}</div>`);
+      const cb=pn.querySelector('.cashbar');if(cb){const was=+cb.dataset.v;cb.dataset.v=p.cash;cb.innerHTML=`<span>${ro?esc(p.name)+'’s cash':'Cash left'}</span><b>${fmt(p.cash)}</b>`+(was&&was!==p.cash?`<em class="${p.cash>was?'up':'dn'}">${p.cash>was?'+':'−'}${fmt(Math.abs(p.cash-was))}</em>`:'');if(was&&was!==p.cash){cb.classList.remove('flash');void cb.offsetWidth;cb.classList.add('flash')}}
+      pn.querySelector('.ahead').innerHTML=(debt?`<div class="debt">${opts.who?'<b>'+esc(p.name)+'</b>: ':''}You owe <b>${fmt(debt)}</b>${opts.to?' to '+esc(opts.to.name):''}. Cash: <b>${fmt(p.cash)}</b>. ${p.cash>=debt?'You can pay now.':`Raise <b>${fmt(debt-p.cash)}</b> more by selling buildings or mortgaging. You could raise up to ${fmt(liquidity(p))} in total.`}</div>`:`<div class="mtxt">Net worth <b>${fmt(netWorth(p))}</b>${p.goojf.length?` · ${p.goojf.length} get-out-of-jail card${p.goojf.length>1?'s':''}`:''}${ownGroups.length?`<br><span class="muted">Full sets: ${ownGroups.join(', ')}. Build houses evenly across a set.</span>`:''}</div>`);
       const L=pn.querySelector('.alist');L.innerHTML='';
       const list=propsOf(p.id);
       if(!list.length)L.innerHTML='<div class="mtxt muted">No properties yet. Land on an unowned street and buy it, or win it at auction.</div>';
@@ -1056,7 +1069,7 @@ function openAssets(p,opts={}){
         const ab=r.querySelector('.ab');
         if(!ro){
           const B=(lab,cls,ok,fn)=>{const b=el('button','sm '+cls,lab);b.disabled=!ok;b.onclick=()=>{fn();renderRoster();draw()};ab.append(b)};
-          if(s.t==='prop'&&ownsAll(p.id,s.g)&&!o.m){B(`${o.h===4?'+Hotel':'+House'} ${fmt(s.h)}`,'go',!debt&&canBuild(p.id,i),()=>build(p.id,i));if(o.h)B(`Sell +${fmt(s.h/2)}`,'warn',canSell(p.id,i),()=>sell(p.id,i))}
+          if(s.t==='prop'&&ownsAll(p.id,s.g)&&!o.m){B(`${o.h===4?'+Hotel':'+House'} ${fmt(s.h)}<small>${p.cash>=s.h?'leaves '+fmt(p.cash-s.h):'not enough cash'}</small>`,'go',!debt&&canBuild(p.id,i),()=>build(p.id,i));if(o.h)B(`Sell +${fmt(s.h/2)}`,'warn',canSell(p.id,i),()=>sell(p.id,i))}
           if(o.m)B(`Redeem ${fmt(unmCost(i))}`,'go',!debt&&canUnmort(p.id,i),()=>unmortgage(p.id,i));
           else B(`Mortgage +${fmt(s.p/2)}`,'warn',canMortgage(p.id,i),()=>mortgage(p.id,i));
         }
@@ -1072,12 +1085,13 @@ async function humanRaise(p,amt,to){
 
 /* ================= TRADE ================= */
 const tradable=pid=>propsOf(pid).filter(i=>SQ[i].t!=='prop'||GROUPS[SQ[i].g].every(j=>G.own[j].h===0));
-async function openTrade(p){
-  const others=alive().filter(q=>q.id!==p.id);if(!others.length)return;
-  let q=others[0],give=new Set(),get=new Set(),gc=0,rc=0,gcard=0,rcard=0;
-  const k=await modal({cls:'wide',tdef:'x',html:'<div class="mh">Make a deal</div><div class="who"></div><div class="tcols"><div class="tcol tg"></div><div class="tcol tr"></div></div><div class="mtxt muted">Streets with buildings in their colour set can’t be traded. Sell the buildings first.</div><div class="mbar foot"></div>',onMount:(pn,close)=>{
-    const chipList=(pid,set)=>{const w=el('div','chips');const ts=tradable(pid);if(!ts.length)w.innerHTML='<span class="mtxt muted">Nothing tradable</span>';
-      ts.forEach(i=>{const c=el('button','pchip'+(set.has(i)?' on':''),`<i style="background:${SQ[i].g?GC[SQ[i].g]:'#cfd8d4'}"></i>${SQ[i].n}${G.own[i].m?' (M)':''}`);c.onclick=()=>{set.has(i)?set.delete(i):set.add(i);draw()};w.append(c)});return w};
+async function openTrade(p){const t=await tradeEditor(p,{});if(!t)return;await resolveTrade(t);renderRoster()}
+async function tradeEditor(p,o){
+  const others=o.partner!=null?[P(o.partner)]:alive().filter(q=>q.id!==p.id);if(!others.length)return null;const pre=o.pre||{};
+  let q=others[0],give=new Set(pre.give||[]),get=new Set(pre.get||[]),gc=pre.gc||0,rc=pre.rc||0,gcard=pre.gcard||0,rcard=pre.rcard||0;
+  const k=await modal({cls:'wide',tdef:'x',html:'<div class="mh">'+(o.title||'Make a deal')+'</div><div class="who"></div><div class="tcols"><div class="tcol tg"></div><div class="tcol tr"></div></div><div class="mtxt muted">Streets with buildings in their colour set can’t be traded. Sell the buildings first.</div><div class="mbar foot"></div>',onMount:(pn,close)=>{
+    const chipList=(pid,set)=>{const w=el('div','chips');const ts=tradable(pid).filter(i=>G.own[i].o===pid);if(!ts.length)w.innerHTML='<span class="mtxt muted">Nothing tradable</span>';
+      ts.forEach(i=>{const c=el('button','pchip'+(set.has(i)?' on':''),`<i style="background:${SQ[i].g?GC[SQ[i].g]:'#cfd8d4'}"></i>${SQ[i].n}${G.own[i].m?' (M)':''}`);c.style.setProperty('--g',SQ[i].g?GC[SQ[i].g]:'#cfd8d4');c.onclick=()=>{set.has(i)?set.delete(i):set.add(i);draw()};w.append(c)});return w};
     const stepper=(val,max,set)=>{const w=el('div','step');[-50,-10].forEach(d=>{const b=el('button','sm',d);b.onclick=()=>{set(Math.max(0,val+d));draw()};w.append(b)});w.append(el('output','',fmt(val)));[10,50].forEach(d=>{const b=el('button','sm','+'+d);b.disabled=val+d>max;b.onclick=()=>{set(Math.min(max,val+d));draw()};w.append(b)});return w};
     const draw=()=>{
       const who=pn.querySelector('.who');who.innerHTML='';
@@ -1088,19 +1102,24 @@ async function openTrade(p){
       tr.innerHTML=`<h4>YOU GET FROM ${esc(q.name).toUpperCase()}</h4>`;tr.append(chipList(q.id,get),stepper(rc,q.cash,v=>rc=v));
       if(q.goojf.length){const b=el('button','pchip'+(rcard?' on':''),'Get-out-of-jail card');b.onclick=()=>{rcard=rcard?0:1;draw()};tr.append(b)}
       const F=pn.querySelector('.foot');F.innerHTML='';const c=el('button','btn','Cancel');c.onclick=()=>close('x');
-      const pr=el('button','btn pri','Propose deal');pr.disabled=!(give.size||get.size||gc||rc||gcard||rcard);pr.onclick=()=>close('go');F.append(c,pr);
+      const pr=el('button','btn pri',o.cta||'Propose deal');pr.disabled=!(give.size||get.size||gc||rc||gcard||rcard);pr.onclick=()=>close('go');F.append(c,pr);
     };draw();}});
-  if(k!=='go')return;
-  await resolveTrade({from:p.id,to:q.id,give:[...give],get:[...get],gc,rc,gcard,rcard});
-  renderRoster();
+  if(k!=='go')return null;
+  return {from:p.id,to:q.id,give:[...give],get:[...get],gc,rc,gcard,rcard};
 }
-async function resolveTrade(t){
-  const f=P(t.from),r=P(t.to);let ok;
+function validTrade(t){const f=P(t.from),r=P(t.to);if(!f||!r||f.bankrupt||r.bankrupt)return false;
+  return t.give.every(i=>G.own[i].o===f.id)&&t.get.every(i=>G.own[i].o===r.id)&&t.gc<=f.cash&&t.rc<=r.cash&&(!t.gcard||f.goojf.length)&&(!t.rcard||r.goojf.length)}
+function counterOf(t){return{from:t.to,to:t.from,give:t.get.slice(),get:t.give.slice(),gc:t.rc,rc:t.gc,gcard:t.rcard,rcard:t.gcard}}
+async function resolveTrade(t,depth=0){
+  const f=P(t.from),r=P(t.to);let ok,counter=null;
+  if(!validTrade(t)){toast('That deal is no longer possible.');return false}
   if(r.ai){await sleep(600);ok=aiAccept(t);toast(ok?`${r.name} accepts the deal!`:`${r.name}: “Abeg, no be so.” Deal declined.`)}
-  else if(isRemote(r)){toast(`Waiting for ${r.name} to answer…`);const a=await askRemote(r,'trade',t);ok=!!(a&&a.ok);toast(ok?`${r.name} accepts the deal!`:`${r.name} declined the deal`)}
-  else ok=(await modal({cls:'wide',html:`<div class="mh">Deal offered to ${esc(r.name)}</div><div class="mtxt muted">${f.ai?'':'Pass the phone to '+esc(r.name)+'.'}</div>${tradeSummary(t)}`,btns:[{k:'no',label:'Decline'},{k:'yes',label:'Accept deal',primary:true}]}))==='yes';
-  if(ok)executeTrade(t);else log(`${r.name} declined a deal from ${f.name}`);
-  return ok;
+  else if(isRemote(r)){toast(`Waiting for ${r.name} to answer…`);const a=await askRemote(r,'trade',Object.assign({depth},t),depth?60000:40000);ok=!!(a&&a.ok);if(a&&a.counter&&depth<3)counter=a.counter;toast(ok?`${r.name} accepts the deal!`:counter?`${r.name} sent a counter offer`:`${r.name} declined the deal`)}
+  else{const k=await modal({cls:'wide',tdef:'no',html:`<div class="mh">${depth?'Counter offer':'Deal offered'} to ${esc(r.name)}</div><div class="mtxt muted">${f.ai||isRemote(f)?'':'Pass the phone to '+esc(r.name)+'.'}</div>${tradeSummary(t)}`,btns:[{k:'no',label:'Decline'},...(depth<3?[{k:'counter',label:'Counter offer'}]:[]),{k:'yes',label:'Accept deal',primary:true}]});
+    ok=k==='yes';if(k==='counter'){counter=await tradeEditor(r,{partner:f.id,pre:counterOf(t),title:`Counter offer to ${esc(f.name)}`,cta:'Send counter offer'});if(!counter)log(`${r.name} declined a deal from ${f.name}`)}}
+  if(ok){executeTrade(t);return true}
+  if(counter){log(`${r.name} made a counter offer to ${f.name}`);return await resolveTrade(counter,depth+1)}
+  log(`${r.name} declined a deal from ${f.name}`);return false;
 }
 function executeTrade(t){
   const f=P(t.from),r=P(t.to);
@@ -1291,11 +1310,18 @@ function showDiceHud(d){if(FAST)return;const h=$('#diceHud');h.innerHTML=dieFace
 
 /* ================= PROPERTY CHIPS ================= */
 function houseLabel(i){const h=G.own[i].h;return h===5?'Hotel':h?h+' house'+(h>1?'s':''):''}
-function propChip(i){const s=SQ[i],o=G.own[i],gc=s.g?GC[s.g]:'#9aa6b4';const set=s.g?GNAME[s.g]:s.t==='rail'?'Transport':'Utility';
-  return `<span class="tchip" style="--g:${gc}"><i></i><span><b>${s.n}</b><small>${set}${o.h?' · '+houseLabel(i):''}${o.m?' · mortgaged':''}</small></span></span>`}
-function tradeSide(props,cash,card){const parts=props.map(propChip);if(cash)parts.push(`<span class="tchip cash"><i></i><span><b>${fmt(cash)}</b><small>Cash</small></span></span>`);if(card)parts.push(`<span class="tchip card"><i></i><span><b>Get out of Kirikiri</b><small>Card</small></span></span>`);return parts.join('')||'<span class="muted">Nothing</span>'}
+function ownHint(i,viewer,incoming,t){if(viewer==null)return '';const s=SQ[i];
+  if(s.g){const gr=GROUPS[s.g],have=gr.filter(j=>G.own[j].o===viewer).length;
+    if(incoming){const after=gr.filter(j=>G.own[j].o===viewer||t.give.includes(j)||(t.from===viewer&&t.get.includes(j))).length;
+      if(after===gr.length)return `<em class="hint good">Completes your ${GNAME[s.g]} set!</em>`;if(have)return `<em class="hint">You own ${have} of ${gr.length} in this set</em>`;return ''}
+    if(have===gr.length)return `<em class="hint bad">Breaks your full ${GNAME[s.g]} set</em>`;return ''}
+  const arr=s.t==='rail'?RAILS:UTILS,have=arr.filter(j=>G.own[j].o===viewer).length;
+  if(incoming&&have)return `<em class="hint">You own ${have} ${s.t==='rail'?'transport hub'+(have>1?'s':''):'utility'}</em>`;return ''}
+function propChip(i,viewer,incoming,t){const s=SQ[i],o=G.own[i],gc=s.g?GC[s.g]:'#9aa6b4';const set=s.g?GNAME[s.g]:s.t==='rail'?'Transport':'Utility';
+  return `<span class="tchip" style="--g:${gc}"><i></i><span><b>${s.n}</b><small>${set}${o.h?' · '+houseLabel(i):''}${o.m?' · mortgaged':''}</small>${ownHint(i,viewer,incoming,t)}</span></span>`}
+function tradeSide(props,cash,card,viewer,incoming,t){const parts=props.map(i=>propChip(i,viewer,incoming,t));if(cash)parts.push(`<span class="tchip cash"><i></i><span><b>${fmt(cash)}</b><small>Cash</small></span></span>`);if(card)parts.push(`<span class="tchip card"><i></i><span><b>Get out of Kirikiri</b><small>Card</small></span></span>`);return parts.join('')||'<span class="muted">Nothing</span>'}
 function tradeSummary(t){const f=P(t.from);
-  return `<div class="tsum"><div><h4>${esc(f.name)} gives</h4><div class="tchips">${tradeSide(t.give,t.gc,t.gcard)}</div></div><div><h4>${esc(f.name)} wants</h4><div class="tchips">${tradeSide(t.get,t.rc,t.rcard)}</div></div></div>`}
+  return `<div class="tsum"><div><h4>${esc(f.name)} gives you</h4><div class="tchips">${tradeSide(t.give,t.gc,t.gcard,t.to,true,t)}</div></div><div><h4>${esc(f.name)} wants from you</h4><div class="tchips">${tradeSide(t.get,t.rc,t.rcard,t.to,false,t)}</div></div></div>`}
 
 /* ================= UI OVERRIDES ================= */
 function renderRoster(){
@@ -1400,7 +1426,7 @@ async function applyRemote(ng){
     if(G.over&&!old.over){NET.applying=false;finish();return}
   }finally{NET.applying=false}
 }
-async function askRemote(p,kind,payload,timeout=40000){
+async function askRemote(p,kind,payload,timeout=kind==='trade'?150000:40000){
   const id='a'+Date.now().toString(36)+Math.floor(Math.random()*1e6).toString(36);
   const askRef=NET.ref.collection('ask').doc(id),ansRef=NET.ref.collection('ans').doc(id);
   try{await askRef.set({to:p.uid,kind,payload,at:Date.now()})}catch(e){return null}
@@ -1416,7 +1442,8 @@ async function handleAsk(snap){
     const btns=[{k:0,label:'Drop out',danger:true},...[10,50,100].filter(x=>bid+x<=cash).map((x,j)=>({k:bid+x,label:'Bid '+fmt(bid+x),primary:j===0}))];
     const v=await modal({cls:'wide',auto:35000,html:`<div class="mh">Auction: your bid</div><div class="row2">${deedHTML(i)}<div class="slotbar sidecol"><div class="mtxt">Highest bid: <b>${bid?fmt(bid):'none yet'}</b>${leader>=0?' by '+esc(P(leader).name):''}.<br>Your cash: <b>${fmt(cash)}</b>. You have 35 seconds.</div></div></div>`,btns});
     ans={v:+v||0}}
-  else if(a.kind==='trade'){const v=await modal({cls:'wide',auto:38000,html:`<div class="mh">${esc(P(a.payload.from).name)} offers you a deal</div>${tradeSummary(a.payload)}<div class="mtxt muted">No answer in 38 seconds counts as a decline.</div>`,btns:[{k:'no',label:'Decline'},{k:'yes',label:'Accept deal',primary:true}]});ans={ok:v==='yes'}}
+  else if(a.kind==='trade'){const t=a.payload,d=t.depth||0;const v=await modal({cls:'wide',auto:38000,html:`<div class="mh">${esc(P(t.from).name)} ${d?'counters with':'offers you'} a deal</div>${tradeSummary(t)}<div class="mtxt muted">No answer in 38 seconds counts as a decline.</div>`,btns:[{k:'no',label:'Decline'},...(d<3?[{k:'counter',label:'Counter offer'}]:[]),{k:'yes',label:'Accept deal',primary:true}]});
+    if(v==='counter'){const me=G.players.find(x=>x.uid===NET.me);const c=me?await tradeEditor(me,{partner:t.from,pre:counterOf(t),title:'Counter offer to '+esc(P(t.from).name),cta:'Send counter offer'}):null;ans=c?{ok:false,counter:c}:{ok:false}}else ans={ok:v==='yes'}}
   try{await ansRef.set(ans)}catch(e){}
 }
 async function netStartGame(code,ref,data){
