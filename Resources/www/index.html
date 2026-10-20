@@ -595,7 +595,9 @@ const SOURCES = {
   tht: ["Theria Games — Abyssal Tide","https://theriagames.com/guide/archero-2-abyssal-tide-guide/"],
   pgb: ["Pro Game Guides — Beginner's Guide","https://progameguides.com/archero-2/archero-2-beginners-guide/"],
   ytrl:["YouTube — Rumble Ladder Guide","https://www.youtube.com/watch?v=CLWjHrchUMM"],
-  ytel:["YouTube — Eternal Lode Guide","https://www.youtube.com/watch?v=k_JahcWlkGk"]
+  ytel:["YouTube — Eternal Lode Guide","https://www.youtube.com/watch?v=k_JahcWlkGk"],
+  appst:["App Store — Archero 2 (events banner)","https://apps.apple.com/us/app/archero-2/id6502820653"],
+  ytair:["YouTube — Airship Trade Fast Guide (Grinnn, 20 Oct 2026)","https://youtube.com/watch?v=IZxtDEqWfPs"]
 };
 
 const HEROES = [
@@ -786,16 +788,17 @@ const TWIN = [
 const TWIN_NOPAIR = ["Sharp Arrow","Arrow Rain","Revive"];
 const TWIN_COST = [["Legendary+2 + Legendary+2","5,000","10,000"],["Legendary+2 + Legendary+3","7,500","15,000"],["Legendary+3 + Legendary+3","10,000","20,000"],["Legendary+2 + Mythic","12,500","25,000"],["Legendary+3 + Mythic","15,000","30,000"],["Mythic + Mythic","20,000","40,000"]];
 /* [other name you may see, name used in this app (Game Vault wiki), what it is, confidence] */
-const GAME = {ver:"v1.1.9", checked:"2026-10-18"};
+const GAME = {ver:"v1.1.9", checked:"2026-10-20"};
 const REPORT_URL = "https://github.com/p2rmy5ks88-design/a2-guide/issues/new";
 /* Last time each card was compared with current guides. Anything not listed uses GAME.checked. */
 const CHECKED = {
   "mode:normal":"2026-10-17","mode:hard":"2026-10-17","mode:invasion":"2026-10-17","mode:tower":"2026-10-17","mode:seal":"2026-10-17",
   "mode:plant":"2026-10-17","mode:arena":"2026-10-17","mode:peak":"2026-10-17","mode:jungle":"2026-10-17","mode:tide":"2026-10-17",
   "event:Angler's Bounty (Fishing)":"2026-10-18","event:All-Star Cup":"2026-10-18","event:Island Treasure (Dice)":"2026-10-17",
-  "runes":"2026-10-18","chapters":"2026-10-17","heroes":"2026-10-17"
+  "runes":"2026-10-18","event:Airship Trade":"2026-10-20","chapters":"2026-10-17","heroes":"2026-10-17"
 };
 const CHANGELOG = [
+  ["2026-10-20","Events",["New: Airship Trade card (early info, confirmed facts plus first-week tips)"]],
   ["2026-10-18","Trust & freshness",["\"Checked\" date and game version on every mode, event and preset","Report outdated info button on each card","This What's new page, with a guide to the Sourced / Inferred labels","Builds now described as starting points, with the reason they work"]],
   ["2026-10-18","Runes",["Rune names matched to the Game Vault wiki (Rotating SPD Up, Rootguard, Equinox Bloom and more)","Name mapping table rebuilt: other names you may see → name used here","Full Twinborn pair list and Runic Remnant costs"]],
   ["2026-10-18","Events",["All-Star Cup guide with season setup","Fishing: Twinborn Core milestones and gems needed per milestone step"]],
@@ -933,6 +936,17 @@ const RUNEPKG = {echoes:"Main weapon (Arrow of Echoes)",orb:"Orb / Circle",strik
 
 /* =================== EVENTS =================== */
 const EVENTS = [
+  {name:"Airship Trade",cyc:"limited",label:"NEW · major update · guild + personal airships",src:["appst","ytair"],early:true,
+   what:"Send Guild or Personal Airships across a trade map to earn rewards. Brand-new event: no written guide or wiki page exists yet, so this card only lists what's confirmed plus safe first-week advice. Details will be added as they're verified.",
+   tips:[["Official description: send Guild or Personal Airships across the trade map.",1],
+         ["Your skill and core choices matter: Grinnn's launch guide is built around the best skills and cores to bring and how to trade fast.",1],
+         ["Keep your personal airship busy. In send-and-return events, idle time is reward you never get back.",0],
+         ["Join every guild airship run, and check guild chat for the run times. Shared runs usually pay more than solo ones.",0],
+         ["Read the in-game ⓘ page before you spend anything. Note the trade routes, reward tiers and the shop.",0],
+         ["Don't spend gems in the first days. Wait until the shop and reward tiers show what's actually worth buying.",0]],
+   setup:[["Still to confirm","Event length, trade currency, route rewards, shop prices, and which skills/cores work best. Send a screenshot of the ⓘ page or report it from this card."]],
+   buy:[],spend:"Hold gems until the shop values are known.",
+   f2p:"Daily sends plus guild runs should be the core of free rewards (inferred until confirmed)."},
   {name:"Angler's Bounty (Fishing)",cyc:"monthly",label:"Occasional · ~monthly",src:["hubf","hubfs","wikf"],visual:"fish",
    what:"Catch fish in a gauge mini-game. Sets of 40 fish (1 Legendary); the final zone, Polar Glacier, has 80 per set (2 Legendary). Completing a set moves you on.",
    tips:[["Higher bait multipliers (1×–50×) raise grade odds but burn bait faster. Extra bait costs gems (see the Twinborn Core section).",1],
@@ -1529,7 +1543,7 @@ let evFilter = "all";
 function renderEvents(){
   const list = EVENTS.filter(e=>evFilter==="all"||e.cyc===evFilter);
   $("#eventList").innerHTML = list.map(e=>`<details class="fold"${e.visual?" open":""}>
-    <summary><div><h3>${esc(e.name)}</h3><div class="sub">${esc(e.label)}</div></div><span class="cyc">${esc(e.cyc)}</span></summary>
+    <summary><div><h3>${esc(e.name)}${e.early?` <span class="tag t-inf">Early info</span>`:""}</h3><div class="sub">${esc(e.label)}</div></div><span class="cyc">${esc(e.cyc)}</span></summary>
     <div class="body">
       <p style="margin:0">${esc(e.what)}</p>
       ${e.visual==="fish"?fishVisual()+coreBlock():e.visual==="dice"?diceBlock():""}
