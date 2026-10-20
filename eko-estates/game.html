@@ -336,12 +336,46 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--navy);outline-o
 @keyframes achin{from{transform:translate(-50%,-120%)}}@keyframes achout{to{transform:translate(-50%,-140%);opacity:0}}
 .achpop .trophy{font:34px/1 var(--emoji)}.achpop small{display:block;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--danfo);font-weight:800}
 .achpop b{display:block;font:20px/1.1 var(--display)}.achpop em{display:block;font-style:normal;font-size:12.5px;font-weight:800;color:#bff0cf}
-.achlist{display:flex;flex-direction:column;gap:6px;max-height:58vh;overflow:auto}
-.ach{display:grid;grid-template-columns:34px 1fr auto;gap:10px;align-items:center;padding:8px 10px;border-radius:12px;background:var(--panel2)}
+.achlist{display:flex;flex-direction:column;gap:6px}
+.ach{flex:none;display:grid;grid-template-columns:34px 1fr auto;gap:2px 10px;align-items:center;padding:6px 10px;border-radius:12px;background:var(--panel2)}
 .ach.done{background:#fff7d6}.ach .trophy{font:24px/1 var(--emoji);text-align:center}.ach .ai{min-width:0}
 .ach b{display:block;font-size:13.5px}.ach small{display:block;font-size:11.5px;color:var(--muted)}
 .ach .rw{font-size:11.5px;font-weight:800;color:var(--green);text-align:right;max-width:150px}
 .ach .bar{display:block;height:6px;border-radius:3px;background:#dde5ee;margin:4px 0 2px;overflow:hidden}.ach .bar i{display:block;height:100%;background:var(--green)}
+
+.prof{display:flex;align-items:center;gap:8px;margin:14px 0 10px;padding:8px;border-radius:18px;background:rgba(255,255,255,.95);box-shadow:0 5px 0 rgba(19,40,74,.2);max-width:440px;color:var(--navy)}
+.plv{flex:none;width:52px;height:52px;border-radius:50%;background:var(--navy);color:var(--danfo);display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 0 0 3px var(--danfo)}
+.plv b{font:22px/1 var(--display)}.plv small{font-size:8px;font-weight:800;letter-spacing:.1em;color:#fff}
+.pinfo2{flex:1;min-width:0}.pinfo2 b{display:block;font:16px var(--display)}.pinfo2 small{font-size:10.5px;color:var(--muted);font-weight:700}
+.xpbar{display:block;height:8px;border-radius:4px;background:#dde5ee;overflow:hidden;margin:3px 0 2px}.xpbar i{display:block;height:100%;background:linear-gradient(90deg,var(--green),#3fd27e);border-radius:4px}
+.pbtn{flex:none;display:flex;flex-direction:column;align-items:center;gap:1px;padding:5px 8px;border-radius:12px;border:2px solid var(--line);background:#fff;font:18px/1 var(--emoji);color:var(--navy);min-width:52px}
+.pbtn b{font:13px var(--display)}.pbtn small{font:800 9px var(--body);color:var(--muted);letter-spacing:.04em}
+.pbtn.ready{border-color:var(--danfo);animation:breathe 1.6s ease-in-out infinite;background:#fff8dc}.pbtn.streak{border-color:#ffd1b0}
+.wheelwrap{display:grid;place-items:center;gap:10px;position:relative;padding:6px 0}
+.wheel{width:min(240px,60vw);aspect-ratio:1;max-width:100%;border-radius:50%;position:relative;box-shadow:0 0 0 6px #fff,0 0 0 9px var(--navy),0 8px 0 9px rgba(19,40,74,.25)}
+.wheel span{position:absolute;left:50%;top:50%;width:0;height:0}
+.wheel span b{position:absolute;left:0;top:0;transform:translate(-50%,-50%) translateY(calc(min(120px,30vw) * -.64));font:13px var(--display);color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.5);white-space:nowrap}
+.wpin{position:absolute;top:0;left:50%;transform:translateX(-50%);width:0;height:0;border:14px solid transparent;border-top:24px solid var(--navy);z-index:2}
+.achtabs{flex:none;display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin}
+.atab{flex:none;display:flex;flex-direction:column;gap:2px;padding:6px 10px;border-radius:12px;border:2px solid var(--line);background:#fff;color:var(--navy);text-align:left;min-width:96px}
+.atab b{font-size:12px}.atab small{font-size:10px;color:var(--muted);font-weight:800}.atab.on{border-color:var(--navy);box-shadow:0 0 0 2px var(--navy)}
+.atab .mini{display:block;height:5px;border-radius:3px;background:#dde5ee;overflow:hidden}.atab .mini i{display:block;height:100%;background:var(--green)}
+.cityhead{flex:none;display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:14px;background:var(--navy);color:#fff}
+.cityhead .medal{font:30px/1 var(--emoji)}.cityhead b{display:block;font:18px var(--display)}.cityhead small{font-size:11px;color:#c9d6e6}
+.cityhead .big{margin-left:auto;min-width:120px;text-align:right}.cityhead .bar{display:block;height:8px;border-radius:4px;background:rgba(255,255,255,.2);overflow:hidden}.cityhead .bar i{display:block;height:100%;background:var(--danfo)}
+.ach .bar{display:block}
+.cprog{display:flex;align-items:center;gap:5px;margin-top:4px}.cprog .bar{flex:1;height:5px;border-radius:3px;background:#dde5ee;overflow:hidden}.cprog .bar i{display:block;height:100%;background:var(--green)}.cprog em{font-style:normal;font-size:10px;font-weight:800;color:var(--muted);white-space:nowrap}
+.tag.lv{background:var(--danfo);color:var(--danfo-ink)}
+.pcard.gold .pt{box-shadow:0 0 0 2px #f2b632,0 0 10px 2px rgba(242,182,50,.8)}
+.xpfloat{position:fixed;right:max(20px,env(safe-area-inset-right,0px));top:40%;z-index:70;font:20px var(--display);color:var(--green);text-shadow:0 2px 0 #fff,0 0 6px #fff;pointer-events:none;animation:fl 1.6s ease-out forwards}
+.evban{position:fixed;left:50%;top:32%;transform:translateX(-50%);z-index:60;padding:12px 22px;border-radius:18px;background:#7b1fa2;color:#fff;text-align:center;box-shadow:0 0 0 4px #fff,0 8px 0 4px rgba(19,40,74,.3);animation:achin .5s cubic-bezier(.2,1.4,.4,1);pointer-events:none;max-width:calc(100% - 32px)}
+.evban b{display:block;font:24px var(--display)}.evban span{font-size:13px;font-weight:700}.evban.bye{animation:achout .4s ease-in forwards}
+.endgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.endgrid>div{min-width:0;display:flex;flex-direction:column;gap:6px}
+.hls{display:flex;flex-direction:column;gap:5px}.hls>div{display:flex;gap:8px;align-items:center;padding:6px 8px;border-radius:10px;background:var(--panel2)}
+.hls i{font:20px/1 var(--emoji);font-style:normal}.hls b{display:block;font-size:12.5px}.hls small{display:block;font-size:11px;color:var(--muted)}
+.xpcard{padding:8px 10px;border-radius:12px;background:#e9f7ef}.xprow{display:flex;justify-content:space-between;align-items:baseline;gap:8px}.xprow b{font:20px var(--display);color:var(--green)}.xprow span{font-size:12px;font-weight:800}
+.xpcard small{font-size:11px;color:var(--muted);font-weight:700}
+@media (orientation:portrait){.endgrid{grid-template-columns:minmax(0,1fr)}.prof{flex-wrap:wrap}}
 </style>
 
 <canvas id="gl" aria-label="3D game board"></canvas>
@@ -800,7 +834,7 @@ function buildBoard(){
     const strip=N(geo.box,mat('#fff'),wx(st.x+st.w/2),.012,wz(st.y+st.h/2)).sc(st.w*U,.024,st.h*U);strip.visible=false;S3.dyn.add(strip);S3.strips[i]=strip;
     const mo=N(geo.plane,S3.mortMat,wx(r.x+r.w/2),.006,wz(r.y+r.h/2)).sc(r.w*U,1,r.h*U);mo.visible=false;S3.dyn.add(mo);S3.morts[i]=mo;
     if(SQ[i].t==='prop'){const pt=[[r.x+r.w/2,r.y+15],[r.x+r.w-15,r.y+r.h/2],[r.x+r.w/2,r.y+r.h-15],[r.x+15,r.y+r.h/2]][s];const hn=new Node().at(wx(pt[0]),0,wz(pt[1])).rot(0,OUTYAW(s),0);S3.dyn.add(hn);S3.houses[i]=hn}}
-  tok3=G.players.map(p=>{const t=tokenModel(p.tok,p.col);t.sc(.82);S3.dyn.add(t);return t});
+  tok3=G.players.map(p=>{const t=tokenModel(p.tok,p.col);if(isLocalHuman(p)&&hasLvl(5))t.add(N(S3.geo.torus,mat('#f2b632',{spec:.95,em:.15}),0,.012,0).sc(.25,.25,.12).rot(Math.PI/2,0,0));t.sc(.82);S3.dyn.add(t);return t});
   cellState=SQ.map(()=>({o:-1,h:0,m:false}));
   SQ.forEach((_,i)=>updateCell(i,false));G.players.forEach(p=>placeToken(p));
 }
@@ -969,7 +1003,7 @@ async function hopTo(p){
 async function settleToken(p){if(FAST||!S3)return;const t=tok3[p.id];if(!t)return;const m=t.m||t;const y0=t.p[1],r0=m.r.slice();const eagle=MOVE[p.tok]&&MOVE[p.tok].kind==='eagle';
   await tween(eagle?520:220,k=>{t.p=[t.p[0],y0*(1-k),t.p[2]];m.r=r0.map(v=>v*(1-k));t.s=[.82,.82,.82];if(t.sh)t.sh.s=[.52,1,.52];if(eagle&&t.wings){const f=Math.sin(k*Math.PI*6)*.6*(1-k);t.wings[0].r=[f,0,0];t.wings[1].r=[-f,0,0]}if(t.lid)t.lid.p=[0,.235,0]},eOut);t.flyY=0}
 async function moveSteps(p,n){
-  for(let k=0;k<n;k++){p.pos=(p.pos+1)%40;if(p.pos===0){p.lapped=true;const dbl=G.set.goDouble&&k===n-1;p.cash+=dbl?400:200;float(p.id,dbl?400:200);sfx('coin');log(dbl?`${p.name} landed on GO, +₦400M`:`${p.name} passed GO, +₦200M`);renderRoster()}await hopTo(p)}
+  for(let k=0;k<n;k++){p.pos=(p.pos+1)%40;if(p.pos===0){p.lapped=true;onPassGo(p);const dbl=G.set.goDouble&&k===n-1;p.cash+=dbl?400:200;float(p.id,dbl?400:200);sfx('coin');log(dbl?`${p.name} landed on GO, +₦400M`:`${p.name} passed GO, +₦200M`);renderRoster()}await hopTo(p)}
   if(!FAST){await settleToken(p);highlight(p.pos);await sleep(200)}
 }
 async function moveTo(p,t){await moveSteps(p,(t-p.pos+40)%40)}
@@ -1060,7 +1094,7 @@ async function auction(i){
     if(amt>bid){bid=amt;leader=pid;sfx('tap');upd(`${q.name} bids ${fmt(bid)}`)}else{active.delete(pid);upd(`${q.name} drops out`)}
   }
   await sleep(700);if(ui)ui.close();
-  if(leader>=0){const w=P(leader);w.cash-=bid;float(w.id,-bid);G.own[i].o=w.id;updateCell(i);sfx('buy');log(`${w.name} won ${s.n} at auction for ${fmt(bid)}`);toast(`${w.name} wins ${s.n} for ${fmt(bid)}`)}
+  if(leader>=0){const w=P(leader);w.cash-=bid;float(w.id,-bid);G.own[i].o=w.id;updateCell(i);onAuctionWin(w,i,bid);sfx('buy');log(`${w.name} won ${s.n} at auction for ${fmt(bid)}`);toast(`${w.name} wins ${s.n} for ${fmt(bid)}`)}
   else{log(`No bids for ${s.n}`);toast('No bids. It stays with the bank.')}
   renderRoster();
 }
@@ -1272,7 +1306,7 @@ async function run(){
   }catch(e){if(!(e instanceof Abort)){console.error(e);if(window.__onErr)window.__onErr(e)}}
 }
 function standings(){return [...G.players].sort((a,b)=>(a.bankrupt-b.bankrupt)||netWorth(b)-netWorth(a))}
-async function finish(){
+async function finishOld(){
   G.over=true;clearSave();if(G.online&&NET.on&&NET.host){NET.ref.update({status:'over'}).catch(()=>{})}if(FAST)return;renderRoster();updateTools();setPrompt('Game over.');$('#acts').innerHTML='';
   const st=standings(),w=st[0];achGameEnd(w);sfx('win');if(S3)S3.marker.visible=false;confetti();camOverview(w.pos,1200);
   const k=await modal({html:`<div class="mh">${esc(w.name)} is the landlord of Lagos!</div><div class="mtxt muted">Final standings by net worth</div><div class="stand">${st.map((p,i)=>`<div><em>${i+1}</em><i style="--pc:${p.col}">${p.tok}</i><span>${esc(p.name)}${p.bankrupt?' · bankrupt':''}</span><span>${fmt(p.bankrupt?0:netWorth(p))}</span></div>`).join('')}</div>`,btns:[{k:'new',label:'New game',primary:true}]});
@@ -1290,6 +1324,7 @@ const RULES=`<div class="rules">
 <h4>Kirikiri</h4><p>Pay ₦50M bail, use a get-out card, or try to roll doubles for up to three turns. After the third miss you pay bail and move.</p>
 <h4>Trading</h4><p>On your turn, trade streets, cash and get-out cards with any player. Streets in a set with buildings can’t be traded.</p>
 <h4>Speed die (house rule)</h4><p>Once you have passed GO, you also roll a red speed die. 1, 2 or 3 is added to your move. Bus: move by either white die or the total. Oga: move, then go straight on to the next property nobody owns (or the next one you must pay rent on). Triples: move to any square.</p>
+<h4>City events (house rule)</h4><p>Every two rounds a city event shakes things up for one round: the power company takes light (no utility rent), owambe weekend (+25% street rent), fuel scarcity (double transport rent), a tax holiday, or an esusu payout of ₦50M for everyone.</p>
 <h4>Turn timer</h4><p>If the timer is on, each player has 90 seconds per turn. When time runs out, the game rolls, skips buying and ends the turn for them.</p>
 <h4>Bankruptcy</h4><p>If you can’t pay, sell buildings and mortgage. If that still isn’t enough, you’re out and your assets go to whoever you owed.</p></div>`;
 async function openMenu(){
@@ -1360,12 +1395,12 @@ function tradeSummary(t){const f=P(t.from);
 function renderRoster(){
   if(FAST)return;const R=$('#roster');R.innerHTML='';
   G.players.forEach(p=>{
-    const cur=p.id===G.turn&&!G.over;const d=el('button','pcard'+(cur?' cur':'')+(p.bankrupt?' out':''));d.id='pc'+p.id;d.style.setProperty('--pc',p.col);
+    const cur=p.id===G.turn&&!G.over;const lh=isLocalHuman(p);const d=el('button','pcard'+(cur?' cur':'')+(p.bankrupt?' out':'')+(lh&&hasLvl(3)?' gold':''));d.id='pc'+p.id;d.style.setProperty('--pc',p.col);
     const props=propsOf(p.id).map(i=>{const o=G.own[i];return `<i class="pp${o.h===5?' hot':''}${o.m?' mo':''}" style="--g:${SQ[i].g?GC[SQ[i].g]:'#9aa6b4'}">${o.h===5?'H':o.h||''}</i>`}).join('');
     const me=G.online&&p.uid&&p.uid===NET.me;
-    d.innerHTML=`${cur?'<span class="nowtag">PLAYING</span>':''}<div class="pt">${p.tok}</div><div class="pinfo"><div class="pn">${esc(p.name)}${me?'<span class="tag you">You</span>':''}${p.ai?'<span class="tag">AI</span>':''}${p.inJail?'<span class="tag jail">Jail</span>':''}${p.bankrupt?'<span class="tag">Out</span>':''}</div><div class="pc">${fmt(p.cash)}</div>${props?`<div class="pg">${props}</div>`:''}</div>`;
+    d.innerHTML=`${cur?'<span class="nowtag">PLAYING</span>':''}<div class="pt">${p.tok}</div><div class="pinfo"><div class="pn">${esc(p.name)}${me?'<span class="tag you">You</span>':''}${lh?`<span class="tag lv">Lv ${lvlOf(PREF.xp)}</span>`:''}${p.ai?'<span class="tag">AI</span>':''}${p.inJail?'<span class="tag jail">Jail</span>':''}${p.bankrupt?'<span class="tag">Out</span>':''}</div><div class="pc">${fmt(p.cash)}</div>${props?`<div class="pg">${props}</div>`:''}</div>`;
     d.onclick=()=>{if(!$('#modals').children.length)openAssets(p,{readonly:true})};R.append(d)});
-  $('#round').textContent='Round '+G.round+(G.set.mode==='timed'?' of '+G.set.rounds:'')+(G.set.pot&&G.pot?' · Jackpot '+fmt(G.pot):'');
+  {const e=evNow()&&EVENTS.find(x=>x.id===evNow());$('#round').textContent='Round '+G.round+(G.set.mode==='timed'?' of '+G.set.rounds:'')+(G.set.pot&&G.pot?' · Jackpot '+fmt(G.pot):'')+(e?' · '+loc(e.t):'')}
   tok3.forEach((t,i)=>{t.visible=!P(i).bankrupt});
   $('#ui').style.setProperty('--turn',G.over?'transparent':P(G.turn).col);
   pushState();achScan();
@@ -1572,15 +1607,16 @@ function startOnlineFromDoc(code,ref,d){
 /* ================= TITLE / SETUP ================= */
 const PREF=(()=>{try{return JSON.parse(localStorage.getItem('ekoPrefs')||'{}')||{}}catch(e){return{}}})();
 function savePref(){try{localStorage.setItem('ekoPrefs',JSON.stringify(PREF))}catch(e){}}
-const RULE_INFO=[['speedDie','Speed die','After your first lap, roll a third die: add 1–3, Bus lets you pick a die, Oga sends you to the next free property, triples move you anywhere.'],['pot','Free Parking jackpot','Taxes and fines pile up on the National Theatre. Land there to scoop them.'],['goDouble','Double pay on GO','Land exactly on GO to collect ₦400M.'],['jailRent','No rent from jail','Owners sitting in Kirikiri can’t collect rent.'],['auction','Auctions','Property nobody buys goes to auction.'],['even','Even building','Build and sell evenly across a colour set.'],['interest','Mortgage interest','Redeeming costs the mortgage plus 10%.']];
+const RULE_INFO=[['events','City events','Every two rounds something happens: blackouts, owambe weekends, fuel scarcity, tax holidays or esusu payouts.'],['speedDie','Speed die','After your first lap, roll a third die: add 1–3, Bus lets you pick a die, Oga sends you to the next free property, triples move you anywhere.'],['pot','Free Parking jackpot','Taxes and fines pile up on the National Theatre. Land there to scoop them.'],['goDouble','Double pay on GO','Land exactly on GO to collect ₦400M.'],['jailRent','No rent from jail','Owners sitting in Kirikiri can’t collect rent.'],['auction','Auctions','Property nobody buys goes to auction.'],['even','Even building','Build and sell evenly across a colour set.'],['interest','Mortgage interest','Redeeming costs the mortgage plus 10%.']];
 const MODES=[['classic','Classic','Play until one landlord is left standing.'],['quick','Quick deal','Everyone starts with 2 random properties. The first bankruptcy ends the game and the richest wins.'],['timed','Round limit','Play a set number of rounds. The richest landlord wins.']];
 const setup={slots:NAMES.map((n,i)=>({name:n,tok:TOKENS[i],type:i===0?'human':i<4?'ai':'off'})),cash:1500,ai:'normal',speed:'normal',mode:'classic',rounds:20,timer:PREF.timer||0,city:'lagos',theme:['beach','night','harmattan','rainy','obudu'].includes(PREF.theme)?PREF.theme:'beach',
-  rules:Object.assign({speedDie:false,pot:false,goDouble:false,jailRent:false,auction:true,even:true,interest:true},PREF.rules||{})};
+  rules:Object.assign({events:false,speedDie:false,pot:false,goDouble:false,jailRent:false,auction:true,even:true,interest:true},PREF.rules||{})};
 function showTitle(){
   if(!setup.cityInit){setup.cityInit=1;if(PREF.city&&cityUnlocked(PREF.city))setup.city=PREF.city}
   GEN++;netStop();$('#modals').innerHTML='';$('#ui').hidden=true;clearGame();applyTheme(setup.theme);const T=$('#title');T.hidden=false;const saved=loadSave();
   T.innerHTML=`<div class="tgrid"><div class="brand"><div class="e">EKO</div><div class="s">ESTATES</div>
     <p>Buy streets across Lagos, build houses and hotels, and collect rent until everyone else is broke. Earn achievements to unlock Abuja, Port Harcourt, Warri, Enugu, Calabar, Benin City and new tokens.</p>
+    <div class="prof" id="prof"></div>
     <div class="row">${saved?'<button class="btn pri" id="tCont">Continue saved game</button>':''}<button class="btn online" id="tOnline">Play online</button><button class="btn" id="tAch">🏆 Achievements</button><button class="btn" id="tRules">How to play</button><button class="btn" id="tSound">Sound</button></div></div>
     <div class="setup">
       <h3>PLAYERS ON THIS PHONE · TAP A TOKEN TO CHANGE IT</h3><div class="slots"></div>
@@ -1601,11 +1637,11 @@ function showTitle(){
     const R=T.querySelector('#oRounds');R.innerHTML=setup.mode==='timed'?'<span>Rounds</span><div class="seg" id="oRn"></div>':'';if(setup.mode==='timed')seg('#oRn',[[10,'10'],[20,'20'],[30,'30'],[45,'45']],()=>setup.rounds,v=>setup.rounds=v)};
   const drawRules=()=>{const E=T.querySelector('#oRules');E.innerHTML='';RULE_INFO.forEach(([k,l,d])=>{const b=el('button','rchip'+(setup.rules[k]?' on':''),`<b>${l}</b><small>${d}</small>`);b.setAttribute('aria-pressed',setup.rules[k]?'true':'false');b.onclick=()=>{setup.rules[k]=!setup.rules[k];PREF.rules=setup.rules;savePref();drawRules()};E.append(b)})};
   const drawCities=()=>{const E=T.querySelector('#oCity');E.innerHTML='';CITY_ORDER.forEach(k=>{const c=CITY_DATA[k],un=cityUnlocked(k);const req=ACH.find(a=>a.reward&&a.reward.city===k);
-      const b=el('button','city'+(setup.city===k?' on':'')+(un?'':' locked'),`<i style="background:${c.sw}"></i><b>${un?'':'🔒 '}${c.name}</b><small>${un?c.blurb:'Unlock: '+esc(req.name)}</small>`);
+      const b=el('button','city'+(setup.city===k?' on':'')+(un?'':' locked'),`<i style="background:${c.sw}"></i><b>${un?'':'🔒 '}${c.name}</b><small>${un?c.blurb:'Unlock: '+esc(req.name)}</small>${un?`<span class="cprog"><span class="bar"><i style="width:${cityDone(k)/CT.length*100}%"></i></span><em>${(medalOf(cityDone(k))||[''])[0]} ${cityDone(k)}/${CT.length}</em></span>`:''}`);
       b.onclick=()=>{if(!un){modal({html:`<div class="mh">🔒 ${c.name}</div><div class="mtxt">Unlock ${c.name} with the <b>${esc(req.name)}</b> achievement: ${esc(loc(req.desc))}</div>`,btns:[{k:'a',label:'All achievements'},{k:'x',label:'OK',primary:true}]}).then(r=>{if(r==='a')openAchievements()});return}
         setup.city=k;PREF.city=k;savePref();applyTheme(k==='lagos'?setup.theme:k);drawCities()};E.append(b)});T.querySelector('#oLocWrap').hidden=setup.city!=='lagos'};
   const drawThemes=()=>{const E=T.querySelector('#oTheme');E.innerHTML='';Object.entries(THEMES).filter(([k])=>LAGOS_LOCS.includes(k)).forEach(([k,th])=>{const b=el('button','theme'+(setup.theme===k?' on':''),`<i style="background:${th.sw}"></i><b>${th.name}</b><small>${th.blurb}</small>`);b.onclick=()=>{setup.theme=k;PREF.theme=k;savePref();applyTheme(k);drawThemes()};E.append(b)})};
-  drawSlots();drawMode();drawRules();drawThemes();drawCities();applyTheme(setup.city==='lagos'?setup.theme:setup.city);
+  drawSlots();drawMode();drawRules();drawThemes();drawCities();renderProfile();applyTheme(setup.city==='lagos'?setup.theme:setup.city);
   seg('#oCash',[[1000,'₦1bn'],[1500,'₦1.5bn'],[2000,'₦2bn']],()=>setup.cash,v=>setup.cash=v);seg('#oAi',[['easy','Easy'],['normal','Normal'],['hard','Hard']],()=>setup.ai,v=>setup.ai=v);seg('#oSpd',[['normal','Normal'],['fast','Fast']],()=>setup.speed,v=>setup.speed=v);seg('#oTimer',[[0,'Off'],[90,'90 sec']],()=>setup.timer,v=>{setup.timer=v;PREF.timer=v;savePref()});
   T.querySelector('#tRules').onclick=()=>modal({cls:'wide',html:'<div class="mh">How to play</div>'+RULES,btns:[{k:'x',label:'Got it',primary:true}]});
   T.querySelector('#tSound').onclick=()=>openSound();
@@ -1622,7 +1658,7 @@ function showTitle(){
   };
 }
 function startWith(g){
-  GEN++;netStop();G=g;applyTheme(G.set.theme||setup.theme);$('#title').hidden=true;$('#ui').hidden=false;$('#modals').innerHTML='';buildBoard();renderRoster();$('#log').textContent='';
+  GEN++;netStop();XPGAME=0;XPLOG=[];G=g;applyTheme(G.set.theme||setup.theme);$('#title').hidden=true;$('#ui').hidden=false;$('#modals').innerHTML='';buildBoard();renderRoster();$('#log').textContent='';
   log(G.round===1&&G.turn===0&&!G.log.length?(G.set.mode==='quick'?'Quick deal: everyone starts with 2 properties.':G.set.mode==='timed'?`Round limit: richest after ${G.set.rounds} rounds wins.`:'Welcome to Eko Estates. First to bankrupt the rest wins.'):'Game resumed.');
   cam.rz=0;camOverview(P(G.turn).pos,0);checkRotate();run();
 }
@@ -2110,8 +2146,8 @@ function tokenUnlocked(t){return TOKENS.includes(t)||ACH.some(a=>a.reward&&a.rew
 const unlockedTokens=()=>TOKENS.concat(NEW_TOKENS.filter(tokenUnlocked));
 function rewardText(r){if(!r)return 'Badge';const out=[];if(r.city)out.push(CITY_DATA[r.city].name);if(r.token)out.push(TOKNAME[r.token]+' '+r.token);return out.join(' + ')}
 const achQ=[];let achBusy=false;
-function achAward(id){const a=ACH.find(x=>x.id===id);if(!a||achDone(a))return;PREF.ach[id]=Date.now();savePref();achQ.push(a);achShow()}
-async function achShow(){if(achBusy||FAST)return;achBusy=true;while(achQ.length){const a=achQ.shift();const b=el('div','achpop',`<span class="trophy">🏆</span><span><small>Achievement unlocked</small><b>${esc(a.name)}</b>${a.reward?`<em>New: ${esc(rewardText(a.reward))}</em>`:''}</span>`);document.body.append(b);sfx('win');await new Promise(r=>setTimeout(r,3600));b.classList.add('bye');await new Promise(r=>setTimeout(r,400));b.remove()}achBusy=false}
+function achAward(id){const a=ACH.find(x=>x.id===id);if(!a||achDone(a))return;PREF.ach[id]=Date.now();savePref();achQ.push(a);achShow();if(typeof addXP==='function')addXP(150,a.name)}
+async function achShow(){if(achBusy||FAST)return;achBusy=true;while(achQ.length){const a=achQ.shift();const b=el('div','achpop',`<span class="trophy">${a.medal||(a.lvl?'⭐':a.daily?'📅':'🏆')}</span><span><small>${a.lvl?'Level up':a.daily?'Daily':a.city?esc(CITY_DATA[a.city].name)+' achievement':a.medal?'City medal':'Achievement unlocked'}</small><b>${esc(a.name)}</b>${a.reward?`<em>New: ${esc(rewardText(a.reward))}</em>`:a.xpText?`<em>${esc(a.xpText)}</em>`:a.xp?`<em>+${a.xp} XP</em>`:''}</span>`);document.body.append(b);sfx('win');await new Promise(r=>setTimeout(r,3600));b.classList.add('bye');await new Promise(r=>setTimeout(r,400));b.remove()}achBusy=false}
 function achBump(id,amount=1){const a=ACH.find(x=>x.id===id);if(!a||achDone(a))return;if(achProg(a)>=a.goal)achAward(id)}
 function trackable(){return G&&!G.sim&&!FAST}
 const localHumans=()=>G.players.filter(p=>!p.ai&&!p.bankrupt&&(!G.online||p.uid===NET.me));
@@ -2125,7 +2161,7 @@ function achGameEnd(winner){if(!trackable()||G.achDone)return;G.achDone=true;con
   if(!st.playedCities.includes(c))st.playedCities.push(c);if(c==='lagos')achAward('eko');
   if(winner&&hum.includes(winner)){st.wins++;if(!st.winCities.includes(c))st.winCities.push(c)}
   savePref();['win1','cities','oba','tour'].forEach(id=>achBump(id));}
-async function openAchievements(){
+async function openAchievementsOld(){
   const done=ACH.filter(achDone).length;
   await modal({cls:'wide',html:`<div class="mh">Achievements · ${done}/${ACH.length}</div><div class="mtxt muted">Saved on this device. Unlock new cities and tokens by playing.</div><div class="achlist">${ACH.map(a=>{const d=achDone(a),pr=Math.min(a.goal,achProg(a));
     return `<div class="ach${d?' done':''}"><span class="trophy">${d?'🏆':'🔒'}</span><span class="ai"><b>${esc(a.name)}</b><small>${esc(loc(a.desc))}</small>${a.goal>1&&!d?`<span class="bar"><i style="width:${pr/a.goal*100}%"></i></span><small>${pr} / ${a.goal}</small>`:''}</span><span class="rw">${a.reward?esc(rewardText(a.reward)):'Badge'}</span></div>`}).join('')}</div>`,btns:[{k:'x',label:'Close',primary:true}]});
@@ -2215,9 +2251,9 @@ function premiumFinish(ctx){const rnd=seeded(41),gold=BP.gold||'#c9a24a';
   ctx.save();ctx.translate(140,960);ctx.rotate(-Math.PI/2);motifBand(ctx,0,0,820,B,k,gold,BP.frame,BP.cell);ctx.restore();
   ctx.save();ctx.translate(960,140);ctx.rotate(Math.PI/2);motifBand(ctx,0,0,820,B,k,gold,BP.frame,BP.cell);ctx.restore();
   ctx.strokeStyle=BP.frame;ctx.lineWidth=4;ctx.strokeRect(140,140,820,820);ctx.strokeStyle=gold;ctx.lineWidth=1.6;ctx.strokeRect(140+B+2,140+B+2,820-2*B-4,820-2*B-4);
-  ctx.strokeStyle=BP.frame;ctx.lineWidth=6;ctx.strokeRect(3,3,1094,1094);ctx.strokeStyle=gold;ctx.lineWidth=2;ctx.strokeRect(9,9,1082,1082);
+  ctx.strokeStyle=hasLvl(10)?'#111':BP.frame;ctx.lineWidth=6;ctx.strokeRect(3,3,1094,1094);ctx.strokeStyle=gold;ctx.lineWidth=2;ctx.strokeRect(9,9,1082,1082);
   ctx.save();ctx.textAlign='center';ctx.textBaseline='middle';ctx.font=`800 9px ${FB}`;ctx.fillStyle=gold;ctx.globalAlpha=.9;ctx.fillText(`${CITY.name.toUpperCase()} · ${BP.tag}`,550,1100-5);ctx.restore()}
-function frameTex(){const c=cnv(256,32,(ctx)=>motifBand(ctx,0,2,256,28,MOTIF[CUR_THEME]||'adire',BP.gold||'#c9a24a',BP.cell,BP.frame));return c}
+function frameTex(){const ge=hasLvl(10);const c=cnv(256,32,(ctx)=>motifBand(ctx,0,2,256,28,MOTIF[CUR_THEME]||'adire',ge?'#f2c200':BP.gold||'#c9a24a',ge?'#8a6a1a':BP.cell,ge?'#111111':BP.frame));return c}
 function buildFrame(){const G0=S3;if(!G0.frameNodes){G0.frameMat=mat('#ffffff',{spec:.25});G0.frameTex=texFrom(frameTex(),true);G0.frameMat.tex=G0.frameTex;
     const strip=(L,W,rep)=>{const v=[-L/2,0,-W/2,0,1,0,0,0, L/2,0,-W/2,0,1,0,rep,0, L/2,0,W/2,0,1,0,rep,1, -L/2,0,W/2,0,1,0,0,1];return mkGeo(v,[0,2,1,0,3,2])};
     const L=11.8,W=.38,off=5.5+W/2,gS=strip(L,W,Math.round(L/(W*2.6)));G0.frameNodes=[];
@@ -2226,6 +2262,178 @@ function buildFrame(){const G0=S3;if(!G0.frameNodes){G0.frameMat=mat('#ffffff',{
     [[1,1],[1,-1],[-1,1],[-1,-1]].forEach(([sx,sz])=>{const m=new Node().at(sx*off,0,sz*off);m.add(N(G0.geo.cyl,G0.medMat,0,.04,0).sc(.3,.08,.3),N(G0.geo.cyl,G0.medIn,0,.085,0).sc(.2,.02,.2),N(G0.geo.sph,G0.medMat,0,.1,0).sc(.08,.04,.08));ROOT.add(m)})}
   else{G0.frameTex.canvas=frameTex();texUpdate(G0.frameTex)}
   G0.medMat.c=hex(BP.gold||'#c9a24a');G0.medIn.c=hex(BP.frame)}
+
+/* ================= PROGRESSION: CITY ACHIEVEMENTS, XP, DAILY, WHEEL, EVENTS ================= */
+const CT=[
+  {id:'visit',d:'Finish a game in {city}.',g:1,f:(p,cs)=>cs.plays},
+  {id:'win',d:'Win a game in {city}.',g:1,f:(p,cs)=>cs.wins},
+  {id:'win3',d:'Win 3 games in {city}.',g:3,f:(p,cs)=>cs.wins},
+  {id:'low',d:'Own the full {g:brown} set.',g:1,f:p=>p&&ownsAll(p.id,'brown')?1:0},
+  {id:'top',d:'Own the full {g:navy} set.',g:1,f:p=>p&&ownsAll(p.id,'navy')?1:0},
+  {id:'hotel39',d:'Build a hotel on {39}.',g:1,f:p=>p&&G.own[39].o===p.id&&G.own[39].h===5?1:0},
+  {id:'hubs',d:'Own all four transport hubs.',g:1,f:p=>p&&RAILS.every(i=>G.own[i].o===p.id)?1:0},
+  {id:'utils',d:'Own {12} and {28}.',g:1,f:p=>p&&UTILS.every(i=>G.own[i].o===p.id)?1:0},
+  {id:'rent',d:'Collect ₦500M or more in a single rent payment.',g:1,f:p=>p&&p.st&&p.st.maxRent>=500?1:0},
+  {id:'go',d:'Pass GO 25 times in {city}.',g:25,f:(p,cs)=>cs.go},
+  {id:'jail',d:'Visit {jail} 5 times.',g:5,f:(p,cs)=>cs.jail},
+  {id:'deal',d:'Complete 5 trades in {city}.',g:5,f:(p,cs)=>cs.trades},
+  {id:'auction',d:'Win an auction for less than half the price.',g:1,f:p=>p&&p.st&&p.st.aucCheap?1:0},
+  {id:'bankrupt',d:'Bankrupt another player.',g:1,f:p=>p&&p.st&&p.st.bankrupted?1:0},
+  {id:'rich',d:'Hold ₦3bn in cash at once.',g:1,f:p=>p&&p.cash>=3000?1:0}];
+const CNAMES={
+  lagos:['Welcome to Eko','Lagos Landlord','Eko Oni Baje','Agege Bread Baron','Banana Island Boss','Ikoyi Hotelier','Danfo Don','Light Up Lagos','Owambe Money','Third Mainland Runner','Kirikiri Regular','Balogun Dealer','Auction Hustler','Area Father','Lagos Big Boy'],
+  abuja:['Centre of Unity','Capital Winner','Aso Rock Solid','Nyanya Starter','Aso Villa Owner','Villa Hotelier','Airport Road Master','Power Broker','Ministry Money','Ring Road Runner','Kuje Visitor','Lobbyist','Contract Bidder','Federal Takeover','Capital Billionaire'],
+  ph:['Garden City Guest','PH Winner','Oil City Oga','Diobu Starter','Bonny Island Boss','Waterfront Hotelier','Port Master','Light and Water','Black Gold Rent','Eleme Junction Runner','Max Prison Regular','Creek Dealer','Pipeline Bargain','Oil Baron Takeover','PH Big Man'],
+  warri:['Warri Arrival','No Dey Carry Last','Area Don Lock','Udu Starter','Royal Itsekiri Boss','Escravos Hotelier','Creek Transport King','Delta Power','Refinery Rent','Enerhen Runner','Okere Regular','Main Market Dealer','Ginger Bargain','Commot Road!','Warri Big Boy'],
+  enugu:['Coal City Guest','Enugu Winner','Lion of the East','Abakpa Starter','Hilltop Boss','Milliken Hotelier','Coal Line Master','Power of the East','Coal Money','Milliken Hill Runner','Enugu Prison Regular','Ogbete Dealer','Coal Bargain','Ndi Enugu Takeover','Odogwu'],
+  calabar:['Carnival Guest','Calabar Winner','Canaan City King','Ikot Ansa Starter','Heritage Boss','Residency Hotelier','Marina Transport King','Cross River Power','Carnival Money','Carnival Route Runner','Afokang Regular','Tinapa Dealer','Edikang Ikong Bargain','Carnival Takeover','Calabar Big Man'],
+  benin:['Ancient City Guest','Benin Winner','Oba Ghato Okpe','Ikpoba Starter','Royal Quarter Boss','Palace Hotelier','Edo Transport King','Light of the Kingdom','Bronze Money','Ring Road Runner','Oko Regular','Oba Market Dealer','Igun Bargain','Kingdom Takeover','Bronze Billionaire']};
+PREF.cach=PREF.cach||{};PREF.cstat=PREF.cstat||{};PREF.xp=PREF.xp||0;PREF.daily=PREF.daily||{};
+const cstat=c=>(PREF.cstat[c]=PREF.cstat[c]||{plays:0,wins:0,go:0,jail:0,trades:0});
+const cach=c=>(PREF.cach[c]=PREF.cach[c]||{});
+function cdesc(t,c){const C=CITY_DATA[c];return t.d.replace('{city}',C.name).replace('{jail}',C.jail).replace(/\{g:(\w+)\}/g,(_,g)=>C.gname[g]).replace(/\{(\d+)\}/g,(_,n)=>{const i=+n;const pi=PROP_IDX.indexOf(i);if(pi>=0)return C.props[pi][0];const ri=UTILS.indexOf(i);return ri>=0?C.utils[ri][0]:''})}
+const cityDone=c=>Object.keys(cach(c)).length;
+function medalOf(n){return n>=15?['🥇','Gold']:n>=10?['🥈','Silver']:n>=5?['🥉','Bronze']:null}
+function cityProg(t,c,p){const v=t.f(p,cstat(c))||0;return Math.min(t.g,v)}
+
+/* ---- XP & levels ---- */
+const RANKS=[[1,'JJC'],[3,'Small Landlord'],[5,'Area Landlord'],[8,'Oga Landlord'],[12,'Big Man'],[16,'Odogwu'],[20,'Baba Landlord'],[25,'Landlord of Naija']];
+const lvlOf=xp=>Math.floor((1+Math.sqrt(1+xp/37.5))/2);
+const xpFor=n=>150*n*(n-1);
+const rankOf=l=>RANKS.filter(r=>l>=r[0]).pop()[1];
+const LVL_REWARDS=[[3,'Golden badge','Your player badge glows gold.'],[5,'Golden tokens','Your token sits on a gold base.'],[10,'Gold Edition boards','Every board gets a black-and-gold frame.'],[15,'Victory fireworks','Bigger celebrations when you win.']];
+const hasLvl=n=>lvlOf(PREF.xp)>=n;
+let XPGAME=0,XPLOG=[];
+function addXP(n,why){if(!n)return;const before=lvlOf(PREF.xp);PREF.xp+=n;XPGAME+=n;if(why)XPLOG.push([why,n]);savePref();xpFloat(n);const after=lvlOf(PREF.xp);
+  if(after>before){const rw=LVL_REWARDS.find(r=>r[0]===after);achQ.push({name:`Level ${after}: ${rankOf(after)}`,lvl:1,reward:null,xpText:rw?`Unlocked: ${rw[1]}`:''});achShow();}}
+function xpFloat(n){if(FAST)return;const f=el('div','xpfloat',`+${n} XP`);document.body.append(f);setTimeout(()=>f.remove(),1600)}
+
+/* ---- per-game stats (on each player, synced online) ---- */
+const st=p=>(p.st=p.st||{rent:0,maxRent:0,buys:0,houses:0,hotels:0,go:0,jail:0,free:0,trades:0,aucWins:0,aucCheap:0,bankrupted:0});
+const mine=p=>p&&trackable()&&isLocalHuman(p);
+function cityNow(){return (G&&G.set.city)||'lagos'}
+function bumpCity(k,n=1){const c=cityNow();cstat(c)[k]+=n;savePref()}
+
+/* ---- city achievement checks ---- */
+function cityScan(final){if(!trackable())return;const c=cityNow(),names=CNAMES[c];const hum=G.players.filter(p=>!p.ai&&(!G.online||p.uid===NET.me));
+  CT.forEach((t,k)=>{if(cach(c)[t.id])return;const ok=hum.some(p=>cityProg(t,c,p)>=t.g);
+    if(ok){cach(c)[t.id]=Date.now();savePref();const n=cityDone(c);achQ.push({name:`${names[k]}`,city:c,xp:100});addXP(100,`${CITY_DATA[c].name}: ${names[k]}`);
+      const m=medalOf(n);if(m&&[5,10,15].includes(n)){achQ.push({name:`${m[1]} ${CITY_DATA[c].name} medal`,medal:m[0],xp:300});addXP(300,`${m[1]} ${CITY_DATA[c].name} medal`)}achShow()}});
+  missionScan(final)}
+
+/* ---- daily missions ---- */
+const MISSIONS=[
+  {id:'buy5',n:'Buy 5 properties in one game',g:5,f:p=>st(p).buys},
+  {id:'rent300',n:'Collect ₦300M rent in one game',g:300,f:p=>st(p).rent,money:1},
+  {id:'auction',n:'Win an auction',g:1,f:p=>st(p).aucWins},
+  {id:'houses3',n:'Build 3 houses in one game',g:3,f:p=>st(p).houses},
+  {id:'finish',n:'Finish a game',g:1,end:1},
+  {id:'win',n:'Win a game',g:1,end:1,win:1},
+  {id:'trade',n:'Complete a trade',g:1,f:p=>st(p).trades},
+  {id:'go5',n:'Pass GO 5 times in one game',g:5,f:p=>st(p).go},
+  {id:'city',n:'Finish a game outside Lagos',g:1,end:1,away:1},
+  {id:'hotel',n:'Build a hotel',g:1,f:p=>st(p).hotels}];
+const today=()=>{const d=new Date();return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate()};
+const dayNum=s=>{const[a,b,c]=s.split('-').map(Number);return Math.round(new Date(a,b-1,c).getTime()/864e5)};
+function daily(){const D=PREF.daily,t=today();if(D.date!==t){const r=seeded(dayNum(t)*7+3);let pool=MISSIONS.filter(m=>!m.away||CITY_ORDER.some(c=>c!=='lagos'&&cityUnlocked(c)));const pick=[];
+    while(pick.length<3){const m=pool[Math.floor(r()*pool.length)];if(!pick.includes(m.id))pick.push(m.id)}D.date=t;D.list=pick;D.done={};D.best={};D.bonus=false;savePref()}return D}
+function missionScan(final,winner){if(!trackable())return;const D=daily();const hum=G.players.filter(p=>!p.ai&&(!G.online||p.uid===NET.me));if(!hum.length)return;
+  D.list.forEach(id=>{if(D.done[id])return;const m=MISSIONS.find(x=>x.id===id);let v=0;
+    if(m.end){if(!final)return;v=m.win?(winner&&hum.includes(winner)?1:0):m.away?(cityNow()!=='lagos'?1:0):1}else v=Math.max(...hum.map(p=>m.f(p)||0));
+    D.best[id]=Math.max(D.best[id]||0,v);if(v>=m.g){D.done[id]=1;streakMark();achQ.push({name:'Daily mission: '+m.n,xp:150,daily:1});addXP(150,'Daily: '+m.n);achShow()}});
+  if(!D.bonus&&D.list.every(id=>D.done[id])){D.bonus=true;achQ.push({name:'All daily missions done!',xp:250,daily:1});addXP(250,'Daily bonus');achShow()}savePref()}
+function streakMark(){const D=PREF.daily,t=today();if(D.streakDay===t)return;D.streak=(D.streakDay&&dayNum(t)-dayNum(D.streakDay)===1)?(D.streak||0)+1:1;D.streakDay=t;const b=Math.min(500,50*D.streak);if(D.streak>1){achQ.push({name:`${D.streak}-day streak 🔥`,xp:b,daily:1});addXP(b,`${D.streak}-day streak`)}}
+function streakNow(){const D=PREF.daily;if(!D.streakDay)return 0;return dayNum(today())-dayNum(D.streakDay)<=1?D.streak||0:0}
+
+/* ---- Owambe wheel ---- */
+const WHEEL=[['50 XP',50,'#ffc61a'],['100 XP',100,'#12884a'],['2× XP',0,'#c2185b'],['150 XP',150,'#2e6fd6'],['75 XP',75,'#f08a1c'],['250 XP',250,'#7b1fa2'],['100 XP',100,'#1e9a53'],['500 XP',500,'#e23b2e']];
+const wheelReady=()=>PREF.daily.spun!==today();
+async function openWheel(){initAudio();const ready=wheelReady();let spun=false;
+  await modal({cls:'wide',html:`<div class="mh">Owambe Wheel</div><div class="mtxt muted">One free spin every day. Win XP or double XP on your next game.</div>
+    <div class="wheelwrap"><div class="wheel" id="wh">${WHEEL.map((w,i)=>`<span style="transform:rotate(${i*45+22.5}deg)"><b>${w[0]}</b></span>`).join('')}</div><div class="wpin"></div><button class="btn pri" id="wSpin"${ready?'':' disabled'}>${ready?'Spin':'Come back tomorrow'}</button><div class="mtxt" id="wRes"></div></div>`,
+    btns:[{k:'x',label:'Close'}],onMount:(pn)=>{const wh=pn.querySelector('#wh');wh.style.background=`conic-gradient(${WHEEL.map((w,i)=>`${w[2]} ${i*45}deg ${(i+1)*45}deg`).join(',')})`;
+      pn.querySelector('#wSpin').onclick=(e)=>{if(spun||!wheelReady())return;spun=true;e.target.disabled=true;PREF.daily.spun=today();savePref();const k=Math.floor(Math.random()*WHEEL.length);
+        const rot=360*6+(360-(k*45+22.5));wh.style.transition='transform 4.2s cubic-bezier(.15,.9,.25,1)';wh.style.transform=`rotate(${rot}deg)`;
+        let ticks=0;const tk=setInterval(()=>{if(++ticks>24)clearInterval(tk);tone(900+Math.random()*200,.03,'square',.03)},140);
+        setTimeout(()=>{const w=WHEEL[k];if(w[1])addXP(w[1],'Owambe Wheel');else{PREF.boost=true;savePref()}sfx('win');pn.querySelector('#wRes').innerHTML=`<b>You won ${w[0]}!</b>${w[1]?'':' Your next finished game earns double XP.'}`;e.target.textContent='Come back tomorrow';renderProfile()},4300)}}});
+}
+
+/* ---- city events (house rule) ---- */
+const EVENTS=[
+  {id:'nepa',t:'⚡ {12} took light!',d:'Utilities collect no rent this round.'},
+  {id:'owambe',t:'🎉 Owambe weekend!',d:'All street rent is up 25% this round.'},
+  {id:'fuel',t:'⛽ Fuel scarcity!',d:'Transport rent is doubled this round.'},
+  {id:'taxfree',t:'🧾 Tax holiday!',d:'No tax or levy to pay this round.'},
+  {id:'esusu',t:'💰 Esusu payout!',d:'Every player collects ₦50M.'}];
+const evNow=()=>G&&G.event&&G.event.round===G.round?G.event.id:null;
+const _rentFor=rentFor;rentFor=function(i,dsum,o2){let r=_rentFor(i,dsum,o2);const e=evNow(),s=SQ[i];if(!r)return r;
+  if(e==='nepa'&&s.t==='util')return 0;if(e==='owambe'&&s.t==='prop')return Math.round(r*1.25);if(e==='fuel'&&s.t==='rail')return r*2;return r};
+const _advanceTurn=advanceTurn;advanceTurn=function(){const r0=G.round;_advanceTurn();if(G.round!==r0&&G.set.events&&G.round%2===0){const e=EVENTS[Math.floor(Math.random()*EVENTS.length)];G.event={id:e.id,round:G.round};
+  if(e.id==='esusu')alive().forEach(p=>{p.cash+=50;float(p.id,50)});log(`${loc(e.t)} ${e.d}`);if(!FAST){evBanner(e)}}};
+function evBanner(e){const b=el('div','evban',`<b>${esc(loc(e.t))}</b><span>${esc(e.d)}</span>`);document.body.append(b);setTimeout(()=>b.classList.add('bye'),3200);setTimeout(()=>b.remove(),3700)}
+
+/* ---- gameplay hooks ---- */
+const _pay=pay;pay=async function(p,amt,to,kind){const cashTo=to?to.cash:0;const ok=await _pay(p,amt,to,kind);if(ok&&to&&kind==='rent'){const s=st(to);s.rent+=amt;s.maxRent=Math.max(s.maxRent,amt);if(mine(to)){cityScan()}}return ok};
+const _bankrupt=bankrupt;bankrupt=function(p,to){_bankrupt(p,to);if(to){st(to).bankrupted++;if(mine(to)){addXP(100,`Bankrupted ${p.name}`);cityScan()}}};
+const _buyProp=buyProp;buyProp=function(p,i,price){_buyProp(p,i,price);st(p).buys++;if(mine(p))missionScan()};
+const _build=build;build=function(pid,i){_build(pid,i);const p=P(pid);const s=st(p);if(G.own[i].h===5){s.hotels++;if(mine(p)&&!FAST)fireworks()}else s.houses++;if(mine(p))cityScan()};
+const _sendToJail=sendToJail;sendToJail=async function(p){st(p).jail++;if(mine(p))bumpCity('jail');await _sendToJail(p);if(mine(p))cityScan()};
+const _executeTrade=executeTrade;executeTrade=function(t){_executeTrade(t);[P(t.from),P(t.to)].forEach(p=>{st(p).trades++;if(mine(p))bumpCity('trades')});if(mine(P(t.from))||mine(P(t.to)))cityScan()};
+function onPassGo(p){st(p).go++;if(mine(p)){bumpCity('go');cityScan()}}
+function onAuctionWin(w,i,bid){const s=st(w);s.aucWins++;if(bid<SQ[i].p/2)s.aucCheap++;if(mine(w))cityScan()}
+const _land=land;land=async function(p,d,o2){if(SQ[p.pos].t==='tax'&&evNow()==='taxfree'){toast('Tax holiday! Nothing to pay.');return}await _land(p,d,o2);if(SQ[p.pos].t==='free')st(p).free++;if(mine(p)&&p.cash>=3000)cityScan()};
+
+/* ---- game end: XP, stats, highlights ---- */
+function progressGameEnd(w){if(!trackable()||G.progDone)return null;G.progDone=true;const hum=G.players.filter(p=>!p.ai&&(!G.online||p.uid===NET.me));if(!hum.length)return null;
+  const c=cityNow(),cs=cstat(c);cs.plays++;const won=hum.includes(w);if(won)cs.wins++;savePref();
+  let base=50+(won?200:0)+Math.min(200,Math.round(Math.max(...hum.map(p=>st(p).rent))/10));
+  if(PREF.boost){base*=2;PREF.boost=false;XPLOG.push(['Double XP from the Owambe Wheel',0])}
+  addXP(base,won?'Win + game XP':'Game XP');cityScan(true);missionScan(true,w);return {won}}
+function highlights(){const pl=G.players,best=(f)=>pl.reduce((b,p)=>(f(p)>(b?f(b):-1)?p:b),null);const out=[];
+  const r=best(p=>st(p).maxRent);if(r&&st(r).maxRent)out.push(['💸','Biggest rent',`${r.name} collected ${fmt(st(r).maxRent)} in one go`]);
+  const b=best(p=>st(p).buys);if(b&&st(b).buys)out.push(['🏘️','Top buyer',`${b.name} bought ${st(b).buys} properties`]);
+  const h=best(p=>st(p).hotels*5+st(p).houses);if(h&&(st(h).houses+st(h).hotels))out.push(['🏨','Master builder',`${h.name} built ${st(h).houses} houses and ${st(h).hotels} hotels`]);
+  const j=best(p=>st(p).jail);if(j&&st(j).jail)out.push(['🚔',`${CITY.jail} regular`,`${j.name} went to jail ${st(j).jail} time${st(j).jail>1?'s':''}`]);
+  const t=best(p=>st(p).trades);if(t&&st(t).trades)out.push(['🤝','Deal maker',`${t.name} closed ${st(t).trades} trade${st(t).trades>1?'s':''}`]);return out}
+async function finish(){
+  G.over=true;clearSave();if(G.online&&NET.on&&NET.host){NET.ref.update({status:'over'}).catch(()=>{})}if(FAST)return;renderRoster();updateTools();setPrompt('Game over.');$('#acts').innerHTML='';
+  const sts=standings(),w=sts[0];achGameEnd(w);const lv0=lvlOf(PREF.xp-0),xp0=PREF.xp;const res=progressGameEnd(w);sfx('win');if(S3)S3.marker.visible=false;confetti();if(hasLvl(15))setTimeout(confetti,700);fireworks();camOverview(w.pos,1200);
+  const hl=highlights(),lv=lvlOf(PREF.xp),a=xpFor(lv),b=xpFor(lv+1);
+  const k=await modal({cls:'wide',html:`<div class="mh">${esc(w.name)} is the landlord of ${esc(CITY.name)}!</div>
+    <div class="endgrid"><div><div class="mtxt muted">Final standings</div><div class="stand">${sts.map((p,i)=>`<div><em>${i+1}</em><i style="--pc:${p.col}">${p.tok}</i><span>${esc(p.name)}${p.bankrupt?' · bankrupt':''}</span><span>${fmt(p.bankrupt?0:netWorth(p))}</span></div>`).join('')}</div></div>
+    <div>${hl.length?`<div class="mtxt muted">Highlights</div><div class="hls">${hl.map(h=>`<div><i>${h[0]}</i><span><b>${esc(h[1])}</b><small>${esc(h[2])}</small></span></div>`).join('')}</div>`:''}
+    ${res?`<div class="xpcard"><div class="xprow"><b>+${XPGAME} XP</b><span>Level ${lv} · ${rankOf(lv)}</span></div><div class="xpbar"><i style="width:${Math.min(100,(PREF.xp-a)/(b-a)*100)}%"></i></div><small>${PREF.xp-a} / ${b-a} XP to level ${lv+1}</small></div>`:''}</div></div>`,
+    btns:[{k:'ach',label:'Achievements'},{k:'new',label:'New game',primary:true}]});
+  if(k==='ach'){await openAchievements();showTitle()}else if(k==='new')showTitle();
+}
+function fireworks(){if(FAST)return;const c=$('#confetti'),x=c.getContext('2d');c.width=innerWidth;c.height=innerHeight;const ps=[];
+  for(let b=0;b<3;b++){const cx=innerWidth*(.25+b*.25),cy=innerHeight*(.25+Math.random()*.2),col=['#ffc61a','#ff5d73','#41c8ff','#6be38b'][b%4];for(let k=0;k<40;k++){const a=Math.random()*7,s=2+Math.random()*4;ps.push({x:cx,y:cy,vx:Math.cos(a)*s,vy:Math.sin(a)*s,l:60+Math.random()*30,c:col,d:b*12})}}
+  let f=0;(function tick(){x.clearRect(0,0,c.width,c.height);ps.forEach(p=>{if(f<p.d)return;p.x+=p.vx;p.y+=p.vy;p.vy+=.06;p.l--;if(p.l>0){x.globalAlpha=Math.min(1,p.l/30);x.fillStyle=p.c;x.fillRect(p.x,p.y,3,3)}});x.globalAlpha=1;if(++f<140)requestAnimationFrame(tick);else x.clearRect(0,0,c.width,c.height)})()}
+
+/* ---- achievements screen with city tabs ---- */
+async function openAchievements(tab){
+  let cur=tab||'main';
+  await modal({cls:'wide',html:`<div class="mh">Achievements</div><div class="achtabs"></div><div class="achbody"></div>`,btns:[{k:'x',label:'Close',primary:true}],onMount:(pn)=>{
+    const draw=()=>{const T=pn.querySelector('.achtabs');T.innerHTML='';
+      const mk=(k,label,n,g)=>{const b=el('button','atab'+(cur===k?' on':''),`<b>${label}</b><span class="mini"><i style="width:${n/g*100}%"></i></span><small>${n}/${g}</small>`);b.onclick=()=>{cur=k;draw()};T.append(b)};
+      mk('main','Main',ACH.filter(achDone).length,ACH.length);CITY_ORDER.forEach(c=>mk(c,(cityUnlocked(c)?'':'🔒 ')+CITY_DATA[c].name,cityDone(c),CT.length));
+      const B=pn.querySelector('.achbody');
+      if(cur==='main'){B.innerHTML=`<div class="achlist">${ACH.map(a=>{const d=achDone(a),pr=Math.min(a.goal,achProg(a));return achRow(d,a.name,loc(a.desc),pr,a.goal,a.reward?rewardText(a.reward):'Badge')}).join('')}</div>`}
+      else{const c=cur,n=cityDone(c),m=medalOf(n),un=cityUnlocked(c);
+        B.innerHTML=`<div class="cityhead"><span class="medal">${m?m[0]:'🎖️'}</span><span><b>${CITY_DATA[c].name}</b><small>${m?m[1]+' medal':'Earn 5 for Bronze, 10 for Silver, 15 for Gold'}${un?'':' · play here once unlocked'}</small></span><span class="big"><span class="bar"><i style="width:${n/CT.length*100}%"></i></span><small>${n} / ${CT.length}</small></span></div>
+          <div class="achlist">${CT.map((t,k)=>{const d=!!cach(c)[t.id];const pr=d?t.g:(t.g>1?cityProg(t,c,null):0);return achRow(d,CNAMES[c][k],cdesc(t,c),pr,t.g,'+100 XP')}).join('')}</div>`}};draw()}});
+}
+function achRow(d,name,desc,pr,goal,rw){return `<div class="ach${d?' done':''}"><span class="trophy">${d?'🏆':'🔒'}</span><span class="ai"><b>${esc(name)}</b><small>${esc(desc)}</small><span class="bar"><i style="width:${(d?1:pr/goal)*100}%"></i></span><small>${d?'Complete':`${pr} / ${goal}`}</small></span><span class="rw">${esc(rw)}</span></div>`}
+
+/* ---- profile card on title ---- */
+function renderProfile(){const E=$('#prof');if(!E)return;const lv=lvlOf(PREF.xp),a=xpFor(lv),b=xpFor(lv+1),D=daily(),sk=streakNow(),dn=D.list.filter(id=>D.done[id]).length;
+  E.innerHTML=`<div class="plv"><b>${lv}</b><small>LEVEL</small></div><div class="pinfo2"><b>${rankOf(lv)}</b><span class="xpbar"><i style="width:${(PREF.xp-a)/(b-a)*100}%"></i></span><small>${PREF.xp-a} / ${b-a} XP${PREF.boost?' · 2× XP ready':''}</small></div>
+    <button class="pbtn" id="pDaily">📅<b>${dn}/3</b><small>Daily</small></button><button class="pbtn${wheelReady()?' ready':''}" id="pWheel">🎡<b>${wheelReady()?'Spin!':'Done'}</b><small>Wheel</small></button><div class="pbtn streak">🔥<b>${sk}</b><small>Streak</small></div>`;
+  E.querySelector('#pDaily').onclick=openDaily;E.querySelector('#pWheel').onclick=()=>openWheel().then(renderProfile)}
+async function openDaily(){const D=daily(),lv=lvlOf(PREF.xp);
+  await modal({cls:'wide',html:`<div class="mh">Daily missions</div><div class="mtxt muted">New missions every day. Each is worth 150 XP, plus 250 XP for finishing all three. Complete one a day to build your 🔥 streak (${streakNow()} day${streakNow()===1?'':'s'}).</div>
+    <div class="achlist">${D.list.map(id=>{const m=MISSIONS.find(x=>x.id===id),d=!!D.done[id],v=Math.min(m.g,D.best[id]||0);return achRow(d,m.n,m.end?'Counts when the game ends.':'Progress counts within one game.',m.money&&!d?v:v,m.g,'+150 XP').replace(`${v} / ${m.g}`,m.money?`${fmt(v)} / ${fmt(m.g)}`:`${v} / ${m.g}`)}).join('')}</div>
+    <div class="mh" style="font-size:17px">Level rewards</div><div class="achlist">${LVL_REWARDS.map(r=>achRow(lv>=r[0],`Level ${r[0]}: ${r[1]}`,r[2],Math.min(lv,r[0]),r[0],lv>=r[0]?'Unlocked':'')).join('')}</div>`,btns:[{k:'x',label:'Close',primary:true}]});renderProfile()}
 
 /* ================= ORIENTATION ================= */
 let rotDismissed=false;

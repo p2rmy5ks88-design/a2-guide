@@ -9,6 +9,8 @@ A Lagos-themed property trading game for phones and tablets, played in landscape
 - **Game modes**: Classic, Quick deal and Round limit, plus six house rules you can switch on or off.
 - **Seven cities**: Lagos plus Abuja, Port Harcourt, Warri, Enugu, Calabar and Benin City, each with its own streets, premium patterned board, 3D centrepiece and radio station. New cities unlock through achievements.
 - **Achievements**: 12 to earn, unlocking cities and six new tokens (Durbar horse, canoe, oil barrel, carnival mask, coal train, Oba’s crown), each with its own movement.
+- **City achievements**: 15 per city (105 in all) with progress bars and Bronze, Silver and Gold city medals.
+- **Progression**: XP and levels with ranks from JJC to Landlord of Naija, level rewards, daily missions with streaks, a daily Owambe Wheel spin, end-of-game highlights, and an optional City events house rule.
 - **Five Lagos locations**, each with its own board colours, centrepiece and crowds:
   - Lekki Beach
   - Lagos at Night
