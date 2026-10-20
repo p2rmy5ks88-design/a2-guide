@@ -18,4 +18,8 @@ set_key ITSAppUsesNonExemptEncryption bool false
 set_key CFBundleDisplayName string "Eko Estates"
 set_key CFBundleShortVersionString string "${VERSION_NAME:-1.0.0}"
 set_key CFBundleVersion string "${VERSION_CODE:-1}"
+PBX=ios/App/App.xcodeproj/project.pbxproj
+if [ -f "$PBX" ]; then
+  sed -i '' -E 's/(INFOPLIST_KEY_UISupportedInterfaceOrientations[^=]*= )"[^"]*"/\1"UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"/' "$PBX"
+fi
 echo "iOS patched: landscape only, status bar hidden, version ${VERSION_NAME:-1.0.0} (${VERSION_CODE:-1})"

@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui}img{max-width:100%}[hidden]{display:none!important}</style></head><body><title>Eko Estates</title>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-180.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Eko Estates"><meta name="theme-color" content="#13284a"><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui}img{max-width:100%}[hidden]{display:none!important}</style></head><body><title>Eko Estates</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&display=swap">
@@ -431,6 +431,14 @@ html.app,html.app body{-webkit-touch-callout:none;overscroll-behavior:none}
 .pane .achlist{gap:5px}
 @media (orientation:portrait){.home{flex-direction:column}.rail{width:auto;flex-direction:row;align-items:center}.mini-logo,.rprof{display:none}.tabs{flex-direction:row;overflow-x:auto}.tab{flex:none;flex-direction:column;gap:2px;font-size:11px;padding:6px 10px}.dgrid{grid-template-columns:minmax(0,1fr)}}
 @media (max-height:420px){.mini-logo b{font-size:34px}.tab{padding:6px 9px;font-size:12.5px}.rail{width:160px}}
+
+html.rot{overflow:hidden;padding:0!important}
+html.rot body{position:fixed;top:0;left:0;width:var(--sh);height:var(--sw);transform-origin:0 0;transform:translateX(var(--sw)) rotate(90deg);
+  padding-left:max(16px,env(safe-area-inset-top,0px));padding-right:max(16px,env(safe-area-inset-bottom,0px))}
+html.rot #ui,html.rot #title .home,html.rot .ov{padding:max(10px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(10px,env(safe-area-inset-left,0px)) max(16px,env(safe-area-inset-top,0px))}
+html.rot .home{flex-direction:row}html.rot .rail{width:176px;flex-direction:column;align-items:stretch}html.rot .mini-logo,html.rot .rprof{display:flex}html.rot .tabs{flex-direction:column}html.rot .tab{flex-direction:row;font-size:13.5px}
+html.rot .dgrid{grid-template-columns:1.6fr 1fr}html.rot .endgrid,html.rot .olgrid,html.rot .tsum{grid-template-columns:1fr 1fr}html.rot .tgrid{grid-template-columns:minmax(0,.85fr) minmax(0,1.2fr)}
+html.rot #acts{flex-direction:row}html.rot #prompt{top:max(10px,env(safe-area-inset-right,0px));bottom:auto;max-width:min(44vh,420px)}html.rot #log{display:block;max-width:min(46vh,440px)}html.rot #toast{max-width:min(60vh,460px)}html.rot .slots{grid-template-columns:1fr 1fr}html.rot .tsum,html.rot .tcols{grid-template-columns:1fr 1fr}
 </style>
 
 <canvas id="gl" aria-label="3D game board"></canvas>
@@ -623,6 +631,16 @@ function sfx(k){if(!AC||FAST||!PREF.audio.sfx)return;try{
   else if(k==='bad'){tone(300,.2,'square',.05);tone(220,.3,'square',.05,.15)}
 }catch(e){}}
 
+/* ================= FORCED LANDSCAPE ================= */
+let ROT=false;
+const LW=()=>ROT?innerHeight:innerWidth,LH=()=>ROT?innerWidth:innerHeight;
+function scr2loc(sx,sy){return ROT?[sy,innerWidth-sx]:[sx,sy]}
+function applyRot(){const coarse=matchMedia('(pointer:coarse)').matches||'ontouchstart' in window;const want=coarse&&innerHeight>innerWidth;
+  const de=document.documentElement;de.style.setProperty('--sw',innerWidth+'px');de.style.setProperty('--sh',innerHeight+'px');
+  if(want!==ROT){ROT=want;de.classList.toggle('rot',ROT);try{dispatchEvent(new Event('eko-rot'))}catch(e){}}}
+applyRot();addEventListener('resize',applyRot);addEventListener('orientationchange',()=>setTimeout(applyRot,150));
+try{screen.orientation&&screen.orientation.lock&&screen.orientation.lock('landscape').catch(()=>{})}catch(e){}
+
 /* ================= MINI 3D ENGINE ================= */
 const M4={
   mul(a,b){const o=new Float32Array(16);for(let c=0;c<4;c++)for(let r=0;r<4;r++)o[c*4+r]=a[r]*b[c*4]+a[4+r]*b[c*4+1]+a[8+r]*b[c*4+2]+a[12+r]*b[c*4+3];return o},
@@ -746,7 +764,7 @@ function drawScene(time){
   const cp=CAMV.pos;tr.sort((a,b)=>{const da=(a[1][12]-cp[0])**2+(a[1][13]-cp[1])**2+(a[1][14]-cp[2])**2,db=(b[1][12]-cp[0])**2+(b[1][13]-cp[1])**2+(b[1][14]-cp[2])**2;return (b[0].mat.layer||0)-(a[0].mat.layer||0)||db-da});
   gl.depthMask(false);tr.forEach(draw);gl.depthMask(true);
 }
-function pickBoard(cx,cy){const cv=GL.canvas,r=cv.getBoundingClientRect();const x=(cx-r.left)/r.width*2-1,y=1-(cy-r.top)/r.height*2;const I=CAMM.inv;if(!I)return null;
+function pickBoard(cx,cy){const cv=GL.canvas;let x,y;if(ROT){const[lx,ly]=scr2loc(cx,cy);x=lx/cv.clientWidth*2-1;y=1-ly/cv.clientHeight*2}else{const r=cv.getBoundingClientRect();x=(cx-r.left)/r.width*2-1;y=1-(cy-r.top)/r.height*2}const I=CAMM.inv;if(!I)return null;
   const T=(v)=>{const o=[0,0,0,0];for(let i=0;i<4;i++)o[i]=I[i]*v[0]+I[4+i]*v[1]+I[8+i]*v[2]+I[12+i]*v[3];return[o[0]/o[3],o[1]/o[3],o[2]/o[3]]};
   const a=T([x,y,-1,1]),b=T([x,y,1,1]);const t=-a[1]/(b[1]-a[1]);if(!(t>0))return null;return[(a[0]+(b[0]-a[0])*t)*100+550,(a[2]+(b[2]-a[2])*t)*100+550]}
 
@@ -824,8 +842,8 @@ function initScene(){
   G0.markMat=mat('#ffc61a',{em:.45,spec:.6});G0.markRim=mat('#ffffff',{em:.6});G0.marker=new Node();G0.marker.add(N(geo.cone,G0.markRim,0,-.005,0).rot(Math.PI,0,0).sc(.155,.3,.155),N(geo.cone,G0.markMat,0,0,0).rot(Math.PI,0,0).sc(.13,.26,.13),N(geo.sph,G0.markMat,0,.17,0).sc(.085));G0.marker.visible=false;ROOT.add(G0.marker);G0.ring=N(geo.torus,mat('#ffffff'),0,.03,0).rot(Math.PI/2,0,0).sc(.32);G0.ring.visible=false;ROOT.add(G0.ring);
   // input
   const cv=$('#gl');let down=null;
-  cv.addEventListener('pointerdown',e=>{down={x:e.clientX,y:e.clientY,yaw:camT.yaw,moved:false,id:e.pointerId};try{cv.setPointerCapture(e.pointerId)}catch(_){}});
-  cv.addEventListener('pointermove',e=>{if(!down)return;const dx=e.clientX-down.x;if(Math.abs(dx)>8||Math.abs(e.clientY-down.y)>8)down.moved=true;if(down.moved&&G&&!G.over){camT.yaw=down.yaw-dx*.008;camT.rate=12;camS.yaw=camT.yaw*.3+camS.yaw*.7;userCam=1}});
+  cv.addEventListener('pointerdown',e=>{const q=scr2loc(e.clientX,e.clientY);down={x:q[0],y:q[1],yaw:camT.yaw,moved:false,id:e.pointerId};try{cv.setPointerCapture(e.pointerId)}catch(_){}});
+  cv.addEventListener('pointermove',e=>{if(!down)return;const q=scr2loc(e.clientX,e.clientY);const dx=q[0]-down.x;if(Math.abs(dx)>8||Math.abs(q[1]-down.y)>8)down.moved=true;if(down.moved&&G&&!G.over){camT.yaw=down.yaw-dx*.008;camT.rate=12;camS.yaw=camT.yaw*.3+camS.yaw*.7;userCam=1}});
   cv.addEventListener('pointerup',e=>{if(down&&!down.moved&&G&&!$('#modals').children.length&&$('#title').hidden){const h=pickBoard(e.clientX,e.clientY);if(h){const i=cellAt(h[0],h[1]);if(i>=0)showSquare(i)}}down=null});
   requestAnimationFrame(frame);return true;
 }
@@ -935,6 +953,7 @@ function placeToken(p,fly){if(FAST||!S3)return;const t=tok3[p.id];if(!t)return;t
   t.p=to;t.r=[0,headingFor(p.pos),0]}
 
 /* ================= CAMERA ================= */
+addEventListener('eko-rot',()=>{if(G&&!userCam)camOverview(P(G.turn).pos,0)});
 function aspect(){const cv=$('#gl');return Math.max(.3,cv.clientWidth/Math.max(1,cv.clientHeight))}
 function nearAng(cur,t){while(t-cur>Math.PI)t-=Math.PI*2;while(t-cur<-Math.PI)t+=Math.PI*2;return t}
 function camGoal(look,yaw,L,pitch,rate=4){camT.look=look;camT.yaw=nearAng(camS.yaw,yaw);camT.L=L;camT.pitch=pitch;camT.rate=rate}
@@ -990,12 +1009,12 @@ async function throwDice(d){
 async function highlight(i){if(FAST||!S3)return;const r=rect(i);S3.hl.p=[wx(r.x+r.w/2),.02,wz(r.y+r.h/2)];S3.hl.s=[r.w*U,1,r.h*U];await tween(900,t=>{S3.M.hl.a=Math.sin(t*Math.PI)*.55})}
 
 /* ================= UI HELPERS ================= */
-function cardPt(pid){const c=document.getElementById('pc'+pid);if(!c)return[innerWidth/2,innerHeight/2];const r=c.getBoundingClientRect();return[r.left+r.width*.4,r.top+r.height/2]}
+function cardPt(pid){const c=document.getElementById('pc'+pid);if(!c)return[LW()/2,LH()/2];const r=c.getBoundingClientRect();return scr2loc(r.left+r.width*.4,r.top+r.height/2)}
 function float(pid,amt){
   if(FAST||!amt)return;const[x,y]=cardPt(pid);
   const f=el('div','float '+(amt>0?'plus':'minus'),(amt>0?'+':'')+fmt(amt));f.style.left=(x+10)+'px';f.style.top=(y-14)+'px';document.body.append(f);setTimeout(()=>f.remove(),1500);
 }
-function flyCash(from,to){if(FAST)return;const a=cardPt(from),b=to==null?[innerWidth/2,innerHeight/2]:cardPt(to);
+function flyCash(from,to){if(FAST)return;const a=cardPt(from),b=to==null?[LW()/2,LH()/2]:cardPt(to);
   for(let k=0;k<4;k++){const n=el('div','note','₦');n.style.left=a[0]+'px';n.style.top=a[1]+'px';document.body.append(n);
     const an=n.animate([{transform:'translate(0,0) rotate(0deg)',opacity:1},{transform:`translate(${(b[0]-a[0])*.5}px,${(b[1]-a[1])*.5-60}px) rotate(${180+k*40}deg)`,opacity:1,offset:.5},{transform:`translate(${b[0]-a[0]}px,${b[1]-a[1]}px) rotate(${360+k*60}deg)`,opacity:.2}],{duration:800*spd(),delay:k*90,easing:'ease-in-out',fill:'forwards'});
     an.onfinish=()=>n.remove()}}
@@ -1403,7 +1422,7 @@ function loadSave(){try{const s=localStorage.getItem(SKEY);return s?JSON.parse(s
 try{window.claude?.hot?.snapshot?.(()=>({G:G&&!G.over&&!G.online?JSON.stringify(G):null}))}catch(e){}
 
 /* ================= CONFETTI ================= */
-function confetti(){const c=$('#confetti'),x=c.getContext('2d');c.width=innerWidth;c.height=innerHeight;
+function confetti(){const c=$('#confetti'),x=c.getContext('2d');c.width=LW();c.height=LH();
   const cols=['#f6c400','#1e9a53','#ffffff','#ff5d73','#41c8ff'];const ps=[...Array(160)].map(()=>({x:Math.random()*c.width,y:-20-Math.random()*c.height*.5,vx:(Math.random()-.5)*3,vy:2+Math.random()*3,r:Math.random()*6.28,s:5+Math.random()*6,c:cols[Math.floor(Math.random()*5)]}));
   let f=0;(function tick(){x.clearRect(0,0,c.width,c.height);ps.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.r+=.1;x.save();x.translate(p.x,p.y);x.rotate(p.r);x.fillStyle=p.c;x.fillRect(-p.s/2,-p.s/4,p.s,p.s/2);x.restore()});if(++f<320)requestAnimationFrame(tick);else x.clearRect(0,0,c.width,c.height)})()}
 
@@ -2461,8 +2480,8 @@ async function finish(){
     btns:[{k:'ach',label:'Achievements'},{k:'new',label:'New game',primary:true}]});
   if(k==='ach'){await openAchievements();showTitle()}else if(k==='new')showTitle();
 }
-function fireworks(){if(FAST)return;const c=$('#confetti'),x=c.getContext('2d');c.width=innerWidth;c.height=innerHeight;const ps=[];
-  for(let b=0;b<3;b++){const cx=innerWidth*(.25+b*.25),cy=innerHeight*(.25+Math.random()*.2),col=['#ffc61a','#ff5d73','#41c8ff','#6be38b'][b%4];for(let k=0;k<40;k++){const a=Math.random()*7,s=2+Math.random()*4;ps.push({x:cx,y:cy,vx:Math.cos(a)*s,vy:Math.sin(a)*s,l:60+Math.random()*30,c:col,d:b*12})}}
+function fireworks(){if(FAST)return;const c=$('#confetti'),x=c.getContext('2d');c.width=LW();c.height=LH();const ps=[];
+  for(let b=0;b<3;b++){const cx=LW()*(.25+b*.25),cy=LH()*(.25+Math.random()*.2),col=['#ffc61a','#ff5d73','#41c8ff','#6be38b'][b%4];for(let k=0;k<40;k++){const a=Math.random()*7,s=2+Math.random()*4;ps.push({x:cx,y:cy,vx:Math.cos(a)*s,vy:Math.sin(a)*s,l:60+Math.random()*30,c:col,d:b*12})}}
   let f=0;(function tick(){x.clearRect(0,0,c.width,c.height);ps.forEach(p=>{if(f<p.d)return;p.x+=p.vx;p.y+=p.vy;p.vy+=.06;p.l--;if(p.l>0){x.globalAlpha=Math.min(1,p.l/30);x.fillStyle=p.c;x.fillRect(p.x,p.y,3,3)}});x.globalAlpha=1;if(++f<140)requestAnimationFrame(tick);else x.clearRect(0,0,c.width,c.height)})()}
 
 /* ---- achievements screen with city tabs ---- */
@@ -2598,7 +2617,7 @@ if(PREF.ai)setup.ai=PREF.ai;if(PREF.speed)setup.speed=PREF.speed;if(PREF.cam)cam
 
 /* ================= ORIENTATION ================= */
 let rotDismissed=false;
-function checkRotate(){$('#rotate').hidden=rotDismissed||innerWidth>=innerHeight}
+function checkRotate(){$('#rotate').hidden=true}
 $('#rotOk').onclick=()=>{rotDismissed=true;checkRotate()};addEventListener('resize',checkRotate);
 ['pointerdown','touchend','click'].forEach(ev=>document.addEventListener(ev,initAudio,{passive:true}));
 

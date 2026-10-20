@@ -4,6 +4,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 M=android/app/src/main/AndroidManifest.xml
 grep -q screenOrientation "$M" || sed -i.bak 's/<activity/<activity android:screenOrientation="sensorLandscape" android:resizeableActivity="true"/' "$M"
+grep -q 'screenOrientation="sensorLandscape"' "$M" || { echo "Landscape lock not applied to $M"; exit 1; }
 rm -f "$M.bak"
 S=android/app/src/main/res/values/styles.xml
 if ! grep -q windowFullscreen "$S"; then
