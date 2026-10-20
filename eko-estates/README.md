@@ -7,7 +7,7 @@ A Lagos-themed property trading game for phones and tablets, played in landscape
 - **The board**: 40 squares of Lagos streets and landmarks, from Agege Motor Road to Banana Island, with Chance and Esusu cards, Kirikiri jail and the National Theatre as Free Parking.
 - **Rules**: buying, auctions, rent, colour sets, houses and hotels with a limited bank supply, mortgages, trading, jail and bankruptcy.
 - **Game modes**: Classic, Quick deal and Round limit, plus six house rules you can switch on or off.
-- **Six cities**: Lagos plus Abuja, Port Harcourt, Warri, Enugu and Calabar, each with its own streets, board colours and 3D centrepiece. New cities unlock through achievements.
+- **Seven cities**: Lagos plus Abuja, Port Harcourt, Warri, Enugu, Calabar and Benin City, each with its own streets, premium patterned board, 3D centrepiece and radio station. New cities unlock through achievements.
 - **Achievements**: 12 to earn, unlocking cities and six new tokens (Durbar horse, canoe, oil barrel, carnival mask, coal train, Oba’s crown), each with its own movement.
 - **Five Lagos locations**, each with its own board colours, centrepiece and crowds:
   - Lekki Beach
