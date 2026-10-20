@@ -376,6 +376,8 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--navy);outline-o
 .xpcard{padding:8px 10px;border-radius:12px;background:#e9f7ef}.xprow{display:flex;justify-content:space-between;align-items:baseline;gap:8px}.xprow b{font:20px var(--display);color:var(--green)}.xprow span{font-size:12px;font-weight:800}
 .xpcard small{font-size:11px;color:var(--muted);font-weight:700}
 @media (orientation:portrait){.endgrid{grid-template-columns:minmax(0,1fr)}.prof{flex-wrap:wrap}}
+
+html.app,html.app body{-webkit-touch-callout:none;overscroll-behavior:none}
 </style>
 
 <canvas id="gl" aria-label="3D game board"></canvas>
@@ -1646,7 +1648,7 @@ function showTitle(){
   T.querySelector('#tRules').onclick=()=>modal({cls:'wide',html:'<div class="mh">How to play</div>'+RULES,btns:[{k:'x',label:'Got it',primary:true}]});
   T.querySelector('#tSound').onclick=()=>openSound();
   T.querySelector('#tAch').onclick=()=>openAchievements().then(()=>{drawCities();drawSlots()});
-  T.querySelector('#tOnline').onclick=()=>{initAudio();openOnline()};
+  T.querySelector('#tOnline').onclick=()=>{initAudio();openOnline()};if(IS_APP)T.querySelector('#tOnline').hidden=true;
   if(saved)T.querySelector('#tCont').onclick=()=>{initAudio();startWith(saved)};
   T.querySelector('#tStart').onclick=()=>{
     const act=setup.slots.map((s,i)=>({...s,i})).filter(s=>s.type!=='off');
@@ -2452,6 +2454,16 @@ window.__sim=async function(n=20,players=4){
   FAST=false;return res;
 };
 
+
+/* ================= NATIVE APP ================= */
+const CAP=window.Capacitor,IS_APP=!!(CAP&&CAP.isNativePlatform&&CAP.isNativePlatform());
+function nativeInit(){if(!IS_APP)return;document.documentElement.classList.add('app');const Pl=CAP.Plugins||{};
+  try{Pl.StatusBar&&Pl.StatusBar.hide()}catch(e){}try{Pl.SplashScreen&&setTimeout(()=>Pl.SplashScreen.hide(),400)}catch(e){}
+  try{Pl.App&&Pl.App.addListener('backButton',()=>{const ov=$('#modals .ov');if(ov){const b=ov.querySelector('.mbar .btn:not(.pri)')||ov.querySelector('.mbar .btn');if(b)b.click();return}
+    if(!$('#title').hidden){Pl.App.exitApp();return}if(G&&!G.over)openMenu();else showTitle()})}catch(e){}
+  try{Pl.App&&Pl.App.addListener('appStateChange',s=>{if(!AC)return;try{s.isActive?AC.resume():AC.suspend()}catch(e){}if(!s.isActive)save()})}catch(e){}
+  document.addEventListener('contextmenu',e=>e.preventDefault())}
+nativeInit();
 
 /* ================= BOOT ================= */
 function boot(data){

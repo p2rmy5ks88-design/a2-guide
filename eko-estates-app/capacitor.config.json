@@ -1,0 +1,12 @@
+{
+  "appId": "com.kenstylez.ekoestates",
+  "appName": "Eko Estates",
+  "webDir": "www",
+  "backgroundColor": "#13284a",
+  "android": { "allowMixedContent": false, "captureInput": true, "webContentsDebuggingEnabled": false },
+  "ios": { "contentInset": "never", "scrollEnabled": false, "backgroundColor": "#13284a" },
+  "plugins": {
+    "SplashScreen": { "launchShowDuration": 1500, "launchAutoHide": false, "backgroundColor": "#13284a", "showSpinner": false, "androidScaleType": "CENTER_CROP" },
+    "StatusBar": { "overlaysWebView": true, "style": "DARK", "backgroundColor": "#00000000" }
+  }
+}
