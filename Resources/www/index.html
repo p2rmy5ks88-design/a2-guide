@@ -597,7 +597,8 @@ const SOURCES = {
   ytrl:["YouTube — Rumble Ladder Guide","https://www.youtube.com/watch?v=CLWjHrchUMM"],
   ytel:["YouTube — Eternal Lode Guide","https://www.youtube.com/watch?v=k_JahcWlkGk"],
   appst:["App Store — Archero 2 (events banner)","https://apps.apple.com/us/app/archero-2/id6502820653"],
-  ytair:["YouTube — Airship Trade Fast Guide (Grinnn, 20 Oct 2026)","https://youtube.com/watch?v=IZxtDEqWfPs"]
+  ytair:["YouTube — Airship Trade Fast Guide (Grinnn, 20 Oct 2026)","https://youtube.com/watch?v=IZxtDEqWfPs"],
+  ingame:["In-game rules (Airship Trade ⓘ pages and trade log, 20 Oct 2026)",""]
 };
 
 const HEROES = [
@@ -798,7 +799,7 @@ const CHECKED = {
   "runes":"2026-10-18","event:Airship Trade":"2026-10-20","chapters":"2026-10-17","heroes":"2026-10-17"
 };
 const CHANGELOG = [
-  ["2026-10-20","Events",["New: Airship Trade card (early info, confirmed facts plus first-week tips)"]],
+  ["2026-10-20","Events",["Airship Trade: full guide from the in-game rules: refresh odds chart, daily routine, plunder and Guild Airship tips"]],
   ["2026-10-18","Trust & freshness",["\"Checked\" date and game version on every mode, event and preset","Report outdated info button on each card","This What's new page, with a guide to the Sourced / Inferred labels","Builds now described as starting points, with the reason they work"]],
   ["2026-10-18","Runes",["Rune names matched to the Game Vault wiki (Rotating SPD Up, Rootguard, Equinox Bloom and more)","Name mapping table rebuilt: other names you may see → name used here","Full Twinborn pair list and Runic Remnant costs"]],
   ["2026-10-18","Events",["All-Star Cup guide with season setup","Fishing: Twinborn Core milestones and gems needed per milestone step"]],
@@ -936,17 +937,29 @@ const RUNEPKG = {echoes:"Main weapon (Arrow of Echoes)",orb:"Orb / Circle",strik
 
 /* =================== EVENTS =================== */
 const EVENTS = [
-  {name:"Airship Trade",cyc:"limited",label:"NEW · major update · guild + personal airships",src:["appst","ytair"],early:true,
-   what:"Send Guild or Personal Airships across a trade map to earn rewards. Brand-new event: no written guide or wiki page exists yet, so this card only lists what's confirmed plus safe first-week advice. Details will be added as they're verified.",
-   tips:[["Official description: send Guild or Personal Airships across the trade map.",1],
-         ["Your skill and core choices matter: Grinnn's launch guide is built around the best skills and cores to bring and how to trade fast.",1],
-         ["Keep your personal airship busy. In send-and-return events, idle time is reward you never get back.",0],
-         ["Join every guild airship run, and check guild chat for the run times. Shared runs usually pay more than solo ones.",0],
-         ["Read the in-game ⓘ page before you spend anything. Note the trade routes, reward tiers and the shop.",0],
-         ["Don't spend gems in the first days. Wait until the shop and reward tiers show what's actually worth buying.",0]],
-   setup:[["Still to confirm","Event length, trade currency, route rewards, shop prices, and which skills/cores work best. Send a screenshot of the ⓘ page or report it from this card."]],
-   buy:[],spend:"Hold gems until the shop values are known.",
-   f2p:"Daily sends plus guild runs should be the core of free rewards (inferred until confirmed)."},
+  {name:"Airship Trade",cyc:"weekly",label:"NEW · Personal Trade, Guild & Express Airships · map rotates every Monday",src:["ingame","appst","ytair"],visual:"airship",
+   what:"Send airships across a weekly trade map for gems, gold, scrolls and rare items. There are four parts: your own Personal Airships, the guild's shared Guild Airship, a paid Express Airship, and Others' Trades, where you plunder other players' ships (and they can plunder yours).",
+   tips:[["Refresh before you send. The first refresh of every run is free, so always use it: it alone lifts Legendary odds from 1% to 3% and removes half the Common results.",1],
+         ["5 refreshes = guaranteed Legendary, on Personal and Guild Airships alike. Extra refreshes cost Trade Vouchers.",1],
+         ["Legendary ships pay far more. From a real trade log: Legendary gave 500 of the green material, 2×10 scrolls and 2×100 coins plus exclusive orange items; Epic gave 300, 2×6 scrolls and 2×60 coins; a Rare gave keys, 30 gems and 2×4 scrolls. Crossed-out tiles in the log are cargo lost to plunder.",1],
+         ["Claim the moment a ship lands. Rewards don't arrive by themselves, and the dock and escort heroes stay locked until you claim.",1],
+         ["Each hero, including its Resonance, and each Mystling can escort only one ship at a time. With 2 docks, split your strongest heroes so both ships have defenders, and put the best ones on the Legendary ship.",1],
+         ["Plunder every day: you get 4 successful plunders (Guild and Personal combined), and failed attacks don't count. Pick targets with lower power than yours.",1],
+         ["When someone plunders you, tap Wanted on them in the Battle Log. Their ships then show up more often in your target list, so you can take it back.",1],
+         ["Don't plan a Personal departure for Sunday evening: none can leave in the 7 hours before Monday 00:00 UTC (Sun 17:00–24:00 UTC; Sweden 18:00–01:00 in winter time, 19:00–02:00 in summer time). The map rotates at that time.",1],
+         ["Guild Airship: queue every day. If 5 or fewer people queue for a cabin, everyone gets in. Pick a cabin with open seats over a crowded premium one unless you're willing to tip.",1],
+         ["Tipping the Captain (max 3 Trade Vouchers) only raises your queue weight; tips are lost if you're not picked. Your weight carries over to the next run, so skip tipping when cabins aren't full.",1],
+         ["The Captain gets the whole airship's rewards, and VIP (Special Guest or Guardian Angel) gets two cabins'. Ask your leaders to rotate Captain and VIP among active members.",0],
+         ["Reward tiles in a cabin are shared and each can be claimed only once, so a cabin with fewer passengers likely means more for you.",0]],
+   setup:[["Personal Trade","4 departures a day, 2 docks. Perks add more of both."],
+          ["Guild Airship","Needs 10+ members and 5,000+ guild activity last week. 1 standard run a day: 10 h boarding (Captain can refresh cargo in the first 8 h), then a 3 h trip. You can join 24 h after entering a guild."],
+          ["Cabins","4 cabins, 5 seats each. Over 5 queued, seats are drawn by queue weight. Not picked = no reward that run."],
+          ["Express Airship","Bought with an Express Airship Ticket; the buyer is Captain. 1 per guild a day, top-grade cargo, all perks active."],
+          ["Plunder","Guild Airship: a win takes 3 random cargo tiles, max 2 plunders per ship. Personal Airship: a win takes random cargo."],
+          ["Weekly map","Guilds and solo players are matched to a Guild Community map every Monday 00:00 UTC. Changing guild mid-week doesn't move your Personal Trade map. No Captain appointments in the 13 h before settlement."]],
+   buy:[["Trade Vouchers","Best use: pushing a Personal or Guild run to 5 refreshes for a guaranteed Legendary."],["Trade Pass","Much better refresh odds (see table). Worth it only if you send 4 ships a day, every day."],["Express Ticket","Top-grade cargo for the whole guild. A good buy for active guilds; check the price first."]],
+   spend:"Spend Trade Vouchers on refreshes for Legendary ships before tipping; tips are a gamble, refreshes are guaranteed.",
+   f2p:"Every day: use the free refresh on all 4 departures, send both docks, claim on landing, land 4 successful plunders and queue for the Guild Airship. That's the full free value."},
   {name:"Angler's Bounty (Fishing)",cyc:"monthly",label:"Occasional · ~monthly",src:["hubf","hubfs","wikf"],visual:"fish",
    what:"Catch fish in a gauge mini-game. Sets of 40 fish (1 Legendary); the final zone, Polar Glacier, has 80 per set (2 Legendary). Completing a set moves you on.",
    tips:[["Higher bait multipliers (1×–50×) raise grade odds but burn bait faster. Extra bait costs gems (see the Twinborn Core section).",1],
@@ -1120,8 +1133,8 @@ const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const chips = (arr, cls="") => `<div class="chips">${arr.map(x=>`<span class="chip ${cls}">${esc(x)}</span>`).join("")}</div>`;
-const srcLink = k => { if(!k||!SOURCES[k]) return ""; const [n,u]=SOURCES[k]; return `<a href="${u}" target="_blank" rel="noopener">${esc(n.split(" — ")[0])}</a>`; };
-const srcFull = k => { if(!k||!SOURCES[k]) return ""; const [n,u]=SOURCES[k]; return `<a href="${u}" target="_blank" rel="noopener">${esc(n)}</a>`; };
+const srcLink = k => { if(!k||!SOURCES[k]) return ""; const [n,u]=SOURCES[k]; if(!u) return esc(n.split(" — ")[0].split(" (")[0]); return `<a href="${u}" target="_blank" rel="noopener">${esc(n.split(" — ")[0])}</a>`; };
+const srcFull = k => { if(!k||!SOURCES[k]) return ""; const [n,u]=SOURCES[k]; if(!u) return esc(n); return `<a href="${u}" target="_blank" rel="noopener">${esc(n)}</a>`; };
 const ls = { get(k,d){ try { const v=localStorage.getItem(k); return v?JSON.parse(v):d; } catch(e){ return d; } },
              set(k,v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} } };
 const heroByName = n => HEROES.find(h => h[0]===n);
@@ -1520,6 +1533,48 @@ function diceAdvice(n){
   if(n>=348) return `<b style="color:var(--warn)">Only lucky runs make it.</b> Play Defensive or Balanced and keep collecting free dice before you roll.`;
   return `<b style="color:var(--bad)">Not enough yet.</b> 100,000 usually needs at least about 390 dice. Keep saving, or roll for the lower milestones only.`;
 }
+/* Airship refresh odds (Common, Fine, Rare, Epic, Legendary) by refresh count 0..5+ — from the in-game Rates page */
+const AIR_RATES = {
+  personal:["Personal Airship",[[34,40,20,5,1],[17,40,30,10,3],[10,35,35,15,5],[0,28,45,20,7],[0,0,60,30,10],[0,0,0,0,100]]],
+  pass:["Personal + Trade Pass",[[18,40,30,10,2],[0,25,50,20,5],[0,0,60,30,10],[0,0,30,50,20],[0,0,0,70,30],[0,0,0,0,100]]],
+  guild:["Guild Airship cargo",[[49,30,15,5,1],[32,30,25,10,3],[15,30,35,15,5],[0,23,50,20,7],[0,0,65,25,10],[0,0,0,0,100]]]
+};
+const AIR_Q = [["Common","#8B93A3"],["Fine","#4FDCA0"],["Rare","#7CB8F0"],["Epic","#C08CF5"],["Legendary","#E8B04B"]];
+let airTrack = "personal";
+function airRates(){
+  const [title,rows]=AIR_RATES[airTrack];
+  return `<div style="display:grid;gap:8px">
+    ${rows.map((r,i)=>`<div style="display:grid;grid-template-columns:62px 1fr 44px;gap:8px;align-items:center">
+      <span class="src" style="font:600 .74rem var(--f-body)">${i===5?"5+":i} ${i===1?"<small style='display:block;opacity:.7'>1st is free</small>":""}</span>
+      <div style="display:flex;height:16px;border-radius:6px;overflow:hidden;background:rgba(255,255,255,.05)" role="img" aria-label="${AIR_Q.map((q,k)=>q[0]+" "+r[k]+"%").join(", ")}">
+        ${r.map((v,k)=>v?`<i style="width:${v}%;background:${AIR_Q[k][1]};${k===4?"box-shadow:0 0 10px "+AIR_Q[4][1]:""}"></i>`:"").join("")}</div>
+      <b style="font:700 .82rem var(--f-mono);color:${r[4]>=20?"var(--gold)":"var(--fg)"};text-align:right">${r[4]}%</b></div>`).join("")}
+    <div style="display:flex;flex-wrap:wrap;gap:10px;font-size:.74rem;color:var(--muted)">${AIR_Q.map(([n,c])=>`<span style="display:inline-flex;align-items:center;gap:5px"><i style="width:10px;height:10px;border-radius:3px;background:${c}"></i>${n}</span>`).join("")}<span style="margin-left:auto">right = Legendary %</span></div></div>`;
+}
+function airshipBlock(){
+  const parts=[["✈","Personal Trade","Your own ships. 4 sends/day, 2 docks. You pick cargo quality by refreshing and escort with heroes."],
+    ["⚓","Guild Airship","1 shared run a day. Queue for a cabin seat; Captain and VIP earn the most."],
+    ["★","Express Airship","Paid ticket. Top-grade cargo, all perks, 1 per guild a day."],
+    ["⚔","Others' Trades","Plunder other ships on your map. 4 wins a day; losses are free."]];
+  const day=[["Send both docks","Use the free refresh first. Aim for Epic+; refresh to 5 for a guaranteed Legendary when you have the vouchers."],
+    ["Split escorts","Each hero escorts one ship at a time. Best heroes go on the Legendary ship."],
+    ["Claim on landing","Frees the dock and heroes for your next send. 4 sends a day means ships must keep cycling."],
+    ["Plunder 4 times","Pick weaker targets. Mark anyone who robbed you as Wanted."],
+    ["Queue Guild Airship","Pick a cabin with ≤5 queued for a sure seat. Tip only for a crowded cabin you really want."]];
+  return `<div class="card" style="gap:12px;background:var(--raised)">
+    <span class="label">The four parts</span>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px">${parts.map(([i,t,d])=>`<div style="padding:10px 12px;border-radius:12px;border:1px solid var(--hair);background:var(--surface);display:grid;gap:4px"><b style="color:var(--accent)">${i} ${t}</b><span style="font-size:.84rem;color:color-mix(in srgb,var(--fg) 75%,transparent)">${d}</span></div>`).join("")}</div>
+    <span class="label" style="margin-top:4px">Refresh odds — how many refreshes before you send</span>
+    <div class="setpick" role="group" aria-label="Airship type" id="airPick">${Object.entries(AIR_RATES).map(([k,[n]])=>`<button aria-pressed="${k===airTrack}" data-air="${k}">${n}</button>`).join("")}</div>
+    <div id="airRates">${airRates()}</div>
+    <div class="note good" style="margin:0"><b>Rule of thumb:</b> always take the free refresh. Stop on Epic or Legendary. With spare Trade Vouchers, go to 5 refreshes: Legendary is then 100%.</div>
+    <span class="label" style="margin-top:4px">Daily routine</span>
+    <ol style="margin:0;padding-left:20px;display:grid;gap:6px">${day.map(([t,d])=>`<li><b>${t}.</b> <span style="color:color-mix(in srgb,var(--fg) 75%,transparent)">${d}</span></li>`).join("")}</ol>
+    <p class="src" style="margin:0">Odds copied from the in-game Rates page. The game marks this event as a test version, so numbers may change.</p>
+  </div>`;
+}
+$("#eventList").addEventListener("click", e=>{ const b=e.target.closest("[data-air]"); if(!b) return; airTrack=b.dataset.air;
+  $$("#airPick button").forEach(x=>x.setAttribute("aria-pressed",String(x===b))); $("#airRates").innerHTML=airRates(); });
 function diceBlock(){
   const have = ls.get("a2-dice",0);
   return `<div class="card" style="gap:12px;background:var(--raised)">
@@ -1546,7 +1601,7 @@ function renderEvents(){
     <summary><div><h3>${esc(e.name)}${e.early?` <span class="tag t-inf">Early info</span>`:""}</h3><div class="sub">${esc(e.label)}</div></div><span class="cyc">${esc(e.cyc)}</span></summary>
     <div class="body">
       <p style="margin:0">${esc(e.what)}</p>
-      ${e.visual==="fish"?fishVisual()+coreBlock():e.visual==="dice"?diceBlock():""}
+      ${e.visual==="fish"?fishVisual()+coreBlock():e.visual==="dice"?diceBlock():e.visual==="airship"?airshipBlock():""}
       ${e.tips.length?`<div style="display:grid;gap:6px"><span class="label">Tips</span><ul class="reasons">${e.tips.map(([t,s])=>`<li style="grid-template-columns:1fr"><span><span class="tag ${s?"t-src":"t-inf"}">${s?"Sourced":"Inferred"}</span> ${esc(t)}</span></li>`).join("")}</ul></div>`:""}
       ${e.setup?`<div style="display:grid;gap:6px"><span class="label">Recommended setup</span><dl class="kv">${e.setup.map(([a,b])=>`<dt>${esc(a)}</dt><dd>${esc(b)}</dd>`).join("")}</dl></div>`:""}
       ${e.buy.length?`<div style="display:grid;gap:6px"><span class="label">What to buy</span><dl class="kv">${e.buy.map(([a,b])=>`<dt>${esc(a)}</dt><dd>${esc(b)}</dd>`).join("")}</dl></div>`:""}
@@ -1597,7 +1652,7 @@ function renderMore(){
     <div class="row between"><h3>${esc(s.name)}</h3><span class="label">${esc(s.style)}</span></div>
     <dl class="kv"><dt>Weapon</dt><dd>${esc(s.weapon)}</dd><dt>Key perks</dt><dd><ul style="margin:0;padding-left:18px">${s.perks.map(p=>`<li>${esc(p)}</li>`).join("")}</ul></dd><dt>Verdict</dt><dd>${esc(s.verdict)}</dd></dl>
     <span class="src">Sources: ${s.src.map(srcLink).join(", ")}</span></div>`).join("");
-  $("#srcList").innerHTML = Object.values(SOURCES).map(([n,u])=>`<li><a href="${u}" target="_blank" rel="noopener">${esc(n)}</a></li>`).join("");
+  $("#srcList").innerHTML = Object.values(SOURCES).map(([n,u])=>u?`<li><a href="${u}" target="_blank" rel="noopener">${esc(n)}</a></li>`:`<li>${esc(n)}</li>`).join("");
   $("#mapRows").innerHTML = MAP.map(([a,b,k,sure])=>`<tr><td>${esc(a)}</td><td><b>${esc(b)}</b>${sure?"":` <span class="tag t-inf">Best match</span>`}</td><td class="src">${esc(k)}</td></tr>`).join("");
   $$("[data-src]").forEach(el=>el.innerHTML=srcLink(el.dataset.src));
   $("#newsList").innerHTML = CHANGELOG.map(([d,t,items],i)=>`<div class="news-item"><div class="news-head"><span class="news-date">${fmtDate(d)}</span><b>${esc(t)}</b>${i===0?`<span class="tag t-src">Latest</span>`:""}</div><ul>${items.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`).join("");
