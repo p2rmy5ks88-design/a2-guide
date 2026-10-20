@@ -447,6 +447,18 @@ button:not(:disabled):active{filter:brightness(.92)}
 
 .tb.off{opacity:.5}
 input,textarea{-webkit-user-select:text;user-select:text}
+
+.rbub{position:fixed;z-index:75;padding:6px 12px;border-radius:14px 14px 14px 4px;background:#fff;color:var(--navy);font:15px var(--display);box-shadow:0 3px 0 rgba(19,40,74,.25);pointer-events:none;animation:achin .35s cubic-bezier(.2,1.4,.4,1);white-space:nowrap}
+.rbub.emo{font:26px/1 var(--emoji);padding:4px 8px}.rbub.bye{animation:achout .4s ease-in forwards}
+.rtray{position:absolute;right:calc(max(16px,env(safe-area-inset-right,0px)) + 56px);top:calc(max(10px,env(safe-area-inset-top,0px)) + 58px);display:grid;grid-template-columns:repeat(4,auto);gap:5px;padding:8px;border-radius:16px;background:#fff;box-shadow:0 6px 0 rgba(19,40,74,.2);z-index:5}
+.rtray button{border:2px solid var(--line);background:#fff;border-radius:12px;padding:6px 8px;font:14px var(--display);color:var(--navy);min-width:44px}
+.rtray button:nth-child(-n+6){font:22px/1 var(--emoji)}
+.qq{font:20px/1.25 var(--display);color:var(--navy);padding:6px 0}
+.quizm .mbar{display:grid;grid-template-columns:1fr 1fr;gap:8px}.quizm .mbar .btn{font-size:15px}
+.cfield{position:relative;height:min(46vh,240px);border-radius:16px;background:linear-gradient(135deg,#e9f7ef,#d2f0de);overflow:hidden;touch-action:none}
+.cfield .cn{position:absolute;right:12px;top:8px;font:28px var(--display);color:var(--green)}
+.note2{position:absolute;width:62px;height:36px;border-radius:6px;border:3px solid #e6ffe9;background:#2fa866;color:#fff;font:20px var(--display);transform:rotate(var(--r));box-shadow:0 3px 6px rgba(0,0,0,.25);animation:pop .25s ease-out}
+.note2.got{transform:scale(1.4);opacity:0;transition:.2s}
 </style>
 
 <canvas id="gl" aria-label="3D game board"></canvas>
@@ -460,6 +472,7 @@ input,textarea{-webkit-user-select:text;user-select:text}
     <button class="tb" id="bAssets" aria-label="Your properties" title="Properties"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"><path d="M3 11 12 3l9 8v10h-6v-6H9v6H3z"/></svg></button>
     <button class="tb" id="bTrade" aria-label="Trade" title="Trade"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h14l-4-4M20 16H6l4 4"/></svg></button>
     <button class="tb" id="camBtn" aria-label="Camera: follow the token" title="Camera"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"><rect x="2" y="7" width="14" height="11" rx="2"/><path d="m16 11 6-3v9l-6-3z"/></svg></button>
+    <button class="tb" id="bReact" aria-label="Reactions" title="Reactions"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M8 14.5c1 1.4 2.4 2 4 2s3-.6 4-2"/><circle cx="9" cy="10" r=".8" fill="currentColor"/><circle cx="15" cy="10" r=".8" fill="currentColor"/></svg></button>
     <button class="tb" id="bMenu" aria-label="Menu" title="Menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
   </div>
   <div id="timer" hidden aria-live="off"><svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="15.5"/><circle class="fg" cx="18" cy="18" r="15.5"/></svg><b>90</b></div>
@@ -1409,7 +1422,8 @@ const RULES=`<div class="rules">
 <h4>Trading</h4><p>On your turn, trade streets, cash and get-out cards with any player. Streets in a set with buildings can’t be traded.</p>
 <h4>Speed die (house rule)</h4><p>Once you have passed GO, you also roll a red speed die. 1, 2 or 3 is added to your move. Bus: move by either white die or the total. Oga: move, then go straight on to the next property nobody owns (or the next one you must pay rent on). Triples: move to any square.</p>
 <h4>Free-for-all building (house rule)</h4><p>Build houses and hotels on any street you own, even without the full colour set. Building evenly still applies across the streets of that colour you own.</p>
-<h4>City events (house rule)</h4><p>Every two rounds a city event shakes things up for one round: the power company takes light (no utility rent), owambe weekend (+25% street rent), fuel scarcity (double transport rent), a tax holiday, or an esusu payout of ₦50M for everyone.</p>
+<h4>City events (house rule)</h4><p>Every two rounds a city event shakes things up for one round: the power company takes light (no utility rent), owambe weekend (+25% street rent), fuel scarcity (double transport rent), a tax holiday, an esusu payout of ₦50M for everyone, flood season (cheap sets at half rent), a building boom (half-price houses), a big wedding gift for the poorest player, a lucky raffle, a public holiday (double GO pay), a go-slow (no transport rent) or market day (+50% on orange and red). Each city also has its own festival, such as Eyo in Lagos, Carnival in Calabar or Igue in Benin City, which doubles rent on that city’s featured streets and gives everyone ₦50M.</p><h4>Reactions</h4><p>Tap the smiley button to send an emoji or a Naija shout like “Ehen!” or “Wahala!”. AI players react too.</p>
+<h4>Mini-games (house rule, on by default)</h4><p>Land on Chance or Esusu for a chance at the Naija Quiz (₦50M for a right answer). Land exactly on GO or Free Parking to play Catch the Naira (₦10M per note).</p>
 <h4>Turn timer</h4><p>If the timer is on, each player has 90 seconds per turn. When time runs out, the game rolls, skips buying and ends the turn for them.</p>
 <h4>Bankruptcy</h4><p>If you can’t pay, sell buildings and mortgage. If that still isn’t enough, you’re out and your assets go to whoever you owed.</p></div>`;
 async function openMenu(){
@@ -1485,7 +1499,7 @@ function renderRoster(){
     const me=G.online&&p.uid&&p.uid===NET.me;
     d.innerHTML=`${cur?'<span class="nowtag">PLAYING</span>':''}<div class="pt">${p.tok}</div><div class="pinfo"><div class="pn">${esc(p.name)}${me?'<span class="tag you">You</span>':''}${lh?`<span class="tag lv">Lv ${lvlOf(PREF.xp)}</span>`:''}${p.ai?'<span class="tag">AI</span>':''}${p.inJail?'<span class="tag jail">Jail</span>':''}${p.bankrupt?'<span class="tag">Out</span>':''}</div><div class="pc">${fmt(p.cash)}</div>${props?`<div class="pg">${props}</div>`:''}</div>`;
     d.onclick=()=>{if(!$('#modals').children.length)openAssets(p,{readonly:true})};R.append(d)});
-  {const e=evNow()&&EVENTS.find(x=>x.id===evNow());$('#round').textContent='Round '+G.round+(G.set.mode==='timed'?' of '+G.set.rounds:'')+(G.set.pot&&G.pot?' · Jackpot '+fmt(G.pot):'')+(e?' · '+loc(e.t):'')}
+  {const e=evDef();$('#round').textContent='Round '+G.round+(G.set.mode==='timed'?' of '+G.set.rounds:'')+(G.set.pot&&G.pot?' · Jackpot '+fmt(G.pot):'')+(e?' · '+evText(e,'t'):'')}
   tok3.forEach((t,i)=>{t.visible=!P(i).bankrupt});
   $('#ui').style.setProperty('--turn',G.over?'transparent':P(G.turn).col);
   pushState();achScan();
@@ -1692,10 +1706,10 @@ function startOnlineFromDoc(code,ref,d){
 /* ================= TITLE / SETUP ================= */
 const PREF=(()=>{try{return JSON.parse(localStorage.getItem('ekoPrefs')||'{}')||{}}catch(e){return{}}})();
 function savePref(){try{localStorage.setItem('ekoPrefs',JSON.stringify(PREF))}catch(e){}}
-const RULE_INFO=[['ffa','Free-for-all building','Build houses and hotels on any street you own. No full colour set needed.'],['events','City events','Every two rounds something happens: blackouts, owambe weekends, fuel scarcity, tax holidays or esusu payouts.'],['speedDie','Speed die','After your first lap, roll a third die: add 1–3, Bus lets you pick a die, Oga sends you to the next free property, triples move you anywhere.'],['pot','Free Parking jackpot','Taxes and fines pile up on the National Theatre. Land there to scoop them.'],['goDouble','Double pay on GO','Land exactly on GO to collect ₦400M.'],['jailRent','No rent from jail','Owners sitting in Kirikiri can’t collect rent.'],['auction','Auctions','Property nobody buys goes to auction.'],['even','Even building','Build and sell evenly across a colour set.'],['interest','Mortgage interest','Redeeming costs the mortgage plus 10%.']];
+const RULE_INFO=[['minigames','Mini-games','Naija Quiz on Chance and Esusu squares, and Catch the Naira when you land on GO or Free Parking.'],['ffa','Free-for-all building','Build houses and hotels on any street you own. No full colour set needed.'],['events','City events','Every two rounds something happens: 13 events including blackouts, owambe weekends, floods, building booms, raffles, weddings and each city’s own festival.'],['speedDie','Speed die','After your first lap, roll a third die: add 1–3, Bus lets you pick a die, Oga sends you to the next free property, triples move you anywhere.'],['pot','Free Parking jackpot','Taxes and fines pile up on the National Theatre. Land there to scoop them.'],['goDouble','Double pay on GO','Land exactly on GO to collect ₦400M.'],['jailRent','No rent from jail','Owners sitting in Kirikiri can’t collect rent.'],['auction','Auctions','Property nobody buys goes to auction.'],['even','Even building','Build and sell evenly across a colour set.'],['interest','Mortgage interest','Redeeming costs the mortgage plus 10%.']];
 const MODES=[['classic','Classic','Play until one landlord is left standing.'],['quick','Quick deal','Everyone starts with 2 random properties. The first bankruptcy ends the game and the richest wins.'],['timed','Round limit','Play a set number of rounds. The richest landlord wins.']];
 const setup={slots:NAMES.map((n,i)=>({name:n,tok:TOKENS[i],type:i===0?'human':i<4?'ai':'off'})),cash:1500,ai:'normal',speed:'normal',mode:'classic',rounds:20,timer:PREF.timer||0,city:'lagos',theme:['beach','night','harmattan','rainy','obudu'].includes(PREF.theme)?PREF.theme:'beach',
-  rules:Object.assign({ffa:false,events:false,speedDie:false,pot:false,goDouble:false,jailRent:false,auction:true,even:true,interest:true},PREF.rules||{})};
+  rules:Object.assign({minigames:true,ffa:false,events:false,speedDie:false,pot:false,goDouble:false,jailRent:false,auction:true,even:true,interest:true},PREF.rules||{})};
 function showTitleOld(){
   if(!setup.cityInit){setup.cityInit=1;if(PREF.city&&cityUnlocked(PREF.city))setup.city=PREF.city}
   GEN++;netStop();$('#modals').innerHTML='';$('#ui').hidden=true;clearGame();applyTheme(setup.theme);const T=$('#title');T.hidden=false;const saved=loadSave();
@@ -2226,6 +2240,9 @@ const ACH=[
   {id:'ffa_spread',name:'Everywhere Landlord',desc:'Have buildings in 5 different colour groups at once.',goal:1},
   {id:'ffa_10',name:'Construction Boss',desc:'Build 10 houses in one free-for-all game.',goal:1},
   {id:'ffa_win',name:'Free-for-All Champion',desc:'Win a game with free-for-all building on.',goal:1},
+  {id:'quiz10',name:'Naija Brain',desc:'Answer 10 Naija Quiz questions correctly.',goal:10},
+  {id:'catch15',name:'Quick Fingers',desc:'Catch 15 notes in one Catch the Naira round.',goal:1},
+  {id:'festival',name:'Festival Goer',desc:'Play through a city festival event.',goal:1},
   {id:'tour',name:'Naija Tour',desc:'Finish a game in all six cities.',goal:6}
 ];
 PREF.ach=PREF.ach||{};PREF.stats=Object.assign({wins:0,deals:0,winCities:[],playedCities:[]},PREF.stats||{});
@@ -2449,29 +2466,95 @@ async function openWheel(){initAudio();const ready=wheelReady();let spun=false;
 }
 
 /* ---- city events (house rule) ---- */
+const FEST_GROUP={lagos:'orange',abuja:'yellow',ph:'green',warri:'navy',enugu:'red',calabar:'yellow',benin:'navy'};
+const festGroup=()=>FEST_GROUP[(G&&G.set.city)||'lagos']||'orange';
 const EVENTS=[
-  {id:'nepa',t:'⚡ {12} took light!',d:'Utilities collect no rent this round.'},
-  {id:'owambe',t:'🎉 Owambe weekend!',d:'All street rent is up 25% this round.'},
-  {id:'fuel',t:'⛽ Fuel scarcity!',d:'Transport rent is doubled this round.'},
+  {id:'nepa',t:'⚡ {12} took light!',d:'Utilities collect no rent this round.',rent:(s,r)=>s.t==='util'?0:r},
+  {id:'owambe',t:'🎉 Owambe weekend!',d:'All street rent is up 25% this round.',rent:(s,r)=>s.t==='prop'?Math.round(r*1.25):r},
+  {id:'fuel',t:'⛽ Fuel scarcity!',d:'Transport rent is doubled this round.',rent:(s,r)=>s.t==='rail'?r*2:r},
   {id:'taxfree',t:'🧾 Tax holiday!',d:'No tax or levy to pay this round.'},
-  {id:'esusu',t:'💰 Esusu payout!',d:'Every player collects ₦50M.'}];
+  {id:'esusu',t:'💰 Esusu payout!',d:'Every player collects ₦50M.',apply:()=>alive().forEach(p=>{p.cash+=50;float(p.id,50)})},
+  {id:'flood',t:'🌧️ Flood season!',d:'Rent on the two cheapest colour sets is halved this round.',rent:(s,r)=>s.t==='prop'&&(s.g==='brown'||s.g==='sky')?Math.round(r/2):r},
+  {id:'boom',t:'🏗️ Building boom!',d:'Houses and hotels cost half price this round.'},
+  {id:'wedding',t:'💍 Big wedding!',d:'The player with the least cash gets a ₦150M wedding gift.',apply:()=>{const p=alive().reduce((a,b)=>b.cash<a.cash?b:a);p.cash+=150;float(p.id,150);log(`${p.name} received the ₦150M wedding gift`)}},
+  {id:'raffle',t:'🎟️ Lucky raffle!',d:'One lucky player wins ₦100M.',apply:()=>{const a=alive(),p=a[Math.floor(Math.random()*a.length)];p.cash+=100;float(p.id,100);log(`${p.name} won the ₦100M raffle`);if(!FAST)toast(`🎟️ ${p.name} wins the raffle!`)}},
+  {id:'holiday',t:'🏖️ Public holiday!',d:'Passing GO pays double (₦400M) this round.'},
+  {id:'goslow',t:'🚦 Go-slow everywhere!',d:'Transport hubs collect no rent this round.',rent:(s,r)=>s.t==='rail'?0:r},
+  {id:'market',t:'🛒 Market day!',d:'Rent on the orange and red sets is up 50% this round.',rent:(s,r)=>s.t==='prop'&&(s.g==='orange'||s.g==='red')?Math.round(r*1.5):r},
+  {id:'fest',t:()=>`🥁 ${CITY.festival}!`,d:()=>`Rent on ${GNAME[festGroup()]} streets doubles this round, and everyone gets ₦50M to celebrate.`,
+    rent:(s,r)=>s.t==='prop'&&s.g===festGroup()?r*2:r,apply:()=>{alive().forEach(p=>{p.cash+=50;float(p.id,50)});if(trackable()&&G.players.some(p=>isLocalHuman(p)))achAward('festival')}}];
+const evText=(e,k)=>loc(typeof e[k]==='function'?e[k]():e[k]);
 const evNow=()=>G&&G.event&&G.event.round===G.round?G.event.id:null;
-const _rentFor=rentFor;rentFor=function(i,dsum,o2){let r=_rentFor(i,dsum,o2);const e=evNow(),s=SQ[i];if(!r)return r;
-  if(e==='nepa'&&s.t==='util')return 0;if(e==='owambe'&&s.t==='prop')return Math.round(r*1.25);if(e==='fuel'&&s.t==='rail')return r*2;return r};
-const _advanceTurn=advanceTurn;advanceTurn=function(){const r0=G.round;_advanceTurn();if(G.round!==r0&&G.set.events&&G.round%2===0){const e=EVENTS[Math.floor(Math.random()*EVENTS.length)];G.event={id:e.id,round:G.round};
-  if(e.id==='esusu')alive().forEach(p=>{p.cash+=50;float(p.id,50)});log(`${loc(e.t)} ${e.d}`);if(!FAST){evBanner(e)}}};
-function evBanner(e){const b=el('div','evban',`<b>${esc(loc(e.t))}</b><span>${esc(e.d)}</span>`);document.body.append(b);setTimeout(()=>b.classList.add('bye'),3200);setTimeout(()=>b.remove(),3700)}
+const evDef=()=>{const id=evNow();return id?EVENTS.find(e=>e.id===id):null};
+const _rentFor=rentFor;rentFor=function(i,dsum,o2){const r=_rentFor(i,dsum,o2);const e=evDef();if(!r||!e||!e.rent)return r;return e.rent(SQ[i],r)};
+const _advanceTurn=advanceTurn;advanceTurn=function(){const r0=G.round;_advanceTurn();if(G.round!==r0&&G.set.events&&G.round%2===0){
+  const e=Math.random()<.25?EVENTS.find(x=>x.id==='fest'):EVENTS[Math.floor(Math.random()*(EVENTS.length-1))];G.event={id:e.id,round:G.round};
+  if(e.apply)e.apply();log(`${evText(e,'t')} ${evText(e,'d')}`);if(!FAST)evBanner(e)}};
+function evBanner(e){const b=el('div','evban',`<b>${esc(evText(e,'t'))}</b><span>${esc(evText(e,'d'))}</span>`);document.body.append(b);setTimeout(()=>b.classList.add('bye'),3400);setTimeout(()=>b.remove(),3900)}
+
+/* ---- reactions ---- */
+const REACTS=['😂','🔥','😮','👏','🙏','😎','Ehen!','Wahala!','Na wa o!','Oya!','Chai!','Gbam!'];
+function bubble(pid,txt){if(FAST||pid==null)return;const[x,y]=cardPt(pid);const b=el('div','rbub'+(/^\p{Extended_Pictographic}/u.test(txt)?' emo':''),esc(txt));b.style.left=(x+60)+'px';b.style.top=(y-18)+'px';document.body.append(b);setTimeout(()=>b.classList.add('bye'),1700);setTimeout(()=>b.remove(),2100)}
+function reactor(){if(!G)return null;const c=P(G.turn);if(c&&isLocalHuman(c))return c.id;const h=G.players.find(p=>isLocalHuman(p)&&!p.bankrupt);return h?h.id:null}
+function openReacts(){if(!G||G.over)return;const old=$('#rtray');if(old){old.remove();return}const pid=reactor();if(pid==null){toast('Reactions are for human players');return}
+  const t=el('div','rtray');t.id='rtray';REACTS.forEach(r=>{const b=el('button','',esc(r));b.onclick=()=>{bubble(pid,r);sfx('tap');t.remove()};t.append(b)});$('#ui').append(t);setTimeout(()=>document.addEventListener('pointerdown',function f(ev){if(!t.contains(ev.target)&&ev.target.id!=='bReact'){t.remove();document.removeEventListener('pointerdown',f)}}),0)}
+let lastChat=0;function aiChat(p,list){if(FAST||!p||!p.ai||Date.now()-lastChat<2500)return;if(Math.random()<.55){lastChat=Date.now();bubble(p.id,list[Math.floor(Math.random()*list.length)])}}
+
+/* ---- mini-games ---- */
+const QUIZ=[
+  ['What is the capital of Nigeria?','Abuja',['Lagos','Kano','Ibadan']],
+  ['What is the name of Nigeria’s currency?','Naira',['Cedi','Rand','Shilling']],
+  ['Which river gives Nigeria its name?','River Niger',['River Benue','River Ogun','River Osun']],
+  ['What colours are on the Nigerian flag?','Green and white',['Red and yellow','Blue and white','Green and gold']],
+  ['The Eyo Festival is celebrated in which city?','Lagos',['Kano','Enugu','Jos']],
+  ['Obudu Mountain Resort is in which state?','Cross River',['Plateau','Ogun','Edo']],
+  ['Olumo Rock is in which city?','Abeokuta',['Kaduna','Port Harcourt','Owerri']],
+  ['What is Nigeria’s national football team called?','Super Eagles',['Black Stars','Indomitable Lions','Bafana Bafana']],
+  ['The Benin Bronzes come from which kingdom?','Benin Kingdom',['Oyo Empire','Kanem-Bornu','Sokoto Caliphate']],
+  ['Which festival in Kebbi State is famous for fishing?','Argungu Festival',['Eyo Festival','Osun Festival','New Yam Festival']],
+  ['In which month does the Calabar Carnival take place?','December',['April','July','October']],
+  ['What is Nigeria’s film industry called?','Nollywood',['Bollywood','Hollywood','Ghallywood']],
+  ['Which two rivers meet at Lokoja?','Niger and Benue',['Ogun and Osun','Cross and Imo','Kaduna and Sokoto']],
+  ['Yankari Game Reserve is in which state?','Bauchi',['Lagos','Rivers','Ondo']],
+  ['In Lagos, what is a “danfo”?','A yellow minibus',['A motorcycle taxi','A ferry','A train']],
+  ['What is an “okada”?','A motorcycle taxi',['A yellow bus','A boat','A food stall']],
+  ['Which city is known as “The Coal City”?','Enugu',['Warri','Kano','Ibadan']],
+  ['Which city is known as “The Garden City”?','Port Harcourt',['Abuja','Calabar','Jos']],
+  ['How many states does Nigeria have?','36',['24','30','40']],
+  ['In which year did Nigeria gain independence?','1960',['1957','1963','1970']],
+  ['Who wrote the novel “Things Fall Apart”?','Chinua Achebe',['Wole Soyinka','Ben Okri','Cyprian Ekwensi']],
+  ['Wole Soyinka won which prize in 1986?','Nobel Prize in Literature',['Olympic gold medal','Grammy Award','FIFA World Cup']],
+  ['What is the longest bridge in Lagos?','Third Mainland Bridge',['Carter Bridge','Eko Bridge','Lekki-Ikoyi Link Bridge']],
+  ['The Osun-Osogbo Sacred Grove is in which state?','Osun',['Oyo','Ekiti','Kwara']],
+  ['Jollof rice is mainly cooked with…','Tomatoes and peppers',['Milk and sugar','Beans and palm oil','Yam and egusi']],
+  ['“Ẹ kú àárọ̀” is a Yoruba greeting for…','Good morning',['Good night','Well done','Welcome']],
+  ['“Kedu” is a greeting in which language?','Igbo',['Yoruba','Hausa','Efik']],
+  ['“Sannu” is a greeting in which language?','Hausa',['Igbo','Yoruba','Ijaw']],
+  ['Which city is famous for the Durbar festival with horse riders?','Kano',['Calabar','Warri','Port Harcourt']],
+  ['Zuma Rock is close to which city?','Abuja',['Calabar','Warri','Ibadan']]];
+async function quiz(p){const qs=PREF.qseen||[];let pool=QUIZ.map((_,i)=>i).filter(i=>!qs.includes(i));if(!pool.length){pool=QUIZ.map((_,i)=>i);PREF.qseen=[]}
+  const qi=pool[Math.floor(Math.random()*pool.length)];(PREF.qseen=PREF.qseen||[]).push(qi);savePref();const[q,a,wr]=QUIZ[qi];const opts=shuffle([a,...wr]);
+  const k=await modal({cls:'wide quizm',tdef:-1,onMount:(pn,close)=>setTimeout(()=>close(-1),20000),html:`<div class="mh">🧠 Naija Quiz</div><div class="mtxt">Answer right to win <b>₦50M</b>. You have 20 seconds.</div><div class="qq">${esc(q)}</div>`,btns:opts.map((o,i)=>({k:i,label:o}))});
+  const right=opts[k]===a;if(right){sfx('win');toast(`Correct! ${a} 🎉`);await collect(p,50);PREF.stats.quiz=(PREF.stats.quiz||0)+1;savePref();achBump('quiz10')}else{sfx('bad');toast(`Not quite. The answer is ${a}.`)}}
+async function catchNaira(p){let n=0;
+  await modal({cls:'wide catchm',tdef:'x',html:`<div class="mh">💸 Catch the Naira!</div><div class="mtxt">Tap the notes before they fly away. ₦10M each, 6 seconds.</div><div class="cfield"><b class="cn">0</b></div>`,onMount:(pn,close)=>{const F=pn.querySelector('.cfield'),C=pn.querySelector('.cn');let live=true;
+    const spawn=()=>{if(!live)return;const b=el('button','note2','₦');b.style.left=(5+Math.random()*82)+'%';b.style.top=(8+Math.random()*70)+'%';b.style.setProperty('--r',(Math.random()*40-20)+'deg');
+      b.onpointerdown=e=>{e.preventDefault();if(b.dataset.got)return;b.dataset.got=1;n++;C.textContent=n;tone(1100+n*20,.06,'square',.04);b.classList.add('got');setTimeout(()=>b.remove(),200)};F.append(b);setTimeout(()=>b.remove(),1100)};
+    const iv=setInterval(spawn,320);spawn();setTimeout(()=>{live=false;clearInterval(iv);close('x')},6000)}});
+  const amt=Math.min(200,n*10);if(amt){toast(`You caught ${n} notes: +${fmt(amt)}!`);await collect(p,amt)}else toast('No notes caught this time!');
+  if(n>=15)achAward('catch15')}
+function miniOK(p){return G.set.minigames&&!FAST&&isLocalHuman(p)&&!p.auto&&!G.online}
 
 /* ---- gameplay hooks ---- */
 const _pay=pay;pay=async function(p,amt,to,kind){const cashTo=to?to.cash:0;const ok=await _pay(p,amt,to,kind);if(ok&&to&&kind==='rent'){const s=st(to);s.rent+=amt;s.maxRent=Math.max(s.maxRent,amt);if(mine(to)){cityScan()}}return ok};
 const _bankrupt=bankrupt;bankrupt=function(p,to){_bankrupt(p,to);if(to){st(to).bankrupted++;if(mine(to)){addXP(100,`Bankrupted ${p.name}`);cityScan()}}};
 const _buyProp=buyProp;buyProp=function(p,i,price){_buyProp(p,i,price);st(p).buys++;if(mine(p))missionScan()};
-const _build=build;build=function(pid,i){_build(pid,i);const p=P(pid);const s=st(p);if(G.own[i].h===5){s.hotels++;if(mine(p)&&!FAST)fireworks()}else s.houses++;if(mine(p)){cityScan();ffaScan(p,i)}};
+const _build=build;build=function(pid,i){_build(pid,i);const p=P(pid);if(evNow()==='boom'){const rf=SQ[i].h/2;p.cash+=rf;float(pid,rf)}const s=st(p);if(G.own[i].h===5){s.hotels++;if(mine(p)&&!FAST)fireworks()}else s.houses++;if(mine(p)){cityScan();ffaScan(p,i)}};
 function ffaScan(p,i){if(!FFA()||!trackable())return;const g=SQ[i].g,full=ownsAll(p.id,g);if(!full)achAward(G.own[i].h===5?'ffa_hotel':'ffa_house');if(st(p).houses>=10)achAward('ffa_10');
   const gs=new Set(propsOf(p.id).filter(j=>G.own[j].h>0).map(j=>SQ[j].g));if(gs.size>=5)achAward('ffa_spread')}
 const _sendToJail=sendToJail;sendToJail=async function(p){st(p).jail++;if(mine(p))bumpCity('jail');await _sendToJail(p);if(mine(p))cityScan()};
 const _executeTrade=executeTrade;executeTrade=function(t){_executeTrade(t);[P(t.from),P(t.to)].forEach(p=>{st(p).trades++;if(mine(p))bumpCity('trades')});if(mine(P(t.from))||mine(P(t.to)))cityScan()};
-function onPassGo(p){st(p).go++;if(mine(p)){bumpCity('go');cityScan()}}
+function onPassGo(p){if(evNow()==='holiday'){p.cash+=200;float(p.id,200)}st(p).go++;if(mine(p)){bumpCity('go');cityScan()}}
 function onAuctionWin(w,i,bid){const s=st(w);s.aucWins++;if(bid<SQ[i].p/2)s.aucCheap++;if(mine(w))cityScan()}
 const _land=land;land=async function(p,d,o2){if(SQ[p.pos].t==='tax'&&evNow()==='taxfree'){toast('Tax holiday! Nothing to pay.');return}await _land(p,d,o2);if(SQ[p.pos].t==='free')st(p).free++;if(mine(p)&&p.cash>=3000)cityScan()};
 
@@ -2632,6 +2715,15 @@ function paneSettings(T){const rows=[['sfx','Game sounds','Dice, coins and token
   T.querySelector('#sReset').onclick=async()=>{const k=await modal({html:'<div class="mh">Reset all progress?</div><div class="mtxt">This deletes your XP, levels, achievements, unlocked cities and tokens, daily streak and saved game on this device. It can’t be undone.</div>',btns:[{k:'no',label:'Keep progress'},{k:'yes',label:'Reset everything',danger:true}]});
     if(k==='yes'){['ach','stats','cach','cstat','daily','boost'].forEach(x=>delete PREF[x]);PREF.xp=0;PREF.ach={};PREF.stats={wins:0,deals:0,winCities:[],playedCities:[]};PREF.cach={};PREF.cstat={};PREF.daily={};setup.city='lagos';savePref();clearSave&&(()=>{try{localStorage.removeItem(SKEY)}catch(e){}})();toast('Progress reset');homeTab('settings')}}}
 if(PREF.ai)setup.ai=PREF.ai;if(PREF.speed)setup.speed=PREF.speed;if(PREF.cam)camMode=PREF.cam;
+
+
+/* ================= FUN HOOKS ================= */
+const _achProg2=achProg;achProg=function(a){if(a.id==='quiz10')return PREF.stats.quiz||0;return _achProg2(a)};
+const _land2=land;land=async function(p,d,o2){await _land2(p,d,o2);if(p.bankrupt||G.over||!miniOK(p))return;const t=SQ[p.pos].t;
+  if(t==='go'||t==='free')await catchNaira(p);else if((t==='chance'||t==='esusu')&&Math.random()<.5)await quiz(p)};
+const _pay2=pay;pay=async function(p,amt,to,kind){const ok=await _pay2(p,amt,to,kind);if(ok&&to&&kind==='rent'&&amt>=100){aiChat(p,['Wahala!','Chai! This rent!','Na wa o!','Haba!']);setTimeout(()=>aiChat(to,['Ehen! 😎','Thank you o!','Gbam!','Oya pay!']),700)}return ok};
+const _buyProp2=buyProp;buyProp=function(p,i,price){_buyProp2(p,i,price);aiChat(p,['Oya!','E don land!','Mine now!','Correct!'])};
+$('#bReact').onclick=()=>openReacts();
 
 /* ================= ORIENTATION ================= */
 let rotDismissed=false;
