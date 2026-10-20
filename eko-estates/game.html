@@ -317,6 +317,13 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--navy);outline-o
 .hint.good{background:#e1f6ea;color:var(--green)}.hint.bad{background:#fdecea;color:var(--bad)}
 .tchip .hint{display:table}
 .pchip{border-left-color:var(--g,var(--line))}
+
+.dface.speed{background:#e23b2e;border-color:#b8261b;display:grid;place-items:center;font:28px/1 var(--display);color:#fff;grid-template:none}
+#diceHud em.oga{background:#7b1fa2}
+.sqgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:5px;max-height:55vh;overflow:auto}
+.sqb{display:grid;grid-template-columns:6px 1fr;column-gap:7px;text-align:left;padding:6px 8px 6px 6px;border-radius:10px;border:2px solid var(--line);background:#fff;color:var(--navy)}
+.sqb i{grid-row:span 2;border-radius:3px;background:var(--g)}.sqb b{font-size:12px;line-height:1.15}.sqb small{font-size:10.5px;color:var(--muted);font-weight:700}
+.sqb:hover,.sqb:focus-visible{border-color:var(--navy)}
 </style>
 
 <canvas id="gl" aria-label="3D game board"></canvas>
@@ -701,6 +708,9 @@ function initScene(){
     P.forEach(([x,y])=>{c.beginPath();c.arc(x0+x,y0+y,v===1?18:12,0,7);c.fill()})}});
   const cell=v=>{const col=(v-1)%3,row=Math.floor((v-1)/3);return[col/3,1-(row+1)/2,(col+1)/3,1-row/2]};
   const dgeo=geoBox(1,1,1,[3,4,1,6,2,5].map(cell));const dm=mat('#ffffff',{tex:texFrom(dc),spec:.5});
+  {const st=cnv(384,256,(c)=>{for(let v=1;v<=6;v++){const col=(v-1)%3,row=Math.floor((v-1)/3),x0=col*128,y0=row*128;c.fillStyle='#e23b2e';c.fillRect(x0,y0,128,128);c.strokeStyle='#ffd0c8';c.lineWidth=6;c.strokeRect(x0+3,y0+3,122,122);c.fillStyle='#fff';c.textAlign='center';c.textBaseline='middle';
+    const f=SPEED_FACE(v);if(typeof f==='number'){c.font=`72px ${FD}`;c.fillText(f,x0+64,y0+68)}else if(f==='bus'){c.font=`64px ${FE}`;c.fillText('🚌',x0+64,y0+68)}else{c.font=`30px ${FD}`;c.fillText('OGA',x0+64,y0+92);c.font=`48px ${FE}`;c.fillText('👑',x0+64,y0+46)}}});
+    G0.sdie=N(dgeo,mat('#ffffff',{tex:texFrom(st),spec:.5}),0,.29,1).sc(.58);G0.sdie.sh=shadow(0,0,.5);G0.sdie.visible=false;G0.sdie.sh.visible=false;ROOT.add(G0.sdie)}
   G0.dice=[0,1].map(k=>{const d=N(dgeo,dm,k?.4:-.4,.29,1).sc(.58);d.sh=shadow(0,0,.5);d.visible=false;d.sh.visible=false;ROOT.add(d);return d});
   // highlight + marker
   G0.hl=N(geo.plane,M.hl,0,.02,0);ROOT.add(G0.hl);
@@ -850,19 +860,20 @@ addEventListener('resize',()=>{if(G&&!userCam&&tweens.length===0)camOverview(P(G
 /* ================= DICE ================= */
 const FACEUP={1:[0,0],2:[-Math.PI/2,0],3:[0,Math.PI/2],4:[0,-Math.PI/2],5:[Math.PI/2,0],6:[Math.PI,0]};
 async function rollDice(){
-  const d=[1+Math.floor(Math.random()*6),1+Math.floor(Math.random()*6)];
+  const d=[1+Math.floor(Math.random()*6),1+Math.floor(Math.random()*6)];const pl=P(G.turn);if(pl&&speedOn(pl)){d.sv=1+Math.floor(Math.random()*6);d.s=SPEED_FACE(d.sv)}
   if(FAST||!S3)return d;
-  G.lastDice={a:d[0],b:d[1],n:((G.lastDice&&G.lastDice.n)||0)+1};pushState();
+  G.lastDice={a:d[0],b:d[1],sv:d.sv||0,n:((G.lastDice&&G.lastDice.n)||0)+1};pushState();
   await throwDice(d);
-  log(`${P(G.turn).name} rolled ${d[0]} + ${d[1]}${d[0]===d[1]?' (doubles)':''}`);
+  log(`${P(G.turn).name} rolled ${d[0]} + ${d[1]}${d.s!=null?' + '+speedLabel(d.s):''}${d[0]===d[1]?' (doubles)':''}`);
   return d;
 }
 async function throwDice(d){
   if(FAST||!S3)return;sfx('dice');
   const yaw=camS.yaw,fx=Math.sin(yaw),fz=Math.cos(yaw),rx=Math.cos(yaw),rz=-Math.sin(yaw);
   const L=camS.L;const near=Math.min(3.2,L*.22);const base=[camS.look[0]+fx*near,camS.look[2]+fz*near];
-  await Promise.all(S3.dice.map((die,k)=>{const off=k?.42:-.42;const end=[base[0]+rx*off,base[1]+rz*off],start=[end[0]+fx*2.6,end[1]+fz*2.6];
-    const[ax,az]=FACEUP[d[k]],ay=(Math.random()-.5)*.6+Math.atan2(fx,fz);const spin=[(4+Math.random()*3)*Math.PI*(Math.random()<.5?-1:1),(3+Math.random()*3)*Math.PI,(4+Math.random()*3)*Math.PI];
+  const dice=d.sv?S3.dice.concat([S3.sdie]):S3.dice;S3.sdie.visible=false;S3.sdie.sh.visible=false;const vals=[d[0],d[1],d.sv];
+  await Promise.all(dice.map((die,k)=>{const off=k===2?0:k?.42:-.42;const fw=k===2?.55:0;const end=[base[0]+rx*off-fx*fw,base[1]+rz*off-fz*fw],start=[end[0]+fx*2.6,end[1]+fz*2.6];
+    const[ax,az]=FACEUP[vals[k]],ay=(Math.random()-.5)*.6+Math.atan2(fx,fz);const spin=[(4+Math.random()*3)*Math.PI*(Math.random()<.5?-1:1),(3+Math.random()*3)*Math.PI,(4+Math.random()*3)*Math.PI];
     die.visible=true;die.sh.visible=true;
     return tween(1100,t=>{const e=1-(1-t)**2;const x=start[0]+(end[0]-start[0])*e,z=start[1]+(end[1]-start[1])*e;const bounce=Math.abs(Math.cos(t*Math.PI*2.5))*(1-t)**1.6*2;
       die.p=[x,.29+bounce,z];const q=(1-t)**2;die.r=[ax+spin[0]*q,ay+spin[1]*q,az+spin[2]*q];die.sh.p=[x,.012,z];die.sh.s=[1-bounce*.15,1,1-bounce*.15];if(t>.3&&t<.32)sfx('hop')})}));
@@ -938,7 +949,7 @@ async function hopTo(p){
 async function settleToken(p){if(FAST||!S3)return;const t=tok3[p.id];if(!t)return;const m=t.m||t;const y0=t.p[1],r0=m.r.slice();const eagle=MOVE[p.tok]&&MOVE[p.tok].kind==='eagle';
   await tween(eagle?520:220,k=>{t.p=[t.p[0],y0*(1-k),t.p[2]];m.r=r0.map(v=>v*(1-k));t.s=[.82,.82,.82];if(t.sh)t.sh.s=[.52,1,.52];if(eagle&&t.wings){const f=Math.sin(k*Math.PI*6)*.6*(1-k);t.wings[0].r=[f,0,0];t.wings[1].r=[-f,0,0]}if(t.lid)t.lid.p=[0,.235,0]},eOut);t.flyY=0}
 async function moveSteps(p,n){
-  for(let k=0;k<n;k++){p.pos=(p.pos+1)%40;if(p.pos===0){const dbl=G.set.goDouble&&k===n-1;p.cash+=dbl?400:200;float(p.id,dbl?400:200);sfx('coin');log(dbl?`${p.name} landed on GO, +₦400M`:`${p.name} passed GO, +₦200M`);renderRoster()}await hopTo(p)}
+  for(let k=0;k<n;k++){p.pos=(p.pos+1)%40;if(p.pos===0){p.lapped=true;const dbl=G.set.goDouble&&k===n-1;p.cash+=dbl?400:200;float(p.id,dbl?400:200);sfx('coin');log(dbl?`${p.name} landed on GO, +₦400M`:`${p.name} passed GO, +₦200M`);renderRoster()}await hopTo(p)}
   if(!FAST){await settleToken(p);highlight(p.pos);await sleep(200)}
 }
 async function moveTo(p,t){await moveSteps(p,(t-p.pos+40)%40)}
@@ -1217,7 +1228,7 @@ async function playTurnInner(p){
     G.phase='busy';updateTools();
     const d=await rollDice();
     if(d[0]===d[1]){dbl++;if(dbl===3){toast('Three doubles in a row. Speeding!');await sendToJail(p);break}}
-    await moveSteps(p,d[0]+d[1]);await land(p,d);
+    if(d.s!=null){const r=await speedResolve(p,d);if(r==='triples')break}else{await moveSteps(p,d[0]+d[1]);await land(p,d)}
     if(p.bankrupt||p.inJail||G.over||d[0]!==d[1])break;
     toast('Doubles! Roll again');await sleep(500);
   }
@@ -1258,6 +1269,7 @@ const RULES=`<div class="rules">
 <h4>Mortgages</h4><p>Mortgage a property for half its price. It collects no rent until you redeem it for the mortgage plus 10%.</p>
 <h4>Kirikiri</h4><p>Pay ₦50M bail, use a get-out card, or try to roll doubles for up to three turns. After the third miss you pay bail and move.</p>
 <h4>Trading</h4><p>On your turn, trade streets, cash and get-out cards with any player. Streets in a set with buildings can’t be traded.</p>
+<h4>Speed die (house rule)</h4><p>Once you have passed GO, you also roll a red speed die. 1, 2 or 3 is added to your move. Bus: move by either white die or the total. Oga: move, then go straight on to the next property nobody owns (or the next one you must pay rent on). Triples: move to any square.</p>
 <h4>Turn timer</h4><p>If the timer is on, each player has 90 seconds per turn. When time runs out, the game rolls, skips buying and ends the turn for them.</p>
 <h4>Bankruptcy</h4><p>If you can’t pay, sell buildings and mortgage. If that still isn’t enough, you’re out and your assets go to whoever you owed.</p></div>`;
 async function openMenu(){
@@ -1306,7 +1318,8 @@ function ensureHighlands(){
 function dieFace(v){return `<span class="dface">${[0,1,2,3,4,5,6,7,8].map(k=>`<i class="${PIPS[v].includes(k)?'p':''}"></i>`).join('')}</span>`}
 const PIPS={1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
 let diceHudT=0;
-function showDiceHud(d){if(FAST)return;const h=$('#diceHud');h.innerHTML=dieFace(d[0])+dieFace(d[1])+`<b>${d[0]+d[1]}</b>${d[0]===d[1]?'<em>DOUBLES</em>':''}`;h.classList.remove('on');void h.offsetWidth;h.classList.add('on');clearTimeout(diceHudT);diceHudT=setTimeout(()=>h.classList.remove('on'),3200*spd())}
+function showDiceHud(d){if(FAST)return;const h=$('#diceHud');const sp=d.s!=null?`<span class="dface speed">${typeof d.s==='number'?d.s:d.s==='bus'?'🚌':'👑'}</span>`:'';const tot=d[0]+d[1]+(typeof d.s==='number'?d.s:0);const trip=typeof d.s==='number'&&d[0]===d[1]&&d[1]===d.s;
+  h.innerHTML=dieFace(d[0])+dieFace(d[1])+sp+`<b>${d.s==='bus'?'BUS':tot}</b>${trip?'<em>TRIPLES</em>':d[0]===d[1]?'<em>DOUBLES</em>':d.s==='oga'?'<em class="oga">OGA</em>':''}`;h.classList.remove('on');void h.offsetWidth;h.classList.add('on');clearTimeout(diceHudT);diceHudT=setTimeout(()=>h.classList.remove('on'),3200*spd())}
 
 /* ================= PROPERTY CHIPS ================= */
 function houseLabel(i){const h=G.own[i].h;return h===5?'Hotel':h?h+' house'+(h>1?'s':''):''}
@@ -1413,7 +1426,7 @@ async function applyRemote(ng){
     const old=G;G=ng;G.online=true;
     if(!old||!tok3.length||old.players.length!==G.players.length){buildBoard();renderRoster();camOverview(P(G.turn).pos,0);return}
     renderRoster();
-    if(ng.lastDice&&(!old.lastDice||ng.lastDice.n!==old.lastDice.n)){await throwDice([ng.lastDice.a,ng.lastDice.b])}
+    if(ng.lastDice&&(!old.lastDice||ng.lastDice.n!==old.lastDice.n)){const dd=[ng.lastDice.a,ng.lastDice.b];if(ng.lastDice.sv){dd.sv=ng.lastDice.sv;dd.s=SPEED_FACE(dd.sv)}await throwDice(dd)}
     for(const p of G.players){const op=old.players[p.id];if(!op||(op.pos===p.pos&&op.inJail===p.inJail))continue;
       const steps=(p.pos-op.pos+40)%40;
       if((p.inJail&&!op.inJail)||steps>12||steps===0)await placeToken(p,true);
@@ -1539,10 +1552,10 @@ function startOnlineFromDoc(code,ref,d){
 /* ================= TITLE / SETUP ================= */
 const PREF=(()=>{try{return JSON.parse(localStorage.getItem('ekoPrefs')||'{}')||{}}catch(e){return{}}})();
 function savePref(){try{localStorage.setItem('ekoPrefs',JSON.stringify(PREF))}catch(e){}}
-const RULE_INFO=[['pot','Free Parking jackpot','Taxes and fines pile up on the National Theatre. Land there to scoop them.'],['goDouble','Double pay on GO','Land exactly on GO to collect ₦400M.'],['jailRent','No rent from jail','Owners sitting in Kirikiri can’t collect rent.'],['auction','Auctions','Property nobody buys goes to auction.'],['even','Even building','Build and sell evenly across a colour set.'],['interest','Mortgage interest','Redeeming costs the mortgage plus 10%.']];
+const RULE_INFO=[['speedDie','Speed die','After your first lap, roll a third die: add 1–3, Bus lets you pick a die, Oga sends you to the next free property, triples move you anywhere.'],['pot','Free Parking jackpot','Taxes and fines pile up on the National Theatre. Land there to scoop them.'],['goDouble','Double pay on GO','Land exactly on GO to collect ₦400M.'],['jailRent','No rent from jail','Owners sitting in Kirikiri can’t collect rent.'],['auction','Auctions','Property nobody buys goes to auction.'],['even','Even building','Build and sell evenly across a colour set.'],['interest','Mortgage interest','Redeeming costs the mortgage plus 10%.']];
 const MODES=[['classic','Classic','Play until one landlord is left standing.'],['quick','Quick deal','Everyone starts with 2 random properties. The first bankruptcy ends the game and the richest wins.'],['timed','Round limit','Play a set number of rounds. The richest landlord wins.']];
 const setup={slots:NAMES.map((n,i)=>({name:n,tok:TOKENS[i],type:i===0?'human':i<4?'ai':'off'})),cash:1500,ai:'normal',speed:'normal',mode:'classic',rounds:20,timer:PREF.timer||0,theme:PREF.theme||'beach',
-  rules:Object.assign({pot:false,goDouble:false,jailRent:false,auction:true,even:true,interest:true},PREF.rules||{})};
+  rules:Object.assign({speedDie:false,pot:false,goDouble:false,jailRent:false,auction:true,even:true,interest:true},PREF.rules||{})};
 function showTitle(){
   GEN++;netStop();$('#modals').innerHTML='';$('#ui').hidden=true;clearGame();applyTheme(setup.theme);const T=$('#title');T.hidden=false;const saved=loadSave();
   T.innerHTML=`<div class="tgrid"><div class="brand"><div class="e">EKO</div><div class="s">ESTATES</div>
@@ -1867,6 +1880,33 @@ function ttTick(){if(!TT.p)return;const tot=G.set.timer*1000,rem=Math.max(0,TT.e
   if(sec<=5&&sec>0&&sec!==TT.beep){TT.beep=sec;tone(sec<=2?1200:900,.08,'square',.04)}
   if(rem<=0){clearInterval(TT.iv);TT.iv=0;const p=TT.p;p.auto=true;toast(`Time’s up! Finishing ${p.name}’s turn`);sfx('bad');const fs=[...TT.pending];TT.pending.clear();fs.forEach(f=>{try{f()}catch(e){}});e.querySelector('b').textContent='0'}}
 function ttGuard(fn){if(!TT.p)return()=>{};if(TT.p.auto){setTimeout(fn,350);return()=>{}}TT.pending.add(fn);return()=>TT.pending.delete(fn)}
+
+/* ================= SPEED DIE ================= */
+const SPEED_FACE=v=>v<=3?v:v===6?'bus':'oga';
+function speedOn(p){return !!(G.set.speedDie&&p.lapped)}
+function speedLabel(s){return s==='bus'?'Bus':s==='oga'?'Oga':String(s)}
+function aiPickTarget(p){let best=0,bs=-1;for(let i=0;i<40;i++){const s=SQ[i];let sc=0;
+  if(buyable(i)&&G.own[i].o<0&&p.cash>=s.p)sc=aiValue(p,i)+50;else if(i===0)sc=100;else if(s.t==='free'&&G.set.pot)sc=G.pot;if(sc>bs){bs=sc;best=i}}return best}
+function squareScore(p,i){const s=SQ[i],o=buyable(i)?G.own[i]:null;if(o&&o.o<0)return p.cash>=s.p?aiValue(p,i):5;if(o&&o.o!==p.id&&!o.m)return -rentFor(i,7);if(s.t==='tax')return -s.amt;if(s.t==='gojail')return -150;if(s.t==='chance'||s.t==='esusu')return 15;return 0}
+async function pickAnySquare(p){
+  if(p.ai||p.auto)return aiPickTarget(p);
+  return await modal({cls:'wide',tdef:aiPickTarget(p),html:`<div class="mh">Triples! Move anywhere</div><div class="mtxt muted">Pick the square ${esc(p.name)} jumps to. You collect ₦200M if you pass GO.</div><div class="sqgrid">${SQ.map((s,i)=>{const o=buyable(i)?G.own[i]:null;const tag=o?(o.o<0?'For sale':o.o===p.id?'Yours':esc(P(o.o).name)):'';
+    return `<button class="sqb" data-i="${i}" style="--g:${s.g?GC[s.g]:'#cfd8d4'}"><i></i><b>${s.n}</b><small>${tag}</small></button>`}).join('')}</div>`,
+    onMount:(pn,close)=>pn.querySelectorAll('.sqb').forEach(b=>b.onclick=()=>close(+b.dataset.i))});
+}
+async function speedResolve(p,d){const s=d.s,w=d[0]+d[1];
+  if(typeof s==='number'&&d[0]===d[1]&&d[1]===s){toast('Triples! Move to any square');const t=await pickAnySquare(p);await moveTo(p,t);await land(p,d);return 'triples'}
+  if(s==='bus'){let n;const opts=[d[0],d[1],w].filter((v,k,a)=>a.indexOf(v)===k);
+    if(p.ai||p.auto){n=opts.reduce((b,v)=>squareScore(p,(p.pos+v)%40)>squareScore(p,(p.pos+b)%40)?v:b,opts[opts.length-1])}
+    else n=+(await actions(`<b>${esc(p.name)}</b>, you rolled the bus.<span class="sub">Move by one die or by the total.</span>`,opts.map((v,k)=>({k:String(v),label:`Move ${v} → ${SQ[(p.pos+v)%40].n}`,primary:k===opts.length-1}))));
+    await moveSteps(p,n);await land(p,d);return 'bus'}
+  if(typeof s==='number'){await moveSteps(p,w+s);await land(p,d);return 'num'}
+  await moveSteps(p,w);await land(p,d);
+  if(p.bankrupt||p.inJail||G.over)return 'oga';
+  let t=-1;for(let k=1;k<40;k++){const i=(p.pos+k)%40;if(buyable(i)&&G.own[i].o<0){t=i;break}}
+  if(t<0)for(let k=1;k<40;k++){const i=(p.pos+k)%40;if(buyable(i)&&G.own[i].o>=0&&G.own[i].o!==p.id){t=i;break}}
+  if(t>=0){toast(`Oga! ${p.name} moves on to ${SQ[t].n}`);await sleep(500);await moveTo(p,t);await land(p,d)}
+  return 'oga'}
 
 /* ================= ORIENTATION ================= */
 let rotDismissed=false;
