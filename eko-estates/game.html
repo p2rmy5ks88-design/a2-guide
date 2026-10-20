@@ -21,7 +21,7 @@ html{height:100%;box-sizing:border-box}
 body{height:100%;margin:0;overflow:hidden;color:var(--text);font-family:var(--body);
   background:linear-gradient(180deg,var(--sky1) 0%,var(--sky2) 55%,var(--sky3) 100%);
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
-  -webkit-user-select:none;user-select:none;touch-action:none;-webkit-tap-highlight-color:transparent}
+  -webkit-user-select:none;user-select:none;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 [hidden]{display:none!important}
 button{font-family:var(--body);cursor:pointer;color:inherit}
 button:focus-visible,input:focus-visible{outline:3px solid var(--navy);outline-offset:2px}
@@ -439,6 +439,14 @@ html.rot #ui,html.rot #title .home,html.rot .ov{padding:max(10px,env(safe-area-i
 html.rot .home{flex-direction:row}html.rot .rail{width:176px;flex-direction:column;align-items:stretch}html.rot .mini-logo,html.rot .rprof{display:flex}html.rot .tabs{flex-direction:column}html.rot .tab{flex-direction:row;font-size:13.5px}
 html.rot .dgrid{grid-template-columns:1.6fr 1fr}html.rot .endgrid,html.rot .olgrid,html.rot .tsum{grid-template-columns:1fr 1fr}html.rot .tgrid{grid-template-columns:minmax(0,.85fr) minmax(0,1.2fr)}
 html.rot #acts{flex-direction:row}html.rot #prompt{top:max(10px,env(safe-area-inset-right,0px));bottom:auto;max-width:min(44vh,420px)}html.rot #log{display:block;max-width:min(46vh,440px)}html.rot #toast{max-width:min(60vh,460px)}html.rot .slots{grid-template-columns:1fr 1fr}html.rot .tsum,html.rot .tcols{grid-template-columns:1fr 1fr}
+
+button,a.btn,input,.pane,.mp,.tabs,.achtabs,#roster,.sqgrid{touch-action:manipulation}
+.pane,.mp,.tabs,.achtabs,#roster,.sqgrid,#title{-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+button:not(:disabled):active{filter:brightness(.92)}
+.achpop{pointer-events:none}
+
+.tb.off{opacity:.5}
+input,textarea{-webkit-user-select:text;user-select:text}
 </style>
 
 <canvas id="gl" aria-label="3D game board"></canvas>
@@ -632,7 +640,7 @@ function sfx(k){if(!AC||FAST||!PREF.audio.sfx)return;try{
 }catch(e){}}
 
 /* ================= FORCED LANDSCAPE ================= */
-let ROT=false;
+let ROT=false;const COARSE=(()=>{try{return matchMedia('(pointer:coarse)').matches}catch(e){return false}})();let lastDraw=0;
 const LW=()=>ROT?innerHeight:innerWidth,LH=()=>ROT?innerWidth:innerHeight;
 function scr2loc(sx,sy){return ROT?[sy,innerWidth-sx]:[sx,sy]}
 function applyRot(){const coarse=matchMedia('(pointer:coarse)').matches||'ontouchstart' in window;const want=coarse&&innerHeight>innerWidth;
@@ -740,7 +748,7 @@ function N(geo,m,x=0,y=0,z=0){return new Node(geo,m).at(x,y,z)}
 const ROOT=new Node();
 const env={sky:hex('#a9c9e6'),gnd:hex('#77705a'),sun:hex('#ffe9c8').map(v=>v*.62),L:(()=>{const l=[.45,.8,.38],n=Math.hypot(...l);return l.map(v=>v/n)})(),fogC:hex('#bfe4fa'),fog:[26,58]};
 function drawScene(time){
-  const gl=GL,cv=gl.canvas;const dpr=Math.min(devicePixelRatio||1,2),w=Math.round(cv.clientWidth*dpr),h=Math.round(cv.clientHeight*dpr);
+  const gl=GL,cv=gl.canvas;const dpr=Math.min(devicePixelRatio||1,COARSE?1.5:2),w=Math.round(cv.clientWidth*dpr),h=Math.round(cv.clientHeight*dpr);
   if(cv.width!==w||cv.height!==h){cv.width=w;cv.height=h}
   gl.viewport(0,0,w,h);gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
   const proj=M4.persp(CAMV.fov*Math.PI/180,w/h,.1,200),view=M4.lookAt(CAMV.pos,CAMV.look,[0,1,0]);
@@ -969,7 +977,7 @@ $('#camBtn').onclick=()=>{camMode=camMode==='follow'?'board':'follow';$('#camBtn
 let lastT=performance.now(),T0=performance.now();
 function roadPt(t){const a=t*Math.PI*2,c=Math.cos(a),s=Math.sin(a),n=6;return[550+268*Math.sign(c)*Math.abs(c)**(2/n),550+268*Math.sign(s)*Math.abs(s)**(2/n)]}
 function frame(now){
-  requestAnimationFrame(frame);if(document.hidden||!GL)return;const dt=Math.min(.05,(now-lastT)/1000);lastT=now;const time=(now-T0)/1000;
+  requestAnimationFrame(frame);if(document.hidden||!GL)return;const idle=(!$('#title').hidden||$('#modals').children.length)&&!tweens.length;if(idle&&now-lastDraw<(COARSE?66:33))return;lastDraw=now;const dt=Math.min(.05,(now-lastT)/1000);lastT=now;const time=(now-T0)/1000;
   for(let i=tweens.length-1;i>=0;i--){const tw=tweens[i];const k=Math.min(1,(now-tw.t0)/tw.dur);tw.fn(tw.ease(k));if(k>=1){tweens.splice(i,1);tw.res()}}
   if(S3){
     S3.buses.forEach(b=>{b.t=(b.t+dt*.018)%1;const p=roadPt(b.t),q=roadPt((b.t+.002)%1);b.n.at(wx(p[0]),.0,wz(p[1]));b.n.r=[0,Math.atan2(-(q[1]-p[1]),q[0]-p[0]),0]});
@@ -1410,8 +1418,8 @@ async function openMenu(){
   else if(k==='end'){const c=await modal({html:'<div class="mh">End the game now?</div><div class="mtxt">The richest player by net worth wins.</div>',btns:[{k:'no',label:'Keep playing'},{k:'yes',label:'End & score',primary:true}]});if(c==='yes'){GEN++;$('#modals').innerHTML='';G.over=true;if(G.online){NET.driving=true;await pushNow();NET.driving=false}finish()}}
   else if(k==='quit'){save();GEN++;$('#modals').innerHTML='';showTitle()}
 }
-$('#bAssets').onclick=()=>{if(G&&!$('#modals').children.length)openAssets(P(G.turn))};
-$('#bTrade').onclick=()=>{if(G&&!$('#modals').children.length)openTrade(P(G.turn))};
+$('#bAssets').onclick=()=>{if(!G||$('#modals').children.length)return;if($('#bAssets').classList.contains('off')){const me=G.players.find(isLocalHuman);if(me)openAssets(me,{readonly:true});else toast('Properties open on your turn');return}openAssets(P(G.turn))};
+$('#bTrade').onclick=()=>{if(!G||$('#modals').children.length)return;if($('#bTrade').classList.contains('off')){toast(alive().length>1?'You can trade on your own turn, before or after rolling':'No one left to trade with');return}openTrade(P(G.turn))};
 $('#bMenu').onclick=()=>{if(G&&!$('#modals').children.length)openMenu()};
 
 /* ================= SAVE / HOT ================= */
@@ -1483,8 +1491,8 @@ function setPrompt(h){if(FAST)return;const p=G&&!G.over?P(G.turn):null;$('#promp
 function isLocalHuman(p){return p&&!p.ai&&(!G.online||p.uid===NET.me)}
 function updateTools(){
   if(FAST)return;const p=G&&P(G.turn);const human=p&&isLocalHuman(p)&&!G.over;
-  $('#bAssets').disabled=!(human&&['pre','post','jail'].includes(G.phase));
-  $('#bTrade').disabled=!(human&&['pre','post'].includes(G.phase)&&alive().length>1);
+  $('#bAssets').classList.toggle('off',!(human&&['pre','post','jail'].includes(G.phase)));
+  $('#bTrade').classList.toggle('off',!(human&&['pre','post'].includes(G.phase)&&alive().length>1));
 }
 function actions(text,btns){
   const g=GEN;setPrompt(text);updateTools();
