@@ -39,4 +39,4 @@ To publish it as a website, turn on GitHub Pages for this repo and point it at t
 
 ## Radio audio
 
-The radio plays `audio/eko-fm-mix.mp3`, a Kenstylez mix of You're My Home, Red Room and Chances Trap. The file isn't stored in this public repo; put it in `eko-estates/audio/` next to `index.html` when hosting the game.
+The radio plays `audio/eko-fm-mix.mp3`, a Kenstylez mix of You're My Home, Red Room and Chances Trap. It lives in `eko-estates/audio/`.
