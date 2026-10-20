@@ -215,7 +215,9 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--navy);outline-o
 #roster{top:calc(max(10px,env(safe-area-inset-top,0px)) + 46px);max-height:calc(100% - 160px);padding-top:12px}
 .tgrid{align-items:start}.brand{position:sticky;top:0;padding-top:8px}
 #tools{flex-direction:column;top:calc(max(10px,env(safe-area-inset-top,0px)) + 58px)}
-#acts{flex-direction:row;align-items:flex-end}
+#acts{flex-direction:row;align-items:flex-end;z-index:2}
+#ui:has(#acts .pills) #log{display:none}
+#acts .pills .pill{font-size:14px;padding:12px 18px}
 #acts .pills{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
 .pill.pri{background:var(--danfo);color:var(--danfo-ink);box-shadow:0 3px 0 var(--danfo-deep)}
 #ui{z-index:3}
@@ -295,14 +297,14 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--navy);outline-o
 @keyframes eq{50%{height:12px}}
 .vol{display:flex;align-items:center;gap:10px;font-weight:800;font-size:13px}.vol input{flex:1;accent-color:var(--green)}
 
-#timer{position:absolute;right:calc(max(16px,env(safe-area-inset-right,0px)) + 106px);bottom:calc(max(12px,env(safe-area-inset-bottom,0px)) + 18px);width:58px;height:58px;border-radius:50%;background:#fff;box-shadow:0 3px 0 rgba(19,40,74,.22);display:grid;place-items:center;--frac:1}
+#timer{position:absolute;right:calc(max(16px,env(safe-area-inset-right,0px)) + 58px);top:calc(max(10px,env(safe-area-inset-top,0px)) + 58px);width:58px;height:58px;border-radius:50%;background:#fff;box-shadow:0 3px 0 rgba(19,40,74,.22);display:grid;place-items:center;--frac:1}
 #timer svg{position:absolute;inset:4px;width:50px;height:50px;transform:rotate(-90deg)}
 #timer circle{fill:none;stroke:var(--line);stroke-width:3.4}
 #timer circle.fg{stroke:var(--green);stroke-linecap:round;stroke-dasharray:97.4;stroke-dashoffset:calc(97.4 * (1 - var(--frac)));transition:stroke-dashoffset .2s linear}
 #timer b{position:relative;font:20px var(--display);color:var(--navy);font-variant-numeric:tabular-nums}
 #timer.low circle.fg{stroke:var(--bad)}#timer.low b{color:var(--bad)}#timer.low{animation:tpulse 1s ease-in-out infinite}
 @keyframes tpulse{50%{transform:scale(1.08)}}
-@media (max-height:420px){#timer{right:calc(max(16px,env(safe-area-inset-right,0px)) + 94px)}}
+@media (max-height:420px){#timer{right:calc(max(16px,env(safe-area-inset-right,0px)) + 54px)}}
 </style>
 
 <canvas id="gl" aria-label="3D game board"></canvas>
@@ -1170,8 +1172,8 @@ async function aiPostTurn(p){
 async function jailTurn(p){
   G.phase='jail';updateTools();let ch;
   if(p.ai){setPrompt(`<b>${esc(p.name)}</b> is in Kirikiri…`);await sleep(700);ch=aiJailChoice(p)}
-  else{const b=[{k:'roll',label:'Roll for doubles',primary:true}];if(p.cash>=50)b.push({k:'pay',label:'Pay ₦50M bail'});if(p.goojf.length)b.push({k:'card',label:'Use get-out-of-jail card'});
-    ch=await actions(`<b>${esc(p.name)}</b>, you are in Kirikiri.<span class="sub">Attempt ${p.jailTurns+1} of 3. Roll doubles to walk free.</span>`,b)}
+  else{const b=[{k:'roll',label:'Roll for doubles',primary:true}];b.push({k:'pay',label:p.cash>=50?'Pay ₦50M bail':'Bail ₦50M (not enough cash)',disabled:p.cash<50});if(p.goojf.length)b.push({k:'card',label:'Use get-out-of-jail card'});
+    ch=await actions(`<b>${esc(p.name)}</b>, you are in Kirikiri.<span class="sub">Attempt ${p.jailTurns+1} of 3. Pay ₦50M bail, use a card, or roll doubles to walk free.</span>`,b)}
   G.phase='busy';updateTools();
   if(ch==='pay'){await pay(p,50,null,'fee');p.inJail=false;p.jailTurns=0;log(`${p.name} paid bail`);toast(`${p.name} pays bail`);placeToken(p);renderRoster();return 'free'}
   if(ch==='card'){const c=p.goojf.pop();G[c.deck].push(c.idx);p.inJail=false;p.jailTurns=0;log(`${p.name} used a get-out-of-jail card`);toast(`${p.name} walks out free`);placeToken(p);renderRoster();return 'free'}
@@ -1786,8 +1788,8 @@ function stopAmb(){if(!AUD.ambOn)return;AUD.ambOn=false;AUD.timers.forEach(clear
 function ambTheme(){if(AUD.ambOn)bedNoise()}
 /* radio: Eko Estates FM 97.3 plays the owner's own tracks as a shuffled, crossfaded playlist */
 const FM_LIST=[['youre-my-home','You’re My Home','Kenstylez'],['red-room','Red Room','Kenstylez'],['chances-trap','Chances Trap','Kenstylez'],
-  ['grinding-all-my-life','Grinding All My Life','kevinaiwe'],['mans-not-hot','Man’s Not Hot','kevinaiwe'],['area-don-lock','Area Don Lock','kevinaiwe'],
-  ['papa-devine-bella','Papa Devine Bella','kevinaiwe'],['bigstan-in-love','Bigstan in Love (Stan-tastic)','kevinaiwe'],['dusty-shoes','Dusty Shoes','kevinaiwe']];
+  ['grinding-all-my-life','Grinding All My Life','Kenstylez'],['mans-not-hot','Man’s Not Hot','Kenstylez'],['area-don-lock','Area Don Lock','Kenstylez'],
+  ['papa-devine-bella','Papa Devine Bella','Kenstylez'],['bigstan-in-love','Bigstan in Love (Stan-tastic)','Kenstylez'],['dusty-shoes','Dusty Shoes','Kenstylez']];
 const FM_XF=6;
 const FMS={slots:[],cur:-1,order:[],idx:-1,xfading:false,routed:false};
 function fmSlot(){const a=new Audio();a.preload='auto';a.setAttribute('playsinline','');const s={a,g:null};
@@ -1819,7 +1821,7 @@ function syncAudio(){if(!AC)return;const b=buses();b.m.gain.setTargetAtTime(PREF
   PREF.audio.amb?startAmb():stopAmb();PREF.audio.radio?startRadio():stopRadio();renderRadioPill()}
 document.addEventListener('visibilitychange',()=>{if(!AC)return;try{document.hidden?AC.suspend():AC.resume()}catch(e){}});
 async function openSound(){
-  const rows=[['sfx','Game sounds','Dice, coins, footsteps on the board.'],['amb','Street ambience','Crowd chatter, danfo horns, okadas, birds or rain to match the location.'],['radio','Eko Estates FM 97.3','Non-stop shuffled mix of 9 tracks by Kenstylez and kevinaiwe, blended like a DJ.']];
+  const rows=[['sfx','Game sounds','Dice, coins, footsteps on the board.'],['amb','Street ambience','Crowd chatter, danfo horns, okadas, birds or rain to match the location.'],['radio','Eko Estates FM 97.3','Non-stop shuffled mix of 9 Kenstylez tracks, blended like a DJ.']];
   initAudio();
   await modal({cls:'wide',html:`<div class="mh">Sound</div><div class="rchips" id="sndChips"></div><label class="vol"><span>Volume</span><input type="range" id="sndVol" min="0" max="1" step="0.05"></label><div class="olrow"><button class="btn" id="sndSkip">Next track</button><span class="mtxt muted">On iPhone, flip the silent switch off and turn the volume up.</span></div>`,btns:[{k:'x',label:'Done',primary:true}],onMount:(pn)=>{
     const draw=()=>{const E=pn.querySelector('#sndChips');E.innerHTML='';rows.forEach(([k,l,d])=>{const b=el('button','rchip'+(PREF.audio[k]?' on':''),`<b>${l}</b><small>${d}</small>`);b.setAttribute('aria-pressed',PREF.audio[k]?'true':'false');b.onclick=()=>{PREF.audio[k]=!PREF.audio[k];savePref();syncAudio();draw()};E.append(b)})};draw();
