@@ -605,14 +605,16 @@ function rentFor(i,dsum,o2={}){
   if(s.t==='util'){const n=UTILS.filter(j=>G.own[j].o===o.o).length;return dsum*(o2.util10||n===2?10:4)}
   return 0;
 }
-function canBuild(pid,i){const s=SQ[i],o=G.own[i];if(s.t!=='prop'||o.o!==pid||!ownsAll(pid,s.g))return false;const gr=GROUPS[s.g];
+const FFA=()=>!!(G&&G.set&&G.set.ffa);
+const grp=(pid,g)=>FFA()?GROUPS[g].filter(j=>G.own[j].o===pid):GROUPS[g];
+function canBuild(pid,i){const s=SQ[i],o=G.own[i];if(s.t!=='prop'||o.o!==pid||(!FFA()&&!ownsAll(pid,s.g)))return false;const gr=grp(pid,s.g);
   if(gr.some(j=>G.own[j].m)||o.h>=5)return false;if(G.set.even!==false&&o.h>Math.min(...gr.map(j=>G.own[j].h)))return false;
   if(P(pid).cash<s.h)return false;return o.h===4?G.hotels>0:G.houses>0}
 function build(pid,i){const o=G.own[i];P(pid).cash-=SQ[i].h;if(o.h===4){G.hotels--;G.houses+=4}else G.houses--;o.h++;updateCell(i,true);float(pid,-SQ[i].h);sfx('build')}
 function canSell(pid,i){const s=SQ[i],o=G.own[i];if(s.t!=='prop'||o.o!==pid||o.h===0)return false;
-  if(G.set.even!==false&&o.h<Math.max(...GROUPS[s.g].map(j=>G.own[j].h)))return false;return o.h!==5||G.houses>=4}
+  if(G.set.even!==false&&o.h<Math.max(...grp(pid,s.g).map(j=>G.own[j].h)))return false;return o.h!==5||G.houses>=4}
 function sell(pid,i){const o=G.own[i];P(pid).cash+=SQ[i].h/2;if(o.h===5){G.hotels++;G.houses-=4}else G.houses++;o.h--;updateCell(i);float(pid,SQ[i].h/2)}
-function canMortgage(pid,i){const s=SQ[i],o=G.own[i];if(o.o!==pid||o.m)return false;return s.t!=='prop'||GROUPS[s.g].every(j=>G.own[j].h===0)}
+function canMortgage(pid,i){const s=SQ[i],o=G.own[i];if(o.o!==pid||o.m)return false;return s.t!=='prop'||grp(pid,s.g).every(j=>G.own[j].h===0)}
 function mortgage(pid,i){G.own[i].m=true;P(pid).cash+=SQ[i].p/2;updateCell(i);float(pid,SQ[i].p/2)}
 function canUnmort(pid,i){const o=G.own[i];return o.o===pid&&o.m&&P(pid).cash>=unmCost(i)}
 function unmortgage(pid,i){G.own[i].m=false;P(pid).cash-=unmCost(i);updateCell(i);float(pid,-unmCost(i))}
@@ -1216,7 +1218,7 @@ function openAssets(p,opts={}){
         const ab=r.querySelector('.ab');
         if(!ro){
           const B=(lab,cls,ok,fn)=>{const b=el('button','sm '+cls,lab);b.disabled=!ok;b.onclick=()=>{fn();renderRoster();draw()};ab.append(b)};
-          if(s.t==='prop'&&ownsAll(p.id,s.g)&&!o.m){B(`${o.h===4?'+Hotel':'+House'} ${fmt(s.h)}<small>${p.cash>=s.h?'leaves '+fmt(p.cash-s.h):'not enough cash'}</small>`,'go',!debt&&canBuild(p.id,i),()=>build(p.id,i));if(o.h)B(`Sell +${fmt(s.h/2)}`,'warn',canSell(p.id,i),()=>sell(p.id,i))}
+          if(s.t==='prop'&&(ownsAll(p.id,s.g)||FFA())&&!o.m){B(`${o.h===4?'+Hotel':'+House'} ${fmt(s.h)}<small>${p.cash>=s.h?'leaves '+fmt(p.cash-s.h):'not enough cash'}</small>`,'go',!debt&&canBuild(p.id,i),()=>build(p.id,i));if(o.h)B(`Sell +${fmt(s.h/2)}`,'warn',canSell(p.id,i),()=>sell(p.id,i))}
           if(o.m)B(`Redeem ${fmt(unmCost(i))}`,'go',!debt&&canUnmort(p.id,i),()=>unmortgage(p.id,i));
           else B(`Mortgage +${fmt(s.p/2)}`,'warn',canMortgage(p.id,i),()=>mortgage(p.id,i));
         }
@@ -1231,7 +1233,7 @@ async function humanRaise(p,amt,to){
 }
 
 /* ================= TRADE ================= */
-const tradable=pid=>propsOf(pid).filter(i=>SQ[i].t!=='prop'||GROUPS[SQ[i].g].every(j=>G.own[j].h===0));
+const tradable=pid=>propsOf(pid).filter(i=>SQ[i].t!=='prop'||grp(pid,SQ[i].g).every(j=>G.own[j].h===0));
 async function openTrade(p){const t=await tradeEditor(p,{});if(!t)return;await resolveTrade(t);renderRoster()}
 async function tradeEditor(p,o){
   const others=o.partner!=null?[P(o.partner)]:alive().filter(q=>q.id!==p.id);if(!others.length)return null;const pre=o.pre||{};
@@ -1406,6 +1408,7 @@ const RULES=`<div class="rules">
 <h4>Kirikiri</h4><p>Pay ₦50M bail, use a get-out card, or try to roll doubles for up to three turns. After the third miss you pay bail and move.</p>
 <h4>Trading</h4><p>On your turn, trade streets, cash and get-out cards with any player. Streets in a set with buildings can’t be traded.</p>
 <h4>Speed die (house rule)</h4><p>Once you have passed GO, you also roll a red speed die. 1, 2 or 3 is added to your move. Bus: move by either white die or the total. Oga: move, then go straight on to the next property nobody owns (or the next one you must pay rent on). Triples: move to any square.</p>
+<h4>Free-for-all building (house rule)</h4><p>Build houses and hotels on any street you own, even without the full colour set. Building evenly still applies across the streets of that colour you own.</p>
 <h4>City events (house rule)</h4><p>Every two rounds a city event shakes things up for one round: the power company takes light (no utility rent), owambe weekend (+25% street rent), fuel scarcity (double transport rent), a tax holiday, or an esusu payout of ₦50M for everyone.</p>
 <h4>Turn timer</h4><p>If the timer is on, each player has 90 seconds per turn. When time runs out, the game rolls, skips buying and ends the turn for them.</p>
 <h4>Bankruptcy</h4><p>If you can’t pay, sell buildings and mortgage. If that still isn’t enough, you’re out and your assets go to whoever you owed.</p></div>`;
@@ -1689,10 +1692,10 @@ function startOnlineFromDoc(code,ref,d){
 /* ================= TITLE / SETUP ================= */
 const PREF=(()=>{try{return JSON.parse(localStorage.getItem('ekoPrefs')||'{}')||{}}catch(e){return{}}})();
 function savePref(){try{localStorage.setItem('ekoPrefs',JSON.stringify(PREF))}catch(e){}}
-const RULE_INFO=[['events','City events','Every two rounds something happens: blackouts, owambe weekends, fuel scarcity, tax holidays or esusu payouts.'],['speedDie','Speed die','After your first lap, roll a third die: add 1–3, Bus lets you pick a die, Oga sends you to the next free property, triples move you anywhere.'],['pot','Free Parking jackpot','Taxes and fines pile up on the National Theatre. Land there to scoop them.'],['goDouble','Double pay on GO','Land exactly on GO to collect ₦400M.'],['jailRent','No rent from jail','Owners sitting in Kirikiri can’t collect rent.'],['auction','Auctions','Property nobody buys goes to auction.'],['even','Even building','Build and sell evenly across a colour set.'],['interest','Mortgage interest','Redeeming costs the mortgage plus 10%.']];
+const RULE_INFO=[['ffa','Free-for-all building','Build houses and hotels on any street you own. No full colour set needed.'],['events','City events','Every two rounds something happens: blackouts, owambe weekends, fuel scarcity, tax holidays or esusu payouts.'],['speedDie','Speed die','After your first lap, roll a third die: add 1–3, Bus lets you pick a die, Oga sends you to the next free property, triples move you anywhere.'],['pot','Free Parking jackpot','Taxes and fines pile up on the National Theatre. Land there to scoop them.'],['goDouble','Double pay on GO','Land exactly on GO to collect ₦400M.'],['jailRent','No rent from jail','Owners sitting in Kirikiri can’t collect rent.'],['auction','Auctions','Property nobody buys goes to auction.'],['even','Even building','Build and sell evenly across a colour set.'],['interest','Mortgage interest','Redeeming costs the mortgage plus 10%.']];
 const MODES=[['classic','Classic','Play until one landlord is left standing.'],['quick','Quick deal','Everyone starts with 2 random properties. The first bankruptcy ends the game and the richest wins.'],['timed','Round limit','Play a set number of rounds. The richest landlord wins.']];
 const setup={slots:NAMES.map((n,i)=>({name:n,tok:TOKENS[i],type:i===0?'human':i<4?'ai':'off'})),cash:1500,ai:'normal',speed:'normal',mode:'classic',rounds:20,timer:PREF.timer||0,city:'lagos',theme:['beach','night','harmattan','rainy','obudu'].includes(PREF.theme)?PREF.theme:'beach',
-  rules:Object.assign({events:false,speedDie:false,pot:false,goDouble:false,jailRent:false,auction:true,even:true,interest:true},PREF.rules||{})};
+  rules:Object.assign({ffa:false,events:false,speedDie:false,pot:false,goDouble:false,jailRent:false,auction:true,even:true,interest:true},PREF.rules||{})};
 function showTitleOld(){
   if(!setup.cityInit){setup.cityInit=1;if(PREF.city&&cityUnlocked(PREF.city))setup.city=PREF.city}
   GEN++;netStop();$('#modals').innerHTML='';$('#ui').hidden=true;clearGame();applyTheme(setup.theme);const T=$('#title');T.hidden=false;const saved=loadSave();
@@ -2218,6 +2221,11 @@ const ACH=[
   {id:'deals',name:'Deal Maker',desc:'Complete 3 trades.',goal:3},
   {id:'triples',name:'Triples!',desc:'Roll triples with the speed die.',goal:1},
   {id:'jail3',name:'Kirikiri Regular',desc:'Go to jail 3 times in one game.',goal:1},
+  {id:'ffa_house',name:'Shortcut Builder',desc:'Build a house without owning the full colour set (free-for-all building).',goal:1},
+  {id:'ffa_hotel',name:'Hotel Hustler',desc:'Build a hotel without owning the full colour set.',goal:1},
+  {id:'ffa_spread',name:'Everywhere Landlord',desc:'Have buildings in 5 different colour groups at once.',goal:1},
+  {id:'ffa_10',name:'Construction Boss',desc:'Build 10 houses in one free-for-all game.',goal:1},
+  {id:'ffa_win',name:'Free-for-All Champion',desc:'Win a game with free-for-all building on.',goal:1},
   {id:'tour',name:'Naija Tour',desc:'Finish a game in all six cities.',goal:6}
 ];
 PREF.ach=PREF.ach||{};PREF.stats=Object.assign({wins:0,deals:0,winCities:[],playedCities:[]},PREF.stats||{});
@@ -2239,7 +2247,7 @@ function achScan(){if(!trackable())return;for(const p of localHumans()){
   if(!achDone(ACH[4])&&RAILS.every(i=>G.own[i].o===p.id))achAward('transport');
   if(!achDone(ACH[5])&&netWorth(p)>=3000)achAward('billion');
   if((p.jailCount||0)>=3)achAward('jail3')}}
-function achGameEnd(winner){if(!trackable()||G.achDone)return;G.achDone=true;const hum=G.players.filter(p=>!p.ai&&(!G.online||p.uid===NET.me));if(!hum.length)return;const st=PREF.stats,c=G.set.city||'lagos';
+function achGameEnd(winner){if(!trackable()||G.achDone)return;G.achDone=true;const hum=G.players.filter(p=>!p.ai&&(!G.online||p.uid===NET.me));if(!hum.length)return;if(FFA()&&winner&&hum.includes(winner))achAward('ffa_win');const st=PREF.stats,c=G.set.city||'lagos';
   if(!st.playedCities.includes(c))st.playedCities.push(c);if(c==='lagos')achAward('eko');
   if(winner&&hum.includes(winner)){st.wins++;if(!st.winCities.includes(c))st.winCities.push(c)}
   savePref();['win1','cities','oba','tour'].forEach(id=>achBump(id));}
@@ -2458,7 +2466,9 @@ function evBanner(e){const b=el('div','evban',`<b>${esc(loc(e.t))}</b><span>${es
 const _pay=pay;pay=async function(p,amt,to,kind){const cashTo=to?to.cash:0;const ok=await _pay(p,amt,to,kind);if(ok&&to&&kind==='rent'){const s=st(to);s.rent+=amt;s.maxRent=Math.max(s.maxRent,amt);if(mine(to)){cityScan()}}return ok};
 const _bankrupt=bankrupt;bankrupt=function(p,to){_bankrupt(p,to);if(to){st(to).bankrupted++;if(mine(to)){addXP(100,`Bankrupted ${p.name}`);cityScan()}}};
 const _buyProp=buyProp;buyProp=function(p,i,price){_buyProp(p,i,price);st(p).buys++;if(mine(p))missionScan()};
-const _build=build;build=function(pid,i){_build(pid,i);const p=P(pid);const s=st(p);if(G.own[i].h===5){s.hotels++;if(mine(p)&&!FAST)fireworks()}else s.houses++;if(mine(p))cityScan()};
+const _build=build;build=function(pid,i){_build(pid,i);const p=P(pid);const s=st(p);if(G.own[i].h===5){s.hotels++;if(mine(p)&&!FAST)fireworks()}else s.houses++;if(mine(p)){cityScan();ffaScan(p,i)}};
+function ffaScan(p,i){if(!FFA()||!trackable())return;const g=SQ[i].g,full=ownsAll(p.id,g);if(!full)achAward(G.own[i].h===5?'ffa_hotel':'ffa_house');if(st(p).houses>=10)achAward('ffa_10');
+  const gs=new Set(propsOf(p.id).filter(j=>G.own[j].h>0).map(j=>SQ[j].g));if(gs.size>=5)achAward('ffa_spread')}
 const _sendToJail=sendToJail;sendToJail=async function(p){st(p).jail++;if(mine(p))bumpCity('jail');await _sendToJail(p);if(mine(p))cityScan()};
 const _executeTrade=executeTrade;executeTrade=function(t){_executeTrade(t);[P(t.from),P(t.to)].forEach(p=>{st(p).trades++;if(mine(p))bumpCity('trades')});if(mine(P(t.from))||mine(P(t.to)))cityScan()};
 function onPassGo(p){st(p).go++;if(mine(p)){bumpCity('go');cityScan()}}
