@@ -378,6 +378,59 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--navy);outline-o
 @media (orientation:portrait){.endgrid{grid-template-columns:minmax(0,1fr)}.prof{flex-wrap:wrap}}
 
 html.app,html.app body{-webkit-touch-callout:none;overscroll-behavior:none}
+
+#title{padding:0;background:linear-gradient(90deg,rgba(19,40,74,.55),rgba(19,40,74,.12) 40%,rgba(19,40,74,.15))}
+.home{display:flex;height:100%;gap:12px;padding:max(10px,env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) max(10px,env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px))}
+.rail{flex:none;width:176px;display:flex;flex-direction:column;gap:8px;min-height:0}
+.mini-logo{display:flex;flex-direction:column;align-items:flex-start;padding:2px 4px 0}
+.mini-logo b{font:44px/.85 var(--display);color:var(--danfo);letter-spacing:.02em;text-shadow:-2px -2px 0 var(--navy),2px -2px 0 var(--navy),-2px 2px 0 var(--navy),2px 2px 0 var(--navy),0 5px 0 var(--navy)}
+.mini-logo span{margin-top:6px;font:13px/1 var(--display);letter-spacing:.14em;color:#fff;background:var(--green);padding:4px 8px 3px;border-radius:6px;box-shadow:0 0 0 2px #fff;transform:rotate(-3deg)}
+.rprof{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:14px;background:rgba(255,255,255,.95);box-shadow:0 3px 0 rgba(19,40,74,.2);cursor:pointer}
+.rprof .rl{flex:none;width:34px;height:34px;border-radius:50%;background:var(--navy);color:var(--danfo);display:grid;place-items:center;font:17px var(--display);box-shadow:0 0 0 2px var(--danfo)}
+.rprof .ri{min-width:0;flex:1}.rprof b{display:block;font-size:12px;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tabs{display:flex;flex-direction:column;gap:4px;overflow-y:auto;min-height:0;scrollbar-width:none;padding:2px}
+.tab{position:relative;display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:12px;border:none;background:rgba(255,255,255,.18);color:#fff;font-weight:800;font-size:13.5px;text-align:left;text-shadow:0 1px 2px rgba(0,0,0,.35)}
+.tab i{font:18px/1 var(--emoji);font-style:normal;width:22px;text-align:center;text-shadow:none}
+.tab.on{background:#fff;color:var(--navy);text-shadow:none;box-shadow:0 3px 0 rgba(19,40,74,.25)}
+.tab .dot{position:absolute;right:10px;top:50%;width:9px;height:9px;margin-top:-4.5px;border-radius:50%;background:var(--bad);box-shadow:0 0 0 2px #fff}
+.pane{flex:1;min-width:0;overflow-y:auto;background:rgba(255,255,255,.97);border-radius:20px;padding:12px 14px 16px;box-shadow:0 8px 0 rgba(19,40,74,.2);display:flex;flex-direction:column;gap:10px;color:var(--navy)}
+.phead{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.phead h2{margin:0;font:26px var(--display);letter-spacing:.01em}
+.pane h3{margin:4px 0 0;font:13px var(--display);letter-spacing:.06em;color:var(--muted)}
+.card{background:var(--panel2);border-radius:16px;padding:10px;display:flex;flex-direction:column;gap:8px}
+.ch{font:15px var(--display);display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}.ch small{font:700 11px var(--body);color:var(--muted)}
+.citychip{display:flex;align-items:center;gap:8px;padding:5px 12px 5px 5px;border-radius:14px;border:2px solid var(--line);background:#fff;color:var(--navy);text-align:left}
+.citychip i{width:40px;height:30px;border-radius:8px;display:block}.citychip small{display:block;font-size:10px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.06em}.citychip b{font-size:13px}.citychip em{font-style:normal;font-size:11.5px;font-weight:800;color:var(--green);margin-left:6px}
+.quick{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.qbtn{display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;column-gap:10px;align-items:center;text-align:left;padding:10px 12px;border-radius:16px;border:none;color:#fff;box-shadow:0 4px 0 rgba(0,0,0,.2)}
+.qbtn i{grid-row:span 2;font:28px/1 var(--emoji);font-style:normal}.qbtn b{font:17px var(--display);letter-spacing:.01em}.qbtn small{font-size:11.5px;font-weight:700;opacity:.9}
+.qbtn.cont{background:var(--navy)}.qbtn.ai{background:#2e6fd6}.qbtn.qpp{background:#c2185b}.qbtn.on{background:var(--green)}.qbtn.ai,.qbtn.cont{width:auto;height:auto}
+.qbtn:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.2)}
+.startbar{position:sticky;bottom:-16px;margin:0 -14px -16px;padding:10px 14px max(12px,env(safe-area-inset-bottom,0px));background:linear-gradient(rgba(255,255,255,0),#fff 30%);display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.btn.big{font:20px var(--display);padding:12px 28px;letter-spacing:.02em}
+.bigcities{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px}
+.bcity{border-radius:16px;overflow:hidden;background:#fff;border:2px solid var(--line);display:flex;flex-direction:column}
+.bcity.on{border-color:var(--navy);box-shadow:0 0 0 2px var(--navy)}
+.bart{height:62px;display:flex;align-items:flex-end;justify-content:space-between;padding:6px 10px;position:relative}
+.bart b{font:20px var(--display);color:#fff;text-shadow:0 2px 0 rgba(0,0,0,.35),0 0 8px rgba(0,0,0,.3)}.bart span{position:absolute;right:8px;top:6px;font:26px/1 var(--emoji)}
+.bcity.locked .bart{filter:grayscale(.85) brightness(.8)}
+.bbody{padding:8px 10px;display:flex;flex-direction:column;gap:5px}.bbody small{font-size:11.5px;color:var(--muted);line-height:1.3}.bbody .fm{font-weight:800;color:var(--navy)}
+.brow{display:flex;gap:6px;flex-wrap:wrap}
+.tokgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
+.tcard{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;gap:3px;padding:10px 8px;border-radius:16px;border:2px solid var(--line);background:#fff;color:var(--navy)}
+.tcard .tem{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;font:36px/1 var(--emoji);background:radial-gradient(circle at 40% 35%,#fff7d6,#ffc61a);box-shadow:0 4px 0 #c98f00}
+.tcard b{font:15px var(--display);margin-top:4px}.tcard small{font-size:11px;color:var(--muted);line-height:1.3}
+.tcard.on{border-color:var(--green);box-shadow:0 0 0 2px var(--green)}.tcard em{position:absolute;top:6px;right:6px;font-style:normal;font-size:10px;font-weight:800;color:#fff;background:var(--green);padding:2px 6px;border-radius:999px}
+.tcard.locked .tem{filter:grayscale(1);opacity:.5;background:#e6ebf1;box-shadow:0 4px 0 #c5ced9}
+.dgrid{display:grid;grid-template-columns:1.6fr 1fr;gap:10px}.dgrid>.card{min-width:0}
+.wheelcard{align-items:flex-start;justify-content:center;background:linear-gradient(135deg,#fff3c4,#ffe08a)}
+.ranks{display:flex;flex-wrap:wrap;gap:6px}.ranks span{padding:5px 10px;border-radius:999px;background:#fff;border:2px solid var(--line);font-size:12px;font-weight:700}.ranks span b{margin-right:5px;color:var(--muted)}.ranks span.got{border-color:var(--green);background:#e9f7ef}
+.learn{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px}
+.lcard{display:flex;gap:10px;padding:10px;border-radius:14px;background:var(--panel2)}.lcard i{font:24px/1 var(--emoji);font-style:normal}.lcard b{font:15px var(--display)}.lcard p{margin:2px 0 0;font-size:12.5px;line-height:1.45;color:#2a3d58}
+.pane .prof{margin:0;max-width:none;box-shadow:none;background:var(--panel2)}
+.pane .achlist{gap:5px}
+@media (orientation:portrait){.home{flex-direction:column}.rail{width:auto;flex-direction:row;align-items:center}.mini-logo,.rprof{display:none}.tabs{flex-direction:row;overflow-x:auto}.tab{flex:none;flex-direction:column;gap:2px;font-size:11px;padding:6px 10px}.dgrid{grid-template-columns:minmax(0,1fr)}}
+@media (max-height:420px){.mini-logo b{font-size:34px}.tab{padding:6px 9px;font-size:12.5px}.rail{width:160px}}
 </style>
 
 <canvas id="gl" aria-label="3D game board"></canvas>
@@ -1613,7 +1666,7 @@ const RULE_INFO=[['events','City events','Every two rounds something happens: bl
 const MODES=[['classic','Classic','Play until one landlord is left standing.'],['quick','Quick deal','Everyone starts with 2 random properties. The first bankruptcy ends the game and the richest wins.'],['timed','Round limit','Play a set number of rounds. The richest landlord wins.']];
 const setup={slots:NAMES.map((n,i)=>({name:n,tok:TOKENS[i],type:i===0?'human':i<4?'ai':'off'})),cash:1500,ai:'normal',speed:'normal',mode:'classic',rounds:20,timer:PREF.timer||0,city:'lagos',theme:['beach','night','harmattan','rainy','obudu'].includes(PREF.theme)?PREF.theme:'beach',
   rules:Object.assign({events:false,speedDie:false,pot:false,goDouble:false,jailRent:false,auction:true,even:true,interest:true},PREF.rules||{})};
-function showTitle(){
+function showTitleOld(){
   if(!setup.cityInit){setup.cityInit=1;if(PREF.city&&cityUnlocked(PREF.city))setup.city=PREF.city}
   GEN++;netStop();$('#modals').innerHTML='';$('#ui').hidden=true;clearGame();applyTheme(setup.theme);const T=$('#title');T.hidden=false;const saved=loadSave();
   T.innerHTML=`<div class="tgrid"><div class="brand"><div class="e">EKO</div><div class="s">ESTATES</div>
@@ -2436,6 +2489,112 @@ async function openDaily(){const D=daily(),lv=lvlOf(PREF.xp);
   await modal({cls:'wide',html:`<div class="mh">Daily missions</div><div class="mtxt muted">New missions every day. Each is worth 150 XP, plus 250 XP for finishing all three. Complete one a day to build your 🔥 streak (${streakNow()} day${streakNow()===1?'':'s'}).</div>
     <div class="achlist">${D.list.map(id=>{const m=MISSIONS.find(x=>x.id===id),d=!!D.done[id],v=Math.min(m.g,D.best[id]||0);return achRow(d,m.n,m.end?'Counts when the game ends.':'Progress counts within one game.',m.money&&!d?v:v,m.g,'+150 XP').replace(`${v} / ${m.g}`,m.money?`${fmt(v)} / ${fmt(m.g)}`:`${v} / ${m.g}`)}).join('')}</div>
     <div class="mh" style="font-size:17px">Level rewards</div><div class="achlist">${LVL_REWARDS.map(r=>achRow(lv>=r[0],`Level ${r[0]}: ${r[1]}`,r[2],Math.min(lv,r[0]),r[0],lv>=r[0]?'Unlocked':'')).join('')}</div>`,btns:[{k:'x',label:'Close',primary:true}]});renderProfile()}
+
+/* ================= HOME (TABBED) ================= */
+const HOME_TABS=[['play','▶','Play'],['cities','🏙️','Cities'],['tokens','🎲','Tokens'],['ach','🏆','Achievements'],['daily','📅','Daily'],['learn','📖','How to play'],['settings','⚙️','Settings']];
+const TOKEN_INFO={'🚌':['Danfo','Drives along the road with a gentle sway and engine rumble.'],'🛺':['Keke','Rocks side to side like a three-wheeler on a bumpy road.'],'🏍️':['Okada','The fastest. Leans into corners and pops a wheelie.'],'🥁':['Talking drum','Bounces square to square with a drum beat on landing.'],'🍲':['Jollof pot','Waddles along while its lid rattles.'],'🦅':['Eagle','Takes off, flies over the board and glides down to land.'],
+  '🐎':['Durbar horse','Gallops with moving legs and hoofbeats.'],'🛶':['Canoe','Rocks along as the paddler rows.'],'🛢️':['Oil barrel','Rolls along on its side.'],'🎭':['Carnival mask','Spins and hops like a carnival dancer.'],'🚂':['Coal train','Chugs along puffing smoke.'],'👑':['Oba’s crown','Floats and turns like royalty.']};
+function showTitle(){
+  if(!setup.cityInit){setup.cityInit=1;if(PREF.city&&cityUnlocked(PREF.city))setup.city=PREF.city}
+  GEN++;netStop();$('#modals').innerHTML='';$('#ui').hidden=true;clearGame();applyTheme(setup.city==='lagos'?setup.theme:setup.city);const T=$('#title');T.hidden=false;
+  T.innerHTML=`<div class="home"><nav class="rail" aria-label="Sections"><div class="mini-logo"><b>EKO</b><span>ESTATES</span></div><div class="rprof" id="rprof"></div><div class="tabs" role="tablist"></div></nav><section class="pane" id="pane" role="tabpanel"></section></div>`;
+  homeTab(setup.tab||'play');
+}
+function railProfile(){const E=$('#rprof');if(!E)return;const lv=lvlOf(PREF.xp),a=xpFor(lv),b=xpFor(lv+1);E.innerHTML=`<span class="rl">${lv}</span><span class="ri"><b>${rankOf(lv)}</b><span class="xpbar"><i style="width:${(PREF.xp-a)/(b-a)*100}%"></i></span></span>`;E.onclick=()=>homeTab('daily')}
+function homeTab(k){setup.tab=k;const nav=$('#title .tabs');if(!nav)return;nav.innerHTML='';const D=daily();const dailyDot=wheelReady()||D.list.some(id=>!D.done[id]);
+  HOME_TABS.forEach(([id,ic,label])=>{const b=el('button','tab'+(id===k?' on':''),`<i>${ic}</i><span>${label}</span>${id==='daily'&&dailyDot?'<em class="dot"></em>':''}`);b.setAttribute('role','tab');b.setAttribute('aria-selected',id===k?'true':'false');b.onclick=()=>{sfx('tap');homeTab(id)};nav.append(b)});
+  railProfile();const P=$('#pane');P.scrollTop=0;P.innerHTML='';P.className='pane tab-'+k;({play:paneP,cities:paneCities,tokens:paneTokens,ach:paneAch,daily:paneDaily,learn:paneLearn,settings:paneSettings})[k](P)}
+const segIn=(T,id,opts,get,set)=>{const E=T.querySelector(id);E.innerHTML='';opts.forEach(([v,l])=>{const b=el('button',get()===v?'on':'',l);b.onclick=()=>{set(v);segIn(T,id,opts,get,set)};E.append(b)})};
+function startFromSetup(T,slots){const act=(slots||setup.slots).map((s,i)=>({...s,i})).filter(s=>s.type!=='off');
+  if(act.length<2){const m=T.querySelector('#tMsg');if(m)m.textContent='Pick at least two players.';return}
+  const toks=new Set();act.forEach(s=>{if(toks.has(s.tok))s.tok=unlockedTokens().find(t=>!toks.has(t)&&!act.some(a=>a.tok===t))||s.tok;toks.add(s.tok)});
+  initAudio();newGame({cash:setup.cash,set:cfgSet(),players:act.map(s=>({name:(s.name||'').trim()||NAMES[s.i],tok:s.tok,col:PCOL[s.i],ai:s.type==='ai'}))});
+  try{document.documentElement.requestFullscreen?.().then(()=>screen.orientation?.lock?.('landscape')).catch(()=>{})}catch(e){}
+  startWith(G)}
+function paneP(T){const saved=loadSave(),c=CITY_DATA[setup.city],m=MODES.find(x=>x[0]===setup.mode);
+  T.innerHTML=`<div class="phead"><h2>Play</h2><button class="citychip" id="pCity"><i style="background:${c.sw}"></i><span><small>City</small><b>${c.name}${setup.city==='lagos'?' · '+THEMES[setup.theme].name:''}</b></span><em>Change</em></button></div>
+    <div class="quick">${saved?`<button class="qbtn cont" id="tCont"><i>⏯️</i><b>Continue</b><small>Round ${saved.round} · ${esc((CITY_DATA[saved.set&&saved.set.city]||CITY_DATA.lagos).name)}</small></button>`:''}
+      <button class="qbtn ai" id="qAI"><i>🤖</i><b>Quick game</b><small>You vs 3 AI landlords</small></button>
+      <button class="qbtn qpp" id="qPP"><i>👥</i><b>Pass and play</b><small>2–6 friends on this phone</small></button>
+      ${IS_APP?'':`<button class="qbtn on" id="tOnline"><i>🌍</i><b>Play online</b><small>Friends on their own phones</small></button>`}</div>
+    <h3>CUSTOM GAME</h3>
+    <div class="card"><div class="ch">Players <small>Tap a token to change it</small></div><div class="slots"></div></div>
+    <div class="card"><div class="ch">Game mode</div><div class="seg wide" id="oMode"></div><div class="small" id="oModeTxt"></div><div id="oRounds" class="opts"></div></div>
+    <div class="card"><div class="ch">House rules <small>Tap to switch on or off</small></div><div class="rchips" id="oRules"></div></div>
+    <div class="card"><div class="ch">Options</div><div class="opts"><span>Starting cash</span><div class="seg" id="oCash"></div><span>AI skill</span><div class="seg" id="oAi"></div><span>Speed</span><div class="seg" id="oSpd"></div><span>Turn timer</span><div class="seg" id="oTimer"></div></div></div>
+    <div class="startbar"><button class="btn pri big" id="tStart">Start game</button><span class="small" id="tMsg">${m[1]} in ${c.name}. Pass-and-play: hand the phone round on each human turn.</span></div>`;
+  const drawSlots=()=>{const S=T.querySelector('.slots');S.innerHTML='';setup.slots.forEach((s,i)=>{
+    const d=el('div','slot'+(s.type==='off'?' off':''));d.style.setProperty('--pc',PCOL[i]);
+    d.innerHTML=`<button class="tok" aria-label="Change token">${s.tok}</button><input id="pname${i}" maxlength="12" value="${esc(s.name)}" aria-label="Player ${i+1} name"><div class="seg">${['human','ai','off'].map(t=>`<button data-t="${t}" class="${s.type===t?'on':''}">${t==='human'?'Human':t==='ai'?'AI':'—'}</button>`).join('')}</div>`;
+    d.querySelector('.tok').onclick=()=>{const used=setup.slots.filter((x,j)=>j!==i&&x.type!=='off').map(x=>x.tok);const TK=unlockedTokens();let k=TK.indexOf(s.tok);for(let n=0;n<TK.length;n++){k=(k+1)%TK.length;if(!used.includes(TK[k]))break}s.tok=TK[k];drawSlots()};
+    d.querySelector('input').oninput=e=>s.name=e.target.value;
+    d.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{s.type=b.dataset.t;drawSlots()});S.append(d)})};
+  const drawMode=()=>{segIn(T,'#oMode',MODES.map(m=>[m[0],m[1]]),()=>setup.mode,v=>{setup.mode=v;drawMode()});T.querySelector('#oModeTxt').textContent=MODES.find(m=>m[0]===setup.mode)[2];
+    const R=T.querySelector('#oRounds');R.innerHTML=setup.mode==='timed'?'<span>Rounds</span><div class="seg" id="oRn"></div>':'';if(setup.mode==='timed')segIn(T,'#oRn',[[10,'10'],[20,'20'],[30,'30'],[45,'45']],()=>setup.rounds,v=>setup.rounds=v)};
+  const drawRules=()=>{const E=T.querySelector('#oRules');E.innerHTML='';RULE_INFO.forEach(([k,l,d])=>{const b=el('button','rchip'+(setup.rules[k]?' on':''),`<b>${l}</b><small>${d}</small>`);b.setAttribute('aria-pressed',setup.rules[k]?'true':'false');b.onclick=()=>{setup.rules[k]=!setup.rules[k];PREF.rules=setup.rules;savePref();drawRules()};E.append(b)})};
+  drawSlots();drawMode();drawRules();
+  segIn(T,'#oCash',[[1000,'₦1bn'],[1500,'₦1.5bn'],[2000,'₦2bn']],()=>setup.cash,v=>setup.cash=v);segIn(T,'#oAi',[['easy','Easy'],['normal','Normal'],['hard','Hard']],()=>setup.ai,v=>{setup.ai=v;PREF.ai=v;savePref()});segIn(T,'#oSpd',[['normal','Normal'],['fast','Fast']],()=>setup.speed,v=>{setup.speed=v;PREF.speed=v;savePref()});segIn(T,'#oTimer',[[0,'Off'],[90,'90 sec']],()=>setup.timer,v=>{setup.timer=v;PREF.timer=v;savePref()});
+  T.querySelector('#pCity').onclick=()=>homeTab('cities');
+  if(saved)T.querySelector('#tCont').onclick=()=>{initAudio();startWith(saved)};
+  const on=T.querySelector('#tOnline');if(on)on.onclick=()=>{initAudio();openOnline()};
+  T.querySelector('#qAI').onclick=()=>{const me=setup.slots[0];startFromSetup(T,setup.slots.map((s,i)=>({...s,type:i===0?'human':i<4?'ai':'off',tok:i===0?me.tok:s.tok})))};
+  T.querySelector('#qPP').onclick=()=>{setup.slots.forEach((s,i)=>s.type=i<2?'human':s.type==='human'?'off':s.type);drawSlots();T.querySelector('.slots').scrollIntoView({behavior:'smooth',block:'center'});toast('Set each friend to Human, then tap Start game')};
+  T.querySelector('#tStart').onclick=()=>startFromSetup(T);
+}
+function paneCities(T){
+  T.innerHTML=`<div class="phead"><h2>Cities</h2><span class="small">${CITY_ORDER.filter(cityUnlocked).length} of ${CITY_ORDER.length} unlocked</span></div><div class="bigcities"></div><div id="locs"></div>`;
+  const draw=()=>{const E=T.querySelector('.bigcities');E.innerHTML='';CITY_ORDER.forEach(k=>{const c=CITY_DATA[k],un=cityUnlocked(k),n=cityDone(k),md=medalOf(n),req=ACH.find(a=>a.reward&&a.reward.city===k),f=CITY_FM[k];
+      const b=el('div','bcity'+(setup.city===k?' on':'')+(un?'':' locked'),`<div class="bart" style="background:${c.sw}"><span>${md?md[0]:''}</span><b>${un?'':'🔒 '}${c.name}</b></div>
+        <div class="bbody"><small>${un?esc(c.blurb):'Unlock with '+esc(req.name)+': '+esc(loc(req.desc))}</small><span class="cprog"><span class="bar"><i style="width:${n/CT.length*100}%"></i></span><em>${n}/${CT.length}</em></span><small class="fm">📻 ${f[0]} ${f[1]}</small>
+        <div class="brow">${un?`<button class="sm go" data-a="pick">${setup.city===k?'Selected':'Play here'}</button>`:''}<button class="sm" data-a="ach">Achievements</button></div></div>`);
+      b.querySelector('[data-a="ach"]').onclick=()=>{setup.achTab=k;homeTab('ach')};const pk=b.querySelector('[data-a="pick"]');if(pk)pk.onclick=()=>{setup.city=k;PREF.city=k;savePref();applyTheme(k==='lagos'?setup.theme:k);draw()};E.append(b)});
+    const L=T.querySelector('#locs');L.innerHTML=setup.city==='lagos'?'<h3>LAGOS LOCATION</h3><div class="themes"></div>':'';if(setup.city==='lagos'){const TH=L.querySelector('.themes');Object.entries(THEMES).filter(([k])=>LAGOS_LOCS.includes(k)).forEach(([k,th])=>{const b=el('button','theme'+(setup.theme===k?' on':''),`<i style="background:${th.sw}"></i><b>${th.name}</b><small>${th.blurb}</small>`);b.onclick=()=>{setup.theme=k;PREF.theme=k;savePref();applyTheme(k);draw()};TH.append(b)})}};draw()}
+function paneTokens(T){const all=TOKENS.concat(NEW_TOKENS);const mine=setup.slots[0].tok;
+  T.innerHTML=`<div class="phead"><h2>Tokens</h2><span class="small">${unlockedTokens().length} of ${all.length} unlocked · tap one to play as it</span></div><div class="tokgrid"></div>`;
+  const G2=T.querySelector('.tokgrid');all.forEach(t=>{const un=tokenUnlocked(t),info=TOKEN_INFO[t],req=ACH.find(a=>a.reward&&a.reward.token===t);
+    const b=el('button','tcard'+(un?'':' locked')+(setup.slots[0].tok===t?' on':''),`<span class="tem">${t}</span><b>${info[0]}</b><small>${un?info[1]:'🔒 '+esc(req.name)+': '+esc(loc(req.desc))}</small>${setup.slots[0].tok===t?'<em>Your token</em>':''}`);
+    b.onclick=()=>{if(!un){toast(`Unlock the ${info[0]} with ${req.name}`);return}const other=setup.slots.findIndex((s,i)=>i>0&&s.tok===t);if(other>0)setup.slots[other].tok=setup.slots[0].tok;setup.slots[0].tok=t;paneTokens(T)};G2.append(b)})}
+function paneAch(T){let cur=setup.achTab||'main';
+  T.innerHTML=`<div class="phead"><h2>Achievements</h2><span class="small">${ACH.filter(achDone).length+CITY_ORDER.reduce((a,c)=>a+cityDone(c),0)} of ${ACH.length+CITY_ORDER.length*CT.length} earned</span></div><div class="achtabs"></div><div class="achbody"></div>`;
+  const draw=()=>{const TT=T.querySelector('.achtabs');TT.innerHTML='';
+    const mk=(k,label,n,g)=>{const b=el('button','atab'+(cur===k?' on':''),`<b>${label}</b><span class="mini"><i style="width:${n/g*100}%"></i></span><small>${n}/${g}</small>`);b.onclick=()=>{cur=k;setup.achTab=k;draw()};TT.append(b)};
+    mk('main','Main',ACH.filter(achDone).length,ACH.length);CITY_ORDER.forEach(c=>mk(c,(cityUnlocked(c)?'':'🔒 ')+CITY_DATA[c].name,cityDone(c),CT.length));
+    const B=T.querySelector('.achbody');
+    if(cur==='main')B.innerHTML=`<div class="achlist">${ACH.map(a=>{const d=achDone(a),pr=Math.min(a.goal,achProg(a));return achRow(d,a.name,loc(a.desc),pr,a.goal,a.reward?rewardText(a.reward):'Badge')}).join('')}</div>`;
+    else{const c=cur,n=cityDone(c),m=medalOf(n);B.innerHTML=`<div class="cityhead"><span class="medal">${m?m[0]:'🎖️'}</span><span><b>${CITY_DATA[c].name}</b><small>${m?m[1]+' medal':'Earn 5 for Bronze, 10 for Silver, 15 for Gold'}</small></span><span class="big"><span class="bar"><i style="width:${n/CT.length*100}%"></i></span><small>${n} / ${CT.length}</small></span></div>
+      <div class="achlist">${CT.map((t,k)=>{const d=!!cach(c)[t.id];const pr=d?t.g:(t.g>1?cityProg(t,c,null):0);return achRow(d,CNAMES[c][k],cdesc(t,c),pr,t.g,'+100 XP')}).join('')}</div>`}};draw()}
+function paneDaily(T){const D=daily(),lv=lvlOf(PREF.xp);
+  T.innerHTML=`<div class="phead"><h2>Daily</h2><span class="small">🔥 ${streakNow()}-day streak</span></div><div class="prof" id="prof"></div>
+    <div class="dgrid"><div class="card"><div class="ch">Today’s missions <small>150 XP each · 250 XP bonus for all three</small></div><div class="achlist">${D.list.map(id=>{const m=MISSIONS.find(x=>x.id===id),d=!!D.done[id],v=Math.min(m.g,D.best[id]||0);return achRow(d,m.n,m.end?'Counts when the game ends.':'Progress counts within one game.',v,m.g,'+150 XP').replace(`${v} / ${m.g}`,m.money?`${fmt(v)} / ${fmt(m.g)}`:`${v} / ${m.g}`)}).join('')}</div></div>
+    <div class="card wheelcard"><div class="ch">🎡 Owambe Wheel</div><div class="small">${wheelReady()?'Your free spin is ready!':'You’ve spun today. Come back tomorrow.'}</div><button class="btn ${wheelReady()?'pri':''}" id="dSpin">${wheelReady()?'Spin the wheel':'View wheel'}</button></div></div>
+    <div class="card"><div class="ch">Level rewards <small>Level ${lv} · ${rankOf(lv)}</small></div><div class="achlist">${LVL_REWARDS.map(r=>achRow(lv>=r[0],`Level ${r[0]}: ${r[1]}`,r[2],Math.min(lv,r[0]),r[0],lv>=r[0]?'Unlocked':'')).join('')}</div></div>
+    <div class="card"><div class="ch">Ranks</div><div class="ranks">${RANKS.map(r=>`<span class="${lv>=r[0]?'got':''}"><b>Lv ${r[0]}</b>${r[1]}</span>`).join('')}</div></div>`;
+  renderProfile();T.querySelector('#dSpin').onclick=()=>openWheel().then(()=>homeTab('daily'))}
+const LEARN=[['🎯','The goal','Be the last landlord standing. Everyone else goes bankrupt, or you are the richest when the game ends.'],['🎲','Your turn','Roll two dice and move. Passing GO pays ₦200M. Doubles roll again, but three doubles in a row sends you to jail.'],
+  ['🏠','Buying property','Land on an unowned street, transport hub or utility to buy it. If you pass, it goes to auction and anyone can bid.'],['💸','Rent','Land on someone else’s property and you pay rent. A full colour set doubles the base rent. Transport hubs pay more the more you own; utilities charge 4× or 10× the dice.'],
+  ['🏗️','Building','Own a full colour set with no mortgages to build houses evenly, then a hotel after four houses. The bank has only 32 houses and 12 hotels.'],['🏦','Mortgages','Mortgage a property for half its price. It collects no rent until you redeem it for the mortgage plus 10%.'],
+  ['🚔','Jail','Pay ₦50M bail, use a get-out card, or roll doubles for up to three turns. After the third miss you pay bail and move.'],['🤝','Trading','On your turn, trade streets, cash and get-out cards with any player. You can accept, decline or send a counter offer. Tags show when a deal completes your set.'],
+  ['📉','Bankruptcy','If you can’t pay, sell buildings and mortgage. If that still isn’t enough you’re out, and your assets go to whoever you owed.']];
+function paneLearn(T){
+  T.innerHTML=`<div class="phead"><h2>How to play</h2></div><div class="learn">${LEARN.map(l=>`<div class="lcard"><i>${l[0]}</i><div><b>${l[1]}</b><p>${esc(loc(l[2]))}</p></div></div>`).join('')}</div>
+    <h3>GAME MODES</h3><div class="learn">${MODES.map(m=>`<div class="lcard"><i>${m[0]==='classic'?'♟️':m[0]==='quick'?'⚡':'⏱️'}</i><div><b>${m[1]}</b><p>${esc(m[2])}</p></div></div>`).join('')}</div>
+    <h3>HOUSE RULES</h3><div class="learn">${RULE_INFO.map(r=>`<div class="lcard"><i>⚙️</i><div><b>${r[1]}</b><p>${esc(r[2])}</p></div></div>`).join('')}<div class="lcard"><i>⏱️</i><div><b>Turn timer</b><p>Optional 90 seconds per turn. When time runs out the game finishes the turn for that player.</p></div></div></div>
+    <h3>SPEED DIE AND CITY EVENTS</h3><div class="learn"><div class="lcard"><i>🟥</i><div><b>Speed die</b><p>After your first lap you also roll a red die. 1–3 adds to your move. Bus: move by one die or the total. Oga: move, then go on to the next free property. Triples: jump to any square.</p></div></div>
+    <div class="lcard"><i>🎉</i><div><b>City events</b><p>Every two rounds: power cuts (no utility rent), owambe weekend (+25% street rent), fuel scarcity (double transport rent), tax holiday, or an esusu payout of ₦50M each.</p></div></div></div>
+    <h3>PROGRESS</h3><div class="learn"><div class="lcard"><i>🏙️</i><div><b>Cities and tokens</b><p>Earn achievements to unlock six more cities and six more tokens. Each city has 15 achievements and Bronze, Silver and Gold medals.</p></div></div>
+    <div class="lcard"><i>⭐</i><div><b>XP and levels</b><p>Earn XP for every game, rent, achievement, daily mission and wheel spin. Level up from JJC to Landlord of Naija and unlock golden rewards.</p></div></div></div>`}
+function paneSettings(T){const rows=[['sfx','Game sounds','Dice, coins and token movement.'],['amb','Street ambience','Crowd chatter, horns, okadas, birds or rain to match the city.'],['radio','City radio','Each city’s own station, playing a shuffled mix of 9 Kenstylez tracks.']];
+  T.innerHTML=`<div class="phead"><h2>Settings</h2></div>
+    <div class="card"><div class="ch">Sound</div><div class="rchips" id="sChips"></div><label class="vol"><span>Volume</span><input type="range" id="sVol" min="0" max="1" step="0.05"></label></div>
+    <div class="card"><div class="ch">Defaults</div><div class="opts"><span>AI skill</span><div class="seg" id="sAi"></div><span>Game speed</span><div class="seg" id="sSpd"></div><span>Camera</span><div class="seg" id="sCam"></div></div></div>
+    <div class="card"><div class="ch">About</div><p class="small">Eko Estates ${IS_APP?'app':'web'} · made in Naija.<br>Radio music by Kenstylez.<br>Progress is saved on this device only.</p><div class="brow"><a class="btn" href="https://p2rmy5ks88-design.github.io/a2-guide/eko-estates/privacy.html" target="_blank" rel="noopener">Privacy policy</a><button class="btn danger" id="sReset">Reset progress</button></div></div>`;
+  const draw=()=>{const E=T.querySelector('#sChips');E.innerHTML='';rows.forEach(([k,l,d])=>{const b=el('button','rchip'+(PREF.audio[k]?' on':''),`<b>${l}</b><small>${d}</small>`);b.setAttribute('aria-pressed',PREF.audio[k]?'true':'false');b.onclick=()=>{initAudio();PREF.audio[k]=!PREF.audio[k];savePref();syncAudio();draw()};E.append(b)})};draw();
+  const v=T.querySelector('#sVol');v.value=PREF.audio.vol;v.oninput=()=>{PREF.audio.vol=+v.value;savePref();syncAudio()};
+  segIn(T,'#sAi',[['easy','Easy'],['normal','Normal'],['hard','Hard']],()=>setup.ai,x=>{setup.ai=x;PREF.ai=x;savePref()});segIn(T,'#sSpd',[['normal','Normal'],['fast','Fast']],()=>setup.speed,x=>{setup.speed=x;PREF.speed=x;savePref()});
+  segIn(T,'#sCam',[['follow','Follow token'],['board','Whole board']],()=>PREF.cam||'follow',x=>{PREF.cam=x;camMode=x;savePref()});
+  T.querySelector('#sReset').onclick=async()=>{const k=await modal({html:'<div class="mh">Reset all progress?</div><div class="mtxt">This deletes your XP, levels, achievements, unlocked cities and tokens, daily streak and saved game on this device. It can’t be undone.</div>',btns:[{k:'no',label:'Keep progress'},{k:'yes',label:'Reset everything',danger:true}]});
+    if(k==='yes'){['ach','stats','cach','cstat','daily','boost'].forEach(x=>delete PREF[x]);PREF.xp=0;PREF.ach={};PREF.stats={wins:0,deals:0,winCities:[],playedCities:[]};PREF.cach={};PREF.cstat={};PREF.daily={};setup.city='lagos';savePref();clearSave&&(()=>{try{localStorage.removeItem(SKEY)}catch(e){}})();toast('Progress reset');homeTab('settings')}}}
+if(PREF.ai)setup.ai=PREF.ai;if(PREF.speed)setup.speed=PREF.speed;if(PREF.cam)camMode=PREF.cam;
 
 /* ================= ORIENTATION ================= */
 let rotDismissed=false;
