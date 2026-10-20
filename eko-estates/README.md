@@ -13,7 +13,9 @@ A Lagos-themed property trading game for phones and tablets, played in landscape
   - Harmattan / Balogun Market
   - Rainy Season / Oshodi
   - Obudu Highlands
-- **Sound**: street ambience that matches each location, and *Eko Estates FM 97.3*, a continuous mix of Kenstylez tracks. Each part can be switched on and off.
+- **Sound**: street ambience that matches each location, and *Eko Estates FM 97.3*, a shuffled, crossfaded playlist of 9 tracks by Kenstylez and kevinaiwe. Each part can be switched on and off.
+- **Tokens** each move their own way: the danfo drives and sways, the keke rocks, the okada zips and leans, the talking drum bounces, the jollof pot waddles and the eagle flies.
+- **Turn timer**: an optional 90-second limit per turn, chosen when starting a game.
 - **Players**: 2 to 6 per game, as pass-and-play humans, AI landlords (Easy, Normal or Hard), or online friends.
 
 ## Files
@@ -39,4 +41,4 @@ To publish it as a website, turn on GitHub Pages for this repo and point it at t
 
 ## Radio audio
 
-The radio plays `audio/eko-fm-mix.mp3`, a Kenstylez mix of You're My Home, Red Room and Chances Trap. It lives in `eko-estates/audio/`.
+The radio plays the tracks in `audio/fm/`. To add a song, put a loudness-matched MP3 in that folder and add a line to `FM_LIST` in `game.html`.
