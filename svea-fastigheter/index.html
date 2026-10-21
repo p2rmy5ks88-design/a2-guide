@@ -1,4 +1,4 @@
-<!doctype html><html lang="sv"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-180.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Svea Fastigheter"><meta name="theme-color" content="#005293"><script src="../eko-estates/firebase-config.js"></script><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui}img{max-width:100%}[hidden]{display:none!important}</style></head><body><title>Svea Fastigheter</title>
+<!doctype html><html lang="sv"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-180.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Svea Fastigheter"><meta name="theme-color" content="#005293"><script src="../eko-estates/firebase-config.js"></script><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui}img{max-width:100%}[hidden]{display:none!important}</style></head><body><title>Svea Fastigheter</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&display=swap">
@@ -459,6 +459,8 @@ input,textarea{-webkit-user-select:text;user-select:text}
 .cfield .cn{position:absolute;right:12px;top:8px;font:28px var(--display);color:var(--green)}
 .note2{position:absolute;width:62px;height:36px;border-radius:6px;border:3px solid #e6ffe9;background:#2fa866;color:#fff;font:20px var(--display);transform:rotate(var(--r));box-shadow:0 3px 6px rgba(0,0,0,.25);animation:pop .25s ease-out}
 .note2.got{transform:scale(1.4);opacity:0;transition:.2s}
+
+@media (pointer:coarse){input:not([type=range]),textarea,select{font-size:16px!important}}
 </style>
 
 <canvas id="gl" aria-label="3D-spelbräde"></canvas>
@@ -1709,7 +1711,7 @@ async function openOnline(pre){
   const db=await netInit();
   if(!db&&(FIRE||!onClaude())){await modal({cls:'wide',html:`<div class="mh">Spela online</div><div class="mtxt">${FIRE?'Kunde inte ansluta till onlinetjänsten. Kontrollera internetanslutningen och försök igen.':'Onlinespel är inte påslaget i den här versionen ännu.'}</div>`,btns:[{k:'x',label:'OK',primary:true}]});return}
   if(!db){await modal({cls:'wide',html:`<div class="mh">Spela online</div><div class="mtxt">Onlinespel körs i claude.ai. Så spelar du med vänner:</div><ol class="steps"><li>Öppna spelet från ditt claude.ai-konto, inloggad.</li><li>Ägaren bjuder in varje vän via e-post från sidans <b>Dela</b>-meny och ger dem <b>Redigerare</b>-behörighet.</li><li>Alla öppnar sidan, trycker på <b>Spela online</b> och går med i samma spelkod.</li></ol><div class="mtxt muted">Den här vyn når inte onlinetjänsten just nu, oftast för att du är utloggad eller bara har läsbehörighet.</div>`,btns:[{k:'x',label:'OK',primary:true}]});return}
-  let nick=PREF.nick||(NET.myName||'').split(' ')[0]||'Spelare',tok=PREF.tok||TOKENS[0];
+  let nick=PREF.nick||(setup.slots[0].name||'').trim()||(NET.myName||'').split(' ')[0]||'Spelare',tok=PREF.tok||setup.slots[0].tok||TOKENS[0];
   let unsubs=[];
   const k=await modal({cls:'wide',html:`<div class="mh">Spela online</div><div class="olme"><button class="tok" id="olTok" aria-label="Byt pjäs"></button><input id="olNick" maxlength="12" aria-label="Ditt namn i spelet"><span class="muted">Ditt namn och din pjäs</span></div>
     <div class="olgrid"><div class="olcard"><h4>Var värd för ett spel</h4><div class="mtxt muted">Använder läget, reglerna och miljön du valt på startskärmen.</div><div class="mtxt" id="olSet"></div><button class="btn pri" id="olNew">Skapa spel</button></div>
@@ -1792,7 +1794,8 @@ const PREF=(()=>{try{return JSON.parse(localStorage.getItem('sveaPrefs')||'{}')|
 function savePref(){try{localStorage.setItem('sveaPrefs',JSON.stringify(PREF))}catch(e){}}
 const RULE_INFO=[['minigames','Minispel','Sverigequiz på Chans- och Allmänningsrutorna, och Fånga sedlarna när du landar på GÅ eller fri parkering.'],['ffa','Fritt byggande','Bygg hus och hotell på alla gator du äger. Ingen hel färggrupp behövs.'],['events','Stadshändelser','Varannan runda händer något: 13 händelser, bland annat strömavbrott, kräftskivor, översvämningar, byggboom, lotterier, bröllop och varje stads egen fest.'],['speedDie','Fartärning','Efter första varvet slår du en tredje tärning: lägg till 1–3, Buss låter dig välja tärning, Boss skickar dig till nästa lediga fastighet, triss flyttar dig vart du vill.'],['pot','Pott på fri parkering','Skatter och böter samlas på Skansen. Landa där för att ta hem dem.'],['goDouble','Dubbel lön på GÅ','Landa exakt på GÅ för att inkassera 400 Mkr.'],['jailRent','Ingen hyra från fängelset','Ägare som sitter på Långholmen kan inte ta ut hyra.'],['auction','Auktioner','Fastigheter som ingen köper går till auktion.'],['even','Jämnt byggande','Bygg och sälj jämnt över en färggrupp.'],['interest','Ränta på lån','Att lösa in kostar lånet plus 10 %.']];
 const MODES=[['classic','Klassiskt','Spela tills en hyresvärd står kvar.'],['quick','Snabbaffär','Alla börjar med 2 slumpade fastigheter. Första konkursen avslutar spelet och den rikaste vinner.'],['timed','Rundgräns','Spela ett bestämt antal rundor. Den rikaste hyresvärden vinner.']];
-const setup={slots:NAMES.map((n,i)=>({name:n,tok:TOKENS[i],type:i===0?'human':i<4?'ai':'off'})),cash:1500,ai:'normal',speed:'normal',mode:'classic',rounds:20,timer:PREF.timer||0,city:'lagos',theme:['beach','night','harmattan','rainy','obudu'].includes(PREF.theme)?PREF.theme:'beach',
+function saveSlot(i,sl){PREF.slots=PREF.slots||[];PREF.slots[i]={name:(sl.name||'').trim(),tok:sl.tok};clearTimeout(saveSlot.t);saveSlot.t=setTimeout(savePref,300)}
+const setup={slots:NAMES.map((n,i)=>{const sv=(PREF.slots||[])[i]||{};return{name:(sv.name||'').trim()||n,tok:TOKENS.includes(sv.tok)?sv.tok:TOKENS[i],type:i===0?'human':i<4?'ai':'off'}}),cash:1500,ai:'normal',speed:'normal',mode:'classic',rounds:20,timer:PREF.timer||0,city:'lagos',theme:['beach','night','harmattan','rainy','obudu'].includes(PREF.theme)?PREF.theme:'beach',
   rules:Object.assign({minigames:true,ffa:false,events:false,speedDie:false,pot:false,goDouble:false,jailRent:false,auction:true,even:true,interest:true},PREF.rules||{})};
 function startWith(g){
   GEN++;netStop();XPGAME=0;XPLOG=[];G=g;applyTheme(G.set.theme||setup.theme);$('#title').hidden=true;$('#ui').hidden=false;$('#modals').innerHTML='';buildBoard();renderRoster();$('#log').textContent='';
@@ -2644,8 +2647,8 @@ function paneP(T){const saved=loadSave(),c=CITY_DATA[setup.city],m=MODES.find(x=
   const drawSlots=()=>{const S=T.querySelector('.slots');S.innerHTML='';setup.slots.forEach((s,i)=>{
     const d=el('div','slot'+(s.type==='off'?' off':''));d.style.setProperty('--pc',PCOL[i]);
     d.innerHTML=`<button class="tok" aria-label="Byt pjäs">${s.tok}</button><input id="pname${i}" maxlength="12" value="${esc(s.name)}" aria-label="Namn på spelare ${i+1}"><div class="seg">${['human','ai','off'].map(t=>`<button data-t="${t}" class="${s.type===t?'on':''}">${t==='human'?'Människa':t==='ai'?'AI':'—'}</button>`).join('')}</div>`;
-    d.querySelector('.tok').onclick=()=>{const used=setup.slots.filter((x,j)=>j!==i&&x.type!=='off').map(x=>x.tok);const TK=unlockedTokens();let k=TK.indexOf(s.tok);for(let n=0;n<TK.length;n++){k=(k+1)%TK.length;if(!used.includes(TK[k]))break}s.tok=TK[k];drawSlots()};
-    d.querySelector('input').oninput=e=>s.name=e.target.value;
+    d.querySelector('.tok').onclick=()=>{const used=setup.slots.filter((x,j)=>j!==i&&x.type!=='off').map(x=>x.tok);const TK=unlockedTokens();let k=TK.indexOf(s.tok);for(let n=0;n<TK.length;n++){k=(k+1)%TK.length;if(!used.includes(TK[k]))break}s.tok=TK[k];saveSlot(i,s);drawSlots()};
+    d.querySelector('input').oninput=e=>{s.name=e.target.value;saveSlot(i,s)};
     d.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{s.type=b.dataset.t;drawSlots()});S.append(d)})};
   const drawMode=()=>{segIn(T,'#oMode',MODES.map(m=>[m[0],m[1]]),()=>setup.mode,v=>{setup.mode=v;drawMode()});T.querySelector('#oModeTxt').textContent=MODES.find(m=>m[0]===setup.mode)[2];
     const R=T.querySelector('#oRounds');R.innerHTML=setup.mode==='timed'?'<span>Rundor</span><div class="seg" id="oRn"></div>':'';if(setup.mode==='timed')segIn(T,'#oRn',[[10,'10'],[20,'20'],[30,'30'],[45,'45']],()=>setup.rounds,v=>setup.rounds=v)};
@@ -2741,6 +2744,8 @@ window.__sim=async function(n=20,players=4){
 };
 
 
+/* iOS: undo any zoom/scroll left behind after the keyboard closes */
+document.addEventListener('focusout',e=>{if(e.target&&/^(INPUT|TEXTAREA)$/.test(e.target.tagName))setTimeout(()=>{if(!document.activeElement||!/^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName)){window.scrollTo(0,0);document.documentElement.scrollLeft=0;document.body.scrollTop=0}},80)});
 /* ================= NATIVE APP ================= */
 const CAP=window.Capacitor,IS_APP=!!(CAP&&CAP.isNativePlatform&&CAP.isNativePlatform());
 function nativeInit(){if(!IS_APP)return;document.documentElement.classList.add('app');const Pl=CAP.Plugins||{};
