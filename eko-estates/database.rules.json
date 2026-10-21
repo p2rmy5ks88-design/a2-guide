@@ -1,0 +1,29 @@
+{
+  "rules": {
+    "games": {
+      ".read": "auth != null",
+      ".indexOn": ["status"],
+      "$code": {
+        ".write": "auth != null && $code.matches(/^[A-Z0-9]{5}$/)"
+      }
+    },
+    "sub": {
+      "$key": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
+    },
+    "locks": {
+      "$key": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
+    },
+    "usr": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid"
+      }
+    }
+  }
+}

@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-180.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Eko Estates"><meta name="theme-color" content="#13284a"><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui}img{max-width:100%}[hidden]{display:none!important}</style></head><body><title>Eko Estates</title>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-180.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Eko Estates"><meta name="theme-color" content="#13284a"><script src="firebase-config.js"></script><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui}img{max-width:100%}[hidden]{display:none!important}</style></head><body><title>Eko Estates</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&display=swap">
@@ -1527,16 +1527,100 @@ async function banner(p){if(FAST)return;const b=$('#banner');const mine=G.online
   b.innerHTML=`<div class="bn" style="--pc:${p.col}"><span class="bt">${p.tok}</span>${mine?'Your turn!':esc(p.name)+'’s turn'}</div>`;sfx('tap');await sleep(1150);b.innerHTML=''}
 
 /* ================= ONLINE PLAY ================= */
+/* ================= FIREBASE REALTIME DATABASE ADAPTER =================
+   Used by the GitHub web link and the iOS/Android apps. Talks to Firebase over its REST + live-stream
+   API (no SDK download) and mimics the small document API the online code already uses. */
+const FIRE=(()=>{const C=window.EKO_FIREBASE;if(!C||!C.apiKey||!C.databaseURL)return null;
+  const DB=C.databaseURL.replace(/\/+$/,''),AUTH=C.authURL||'https://identitytoolkit.googleapis.com/v1',TOKU=C.tokenURL||'https://securetoken.googleapis.com/v1';
+  let tok=null,exp=0,uid=null,refresh=null,pending=null;
+  try{const s=JSON.parse(localStorage.getItem('ekoFbAuth')||'null');if(s){refresh=s.r;uid=s.u}}catch(e){}
+  const save=()=>{try{localStorage.setItem('ekoFbAuth',JSON.stringify({r:refresh,u:uid}))}catch(e){}};
+  const netErr=()=>Object.assign(new Error('offline'),{code:'unavailable'});
+  async function signIn(){
+    if(refresh){let r;try{r=await fetch(TOKU+'/token?key='+C.apiKey,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'grant_type=refresh_token&refresh_token='+encodeURIComponent(refresh)})}catch(e){throw netErr()}
+      if(r.ok){const j=await r.json();tok=j.id_token;refresh=j.refresh_token;uid=j.user_id;exp=Date.now()+(+j.expires_in||3600)*1000;save();return tok}}
+    let r;try{r=await fetch(AUTH+'/accounts:signUp?key='+C.apiKey,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({returnSecureToken:true})})}catch(e){throw netErr()}
+    if(!r.ok)throw Object.assign(new Error('auth '+r.status),{code:'auth'});
+    const j=await r.json();tok=j.idToken;refresh=j.refreshToken;uid=j.localId;exp=Date.now()+(+j.expiresIn||3600)*1000;save();return tok}
+  function token(force){if(tok&&!force&&Date.now()<exp-120000)return Promise.resolve(tok);if(!pending)pending=signIn().finally(()=>pending=null);return pending}
+  const enc=p=>p.split('/').map(encodeURIComponent).join('/');
+  const url=async(p,q='',force)=>DB+'/'+enc(p)+'.json?auth='+encodeURIComponent(await token(force))+q;
+  async function req(method,p,body,q='',headers={}){
+    for(let a=0;a<2;a++){let r;try{r=await fetch(await url(p,q,a>0),{method,headers:Object.assign(body!==undefined?{'Content-Type':'application/json'}:{},headers),body:body!==undefined?JSON.stringify(body):undefined})}catch(e){throw netErr()}
+      if(r.status===401&&a===0)continue;
+      if(r.status===412)return{status:412};
+      if(!r.ok)throw Object.assign(new Error('db '+r.status),{code:r.status===401||r.status===403?'permission_denied':'unavailable'});
+      const txt=await r.text();return{status:r.status,etag:r.headers.get('ETag'),val:txt?JSON.parse(txt):null}}
+    throw Object.assign(new Error('auth'),{code:'permission_denied'})}
+  const clone=v=>v==null?v:JSON.parse(JSON.stringify(v));
+  const snapDoc=(id,d)=>({id,exists:d!=null,data:()=>d==null?undefined:clone(d)});
+  /* live stream of one path; calls onVal(value) after every server event */
+  function stream(p,onVal,onErr){let es=null,val=null,live=true,retry=0;
+    const setAt=(path,v)=>{const segs=path.split('/').filter(Boolean);if(!segs.length){val=v;return}
+      if(val==null||typeof val!=='object')val={};let o=val;for(let i=0;i<segs.length-1;i++){if(o[segs[i]]==null||typeof o[segs[i]]!=='object')o[segs[i]]={};o=o[segs[i]]}
+      const k=segs[segs.length-1];if(v==null){if(Array.isArray(o))o[k]=undefined;else delete o[k]}else o[k]=v};
+    const open=async force=>{if(!live)return;let u;try{u=await url(p,'',force)}catch(e){setTimeout(()=>open(),3000);return}if(!live)return;
+      es=new EventSource(u);
+      es.addEventListener('put',e=>{retry=0;const m=JSON.parse(e.data);setAt(m.path,m.data);onVal(val)});
+      es.addEventListener('patch',e=>{const m=JSON.parse(e.data);Object.keys(m.data||{}).forEach(k=>setAt(m.path.replace(/\/$/,'')+'/'+k,m.data[k]));onVal(val)});
+      es.addEventListener('auth_revoked',()=>{es.close();open(true)});
+      es.addEventListener('cancel',()=>{es.close();onErr&&onErr(Object.assign(new Error('cancelled'),{code:'permission_denied'}))});
+      es.onerror=()=>{if(es.readyState===2&&live){retry++;setTimeout(()=>open(retry>1),Math.min(8000,800*retry))}}};
+    open();return()=>{live=false;if(es)es.close()}}
+  const subPath=(docPath,name)=>'sub/'+docPath.split('/').join('~')+'/'+name;
+  const myIndex=(docPath,body)=>{if(docPath.startsWith('games/')&&body&&Array.isArray(body.seatIds)&&body.seatIds.includes(uid))req('PUT','usr/'+uid+'/'+docPath.slice(6),Date.now()).catch(()=>{})};
+  function docRef(p){const id=p.split('/').pop();return{id,path:p,
+    get:async()=>snapDoc(id,(await req('GET',p)).val),
+    set:async d=>{await req('PUT',p,d);myIndex(p,d)},
+    update:async d=>{await req('PATCH',p,d);myIndex(p,d)},
+    delete:async()=>{await req('DELETE',p)},
+    async acquire({holder,ttlMs=4000}){const lp='locks/'+p.split('/').join('~');
+      const g=await req('GET',lp,undefined,'',{'X-Firebase-ETag':'true'});const v=g.val;
+      if(v&&v.until>Date.now()&&v.holder!==holder)return{acquired:false};
+      if(!g.etag){await req('PUT',lp,{holder,until:Date.now()+ttlMs});return{acquired:true}}
+      const r=await req('PUT',lp,{holder,until:Date.now()+ttlMs},'',{'if-match':g.etag});return{acquired:r.status!==412}},
+    onSnapshot(next,err){return stream(p,v=>next(snapDoc(id,v)),err)},
+    collection:name=>colRef(subPath(p,name))}}
+  const match=(v,f)=>f.every(([k,o,x])=>o==='=='?v&&v[k]===x:o==='array-contains'?v&&Array.isArray(v[k])&&v[k].includes(x):true);
+  function colRef(p,filters=[],lim=1000){const top=!p.includes('/');return{path:p,
+    doc:id=>docRef(p+'/'+(id||Math.random().toString(36).slice(2))),
+    where:(f,o,v)=>colRef(p,[...filters,[f,o,v]],lim),limit:n=>colRef(p,filters,n),orderBy:()=>colRef(p,filters,lim),
+    async fetchDocs(){
+      if(top&&p==='games'){const ac=filters.find(f=>f[1]==='array-contains'&&f[0]==='seatIds');
+        if(ac){const idx=(await req('GET','usr/'+uid)).val||{};const codes=Object.keys(idx).sort((a,b)=>idx[b]-idx[a]).slice(0,Math.min(lim,10));
+          const rows=await Promise.all(codes.map(async c=>{const[s,st,h]=await Promise.all(['seats','status','host'].map(k=>req('GET','games/'+c+'/'+k).then(r=>r.val).catch(()=>null)));
+            if(!st){req('DELETE','usr/'+uid+'/'+c).catch(()=>{});return null}return{id:c,d:{code:c,seats:s||[],status:st,host:h,seatIds:(s||[]).map(x=>x&&x.uid).filter(Boolean)}}}));
+          return rows.filter(Boolean)}
+        const eq=filters.find(f=>f[1]==='==');const all=(await req('GET','games',undefined,eq?'&orderBy='+encodeURIComponent('"'+eq[0]+'"')+'&equalTo='+encodeURIComponent(JSON.stringify(eq[2])):'')).val||{};
+        const out=[];Object.keys(all).forEach(k=>{const v=all[k];if(!match(v,filters))return;
+          if(v.status==='lobby'&&Date.now()-(v.at||0)>24*3600e3){req('DELETE','games/'+k).catch(()=>{});return}out.push({id:k,d:v})});
+        return out.sort((a,b)=>(b.d.at||0)-(a.d.at||0)).slice(0,lim)}
+      const all=(await req('GET',p)).val||{};return Object.keys(all).filter(k=>match(all[k],filters)).sort().slice(0,lim).map(k=>({id:k,d:all[k]}))},
+    async get(){const rows=await this.fetchDocs();return mk(rows,[])},
+    onSnapshot(next,err){let prev=new Set(),live=true,lastJ='';const self=this;
+      const emit=rows=>{const j=JSON.stringify(rows);if(j===lastJ)return;lastJ=j;const snap=mk(rows,prev);prev=new Set(rows.map(r=>r.id));next(snap)};
+      if(top){const tick=async()=>{if(!live)return;try{emit(await self.fetchDocs())}catch(e){err&&err(e)}if(live)setTimeout(tick,4000)};tick();return()=>{live=false}}
+      return stream(p,v=>{v=v||{};emit(Object.keys(v).filter(k=>v[k]!=null&&match(v[k],filters)).sort().slice(0,lim).map(k=>({id:k,d:v[k]})))},err)}}}
+  function mk(rows,prev){const docs=rows.map(r=>snapDoc(r.id,r.d));return{docs,size:docs.length,empty:!docs.length,docChanges:()=>docs.filter(d=>!prev.has(d.id)).map(d=>({type:'added',doc:d}))}}
+  return{token,uid:()=>uid,db:{doc:docRef,collection:p=>colRef(p)}};
+})();
+const SHARE_URL=(window.EKO_FIREBASE&&window.EKO_FIREBASE.shareURL)||'https://p2rmy5ks88-design.github.io/a2-guide/eko-estates/';
+const onClaude=()=>!!(window.claude&&window.claude.use);
+async function inviteFriends(code){const link=SHARE_URL+'?join='+code,text=`Join my Eko Estates game! Code: ${code}`;
+  try{if(navigator.share){await navigator.share({title:'Eko Estates',text,url:link});return}}catch(e){if(e&&e.name==='AbortError')return}
+  window.open('https://wa.me/?text='+encodeURIComponent(text+' '+link),'_blank')}
+
 const NET={on:false,db:undefined,user:null,me:null,myName:'',code:null,ref:null,host:false,seq:0,driving:false,pushing:false,dirty:false,unsubs:[],applyQ:Promise.resolve(),lastSeqAt:0,asked:new Set()};
 async function netInit(){
   if(NET.db!==undefined)return NET.db;
+  if(FIRE&&(IS_APP||!onClaude())){try{await FIRE.token();NET.db=FIRE.db;NET.me=FIRE.uid();NET.backend='firebase';return NET.db}catch(e){NET.fbErr=e&&e.code||'error';return null}}
   try{if(!window.claude||!window.claude.use){NET.db=null;return null}
     NET.db=await window.claude.use('db');NET.user=await window.claude.use('user');
     if(NET.user){NET.me=await NET.user.id();const me=await NET.user.me();NET.myName=(me&&me.name)||''}
-    if(!NET.me)NET.db=null}catch(e){NET.db=null}
+    if(!NET.me)NET.db=null;else NET.backend='claude'}catch(e){NET.db=null}
   return NET.db;
 }
-function netStop(){NET.unsubs.forEach(u=>{try{u()}catch(e){}});NET.unsubs=[];NET.on=false;NET.code=null;NET.ref=null;NET.driving=false;NET.asked=new Set()}
+function netStop(){NET.unsubs.forEach(u=>{try{u()}catch(e){}});NET.unsubs=[];NET.on=false;NET.pend=null;NET.code=null;NET.ref=null;NET.driving=false;NET.asked=new Set()}
 function genCode(){const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let k=0;k<5;k++)s+=A[Math.floor(Math.random()*A.length)];return s}
 function pushState(){if(!NET.on||!NET.driving||!G||!G.online)return;NET.dirty=true;if(!NET.pushing)netFlush()}
 async function netFlush(){NET.pushing=true;
@@ -1547,7 +1631,7 @@ async function netFlush(){NET.pushing=true;
 async function pushNow(){pushState();while(NET.pushing)await new Promise(r=>setTimeout(r,60))}
 function shouldDrive(){if(!G||G.over||!NET.on)return false;const p=P(G.turn);if(p.bankrupt)return NET.host;return p.ai?NET.host:p.uid===NET.me}
 async function onlineTick(){
-  if(!NET.on||NET.driving||NET.applying||!shouldDrive())return spectatorPrompt();
+  if(!NET.on||NET.driving||NET.applying||NET.applyRun||!shouldDrive())return spectatorPrompt();
   NET.driving=true;const g=GEN;
   try{
     if(NET.host&&NET.reclaim){G.players.forEach(p=>{if(p.awayBot&&NET.reclaim[p.uid]){p.ai=false;p.awayBot=false;delete NET.reclaim[p.uid]}})}
@@ -1572,7 +1656,8 @@ function onGameSnap(snap){
   if(!snap.exists)return;const d=snap.data();if(d.status==='lobby'||!d.s)return;
   if(d.seq<=NET.seq)return;if(NET.driving)return;
   NET.seq=d.seq;let ng;try{ng=JSON.parse(d.s)}catch(e){return}
-  NET.applyQ=NET.applyQ.then(()=>applyRemote(ng)).catch(e=>console.error(e)).then(()=>onlineTick());
+  NET.pend=ng;if(NET.applyRun)return;NET.applyRun=true;
+  (async()=>{try{while(NET.pend){const x=NET.pend;NET.pend=null;try{await applyRemote(x)}catch(e){console.error(e)}}}finally{NET.applyRun=false}onlineTick()})();
 }
 async function applyRemote(ng){
   NET.applying=true;
@@ -1624,17 +1709,19 @@ async function netStartGame(code,ref,data){
 const SEATCOL=PCOL;
 function onlineCfgSummary(set){const m=MODES.find(x=>x[0]===set.mode)||MODES[0];const on=RULE_INFO.filter(r=>set[r[0]]).map(r=>r[1]);if(set.timer)on.push(set.timer+' sec turn timer');
   return `${m[1]}${set.mode==='timed'?' ('+set.rounds+' rounds)':''} · ${fmt(set.cash)} start · ${THEMES[set.theme]?THEMES[set.theme].name:'Lekki Beach'}${on.length?'<br><span class="muted">'+on.join(' · ')+'</span>':''}`}
-async function openOnline(){
+async function openOnline(pre){
   const db=await netInit();
+  if(!db&&(FIRE||!onClaude())){await modal({cls:'wide',html:`<div class="mh">Play online</div><div class="mtxt">${FIRE?'Couldn’t connect to the online service. Check your internet connection and try again.':'Online play isn’t switched on in this version yet.'}</div>`,btns:[{k:'x',label:'OK',primary:true}]});return}
   if(!db){await modal({cls:'wide',html:`<div class="mh">Play online</div><div class="mtxt">Online games run inside claude.ai. To play with friends:</div><ol class="steps"><li>Open this game from your claude.ai account, signed in.</li><li>The owner invites each friend by email from the page’s <b>Share</b> menu and gives them <b>Editor</b> access.</li><li>Everyone opens the page, taps <b>Play online</b>, and joins the same game code.</li></ol><div class="mtxt muted">This view can’t reach the online service right now, usually because you’re signed out or only have view access.</div>`,btns:[{k:'x',label:'OK',primary:true}]});return}
   let nick=PREF.nick||(NET.myName||'').split(' ')[0]||'Player',tok=PREF.tok||TOKENS[0];
   let unsubs=[];
   const k=await modal({cls:'wide',html:`<div class="mh">Play online</div><div class="olme"><button class="tok" id="olTok" aria-label="Change token"></button><input id="olNick" maxlength="12" aria-label="Your name in the game"><span class="muted">Your name and token</span></div>
     <div class="olgrid"><div class="olcard"><h4>Host a game</h4><div class="mtxt muted">Uses the mode, rules and location you set on the home screen.</div><div class="mtxt" id="olSet"></div><button class="btn pri" id="olNew">Create game</button></div>
     <div class="olcard"><h4>Join a game</h4><div class="olrow"><input id="olCode" maxlength="5" placeholder="Code" aria-label="Game code" autocapitalize="characters"><button class="btn" id="olJoin">Join</button></div><div class="mtxt muted" id="olErr"></div><h4>Open games</h4><div class="ollist" id="olOpen"><span class="muted">Looking for games…</span></div><h4>Your games in progress</h4><div class="ollist" id="olMine"><span class="muted">None</span></div></div></div>
-    <div class="mtxt muted">Friends need this page shared with them as <b>Editors</b> (Share menu, invite by email) and must be signed in to claude.ai.</div>`,
+    <div class="mtxt muted">${NET.backend==='claude'?'Friends need this page shared with them as <b>Editors</b> (Share menu, invite by email) and must be signed in to claude.ai.':'Friends can play on the Eko Estates app or the web link. After you create a game, tap <b>Invite friends</b> to send them the code.'}</div>`,
     btns:[{k:'x',label:'Close'}],onMount:(pn,close)=>{
       const tb=pn.querySelector('#olTok'),ni=pn.querySelector('#olNick'),err=pn.querySelector('#olErr');tb.textContent=tok;tb.style.setProperty('--pc','#ffc61a');ni.value=nick;
+      if(pre)pn.querySelector('#olCode').value=pre;
       tb.onclick=()=>{const TK=unlockedTokens();tok=TK[(TK.indexOf(tok)+1)%TK.length];tb.textContent=tok};ni.oninput=()=>nick=ni.value;
       pn.querySelector('#olSet').innerHTML=onlineCfgSummary(cfgSet());
       const row=(d,label,act)=>{const v=d.data();const r=el('div','olitem');r.innerHTML=`<b>${esc(v.code)}</b><span>${esc((v.seats&&v.seats[0]&&v.seats[0].name)||'Host')} · ${(v.seats||[]).length}/6</span>`;const b=el('button','sm go',label);b.onclick=()=>{close('x');PREF.nick=(nick||'Player').trim();PREF.tok=tok;savePref();act(v.code)};r.append(b);return r};
@@ -1651,7 +1738,7 @@ async function createOnline(){
   const db=NET.db;let code=genCode();const ref=db.doc('games/'+code);
   const seat={uid:NET.me,name:PREF.nick||'Player',tok:PREF.tok||TOKENS[0],col:SEATCOL[0],ai:false};
   try{await ref.set({code,host:NET.me,status:'lobby',seats:[seat],seatIds:[NET.me],set:cfgSet(),at:Date.now(),seq:0})}
-  catch(e){toast(e&&e.code==='quota_exceeded'?'The online game list is full. Delete old games and try again.':'Couldn’t create the game. Check you have Editor access, then try again.');return}
+  catch(e){toast(e&&e.code==='quota_exceeded'?'The online game list is full. Delete old games and try again.':(NET.backend==='claude'?'Couldn’t create the game. Check you have Editor access, then try again.':'Couldn’t create the game. Check your connection and try again.'));return}
   lobby(code,ref);
 }
 async function joinOnline(code){
@@ -1680,6 +1767,7 @@ function lobby(code,ref){
       <div class="seats">${(d.seats||[]).map((s,i)=>`<div class="seat" style="--pc:${s.col}"><span class="pt">${s.tok}</span><b>${esc(s.name)}</b>${s.ai?'<span class="tag">AI</span>':''}${s.uid===d.host?'<span class="tag">Host</span>':''}${s.uid===NET.me?'<span class="tag you">You</span>':''}${host&&s.uid!==NET.me?`<button class="sm" data-rm="${i}" aria-label="Remove ${esc(s.name)}">Remove</button>`:''}</div>`).join('')}</div>
       <div class="mtxt muted">${host?'Add AI players if you like, then start when everyone is in.':'Waiting for the host to start the game…'}</div><div class="mbar"></div>`;
     const bar=pn.querySelector('.mbar');
+    if(NET.backend!=='claude'){const iv=el('button','btn','📲 Invite friends');iv.onclick=()=>inviteFriends(d.code);bar.append(iv)}
     const lv=el('button','btn','Leave');lv.onclick=async()=>{netStop();close();if(!host){const s=(d.seats||[]).filter(x=>x.uid!==NET.me);ref.update({seats:s,seatIds:s.map(x=>x.uid).filter(Boolean)}).catch(()=>{})}else ref.delete().catch(()=>{})};bar.append(lv);
     if(host){const ai=el('button','btn','Add AI player');ai.disabled=(d.seats||[]).length>=6;ai.onclick=()=>{const seats=[...d.seats];const usedT=seats.map(x=>x.tok),usedC=seats.map(x=>x.col);const n=NAMES.find(x=>!seats.some(s=>s.name===x))||'Bot';
         seats.push({uid:null,name:n,tok:TOKENS.find(t=>!usedT.includes(t)),col:SEATCOL.find(c=>!usedC.includes(c)),ai:true});ref.update({seats}).catch(()=>toast('Couldn’t update the game'))};bar.append(ai);
@@ -1745,7 +1833,7 @@ function showTitleOld(){
   T.querySelector('#tRules').onclick=()=>modal({cls:'wide',html:'<div class="mh">How to play</div>'+RULES,btns:[{k:'x',label:'Got it',primary:true}]});
   T.querySelector('#tSound').onclick=()=>openSound();
   T.querySelector('#tAch').onclick=()=>openAchievements().then(()=>{drawCities();drawSlots()});
-  T.querySelector('#tOnline').onclick=()=>{initAudio();openOnline()};if(IS_APP)T.querySelector('#tOnline').hidden=true;
+  T.querySelector('#tOnline').onclick=()=>{initAudio();openOnline()};if(IS_APP&&!FIRE)T.querySelector('#tOnline').hidden=true;
   if(saved)T.querySelector('#tCont').onclick=()=>{initAudio();startWith(saved)};
   T.querySelector('#tStart').onclick=()=>{
     const act=setup.slots.map((s,i)=>({...s,i})).filter(s=>s.type!=='off');
@@ -2636,7 +2724,7 @@ function paneP(T){const saved=loadSave(),c=CITY_DATA[setup.city],m=MODES.find(x=
     <div class="quick">${saved?`<button class="qbtn cont" id="tCont"><i>⏯️</i><b>Continue</b><small>Round ${saved.round} · ${esc((CITY_DATA[saved.set&&saved.set.city]||CITY_DATA.lagos).name)}</small></button>`:''}
       <button class="qbtn ai" id="qAI"><i>🤖</i><b>Quick game</b><small>You vs 3 AI landlords</small></button>
       <button class="qbtn qpp" id="qPP"><i>👥</i><b>Pass and play</b><small>2–6 friends on this phone</small></button>
-      ${IS_APP?'':`<button class="qbtn on" id="tOnline"><i>🌍</i><b>Play online</b><small>Friends on their own phones</small></button>`}</div>
+      ${IS_APP&&!FIRE?'':`<button class="qbtn on" id="tOnline"><i>🌍</i><b>Play online</b><small>Friends on their own phones</small></button>`}</div>
     <h3>CUSTOM GAME</h3>
     <div class="card"><div class="ch">Players <small>Tap a token to change it</small></div><div class="slots"></div></div>
     <div class="card"><div class="ch">Game mode</div><div class="seg wide" id="oMode"></div><div class="small" id="oModeTxt"></div><div id="oRounds" class="opts"></div></div>
@@ -2761,5 +2849,6 @@ function boot(data){
   showTitle();
 }
 try{const h=window.claude?.hot;if(h&&h.ready)h.ready(boot);else boot(h?.data??{})}catch(e){boot({})}
+setTimeout(()=>{try{const c=(new URLSearchParams(location.search).get('join')||'').toUpperCase();if(!/^[A-Z0-9]{5}$/.test(c)||!FIRE)return;history.replaceState(null,'',location.pathname);if(!G||G.over)openOnline(c)}catch(e){}},1200);
 </script>
 </body></html>

@@ -20,22 +20,24 @@ Eko Estates is a 3D property trading board game set in real Nigerian cities. Rol
 • SEVEN CITIES: start in Lagos, then unlock Abuja, Port Harcourt, Warri, Enugu, Calabar and Benin City. Every city has its own streets, landmarks, board design and radio station.
 • LIVING 3D BOARDS: watch the Lekki-Ikoyi Link Bridge, Balogun Market, Oshodi danfo parks, Aso Rock, the Oba's Palace and the Calabar Carnival come alive as you play.
 • 12 TOKENS WITH PERSONALITY: the danfo drives, the okada leans into corners, the eagle flies, the Durbar horse gallops and the talking drum bounces.
-• PLAY YOUR WAY: 2 to 6 players on one phone, against AI landlords (Easy, Normal or Hard), or a mix.
+• PLAY YOUR WAY: 2 to 6 players on one phone, against AI landlords (Easy, Normal or Hard), or online with friends on their own phones. Just share a game code.
+• FUN FOR ALL AGES: the Naija Quiz, Catch the Naira, emoji reactions and city festivals like Eyo, Mmanwu and the Calabar Carnival.
 • GAME MODES AND HOUSE RULES: Classic, Quick Deal and Round Limit, plus the speed die, city events, Free Parking jackpot, a 90-second turn timer and more.
 • 120+ ACHIEVEMENTS: earn Bronze, Silver and Gold medals in every city.
 • LEVEL UP: climb from JJC to Landlord of Naija, finish daily missions, keep your streak and spin the Owambe Wheel every day.
 • NAIJA RADIO: Eko Estates FM and other city stations play original Afrobeats while you build your empire.
-• Works offline. No ads. No account needed.
+• Works offline. No ads. No account needed, even for online play.
 
 ## Age rating answers
 - Violence, sexual content, profanity, drugs: none
 - Simulated gambling: none (dice and play money only; no betting, no real money, no prizes)
-- User-generated content / chat: none
+- User-generated content / chat: no free chat. Players can type a game nickname (up to 12 characters) that others in the same online game see, and reactions are a fixed list of emojis and phrases
 - Expected rating: 4+ (Apple), Everyone / PEGI 3 (Google)
 
 ## App privacy answers
-- Apple "App Privacy": **Data Not Collected**
-- Google "Data safety": no data collected, no data shared
+Once online play is switched on (Firebase), declare this. Without online play, it's "Data Not Collected".
+- Apple "App Privacy": **Identifiers → User ID** (a random anonymous Firebase ID) and **User Content → Gameplay Content** (nicknames, moves). Both are used only for **App Functionality**, are **not linked to the user's identity**, and are **not used for tracking**.
+- Google "Data safety": **App activity → Other actions** and **Device or other IDs**. Collected for **App functionality** only, encrypted in transit, not shared with third parties (Google Firebase is a service provider, not a "share"). Users can ask for deletion through the store contact.
 
 ## Screenshots needed
 - iPhone 6.9" landscape (2868 × 1320 or 1320 × 2868 rotated)
@@ -47,4 +49,4 @@ Good shots: the Lagos beach board with a hotel row, a trade offer with "Complete
 
 ## Before you submit
 - Confirm you own or have licensed all 13 radio tracks for commercial distribution.
-- Online multiplayer is hidden in the app. It currently runs only inside claude.ai and needs its own server before it can ship in the stores.
+- Online multiplayer switches on once `eko-estates/firebase-config.js` has your Firebase settings. Do the Firebase setup in `eko-estates/README.md` first, and use the privacy answers above.

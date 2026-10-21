@@ -29,11 +29,31 @@ A Lagos-themed property trading game for phones and tablets, played in landscape
 | `game.html` | The source: page content, styles and scripts. Edit this one. |
 | `index.html` | A standalone page built from `game.html` by `python3 build.py`. Open it in a browser or host it anywhere. |
 
-## Online play
+## Online play (Firebase Realtime Database)
 
-Online play uses the claude.ai artifact runtime (`window.claude.use("db")`) to share game state, so it only works when the game is opened as a claude.ai artifact.
+The web link and the iOS/Android apps play online through **Firebase Realtime Database**, using players' phones and no server of our own. The game talks to Firebase over its REST and live-stream API, so it needs no SDK download. Players sign in anonymously in the background, without an account or email.
 
-When `index.html` is opened anywhere else, local and AI play work normally and the *Play online* button explains that online play isn't available. To play online outside claude.ai, swap the `NET` functions for a backend such as Firebase or Supabase.
+When the game runs as a claude.ai artifact it still uses claude.ai's built-in storage instead.
+
+### One-time setup (about 10 minutes, free Spark plan)
+
+1. Go to https://console.firebase.google.com and click **Create a project** (for example `eko-estates`). You can leave Google Analytics off.
+2. **Build → Authentication → Get started → Sign-in method → Anonymous → Enable → Save.**
+3. **Build → Realtime Database → Create database.** Pick a location (`europe-west1` is closest to Nigeria and Europe) and start in **locked mode**.
+4. Open the database's **Rules** tab, paste in everything from [`database.rules.json`](database.rules.json), and click **Publish**.
+5. **Project settings (gear icon) → General → Your apps → Web (`</>`)**. Register an app called "Eko Estates" (Hosting isn't needed) and copy the `firebaseConfig` values.
+6. Paste those values into [`firebase-config.js`](firebase-config.js) as `window.EKO_FIREBASE = { apiKey: ..., databaseURL: ..., ... }` and commit. Make sure `databaseURL` is included; it appears once the Realtime Database exists.
+
+The web link picks up the change in about a minute, and the next app build includes it. The config is not secret, because access is controlled by the rules.
+
+### How it works
+
+- `games/{CODE}`: the lobby (seats, settings) and, once started, the whole game state with a sequence number. The player whose turn it is (or the host, for AI turns) is the only one who writes; everyone else follows a live stream.
+- `sub/games~{CODE}/ask|ans|ctl`: questions to a specific player (auction bids, trade offers, counter offers) and their answers, plus "take back control" requests.
+- `locks/…`: a short lock so two friends joining at the same moment don't take the same seat.
+- `usr/{uid}`: each player's own list of games, for the "Your games in progress" rejoin list.
+- An online game is about 2–5 KB, so the free plan (1 GB stored, 10 GB/month downloaded, 100 players connected at once) covers a lot of play. Lobbies left unused for 24 hours are cleaned up automatically.
+- **Invite friends** in the lobby opens the phone's share sheet (WhatsApp, SMS and so on) with a link like `…/eko-estates/?join=CODE`. The link opens the game with the code already filled in.
 
 ## Updating
 

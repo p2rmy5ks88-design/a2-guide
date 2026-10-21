@@ -33,7 +33,7 @@ npm run sync            # after changing the game
 ## App details
 - App ID: `com.kenstylez.ekoestates` (change it in `capacitor.config.json` **before** the first store upload; it can't change afterwards)
 - Landscape only, full screen, works offline, no tracking
-- Online multiplayer is hidden in the app until it has its own server
+- Online multiplayer uses Firebase Realtime Database. It switches on once `../eko-estates/firebase-config.js` has your Firebase settings (see the web README), and stays hidden in the app until then
 - Icon and splash sources: `resources/`
 - Store text and answers: `STORE_LISTING.md`
 - Privacy policy: https://p2rmy5ks88-design.github.io/a2-guide/eko-estates/privacy.html
