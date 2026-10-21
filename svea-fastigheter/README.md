@@ -15,6 +15,11 @@ Den svenska utgåvan av Eko Estates: ett fastighetsspel i 3D för mobil och surf
 
 Stadsradion använder låtarna i `../eko-estates/audio/fm/`.
 
-## Onlinespel
+## Onlinespel (Firebase Realtime Database)
 
-Onlinespel fungerar bara när spelet öppnas som artefakt i claude.ai. På GitHub Pages fungerar spel mot AI och skicka-runt-spel som vanligt.
+Webblänken spelar online via samma Firebase-projekt som Eko Estates. Inställningarna hämtas från `../eko-estates/firebase-config.js`, så ingen extra konfiguration behövs.
+
+- Spelare loggas in anonymt i bakgrunden, utan konto eller e-post.
+- Svea-spel hålls isär från Eko-spel: lobbyer har statusen `lobby-sv` och taggen `ed: 'sv'`, och inloggningen sparas separat (`sveaFbAuth`). Svea visar bara svenska spel i listan och Eko visar aldrig dem.
+- **Bjud in vänner** i lobbyn delar en länk som `…/svea-fastigheter/?join=KOD`.
+- Som artefakt i claude.ai används claude.ai:s inbyggda lagring i stället.
