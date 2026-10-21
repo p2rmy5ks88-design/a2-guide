@@ -1540,7 +1540,7 @@ const FIRE=(()=>{const C=window.EKO_FIREBASE;if(!C||!C.apiKey||!C.databaseURL)re
     if(refresh){let r;try{r=await fetch(TOKU+'/token?key='+C.apiKey,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'grant_type=refresh_token&refresh_token='+encodeURIComponent(refresh)})}catch(e){throw netErr()}
       if(r.ok){const j=await r.json();tok=j.id_token;refresh=j.refresh_token;uid=j.user_id;exp=Date.now()+(+j.expires_in||3600)*1000;save();return tok}}
     let r;try{r=await fetch(AUTH+'/accounts:signUp?key='+C.apiKey,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({returnSecureToken:true})})}catch(e){throw netErr()}
-    if(!r.ok)throw Object.assign(new Error('auth '+r.status),{code:'auth'});
+    if(!r.ok){let m='';try{m=((await r.json()).error||{}).message||''}catch(e){}throw Object.assign(new Error('auth '+r.status+' '+m),{code:/OPERATION_NOT_ALLOWED|ADMIN_ONLY/.test(m)?'anon_off':/API_KEY|API key|blocked|PERMISSION/i.test(m)?'key':'auth',detail:(r.status+' '+m).trim()})}
     const j=await r.json();tok=j.idToken;refresh=j.refreshToken;uid=j.localId;exp=Date.now()+(+j.expiresIn||3600)*1000;save();return tok}
   function token(force){if(tok&&!force&&Date.now()<exp-120000)return Promise.resolve(tok);if(!pending)pending=signIn().finally(()=>pending=null);return pending}
   const enc=p=>p.split('/').map(encodeURIComponent).join('/');
@@ -1613,7 +1613,7 @@ async function inviteFriends(code){const link=SHARE_URL+'?join='+code,text=`Join
 const NET={on:false,db:undefined,user:null,me:null,myName:'',code:null,ref:null,host:false,seq:0,driving:false,pushing:false,dirty:false,unsubs:[],applyQ:Promise.resolve(),lastSeqAt:0,asked:new Set()};
 async function netInit(){
   if(NET.db!==undefined)return NET.db;
-  if(FIRE&&(IS_APP||!onClaude())){try{await FIRE.token();NET.db=FIRE.db;NET.me=FIRE.uid();NET.backend='firebase';return NET.db}catch(e){NET.fbErr=e&&e.code||'error';return null}}
+  if(FIRE&&(IS_APP||!onClaude())){try{await FIRE.token();NET.db=FIRE.db;NET.me=FIRE.uid();NET.backend='firebase';return NET.db}catch(e){NET.fbErr=e&&e.code||'error';NET.fbDetail=(e&&(e.detail||e.message))||'';return null}}
   try{if(!window.claude||!window.claude.use){NET.db=null;return null}
     NET.db=await window.claude.use('db');NET.user=await window.claude.use('user');
     if(NET.user){NET.me=await NET.user.id();const me=await NET.user.me();NET.myName=(me&&me.name)||''}
@@ -1711,7 +1711,7 @@ function onlineCfgSummary(set){const m=MODES.find(x=>x[0]===set.mode)||MODES[0];
   return `${m[1]}${set.mode==='timed'?' ('+set.rounds+' rounds)':''} · ${fmt(set.cash)} start · ${THEMES[set.theme]?THEMES[set.theme].name:'Lekki Beach'}${on.length?'<br><span class="muted">'+on.join(' · ')+'</span>':''}`}
 async function openOnline(pre){
   const db=await netInit();
-  if(!db&&(FIRE||!onClaude())){await modal({cls:'wide',html:`<div class="mh">Play online</div><div class="mtxt">${FIRE?'Couldn’t connect to the online service. Check your internet connection and try again.':'Online play isn’t switched on in this version yet.'}</div>`,btns:[{k:'x',label:'OK',primary:true}]});return}
+  if(!db&&(FIRE||!onClaude())){await modal({cls:'wide',html:`<div class="mh">Play online</div><div class="mtxt">${!FIRE?'Online play isn’t switched on in this version yet.':NET.fbErr==='anon_off'?'Online sign-in is switched off. In the Firebase console, open Authentication → Sign-in method and enable <b>Anonymous</b>.':NET.fbErr==='key'?'The online service rejected this app’s key. Check the Firebase web config.':'Couldn’t connect to the online service. Check your internet connection and try again.'}</div>${FIRE&&NET.fbDetail?`<div class="mtxt muted" style="font-size:12px">Details: ${esc(NET.fbErr+' · '+NET.fbDetail)}</div>`:''}`,btns:[{k:'x',label:'OK',primary:true}]});return}
   if(!db){await modal({cls:'wide',html:`<div class="mh">Play online</div><div class="mtxt">Online games run inside claude.ai. To play with friends:</div><ol class="steps"><li>Open this game from your claude.ai account, signed in.</li><li>The owner invites each friend by email from the page’s <b>Share</b> menu and gives them <b>Editor</b> access.</li><li>Everyone opens the page, taps <b>Play online</b>, and joins the same game code.</li></ol><div class="mtxt muted">This view can’t reach the online service right now, usually because you’re signed out or only have view access.</div>`,btns:[{k:'x',label:'OK',primary:true}]});return}
   let nick=PREF.nick||(NET.myName||'').split(' ')[0]||'Player',tok=PREF.tok||TOKENS[0];
   let unsubs=[];
