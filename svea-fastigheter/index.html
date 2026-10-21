@@ -274,7 +274,7 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--navy);outline-o
 .olrow{display:flex;gap:6px}
 .ollist{display:flex;flex-direction:column;gap:5px}
 .olitem{display:flex;align-items:center;gap:8px;background:#fff;border-radius:10px;padding:6px 8px;font-size:12.5px}
-.olitem b{font:15px var(--display);letter-spacing:.12em}.olitem span{flex:1;color:var(--muted);font-weight:700}
+.olitem b{font:15px var(--display);letter-spacing:.12em}.olitem .olx{flex:none;min-width:34px;color:var(--muted);border-color:transparent;background:transparent;font-size:14px}.olitem span{flex:1;color:var(--muted);font-weight:700}
 .code{font:22px var(--display);letter-spacing:.2em;background:var(--danfo);padding:2px 10px;border-radius:8px;color:var(--danfo-ink)}
 .seats{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:6px}
 .seat{display:flex;align-items:center;gap:6px;padding:5px 8px 5px 5px;border-radius:999px;background:var(--panel2);border:2px solid var(--pc);font-size:13px}
@@ -1599,7 +1599,7 @@ const FIRE=(()=>{const C=window.EKO_FIREBASE;if(!C||!C.apiKey||!C.databaseURL)re
           return rows.filter(Boolean)}
         const eq=filters.find(f=>f[1]==='==');const all=(await req('GET','games',undefined,eq?'&orderBy='+encodeURIComponent('"'+eq[0]+'"')+'&equalTo='+encodeURIComponent(JSON.stringify(eq[2])):'')).val||{};
         const out=[];Object.keys(all).forEach(k=>{const v=all[k];if(!match(v,filters))return;
-          if(v.status===LOBBY&&Date.now()-(v.at||0)>24*3600e3){req('DELETE','games/'+k).catch(()=>{});return}out.push({id:k,d:v})});
+          if(v.status===LOBBY&&Date.now()-(v.at||0)>6*3600e3){purge(k).catch(()=>{});return}out.push({id:k,d:v})});
         return out.sort((a,b)=>(b.d.at||0)-(a.d.at||0)).slice(0,lim)}
       const all=(await req('GET',p)).val||{};return Object.keys(all).filter(k=>match(all[k],filters)).sort().slice(0,lim).map(k=>({id:k,d:all[k]}))},
     async get(){const rows=await this.fetchDocs();return mk(rows,[])},
@@ -1608,7 +1608,14 @@ const FIRE=(()=>{const C=window.EKO_FIREBASE;if(!C||!C.apiKey||!C.databaseURL)re
       if(top){const tick=async()=>{if(!live)return;try{emit(await self.fetchDocs())}catch(e){err&&err(e)}if(live)setTimeout(tick,4000)};tick();return()=>{live=false}}
       return stream(p,v=>{v=v||{};emit(Object.keys(v).filter(k=>v[k]!=null&&match(v[k],filters)).sort().slice(0,lim).map(k=>({id:k,d:v[k]})))},err)}}}
   function mk(rows,prev){const docs=rows.map(r=>snapDoc(r.id,r.d));return{docs,size:docs.length,empty:!docs.length,docChanges:()=>docs.filter(d=>!prev.has(d.id)).map(d=>({type:'added',doc:d}))}}
-  return{token,uid:()=>uid,db:{doc:docRef,collection:p=>colRef(p)}};
+  async function purge(c){if(!/^[A-Z0-9]{5}$/.test(c))return;await Promise.all(['games/'+c,'sub/games~'+c,'locks/games~'+c].map(p=>req('DELETE',p).catch(()=>{})));if(uid)req('DELETE','usr/'+uid+'/'+c).catch(()=>{})}
+  let swept=0;
+  async function sweep(){if(Date.now()-swept<10*60e3)return;swept=Date.now();const now=Date.now();
+    const q=st=>req('GET','games',undefined,'&orderBy='+encodeURIComponent('"status"')+'&equalTo='+encodeURIComponent(JSON.stringify(st))).then(r=>r.val||{}).catch(()=>({}));
+    const [over,play]=await Promise.all([q('over'),q('playing')]);
+    const old=[...Object.keys(over).filter(k=>now-((over[k]||{}).at||0)>10*60e3),...Object.keys(play).filter(k=>now-((play[k]||{}).at||0)>3*864e5)];
+    for(const k of old)await purge(k)}
+  return{token,uid:()=>uid,purge,sweep,forget:c=>{if(uid)req('DELETE','usr/'+uid+'/'+c).catch(()=>{})},db:{doc:docRef,collection:p=>colRef(p)}};
 })();
 const SHARE_URL='https://p2rmy5ks88-design.github.io/a2-guide/svea-fastigheter/';
 const onClaude=()=>!!(window.claude&&window.claude.use);
@@ -1720,7 +1727,7 @@ async function openOnline(pre){
   if(!db&&(FIRE||!onClaude())){await modal({cls:'wide',html:`<div class="mh">Spela online</div><div class="mtxt">${FIRE?'Kunde inte ansluta till onlinetjänsten. Kontrollera internetanslutningen och försök igen.':'Onlinespel är inte påslaget i den här versionen ännu.'}</div>`,btns:[{k:'x',label:'OK',primary:true}]});return}
   if(!db){await modal({cls:'wide',html:`<div class="mh">Spela online</div><div class="mtxt">Onlinespel körs i claude.ai. Så spelar du med vänner:</div><ol class="steps"><li>Öppna spelet från ditt claude.ai-konto, inloggad.</li><li>Ägaren bjuder in varje vän via e-post från sidans <b>Dela</b>-meny och ger dem <b>Redigerare</b>-behörighet.</li><li>Alla öppnar sidan, trycker på <b>Spela online</b> och går med i samma spelkod.</li></ol><div class="mtxt muted">Den här vyn når inte onlinetjänsten just nu, oftast för att du är utloggad eller bara har läsbehörighet.</div>`,btns:[{k:'x',label:'OK',primary:true}]});return}
   let nick=myName(),tok=PREF.tok||setup.slots[0].tok||TOKENS[0];
-  let unsubs=[];
+  let unsubs=[];if(NET.backend==='firebase'&&FIRE)FIRE.sweep().catch(()=>{});
   const k=await modal({cls:'wide',html:`<div class="mh">Spela online</div><div class="olme"><button class="tok" id="olTok" aria-label="Byt pjäs"></button><input id="olNick" maxlength="12" placeholder="Skriv ditt namn" aria-label="Ditt namn i spelet"><span class="muted">Ditt namn och din pjäs. Tryck på pjäsen för att byta.</span></div>
     <div class="olgrid"><div class="olcard"><h4>Var värd för ett spel</h4><div class="mtxt muted">Använder läget, reglerna och miljön du valt på startskärmen.</div><div class="mtxt" id="olSet"></div><button class="btn pri" id="olNew">Skapa spel</button></div>
     <div class="olcard"><h4>Gå med i ett spel</h4><div class="olrow"><input id="olCode" maxlength="5" placeholder="Kod" aria-label="Spelkod" autocapitalize="characters"><button class="btn" id="olJoin">Gå med</button></div><div class="mtxt muted" id="olErr"></div><h4>Öppna spel</h4><div class="ollist" id="olOpen"><span class="muted">Letar efter spel…</span></div><h4>Dina pågående spel</h4><div class="ollist" id="olMine"><span class="muted">Inga</span></div></div></div>
@@ -1729,9 +1736,9 @@ async function openOnline(pre){
       const tb=pn.querySelector('#olTok'),ni=pn.querySelector('#olNick'),err=pn.querySelector('#olErr');tb.textContent=tok;tb.style.setProperty('--pc','#ffc61a');ni.value=nick;if(pre)pn.querySelector('#olCode').value=pre;
       tb.onclick=()=>{const TK=unlockedTokens();tok=TK[(TK.indexOf(tok)+1)%TK.length];tb.textContent=tok};ni.oninput=()=>nick=ni.value;
       pn.querySelector('#olSet').innerHTML=onlineCfgSummary(cfgSet());
-      const row=(d,label,act)=>{const v=d.data();const r=el('div','olitem');r.innerHTML=`<b>${esc(v.code)}</b><span>${esc((v.seats&&v.seats[0]&&v.seats[0].name)||'Värd')} · ${(v.seats||[]).length}/6</span>`;const b=el('button','sm go',label);b.onclick=()=>{if(!needName())return;close('x');keepName(nick,tok);act(v.code)};r.append(b);return r};
-      unsubs.push(db.collection('games').where('status','==',LOBBY).limit(20).onSnapshot(qs=>{const L=pn.querySelector('#olOpen');L.innerHTML='';const docs=qs.docs.filter(d=>Date.now()-(d.data().at||0)<6*3600e3);if(!docs.length)L.innerHTML='<span class="muted">Inga öppna spel just nu. Skapa ett, eller be en vän om koden.</span>';docs.forEach(d=>L.append(row(d,'Gå med',joinOnline)))},()=>{}));
-      unsubs.push(db.collection('games').where('seatIds','array-contains',NET.me).limit(20).onSnapshot(qs=>{const L=pn.querySelector('#olMine');L.innerHTML='';const docs=qs.docs.filter(d=>d.data().status==='playing');if(!docs.length)L.innerHTML='<span class="muted">Inga</span>';docs.forEach(d=>L.append(row(d,'Återanslut',joinOnline)))},()=>{}));
+      const row=(d,label,act,kind)=>{const v=d.data();const r=el('div','olitem');r.innerHTML=`<b>${esc(v.code)}</b><span>${esc((v.seats&&v.seats[0]&&v.seats[0].name)||'Värd')} · ${(v.seats||[]).length}/6</span>`;const b=el('button','sm go',label);b.onclick=()=>{if(!needName())return;close('x');keepName(nick,tok);act(v.code)};r.append(b);const x=el('button','sm olx','✕');x.setAttribute('aria-label','Ta bort från listan '+v.code);x.title='Ta bort från listan';x.onclick=async()=>{r.remove();if(kind==='open'&&v.host===NET.me){try{if(NET.backend==='firebase'&&FIRE)await FIRE.purge(v.code);else await db.doc('games/'+v.code).delete()}catch(e){}toast('Spelet är stängt och borttaget')}else toast('Borttaget från din lista');hideGame(v.code)};r.append(x);return r};
+      unsubs.push(db.collection('games').where('status','==',LOBBY).limit(20).onSnapshot(qs=>{const L=pn.querySelector('#olOpen');L.innerHTML='';const hg=hiddenGames();const docs=qs.docs.filter(d=>Date.now()-(d.data().at||0)<6*3600e3&&!hg[d.data().code]);if(!docs.length)L.innerHTML='<span class="muted">Inga öppna spel just nu. Skapa ett, eller be en vän om koden.</span>';docs.forEach(d=>L.append(row(d,'Gå med',joinOnline,'open')))},()=>{}));
+      unsubs.push(db.collection('games').where('seatIds','array-contains',NET.me).limit(20).onSnapshot(qs=>{const L=pn.querySelector('#olMine');L.innerHTML='';const hg=hiddenGames();const docs=qs.docs.filter(d=>d.data().status==='playing'&&!hg[d.data().code]);if(!docs.length)L.innerHTML='<span class="muted">Inga</span>';docs.forEach(d=>L.append(row(d,'Återanslut',joinOnline,'mine')))},()=>{}));
       const needName=()=>{if((nick||'').trim())return true;err.textContent='Skriv ditt namn först, så att vännerna ser vem du är.';ni.focus();return false};
       pn.querySelector('#olNew').onclick=()=>{if(!needName())return;keepName(nick,tok);close('new')};
       pn.querySelector('#olJoin').onclick=()=>{const c=(pn.querySelector('#olCode').value||'').trim().toUpperCase();if(!/^[A-Z0-9]{5}$/.test(c)){err.textContent='Ange koden på 5 tecken som din vän delade.';return}if(!needName())return;keepName(nick,tok);close('x');joinOnline(c)};
@@ -1747,7 +1754,11 @@ async function createOnline(){
   catch(e){toast(e&&e.code==='quota_exceeded'?'Listan med onlinespel är full. Ta bort gamla spel och försök igen.':(NET.backend==='claude'?'Kunde inte skapa spelet. Kontrollera att du har redigeringsbehörighet och försök igen.':'Kunde inte skapa spelet. Kontrollera anslutningen och försök igen.'));return}
   lobby(code,ref);
 }
-async function joinOnline(code){
+/* games the player removed from their lists (kept a week) */
+function hiddenGames(){const h=PREF.hidden=PREF.hidden||{};const now=Date.now();Object.keys(h).forEach(c=>{if(now-h[c]>7*864e5)delete h[c]});return h}
+function hideGame(c){hiddenGames()[c]=Date.now();savePref();if(NET.backend==='firebase'&&FIRE)FIRE.forget(c)}
+function unhideGame(c){const h=hiddenGames();if(h[c]){delete h[c];savePref()}}
+async function joinOnline(code){unhideGame(code);
   const ref=NET.db.doc('games/'+code);let snap;try{snap=await ref.get()}catch(e){toast('Kunde inte nå onlinetjänsten. Försök igen.');return}
   if(!snap.exists){toast(`Inget spel med koden ${code}. Kontrollera koden och försök igen.`);return}
   const d=snap.data();
@@ -1776,7 +1787,7 @@ function lobby(code,ref){
       <div class="mtxt lhint">${host?(n<2?'Du behöver minst en spelare till. Bjud in en vän eller lägg till en AI-spelare.':`<b>${n} av 6 spelare.</b> Tryck på Starta spelet när alla som ska vara med har gått med.`):`Bara värden kan starta. Väntar på att <b>${esc(hs?hs.name:'värden')}</b> startar spelet…`}</div><div class="mbar"></div>`;
     const bar=pn.querySelector('.mbar');
     if(NET.backend!=='claude'){const iv=el('button','btn','📲 Bjud in vänner');iv.onclick=()=>inviteFriends(d.code);bar.append(iv)}
-    const lv=el('button','btn','Lämna');lv.onclick=async()=>{netStop();close();if(!host){const s=(d.seats||[]).filter(x=>x.uid!==NET.me);ref.update({seats:s,seatIds:s.map(x=>x.uid).filter(Boolean)}).catch(()=>{})}else ref.delete().catch(()=>{})};bar.append(lv);
+    const lv=el('button','btn','Lämna');lv.onclick=async()=>{netStop();close();if(!host){const s=(d.seats||[]).filter(x=>x.uid!==NET.me);ref.update({seats:s,seatIds:s.map(x=>x.uid).filter(Boolean)}).catch(()=>{})}else if(NET.backend==='firebase'&&FIRE)FIRE.purge(d.code);else ref.delete().catch(()=>{})};bar.append(lv);
     if(host){const ai=el('button','btn','Lägg till AI-spelare');ai.disabled=(d.seats||[]).length>=6;ai.onclick=()=>{const seats=[...d.seats];const usedT=seats.map(x=>x.tok),usedC=seats.map(x=>x.col);const n=NAMES.find(x=>!seats.some(s=>s.name===x))||'Bot';
         seats.push({uid:null,name:n,tok:TOKENS.find(t=>!usedT.includes(t)),col:SEATCOL.find(c=>!usedC.includes(c)),ai:true});ref.update({seats}).catch(()=>toast('Kunde inte uppdatera spelet'))};bar.append(ai);
       const st=el('button','btn pri',n<2?'Starta (minst 2)':'Starta spelet');st.disabled=n<2;st.onclick=()=>hostStart(ref,d);bar.append(st);
@@ -2585,7 +2596,7 @@ function highlights(){const pl=G.players,best=(f)=>pl.reduce((b,p)=>(f(p)>(b?f(b
   const j=best(p=>st(p).jail);if(j&&st(j).jail)out.push(['🚔',`Stamgäst på ${CITY.jail}`,`${j.name} hamnade i fängelse ${st(j).jail} ${st(j).jail>1?'gånger':'gång'}`]);
   const t=best(p=>st(p).trades);if(t&&st(t).trades)out.push(['🤝','Affärsgeniet',`${t.name} gjorde ${st(t).trades} ${st(t).trades>1?'byten':'byte'}`]);return out}
 async function finish(){
-  G.over=true;clearSave();if(G.online&&NET.on&&NET.host){NET.ref.update({status:'over'}).catch(()=>{})}if(FAST)return;renderRoster();updateTools();setPrompt('Spelet är slut.');$('#acts').innerHTML='';
+  G.over=true;clearSave();if(G.online&&NET.on){NET.ref.update({status:'over',at:Date.now()}).catch(()=>{});if(G.code&&NET.backend==='firebase'&&FIRE){const c=G.code;FIRE.forget(c);setTimeout(()=>FIRE.purge(c),20000)}}if(FAST)return;renderRoster();updateTools();setPrompt('Spelet är slut.');$('#acts').innerHTML='';
   const sts=standings(),w=sts[0];achGameEnd(w);const lv0=lvlOf(PREF.xp-0),xp0=PREF.xp;const res=progressGameEnd(w);sfx('win');if(S3)S3.marker.visible=false;confetti();if(hasLvl(15))setTimeout(confetti,700);fireworks();camOverview(w.pos,1200);
   const hl=highlights(),lv=lvlOf(PREF.xp),a=xpFor(lv),b=xpFor(lv+1);
   const k=await modal({cls:'wide',html:`<div class="mh">${esc(w.name)} är hyresvärd över ${esc(CITY.name)}!</div>

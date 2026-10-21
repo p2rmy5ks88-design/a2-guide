@@ -274,7 +274,7 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--navy);outline-o
 .olrow{display:flex;gap:6px}
 .ollist{display:flex;flex-direction:column;gap:5px}
 .olitem{display:flex;align-items:center;gap:8px;background:#fff;border-radius:10px;padding:6px 8px;font-size:12.5px}
-.olitem b{font:15px var(--display);letter-spacing:.12em}.olitem span{flex:1;color:var(--muted);font-weight:700}
+.olitem b{font:15px var(--display);letter-spacing:.12em}.olitem .olx{flex:none;min-width:34px;color:var(--muted);border-color:transparent;background:transparent;font-size:14px}.olitem span{flex:1;color:var(--muted);font-weight:700}
 .code{font:22px var(--display);letter-spacing:.2em;background:var(--danfo);padding:2px 10px;border-radius:8px;color:var(--danfo-ink)}
 .seats{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:6px}
 .seat{display:flex;align-items:center;gap:6px;padding:5px 8px 5px 5px;border-radius:999px;background:var(--panel2);border:2px solid var(--pc);font-size:13px}
@@ -1414,7 +1414,7 @@ async function run(){
 }
 function standings(){return [...G.players].sort((a,b)=>(a.bankrupt-b.bankrupt)||netWorth(b)-netWorth(a))}
 async function finishOld(){
-  G.over=true;clearSave();if(G.online&&NET.on&&NET.host){NET.ref.update({status:'over'}).catch(()=>{})}if(FAST)return;renderRoster();updateTools();setPrompt('Game over.');$('#acts').innerHTML='';
+  G.over=true;clearSave();if(G.online&&NET.on){NET.ref.update({status:'over',at:Date.now()}).catch(()=>{});if(G.code&&NET.backend==='firebase'&&FIRE){const c=G.code;FIRE.forget(c);setTimeout(()=>FIRE.purge(c),20000)}}if(FAST)return;renderRoster();updateTools();setPrompt('Game over.');$('#acts').innerHTML='';
   const st=standings(),w=st[0];achGameEnd(w);sfx('win');if(S3)S3.marker.visible=false;confetti();camOverview(w.pos,1200);
   const k=await modal({html:`<div class="mh">${esc(w.name)} is the landlord of Lagos!</div><div class="mtxt muted">Final standings by net worth</div><div class="stand">${st.map((p,i)=>`<div><em>${i+1}</em><i style="--pc:${p.col}">${p.tok}</i><span>${esc(p.name)}${p.bankrupt?' · bankrupt':''}</span><span>${fmt(p.bankrupt?0:netWorth(p))}</span></div>`).join('')}</div>`,btns:[{k:'new',label:'New game',primary:true}]});
   if(k==='new')showTitle();
@@ -1603,7 +1603,7 @@ const FIRE=(()=>{const C=window.EKO_FIREBASE;if(!C||!C.apiKey||!C.databaseURL)re
           return rows.filter(Boolean)}
         const eq=filters.find(f=>f[1]==='==');const all=(await req('GET','games',undefined,eq?'&orderBy='+encodeURIComponent('"'+eq[0]+'"')+'&equalTo='+encodeURIComponent(JSON.stringify(eq[2])):'')).val||{};
         const out=[];Object.keys(all).forEach(k=>{const v=all[k];if(!match(v,filters))return;
-          if(v.status==='lobby'&&Date.now()-(v.at||0)>24*3600e3){req('DELETE','games/'+k).catch(()=>{});return}out.push({id:k,d:v})});
+          if(v.status==='lobby'&&Date.now()-(v.at||0)>6*3600e3){purge(k).catch(()=>{});return}out.push({id:k,d:v})});
         return out.sort((a,b)=>(b.d.at||0)-(a.d.at||0)).slice(0,lim)}
       const all=(await req('GET',p)).val||{};return Object.keys(all).filter(k=>match(all[k],filters)).sort().slice(0,lim).map(k=>({id:k,d:all[k]}))},
     async get(){const rows=await this.fetchDocs();return mk(rows,[])},
@@ -1612,7 +1612,14 @@ const FIRE=(()=>{const C=window.EKO_FIREBASE;if(!C||!C.apiKey||!C.databaseURL)re
       if(top){const tick=async()=>{if(!live)return;try{emit(await self.fetchDocs())}catch(e){err&&err(e)}if(live)setTimeout(tick,4000)};tick();return()=>{live=false}}
       return stream(p,v=>{v=v||{};emit(Object.keys(v).filter(k=>v[k]!=null&&match(v[k],filters)).sort().slice(0,lim).map(k=>({id:k,d:v[k]})))},err)}}}
   function mk(rows,prev){const docs=rows.map(r=>snapDoc(r.id,r.d));return{docs,size:docs.length,empty:!docs.length,docChanges:()=>docs.filter(d=>!prev.has(d.id)).map(d=>({type:'added',doc:d}))}}
-  return{token,uid:()=>uid,db:{doc:docRef,collection:p=>colRef(p)}};
+  async function purge(c){if(!/^[A-Z0-9]{5}$/.test(c))return;await Promise.all(['games/'+c,'sub/games~'+c,'locks/games~'+c].map(p=>req('DELETE',p).catch(()=>{})));if(uid)req('DELETE','usr/'+uid+'/'+c).catch(()=>{})}
+  let swept=0;
+  async function sweep(){if(Date.now()-swept<10*60e3)return;swept=Date.now();const now=Date.now();
+    const q=st=>req('GET','games',undefined,'&orderBy='+encodeURIComponent('"status"')+'&equalTo='+encodeURIComponent(JSON.stringify(st))).then(r=>r.val||{}).catch(()=>({}));
+    const [over,play]=await Promise.all([q('over'),q('playing')]);
+    const old=[...Object.keys(over).filter(k=>now-((over[k]||{}).at||0)>10*60e3),...Object.keys(play).filter(k=>now-((play[k]||{}).at||0)>3*864e5)];
+    for(const k of old)await purge(k)}
+  return{token,uid:()=>uid,purge,sweep,forget:c=>{if(uid)req('DELETE','usr/'+uid+'/'+c).catch(()=>{})},db:{doc:docRef,collection:p=>colRef(p)}};
 })();
 const SHARE_URL=(window.EKO_FIREBASE&&window.EKO_FIREBASE.shareURL)||'https://p2rmy5ks88-design.github.io/a2-guide/eko-estates/';
 const onClaude=()=>!!(window.claude&&window.claude.use);
@@ -1724,7 +1731,7 @@ async function openOnline(pre){
   if(!db&&(FIRE||!onClaude())){await modal({cls:'wide',html:`<div class="mh">Play online</div><div class="mtxt">${!FIRE?'Online play isn’t switched on in this version yet.':NET.fbErr==='anon_off'?'Online sign-in is switched off. In the Firebase console, open Authentication → Sign-in method and enable <b>Anonymous</b>.':NET.fbErr==='key'?'The online service rejected this app’s key. Check the Firebase web config.':'Couldn’t connect to the online service. Check your internet connection and try again.'}</div>${FIRE&&NET.fbDetail?`<div class="mtxt muted" style="font-size:12px">Details: ${esc(NET.fbErr+' · '+NET.fbDetail)}</div>`:''}`,btns:[{k:'x',label:'OK',primary:true}]});return}
   if(!db){await modal({cls:'wide',html:`<div class="mh">Play online</div><div class="mtxt">Online games run inside claude.ai. To play with friends:</div><ol class="steps"><li>Open this game from your claude.ai account, signed in.</li><li>The owner invites each friend by email from the page’s <b>Share</b> menu and gives them <b>Editor</b> access.</li><li>Everyone opens the page, taps <b>Play online</b>, and joins the same game code.</li></ol><div class="mtxt muted">This view can’t reach the online service right now, usually because you’re signed out or only have view access.</div>`,btns:[{k:'x',label:'OK',primary:true}]});return}
   let nick=myName(),tok=PREF.tok||setup.slots[0].tok||TOKENS[0];
-  let unsubs=[];
+  let unsubs=[];if(NET.backend==='firebase'&&FIRE)FIRE.sweep().catch(()=>{});
   const k=await modal({cls:'wide',html:`<div class="mh">Play online</div><div class="olme"><button class="tok" id="olTok" aria-label="Change token"></button><input id="olNick" maxlength="12" placeholder="Type your name" aria-label="Your name in the game"><span class="muted">Your name and token. Tap the token to change it.</span></div>
     <div class="olgrid"><div class="olcard"><h4>Host a game</h4><div class="mtxt muted">Uses the mode, rules and location you set on the home screen.</div><div class="mtxt" id="olSet"></div><button class="btn pri" id="olNew">Create game</button></div>
     <div class="olcard"><h4>Join a game</h4><div class="olrow"><input id="olCode" maxlength="5" placeholder="Code" aria-label="Game code" autocapitalize="characters"><button class="btn" id="olJoin">Join</button></div><div class="mtxt muted" id="olErr"></div><h4>Open games</h4><div class="ollist" id="olOpen"><span class="muted">Looking for games…</span></div><h4>Your games in progress</h4><div class="ollist" id="olMine"><span class="muted">None</span></div></div></div>
@@ -1734,9 +1741,9 @@ async function openOnline(pre){
       if(pre)pn.querySelector('#olCode').value=pre;
       tb.onclick=()=>{const TK=unlockedTokens();tok=TK[(TK.indexOf(tok)+1)%TK.length];tb.textContent=tok};ni.oninput=()=>nick=ni.value;
       pn.querySelector('#olSet').innerHTML=onlineCfgSummary(cfgSet());
-      const row=(d,label,act)=>{const v=d.data();const r=el('div','olitem');r.innerHTML=`<b>${esc(v.code)}</b><span>${esc((v.seats&&v.seats[0]&&v.seats[0].name)||'Host')} · ${(v.seats||[]).length}/6</span>`;const b=el('button','sm go',label);b.onclick=()=>{if(!needName())return;close('x');keepName(nick,tok);act(v.code)};r.append(b);return r};
-      unsubs.push(db.collection('games').where('status','==','lobby').limit(20).onSnapshot(qs=>{const L=pn.querySelector('#olOpen');L.innerHTML='';const docs=qs.docs.filter(d=>Date.now()-(d.data().at||0)<6*3600e3);if(!docs.length)L.innerHTML='<span class="muted">No open games right now. Create one, or ask a friend for their code.</span>';docs.forEach(d=>L.append(row(d,'Join',joinOnline)))},()=>{}));
-      unsubs.push(db.collection('games').where('seatIds','array-contains',NET.me).limit(20).onSnapshot(qs=>{const L=pn.querySelector('#olMine');L.innerHTML='';const docs=qs.docs.filter(d=>d.data().status==='playing');if(!docs.length)L.innerHTML='<span class="muted">None</span>';docs.forEach(d=>L.append(row(d,'Rejoin',joinOnline)))},()=>{}));
+      const row=(d,label,act,kind)=>{const v=d.data();const r=el('div','olitem');r.innerHTML=`<b>${esc(v.code)}</b><span>${esc((v.seats&&v.seats[0]&&v.seats[0].name)||'Host')} · ${(v.seats||[]).length}/6</span>`;const b=el('button','sm go',label);b.onclick=()=>{if(!needName())return;close('x');keepName(nick,tok);act(v.code)};r.append(b);const x=el('button','sm olx','✕');x.setAttribute('aria-label','Remove from list '+v.code);x.title='Remove from list';x.onclick=async()=>{r.remove();if(kind==='open'&&v.host===NET.me){try{if(NET.backend==='firebase'&&FIRE)await FIRE.purge(v.code);else await db.doc('games/'+v.code).delete()}catch(e){}toast('Game closed and removed')}else toast('Removed from your list');hideGame(v.code)};r.append(x);return r};
+      unsubs.push(db.collection('games').where('status','==','lobby').limit(20).onSnapshot(qs=>{const L=pn.querySelector('#olOpen');L.innerHTML='';const hg=hiddenGames();const docs=qs.docs.filter(d=>Date.now()-(d.data().at||0)<6*3600e3&&!hg[d.data().code]);if(!docs.length)L.innerHTML='<span class="muted">No open games right now. Create one, or ask a friend for their code.</span>';docs.forEach(d=>L.append(row(d,'Join',joinOnline,'open')))},()=>{}));
+      unsubs.push(db.collection('games').where('seatIds','array-contains',NET.me).limit(20).onSnapshot(qs=>{const L=pn.querySelector('#olMine');L.innerHTML='';const hg=hiddenGames();const docs=qs.docs.filter(d=>d.data().status==='playing'&&!hg[d.data().code]);if(!docs.length)L.innerHTML='<span class="muted">None</span>';docs.forEach(d=>L.append(row(d,'Rejoin',joinOnline,'mine')))},()=>{}));
       const needName=()=>{if((nick||'').trim())return true;err.textContent='Type your name first, so your friends know who you are.';ni.focus();return false};
       pn.querySelector('#olNew').onclick=()=>{if(!needName())return;keepName(nick,tok);close('new')};
       pn.querySelector('#olJoin').onclick=()=>{const c=(pn.querySelector('#olCode').value||'').trim().toUpperCase();if(!/^[A-Z0-9]{5}$/.test(c)){err.textContent='Enter the 5-character code your friend shared.';return}if(!needName())return;keepName(nick,tok);close('x');joinOnline(c)};
@@ -1752,7 +1759,11 @@ async function createOnline(){
   catch(e){toast(e&&e.code==='quota_exceeded'?'The online game list is full. Delete old games and try again.':(NET.backend==='claude'?'Couldn’t create the game. Check you have Editor access, then try again.':'Couldn’t create the game. Check your connection and try again.'));return}
   lobby(code,ref);
 }
-async function joinOnline(code){
+/* games the player removed from their lists (kept a week) */
+function hiddenGames(){const h=PREF.hidden=PREF.hidden||{};const now=Date.now();Object.keys(h).forEach(c=>{if(now-h[c]>7*864e5)delete h[c]});return h}
+function hideGame(c){hiddenGames()[c]=Date.now();savePref();if(NET.backend==='firebase'&&FIRE)FIRE.forget(c)}
+function unhideGame(c){const h=hiddenGames();if(h[c]){delete h[c];savePref()}}
+async function joinOnline(code){unhideGame(code);
   const ref=NET.db.doc('games/'+code);let snap;try{snap=await ref.get()}catch(e){toast('Couldn’t reach the online service. Try again.');return}
   if(!snap.exists){toast(`No game with code ${code}. Check the code and try again.`);return}
   const d=snap.data();
@@ -1780,7 +1791,7 @@ function lobby(code,ref){
       <div class="mtxt lhint">${host?(n<2?'You need at least one more player. Invite a friend or add an AI player.':`<b>${n} of 6 players.</b> Tap Start game once everyone who's playing has joined.`):`Only the host can start. Waiting for <b>${esc(hs?hs.name:'the host')}</b> to start the game…`}</div><div class="mbar"></div>`;
     const bar=pn.querySelector('.mbar');
     if(NET.backend!=='claude'){const iv=el('button','btn','📲 Invite friends');iv.onclick=()=>inviteFriends(d.code);bar.append(iv)}
-    const lv=el('button','btn','Leave');lv.onclick=async()=>{netStop();close();if(!host){const s=(d.seats||[]).filter(x=>x.uid!==NET.me);ref.update({seats:s,seatIds:s.map(x=>x.uid).filter(Boolean)}).catch(()=>{})}else ref.delete().catch(()=>{})};bar.append(lv);
+    const lv=el('button','btn','Leave');lv.onclick=async()=>{netStop();close();if(!host){const s=(d.seats||[]).filter(x=>x.uid!==NET.me);ref.update({seats:s,seatIds:s.map(x=>x.uid).filter(Boolean)}).catch(()=>{})}else if(NET.backend==='firebase'&&FIRE)FIRE.purge(d.code);else ref.delete().catch(()=>{})};bar.append(lv);
     if(host){const ai=el('button','btn','Add AI player');ai.disabled=(d.seats||[]).length>=6;ai.onclick=()=>{const seats=[...d.seats];const usedT=seats.map(x=>x.tok),usedC=seats.map(x=>x.col);const n=NAMES.find(x=>!seats.some(s=>s.name===x))||'Bot';
         seats.push({uid:null,name:n,tok:TOKENS.find(t=>!usedT.includes(t)),col:SEATCOL.find(c=>!usedC.includes(c)),ai:true});ref.update({seats}).catch(()=>toast('Couldn’t update the game'))};bar.append(ai);
       const st=el('button','btn pri',n<2?'Start (2+ needed)':'Start game');st.disabled=n<2;st.onclick=()=>hostStart(ref,d);bar.append(st);
@@ -2675,7 +2686,7 @@ function highlights(){const pl=G.players,best=(f)=>pl.reduce((b,p)=>(f(p)>(b?f(b
   const j=best(p=>st(p).jail);if(j&&st(j).jail)out.push(['🚔',`${CITY.jail} regular`,`${j.name} went to jail ${st(j).jail} time${st(j).jail>1?'s':''}`]);
   const t=best(p=>st(p).trades);if(t&&st(t).trades)out.push(['🤝','Deal maker',`${t.name} closed ${st(t).trades} trade${st(t).trades>1?'s':''}`]);return out}
 async function finish(){
-  G.over=true;clearSave();if(G.online&&NET.on&&NET.host){NET.ref.update({status:'over'}).catch(()=>{})}if(FAST)return;renderRoster();updateTools();setPrompt('Game over.');$('#acts').innerHTML='';
+  G.over=true;clearSave();if(G.online&&NET.on){NET.ref.update({status:'over',at:Date.now()}).catch(()=>{});if(G.code&&NET.backend==='firebase'&&FIRE){const c=G.code;FIRE.forget(c);setTimeout(()=>FIRE.purge(c),20000)}}if(FAST)return;renderRoster();updateTools();setPrompt('Game over.');$('#acts').innerHTML='';
   const sts=standings(),w=sts[0];achGameEnd(w);const lv0=lvlOf(PREF.xp-0),xp0=PREF.xp;const res=progressGameEnd(w);sfx('win');if(S3)S3.marker.visible=false;confetti();if(hasLvl(15))setTimeout(confetti,700);fireworks();camOverview(w.pos,1200);
   const hl=highlights(),lv=lvlOf(PREF.xp),a=xpFor(lv),b=xpFor(lv+1);
   const k=await modal({cls:'wide',html:`<div class="mh">${esc(w.name)} is the landlord of ${esc(CITY.name)}!</div>
