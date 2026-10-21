@@ -461,6 +461,14 @@ input,textarea{-webkit-user-select:text;user-select:text}
 .note2.got{transform:scale(1.4);opacity:0;transition:.2s}
 
 @media (pointer:coarse){input:not([type=range]),textarea,select{font-size:16px!important}}
+.mp.lobby{overflow:hidden}
+.mp.lobby>*{flex:none}
+.mp.lobby .seats{flex:1 1 auto;min-height:44px;overflow-y:auto;overscroll-behavior:contain;align-content:start}
+.mp.lobby .mbar{padding-top:4px}
+.mp.lobby .lhint{font-size:13px}
+@media (max-height:460px){.mp.lobby .lsum{display:none}.mp.lobby{gap:7px}}
+html.rot .mp.lobby .lsum{display:none}
+html.rot .mp.lobby{gap:7px}
 </style>
 
 <canvas id="gl" aria-label="3D-spelbräde"></canvas>
@@ -1711,9 +1719,9 @@ async function openOnline(pre){
   const db=await netInit();
   if(!db&&(FIRE||!onClaude())){await modal({cls:'wide',html:`<div class="mh">Spela online</div><div class="mtxt">${FIRE?'Kunde inte ansluta till onlinetjänsten. Kontrollera internetanslutningen och försök igen.':'Onlinespel är inte påslaget i den här versionen ännu.'}</div>`,btns:[{k:'x',label:'OK',primary:true}]});return}
   if(!db){await modal({cls:'wide',html:`<div class="mh">Spela online</div><div class="mtxt">Onlinespel körs i claude.ai. Så spelar du med vänner:</div><ol class="steps"><li>Öppna spelet från ditt claude.ai-konto, inloggad.</li><li>Ägaren bjuder in varje vän via e-post från sidans <b>Dela</b>-meny och ger dem <b>Redigerare</b>-behörighet.</li><li>Alla öppnar sidan, trycker på <b>Spela online</b> och går med i samma spelkod.</li></ol><div class="mtxt muted">Den här vyn når inte onlinetjänsten just nu, oftast för att du är utloggad eller bara har läsbehörighet.</div>`,btns:[{k:'x',label:'OK',primary:true}]});return}
-  let nick=PREF.nick||(setup.slots[0].name||'').trim()||(NET.myName||'').split(' ')[0]||'Spelare',tok=PREF.tok||setup.slots[0].tok||TOKENS[0];
+  let nick=myName(),tok=PREF.tok||setup.slots[0].tok||TOKENS[0];
   let unsubs=[];
-  const k=await modal({cls:'wide',html:`<div class="mh">Spela online</div><div class="olme"><button class="tok" id="olTok" aria-label="Byt pjäs"></button><input id="olNick" maxlength="12" aria-label="Ditt namn i spelet"><span class="muted">Ditt namn och din pjäs</span></div>
+  const k=await modal({cls:'wide',html:`<div class="mh">Spela online</div><div class="olme"><button class="tok" id="olTok" aria-label="Byt pjäs"></button><input id="olNick" maxlength="12" placeholder="Skriv ditt namn" aria-label="Ditt namn i spelet"><span class="muted">Ditt namn och din pjäs. Tryck på pjäsen för att byta.</span></div>
     <div class="olgrid"><div class="olcard"><h4>Var värd för ett spel</h4><div class="mtxt muted">Använder läget, reglerna och miljön du valt på startskärmen.</div><div class="mtxt" id="olSet"></div><button class="btn pri" id="olNew">Skapa spel</button></div>
     <div class="olcard"><h4>Gå med i ett spel</h4><div class="olrow"><input id="olCode" maxlength="5" placeholder="Kod" aria-label="Spelkod" autocapitalize="characters"><button class="btn" id="olJoin">Gå med</button></div><div class="mtxt muted" id="olErr"></div><h4>Öppna spel</h4><div class="ollist" id="olOpen"><span class="muted">Letar efter spel…</span></div><h4>Dina pågående spel</h4><div class="ollist" id="olMine"><span class="muted">Inga</span></div></div></div>
     <div class="mtxt muted">${NET.backend==='claude'?'Vännerna behöver få sidan delad med sig som <b>Redigerare</b> (Dela-menyn, bjud in via e-post) och måste vara inloggade på claude.ai.':'Vännerna spelar via webblänken på sina egna telefoner. När du har skapat ett spel trycker du på <b>Bjud in vänner</b> för att skicka koden.'}</div>`,
@@ -1721,11 +1729,12 @@ async function openOnline(pre){
       const tb=pn.querySelector('#olTok'),ni=pn.querySelector('#olNick'),err=pn.querySelector('#olErr');tb.textContent=tok;tb.style.setProperty('--pc','#ffc61a');ni.value=nick;if(pre)pn.querySelector('#olCode').value=pre;
       tb.onclick=()=>{const TK=unlockedTokens();tok=TK[(TK.indexOf(tok)+1)%TK.length];tb.textContent=tok};ni.oninput=()=>nick=ni.value;
       pn.querySelector('#olSet').innerHTML=onlineCfgSummary(cfgSet());
-      const row=(d,label,act)=>{const v=d.data();const r=el('div','olitem');r.innerHTML=`<b>${esc(v.code)}</b><span>${esc((v.seats&&v.seats[0]&&v.seats[0].name)||'Värd')} · ${(v.seats||[]).length}/6</span>`;const b=el('button','sm go',label);b.onclick=()=>{close('x');PREF.nick=(nick||'Spelare').trim();PREF.tok=tok;savePref();act(v.code)};r.append(b);return r};
+      const row=(d,label,act)=>{const v=d.data();const r=el('div','olitem');r.innerHTML=`<b>${esc(v.code)}</b><span>${esc((v.seats&&v.seats[0]&&v.seats[0].name)||'Värd')} · ${(v.seats||[]).length}/6</span>`;const b=el('button','sm go',label);b.onclick=()=>{if(!needName())return;close('x');keepName(nick,tok);act(v.code)};r.append(b);return r};
       unsubs.push(db.collection('games').where('status','==',LOBBY).limit(20).onSnapshot(qs=>{const L=pn.querySelector('#olOpen');L.innerHTML='';const docs=qs.docs.filter(d=>Date.now()-(d.data().at||0)<6*3600e3);if(!docs.length)L.innerHTML='<span class="muted">Inga öppna spel just nu. Skapa ett, eller be en vän om koden.</span>';docs.forEach(d=>L.append(row(d,'Gå med',joinOnline)))},()=>{}));
       unsubs.push(db.collection('games').where('seatIds','array-contains',NET.me).limit(20).onSnapshot(qs=>{const L=pn.querySelector('#olMine');L.innerHTML='';const docs=qs.docs.filter(d=>d.data().status==='playing');if(!docs.length)L.innerHTML='<span class="muted">Inga</span>';docs.forEach(d=>L.append(row(d,'Återanslut',joinOnline)))},()=>{}));
-      pn.querySelector('#olNew').onclick=()=>{PREF.nick=(nick||'Spelare').trim();PREF.tok=tok;savePref();close('new')};
-      pn.querySelector('#olJoin').onclick=()=>{const c=(pn.querySelector('#olCode').value||'').trim().toUpperCase();if(!/^[A-Z0-9]{5}$/.test(c)){err.textContent='Ange koden på 5 tecken som din vän delade.';return}PREF.nick=(nick||'Spelare').trim();PREF.tok=tok;savePref();close('x');joinOnline(c)};
+      const needName=()=>{if((nick||'').trim())return true;err.textContent='Skriv ditt namn först, så att vännerna ser vem du är.';ni.focus();return false};
+      pn.querySelector('#olNew').onclick=()=>{if(!needName())return;keepName(nick,tok);close('new')};
+      pn.querySelector('#olJoin').onclick=()=>{const c=(pn.querySelector('#olCode').value||'').trim().toUpperCase();if(!/^[A-Z0-9]{5}$/.test(c)){err.textContent='Ange koden på 5 tecken som din vän delade.';return}if(!needName())return;keepName(nick,tok);close('x');joinOnline(c)};
     }});
   unsubs.forEach(u=>u());
   if(k==='new')createOnline();
@@ -1750,7 +1759,8 @@ async function joinOnline(code){
       if(!l.acquired){await new Promise(r=>setTimeout(r,700));continue}
       const s2=(await ref.get()).data();const seats=s2.seats||[];if(seats.length>=6){toast('Det spelet är fullt.');return}
       const usedT=seats.map(x=>x.tok),usedC=seats.map(x=>x.col);let tok=PREF.tok||TOKENS[0];if(usedT.includes(tok))tok=TOKENS.find(t=>!usedT.includes(t));
-      seats.push({uid:NET.me,name:PREF.nick||'Spelare',tok,col:SEATCOL.find(c=>!usedC.includes(c)),ai:false});
+      let nm=(PREF.nick||'Spelare').trim().slice(0,12)||'Spelare';if(seats.some(x=>x.name===nm)){let k=2;while(seats.some(x=>x.name===nm.slice(0,10)+' '+k))k++;nm=nm.slice(0,10)+' '+k}
+      seats.push({uid:NET.me,name:nm,tok,col:SEATCOL.find(c=>!usedC.includes(c)),ai:false});
       await ref.update({seats,seatIds:seats.map(x=>x.uid).filter(Boolean)});ok=true}
     if(!ok){toast('Spelet är upptaget. Försök gå med igen.');return}
   }
@@ -1758,18 +1768,18 @@ async function joinOnline(code){
 }
 function lobby(code,ref){
   netStop();NET.code=code;NET.ref=ref;let latest=null,started=false;
-  const ov=el('div','ov'),pn=el('div','mp wide');ov.append(pn);$('#modals').innerHTML='';$('#modals').append(ov);
+  const ov=el('div','ov'),pn=el('div','mp wide lobby');ov.append(pn);$('#modals').innerHTML='';$('#modals').append(ov);
   const close=()=>{ov.remove()};
-  const draw=()=>{const d=latest;if(!d)return;const host=d.host===NET.me;
-    pn.innerHTML=`<div class="mh">Spel ${esc(d.code)}</div><div class="mtxt">Dela den här koden med dina vänner: <b class="code">${esc(d.code)}</b></div><div class="mtxt muted">${onlineCfgSummary(d.set||{})}</div>
+  const draw=()=>{const d=latest;if(!d)return;const host=d.host===NET.me;const hs=(d.seats||[]).find(x=>x.uid===d.host),n=(d.seats||[]).length;
+    pn.innerHTML=`<div class="mh">Spel ${esc(d.code)}</div><div class="mtxt">Dela den här koden med dina vänner: <b class="code">${esc(d.code)}</b></div><div class="mtxt muted lsum">${onlineCfgSummary(d.set||{})}</div>
       <div class="seats">${(d.seats||[]).map((s,i)=>`<div class="seat" style="--pc:${s.col}"><span class="pt">${s.tok}</span><b>${esc(s.name)}</b>${s.ai?'<span class="tag">AI</span>':''}${s.uid===d.host?'<span class="tag">Värd</span>':''}${s.uid===NET.me?'<span class="tag you">Du</span>':''}${host&&s.uid!==NET.me?`<button class="sm" data-rm="${i}" aria-label="Ta bort ${esc(s.name)}">Ta bort</button>`:''}</div>`).join('')}</div>
-      <div class="mtxt muted">${host?'Lägg till AI-spelare om du vill och starta när alla är med.':'Väntar på att värden ska starta spelet…'}</div><div class="mbar"></div>`;
+      <div class="mtxt lhint">${host?(n<2?'Du behöver minst en spelare till. Bjud in en vän eller lägg till en AI-spelare.':`<b>${n} av 6 spelare.</b> Tryck på Starta spelet när alla som ska vara med har gått med.`):`Bara värden kan starta. Väntar på att <b>${esc(hs?hs.name:'värden')}</b> startar spelet…`}</div><div class="mbar"></div>`;
     const bar=pn.querySelector('.mbar');
     if(NET.backend!=='claude'){const iv=el('button','btn','📲 Bjud in vänner');iv.onclick=()=>inviteFriends(d.code);bar.append(iv)}
     const lv=el('button','btn','Lämna');lv.onclick=async()=>{netStop();close();if(!host){const s=(d.seats||[]).filter(x=>x.uid!==NET.me);ref.update({seats:s,seatIds:s.map(x=>x.uid).filter(Boolean)}).catch(()=>{})}else ref.delete().catch(()=>{})};bar.append(lv);
     if(host){const ai=el('button','btn','Lägg till AI-spelare');ai.disabled=(d.seats||[]).length>=6;ai.onclick=()=>{const seats=[...d.seats];const usedT=seats.map(x=>x.tok),usedC=seats.map(x=>x.col);const n=NAMES.find(x=>!seats.some(s=>s.name===x))||'Bot';
         seats.push({uid:null,name:n,tok:TOKENS.find(t=>!usedT.includes(t)),col:SEATCOL.find(c=>!usedC.includes(c)),ai:true});ref.update({seats}).catch(()=>toast('Kunde inte uppdatera spelet'))};bar.append(ai);
-      const st=el('button','btn pri','Starta spelet');st.disabled=(d.seats||[]).length<2;st.onclick=()=>hostStart(ref,d);bar.append(st);
+      const st=el('button','btn pri',n<2?'Starta (minst 2)':'Starta spelet');st.disabled=n<2;st.onclick=()=>hostStart(ref,d);bar.append(st);
       pn.querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{const seats=d.seats.filter((_,i)=>i!==+b.dataset.rm);ref.update({seats,seatIds:seats.map(x=>x.uid).filter(Boolean)}).catch(()=>{})})}
   };
   pn.innerHTML='<div class="mh">Ansluter…</div>';
@@ -1794,7 +1804,10 @@ const PREF=(()=>{try{return JSON.parse(localStorage.getItem('sveaPrefs')||'{}')|
 function savePref(){try{localStorage.setItem('sveaPrefs',JSON.stringify(PREF))}catch(e){}}
 const RULE_INFO=[['minigames','Minispel','Sverigequiz på Chans- och Allmänningsrutorna, och Fånga sedlarna när du landar på GÅ eller fri parkering.'],['ffa','Fritt byggande','Bygg hus och hotell på alla gator du äger. Ingen hel färggrupp behövs.'],['events','Stadshändelser','Varannan runda händer något: 13 händelser, bland annat strömavbrott, kräftskivor, översvämningar, byggboom, lotterier, bröllop och varje stads egen fest.'],['speedDie','Fartärning','Efter första varvet slår du en tredje tärning: lägg till 1–3, Buss låter dig välja tärning, Boss skickar dig till nästa lediga fastighet, triss flyttar dig vart du vill.'],['pot','Pott på fri parkering','Skatter och böter samlas på Skansen. Landa där för att ta hem dem.'],['goDouble','Dubbel lön på GÅ','Landa exakt på GÅ för att inkassera 400 Mkr.'],['jailRent','Ingen hyra från fängelset','Ägare som sitter på Långholmen kan inte ta ut hyra.'],['auction','Auktioner','Fastigheter som ingen köper går till auktion.'],['even','Jämnt byggande','Bygg och sälj jämnt över en färggrupp.'],['interest','Ränta på lån','Att lösa in kostar lånet plus 10 %.']];
 const MODES=[['classic','Klassiskt','Spela tills en hyresvärd står kvar.'],['quick','Snabbaffär','Alla börjar med 2 slumpade fastigheter. Första konkursen avslutar spelet och den rikaste vinner.'],['timed','Rundgräns','Spela ett bestämt antal rundor. Den rikaste hyresvärden vinner.']];
-function saveSlot(i,sl){PREF.slots=PREF.slots||[];PREF.slots[i]={name:(sl.name||'').trim(),tok:sl.tok};clearTimeout(saveSlot.t);saveSlot.t=setTimeout(savePref,300)}
+/* the player's own name, shared by the first home-screen slot and online play */
+function myName(){const n=(PREF.nick||'').trim()||(PREF.slots&&PREF.slots[0]&&PREF.slots[0].name||'').trim();return n&&!NAMES.includes(n)?n:(PREF.nickSet?n:'')}
+function keepName(n,tok){n=(n||'').trim().slice(0,12);PREF.nick=n;PREF.nickSet=true;PREF.tok=tok;setup.slots[0].name=n;if(tok&&TOKENS.includes(tok))setup.slots[0].tok=tok;saveSlot(0,setup.slots[0]);savePref()}
+function saveSlot(i,sl){if(i===0&&(sl.name||'').trim()){PREF.nick=(sl.name||'').trim();PREF.nickSet=true}PREF.slots=PREF.slots||[];PREF.slots[i]={name:(sl.name||'').trim(),tok:sl.tok};clearTimeout(saveSlot.t);saveSlot.t=setTimeout(savePref,300)}
 const setup={slots:NAMES.map((n,i)=>{const sv=(PREF.slots||[])[i]||{};return{name:(sv.name||'').trim()||n,tok:TOKENS.includes(sv.tok)?sv.tok:TOKENS[i],type:i===0?'human':i<4?'ai':'off'}}),cash:1500,ai:'normal',speed:'normal',mode:'classic',rounds:20,timer:PREF.timer||0,city:'lagos',theme:['beach','night','harmattan','rainy','obudu'].includes(PREF.theme)?PREF.theme:'beach',
   rules:Object.assign({minigames:true,ffa:false,events:false,speedDie:false,pot:false,goDouble:false,jailRent:false,auction:true,even:true,interest:true},PREF.rules||{})};
 function startWith(g){
