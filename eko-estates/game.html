@@ -459,6 +459,8 @@ input,textarea{-webkit-user-select:text;user-select:text}
 .cfield .cn{position:absolute;right:12px;top:8px;font:28px var(--display);color:var(--green)}
 .note2{position:absolute;width:62px;height:36px;border-radius:6px;border:3px solid #e6ffe9;background:#2fa866;color:#fff;font:20px var(--display);transform:rotate(var(--r));box-shadow:0 3px 6px rgba(0,0,0,.25);animation:pop .25s ease-out}
 .note2.got{transform:scale(1.4);opacity:0;transition:.2s}
+
+@media (pointer:coarse){input:not([type=range]),textarea,select{font-size:16px!important}}
 </style>
 
 <canvas id="gl" aria-label="3D game board"></canvas>
@@ -2832,6 +2834,9 @@ window.__sim=async function(n=20,players=4){
 };
 
 
+
+/* iOS: undo any zoom/scroll left behind after the keyboard closes */
+document.addEventListener('focusout',e=>{if(e.target&&/^(INPUT|TEXTAREA)$/.test(e.target.tagName))setTimeout(()=>{if(!document.activeElement||!/^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName)){window.scrollTo(0,0);document.documentElement.scrollLeft=0;document.body.scrollTop=0}},80)});
 /* ================= NATIVE APP ================= */
 const CAP=window.Capacitor,IS_APP=!!(CAP&&CAP.isNativePlatform&&CAP.isNativePlatform());
 function nativeInit(){if(!IS_APP)return;document.documentElement.classList.add('app');const Pl=CAP.Plugins||{};
