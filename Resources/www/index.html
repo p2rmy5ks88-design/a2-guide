@@ -177,6 +177,11 @@ a{color:var(--accent)}
         <div class="field"><label class="label" for="b-grade">Gear grade (most pieces)</label><select id="b-grade"></select></div>
         <div class="field"><label class="label" for="b-forge">Godforge stars</label><select id="b-forge"></select></div>
       </div>
+      <div class="field" style="gap:8px">
+        <div class="row between"><span class="label">Resonance heroes</span><button class="btn ghost" id="resFill" type="button" style="padding:6px 11px;font-size:.78rem">Fill best for my set</button></div>
+        <div id="resSlots" class="resgrid"></div>
+        <p class="src" style="margin:0">Pick the heroes you resonate with and their stars. Some only count from a star level (Wukong 5★, Otta 2★, Phynx 8★).</p>
+      </div>
     </div>
     <div class="card" id="result" aria-live="polite"></div>
 
@@ -361,6 +366,10 @@ a{color:var(--accent)}
 
 <style id="premium">
 [hidden]{display:none!important}
+.resgrid{display:grid;gap:8px}
+.resrow{display:grid;grid-template-columns:22px minmax(0,1fr) 92px;gap:8px;align-items:center}
+.resrow .n{font:700 .8rem var(--f-mono);color:var(--accent);text-align:center}
+
 /* ---- trust: checked dates, report links, changelog ---- */
 button.ver{background:none;border:0;padding:0;cursor:pointer;font:inherit;color:inherit}
 button.ver:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:8px}
@@ -789,7 +798,7 @@ const TWIN = [
 const TWIN_NOPAIR = ["Sharp Arrow","Arrow Rain","Revive"];
 const TWIN_COST = [["Legendary+2 + Legendary+2","5,000","10,000"],["Legendary+2 + Legendary+3","7,500","15,000"],["Legendary+3 + Legendary+3","10,000","20,000"],["Legendary+2 + Mythic","12,500","25,000"],["Legendary+3 + Mythic","15,000","30,000"],["Mythic + Mythic","20,000","40,000"]];
 /* [other name you may see, name used in this app (Game Vault wiki), what it is, confidence] */
-const GAME = {ver:"v1.1.9", checked:"2026-10-20"};
+const GAME = {ver:"v1.1.9", checked:"2026-10-21"};
 const REPORT_URL = "https://github.com/p2rmy5ks88-design/a2-guide/issues/new";
 /* Last time each card was compared with current guides. Anything not listed uses GAME.checked. */
 const CHECKED = {
@@ -799,6 +808,7 @@ const CHECKED = {
   "runes":"2026-10-18","event:Airship Trade":"2026-10-20","chapters":"2026-10-17","heroes":"2026-10-17"
 };
 const CHANGELOG = [
+  ["2026-10-21","Build checker",["Resonance slots: pick up to 3 resonance heroes with stars, scored against the S/A/B lineups for your set","\"Fill best for my set\" button","Saved loadouts now keep resonance"]],
   ["2026-10-20","Events",["Airship Trade: full guide from the in-game rules: refresh odds chart, daily routine, plunder and Guild Airship tips"]],
   ["2026-10-18","Trust & freshness",["\"Checked\" date and game version on every mode, event and preset","Report outdated info button on each card","This What's new page, with a guide to the Sourced / Inferred labels","Builds now described as starting points, with the reason they work"]],
   ["2026-10-18","Runes",["Rune names matched to the Game Vault wiki (Rotating SPD Up, Rootguard, Equinox Bloom and more)","Name mapping table rebuilt: other names you may see → name used here","Full Twinborn pair list and Runic Remnant costs"]],
@@ -1174,16 +1184,50 @@ function fillSelects(){
   const st = Object.assign({h:"Thor",s:"oracle",r:"echoes",m:"normal",star:5,skin:"",g:"Mythic",f:0}, ls.get("a2-builder",{}));
   $("#b-hero").value=st.h; $("#b-set").value=st.s; $("#b-rune").value=st.r in RUNEPKG?st.r:"echoes"; $("#b-mode").value=st.m;
   $("#b-star").value=st.star; $("#b-grade").value=GRADES.includes(st.g)?st.g:"Mythic"; $("#b-forge").value=st.f;
-  fillSkins(st.skin); syncForge();
+  fillSkins(st.skin); syncForge(); fillRes(st.res||[]);
 }
 function fillSkins(sel=""){
   const h=$("#b-hero").value, list=SKINS[h]||[];
   $("#b-skin").innerHTML = `<option value="">No skin / unknown</option>` + list.map(([n])=>`<option${n===sel?" selected":""}>${esc(n)}</option>`).join("") + `<option value="other"${sel==="other"?" selected":""}>Other skin</option>`;
 }
 function syncForge(){ const ok = gradeIdx($("#b-grade").value) >= gradeIdx("Mythic+3"); $("#b-forge").disabled=!ok; if(!ok) $("#b-forge").value="0"; }
-function opts(){ return {star:+$("#b-star").value, skin:$("#b-skin").value, grade:$("#b-grade").value, forge:+$("#b-forge").value}; }
+function opts(){ return {star:+$("#b-star").value, skin:$("#b-skin").value, grade:$("#b-grade").value, forge:+$("#b-forge").value, res:readRes()}; }
+/* ---- Resonance ---- */
+const RES_SLOTS = 3;
+function fillRes(res=[]){
+  $("#resSlots").innerHTML = Array.from({length:RES_SLOTS},(_,i)=>{ const [h,st]=res[i]||["",5];
+    return `<div class="resrow"><span class="n">${i+1}</span>
+      <select data-resh="${i}" aria-label="Resonance hero ${i+1}"><option value="">— empty —</option>${HEROES.map(x=>`<option${x[0]===h?" selected":""}>${esc(x[0])}</option>`).join("")}</select>
+      <select data-ress="${i}" aria-label="Resonance hero ${i+1} stars">${Array.from({length:9},(_,k)=>`<option value="${k}"${k===st?" selected":""}>${k}★</option>`).join("")}</select></div>`; }).join("");
+}
+function readRes(){ return Array.from({length:RES_SLOTS},(_,i)=>{ const h=$(`[data-resh="${i}"]`)?.value||""; return h?[h,+$(`[data-ress="${i}"]`).value]:null; }).filter(Boolean); }
+/* Parse RESON lists: "Cleo, Wukong (5★+), Helix or Mymu" -> [[{n,min}], [{n,min},{n,min}] ...] (inner array = any one of) */
+function resonTiers(setK){
+  const row = RESON.find(r=>r[0].toLowerCase()===(setK==="mix"?"dragoon":setK)); if(!row) return [];
+  return row[1].map(([tier,txt])=>({tier, req: txt.split(/,\s*/).map(part=>part.split(/\s+or\s+/).map(x=>{ const m=x.match(/^(.+?)\s*\((\d)★\+?\)\s*$/); return m?{n:m[1].trim(),min:+m[2]}:{n:x.trim(),min:0}; }))}));
+}
+function resCheck(heroN, setK, res, reasons){
+  const tiers = resonTiers(setK); if(!tiers.length) return 0;
+  const have = Object.fromEntries(res.map(([h,st])=>[h,st]));
+  const ok = c => c.some(x=> x.n in have && have[x.n]>=x.min);
+  const best = tiers[0], label = setK==="mix"?"Dragoon/mix":SETS[setK].short;
+  const names = [...new Set(res.map(r=>r[0]))];
+  if(names.length < res.length) reasons.push(["warn","The same hero is picked twice in resonance."]);
+  if(have[heroN]!==undefined) reasons.push(["warn",`${heroN} is your main hero, so it can't also be a resonance hero.`]);
+  if(!res.length){ reasons.push(["bad",`No resonance heroes picked. Best for ${label}: ${best.req.map(c=>c.map(x=>x.n+(x.min?` ${x.min}★+`:"")).join(" or ")).join(", ")}.`]); return 0; }
+  const all = tiers.flatMap(t=>t.req.flat());
+  res.forEach(([h,st])=>{ if(h===heroN) return; const need = all.filter(x=>x.n===h);
+    if(!need.length) reasons.push(["info",`${h} isn't on the ${label} resonance lists (Archero 2 Hub).`]);
+    else { const min = Math.min(...need.map(x=>x.min)); if(st<min) reasons.push(["warn",`${h} only counts for ${label} resonance from ${min}★ (you have ${st}★).`]); } });
+  const hit = tiers.find(t=>t.req.every(ok));
+  if(hit===best){ reasons.push(["good",`Resonance matches the top ${best.tier}-tier lineup for ${label}.`]); return 1; }
+  const missing = best.req.filter(c=>!ok(c)).map(c=>c.map(x=>x.n+(x.min?` ${x.min}★+`:"")).join(" or "));
+  if(hit) reasons.push(["warn",`Resonance matches the ${hit.tier}-tier lineup for ${label}. For ${best.tier}-tier add ${missing.join(", ")}.`]);
+  else reasons.push(["bad",`Resonance doesn't match a recommended ${label} lineup. Missing: ${missing.join(", ")}.`]);
+  return 0;
+}
 function evaluate(heroN, setK, runeK, modeK, o){
-  o = Object.assign({star:5,skin:"",grade:"Mythic",forge:0}, o||{});
+  o = Object.assign({star:5,skin:"",grade:"Mythic",forge:0,res:[]}, o||{});
   const m = modeByKey(modeK), h = heroByName(heroN)||["","B"], reasons = [];
   let score = 0, max = 0; const gearOn = !!m.set;
   if(gearOn){ let sf = m.set[setK]; const set = SETS[setK]; const best = m.bestSet.split(";")[0];
@@ -1212,6 +1256,7 @@ function evaluate(heroN, setK, runeK, modeK, o){
   else if(o.star>=3) reasons.push(["warn",`${heroN} at ${o.star}★: resonance is open, but 5★ (Skill Lv.3) is the main power spike. Hub's advice: get your main hero to 5★.`]);
   else reasons.push(["bad",`${heroN} at ${o.star}★ has no resonance yet (3★) and only ${o.star>=2?"Skill Lv.2":"base skill"}. Push your main hero to 5★.`]);
   if(m.applies.res===0) reasons.push(["info",`Resonance is disabled in ${m.name}; only ${heroN}'s own skill counts.`]);
+  else if(gearOn){ max += 1; score += resCheck(heroN, setK, o.res, reasons); }
   if(gearOn){ max += 1; const gi = gradeIdx(o.grade);
     if(gi>=gradeIdx("Mythic")){ score += 1; reasons.push(["good",`${o.grade} gear unlocks the set's Mythic perks${gi>=gradeIdx("Mythic+3")?", Godforge and set swap":""}.`]); }
     else reasons.push(["warn",`${o.grade} gear: the big set perks arrive at Mythic. Chapter farming stops at Legendary+3; Mythic needs S-tier gear from Mythstone or Chromatic chests.`]);
@@ -1226,7 +1271,7 @@ let currentPreset = "orChapter";
 function renderResult(){
   const H=$("#b-hero").value, S=$("#b-set").value, R=$("#b-rune").value, M=$("#b-mode").value;
   const o = opts();
-  ls.set("a2-builder",{h:H,s:S,r:R,m:M,star:o.star,skin:o.skin,g:o.grade,f:o.forge});
+  ls.set("a2-builder",{h:H,s:S,r:R,m:M,star:o.star,skin:o.skin,g:o.grade,f:o.forge,res:o.res});
   const e = evaluate(H,S,R,M,o); const m=e.m; currentPreset = resolvePreset(m, m.set?S:null); const p=PRESETS[currentPreset];
   const icon = {good:"✓",warn:"!",bad:"✕",info:"i"};
   const mine = hasMyRunes()?myRunes:null; let match="";
@@ -1235,13 +1280,13 @@ function renderResult(){
   $("#result").innerHTML = `
     <div class="verdict"><div class="meter">${e.score}<small>/${e.max}</small></div>
       <div style="display:grid;gap:4px"><div class="row"><span class="pill ${e.grade[1]}">${e.grade[0]}</span>${match}</div>
-      <span class="src">${esc(H)} · ${esc(m.set?SETS[S].name:"runes only")} · ${esc(RUNEPKG[R])} · ${esc(m.name)}</span></div></div>
+      <span class="src">${esc(H)} · ${esc(m.set?SETS[S].name:"runes only")} · ${esc(RUNEPKG[R])} · ${esc(m.name)}${o.res.length&&m.applies.res?` · Res: ${esc(o.res.map(r=>r[0]).join(", "))}`:""}</span></div></div>
     <ul class="reasons">${e.reasons.map(([k,t])=>`<li class="p-${k}"><b>${icon[k]}</b><span style="color:var(--fg)">${esc(t)}</span></li>`).join("")}</ul>
     ${progressPanel(H,S,o,m)}
     ${mine?`<p class="src" style="margin:0">Green outline = you already run it. Dashed = change this slot.</p>`:""}
     ${presetBlock(currentPreset, mine)}
     <dl class="kv"><dt>Gear</dt><dd>${esc(m.set?m.bestSet:"Disabled in this mode")}</dd><dt>Take skills</dt><dd>${chips(m.skills)}</dd>${m.avoid.length?`<dt>Skip</dt><dd>${chips(m.avoid,"no")}</dd>`:""}</dl>
-    <p class="src" style="margin:0">Grade = set fit + rune fit + hero fit, summarized from the guides under More → Sources. It is not a damage simulation. The preset is a proven starting point; adjust it to your own runes.</p>
+    <p class="src" style="margin:0">Grade = set fit + rune fit + hero fit + resonance, summarized from the guides under More → Sources. It is not a damage simulation. The preset is a proven starting point; adjust it to your own runes.</p>
     ${fresh("mode:"+m.key, `Build checker — ${H} / ${m.set?SETS[S].name:"runes only"} / ${m.name}`)}`;
 }
 function progressPanel(H,S,o,m){
@@ -1280,8 +1325,8 @@ $("#copyPreset").onclick = ()=>{ const p=PRESETS[currentPreset]; myRunes={}; Obj
 $("#clearRunes").onclick = ()=>{ myRunes=null; ls.set("a2-runes",null); renderMyRunes(); renderResult(); };
 function renderSaved(){
   const list = ls.get("a2-saved",[]);
-  $("#savedList").innerHTML = list.length ? list.map((b,i)=>{ const e=evaluate(b.h,b.s,b.r in RUNEPKG?b.r:"echoes",b.m,{star:b.star??5,skin:b.skin||"",grade:b.g||"Mythic",forge:b.f||0});
-    return `<div class="item"><div><b>${esc(b.h)} ${b.star??5}★</b> · ${esc(modeByKey(b.m).name)}<br><span class="src">${esc(SETS[b.s].name)} (${esc(b.g||"Mythic")}) · ${esc(RUNEPKG[b.r]||"")}</span></div>
+  $("#savedList").innerHTML = list.length ? list.map((b,i)=>{ const e=evaluate(b.h,b.s,b.r in RUNEPKG?b.r:"echoes",b.m,{star:b.star??5,skin:b.skin||"",grade:b.g||"Mythic",forge:b.f||0,res:b.res||[]});
+    return `<div class="item"><div><b>${esc(b.h)} ${b.star??5}★</b> · ${esc(modeByKey(b.m).name)}<br><span class="src">${esc(SETS[b.s].name)} (${esc(b.g||"Mythic")}) · ${esc(RUNEPKG[b.r]||"")}${b.res&&b.res.length?" · Res: "+esc(b.res.map(r=>r[0]).join(", ")):""}</span></div>
       <div class="row"><span class="pill ${e.grade[1]}">${e.grade[0]}</span><button data-load="${i}">Load</button><button data-del="${i}">Delete</button></div></div>`;
   }).join("") : `<p class="empty">No saved loadouts yet. Saved loadouts stay on this device only.</p>`;
 }
@@ -1683,9 +1728,13 @@ function showTab(t){
 document.querySelector("nav.tabs").addEventListener("click", e=>{ const b=e.target.closest("button"); if(b) showTab(b.dataset.tab); });
 ["#b-set","#b-rune","#b-mode","#b-star","#b-skin","#b-forge"].forEach(s=>$(s).addEventListener("change", renderResult));
 $("#b-hero").addEventListener("change", ()=>{ fillSkins(); renderResult(); });
+$("#resSlots").addEventListener("change", renderResult);
+$("#resFill").addEventListener("click", ()=>{ const S=$("#b-set").value, H=$("#b-hero").value, t=resonTiers(S)[0]; if(!t) return;
+  const pick = t.req.map(c=>{ const x=c.find(y=>y.n!==H)||c[0]; return [x.n, Math.max(x.min,5)]; }).filter(r=>r[0]!==H).slice(0,RES_SLOTS);
+  fillRes(pick); renderResult(); });
 $("#b-grade").addEventListener("change", ()=>{ syncForge(); renderResult(); });
 $("#save").addEventListener("click", ()=>{
-  const o=opts(); const list = ls.get("a2-saved",[]); const b = {h:$("#b-hero").value,s:$("#b-set").value,r:$("#b-rune").value,m:$("#b-mode").value,star:o.star,skin:o.skin,g:o.grade,f:o.forge};
+  const o=opts(); const list = ls.get("a2-saved",[]); const b = {h:$("#b-hero").value,s:$("#b-set").value,r:$("#b-rune").value,m:$("#b-mode").value,star:o.star,skin:o.skin,g:o.grade,f:o.forge,res:o.res};
   if(!list.some(x=>JSON.stringify(x)===JSON.stringify(b))) list.unshift(b);
   ls.set("a2-saved",list.slice(0,20)); renderSaved();
   $("#save").textContent="Saved"; setTimeout(()=>$("#save").textContent="Save this loadout",1200);
@@ -1693,7 +1742,7 @@ $("#save").addEventListener("click", ()=>{
 $("#savedList").addEventListener("click", e=>{
   const l=e.target.dataset.load, d=e.target.dataset.del, list=ls.get("a2-saved",[]);
   if(l!==undefined){ const b=list[+l]; $("#b-hero").value=b.h; $("#b-set").value=b.s; $("#b-rune").value=b.r in RUNEPKG?b.r:"echoes"; $("#b-mode").value=b.m;
-    $("#b-star").value=b.star??5; $("#b-grade").value=GRADES.includes(b.g)?b.g:"Mythic"; fillSkins(b.skin||""); syncForge(); $("#b-forge").value=b.f||0; renderResult(); window.scrollTo(0,0); }
+    $("#b-star").value=b.star??5; $("#b-grade").value=GRADES.includes(b.g)?b.g:"Mythic"; fillSkins(b.skin||""); syncForge(); $("#b-forge").value=b.f||0; fillRes(b.res||[]); renderResult(); window.scrollTo(0,0); }
   if(d!==undefined){ list.splice(+d,1); ls.set("a2-saved",list); renderSaved(); }
 });
 $("#heroSearch").addEventListener("input", e=>renderHeroes(e.target.value));
