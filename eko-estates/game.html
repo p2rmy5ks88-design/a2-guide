@@ -461,6 +461,37 @@ input,textarea{-webkit-user-select:text;user-select:text}
 .note2.got{transform:scale(1.4);opacity:0;transition:.2s}
 
 @media (pointer:coarse){input:not([type=range]),textarea,select{font-size:16px!important}}
+#tools .tb#bMap svg{width:21px;height:21px}
+.mp.mapm{overflow:hidden;max-width:min(980px,100%);height:100%}
+.mapm .maphd{flex:none;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.mapm .maphd .mh{margin-right:auto}
+.mapm .chip{padding:4px 10px;border-radius:999px;background:var(--panel2);font-weight:800;font-size:12.5px;color:var(--navy);white-space:nowrap}
+.mapm .mapwrap{flex:1 1 auto;min-height:0;overflow:auto;border-radius:12px;background:var(--panel2);overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.mapm .mapbd{position:relative;margin:auto;background:#e9efe2;border-radius:8px}
+.mapm .mc{position:absolute;box-sizing:border-box;border:1px solid rgba(19,40,74,.25);background:#fffdf6;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:2px;text-align:center;cursor:pointer;color:var(--navy);font:800 var(--fs) var(--body);line-height:1.05}
+.mapm .mc:focus-visible{outline:3px solid var(--navy);outline-offset:-3px}
+.mapm .mc .band{position:absolute;background:var(--g)}
+.mapm .mc .nm{max-width:100%;overflow:hidden;word-break:break-word;max-height:2.2em;position:relative}
+.mapm .mc .ic{font:calc(var(--fs)*1.7)/1 var(--emoji)}
+.mapm .mc .hs{position:relative;font-size:calc(var(--fs)*1.05);letter-spacing:-.05em;color:#1e9a53}
+.mapm .mc .hs.ht{color:#e23b2e}
+.mapm .mc .ow{position:absolute;width:calc(var(--fs)*.9);height:calc(var(--fs)*.9);border-radius:50%;background:var(--oc);border:1px solid #fff;right:2px;bottom:2px}
+.mapm .mc.mo{background-image:repeating-linear-gradient(-45deg,transparent 0 4px,rgba(200,40,30,.2) 4px 6px)}
+.mapm .tks{position:relative;display:flex;flex-wrap:wrap;justify-content:center;gap:1px}
+.mapm .tks i{font:calc(var(--fs)*1.5)/1 var(--emoji);font-style:normal;width:calc(var(--fs)*2.1);height:calc(var(--fs)*2.1);display:grid;place-items:center;border-radius:50%;background:var(--pc);border:1.5px solid #fff;box-shadow:0 1px 2px rgba(0,0,0,.3)}
+.mapm .tks i.now{box-shadow:0 0 0 2px #e23b2e,0 1px 2px rgba(0,0,0,.3)}
+.mapm .tks i.jl{border-color:#e23b2e}
+.mapm .mcen{position:absolute;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center;color:var(--navy);padding:8px}
+.mapm .mcen b{font:calc(var(--fs)*2.2) var(--display)}
+.mapm .mcen small{font-weight:700;color:var(--muted);font-size:calc(var(--fs)*1.4);max-width:90%}
+.mapm .mapft{flex:none;font-size:12px;color:var(--muted)}
+.mapm .mc.fs{border:2px dashed #17a35a;background-color:#effaf2}
+.mapm .maphd .mh{font-size:20px}
+.mapm .maphd .btn{padding:7px 12px;font-size:13px}
+.mapm .mapx{min-width:40px;font-size:16px!important}
+.mapm .chip{font-size:12px;padding:3px 9px}
+.mp.mapm{gap:8px;padding:10px 12px}
+
 .mp.lobby{overflow:hidden}
 .mp.lobby>*{flex:none}
 .mp.lobby .seats{flex:1 1 auto;min-height:44px;overflow-y:auto;overscroll-behavior:contain;align-content:start}
@@ -482,6 +513,7 @@ html.rot .mp.lobby{gap:7px}
     <button class="tb" id="bAssets" aria-label="Your properties" title="Properties"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"><path d="M3 11 12 3l9 8v10h-6v-6H9v6H3z"/></svg></button>
     <button class="tb" id="bTrade" aria-label="Trade" title="Trade"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h14l-4-4M20 16H6l4 4"/></svg></button>
     <button class="tb" id="camBtn" aria-label="Camera: follow the token" title="Camera"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"><rect x="2" y="7" width="14" height="11" rx="2"/><path d="m16 11 6-3v9l-6-3z"/></svg></button>
+    <button class="tb" id="bMap" aria-label="Show the board map" title="Map"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M3 6.5 9 4l6 2.5L21 4v13.5L15 20l-6-2.5L3 20z"/><path d="M9 4v13.5M15 6.5V20"/></svg></button>
     <button class="tb" id="bReact" aria-label="Reactions" title="Reactions"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M8 14.5c1 1.4 2.4 2 4 2s3-.6 4-2"/><circle cx="9" cy="10" r=".8" fill="currentColor"/><circle cx="15" cy="10" r=".8" fill="currentColor"/></svg></button>
     <button class="tb" id="bMenu" aria-label="Menu" title="Menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
   </div>
@@ -1508,8 +1540,8 @@ function renderRoster(){
     const props=propsOf(p.id).map(i=>{const o=G.own[i];return `<i class="pp${o.h===5?' hot':''}${o.m?' mo':''}" style="--g:${SQ[i].g?GC[SQ[i].g]:'#9aa6b4'}">${o.h===5?'H':o.h||''}</i>`}).join('');
     const me=G.online&&p.uid&&p.uid===NET.me;
     d.innerHTML=`${cur?'<span class="nowtag">PLAYING</span>':''}<div class="pt">${p.tok}</div><div class="pinfo"><div class="pn">${esc(p.name)}${me?'<span class="tag you">You</span>':''}${lh?`<span class="tag lv">Lv ${lvlOf(PREF.xp)}</span>`:''}${p.ai?'<span class="tag">AI</span>':''}${p.inJail?'<span class="tag jail">Jail</span>':''}${p.bankrupt?'<span class="tag">Out</span>':''}</div><div class="pc">${fmt(p.cash)}</div>${props?`<div class="pg">${props}</div>`:''}</div>`;
-    d.onclick=()=>{if(!$('#modals').children.length)openAssets(p,{readonly:true})};R.append(d)});
-  {const e=evDef();$('#round').textContent='Round '+G.round+(G.set.mode==='timed'?' of '+G.set.rounds:'')+(G.set.pot&&G.pot?' · Jackpot '+fmt(G.pot):'')+(e?' · '+evText(e,'t'):'')}
+    d.onclick=()=>badgeTap(p);R.append(d)});
+  {const e=evDef();$('#round').textContent='Round '+G.round+(G.set.mode==='timed'?' of '+G.set.rounds:'')+(G.set.pot&&G.pot?' · Jackpot '+fmt(G.pot):'')+` · 🏠 ${G.houses} · 🏨 ${G.hotels} · 🏷️ ${forSale()}`+(e?' · '+evText(e,'t'):'')}
   tok3.forEach((t,i)=>{t.visible=!P(i).bankrupt});
   $('#ui').style.setProperty('--turn',G.over?'transparent':P(G.turn).col);
   pushState();achScan();
@@ -2861,6 +2893,45 @@ window.__sim=async function(n=20,players=4){
 
 /* iOS: undo any zoom/scroll left behind after the keyboard closes */
 document.addEventListener('focusout',e=>{if(e.target&&/^(INPUT|TEXTAREA)$/.test(e.target.tagName))setTimeout(()=>{if(!document.activeElement||!/^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName)){window.scrollTo(0,0);document.documentElement.scrollLeft=0;document.body.scrollTop=0}},80)});
+
+/* ================= BOARD MAP + FIND A PLAYER ================= */
+let badgeT=null,badgeLast={id:-1,t:0};
+function badgeTap(p){const now=Date.now();
+  if(badgeLast.id===p.id&&now-badgeLast.t<350){clearTimeout(badgeT);badgeLast={id:-1,t:0};flyToPlayer(p);return}
+  badgeLast={id:p.id,t:now};clearTimeout(badgeT);badgeT=setTimeout(()=>{if(!$('#modals').children.length)openAssets(p,{readonly:true})},350)}
+function camFocus(pos){const r=rect(pos);const X=r.x+r.w/2,Y=r.y+r.h/2;const dx=550-X,dy=550-Y,l=Math.hypot(dx,dy)||1;const a=aspect();
+  camGoal([wx(X)+dx/l*.7,0,wz(Y)+dy/l*.7],-sideOf(pos)*Math.PI/2,a<1?8:5.4,.74,3.2);userCam=1}
+function flyToPlayer(p){if(!G||!S3)return;if(p.bankrupt){toast(`${p.name} is out of the game`);return}
+  camFocus(p.pos);highlight(p.pos);toast(p.inJail?`${p.name} is in ${SQ[10].n}`:`${p.name} is on ${SQ[p.pos].n}`);sfx('tap')}
+let mapZoom=1;
+const forSale=()=>G?SQ.reduce((n,_,i)=>n+(buyable(i)&&G.own[i].o<0?1:0),0):0;
+function mapCellHTML(i,k,cp){const s=SQ[i],r=rect(i),sd=sideOf(i),cw=CW*k,fs=Math.max(5.5,cw*.15);
+  const o=buyable(i)?G.own[i]:null,own=o&&o.o>=0?P(o.o):null;
+  const toks=G.players.filter(p=>!p.bankrupt&&p.pos===i).map(p=>`<i class="${cp&&p.id===cp.id?'now':''}${p.inJail?' jl':''}" style="--pc:${p.col}">${p.tok}</i>`).join('');
+  let band='';if(s.g){const B=Math.max(3,cw*.16);band=`<span class="band" style="--g:${GC[s.g]};${[`left:0;right:0;top:0;height:${B}px`,`top:0;bottom:0;right:0;width:${B}px`,`left:0;right:0;bottom:0;height:${B}px`,`top:0;bottom:0;left:0;width:${B}px`][sd]}"></span>`}
+  const ic={go:'🏁',jail:'🔒',free:'🅿️',gojail:'👮',chance:'❓',esusu:'💰',tax:'🧾'}[s.t]||s.ic||'';
+  const hs=o&&o.h?(o.h===5?'<span class="hs ht">🏨</span>':`<span class="hs">${'●'.repeat(o.h)}</span>`):'';
+  const bg=own?`background-color:${own.col}2e;`:'';
+  const big=cw>=40,sale=o&&o.o<0;
+  return `<div class="mc${o&&o.m?' mo':''}${sale?' fs':''}" role="button" tabindex="0" data-i="${i}" style="left:${r.x*k}px;top:${r.y*k}px;width:${r.w*k}px;height:${r.h*k}px;--fs:${fs}px;${bg}">${band}${ic&&!toks?`<span class="ic">${ic}</span>`:''}${big||(!ic&&!toks&&!hs)?`<span class="nm">${esc(s.n)}</span>`:''}${hs}${toks?`<span class="tks">${toks}</span>`:''}${own?`<span class="ow" style="--oc:${own.col}" title="${esc(own.name)}"></span>`:''}</div>`}
+function drawMap(pn){const W=pn.querySelector('.mapwrap'),B=pn.querySelector('.mapbd');if(!W||!G)return;
+  const base=Math.max(220,Math.min(W.clientWidth,W.clientHeight)-12),S=Math.round(base*mapZoom),k=S/1100,cp=G.over?null:P(G.turn),fs=Math.max(5.5,CW*k*.15);
+  B.style.width=S+'px';B.style.height=S+'px';
+  let h='';for(let i=0;i<40;i++)h+=mapCellHTML(i,k,cp);
+  h+=`<div class="mcen" style="left:${C*k}px;top:${C*k}px;width:${(1100-2*C)*k}px;height:${(1100-2*C)*k}px;--fs:${fs}px"><b>${esc(CITY.name)}</b><span>${'Round '+G.round}${cp?' · '+`${esc(cp.name)}’s turn`:' · '+'Game over'}</span><span>${`🏷️ ${forSale()} for sale`}</span><span>${`🏠 ${G.houses} houses left`} · ${`🏨 ${G.hotels} hotels left`}</span><small>Tap a square for details. Double-tap a player on the left to see where their token is.</small></div>`;
+  B.innerHTML=h;
+  B.querySelectorAll('.mc').forEach(c=>{const go=()=>showSquare(+c.dataset.i);c.onclick=go;c.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go()}}});
+  pn.querySelector('#mapH').textContent=`🏠 ${G.houses} houses left`;pn.querySelector('#mapS').textContent=`🏷️ ${forSale()} for sale`;pn.querySelector('#mapT').textContent=`🏨 ${G.hotels} hotels left`}
+async function openMap(){if(!G||$('#modals').children.length)return;sfx('tap');let iv=0;
+  await modal({cls:'wide mapm',html:`<div class="maphd"><div class="mh">Map</div><span class="chip" id="mapS"></span><span class="chip" id="mapH"></span><span class="chip" id="mapT"></span><button class="btn" id="mapZ">${mapZoom>1?'🔍 Zoom out':'🔍 Zoom in'}</button><button class="btn mapx" id="mapX" aria-label="Close the map">✕</button></div><div class="mapwrap"><div class="mapbd"></div></div>`,
+    btns:[],onMount:(pn,close)=>{pn.querySelector('#mapX').onclick=()=>close('x');
+      const draw=()=>drawMap(pn);const ro=()=>draw();requestAnimationFrame(draw);
+      pn.querySelector('#mapZ').onclick=e=>{const W=pn.querySelector('.mapwrap');const cx=(W.scrollLeft+W.clientWidth/2)/W.scrollWidth,cy=(W.scrollTop+W.clientHeight/2)/W.scrollHeight;
+        mapZoom=mapZoom>1?1:2.4;e.target.textContent=mapZoom>1?'🔍 Zoom out':'🔍 Zoom in';draw();W.scrollLeft=cx*W.scrollWidth-W.clientWidth/2;W.scrollTop=cy*W.scrollHeight-W.clientHeight/2};
+      let last='';iv=setInterval(()=>{if(!pn.isConnected){clearInterval(iv);removeEventListener('resize',ro);return}const sig=JSON.stringify([G.turn,G.houses,G.hotels,G.players.map(p=>[p.pos,p.bankrupt,p.inJail]),G.own.map(o=>[o.o,o.h,o.m])]);if(sig!==last){last=sig;draw()}},700);
+      addEventListener('resize',ro)}});
+  clearInterval(iv)}
+$('#bMap').onclick=()=>openMap();
 /* ================= NATIVE APP ================= */
 const CAP=window.Capacitor,IS_APP=!!(CAP&&CAP.isNativePlatform&&CAP.isNativePlatform());
 function nativeInit(){if(!IS_APP)return;document.documentElement.classList.add('app');const Pl=CAP.Plugins||{};
