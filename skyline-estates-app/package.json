@@ -1,0 +1,30 @@
+{
+  "name": "skyline-estates-app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Skyline Estates for iOS and Android, built with Capacitor from the web game in ../skyline-estates",
+  "scripts": {
+    "build:web": "node scripts/build-web.mjs",
+    "assets": "capacitor-assets generate --iconBackgroundColor '#10223f' --splashBackgroundColor '#10223f' --splashBackgroundColorDark '#0a162a'",
+    "setup:android": "npm run build:web && npx cap add android && npm run assets -- --android && bash scripts/patch-android.sh && npx cap sync android",
+    "setup:ios": "npm run build:web && npx cap add ios && npm run assets -- --ios && bash scripts/patch-ios.sh && npx cap sync ios",
+    "sync": "npm run build:web && npx cap sync",
+    "open:android": "npx cap open android",
+    "open:ios": "npx cap open ios"
+  },
+  "dependencies": {
+    "@capacitor/android": "^7.0.0",
+    "@capacitor/app": "^7.0.0",
+    "@capacitor/core": "^7.0.0",
+    "@capacitor/ios": "^7.0.0",
+    "@capacitor/splash-screen": "^7.0.0",
+    "@capacitor/status-bar": "^7.0.0",
+    "cordova-plugin-purchase": "^13.12.1"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^7.0.0",
+    "@fontsource/bricolage-grotesque": "^5.1.0",
+    "@fontsource/lilita-one": "^5.1.0"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "appId": "com.kenstylez.skylineestates",
+  "appName": "Skyline Estates",
+  "webDir": "www",
+  "backgroundColor": "#10223f",
+  "android": { "allowMixedContent": false, "captureInput": true, "webContentsDebuggingEnabled": false },
+  "ios": { "contentInset": "never", "scrollEnabled": false, "backgroundColor": "#10223f" },
+  "plugins": {
+    "SplashScreen": { "launchShowDuration": 1500, "launchAutoHide": false, "backgroundColor": "#10223f", "showSpinner": false, "androidScaleType": "CENTER_CROP" },
+    "StatusBar": { "overlaysWebView": true, "style": "DARK", "backgroundColor": "#00000000" }
+  }
+}
