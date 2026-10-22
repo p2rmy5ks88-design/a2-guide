@@ -1647,7 +1647,7 @@ function dieFace(v){return `<span class="dface">${[0,1,2,3,4,5,6,7,8].map(k=>`<i
 const PIPS={1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
 let diceHudT=0;
 function showDiceHud(d){if(FAST)return;const h=$('#diceHud');const sp=d.s!=null?`<span class="dface speed">${typeof d.s==='number'?d.s:d.s==='taxi'?'🚕':'★'}</span>`:'';const tot=d[0]+d[1]+(typeof d.s==='number'?d.s:0);
-  h.innerHTML=dieFace(d[0])+dieFace(d[1])+sp+`<b>${d.s==='bus'?'BUS':tot}</b>${trip?'<em>TRIPLES</em>':d[0]===d[1]?'<em>DOUBLES</em>':d.s==='oga'?'<em class="oga">OGA</em>':''}`;h.classList.remove('on');void h.offsetWidth;h.classList.add('on');clearTimeout(diceHudT);diceHudT=setTimeout(()=>h.classList.remove('on'),3200*spd())}
+  h.innerHTML=dieFace(d[0])+dieFace(d[1])+sp+`<b>${tot}</b>${d[0]===d[1]?'<em>DOUBLES</em>':d.s==='star'?'<em class="oga">STAR</em>':d.s==='taxi'?'<em class="oga">TAXI</em>':''}`;h.classList.remove('on');void h.offsetWidth;h.classList.add('on');clearTimeout(diceHudT);diceHudT=setTimeout(()=>h.classList.remove('on'),3200*spd())}
 
 /* ================= PROPERTY CHIPS ================= */
 function houseLabel(i){const h=G.own[i].h;return h===5?'Hotel':h?h+' house'+(h>1?'s':''):''}
@@ -2227,7 +2227,7 @@ function ambLoop(){if(!AUD.ambOn)return;const th=CUR_THEME;const r=Math.random()
 function startAmb(){if(AUD.ambOn||!AC)return;AUD.ambOn=true;const b=buses();b.amb.gain.setTargetAtTime(1,AC.currentTime,.8);ambTalkers(true);bedNoise();later(ambLoop,800,2000)}
 function stopAmb(){if(!AUD.ambOn)return;AUD.ambOn=false;AUD.timers.forEach(clearTimeout);AUD.timers=[];ambTalkers(false);if(AUD.bed){try{AUD.bed.s.stop()}catch(e){}AUD.bed=null}}
 function ambTheme(){if(AUD.ambOn)bedNoise()}
-/* radio: Eko Estates FM 97.3 plays the owner's own tracks as a shuffled, crossfaded playlist */
+/* radio: Skyline FM plays the owner's own tracks as a shuffled, crossfaded playlist */
 const FM_LIST=[['youre-my-home','You’re My Home','Kenstylez'],['red-room','Red Room','Kenstylez'],['chances-trap','Chances Trap','Kenstylez'],
   ['grinding-all-my-life','Grinding All My Life','Kenstylez'],['mans-not-hot','Man’s Not Hot','Kenstylez'],['area-don-lock','Area Don Lock','Kenstylez'],
   ['papa-devine-bella','Papa Devine Bella','Kenstylez'],['bigstan-in-love','Bigstan in Love (Stan-tastic)','Kenstylez'],['dusty-shoes','Dusty Shoes','Kenstylez'],['sanctuary-and-battlefield','Sanctuary and Battlefield','Kenstylez'],['lifestyle','Lifestyle','Kenstylez'],['comfort','Comfort','Kenstylez'],['intro','Intro','Kenstylez']];
@@ -2243,7 +2243,7 @@ function fmInit(){if(FMS.slots.length)return;FMS.slots=[fmSlot(),fmSlot()];FMS.o
 function fmGain(s,v,t){if(s.g){s.g.gain.cancelScheduledValues(AC.currentTime);s.g.gain.setValueAtTime(s.g.gain.value,AC.currentTime);s.g.gain.linearRampToValueAtTime(v,AC.currentTime+t)}else s.a.volume=v>0?Math.min(1,PREF.audio.vol):0}
 function fmNext(fade=FM_XF){fmInit();FMS.idx=(FMS.idx+1)%FMS.order.length;if(FMS.idx===0&&FMS.cur>=0){const last=FMS.order[FMS.order.length-1];do{shuffle(FMS.order)}while(FMS.order.length>1&&FMS.order[0]===last)}
   const t=FM_LIST[FMS.order[FMS.idx]],old=FMS.slots[FMS.cur],ni=FMS.cur<0?0:1-FMS.cur,nw=FMS.slots[ni];
-  nw.a.src='audio/fm/'+t[0]+'.mp3';nw.a.currentTime=0;FMS.cur=ni;FMS.track=t;FMS.xfading=true;
+  nw.a.src=(IS_APP?'':'../eko-estates/')+'audio/fm/'+t[0]+'.mp3';nw.a.currentTime=0;FMS.cur=ni;FMS.track=t;FMS.xfading=true;
   const p=nw.a.play();if(p&&p.catch)p.catch(()=>{});fmGain(nw,1,Math.max(.05,fade*.6));
   if(old&&!old.a.paused){fmGain(old,0,fade);setTimeout(()=>{if(FMS.slots[FMS.cur]!==old)old.a.pause()},fade*1000+150)}
   setTimeout(()=>{FMS.xfading=false},fade*1000+200);lastPill='';renderRadioPill();
