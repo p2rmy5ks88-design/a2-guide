@@ -620,6 +620,8 @@ html.rot .mp.lobby{gap:7px}
 .crole{font:800 11px var(--body)!important;letter-spacing:.08em;text-transform:uppercase;color:#7a5200!important}
 .cbig2 .csvg,.pav .csvg{display:block}
 .ccard .csvg{border-radius:12px}
+.okmsg{color:var(--green)!important;font-weight:800}.errmsg{color:var(--bad)!important;font-weight:800}
+#sPromo{text-transform:uppercase;letter-spacing:.06em}
 </style>
 
 <canvas id="gl" aria-label="3D game board"></canvas>
@@ -3624,7 +3626,10 @@ function paneShop(T){let tab=setup.shopTab||'surr';
   else if(tab==='dice'){B.innerHTML=`<div class="shopgrid"></div>`;const E=B.querySelector('.shopgrid');DICE_SKINS.forEach(d=>{const own=itemOwned('dice',d.id),on=diceSkin().id===d.id;
       const b=el('div','scard'+(on?' on':''),`<div class="diceprev" style="--f:${d.face};--e:${d.edge};--p:${d.pip};--o:${d.one}"><i></i><i></i><i></i><i></i><i></i></div><b>${esc(d.name)} dice</b><div class="brow">${on?'<span class="premtag">Equipped</span>':own?'<button class="sm go" data-a="eq">Use</button>':d.price?`<button class="sm warn" data-a="buy">${fmtC(d.price)}</button>`:''}</div>${!own?`<small class="how">${esc(unlockTxt(d))}</small>`:''}`);
       const eq=()=>{PREF.eq.dice=d.id;savePref();applyDiceSkin();paneShop(T)};const e1=b.querySelector('[data-a="eq"]');if(e1)e1.onclick=eq;const bb=b.querySelector('[data-a="buy"]');if(bb)bb.onclick=async()=>{if(await confirmBuy(`${d.name} dice`,d.price)){grantItem('dice',d.id);eq();railProfile()}};E.append(b)})}
-  else if(tab==='fin'){setup.tab='tokens';homeTab('tokens');setTimeout(()=>{const f=$('#pane .fingrid');if(f)f.scrollIntoView({block:'center'})},60)}}
+  else if(tab==='fin'){B.innerHTML=`<div class="small">A finish paints your token. It shows for you and, online, for everyone in your game.</div><div class="fingrid"></div>`;
+    const F=B.querySelector('.fingrid');[{id:null,name:'Player colour',col:PCOL[0],price:0}].concat(FINISHES).forEach(f=>{const own=f.id===null||itemOwned('fin',f.id),on=(PREF.eq.fin||null)===f.id;
+      const b=el('button','fcard'+(on?' on':'')+(own?'':' locked'),`<i style="background:radial-gradient(circle at 35% 30%,#fff,${f.col} 55%,#000 140%)"></i><b>${esc(f.name)}</b><small>${on?'Equipped':own?'Tap to use':f.price?fmtC(f.price):esc(f.desc)}</small>`);
+      b.onclick=async()=>{if(!own){if(!f.price){toast(f.desc);return}if(!(await confirmBuy(`${f.name} finish`,f.price,esc(f.desc))))return;grantItem('fin',f.id)}PREF.eq.fin=f.id;savePref();paneShop(T);railProfile()};F.append(b)})}}
 function pickChar(s,act){if(s.i===0&&s.type==='human')return myChar();const used=new Set(act.filter(a=>a.i===0&&a.type==='human').map(()=>myChar()));const pool=s.type==='ai'?CHARS.filter(c=>c.id!=='nova'):CHARS.filter(c=>charUnlocked(c.id));const free=pool.filter(c=>!used.has(c.id));const k=(s.i*5+3)%Math.max(1,free.length);return (free[k]||pool[0]).id}
 async function previewSurround(id){const old=PREF.eq.surr;PREF.eq.surr=id;PREF.inv.surr=PREF.inv.surr||{};const had=PREF.inv.surr[id];PREF.inv.surr[id]=1;applyTheme(setup.city);$('#title').classList.add('peek');TITLE_CAM={look:[0,0,0],L:34,pitch:.5,spin:.08};
   await modal({cls:'peekm',html:`<div class="mtxt">Previewing <b>${esc(SURROUND_PREMIUM.find(s=>s.id===id).name)}</b></div>`,btns:[{k:'x',label:'Done',primary:true}]});
@@ -3648,12 +3653,14 @@ function paneSettings(T){const rows=[['riders','Riders on tokens','Show each pla
   T.innerHTML=`<div class="phead"><h2>Settings</h2></div>
     <div class="card"><div class="ch">Sound</div><div class="rchips" id="sChips"></div><label class="vol"><span>Volume</span><input type="range" id="sVol" min="0" max="1" step="0.05"></label></div>
     <div class="card"><div class="ch">Defaults</div><div class="opts"><span>AI skill</span><div class="seg" id="sAi"></div><span>Game speed</span><div class="seg" id="sSpd"></div><span>Camera</span><div class="seg" id="sCam"></div><span>Language</span><div class="seg" id="sLang"></div></div><div class="small">More languages are on the way.</div></div>
+    <div class="card"><div class="ch">Promo code</div><div class="brow"><input id="sPromo" class="uname" maxlength="20" placeholder="Enter code" autocomplete="off" autocapitalize="characters" spellcheck="false"><button class="sm go" id="sRedeem">Redeem</button></div><div class="small" id="sPromoMsg">Codes are given out in events and by the Skyline Estates team.</div></div>
     <div class="card"><div class="ch">Online safety</div><div class="small">Names are filtered. You can report or block a player from the online lobby or during a game. ${blocked.length?`Blocked: ${blocked.map(b=>esc(b.n)).join(', ')}`:'You haven’t blocked anyone.'}</div>${blocked.length?'<div class="brow"><button class="sm" id="sUnblock">Unblock everyone</button></div>':''}</div>
     <div class="card"><div class="ch">About</div><p class="small">Skyline Estates ${IS_APP?'app':'web'} · a property trading game.<br>Radio music by Kenstylez.<br>Progress and coins are saved on this device.${SUPPORT_EMAIL?`<br>Support: <a href="mailto:${SUPPORT_EMAIL}">${SUPPORT_EMAIL}</a>`:''}</p><div class="brow"><a class="btn" href="${PRIVACY_URL}" target="_blank" rel="noopener">Privacy policy</a><button class="btn danger" id="sReset">Reset progress</button></div></div>`;
   const draw=()=>{const E=T.querySelector('#sChips');E.innerHTML='';rows.forEach(([k,l,d])=>{const on=k==='riders'?PREF.riders:PREF.audio[k];const b=el('button','rchip'+(on?' on':''),`<b>${l}</b><small>${d}</small>`);b.setAttribute('aria-pressed',on?'true':'false');b.onclick=()=>{if(k==='riders'){PREF.riders=!PREF.riders;savePref();draw();return}initAudio();PREF.audio[k]=!PREF.audio[k];savePref();syncAudio();draw()};E.append(b)})};draw();
   const v=T.querySelector('#sVol');v.value=PREF.audio.vol;v.oninput=()=>{PREF.audio.vol=+v.value;savePref();syncAudio()};
   segIn(T,'#sAi',[['easy','Easy'],['normal','Normal'],['hard','Hard']],()=>setup.ai,x=>{setup.ai=x;PREF.ai=x;savePref()});segIn(T,'#sSpd',[['normal','Normal'],['fast','Fast']],()=>setup.speed,x=>{setup.speed=x;PREF.speed=x;savePref()});
   segIn(T,'#sCam',[['follow','Follow token'],['board','Whole board']],()=>PREF.cam||'follow',x=>{PREF.cam=x;camMode=x;savePref()});segIn(T,'#sLang',[['en','English']],()=>PREF.lang,x=>{PREF.lang=x;savePref()});
+  const pi=T.querySelector('#sPromo'),pm=T.querySelector('#sPromoMsg');T.querySelector('#sRedeem').onclick=async()=>{const r=await redeemPromo(pi.value);pm.textContent=r.msg;pm.className='small'+(r.ok?' okmsg':' errmsg');if(r.ok){pi.value='';railProfile()}};pi.onkeydown=e=>{if(e.key==='Enter')T.querySelector('#sRedeem').click()};
   const ub=T.querySelector('#sUnblock');if(ub)ub.onclick=()=>{PREF.blocked=[];savePref();paneSettings(T)};
   T.querySelector('#sReset').onclick=async()=>{const k=await modal({html:'<div class="mh">Reset all progress?</div><div class="mtxt">This deletes your XP, levels, coins, items, token upgrades, achievements, unlocked cities and tokens, season progress, trophies, daily streak and saved game on this device. It can’t be undone.</div>',btns:[{k:'no',label:'Keep progress'},{k:'yes',label:'Reset everything',danger:true}]});
     if(k==='yes'){['ach','stats','cach','cstat','daily','boost','boostGames','coins','inv','eq','tokLv','season','trophies','leagueBest','lastCountry','qseen'].forEach(x=>delete PREF[x]);try{localStorage.setItem(PKEY,JSON.stringify(PREF));localStorage.removeItem(SKEY)}catch(e){}location.reload()}}}
@@ -3686,6 +3693,19 @@ function paneCast(T){let sel=setup.castSel||myChar();const tok=setup.slots[0].to
     T.querySelectorAll('[data-g]').forEach(b=>b.onclick=()=>previewGesture(b.dataset.g));
     const u=T.querySelector('#cUse');if(u)u.onclick=()=>{PREF.eq.char=sel;savePref();railProfile();draw()}};
   draw();previewChar(sel,tok)}
+
+/* ---- promo codes: only a hash of each code is stored here, so codes can't be read from the page ---- */
+const PROMOS=[{h:'3eb64b641a84925181c72446845c5e300a9e2d75cb27bd64276c2b74fe286ba5',coins:20000,until:Date.UTC(2026,9,27,20,13),label:'20,000 coins'}];
+function sha256hex(str){const K=[],H=[];let p=2;for(let n=0;n<64;p++){let ok=true;for(let d=2;d*d<=p;d++)if(p%d===0){ok=false;break}if(ok){if(n<8)H[n]=(Math.pow(p,1/2)%1)*4294967296|0;K[n++]=(Math.pow(p,1/3)%1)*4294967296|0}}
+  const b=unescape(encodeURIComponent(str)),w=[],l=b.length*8;for(let i=0;i<b.length;i++)w[i>>2]|=b.charCodeAt(i)<<(24-(i%4)*8);w[l>>5]|=0x80<<(24-l%32);w[((l+64>>9)<<4)+15]=l;
+  const r=(x,n)=>x>>>n|x<<(32-n);for(let j=0;j<w.length;j+=16){const W=Array.from({length:16},(_,k)=>w[j+k]|0);let[a,bb,c,d,e,f,g,h]=H;for(let i=0;i<64;i++){if(i>15){const x=W[i-15],y=W[i-2];W[i]=(W[i-16]+(r(x,7)^r(x,18)^x>>>3)+W[i-7]+(r(y,17)^r(y,19)^y>>>10))|0}
+    const t1=(h+(r(e,6)^r(e,11)^r(e,25))+(e&f^~e&g)+K[i]+(W[i]|0))|0,t2=((r(a,2)^r(a,13)^r(a,22))+(a&bb^a&c^bb&c))|0;h=g;g=f;f=e;e=d+t1|0;d=c;c=bb;bb=a;a=t1+t2|0}
+    H[0]=H[0]+a|0;H[1]=H[1]+bb|0;H[2]=H[2]+c|0;H[3]=H[3]+d|0;H[4]=H[4]+e|0;H[5]=H[5]+f|0;H[6]=H[6]+g|0;H[7]=H[7]+h|0}
+  return H.map(x=>(x>>>0).toString(16).padStart(8,'0')).join('')}
+async function redeemPromo(raw){const n=String(raw||'').toUpperCase().replace(/[^A-Z0-9]/g,'');if(n.length<4)return{ok:false,msg:'Enter a code.'};
+  const h=sha256hex('skyline:'+n),P=PROMOS.find(x=>x.h===h);if(!P)return{ok:false,msg:'That code isn’t valid.'};
+  PREF.promos=PREF.promos||{};if(PREF.promos[h])return{ok:false,msg:'You’ve already redeemed this code.'};if(Date.now()>P.until)return{ok:false,msg:'This code has expired.'};
+  PREF.promos[h]=Date.now();savePref();if(P.coins)addCoins(P.coins,'Promo code');sfx('win');toast(`🎁 ${P.label} added!`);return{ok:true,msg:`Redeemed: ${P.label} added to your balance.`}}
 /* ================= ORIENTATION ================= */
 let rotDismissed=false;
 function checkRotate(){$('#rotate').hidden=true}
