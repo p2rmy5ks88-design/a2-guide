@@ -10,6 +10,9 @@ HERE="$(dirname "$(readlink -f "$0")")"
 LOG="$HOME/.skyline-estates.log"
 echo "--- $(date) start $*" >> "$LOG"
 unset LD_PRELOAD
+# plain keyboard handling: the Steam on-screen keyboard otherwise types every letter twice through the input method
+export GTK_IM_MODULE=gtk-im-context-simple
+export XMODIFIERS=@im=none
 exec "$HERE/${name}.bin" --no-sandbox --disable-gpu-sandbox "$@" >> "$LOG" 2>&1
 `);
   fs.chmodSync(bin, 0o755);

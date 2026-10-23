@@ -1,7 +1,7 @@
 {
   "name": "skyline-estates",
   "productName": "Skyline Estates",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "private": true,
   "description": "Skyline Estates, a 3D property trading board game, packaged for Steam Deck and Linux desktops",
   "author": {

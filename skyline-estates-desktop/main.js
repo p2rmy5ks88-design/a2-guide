@@ -7,6 +7,7 @@ const { pathToFileURL } = require('node:url');
 protocol.registerSchemesAsPrivileged([{ scheme: 'app', privileges: { standard: true, secure: true, supportFetchAPI: true, corsEnabled: true, stream: true } }]);
 app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
 app.commandLine.appendSwitch('no-sandbox');
+app.commandLine.appendSwitch('touch-events', 'enabled');
 process.on('uncaughtException', (e) => { console.error('Skyline Estates error:', e); });
 
 let win;
