@@ -628,6 +628,11 @@ html.rot .mp.lobby{gap:7px}
 .tem.r4{background:radial-gradient(circle at 40% 35%,#fff7d6,#e2b13c)!important;box-shadow:0 4px 0 #9a6f10,0 0 14px rgba(242,193,74,.7)!important}
 .lvpips i{width:34px}
 .tlv{color:#fff!important}
+.tem.r5{background:radial-gradient(circle at 40% 35%,#ffd8d8,#b3122f)!important;box-shadow:0 4px 0 #6a0a1c,0 0 16px rgba(255,58,42,.75)!important;animation:ember 1.6s ease-in-out infinite}
+.tem.r6{background:conic-gradient(from 0deg,#ff3f6c,#ffb02e,#6be38b,#3fd0ff,#8f3fd8,#ff3f6c)!important;box-shadow:0 4px 0 #2a1048,0 0 18px rgba(143,63,216,.8)!important;animation:chaos 4s linear infinite}
+@keyframes ember{50%{box-shadow:0 4px 0 #6a0a1c,0 0 26px rgba(255,120,42,.95)}}
+@keyframes chaos{to{filter:hue-rotate(360deg)}}
+.lvpips i{width:24px!important}
 </style>
 
 <canvas id="gl" aria-label="3D game board"></canvas>
@@ -1106,7 +1111,7 @@ function buildBoard(){
     const strip=N(geo.box,mat('#fff'),wx(st.x+st.w/2),.012,wz(st.y+st.h/2)).sc(st.w*U,.024,st.h*U);strip.visible=false;S3.dyn.add(strip);S3.strips[i]=strip;
     const mo=N(geo.plane,S3.mortMat,wx(r.x+r.w/2),.006,wz(r.y+r.h/2)).sc(r.w*U,1,r.h*U);mo.visible=false;S3.dyn.add(mo);S3.morts[i]=mo;
     if(SQ[i].t==='prop'){const pt=[[r.x+r.w/2,r.y+15],[r.x+r.w-15,r.y+r.h/2],[r.x+r.w/2,r.y+r.h-15],[r.x+15,r.y+r.h/2]][s];const hn=new Node().at(wx(pt[0]),0,wz(pt[1])).rot(0,OUTYAW(s),0);S3.dyn.add(hn);S3.houses[i]=hn}}
-  tok3=G.players.map(p=>{const fc=p.fin&&FINISHES.find(f=>f.id===p.fin);const rc=rarityOf(p.tl).col;const t=tokenModel(p.tok,fc?fc.col:rc||p.col);attachRider(p,t);if(fc||rc)t.add(N(S3.geo.torus,mat(p.col,{spec:.5,em:.2}),0,.03,0).sc(.23,.23,.1).rot(Math.PI/2,0,0));if(p.tl>=4||(isLocalHuman(p)&&hasLvl(5)))t.add(N(S3.geo.torus,mat('#f2b632',{spec:.95,em:.15}),0,.012,0).sc(.25,.25,.12).rot(Math.PI/2,0,0));t.sc(.82);S3.dyn.add(t);return t});
+  tok3=G.players.map(p=>{const fc=p.fin&&FINISHES.find(f=>f.id===p.fin);const rc=rarityOf(p.tl).col;const t=tokenModel(p.tok,fc?fc.col:rc||p.col);attachRider(p,t);if(fc||rc)t.add(N(S3.geo.torus,mat(p.col,{spec:.5,em:.2}),0,.03,0).sc(.23,.23,.1).rot(Math.PI/2,0,0));addAura(t,p.tl);if(p.tl>=4||(isLocalHuman(p)&&hasLvl(5)))t.add(N(S3.geo.torus,mat('#f2b632',{spec:.95,em:.15}),0,.012,0).sc(.25,.25,.12).rot(Math.PI/2,0,0));t.sc(.82);S3.dyn.add(t);return t});
   cellState=SQ.map(()=>({o:-1,h:0,m:false}));
   SQ.forEach((_,i)=>updateCell(i,false));G.players.forEach(p=>placeToken(p));
 }
@@ -2456,8 +2461,15 @@ const TOKEN_LV=[null,
   {name:'Common',col:null,ui:'#8a96a3',cost:0,pay:0,rr:0,pass:0,txt:'No perks yet. Plays in your player colour.'},
   {name:'Rare',col:'#2f7fe0',ui:'#2f7fe0',cost:500,pay:.05,rr:1,pass:0,txt:'Blue finish · Payday +5% · 1 re-roll per game'},
   {name:'Epic',col:'#8f3fd8',ui:'#8f3fd8',cost:1500,pay:.1,rr:1,pass:1,txt:'Purple finish · Payday +10% · 1 re-roll · Lucky Pass'},
-  {name:'Legendary',col:'#e2b13c',ui:'#c9921a',cost:4000,pay:.15,rr:2,pass:1,txt:'Gold finish with a glowing base · Payday +15% · 2 re-rolls · Lucky Pass'}];
-const TL_MAX=4;
+  {name:'Legendary',col:'#e2b13c',ui:'#c9921a',cost:4000,pay:.15,rr:2,pass:1,txt:'Gold finish with a glowing base · Payday +15% · 2 re-rolls · Lucky Pass'},
+  {name:'Mythic',col:'#b3122f',ui:'#c8203c',cost:12000,pay:.2,rr:2,pass:1,shield:1,coinX:.25,xpX:0,req:{wins:15,lvl:15},aura:'mythic',
+    txt:'Crimson finish with a pulsing ember aura · Payday +20% · 2 re-rolls · Lucky Pass · Rent Shield (your first rent bill each game is halved) · +25% coins from every game with this token · Mythic title'},
+  {name:'Chaotic',col:'#2a1048',ui:'linear-gradient(90deg,#ff3f6c,#ffb02e,#3fd0ff,#8f3fd8)',cost:30000,pay:.25,rr:3,pass:2,shield:1,coinX:.5,xpX:.25,surge:1,req:{wins:40,lvl:30,league:'diamond'},aura:'chaos',
+    txt:'Shifting rainbow aura with orbiting sparks · Payday +25% · 3 re-rolls · 2 Lucky Passes · Rent Shield · Chaos Surge (your first trip past Start each game pays triple) · +50% coins and +25% XP from every game with this token · Chaotic title'}];
+const TL_MAX=6;
+PREF.tokWins=PREF.tokWins||{};
+function tierReqText(t,lv){const R=TOKEN_LV[lv];if(!R||!R.req)return'';const q=R.req,o=[];if(q.wins)o.push(`Win ${q.wins} games with this token (${Math.min(q.wins,PREF.tokWins[t]||0)}/${q.wins})`);if(q.lvl)o.push(`Reach player level ${q.lvl} (now ${lvlOf(PREF.xp)})`);if(q.league){const L=LEAGUES.find(l=>l.id===q.league);o.push(`Reach the ${L.name} league`)}return o.join(' · ')}
+function tierReqMet(t,lv){const R=TOKEN_LV[lv];if(!R||!R.req)return true;const q=R.req;return (!q.wins||(PREF.tokWins[t]||0)>=q.wins)&&(!q.lvl||lvlOf(PREF.xp)>=q.lvl)&&(!q.league||leagueIdx()>=LEAGUES.findIndex(l=>l.id===q.league))}
 if(!PREF.tokTierV){Object.keys(PREF.tokLv).forEach(k=>{PREF.tokLv[k]=[1,1,2,2,3,4][Math.min(5,PREF.tokLv[k]||1)]});PREF.tokTierV=1}
 const tokLv=t=>Math.max(1,Math.min(TL_MAX,PREF.tokLv[t]||1));
 const rarityOf=l=>TOKEN_LV[Math.max(1,Math.min(TL_MAX,l||1))];
@@ -2536,6 +2548,8 @@ const ACH=[
   {id:'streak7',name:'Seven-Day Streak',desc:'Reach a 7-day daily streak.',goal:7,s:'streak',reward:{coins:300}},
   {id:'tuned',name:'Tuned Up',desc:'Upgrade a token to Epic.',goal:3,s:'tokLv',reward:{coins:100}},
   {id:'loaded',name:'Fully Loaded',desc:'Upgrade a token to Legendary.',goal:4,s:'tokLv',reward:{coins:400}},
+  {id:'mythic',name:'Myth Made Real',desc:'Upgrade a token to Mythic.',goal:5,s:'tokLv',reward:{coins:1500}},
+  {id:'chaotic',name:'Agent of Chaos',desc:'Upgrade a token to Chaotic.',goal:6,s:'tokLv',reward:{coins:5000}},
   {id:'league',name:'Golden League',desc:'Reach the Gold league.',goal:1,reward:{coins:300}},
   {id:'season10',name:'Season Climber',desc:'Reach tier 10 in a season.',goal:10,s:'seasonTier',reward:{coins:200}},
   {id:'shopper',name:'Window Shopper',desc:'Buy an item with coins.',goal:1,reward:{coins:50}},
@@ -2555,7 +2569,7 @@ const ACH=[
   {id:'platinum',name:'Skyline Platinum',desc:'Earn every other trophy.',goal:1,s:'allTrophies',reward:{coins:3000}}
 ];
 /* trophy tiers, in the style of console trophy lists: bronze, silver, gold and one platinum */
-const TROPHY_TIER={first:'b',win1:'b',win5:'s',win25:'g',win100:'g',games10:'b',games50:'s',set:'b',hotel:'b',hotels3:'s',transport:'s',utils:'b',billion:'s',rent500:'b',takeover:'b',takeover3:'g',deals3:'b',deals25:'s',auction:'b',jail3:'b',triples:'b',quiz10:'b',quiz50:'s',catch15:'b',festival:'b',ffa_house:'b',ffa_win:'s',quick:'b',timed:'b',countries3:'b',countries8:'s',globetrotter:'g',cities10:'s',worldtour:'g',wincountries5:'g',medal:'b',gold:'g',level10:'s',level25:'g',online1:'b',onlinewin:'s',streak7:'s',tuned:'b',loaded:'s',league:'s',season10:'s',shopper:'b',rules4:'b',nohouse:'s',comeback:'g',sets3:'s',land10:'b',paper:'b',cards20:'b',speeding:'b',blitz:'g',auctions10:'s',cast5:'s',castall:'g',username:'b',platinum:'p'};
+const TROPHY_TIER={first:'b',win1:'b',win5:'s',win25:'g',win100:'g',games10:'b',games50:'s',set:'b',hotel:'b',hotels3:'s',transport:'s',utils:'b',billion:'s',rent500:'b',takeover:'b',takeover3:'g',deals3:'b',deals25:'s',auction:'b',jail3:'b',triples:'b',quiz10:'b',quiz50:'s',catch15:'b',festival:'b',ffa_house:'b',ffa_win:'s',quick:'b',timed:'b',countries3:'b',countries8:'s',globetrotter:'g',cities10:'s',worldtour:'g',wincountries5:'g',medal:'b',gold:'g',level10:'s',level25:'g',online1:'b',onlinewin:'s',streak7:'s',tuned:'b',loaded:'s',mythic:'g',chaotic:'g',league:'s',season10:'s',shopper:'b',rules4:'b',nohouse:'s',comeback:'g',sets3:'s',land10:'b',paper:'b',cards20:'b',speeding:'b',blitz:'g',auctions10:'s',cast5:'s',castall:'g',username:'b',platinum:'p'};
 const TIER_INFO={b:['Bronze','🥉',15],s:['Silver','🥈',30],g:['Gold','🥇',90],p:['Platinum','💎',300]};
 ACH.forEach(a=>a.tier=TROPHY_TIER[a.id]||'b');
 function trophyCount(){const n={b:0,s:0,g:0,p:0};ACH.forEach(a=>{if(achDone(a))n[a.tier]++});return n}
@@ -3247,10 +3261,10 @@ const _bankrupt=bankrupt;bankrupt=function(p,to){_bankrupt(p,to);if(to){st(to).b
 const _buyProp=buyProp;buyProp=function(p,i,price){_buyProp(p,i,price);st(p).buys++;if(mine(p))missionScan()};
 const _build=build;build=function(pid,i){_build(pid,i);const p=P(pid);if(evNow()==='boom'){const rf=SQ[i].h/2;p.cash+=rf;float(pid,rf)}const s=st(p);if(G.own[i].h===5){s.hotels++;if(mine(p)&&!FAST)fireworks()}else s.houses++;if(mine(p)){cityScan();ffaScan(p,i)}};
 function ffaScan(p,i){if(!FFA()||!trackable())return;const g=SQ[i].g,full=ownsAll(p.id,g);if(!full)achAward('ffa_house')}
-const _sendToJail=sendToJail;sendToJail=async function(p){const pk=perkOf(p);if(pk.pass&&!p.passUsed){p.passUsed=1;log(`${p.name} used a Lucky Pass and stays out of the Lockup`);if(!FAST)toast(`🍀 ${p.name}’s Lucky Pass! No Lockup this time.`);renderRoster();return}
+const _sendToJail=sendToJail;sendToJail=async function(p){const pk=perkOf(p);if(pk.pass&&(p.passUsed||0)<pk.pass){p.passUsed=(p.passUsed||0)+1;log(`${p.name} used a Lucky Pass and stays out of the Lockup`);if(!FAST)toast(`🍀 ${p.name}’s Lucky Pass! No Lockup this time.`);renderRoster();return}
   st(p).jail++;if(mine(p))bumpCity('jail');await _sendToJail(p);if(mine(p))cityScan()};
 const _executeTrade=executeTrade;executeTrade=function(t){_executeTrade(t);[P(t.from),P(t.to)].forEach(p=>{st(p).trades++;if(mine(p)){bumpCity('trades');PREF.stats.deals++;savePref()}});if(mine(P(t.from))||mine(P(t.to))){cityScan();achBump()}};
-function onPassGo(p){if(evNow()==='holiday'){const x=payday(p);p.cash+=x;float(p.id,x)}st(p).go++;if(mine(p)){bumpCity('go');cityScan()}}
+function onPassGo(p){if(evNow()==='holiday'){const x=payday(p);p.cash+=x;float(p.id,x)}if(perkOf(p).surge&&!p.surgeUsed){p.surgeUsed=1;const x=payday(p)*2;p.cash+=x;float(p.id,x);log(`${p.name}’s Chaos Surge: triple payday!`);if(!FAST)toast(`🌀 Chaos Surge! ${p.name} collects a triple payday`)}st(p).go++;if(mine(p)){bumpCity('go');cityScan()}}
 function onAuctionWin(w,i,bid){const s=st(w);s.aucWins++;if(bid<SQ[i].p/2)s.aucCheap++;if(mine(w))cityScan()}
 const _land=land;land=async function(p,d,o2){if(SQ[p.pos].t==='tax'&&evNow()==='taxfree'){toast('Tax holiday! Nothing to pay.');return}await _land(p,d,o2);if(SQ[p.pos].t==='free')st(p).free++;if(mine(p)&&p.cash>=3000)cityScan()};
 /* re-roll perk: offered to the local player before the dice count */
@@ -3264,8 +3278,9 @@ function progressGameEnd(w){if(!trackable()||G.progDone)return null;G.progDone=t
   const sts=standings(),me=hum.slice().sort((a,b)=>sts.indexOf(a)-sts.indexOf(b))[0],rank=sts.indexOf(me),n=sts.length;
   let base=50+(won?200:0)+Math.min(200,Math.round(Math.max(...hum.map(p=>st(p).rent))/10));
   if(PREF.boostGames>0){base*=2;PREF.boostGames--;XPLOG.push(['Double XP booster',0])}
+  const myT=rarityOf(me.tl);if(myT.xpX){base=Math.round(base*(1+myT.xpX));XPLOG.push([myT.name+' token bonus',0])}
   addXP(base,won?'Win + game XP':'Game XP');
-  const coins=(won?120:40)+(rank===1&&!won?30:0)+(G.online?40:0);addCoins(coins,won?'Win':'Game');
+  const coins=Math.round(((won?120:40)+(rank===1&&!won?30:0)+(G.online?40:0))*(1+(myT.coinX||0)));addCoins(coins,won?'Win':'Game');if(won){PREF.tokWins[me.tok]=(PREF.tokWins[me.tok]||0)+1;savePref()}
   const tr=trophyDelta(rank,n,won);const lc=tr?addTrophies(tr):0;
   const sx=hum.map(st);const sum=k=>sx.reduce((a,s)=>a+(s[k]||0),0);
   weeklyAdd('games',1);if(won)weeklyAdd('wins',1);if(G.online)weeklyAdd('online',1);weeklyAdd('houses',sum('houses'));weeklyAdd('towers',sum('hotels'));weeklyAdd('rent',sum('rent'));weeklyAdd('trades',sum('trades'));weeklyAdd('auctions',sum('aucWins'));
@@ -3461,9 +3476,20 @@ let TITLE_CAM=null;
 function clearPreview(){if(S3&&S3.preview){ROOT.remove(S3.preview);S3.preview=null}TITLE_CAM=null}
 function previewChar(id,tok){if(!S3)return;clearPreview();const g=new Node().at(0,2.1,0);const t=tokenModel(tok,(myFinish()&&FINISHES.find(f=>f.id===myFinish()).col)||rarityOf(tokLv(tok)).col||PCOL[0]);
   const f=charModel(id);f.node.at(-.02,SEAT[tok]==null?.3:SEAT[tok],0).sc(1.25);(t.m||t).add(f.node);(S3.figs=S3.figs||[]).push(f);t.fig=f;
-  g.add(N(S3.geo.cyl,mat('#1c2333',{spec:.8}),0,-.03,0).sc(.34,.04,.34),N(S3.geo.torus,mat('#c9a24a',{spec:.95,em:.15}),0,-.01,0).sc(.34,.34,.08).rot(Math.PI/2,0,0),t);g.sc(3.9);ROOT.add(g);S3.preview=g;S3.previewFig=f;
+  addAura(t,tokLv(tok));g.add(N(S3.geo.cyl,mat('#1c2333',{spec:.8}),0,-.03,0).sc(.34,.04,.34),N(S3.geo.torus,mat('#c9a24a',{spec:.95,em:.15}),0,-.01,0).sc(.34,.34,.08).rot(Math.PI/2,0,0),t);g.sc(3.9);ROOT.add(g);S3.preview=g;S3.previewFig=f;
   TITLE_CAM={look:[0,4.25,0],L:7.6,pitch:.16,spin:0,dx:3.6};f.g='wave';f.t0=performance.now()/1000;f.dur=1.6}
 function previewGesture(g){const f=S3&&S3.previewFig;if(!f)return;f.g=g;f.t0=performance.now()/1000;f.dur=g==='dance'?4:1.8}
+
+/* ---- Mythic and Chaotic: Rent Shield and token auras ---- */
+{const _ps=pay;pay=async function(p,amt,to,kind){if(kind==='rent'&&to&&amt>0&&perkOf(p).shield&&!p.shieldUsed){p.shieldUsed=1;const half=Math.ceil(amt/2);log(`${p.name}’s Rent Shield halves the bill to ${fmt(half)}`);if(!FAST)toast(`🛡️ Rent Shield! ${p.name} pays only ${fmt(half)}`);amt=half}return _ps(p,amt,to,kind)}}
+function addAura(t,tl){const R=rarityOf(tl);if(!R.aura||!S3)return;const geo=S3.geo,g=new Node();const ring=mat(R.aura==='mythic'?'#ff3a2a':'#ff3f6c',{em:.9,spec:.6,a:.85,blend:1}),ring2=mat(R.aura==='mythic'?'#ffb02e':'#3fd0ff',{em:.9,a:.6,blend:1});
+  g.add(N(geo.torus,ring,0,.02,0).sc(.3,.3,.08).rot(Math.PI/2,0,0),N(geo.torus,ring2,0,.05,0).sc(.26,.26,.05).rot(Math.PI/2,0,0));const sparks=[];
+  if(R.aura==='chaos')for(let k=0;k<5;k++){const s=N(geo.sph,mat(['#ff3f6c','#ffb02e','#3fd0ff','#8f3fd8','#6be38b'][k],{em:1}),0,.2,0).sc(.025);g.add(s);sparks.push(s)}
+  t.add(g);(S3.auras=S3.auras||[]).push({g,ring,ring2,sparks,kind:R.aura,ph:Math.random()*6})}
+function hsl(h,s,l){const f=n=>{const k=(n+h*12)%12,a=s*Math.min(l,1-l);return l-a*Math.max(-1,Math.min(k-3,9-k,1))};return[f(0),f(8),f(4)]}
+{const _uf=updateFigs;updateFigs=function(dt,time){_uf(dt,time);const A=S3.auras;if(!A)return;for(let i=A.length-1;i>=0;i--){const a=A[i];if(!a.g.parent){A.splice(i,1);continue}
+  if(a.kind==='mythic'){const p=.5+.5*Math.sin(time*3+a.ph);a.ring.em=.5+p*.8;a.g.s=[1+p*.12,1,1+p*.12];a.g.r=[0,time*.6,0]}
+  else{a.ring.c=hsl((time*.15+a.ph)%1,.85,.55);a.ring2.c=hsl((time*.15+a.ph+.5)%1,.85,.6);a.g.r=[0,time*1.2,0];a.sparks.forEach((s,k)=>{const an=time*2+k*1.2566;s.p=[Math.cos(an)*.3,.15+Math.sin(time*3+k)*.12,Math.sin(an)*.3]})}}}}
 
 /* ================= SHOP: COIN PACKS (IN-APP PURCHASE) ================= */
 /* Coin packs are consumable in-app purchases in the iOS and Android apps (cordova-plugin-purchase).
@@ -3497,7 +3523,7 @@ function showTitle(){
   T.innerHTML=`<div class="home"><nav class="rail" aria-label="Sections"><div class="mini-logo"><b>SKYLINE</b><span>ESTATES</span></div><div class="rprof" id="rprof"></div><div class="tabs" role="tablist"></div></nav><section class="pane" id="pane" role="tabpanel"></section></div>`;
   homeTab(setup.tab||'play');askUsername();
 }
-function railProfile(){const E=$('#rprof');if(!E)return;const lv=lvlOf(PREF.xp),a=xpFor(lv),b=xpFor(lv+1),L=LEAGUES[leagueIdx()];E.innerHTML=`<span class="rav">${charSVG(myChar(),40)}<em class="rl">${lv}</em></span><span class="ri"><b>${esc(myName()||rankOf(lv))}</b><span class="xpbar"><i style="width:${(PREF.xp-a)/(b-a)*100}%"></i></span><span class="rmeta">${PCOIN()}<em>${L.icon} ${PREF.trophies}</em></span></span>`;E.onclick=()=>homeTab('shop')}
+function railProfile(){const E=$('#rprof');if(!E)return;const lv=lvlOf(PREF.xp),a=xpFor(lv),b=xpFor(lv+1),L=LEAGUES[leagueIdx()];E.innerHTML=`<span class="rav">${charSVG(myChar(),40)}<em class="rl">${lv}</em></span><span class="ri"><b>${esc(myName()||rankOf(lv))}</b><span class="xpbar"><i style="width:${(PREF.xp-a)/(b-a)*100}%"></i></span><span class="rmeta">${(()=>{const m=Math.max(1,...Object.values(PREF.tokLv));return m>=5?`<span class="rar" style="background:${rarityOf(m).ui}">${rarityOf(m).name}</span>`:''})()}${PCOIN()}<em>${L.icon} ${PREF.trophies}</em></span></span>`;E.onclick=()=>homeTab('shop')}
 function homeTab(k){if(!HOME_TABS.some(t=>t[0]===k))k='play';setup.tab=k;const nav=$('#title .tabs');if(!nav)return;nav.innerHTML='';const D=daily();const dots={daily:wheelReady()||D.list.some(id=>!D.done[id]),season:seasonClaimable()>0};
   HOME_TABS.forEach(([id,ic,label])=>{const b=el('button','tab'+(id===k?' on':''),`<i>${ic}</i><span>${label}</span>${dots[id]?'<em class="dot"></em>':''}`);b.setAttribute('role','tab');b.setAttribute('aria-selected',id===k?'true':'false');b.onclick=()=>{sfx('tap');homeTab(id)};nav.append(b)});
   if(k!=='cast')clearPreview();railProfile();const P=$('#pane');P.scrollTop=0;P.innerHTML='';P.className='pane tab-'+k;({play:paneP,world:paneWorld,cast:paneCast,tokens:paneTokens,season:paneSeason,leagues:paneLeagues,ach:paneAch,daily:paneDaily,shop:paneShop,learn:paneLearn,settings:paneSettings})[k](P)}
@@ -3559,8 +3585,8 @@ function paneTokens(T){const all=TOKENS.concat(NEW_TOKENS);let sel=setup.slots[0
   const draw=()=>{const tl=tokLv(sel),next=TOKEN_LV[tl+1],un=tokenUnlocked(sel),info=TOKEN_INFO[sel],R=rarityOf(tl);
     T.innerHTML=`<div class="phead"><h2>Tokens</h2><span class="small">${unlockedTokens().length} of ${all.length} unlocked</span></div>
       <div class="tokhero card"><div class="tem big r${tl}">${sel}</div><div class="tinfo"><b>${esc(info[0])}${un?` <span class="rar" style="background:${R.ui}">${R.name}</span>`:''}</b><small>${esc(info[1])}</small>
-        ${un?`<div class="lvpips">${[1,2,3,4].map(i=>`<i style="${i<=tl?'background:'+TOKEN_LV[i].ui:''}" title="${TOKEN_LV[i].name}"></i>`).join('')}</div><small><b>Now:</b> ${esc(TOKEN_LV[tl].txt)}${next?`<br><b>Next:</b> ${esc(next.txt)}`:''}</small>`:`<small>🔒 ${esc(tokenHowText(sel))}</small>`}
-        <div class="brow">${un?`<button class="sm go" id="tPlay">${setup.slots[0].tok===sel?'Your token':'Play as this'}</button>${next?`<button class="sm warn" id="tUp">Upgrade to ${next.name} ${fmtC(next.cost)}</button>`:'<span class="small">Legendary ✨</span>'}`:(TOKEN_HOW[sel]&&TOKEN_HOW[sel].coins?`<button class="sm warn" id="tBuy">Unlock ${fmtC(TOKEN_HOW[sel].coins)}</button>`:'')}</div></div></div>
+        ${un?`<div class="lvpips">${[1,2,3,4,5,6].map(i=>`<i style="${i<=tl?'background:'+TOKEN_LV[i].ui:''}" title="${TOKEN_LV[i].name}"></i>`).join('')}</div><small><b>Now:</b> ${esc(TOKEN_LV[tl].txt)}${next?`<br><b>Next (${next.name}):</b> ${esc(next.txt)}${next.req?`<br><b>Needs:</b> ${esc(tierReqText(sel,tl+1))}`:''}`:''}</small>`:`<small>🔒 ${esc(tokenHowText(sel))}</small>`}
+        <div class="brow">${un?`<button class="sm go" id="tPlay">${setup.slots[0].tok===sel?'Your token':'Play as this'}</button>${next?`<button class="sm warn" id="tUp"${tierReqMet(sel,tl+1)?'':' disabled'}>Upgrade to ${next.name} ${fmtC(next.cost)}</button>`:'<span class="small">Chaotic: the highest tier ✨</span>'}`:(TOKEN_HOW[sel]&&TOKEN_HOW[sel].coins?`<button class="sm warn" id="tBuy">Unlock ${fmtC(TOKEN_HOW[sel].coins)}</button>`:'')}</div></div></div>
       <div class="small">Upgrades give a little extra luck: a bigger payday, re-rolls and a Lucky Pass that keeps you out of the Lockup once a game. The game host can switch token perks off for a level playing field.</div>
       <div class="tokgrid"></div>
       <h3>TOKEN FINISH</h3><div class="small">A finish paints your token. It shows for you and, online, for everyone in your game.</div><div class="fingrid"></div>`;
@@ -3569,7 +3595,7 @@ function paneTokens(T){const all=TOKENS.concat(NEW_TOKENS);let sel=setup.slots[0
       const b=el('button','fcard'+(on?' on':'')+(own?'':' locked'),`<i style="background:radial-gradient(circle at 35% 30%,#fff,${f.col} 55%,#000 140%)"></i><b>${esc(f.name)}</b><small>${on?'Equipped':own?'Tap to use':f.price?fmtC(f.price):esc(f.desc)}</small>`);
       b.onclick=async()=>{if(!own){if(!f.price){toast(f.desc);return}if(!(await confirmBuy(`${f.name} finish`,f.price,esc(f.desc))))return;grantItem('fin',f.id)}PREF.eq.fin=f.id;savePref();draw();railProfile()};F.append(b)});
     const pl=T.querySelector('#tPlay');if(pl)pl.onclick=()=>{const other=setup.slots.findIndex((s,i)=>i>0&&s.tok===sel);if(other>0)setup.slots[other].tok=setup.slots[0].tok;setup.slots[0].tok=sel;saveSlot(0,setup.slots[0]);draw()};
-    const up=T.querySelector('#tUp');if(up)up.onclick=async()=>{if(await confirmBuy(`Upgrade ${info[0]} to ${next.name}`,next.cost,esc(next.txt))){PREF.tokLv[sel]=tl+1;savePref();achBump();toast(`${info[0]} is now ${next.name}!`);draw();railProfile()}};
+    const up=T.querySelector('#tUp');if(up)up.onclick=async()=>{if(!tierReqMet(sel,tl+1)){toast('Not yet: '+tierReqText(sel,tl+1));return}if(await confirmBuy(`Upgrade ${info[0]} to ${next.name}`,next.cost,esc(next.txt))){PREF.tokLv[sel]=tl+1;savePref();achBump();toast(`${info[0]} is now ${next.name}!`);draw();railProfile()}};
     const bu=T.querySelector('#tBuy');if(bu)bu.onclick=async()=>{if(await confirmBuy(`Unlock ${info[0]}`,TOKEN_HOW[sel].coins)){grantItem('tok',sel);draw();railProfile()}}};
   draw()}
 function paneSeason(T){const S=season(),t=seasonTierNow(),left=Math.max(0,Math.ceil((seasonEnds()-Date.now())/864e5)),into=S.sxp-t*TIER_XP,W=weekly();
@@ -3654,7 +3680,7 @@ function paneLearn(T){
     <h3>HOUSE RULES</h3><div class="learn">${RULE_INFO.map(r=>`<div class="lcard"><i>⚙️</i><div><b>${r[1]}</b><p>${esc(loc(r[2]))}</p></div></div>`).join('')}<div class="lcard"><i>⏱️</i><div><b>Turn timer</b><p>Optional 90 seconds per turn. When time runs out the game finishes the turn for that player.</p></div></div></div>
     <h3>PROGRESS</h3><div class="learn"><div class="lcard"><i>🌍</i><div><b>World</b><p>18 countries and 31 cities, each with its own board, landscape and 15 achievements. Level up to open new countries; play in a country to open its other cities.</p></div></div>
     <div class="lcard"><i>${COIN}</i><div><b>Coins</b><p>Earn coins from wins, level-ups, achievements, missions, the Lucky Spin, season tiers and league promotions. Spend them on tokens, upgrades, finishes, dice, board surrounds and early unlocks.</p></div></div>
-    <div class="lcard"><i>⬆️</i><div><b>Token upgrades</b><p>Upgrade a token from Common to Rare, Epic and Legendary. Each tier repaints it (blue, purple, then gold) and adds a bigger payday, re-rolls and a Lucky Pass. Hosts can switch perks off.</p></div></div>
+    <div class="lcard"><i>⬆️</i><div><b>Token upgrades</b><p>Upgrade a token from Common to Rare, Epic, Legendary, Mythic and Chaotic. Each tier repaints it (blue, purple, gold, crimson, then a shifting rainbow) and adds a bigger payday, re-rolls and Lucky Passes. Mythic and Chaotic also need wins with that token, a high level and (for Chaotic) the Diamond league, and add a Rent Shield, Chaos Surge and bonus coins and XP. Hosts can switch in-game perks off.</p></div></div>
     <div class="lcard"><i>📅</i><div><b>Seasons</b><p>Every 30 days a new season starts with 30 tiers of rewards and weekly challenges. All XP counts toward the season.</p></div></div>
     <div class="lcard"><i>🏆</i><div><b>Leagues</b><p>Win trophies to climb from Bronze to Legend and earn promotion rewards. The global leaderboard shows the top players each season.</p></div></div></div>`}
 function paneSettings(T){const rows=[['riders','Riders on tokens','Show each player’s character riding their token. Switch off on slower phones.'],['sfx','Game sounds','Dice, coins and token movement.'],['amb','Street ambience','Crowd chatter, traffic, birds or rain to match the city.'],['radio','Skyline FM','One station for every city, playing a shuffled mix of 13 Kenstylez tracks.']];
