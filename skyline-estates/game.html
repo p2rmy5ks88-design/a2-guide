@@ -891,6 +891,26 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .topbar .who{flex:0 1 auto;max-width:56%;text-align:left}
 .topbar .ri{flex:1 1 auto;width:auto;min-width:0;text-align:left;align-items:flex-start}
 .topbar .ri b{display:block;max-width:100%}
+/* the game is always laid out in landscape; when a phone is held upright the page is rotated (html.rot), so undo the old portrait rules */
+@media (orientation:portrait){
+  .home{flex-direction:row}
+  .rail{flex-direction:column;align-items:center;width:auto}
+  .rail .tabs{flex-direction:column;overflow-x:hidden;overflow-y:auto}
+  .tab{flex:none;flex-direction:column;gap:3px;padding:6px 0 5px;width:70px;font-size:11px}
+  .slots{grid-template-columns:1fr 1fr}
+  .endgrid{grid-template-columns:1fr 1fr}
+  .olgrid{grid-template-columns:1fr 1.3fr}
+  .tsum{grid-template-columns:1fr 1fr}
+  #prompt{top:max(10px,env(safe-area-inset-top,0px));bottom:auto;max-width:min(44vw,420px)}
+  #log{display:block}
+  #log:empty{display:none}
+  .prof{flex-wrap:nowrap}
+}
+@media (orientation:portrait) and (max-width:560px){html:not(.rot) .playgrid{grid-template-columns:minmax(0,1fr)}html:not(.rot) .slots{grid-template-columns:minmax(0,1fr)}}
+html.rot #title .home{padding:0}
+html.rot .rail{width:auto;align-items:center}
+html.rot .tab{flex-direction:column;font-size:11px}
+html.rot .rail .tabs{flex-direction:column}
 </style>
 
 <canvas id="gl" aria-label="3D game board"></canvas>
