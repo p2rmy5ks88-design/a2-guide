@@ -911,6 +911,17 @@ html.rot #title .home{padding:0}
 html.rot .rail{width:auto;align-items:center}
 html.rot .tab{flex-direction:column;font-size:11px}
 html.rot .rail .tabs{flex-direction:column}
+
+/* readability fixes: property list header, cash pill and auction bidders (old light styles won on specificity) */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+.mp .ahd{background:var(--bg2);color:var(--ink)}
+.mp .ahd .mh{color:var(--ink)}
+.mp .cashbar{background:var(--panel2);border:1px solid var(--ln2);color:var(--green)}
+.mp .cashbar b{color:var(--ink)}
+.mp .cashbar em.dn{color:var(--bad)}
+.mp .cashbar em.up{color:var(--green)}
+.auc .bidders span{background:var(--panel2);color:var(--ink);border:2px solid var(--pc)}
+.auc .bidders span.out{opacity:.45}
 /* ================= DAYLIGHT THEME (generated from the dark theme) ================= */
 html.light{
   --ink:#13284A;--ink2:#3E5270;--mute:#5A6D84;--bg0:#EEF2F7;--bg1:#F4F6FA;--bg2:#FFFFFF;--bg3:#E8EEF6;--ln:#DCE3EC;--ln2:#C9D4E2;
