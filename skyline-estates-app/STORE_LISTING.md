@@ -37,6 +37,14 @@ Create these in App Store Connect and Google Play with exactly these product IDs
 | com.kenstylez.skylineestates.coins_3000 | 3,000 | $4.99 |
 | com.kenstylez.skylineestates.coins_7000 | 7,000 | $9.99 |
 
+And one **non-consumable** (one-time) product:
+
+| Product ID | Contents | Suggested price |
+|---|---|---|
+| com.kenstylez.skylineestates.starter_bundle | 1,500 coins + Gold token finish + Midnight dice | $2.99 |
+
+Apple calls this type "Non-Consumable"; in Google Play create it as a one-time product. Players who reinstall can restore it.
+
 Coins buy cosmetic items (board surrounds, token finishes, dice), token upgrades, the season premium track and early country unlocks. Nothing is random. Characters can only be earned by playing.
 
 ## Age rating answers
@@ -60,6 +68,6 @@ Good shots: a Tokyo or Dubai board mid-game, the Characters screen, the Season t
 
 ## Before you submit
 - Confirm you own or have licensed all 13 radio tracks for commercial distribution.
-- Create the four coin products above and accept the Paid Apps agreement in App Store Connect.
+- Create the four coin products and the starter bundle above, and accept the Paid Apps agreement in App Store Connect.
 - Deploy `skyline-estates/database.rules.json` to the Firebase Realtime Database (it keeps the rules the other editions need and adds the leaderboard and reports).
 - Fill in a support email: add `window.SKYLINE_CONFIG={supportEmail:'you@example.com'}` before the game script, or ask Claude to set it.

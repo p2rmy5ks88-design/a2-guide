@@ -1003,6 +1003,129 @@ html.light .mp{box-shadow:0 20px 60px rgba(19,40,74,.25)}
 html.light .pt{border-color:#FFFFFF}
 html.light .ach.done .trophy{filter:none}
 html.light .deed,html.light .gfront{border-color:#E2D9C3}
+
+/* ================= SHOP SHOWROOM AND SEASON TRACK ================= */
+.shophead{display:flex;align-items:center;gap:10px;flex-wrap:wrap;flex:none}
+.shophead h2{margin:0;font:700 24px var(--display);color:var(--ink)}
+.subpane .shophead h2{display:none}
+.shoptabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:2px 0}
+.shoptabs .stab{flex:none;height:32px;padding:0 13px;border-radius:999px;border:1px solid var(--ln);background:var(--bg2);color:var(--ink2);font:800 12.5px var(--body);cursor:pointer}
+.shoptabs .stab.on{border-color:var(--gold);background:color-mix(in srgb,var(--gold) 16%,var(--bg2));color:var(--gold2)}
+html.light .shoptabs .stab.on{color:#7A5200}
+.shopbody{display:flex;flex-direction:column;gap:10px;flex:none}
+.shopnote{margin-top:2px}
+.igrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.igrid.g6{grid-template-columns:repeat(3,minmax(0,1fr))}
+.icard{position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;padding:12px 10px 10px;border-radius:16px;color:var(--ink);text-align:center;min-width:0;
+  background:var(--bg2);border:1px solid var(--ln);
+  background:radial-gradient(ellipse at 50% 0%,color-mix(in srgb,var(--rc) 32%,transparent),transparent 70%),linear-gradient(180deg,color-mix(in srgb,var(--rc) 22%,var(--bg2)),var(--bg2) 78%);
+  border-color:color-mix(in srgb,var(--rc) 45%,var(--ln))}
+.icard b{font:700 14px var(--display);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.icard .itier{font-size:10.5px;font-weight:800;letter-spacing:.03em;color:color-mix(in srgb,var(--rc) 55%,var(--ink))}
+.iwrap{height:54px;display:grid;place-items:center;margin-bottom:2px}
+.ideal{position:absolute;top:8px;right:8px;padding:2px 8px;border-radius:999px;background:#3FBF7F;color:#06210F;font:800 10px var(--body);font-style:normal;z-index:1}
+.ipv{position:absolute;top:7px;left:7px;height:22px;padding:0 8px;border-radius:999px;border:1px solid var(--ln2);background:color-mix(in srgb,var(--bg0) 70%,transparent);color:var(--ink2);font:800 10px var(--body);cursor:pointer;z-index:1}
+.ibuy{margin-top:auto;width:100%;min-height:34px;border-radius:10px;border:1px solid var(--ln2);background:var(--bg1);color:var(--ink);font:700 15px var(--display);display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer}
+.ibuy s{font:600 12px var(--body);color:var(--mute)}
+.ibuy.use{background:color-mix(in srgb,var(--green) 18%,var(--bg1));border-color:color-mix(in srgb,var(--green) 55%,var(--ln2))}
+.ibuy.cash{border:none;background:var(--goldgrad);color:#1A1406;box-shadow:0 3px 0 #9A6F10}
+.iown,.ihow{margin-top:auto;min-height:36px;display:flex;align-items:center;justify-content:center;font:800 12px var(--body);color:var(--green)}
+.ihow{color:var(--mute);font-weight:700;font-size:11px;line-height:1.2}
+i.coin{display:inline-block;flex:none;width:15px;height:15px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#FFF2C2,#E2B54A 55%,#9A6F10);box-shadow:inset 0 0 0 1.5px #C9962E}
+.ibtn{height:44px;padding:0 16px;border-radius:12px;font:800 14px var(--body);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap}
+.ibtn.gold{border:none;background:var(--goldgrad);color:#1A1406;box-shadow:0 4px 0 #9A6F10}
+.ibtn.gold span{display:inline-flex;align-items:center;gap:4px;font:700 15px var(--display)}
+.ibtn.ghost{border:1px solid var(--gold);background:color-mix(in srgb,var(--gold) 12%,var(--bg2));color:var(--ink)}
+/* item art, drawn from each item's real colours */
+.iart{display:block;flex:none}
+.iart.ball{width:50px;height:50px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,var(--c) 52%,#000 145%);box-shadow:0 6px 14px rgba(0,0,0,.35)}
+.iart.ball.big{width:62px;height:62px}
+.iart.die{width:46px;height:46px;border-radius:10px;border:2px solid var(--e);box-sizing:border-box;box-shadow:0 6px 14px rgba(0,0,0,.35);
+  background:radial-gradient(circle,var(--o) 0 30%,transparent 33%) 8% 8%/36% 36% no-repeat,radial-gradient(circle,var(--p) 0 26%,transparent 29%) 50% 50%/36% 36% no-repeat,radial-gradient(circle,var(--p) 0 26%,transparent 29%) 92% 92%/36% 36% no-repeat,var(--f)}
+.iart.surr{width:84px;height:54px;border-radius:12px;box-shadow:0 6px 14px rgba(0,0,0,.35);
+  background:linear-gradient(var(--p),var(--p)) 50% 50%/26px 26px no-repeat,linear-gradient(var(--r),var(--r)) 50% 50%/32px 32px no-repeat,radial-gradient(ellipse at 50% 50%,var(--b) 0 46%,var(--w) 47%)}
+.iart.coins,.iart.coin1{position:relative;width:46px;height:46px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#FFF2C2,#E2B54A 55%,#9A6F10);box-shadow:inset 0 0 0 3px #C9962E,0 6px 14px rgba(0,0,0,.35)}
+.iart.coin1{width:30px;height:30px;box-shadow:inset 0 0 0 2px #C9962E}
+.iart.coin1.plus::after{content:'';position:absolute;right:-8px;bottom:-4px;width:14px;height:14px;border-radius:50%;background:#3FD0FF;box-shadow:0 0 8px #3FD0FF}
+.iart.coins.n1{box-shadow:inset 0 0 0 3px #C9962E,10px -6px 0 -4px #E2B54A,0 6px 14px rgba(0,0,0,.35)}
+.iart.coins.n2{box-shadow:inset 0 0 0 3px #C9962E,12px -6px 0 -4px #E2B54A,-12px -6px 0 -4px #D9A53A,0 6px 14px rgba(0,0,0,.35)}
+.iart.coins.n3{width:54px;height:54px;box-shadow:inset 0 0 0 3px #C9962E,14px -8px 0 -4px #E2B54A,-14px -8px 0 -4px #D9A53A,0 -14px 0 -6px #F3CF76,0 0 22px rgba(226,181,74,.55)}
+.iart.glyph{width:50px;height:50px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 35% 30%,color-mix(in srgb,var(--rc,#E2B13C) 60%,#fff),color-mix(in srgb,var(--rc,#E2B13C) 80%,#000))}
+.iart.glyph svg{width:28px;height:28px;color:#fff}
+.iart.glyph.bolt{--rc:#2F9FE0}
+/* daily layout: bundle beside the picks */
+.dshop{display:grid;grid-template-columns:minmax(200px,250px) minmax(0,1fr);gap:12px;align-items:start}
+.dshop.nob{grid-template-columns:minmax(0,1fr)}
+.dpicks{display:flex;flex-direction:column;gap:8px;min-width:0}
+.dhead{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.dhead h3{margin:0;font:700 16px var(--display);color:var(--ink)}
+.dhead span{font-size:12px;font-weight:700;color:var(--mute)}
+.dhead b{color:var(--gold2);font-variant-numeric:tabular-nums}
+html.light .dhead b{color:#7A5200}
+.bundle{position:relative;display:flex;flex-direction:column;gap:8px;padding:14px;border-radius:20px;color:var(--ink);border:1px solid color-mix(in srgb,var(--gold) 50%,var(--ln));
+  background:linear-gradient(165deg,color-mix(in srgb,var(--gold) 26%,var(--bg2)) 0%,var(--bg2) 60%);box-shadow:0 10px 30px color-mix(in srgb,var(--gold) 14%,transparent)}
+.bundle .once{align-self:flex-start;padding:3px 10px;border-radius:999px;background:var(--gold);color:#1A1406;font:800 10.5px var(--body);letter-spacing:.08em}
+.bundle h3{margin:0;font:700 20px/1.1 var(--display)}
+.bstage{height:96px;border-radius:14px;display:flex;align-items:flex-end;justify-content:center;gap:12px;padding-bottom:14px;box-sizing:border-box;
+  background:radial-gradient(ellipse at 50% 120%,color-mix(in srgb,var(--gold) 45%,transparent),transparent 65%),linear-gradient(180deg,var(--bg3),var(--bg1))}
+.bundle ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:3px;font-size:13px;color:var(--ink2)}
+.bundle ul li::before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--gold);margin-right:8px;vertical-align:middle}
+.bundle .ibtn{width:100%;font:700 17px var(--display)}
+@media (max-width:620px){html:not(.rot) .dshop{grid-template-columns:minmax(0,1fr)}html:not(.rot) .igrid.g6{grid-template-columns:repeat(2,minmax(0,1fr))}}
+/* season */
+.sban{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:12px 16px;border-radius:18px;border:1px solid var(--ln2);color:var(--ink);
+  background:radial-gradient(ellipse at 85% 0%,rgba(63,208,255,.22),transparent 55%),radial-gradient(ellipse at 10% 120%,color-mix(in srgb,var(--gold) 28%,transparent),transparent 60%),linear-gradient(120deg,var(--bg3),var(--bg2))}
+.sbt{display:flex;flex-direction:column;gap:1px;min-width:0}
+.sbt small{font:800 11px var(--body);letter-spacing:.1em;color:var(--gold2)}
+html.light .sbt small{color:#7A5200}
+.sbt h2{margin:0;font:700 22px/1.1 var(--display)}
+.sbt span{font-size:12px;color:var(--ink2)}
+.sbp{flex:1;min-width:120px;display:flex;flex-direction:column;gap:6px}
+.sbl{display:flex;justify-content:space-between;font-size:12px;font-weight:700;color:var(--ink2);font-variant-numeric:tabular-nums}
+.sbl b{color:var(--ink)}
+.sbar{display:block;height:12px;border-radius:999px;background:var(--bg0);border:1px solid var(--ln2);overflow:hidden}
+.sbar i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#3FD0FF,#6BE38B)}
+.sbb{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.premown{padding:6px 12px;border-radius:999px;background:color-mix(in srgb,var(--gold) 18%,var(--bg2));border:1px solid var(--gold);font:800 12px var(--body);color:var(--ink)}
+.strack{display:grid;grid-template-rows:20px 86px 86px;grid-auto-flow:column;grid-auto-columns:92px;gap:6px;overflow-x:auto;padding:2px 2px 8px;scrollbar-width:thin;flex:none}
+.snum{display:flex;align-items:center;justify-content:center;border-radius:999px;font:800 11px var(--body);color:var(--mute)}
+.snum.got{color:var(--green)}
+.snum.now{background:var(--gold);color:#1A1406}
+.snum.lab,.slab{position:sticky;left:0;z-index:2}
+.snum.lab{background:var(--bg1);border-radius:0;box-shadow:8px 0 0 var(--bg1)}
+.slab{display:flex;flex-direction:column;justify-content:center;padding:0 10px;border-radius:12px;background:var(--bg2);border:1px solid var(--ln);box-shadow:8px 0 0 var(--bg1),14px 0 10px -6px rgba(0,0,0,.35)}
+.slab b{font-size:13px;color:var(--ink)}.slab small{font-size:10.5px;color:var(--mute)}
+.slab.prem{background:linear-gradient(160deg,color-mix(in srgb,var(--gold) 25%,var(--bg2)),var(--bg2));border-color:color-mix(in srgb,var(--gold) 50%,var(--ln))}
+.slab.prem b{color:var(--gold2)}
+html.light .slab.prem b{color:#7A5200}
+.scell{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:6px 4px;border-radius:12px;background:var(--bg2);border:1px solid var(--ln);color:var(--ink);font:inherit;min-width:0}
+.scell.prem{background:linear-gradient(180deg,color-mix(in srgb,var(--gold) 14%,var(--bg2)),var(--bg2))}
+.scell.big{border-color:color-mix(in srgb,#3FD0FF 50%,var(--ln));background:radial-gradient(ellipse at 50% 0%,rgba(63,208,255,.24),transparent 70%),var(--bg2)}
+.scell.prem.big{background:radial-gradient(ellipse at 50% 0%,rgba(63,208,255,.24),transparent 70%),linear-gradient(180deg,color-mix(in srgb,var(--gold) 14%,var(--bg2)),var(--bg2))}
+.scell small{font-size:10px;font-weight:800;line-height:1.15;text-align:center;max-height:2.3em;overflow:hidden}
+.scell em{font:800 10px var(--body);font-style:normal;padding:1px 7px;border-radius:999px;color:var(--mute)}
+.scell.done{opacity:.55}.scell.done em{color:var(--green)}
+.scell.can{border:2px solid var(--gold);box-shadow:0 0 16px color-mix(in srgb,var(--gold) 40%,transparent);cursor:pointer}
+.scell.can em{background:var(--gold);color:#1A1406}
+.scell .iart.ball{width:32px;height:32px}.scell .iart.die{width:30px;height:30px;border-radius:7px}.scell .iart.surr{width:52px;height:34px;border-radius:8px;background-size:16px 16px,20px 20px,auto}
+.scell .iart.glyph{width:32px;height:32px}.scell .iart.glyph svg{width:18px;height:18px}
+.sweek{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.swl{font:800 12px var(--body);color:var(--mute);white-space:nowrap}
+.swc{flex:1 1 150px;min-width:0;min-height:34px;border-radius:10px;background:var(--bg2);border:1px solid var(--ln);display:flex;align-items:center;gap:8px;padding:0 10px;color:var(--ink)}
+.swc span{flex:1;min-width:0;font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.swc b{font:800 12px var(--body);color:var(--gold2);font-variant-numeric:tabular-nums}
+html.light .swc b{color:#7A5200}
+.swc.done{border-color:color-mix(in srgb,var(--green) 55%,var(--ln))}.swc.done b{color:var(--green)}
+
+.shopbody h3,.shopbody .bundle h3,.shopbody .dhead h3{letter-spacing:0;text-transform:none;color:var(--ink)}
+.icard{padding:10px 10px 9px}
+.sban{padding:10px 14px}
+.scell .iart.die{background-size:36% 36%,36% 36%,36% 36%,auto}
+.strack{scroll-snap-type:x proximity;scroll-padding-left:98px}
+.snum{scroll-snap-align:start}
+.dshop{grid-template-columns:minmax(190px,250px) minmax(0,1fr)}
+.sban{flex-wrap:nowrap}.sbb{flex:none}
+@media (max-width:560px){html:not(.rot) .sban{flex-wrap:wrap}}
 </style>
 
 <canvas id="gl" aria-label="3D game board"></canvas>
@@ -3934,13 +4057,14 @@ function rigToggle(){if(!PREF.rig){RIG.live.forEach(r=>{RIG.scene.remove(r.root)
    On the web the shop explains that packs are in the app. Coins never buy random rewards. */
 const IAP_PREFIX='com.kenstylez.skylineestates.';
 const IAP_PACKS=[{id:'coins_500',coins:500,price:'$0.99'},{id:'coins_1200',coins:1200,price:'$1.99',tag:'+20%'},{id:'coins_3000',coins:3000,price:'$4.99',tag:'Popular'},{id:'coins_7000',coins:7000,price:'$9.99',tag:'Best value'}];
+const IAP_BUNDLE={id:'starter_bundle',price:'$2.99',once:true};
 const IAP={ready:false,store:null,
   init(){const C=window.CdvPurchase;if(!C||!C.store||this.store)return;const s=C.store;this.store=s;const plat=/android/i.test(navigator.userAgent)?C.Platform.GOOGLE_PLAY:C.Platform.APPLE_APPSTORE;
-    try{s.register(IAP_PACKS.map(p=>({id:IAP_PREFIX+p.id,type:C.ProductType.CONSUMABLE,platform:plat})));
-      s.when().approved(tx=>{const id=tx.transactionId||'';PREF.iapDone=PREF.iapDone||{};if(!id||!PREF.iapDone[id]){(tx.products||[]).forEach(pr=>{const p=IAP_PACKS.find(x=>IAP_PREFIX+x.id===pr.id);if(p){addCoins(p.coins,'Coin pack');toast(`+${p.coins} ${COIN} added. Thank you!`)}});if(id)PREF.iapDone[id]=Date.now();savePref()}tx.finish()})
-        .productUpdated(()=>{IAP_PACKS.forEach(p=>{const pr=s.get(IAP_PREFIX+p.id,plat);if(pr&&pr.pricing&&pr.pricing.price)p.price=pr.pricing.price})});
+    try{s.register(IAP_PACKS.map(p=>({id:IAP_PREFIX+p.id,type:C.ProductType.CONSUMABLE,platform:plat})).concat([{id:IAP_PREFIX+IAP_BUNDLE.id,type:C.ProductType.NON_CONSUMABLE,platform:plat}]));
+      s.when().approved(tx=>{const id=tx.transactionId||'';PREF.iapDone=PREF.iapDone||{};if(!id||!PREF.iapDone[id]){(tx.products||[]).forEach(pr=>{const p=IAP_PACKS.find(x=>IAP_PREFIX+x.id===pr.id);if(p){addCoins(p.coins,'Coin pack');toast(`+${p.coins} ${COIN} added. Thank you!`)}else if(pr.id===IAP_PREFIX+IAP_BUNDLE.id&&typeof grantStarter==='function')grantStarter()});if(id)PREF.iapDone[id]=Date.now();savePref()}tx.finish()})
+        .productUpdated(()=>{IAP_PACKS.concat([IAP_BUNDLE]).forEach(p=>{const pr=s.get(IAP_PREFIX+p.id,plat);if(pr&&pr.pricing&&pr.pricing.price)p.price=pr.pricing.price})});
       s.initialize([plat]).then(()=>{this.ready=true}).catch(()=>{})}catch(e){}},
-  async buy(p){if(!this.ready||!this.store){await modal({html:`<div class="mh">${COIN} Coin packs</div><div class="mtxt">Coin packs are sold in the Skyline Estates app for iPhone and Android. On the web you earn coins by playing: wins, level-ups, daily missions, the Lucky Spin, season tiers and league promotions.</div>`,btns:[{k:'x',label:'OK',primary:true}]});return}
+  async buy(p){if(!this.ready||!this.store){await modal({html:`<div class="mh">${p&&p.once?'Starter bundle':COIN+' Coin packs'}</div><div class="mtxt">${p&&p.once?'The starter bundle is':'Coin packs are'} sold in the Skyline Estates app for iPhone and Android. On the web you earn coins by playing: wins, level-ups, daily missions, the Lucky Spin, season tiers and league promotions.</div>`,btns:[{k:'x',label:'OK',primary:true}]});return}
     try{const pr=this.store.get(IAP_PREFIX+p.id);const o=pr&&pr.getOffer();if(!o){toast('This pack isn’t available right now');return}const err=await o.order();if(err&&err.code!==6777006)toast('Purchase didn’t go through')}catch(e){toast('Purchase didn’t go through')}}};
 document.addEventListener('deviceready',()=>IAP.init(),false);setTimeout(()=>IAP.init(),1500);
 
@@ -4065,20 +4189,6 @@ function paneTokens(T){const all=TOKENS.concat(NEW_TOKENS);let sel=setup.slots[0
     const up=T.querySelector('#tUp');if(up)up.onclick=async()=>{if(!tierReqMet(sel,tl+1)){toast('Not yet: '+tierReqText(sel,tl+1));return}if(await confirmBuy(`Upgrade ${info[0]} to ${next.name}`,next.cost,esc(next.txt))){PREF.tokLv[sel]=tl+1;savePref();achBump();toast(`${info[0]} is now ${next.name}!`);draw();railProfile()}};
     const bu=T.querySelector('#tBuy');if(bu)bu.onclick=async()=>{if(await confirmBuy(`Unlock ${info[0]}`,TOKEN_HOW[sel].coins)){grantItem('tok',sel);draw();railProfile()}}};
   draw()}
-function paneSeason(T){const S=season(),t=seasonTierNow(),left=Math.max(0,Math.ceil((seasonEnds()-Date.now())/864e5)),into=S.sxp-t*TIER_XP,W=weekly();
-  T.innerHTML=`<div class="phead"><h2>Season ${S.n}: ${esc(seasonName(S.n))}</h2><span class="small">${left} day${left===1?'':'s'} left</span></div>
-    <div class="card seasonhead"><div class="stier"><b>${t}</b><small>TIER</small></div><div class="sinfo"><span class="xpbar"><i style="width:${t>=TIERS?100:into/TIER_XP*100}%"></i></span><small>${t>=TIERS?'All 30 tiers reached!':`${into} / ${TIER_XP} season XP to tier ${t+1}`} · every XP you earn also counts here</small></div>
-      <div class="brow">${S.prem?'<span class="premtag">★ Premium pass</span>':`<button class="sm warn" id="sPrem">★ Premium pass ${fmtC(PREM_PRICE)}</button>`}<button class="sm go" id="sAll"${seasonClaimable()?'':' disabled'}>Claim all (${seasonClaimable()})</button></div></div>
-    <div class="track" id="track"></div>
-    <div class="card"><div class="ch">This week’s challenges <small>${WEEK_SXP} season XP + ${WEEK_COINS} ${COIN} each · new every Thursday</small></div><div class="achlist">${W.list.map(id=>{const m=WEEKLY.find(x=>x.id===id),d=!!W.done[id],v=Math.min(m.g,W.prog[id]||0);return achRow(d,loc(m.n),'Counts across all your games this week.',v,m.g,`+${WEEK_SXP} sXP`).replace(`${v} / ${m.g}`,m.money?`${fmt(v)} / ${fmt(m.g)}`:`${v} / ${m.g}`)}).join('')}</div></div>
-    <div class="small">The season runs 30 days. Tiers reset when a new season starts; anything you claimed is yours to keep. The premium pass adds a second reward on every tier, including exclusive finishes, dice and board surrounds.</div>`;
-  const tk=T.querySelector('#track');for(let i=1;i<=TIERS;i++){const fr=tierReward(i,false),pr=tierReward(i,true),reach=t>=i;
-    const cell=el('div','tier'+(reach?' got':'')+(i===t+1?' next':''));const btn=(r,prem)=>{const done=(prem?S.cp:S.cf)[i];const can=reach&&!done&&(!prem||S.prem);return `<button class="trw${prem?' prem':''}${done?' done':''}${can?' can':''}" data-i="${i}" data-p="${prem?1:0}"${can?'':' disabled'} title="${esc(tierText(r))}"><i>${done?'✓':tierIcon(r)}</i><small>${esc(tierText(r))}</small></button>`};
-    cell.innerHTML=`<em>${i}</em>${btn(fr,false)}${btn(pr,true)}`;tk.append(cell)}
-  tk.querySelectorAll('button.can').forEach(b=>b.onclick=()=>{if(claimTier(+b.dataset.i,b.dataset.p==='1')){sfx('win');toast('Reward claimed!');homeTab('season')}});
-  const nx=tk.querySelector('.tier.next')||tk.querySelector('.tier.got:last-child');if(nx)setTimeout(()=>nx.scrollIntoView({inline:'center',block:'nearest'}),50);
-  T.querySelector('#sAll').onclick=()=>{let n=0;for(let i=1;i<=t;i++){if(claimTier(i,false))n++;if(claimTier(i,true))n++}if(n){sfx('win');toast(`${n} reward${n>1?'s':''} claimed!`)}homeTab('season')};
-  const sp=T.querySelector('#sPrem');if(sp)sp.onclick=async()=>{if(await confirmBuy(`Season ${S.n} premium pass`,PREM_PRICE,'Unlocks the premium reward on all 30 tiers this season, including tiers you’ve already reached.')){S.prem=true;savePref();homeTab('season')}}}
 function paneLeagues(T){const i=leagueIdx(),L=LEAGUES[i],N=LEAGUES[i+1],S=season();
   T.innerHTML=`<div class="phead"><h2>Leagues</h2><span class="small">Season ${S.n} · ${S.tr||0} 🏆 this season</span></div>
     <div class="card leaguehead"><span class="lic">${L.icon}</span><span><b>${L.name} league</b><small>${PREF.trophies} trophies${N?` · ${N.min-PREF.trophies} more for ${N.icon} ${N.name}`:' · top league!'}</small><span class="xpbar"><i style="width:${N?Math.min(100,(PREF.trophies-L.min)/(N.min-L.min)*100):100}%"></i></span></span></div>
@@ -4105,33 +4215,6 @@ function paneDaily(T){const D=daily(),lv=lvlOf(PREF.xp);
     <div class="card"><div class="ch">Level rewards <small>Level ${lv} · ${rankOf(lv)} · every level-up pays coins</small></div><div class="achlist">${LVL_REWARDS.map(r=>achRow(lv>=r[0],`Level ${r[0]}: ${r[1]}`,r[2],Math.min(lv,r[0]),r[0],lv>=r[0]?'Unlocked':'')).join('')}${COUNTRIES.filter(C=>C.lvl>1).filter((C,i,a)=>a.findIndex(x=>x.lvl===C.lvl)===i).map(C=>achRow(lv>=C.lvl,`Level ${C.lvl}: ${COUNTRIES.filter(x=>x.lvl===C.lvl).map(x=>x.flag+' '+x.name).join(' and ')}`,'New countries to play in.',Math.min(lv,C.lvl),C.lvl,lv>=C.lvl?'Unlocked':'')).join('')}</div></div>
     <div class="card"><div class="ch">Ranks</div><div class="ranks">${RANKS.map(r=>`<span class="${lv>=r[0]?'got':''}"><b>Lv ${r[0]}</b>${r[1]}</span>`).join('')}</div></div>`;
   renderProfile();T.querySelector('#dSpin').onclick=()=>openWheel().then(()=>homeTab('daily'))}
-function paneShop(T){let tab=setup.shopTab||'surr';
-  const tabs=[['surr','🏝️','Surrounds'],['coins',COIN,'Coins'],['boost','⚡','Boosts'],['dice','🎲','Dice'],['fin','✨','Finishes']];
-  T.innerHTML=`<div class="phead"><h2>Shop</h2></div><div class="shoptabs">${tabs.map(([k,i,l])=>`<button class="stab${k===tab?' on':''}" data-k="${k}">${l}</button>`).join('')}</div><div class="shopbody"></div>
-    <div class="small">Everything in the shop is cosmetic or a small boost. Nothing is random: you always see exactly what you get.</div>`;
-  T.querySelectorAll('.shoptabs button').forEach(b=>b.onclick=()=>{setup.shopTab=b.dataset.k;paneShop(T)});const B=T.querySelector('.shopbody');
-  const unlockTxt=u=>u.level?`Free at level ${u.level}`:u.lvl?`Free at level ${u.lvl}`:u.league?`Free in ${LEAGUES.find(l=>l.id===u.league).name} league`:u.season?`Premium season pass, tier ${u.season}`:u.ach?`Free with ${ACH.find(a=>a.id===u.ach).name}`:u.prem?`Premium season pass, tier ${u.prem}`:'';
-  if(tab==='surr'){B.innerHTML=`<div class="small">Change what surrounds your board. “City default” gives every city its own landscape.</div><div class="shopgrid"></div>`;const E=B.querySelector('.shopgrid');
-    [{id:null,name:'City default',icon:'🗺️',desc:'Every city’s own land, water and streets.',s:{base:'#7fa25a'}}].concat(SURROUND_PREMIUM).forEach(s=>{const own=s.id===null||itemOwned('surr',s.id),on=(PREF.eq.surr||null)===s.id;
-      const b=el('div','scard'+(on?' on':''),`<div class="sprev" style="background:${s.id?`radial-gradient(circle at 50% 55%,${s.s.plinth} 0 26%,${s.s.base} 27% 70%,${s.s.water} 71%)`:'linear-gradient(135deg,#7fa25a 0 33%,#e2bf86 33% 66%,#eef3f6 66%)'}"><span>${s.icon}</span></div><b>${esc(s.name)}</b><small>${esc(s.desc)}</small>
-        <div class="brow">${on?'<span class="premtag">Equipped</span>':own?'<button class="sm go" data-a="eq">Use</button>':`<button class="sm warn" data-a="buy">${fmtC(s.price)}</button>`}${s.id?'<button class="sm" data-a="pv">Preview</button>':''}</div>${!own&&s.unlock?`<small class="how">${esc(unlockTxt(s.unlock))}</small>`:''}`);
-      const eq=()=>{PREF.eq.surr=s.id;savePref();applyTheme(setup.city);paneShop(T)};const e1=b.querySelector('[data-a="eq"]');if(e1)e1.onclick=eq;
-      const bb=b.querySelector('[data-a="buy"]');if(bb)bb.onclick=async()=>{if(await confirmBuy(`${s.name} surround`,s.price,esc(s.desc))){grantItem('surr',s.id);eq();railProfile()}};
-      const pv=b.querySelector('[data-a="pv"]');if(pv)pv.onclick=()=>previewSurround(s.id);E.append(b)})}
-  else if(tab==='coins'){B.innerHTML=`<div class="shopgrid">${IAP_PACKS.map((p,i)=>`<div class="scard coinpack">${p.tag?`<em class="ptag">${p.tag}</em>`:''}<div class="cbig">${COIN}</div><b>${p.coins.toLocaleString('en-US')} coins</b><button class="btn pri" data-i="${i}">${esc(p.price)}</button></div>`).join('')}</div>
-      <div class="small">${IAP.ready?'Purchases are handled by the App Store or Google Play.':'Coin packs are available in the Skyline Estates app for iPhone and Android.'} You also earn coins from wins, level-ups, missions, the Lucky Spin, season tiers and league promotions.</div>`;
-    B.querySelectorAll('[data-i]').forEach(b=>b.onclick=()=>IAP.buy(IAP_PACKS[+b.dataset.i]))}
-  else if(tab==='boost'){const S=season();B.innerHTML=`<div class="shopgrid"><div class="scard"><div class="cbig">★</div><b>Season ${S.n} premium pass</b><small>A second reward on all 30 tiers this season: coins, Candy dice, Neon and Crystal finishes, Coral Lagoon and Sky Deck surrounds.</small>${S.prem?'<span class="premtag">Owned</span>':`<button class="sm warn" id="bPrem">${fmtC(PREM_PRICE)}</button>`}</div>
-      <div class="scard"><div class="cbig">⚡</div><b>Double XP × 3</b><small>Your next 3 finished games earn double XP (and season XP). You have ${PREF.boostGames} game${PREF.boostGames===1?'':'s'} left.</small><button class="sm warn" id="bXP">${fmtC(300)}</button></div></div>`;
-    const bp=B.querySelector('#bPrem');if(bp)bp.onclick=async()=>{if(await confirmBuy(`Season ${S.n} premium pass`,PREM_PRICE)){S.prem=true;savePref();paneShop(T);railProfile()}};
-    B.querySelector('#bXP').onclick=async()=>{if(await confirmBuy('Double XP × 3',300)){PREF.boostGames+=3;savePref();paneShop(T);railProfile()}}}
-  else if(tab==='dice'){B.innerHTML=`<div class="shopgrid"></div>`;const E=B.querySelector('.shopgrid');DICE_SKINS.forEach(d=>{const own=itemOwned('dice',d.id),on=diceSkin().id===d.id;
-      const b=el('div','scard'+(on?' on':''),`<div class="diceprev" style="--f:${d.face};--e:${d.edge};--p:${d.pip};--o:${d.one}"><i></i><i></i><i></i><i></i><i></i></div><b>${esc(d.name)} dice</b><div class="brow">${on?'<span class="premtag">Equipped</span>':own?'<button class="sm go" data-a="eq">Use</button>':d.price?`<button class="sm warn" data-a="buy">${fmtC(d.price)}</button>`:''}</div>${!own?`<small class="how">${esc(unlockTxt(d))}</small>`:''}`);
-      const eq=()=>{PREF.eq.dice=d.id;savePref();applyDiceSkin();paneShop(T)};const e1=b.querySelector('[data-a="eq"]');if(e1)e1.onclick=eq;const bb=b.querySelector('[data-a="buy"]');if(bb)bb.onclick=async()=>{if(await confirmBuy(`${d.name} dice`,d.price)){grantItem('dice',d.id);eq();railProfile()}};E.append(b)})}
-  else if(tab==='fin'){B.innerHTML=`<div class="small">A finish paints your token. It shows for you and, online, for everyone in your game.</div><div class="fingrid"></div>`;
-    const F=B.querySelector('.fingrid');[{id:null,name:'Player colour',col:PCOL[0],price:0}].concat(FINISHES).forEach(f=>{const own=f.id===null||itemOwned('fin',f.id),on=(PREF.eq.fin||null)===f.id;
-      const b=el('button','fcard'+(on?' on':'')+(own?'':' locked'),`<i style="background:radial-gradient(circle at 35% 30%,#fff,${f.col} 55%,#000 140%)"></i><b>${esc(f.name)}</b><small>${on?'Equipped':own?'Tap to use':f.price?fmtC(f.price):esc(f.desc)}</small>`);
-      b.onclick=async()=>{if(!own){if(!f.price){toast(f.desc);return}if(!(await confirmBuy(`${f.name} finish`,f.price,esc(f.desc))))return;grantItem('fin',f.id)}PREF.eq.fin=f.id;savePref();paneShop(T);railProfile()};F.append(b)})}}
 function pickChar(s,act){if(s.i===0&&s.type==='human')return myChar();const used=new Set(act.filter(a=>a.i===0&&a.type==='human').map(()=>myChar()));const pool=s.type==='ai'?CHARS.filter(c=>c.id!=='nova'):CHARS.filter(c=>charUnlocked(c.id));const free=pool.filter(c=>!used.has(c.id));const k=(s.i*5+3)%Math.max(1,free.length);return (free[k]||pool[0]).id}
 async function previewSurround(id){const old=PREF.eq.surr;PREF.eq.surr=id;PREF.inv.surr=PREF.inv.surr||{};const had=PREF.inv.surr[id];PREF.inv.surr[id]=1;applyTheme(setup.city);$('#title').classList.add('peek');TITLE_CAM={look:[0,0,0],L:34,pitch:.5,spin:.08};
   await modal({cls:'peekm',html:`<div class="mtxt">Previewing <b>${esc(SURROUND_PREMIUM.find(s=>s.id===id).name)}</b></div>`,btns:[{k:'x',label:'Done',primary:true}]});
@@ -4213,6 +4296,101 @@ async function redeemPromo(raw){const n=String(raw||'').toUpperCase().replace(/[
 /* ---- colour theme: Midnight (dark) or Daylight (light) ---- */
 function applyUI(){const light=PREF.ui==='light';document.documentElement.classList.toggle('light',light);const m=document.querySelector('meta[name=theme-color]');if(m)m.setAttribute('content',light?'#F4F6FA':'#10223f')}
 applyUI();
+
+/* ================= SHOP SHOWROOM AND SEASON TRACK ================= */
+/* Picture cards coloured by rarity, a daily rotation of six items (one at 20% off), a one-time starter bundle,
+   and a two-row season track. Nothing is random: every card shows exactly what you get. */
+const RAR={C:['Common','#8A96A3'],R:['Rare','#2F7FE0'],E:['Epic','#8F3FD8'],L:['Legendary','#E2B13C']};
+const ITEM_RAR={fin:{gold:'L',chrome:'R',ruby:'R',obsidian:'R',neon:'E',crystal:'L'},dice:{classic:'C',midnight:'R',gold:'E',mint:'R',candy:'E',marble:'L'},surr:{marble:'E',neon:'E',skydeck:'L',lava:'L',ice:'E',garden:'R',lagoon:'E',confetti:'R'}};
+const KIND_NAME={surr:'Surround',fin:'Finish',dice:'Dice'};
+const itemList=k=>k==='surr'?SURROUND_PREMIUM:k==='fin'?FINISHES:DICE_SKINS;
+const itemOf=(k,id)=>itemList(k).find(x=>x.id===id);
+const nfmt=n=>Math.round(n).toLocaleString('en-US');
+const COIN_I='<i class="coin" aria-hidden="true"></i>';
+const SVG_STAR='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8l2.8 5.9 6.4.8-4.7 4.4 1.2 6.4L12 17.2l-5.7 3.1 1.2-6.4-4.7-4.4 6.4-.8z" fill="currentColor"/></svg>';
+const SVG_BOLT='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 2 4 13.5h6.5L9.5 22 20 9.5h-6.6z" fill="currentColor"/></svg>';
+function itemArt(k,it,cls=''){if(!it)return '';
+  if(k==='fin')return `<span class="iart ball ${cls}" style="--c:${it.col}"></span>`;
+  if(k==='dice')return `<span class="iart die ${cls}" style="--f:${it.face};--e:${it.edge};--p:${it.pip};--o:${it.one}"></span>`;
+  const s=it.s;return `<span class="iart surr ${cls}" style="--b:${s.base};--w:${s.water};--p:${s.plinth};--r:${s.rim}"></span>`}
+function isEquipped(k,id){return k==='fin'?(PREF.eq.fin||null)===id:k==='dice'?diceSkin().id===id:(PREF.eq.surr||null)===id}
+function equipItem(k,id){if(k==='fin')PREF.eq.fin=id;else if(k==='dice'){PREF.eq.dice=id;applyDiceSkin()}else{PREF.eq.surr=id;applyTheme(setup.city)}savePref();railProfile()}
+function unlockTxt(u){if(!u)return '';return u.level?`Free at level ${u.level}`:u.lvl?`Free at level ${u.lvl}`:u.league?`Free in ${LEAGUES.find(l=>l.id===u.league).name} league`:u.season?`Season track, tier ${u.season}`:u.ach?`Free with ${(ACH.find(a=>a.id===u.ach)||{}).name||'an award'}`:u.prem?`Premium season, tier ${u.prem}`:''}
+/* one item card; price can be a daily deal */
+function itemCard(k,it,o={}){const r=RAR[ITEM_RAR[k][it.id]||'R'],own=itemOwned(k,it.id),on=isEquipped(k,it.id),price=o.price||it.price;
+  const act=on?'<span class="iown">Equipped</span>':own?'<button class="ibuy use" data-a="eq">Use</button>':price?`<button class="ibuy" data-a="buy" aria-label="Buy ${esc(it.name)} for ${nfmt(price)} coins">${COIN_I}${o.was?`<s>${nfmt(o.was)}</s>`:''}<span>${nfmt(price)}</span></button>`:`<span class="ihow">${esc(unlockTxt(it.unlock||it))}</span>`;
+  return `<article class="icard" style="--rc:${r[1]}" data-k="${k}" data-id="${it.id}" data-p="${price||0}">${o.deal&&!own?`<em class="ideal">${o.deal}</em>`:''}${k==='surr'?`<button class="ipv" data-a="pv" aria-label="Preview ${esc(it.name)}">Preview</button>`:''}
+    <div class="iwrap">${itemArt(k,it)}</div><b>${esc(it.name)}</b><small class="itier">${KIND_NAME[k]} · ${r[0]}</small>${act}</article>`}
+function bindCards(E,redraw){E.querySelectorAll('.icard[data-k]').forEach(c=>{const k=c.dataset.k,id=c.dataset.id,it=itemOf(k,id);if(!it)return;
+  const b=c.querySelector('[data-a="buy"]');if(b)b.onclick=async()=>{const p=+c.dataset.p;if(await confirmBuy(`${it.name} ${KIND_NAME[k].toLowerCase()}`,p,esc(it.desc||''))){grantItem(k,id);equipItem(k,id);sfx('buy');redraw()}};
+  const u=c.querySelector('[data-a="eq"]');if(u)u.onclick=()=>{equipItem(k,id);redraw()};
+  const v=c.querySelector('[data-a="pv"]');if(v)v.onclick=()=>previewSurround(id)})}
+/* daily picks: fixed for the whole local day, chosen from items the player didn't own that morning */
+function dailyKey(){const d=new Date();return d.getFullYear()*1e4+(d.getMonth()+1)*100+d.getDate()}
+function dailyPicks(){const key=dailyKey();if(PREF.dshop&&PREF.dshop.key===key)return PREF.dshop;
+  const r=seeded(key*7+11),pool=[];['surr','fin','dice'].forEach(k=>itemList(k).forEach(it=>{if(it.price>0)pool.push([k,it.id])}));
+  for(let i=pool.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]]}
+  const un=pool.filter(([k,id])=>!itemOwned(k,id)),list=un.concat(pool.filter(x=>!un.includes(x))).slice(0,6);
+  PREF.dshop={key,list,deal:Math.floor(r()*Math.min(6,un.length||1))};savePref();return PREF.dshop}
+const dealPrice=p=>Math.round(p*.8/10)*10;
+function untilMidnight(){const n=new Date(),m=new Date(n);m.setHours(24,0,0,0);const s=Math.max(0,Math.floor((m-n)/1e3));return [s/3600|0,(s/60|0)%60,s%60].map(v=>String(v).padStart(2,'0')).join(':')}
+/* the one-time starter bundle (an in-app purchase in the apps) */
+const STARTER={coins:1500,fin:'gold',dice:'midnight'};
+function grantStarter(){if(PREF.starterDone)return;addCoins(STARTER.coins,'Starter bundle');grantItem('fin',STARTER.fin);grantItem('dice',STARTER.dice);PREF.starterDone=Date.now();savePref();toast('Starter bundle added. Thank you!');railProfile()}
+function bundleCard(){const f=itemOf('fin',STARTER.fin),d=itemOf('dice',STARTER.dice);
+  return `<article class="bundle"><span class="once">ONE TIME ONLY</span><h3>Starter Skyline Bundle</h3>
+    <div class="bstage"><span class="iart coins"></span>${itemArt('fin',f,'big')}${itemArt('dice',d)}</div>
+    <ul><li>${nfmt(STARTER.coins)} coins</li><li>${esc(f.name)} token finish</li><li>${esc(d.name)} dice</li></ul>
+    <button class="ibtn gold" id="bStarter">${esc(IAP_BUNDLE.price)}</button></article>`}
+let SHOP_TICK=null;
+function paneShop(T){let tab=setup.shopTab||'daily';if(tab==='surr'&&!setup.shopTabSet)tab='daily';
+  const tabs=[['daily','Daily'],['surr','Surrounds'],['fin','Finishes'],['dice','Dice'],['boost','Boosts'],['coins','Coins']];
+  T.innerHTML=`<div class="shophead"><h2>Shop</h2><div class="shoptabs" role="tablist">${tabs.map(([k,l])=>`<button class="stab${k===tab?' on':''}" role="tab" aria-selected="${k===tab}" data-k="${k}">${l}</button>`).join('')}</div></div><div class="shopbody"></div>
+    <div class="small shopnote">Nothing in the shop is random: you always see exactly what you get.</div>`;
+  T.querySelectorAll('.shoptabs button').forEach(b=>b.onclick=()=>{setup.shopTab=b.dataset.k;setup.shopTabSet=1;paneShop(T)});
+  const B=T.querySelector('.shopbody'),redraw=()=>paneShop(T);clearInterval(SHOP_TICK);
+  if(tab==='daily'){const D=dailyPicks(),showB=!PREF.starterDone;
+    B.innerHTML=`<div class="dshop${showB?'':' nob'}">${showB?bundleCard():''}<div class="dpicks"><div class="dhead"><h3>Daily picks</h3><span>New items in <b id="dTimer">${untilMidnight()}</b></span></div><div class="igrid g6">${D.list.map(([k,id],i)=>{const it=itemOf(k,id);if(!it)return '';const deal=i===D.deal&&!itemOwned(k,id);return itemCard(k,it,deal?{price:dealPrice(it.price),was:it.price,deal:'Save 20%'}:{})}).join('')}</div></div></div>`;
+    const sb=B.querySelector('#bStarter');if(sb)sb.onclick=()=>IAP.buy(IAP_BUNDLE);
+    SHOP_TICK=setInterval(()=>{const e=document.getElementById('dTimer');if(!e){clearInterval(SHOP_TICK);return}if(dailyKey()!==D.key){clearInterval(SHOP_TICK);redraw();return}e.textContent=untilMidnight()},1000)}
+  else if(tab==='surr'||tab==='fin'||tab==='dice'){const L=itemList(tab).filter(it=>tab!=='dice'||it.id!=='classic');
+    const def=tab==='surr'?`<article class="icard" style="--rc:#8A96A3"><div class="iwrap"><span class="iart surr" style="--b:#7fa25a;--w:#4f9fc8;--p:#e2bf86;--r:#c9a26a"></span></div><b>City default</b><small class="itier">Every city’s own landscape</small>${(PREF.eq.surr||null)===null?'<span class="iown">Equipped</span>':'<button class="ibuy use" id="sDef">Use</button>'}</article>`
+      :tab==='fin'?`<article class="icard" style="--rc:#8A96A3"><div class="iwrap"><span class="iart ball" style="--c:${PCOL[0]}"></span></div><b>Player colour</b><small class="itier">Finish · Common</small>${(PREF.eq.fin||null)===null?'<span class="iown">Equipped</span>':'<button class="ibuy use" id="sDef">Use</button>'}</article>`
+      :`<article class="icard" style="--rc:#8A96A3"><div class="iwrap">${itemArt('dice',itemOf('dice','classic'))}</div><b>Classic</b><small class="itier">Dice · Common</small>${diceSkin().id==='classic'?'<span class="iown">Equipped</span>':'<button class="ibuy use" id="sDef">Use</button>'}</article>`;
+    B.innerHTML=`<div class="igrid">${def}${L.map(it=>itemCard(tab,it)).join('')}</div>`;
+    const d=B.querySelector('#sDef');if(d)d.onclick=()=>{equipItem(tab,tab==='dice'?'classic':null);redraw()}}
+  else if(tab==='boost'){const S=season();
+    B.innerHTML=`<div class="igrid">
+      <article class="icard" style="--rc:#E2B13C"><div class="iwrap"><span class="iart glyph star">${SVG_STAR}</span></div><b>Season ${S.n} premium</b><small class="itier">A second reward on all 30 tiers</small>${S.prem?'<span class="iown">Owned</span>':`<button class="ibuy" id="bPrem">${COIN_I}<span>${nfmt(PREM_PRICE)}</span></button>`}</article>
+      <article class="icard" style="--rc:#2F7FE0"><div class="iwrap"><span class="iart glyph bolt">${SVG_BOLT}</span></div><b>Double XP × 3</b><small class="itier">${PREF.boostGames?`${PREF.boostGames} game${PREF.boostGames===1?'':'s'} left`:'Your next 3 games'}</small><button class="ibuy" id="bXP">${COIN_I}<span>300</span></button></article></div>`;
+    const bp=B.querySelector('#bPrem');if(bp)bp.onclick=async()=>{if(await confirmBuy(`Season ${S.n} premium pass`,PREM_PRICE,'Unlocks the premium reward on all 30 tiers this season, including tiers you’ve already reached.')){S.prem=true;savePref();railProfile();redraw()}};
+    B.querySelector('#bXP').onclick=async()=>{if(await confirmBuy('Double XP × 3',300)){PREF.boostGames+=3;savePref();railProfile();redraw()}}}
+  else if(tab==='coins'){B.innerHTML=`<div class="igrid">${IAP_PACKS.map((p,i)=>`<article class="icard" style="--rc:${['#2F7FE0','#2F7FE0','#8F3FD8','#E2B13C'][i]||'#2F7FE0'}">${p.tag?`<em class="ideal">${esc(p.tag)}</em>`:''}<div class="iwrap"><span class="iart coins n${i}"></span></div><b>${nfmt(p.coins)} coins</b><small class="itier">Coin pack</small><button class="ibuy cash" data-i="${i}">${esc(p.price)}</button></article>`).join('')}</div>
+      <div class="small shopnote">${IAP.ready?'Purchases are handled by the App Store or Google Play.':'Coin packs are sold in the Skyline Estates app for iPhone and Android.'} You also earn coins from wins, level-ups, missions, the Lucky Spin, season tiers and league promotions.</div>`;
+    B.querySelectorAll('[data-i]').forEach(b=>b.onclick=()=>IAP.buy(IAP_PACKS[+b.dataset.i]))}
+  bindCards(B,redraw)}
+
+/* ---- season: banner, two reward rows, weekly challenges ---- */
+function rewardArt(r){if(r.surr)return itemArt('surr',itemOf('surr',r.surr));if(r.fin)return itemArt('fin',itemOf('fin',r.fin));if(r.dice)return itemArt('dice',itemOf('dice',r.dice));
+  if(r.boost&&!r.coins)return `<span class="iart glyph bolt">${SVG_BOLT}</span>`;return `<span class="iart coin1${r.boost?' plus':''}"></span>`}
+function rewardLabel(r){const o=[];if(r.surr)o.push(itemOf('surr',r.surr).name);if(r.fin)o.push(itemOf('fin',r.fin).name+' finish');if(r.dice)o.push(itemOf('dice',r.dice).name+' dice');if(r.coins)o.push(`${r.coins} coins`);if(r.boost)o.push(`${r.boost}× double XP`);return o.join(' + ')}
+function paneSeason(T){const S=season(),t=seasonTierNow(),left=Math.max(0,Math.ceil((seasonEnds()-Date.now())/864e5)),into=S.sxp-t*TIER_XP,W=weekly(),ca=seasonClaimable();
+  T.innerHTML=`<div class="sban"><div class="sbt"><small>SEASON ${S.n}</small><h2>${esc(seasonName(S.n))}</h2><span>Ends in <b>${left} day${left===1?'':'s'}</b></span></div>
+    <div class="sbp"><div class="sbl"><span>Tier <b>${t}</b> of ${TIERS}</span><span>${t>=TIERS?'All tiers reached':`${into} / ${TIER_XP} XP`}</span></div><span class="sbar" aria-hidden="true"><i style="width:${t>=TIERS?100:into/TIER_XP*100}%"></i></span></div>
+    <div class="sbb">${ca?`<button class="ibtn ghost" id="sAll">Claim all (${ca})</button>`:''}${S.prem?'<span class="premown">Premium unlocked</span>':`<button class="ibtn gold" id="sPrem">Unlock Premium <span>${COIN_I}${nfmt(PREM_PRICE)}</span></button>`}</div></div>
+    <div class="strack" id="track"><span class="snum lab"></span><div class="slab"><b>Free</b><small>Everyone</small></div><div class="slab prem"><b>Premium</b><small>${S.prem?'Unlocked':'Locked'}</small></div></div>
+    <div class="sweek"><span class="swl">This week</span>${W.list.map(id=>{const m=WEEKLY.find(x=>x.id===id),d=!!W.done[id],v=Math.min(m.g,W.prog[id]||0);return `<div class="swc${d?' done':''}" title="${WEEK_SXP} season XP + ${WEEK_COINS} coins"><span>${esc(loc(m.n))}</span><b>${d?'Done':m.money?`${fmt(v)} / ${fmt(m.g)}`:`${v}/${m.g}`}</b></div>`}).join('')}</div>
+    <div class="small shopnote">Every XP you earn also counts here. Weekly challenges pay ${WEEK_SXP} season XP and ${WEEK_COINS} coins each. Anything you claim is yours to keep.</div>`;
+  const tk=T.querySelector('#track');
+  for(let i=1;i<=TIERS;i++){const num=el('span','snum'+(i===t?' now':i<t?' got':''),String(i));tk.append(num);
+    [false,true].forEach(prem=>{const r=tierReward(i,prem),done=(prem?S.cp:S.cf)[i],reach=t>=i,can=reach&&!done&&(!prem||S.prem),big=!!(r.fin||r.dice||r.surr);
+      const st=done?'Claimed':can?'Claim':prem&&!S.prem?'Locked':reach?'':`Tier ${i}`;
+      const c=el(can?'button':'div','scell'+(prem?' prem':'')+(big?' big':'')+(done?' done':'')+(can?' can':''),`${rewardArt(r)}<small>${esc(rewardLabel(r))}</small>${st?`<em>${st}</em>`:''}`);
+      if(can){c.setAttribute('aria-label',`Claim tier ${i}${prem?' premium':''}: ${rewardLabel(r)}`);c.onclick=()=>{if(claimTier(i,prem)){sfx('win');toast('Reward claimed!');homeTab('season')}}}
+      tk.append(c)})}
+  const cur=tk.querySelector('.snum.now')||tk.querySelector('.snum.got:last-of-type');if(cur)setTimeout(()=>{tk.scrollLeft=Math.max(0,cur.offsetLeft-tk.clientWidth/2+44)},30);
+  const a=T.querySelector('#sAll');if(a)a.onclick=()=>{let n=0;for(let i=1;i<=t;i++){if(claimTier(i,false))n++;if(claimTier(i,true))n++}if(n){sfx('win');toast(`${n} reward${n>1?'s':''} claimed!`)}homeTab('season')};
+  const sp=T.querySelector('#sPrem');if(sp)sp.onclick=async()=>{if(await confirmBuy(`Season ${S.n} premium pass`,PREM_PRICE,'Unlocks the premium reward on all 30 tiers this season, including tiers you’ve already reached.')){S.prem=true;savePref();railProfile();homeTab('season')}}}
 /* ================= ORIENTATION ================= */
 let rotDismissed=false;
 function checkRotate(){$('#rotate').hidden=true}
