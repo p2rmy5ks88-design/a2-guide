@@ -1,0 +1,32 @@
+name: Skyline Estates Desktop (Steam Deck)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  appimage:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: skyline-estates-desktop
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: Install
+        run: npm install --no-audit --no-fund
+      - name: Build AppImage
+        run: npm run dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: skyline-estates-steam-deck
+          path: skyline-estates-desktop/dist/*.AppImage
+      - name: Publish to the steam-deck release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view skyline-deck >/dev/null 2>&1 || gh release create skyline-deck --title "Skyline Estates for Steam Deck" --notes "Download Skyline-Estates-x86_64.AppImage on your Steam Deck (Desktop Mode), make it executable, then Add to Steam."
+          gh release upload skyline-deck dist/Skyline-Estates-x86_64.AppImage --clobber

@@ -2749,7 +2749,7 @@ function fmInit(){if(FMS.slots.length)return;FMS.slots=[fmSlot(),fmSlot()];FMS.o
 function fmGain(s,v,t){if(s.g){s.g.gain.cancelScheduledValues(AC.currentTime);s.g.gain.setValueAtTime(s.g.gain.value,AC.currentTime);s.g.gain.linearRampToValueAtTime(v,AC.currentTime+t)}else s.a.volume=v>0?Math.min(1,PREF.audio.vol):0}
 function fmNext(fade=FM_XF){fmInit();FMS.idx=(FMS.idx+1)%FMS.order.length;if(FMS.idx===0&&FMS.cur>=0){const last=FMS.order[FMS.order.length-1];do{shuffle(FMS.order)}while(FMS.order.length>1&&FMS.order[0]===last)}
   const t=FM_LIST[FMS.order[FMS.idx]],old=FMS.slots[FMS.cur],ni=FMS.cur<0?0:1-FMS.cur,nw=FMS.slots[ni];
-  nw.a.src=(IS_APP?'':'../eko-estates/')+'audio/fm/'+t[0]+'.mp3';nw.a.currentTime=0;FMS.cur=ni;FMS.track=t;FMS.xfading=true;
+  nw.a.src=(IS_APP||window.SKYLINE_DESKTOP?'':'../eko-estates/')+'audio/fm/'+t[0]+'.mp3';nw.a.currentTime=0;FMS.cur=ni;FMS.track=t;FMS.xfading=true;
   const p=nw.a.play();if(p&&p.catch)p.catch(()=>{});fmGain(nw,1,Math.max(.05,fade*.6));
   if(old&&!old.a.paused){fmGain(old,0,fade);setTimeout(()=>{if(FMS.slots[FMS.cur]!==old)old.a.pause()},fade*1000+150)}
   setTimeout(()=>{FMS.xfading=false},fade*1000+200);lastPill='';renderRadioPill();
@@ -4391,6 +4391,66 @@ function paneSeason(T){const S=season(),t=seasonTierNow(),left=Math.max(0,Math.c
   const cur=tk.querySelector('.snum.now')||tk.querySelector('.snum.got:last-of-type');if(cur)setTimeout(()=>{tk.scrollLeft=Math.max(0,cur.offsetLeft-tk.clientWidth/2+44)},30);
   const a=T.querySelector('#sAll');if(a)a.onclick=()=>{let n=0;for(let i=1;i<=t;i++){if(claimTier(i,false))n++;if(claimTier(i,true))n++}if(n){sfx('win');toast(`${n} reward${n>1?'s':''} claimed!`)}homeTab('season')};
   const sp=T.querySelector('#sPrem');if(sp)sp.onclick=async()=>{if(await confirmBuy(`Season ${S.n} premium pass`,PREM_PRICE,'Unlocks the premium reward on all 30 tiers this season, including tiers you’ve already reached.')){S.prem=true;savePref();railProfile();homeTab('season')}}}
+
+/* ================= GAME CONTROLLER (Steam Deck, Xbox, PlayStation) ================= */
+/* D-pad or left stick moves a gold focus ring between buttons, A presses, B goes back.
+   In a game: X rolls or ends the turn, Y opens Properties, Menu opens the menu, View opens the map,
+   right stick turns the camera, triggers zoom. LB and RB switch tabs. */
+const PAD={on:false,raf:0,prev:[],held:{},last:0,cur:null,scope:null};
+(function(){const st=document.createElement('style');st.textContent=`html.pad .padf{outline:3px solid #FFFFFF!important;outline-offset:3px;box-shadow:0 0 0 7px rgba(226,181,74,.75),0 0 18px rgba(226,181,74,.6)!important;z-index:5}
+html.pad .padf.icard,html.pad .padf.scell{transform:translateY(-2px)}
+html.pad.light .padf{outline-color:#13284A!important}
+#padHint{position:fixed;left:50%;bottom:10px;transform:translateX(-50%);z-index:90;display:none;gap:12px;padding:6px 12px;border-radius:999px;background:rgba(11,20,36,.82);border:1px solid #2A3F63;color:#C7D3E3;font:700 11px Manrope,system-ui,sans-serif;pointer-events:none}
+html.padhint #padHint{display:flex}#padHint b{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 4px;margin-right:4px;border-radius:9px;background:#EEF2F8;color:#0E1A2E;font-size:10px}`;document.head.appendChild(st)})();
+function padScope(){const m=$('#modals');if(m&&m.children.length)return m.lastElementChild;const t=$('#title');if(t&&!t.hidden)return t;return $('#ui')}
+function padVisible(e){if(!e||e.disabled||e.closest('[hidden]'))return false;const r=e.getBoundingClientRect();if(r.width<4||r.height<4)return false;const s=getComputedStyle(e);return s.visibility!=='hidden'&&s.display!=='none'&&+s.opacity!==0}
+function padItems(sc){return [...sc.querySelectorAll('button,a[href],input,select,textarea,[tabindex]:not([tabindex="-1"])')].filter(padVisible)}
+function padSet(e){if(PAD.cur&&PAD.cur!==e)PAD.cur.classList.remove('padf');PAD.cur=e;if(!e)return;e.classList.add('padf');try{e.focus({preventScroll:true})}catch(_){}e.scrollIntoView({block:'nearest',inline:'nearest'})}
+function padPick(sc){const L=padItems(sc);return L.find(e=>/\bpri\b|\bgold\b|\bbigb\b|primary/.test(e.className))||L[0]||null}
+function padEnsure(){const sc=padScope();if(!sc)return null;if(sc!==PAD.scope||!PAD.cur||!PAD.cur.isConnected||!sc.contains(PAD.cur)||!padVisible(PAD.cur)){PAD.scope=sc;padSet(padPick(sc))}return PAD.cur}
+function padMove(dx,dy){const cur=padEnsure();if(!cur)return;
+  if(cur.tagName==='SELECT'&&dx){const n=cur.options.length;cur.selectedIndex=(cur.selectedIndex+dx+n)%n;cur.dispatchEvent(new Event('change',{bubbles:true}));return}
+  const a=cur.getBoundingClientRect(),ax=a.left+a.width/2,ay=a.top+a.height/2;let best=null,bs=1e9;
+  for(const e of padItems(PAD.scope)){if(e===cur)continue;const b=e.getBoundingClientRect(),bx=b.left+b.width/2,by=b.top+b.height/2,vx=bx-ax,vy=by-ay;
+    const along=dx?vx*dx:vy*dy;if(along<=4)continue;const cross=dx?Math.abs(vy):Math.abs(vx);const s=along+cross*2.2;if(s<bs){bs=s;best=e}}
+  if(best)padSet(best)}
+function padClick(){const e=padEnsure();if(!e)return;if(e.tagName==='INPUT'||e.tagName==='TEXTAREA'){e.focus();return}e.click()}
+function padBack(){const m=$('#modals');if(m&&m.children.length){const top=m.lastElementChild,bs=padItems(top);
+    const b=bs.find(x=>x.dataset.k==='x')||bs.find(x=>/^(cancel|close|done|not now|ok|no|back|later)$/i.test(x.textContent.trim()));if(b)b.click();return}
+  const t=$('#title');if(t&&!t.hidden&&typeof homeTab==='function'){homeTab('play');return}}
+function padTabs(d){const sc=padScope();if(!sc)return;const groups=[...sc.querySelectorAll('.shoptabs,.subtabs,.achsel,[role="tablist"]')].filter(padVisible);
+  let g=groups[0];if(!g&&sc.id==='title')g=sc.querySelector('.rail');if(!g)return;const L=[...g.querySelectorAll('button')].filter(padVisible);if(!L.length)return;
+  let i=L.findIndex(b=>b.classList.contains('on')||b.getAttribute('aria-selected')==='true'||b.getAttribute('aria-current'));const n=L[(i+d+L.length)%L.length];n.click();PAD.scope=null}
+function padGameBtn(sel){const e=$(sel);if(e&&padVisible(e))e.click()}
+function padPress(i){
+  const inGame=G&&!G.over&&$('#title').hidden&&!$('#modals').children.length;
+  switch(i){case 0:padClick();break;case 1:padBack();break;
+    case 2:if(inGame)padGameBtn('.bigb');else padClick();break;
+    case 3:if(inGame)padGameBtn('#bAssets');break;
+    case 4:padTabs(-1);break;case 5:padTabs(1);break;
+    case 8:if(inGame)padGameBtn('#bMap');break;
+    case 9:if($('#title').hidden)padGameBtn('#bMenu');else if(typeof homeTab==='function')homeTab('settings');break;
+    case 12:padMove(0,-1);break;case 13:padMove(0,1);break;case 14:padMove(-1,0);break;case 15:padMove(1,0);break}}
+function padLoop(t){PAD.raf=requestAnimationFrame(padLoop);const gp=[...(navigator.getGamepads?navigator.getGamepads():[])].find(g=>g&&g.connected);if(!gp)return;
+  const dt=Math.min(.05,(t-(PAD.last||t))/1000);PAD.last=t;const B=gp.buttons.map(b=>b.pressed||b.value>.5),now=t/1000;
+  if(B.some(Boolean)&&!PAD.on){padOn();padEnsure()}
+  const ax=gp.axes[0]||0,ay=gp.axes[1]||0,dz=.5;const stick={12:ay<-dz,13:ay>dz,14:ax<-dz,15:ax>dz};
+  for(let i=0;i<B.length;i++){const p=B[i]||!!stick[i],was=PAD.prev[i];
+    if(p&&!was){PAD.held[i]=now+.38;padPress(i)}else if(p&&i>=12&&i<=15&&now>PAD.held[i]){PAD.held[i]=now+.11;padPress(i)}PAD.prev[i]=p}
+  const rx=gp.axes[2]||0,ry=gp.axes[3]||0,lt=(gp.buttons[6]&&gp.buttons[6].value)||0,rt=(gp.buttons[7]&&gp.buttons[7].value)||0;
+  if(typeof camT!=='undefined'&&G&&$('#title').hidden&&(Math.abs(rx)>.15||Math.abs(ry)>.15||lt>.1||rt>.1)){
+    if(!PAD.on)padOn();
+    if(Math.abs(rx)>.15)camT.yaw-=rx*dt*2.2;if(Math.abs(ry)>.15)camT.pitch=Math.max(.3,Math.min(1.3,camT.pitch+ry*dt*1.1));
+    if(lt>.1||rt>.1)camT.L=Math.max(6,Math.min(42,camT.L*(1+(lt-rt)*dt*1.4)));camT.rate=12;userCam=1}
+  if(PAD.on&&PAD.cur&&!PAD.cur.isConnected)padEnsure()}
+function padOn(){PAD.on=true;const h=document.documentElement;h.classList.add('pad','padhint');clearTimeout(PAD.ht);PAD.ht=setTimeout(()=>h.classList.remove('padhint'),6000)}
+function padStart(){if(PAD.raf)return;PAD.raf=requestAnimationFrame(padLoop);if(!$('#padHint')){const h=el('div','',`<span><b>A</b>Select</span><span><b>B</b>Back</span><span><b>X</b>Roll / end turn</span><span><b>Y</b>Properties</span><span><b>LB RB</b>Tabs</span>`);h.id='padHint';document.body.append(h)}}
+addEventListener('gamepadconnected',padStart);if(navigator.getGamepads&&[...navigator.getGamepads()].some(Boolean))padStart();
+addEventListener('pointerdown',()=>{if(PAD.on){PAD.on=false;document.documentElement.classList.remove('pad');if(PAD.cur)PAD.cur.classList.remove('padf');PAD.cur=null}},true);
+/* desktop app (Steam Deck / Linux): a Quit button in Settings */
+{const _ps=paneSettings;paneSettings=function(T){_ps(T);const D=window.SKYLINE_DESKTOP;if(!D||!D.quit)return;
+  const c=el('div','card',`<div class="ch">Desktop app</div><p class="small">Controller: A select · B back · X roll or end turn · Y properties · LB/RB tabs · right stick turns the camera · triggers zoom · View opens the map · Menu opens the menu.</p><div class="brow"><button class="btn" id="dFull">Toggle full screen</button><button class="btn danger" id="dQuit">Quit game</button></div>`);
+  T.append(c);c.querySelector('#dQuit').onclick=()=>D.quit();c.querySelector('#dFull').onclick=()=>D.fullscreen&&D.fullscreen()}}
 /* ================= ORIENTATION ================= */
 let rotDismissed=false;
 function checkRotate(){$('#rotate').hidden=true}
