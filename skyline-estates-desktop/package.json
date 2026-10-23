@@ -1,10 +1,12 @@
 {
   "name": "skyline-estates",
   "productName": "Skyline Estates",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "description": "Skyline Estates, a 3D property trading board game, packaged for Steam Deck and Linux desktops",
-  "author": { "name": "Kenstylez" },
+  "author": {
+    "name": "Kenstylez"
+  },
   "main": "main.js",
   "scripts": {
     "build:www": "node scripts/build-www.mjs",
@@ -20,14 +22,24 @@
   "build": {
     "appId": "com.kenstylez.skylineestates.desktop",
     "productName": "Skyline Estates",
-    "files": ["main.js", "preload.js", "www/**/*"],
-    "directories": { "output": "dist", "buildResources": "build" },
+    "files": [
+      "main.js",
+      "preload.js",
+      "www/**/*"
+    ],
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
     "linux": {
-      "target": ["AppImage"],
+      "target": [
+        "AppImage"
+      ],
       "category": "Game",
       "icon": "build/icon.png",
       "artifactName": "Skyline-Estates-x86_64.${ext}",
       "synopsis": "3D property trading board game"
-    }
+    },
+    "afterPack": "scripts/after-pack.cjs"
   }
 }
