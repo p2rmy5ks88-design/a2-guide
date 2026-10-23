@@ -622,6 +622,12 @@ html.rot .mp.lobby{gap:7px}
 .ccard .csvg{border-radius:12px}
 .okmsg{color:var(--green)!important;font-weight:800}.errmsg{color:var(--bad)!important;font-weight:800}
 #sPromo{text-transform:uppercase;letter-spacing:.06em}
+.rar{display:inline-block;padding:1px 7px;border-radius:999px;color:#fff;font:800 10px var(--body);letter-spacing:.06em;text-transform:uppercase;vertical-align:middle}
+.tem.r2{background:radial-gradient(circle at 40% 35%,#e3efff,#2f7fe0)!important;box-shadow:0 4px 0 #1f5aa8!important}
+.tem.r3{background:radial-gradient(circle at 40% 35%,#f1e3ff,#8f3fd8)!important;box-shadow:0 4px 0 #5f2a96!important}
+.tem.r4{background:radial-gradient(circle at 40% 35%,#fff7d6,#e2b13c)!important;box-shadow:0 4px 0 #9a6f10,0 0 14px rgba(242,193,74,.7)!important}
+.lvpips i{width:34px}
+.tlv{color:#fff!important}
 </style>
 
 <canvas id="gl" aria-label="3D game board"></canvas>
@@ -1100,7 +1106,7 @@ function buildBoard(){
     const strip=N(geo.box,mat('#fff'),wx(st.x+st.w/2),.012,wz(st.y+st.h/2)).sc(st.w*U,.024,st.h*U);strip.visible=false;S3.dyn.add(strip);S3.strips[i]=strip;
     const mo=N(geo.plane,S3.mortMat,wx(r.x+r.w/2),.006,wz(r.y+r.h/2)).sc(r.w*U,1,r.h*U);mo.visible=false;S3.dyn.add(mo);S3.morts[i]=mo;
     if(SQ[i].t==='prop'){const pt=[[r.x+r.w/2,r.y+15],[r.x+r.w-15,r.y+r.h/2],[r.x+r.w/2,r.y+r.h-15],[r.x+15,r.y+r.h/2]][s];const hn=new Node().at(wx(pt[0]),0,wz(pt[1])).rot(0,OUTYAW(s),0);S3.dyn.add(hn);S3.houses[i]=hn}}
-  tok3=G.players.map(p=>{const fc=p.fin&&FINISHES.find(f=>f.id===p.fin);const t=tokenModel(p.tok,fc?fc.col:p.col);attachRider(p,t);if(p.tl>=5||(isLocalHuman(p)&&hasLvl(5)))t.add(N(S3.geo.torus,mat('#f2b632',{spec:.95,em:.15}),0,.012,0).sc(.25,.25,.12).rot(Math.PI/2,0,0));t.sc(.82);S3.dyn.add(t);return t});
+  tok3=G.players.map(p=>{const fc=p.fin&&FINISHES.find(f=>f.id===p.fin);const rc=rarityOf(p.tl).col;const t=tokenModel(p.tok,fc?fc.col:rc||p.col);attachRider(p,t);if(fc||rc)t.add(N(S3.geo.torus,mat(p.col,{spec:.5,em:.2}),0,.03,0).sc(.23,.23,.1).rot(Math.PI/2,0,0));if(p.tl>=4||(isLocalHuman(p)&&hasLvl(5)))t.add(N(S3.geo.torus,mat('#f2b632',{spec:.95,em:.15}),0,.012,0).sc(.25,.25,.12).rot(Math.PI/2,0,0));t.sc(.82);S3.dyn.add(t);return t});
   cellState=SQ.map(()=>({o:-1,h:0,m:false}));
   SQ.forEach((_,i)=>updateCell(i,false));G.players.forEach(p=>placeToken(p));
 }
@@ -1968,7 +1974,7 @@ function lobby(code,ref){
     draw()},()=>{pn.innerHTML='<div class="mh">Connection lost</div>';}));
 }
 async function hostStart(ref,d){
-  const set=d.set||cfgSet();const players=d.seats.map((s,i)=>({name:cleanName(s.name),tok:s.tok,col:s.col,ai:s.ai,uid:s.uid,tl:Math.max(1,Math.min(5,+s.tl||1)),fin:FINISHES.some(f=>f.id===s.fin)?s.fin:null,ch:CHARS.some(c=>c.id===s.ch)?s.ch:null}));
+  const set=d.set||cfgSet();const players=d.seats.map((s,i)=>({name:cleanName(s.name),tok:s.tok,col:s.col,ai:s.ai,uid:s.uid,tl:Math.max(1,Math.min(TL_MAX,+s.tl||1)),fin:FINISHES.some(f=>f.id===s.fin)?s.fin:null,ch:CHARS.some(c=>c.id===s.ch)?s.ch:null}));
   newGame({cash:set.cash||1600,set:Object.assign({},set),players});G.online=true;G.code=d.code;G.seq=1;
   try{await ref.update({status:'playing',s:JSON.stringify(G),seq:1,at:Date.now()})}catch(e){toast('Couldn’t start the game. Try again.')}
 }
@@ -1991,7 +1997,7 @@ const MODES=[['classic','Classic','Play until one landlord is left standing.'],[
 function myName(){const n=(PREF.nick||'').trim()||(PREF.slots&&PREF.slots[0]&&PREF.slots[0].name||'').trim();return n&&!NAMES.includes(n)?n:(PREF.nickSet?n:'')}
 function keepName(n,tok){n=(n||'').trim().slice(0,12);PREF.nick=n;PREF.nickSet=true;PREF.tok=tok;setup.slots[0].name=n;if(tok&&TOKENS.includes(tok))setup.slots[0].tok=tok;saveSlot(0,setup.slots[0]);savePref()}
 function saveSlot(i,sl){if(i===0&&(sl.name||'').trim()){PREF.nick=(sl.name||'').trim();PREF.nickSet=true}PREF.slots=PREF.slots||[];PREF.slots[i]={name:(sl.name||'').trim(),tok:sl.tok};clearTimeout(saveSlot.t);saveSlot.t=setTimeout(savePref,300)}
-const setup={slots:NAMES.map((n,i)=>{const sv=(PREF.slots||[])[i]||{};return{name:(sv.name||'').trim()||n,tok:TOKENS.includes(sv.tok)?sv.tok:TOKENS[i],type:i===0?'human':i<4?'ai':'off'}}),cash:1600,ai:'normal',speed:'normal',mode:'classic',rounds:20,timer:PREF.timer||0,city:'lagos',theme:'lagos',
+const setup={slots:NAMES.slice(0,6).map((n,i)=>{const sv=(PREF.slots||[])[i]||{};return{name:(sv.name||'').trim()||n,tok:TOKENS.includes(sv.tok)?sv.tok:TOKENS[i],type:i===0?'human':i<4?'ai':'off'}}),cash:1600,ai:'normal',speed:'normal',mode:'classic',rounds:20,timer:PREF.timer||0,city:'lagos',theme:'lagos',
   rules:Object.assign({minigames:true,perks:true,ffa:false,events:false,speedDie:false,pot:false,goDouble:false,jailRent:false,auction:true,even:true,interest:true},PREF.rules||{})};
 function startWith(g){
   GEN++;netStop();XPGAME=0;XPLOG=[];COINLOG=[];G=g;applyTheme(G.set.city||G.set.theme||setup.city);applyDiceSkin();$('#title').hidden=true;$('#ui').hidden=false;$('#modals').innerHTML='';buildBoard();renderRoster();$('#log').textContent='';
@@ -2445,15 +2451,18 @@ const TOKEN_INFO={'🚌':['City Bus','Drives along the road with a gentle sway a
 // how each locked token can be earned; every one can also be bought with coins
 const TOKEN_HOW={'🚕':{ach:'win1',coins:600},'⛵':{ach:'countries3',coins:900},'🐎':{ach:'deals3',coins:700},'🛶':{ach:'set',coins:500},'🚂':{ach:'transport',coins:800},'🎭':{ach:'festival',coins:800},'✈️':{ach:'countries8',coins:1500},'🚀':{ach:'hotels3',coins:1200},'👑':{ach:'win25',coins:2500},'🛢️':{lvl:4,coins:400}};
 /* token upgrades: better luck, never a sure win. The host can switch perks off in house rules. */
+/* token rarity: Common → Rare → Epic → Legendary. Each tier repaints the token. */
 const TOKEN_LV=[null,
-  {cost:0,pay:0,rr:0,pass:0,txt:'Starter'},
-  {cost:300,pay:.05,rr:0,pass:0,txt:'Payday +5%'},
-  {cost:800,pay:.05,rr:1,pass:0,txt:'Payday +5% · 1 re-roll per game'},
-  {cost:1800,pay:.1,rr:1,pass:1,txt:'Payday +10% · 1 re-roll · Lucky Pass'},
-  {cost:3500,pay:.15,rr:2,pass:1,txt:'Payday +15% · 2 re-rolls · Lucky Pass · gold shine'}];
-const tokLv=t=>Math.max(1,Math.min(5,PREF.tokLv[t]||1));
+  {name:'Common',col:null,ui:'#8a96a3',cost:0,pay:0,rr:0,pass:0,txt:'No perks yet. Plays in your player colour.'},
+  {name:'Rare',col:'#2f7fe0',ui:'#2f7fe0',cost:500,pay:.05,rr:1,pass:0,txt:'Blue finish · Payday +5% · 1 re-roll per game'},
+  {name:'Epic',col:'#8f3fd8',ui:'#8f3fd8',cost:1500,pay:.1,rr:1,pass:1,txt:'Purple finish · Payday +10% · 1 re-roll · Lucky Pass'},
+  {name:'Legendary',col:'#e2b13c',ui:'#c9921a',cost:4000,pay:.15,rr:2,pass:1,txt:'Gold finish with a glowing base · Payday +15% · 2 re-rolls · Lucky Pass'}];
+const TL_MAX=4;
+if(!PREF.tokTierV){Object.keys(PREF.tokLv).forEach(k=>{PREF.tokLv[k]=[1,1,2,2,3,4][Math.min(5,PREF.tokLv[k]||1)]});PREF.tokTierV=1}
+const tokLv=t=>Math.max(1,Math.min(TL_MAX,PREF.tokLv[t]||1));
+const rarityOf=l=>TOKEN_LV[Math.max(1,Math.min(TL_MAX,l||1))];
 const perksOn=()=>!G||G.set.perks!==false;
-const perkOf=p=>TOKEN_LV[perksOn()&&p&&p.tl?Math.max(1,Math.min(5,p.tl)):1];
+const perkOf=p=>TOKEN_LV[perksOn()&&p&&p.tl?Math.max(1,Math.min(TL_MAX,p.tl)):1];
 function payday(p){return Math.round(PAYDAY*(1+perkOf(p).pay))}
 
 /* ---- premium cosmetics ---- */
@@ -2525,8 +2534,8 @@ const ACH=[
   {id:'online1',name:'Online Debut',desc:'Finish an online game.',goal:1,s:'onlineGames',reward:{coins:100}},
   {id:'onlinewin',name:'Online Champion',desc:'Win an online game.',goal:1,s:'onlineWins',reward:{coins:200}},
   {id:'streak7',name:'Seven-Day Streak',desc:'Reach a 7-day daily streak.',goal:7,s:'streak',reward:{coins:300}},
-  {id:'tuned',name:'Tuned Up',desc:'Upgrade a token to level 3.',goal:3,s:'tokLv',reward:{coins:100}},
-  {id:'loaded',name:'Fully Loaded',desc:'Upgrade a token to level 5.',goal:5,s:'tokLv',reward:{coins:400}},
+  {id:'tuned',name:'Tuned Up',desc:'Upgrade a token to Epic.',goal:3,s:'tokLv',reward:{coins:100}},
+  {id:'loaded',name:'Fully Loaded',desc:'Upgrade a token to Legendary.',goal:4,s:'tokLv',reward:{coins:400}},
   {id:'league',name:'Golden League',desc:'Reach the Gold league.',goal:1,reward:{coins:300}},
   {id:'season10',name:'Season Climber',desc:'Reach tier 10 in a season.',goal:10,s:'seasonTier',reward:{coins:200}},
   {id:'shopper',name:'Window Shopper',desc:'Buy an item with coins.',goal:1,reward:{coins:50}},
@@ -3450,7 +3459,7 @@ function updateFigs(dt,time){if(S3.preview)S3.preview.r=[0,time*.5,0];const L=S3
 /* character showcase on the home screen */
 let TITLE_CAM=null;
 function clearPreview(){if(S3&&S3.preview){ROOT.remove(S3.preview);S3.preview=null}TITLE_CAM=null}
-function previewChar(id,tok){if(!S3)return;clearPreview();const g=new Node().at(0,2.1,0);const t=tokenModel(tok,(myFinish()&&FINISHES.find(f=>f.id===myFinish()).col)||PCOL[0]);
+function previewChar(id,tok){if(!S3)return;clearPreview();const g=new Node().at(0,2.1,0);const t=tokenModel(tok,(myFinish()&&FINISHES.find(f=>f.id===myFinish()).col)||rarityOf(tokLv(tok)).col||PCOL[0]);
   const f=charModel(id);f.node.at(-.02,SEAT[tok]==null?.3:SEAT[tok],0).sc(1.25);(t.m||t).add(f.node);(S3.figs=S3.figs||[]).push(f);t.fig=f;
   g.add(N(S3.geo.cyl,mat('#1c2333',{spec:.8}),0,-.03,0).sc(.34,.04,.34),N(S3.geo.torus,mat('#c9a24a',{spec:.95,em:.15}),0,-.01,0).sc(.34,.34,.08).rot(Math.PI/2,0,0),t);g.sc(3.9);ROOT.add(g);S3.preview=g;S3.previewFig=f;
   TITLE_CAM={look:[0,4.25,0],L:7.6,pitch:.16,spin:0,dx:3.6};f.g='wave';f.t0=performance.now()/1000;f.dur=1.6}
@@ -3518,8 +3527,8 @@ function paneP(T){const saved=loadSave(),c=CITY_DATA[setup.city],m=MODES.find(x=
     <div class="card"><div class="ch">Options</div><div class="opts"><span>Starting cash</span><div class="seg" id="oCash"></div><span>AI skill</span><div class="seg" id="oAi"></div><span>Speed</span><div class="seg" id="oSpd"></div><span>Turn timer</span><div class="seg" id="oTimer"></div></div></div>
     <div class="startbar"><button class="btn pri big" id="tStart">Start game</button><span class="small" id="tMsg">${m[1]} in ${esc(c.name)}. Pass-and-play: hand the phone round on each human turn.</span></div>`;
   const drawSlots=()=>{const S=T.querySelector('.slots');S.innerHTML='';setup.slots.forEach((s,i)=>{
-    const d=el('div','slot'+(s.type==='off'?' off':''));d.style.setProperty('--pc',PCOL[i]);const lv=i===0&&s.type==='human'?tokLv(s.tok):0;
-    d.innerHTML=`<button class="tok" aria-label="Change token">${s.tok}${lv>1?`<em class="tlv">${lv}</em>`:''}</button><input id="pname${i}" maxlength="12" value="${esc(s.name)}" aria-label="Player ${i+1} name"><div class="seg">${['human','ai','off'].map(t=>`<button data-t="${t}" class="${s.type===t?'on':''}">${t==='human'?'Human':t==='ai'?'AI':'—'}</button>`).join('')}</div>`;
+    const d=el('div','slot'+(s.type==='off'?' off':''));d.style.setProperty('--pc',PCOL[i]);const lv=i===0&&s.type==='human'?tokLv(s.tok):0,rr=rarityOf(lv);
+    d.innerHTML=`<button class="tok" aria-label="Change token">${s.tok}${lv>1?`<em class="tlv" style="background:${rr.ui}" title="${rr.name}">${rr.name[0]}</em>`:''}</button><input id="pname${i}" maxlength="12" value="${esc(s.name)}" aria-label="Player ${i+1} name"><div class="seg">${['human','ai','off'].map(t=>`<button data-t="${t}" class="${s.type===t?'on':''}">${t==='human'?'Human':t==='ai'?'AI':'—'}</button>`).join('')}</div>`;
     d.querySelector('.tok').onclick=()=>{const used=setup.slots.filter((x,j)=>j!==i&&x.type!=='off').map(x=>x.tok);const TK=unlockedTokens();let k=TK.indexOf(s.tok);for(let n=0;n<TK.length;n++){k=(k+1)%TK.length;if(!used.includes(TK[k]))break}s.tok=TK[k];saveSlot(i,s);drawSlots()};
     d.querySelector('input').oninput=e=>{s.name=e.target.value;saveSlot(i,s)};
     d.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{s.type=b.dataset.t;drawSlots()});S.append(d)})};
@@ -3547,20 +3556,20 @@ function paneWorld(T){const nUn=CITY_ORDER.filter(cityUnlocked).length;
         b.querySelector('[data-a="ach"]').onclick=()=>{setup.achTab=k;homeTab('ach')};const pk=b.querySelector('[data-a="pick"]');if(pk)pk.onclick=()=>{setup.city=k;PREF.city=k;savePref();applyTheme(k);draw()};
         const bu=b.querySelector('[data-a="buy"]');if(bu)bu.onclick=async()=>{if(await confirmBuy(`Unlock ${c.name}`,cityCost(k))){PREF.inv.city[k]=Date.now();setup.city=k;PREF.city=k;savePref();applyTheme(k);draw();railProfile()}};E.append(b)});W.append(box)})};draw()}
 function paneTokens(T){const all=TOKENS.concat(NEW_TOKENS);let sel=setup.slots[0].tok;
-  const draw=()=>{const tl=tokLv(sel),next=TOKEN_LV[tl+1],un=tokenUnlocked(sel),info=TOKEN_INFO[sel];
+  const draw=()=>{const tl=tokLv(sel),next=TOKEN_LV[tl+1],un=tokenUnlocked(sel),info=TOKEN_INFO[sel],R=rarityOf(tl);
     T.innerHTML=`<div class="phead"><h2>Tokens</h2><span class="small">${unlockedTokens().length} of ${all.length} unlocked</span></div>
-      <div class="tokhero card"><div class="tem big">${sel}</div><div class="tinfo"><b>${esc(info[0])}${un?` · Level ${tl}`:''}</b><small>${esc(info[1])}</small>
-        ${un?`<div class="lvpips">${[1,2,3,4,5].map(i=>`<i class="${i<=tl?'on':''}"></i>`).join('')}</div><small><b>Now:</b> ${esc(TOKEN_LV[tl].txt)}${next?`<br><b>Next:</b> ${esc(next.txt)}`:''}</small>`:`<small>🔒 ${esc(tokenHowText(sel))}</small>`}
-        <div class="brow">${un?`<button class="sm go" id="tPlay">${setup.slots[0].tok===sel?'Your token':'Play as this'}</button>${next?`<button class="sm warn" id="tUp">Upgrade ${fmtC(next.cost)}</button>`:'<span class="small">Max level ✨</span>'}`:(TOKEN_HOW[sel]&&TOKEN_HOW[sel].coins?`<button class="sm warn" id="tBuy">Unlock ${fmtC(TOKEN_HOW[sel].coins)}</button>`:'')}</div></div></div>
+      <div class="tokhero card"><div class="tem big r${tl}">${sel}</div><div class="tinfo"><b>${esc(info[0])}${un?` <span class="rar" style="background:${R.ui}">${R.name}</span>`:''}</b><small>${esc(info[1])}</small>
+        ${un?`<div class="lvpips">${[1,2,3,4].map(i=>`<i style="${i<=tl?'background:'+TOKEN_LV[i].ui:''}" title="${TOKEN_LV[i].name}"></i>`).join('')}</div><small><b>Now:</b> ${esc(TOKEN_LV[tl].txt)}${next?`<br><b>Next:</b> ${esc(next.txt)}`:''}</small>`:`<small>🔒 ${esc(tokenHowText(sel))}</small>`}
+        <div class="brow">${un?`<button class="sm go" id="tPlay">${setup.slots[0].tok===sel?'Your token':'Play as this'}</button>${next?`<button class="sm warn" id="tUp">Upgrade to ${next.name} ${fmtC(next.cost)}</button>`:'<span class="small">Legendary ✨</span>'}`:(TOKEN_HOW[sel]&&TOKEN_HOW[sel].coins?`<button class="sm warn" id="tBuy">Unlock ${fmtC(TOKEN_HOW[sel].coins)}</button>`:'')}</div></div></div>
       <div class="small">Upgrades give a little extra luck: a bigger payday, re-rolls and a Lucky Pass that keeps you out of the Lockup once a game. The game host can switch token perks off for a level playing field.</div>
       <div class="tokgrid"></div>
       <h3>TOKEN FINISH</h3><div class="small">A finish paints your token. It shows for you and, online, for everyone in your game.</div><div class="fingrid"></div>`;
-    const G2=T.querySelector('.tokgrid');all.forEach(t=>{const u=tokenUnlocked(t),lv=tokLv(t);const b=el('button','tcard'+(u?'':' locked')+(sel===t?' on':''),`<span class="tem">${t}</span><b>${esc(TOKEN_INFO[t][0])}</b><small>${u?(lv>1?'Level '+lv:'Unlocked'):'🔒 Locked'}</small>${setup.slots[0].tok===t?'<em>Your token</em>':''}`);b.onclick=()=>{sel=t;draw()};G2.append(b)});
+    const G2=T.querySelector('.tokgrid');all.forEach(t=>{const u=tokenUnlocked(t),lv=tokLv(t);const b=el('button','tcard'+(u?'':' locked')+(sel===t?' on':''),`<span class="tem r${u?lv:1}">${t}</span><b>${esc(TOKEN_INFO[t][0])}</b><small>${u?`<span class="rar" style="background:${rarityOf(lv).ui}">${rarityOf(lv).name}</span>`:'🔒 Locked'}</small>${setup.slots[0].tok===t?'<em>Your token</em>':''}`);b.onclick=()=>{sel=t;draw()};G2.append(b)});
     const F=T.querySelector('.fingrid');[{id:null,name:'Player colour',col:PCOL[0],price:0}].concat(FINISHES).forEach(f=>{const own=f.id===null||itemOwned('fin',f.id),on=(PREF.eq.fin||null)===f.id;
       const b=el('button','fcard'+(on?' on':'')+(own?'':' locked'),`<i style="background:radial-gradient(circle at 35% 30%,#fff,${f.col} 55%,#000 140%)"></i><b>${esc(f.name)}</b><small>${on?'Equipped':own?'Tap to use':f.price?fmtC(f.price):esc(f.desc)}</small>`);
       b.onclick=async()=>{if(!own){if(!f.price){toast(f.desc);return}if(!(await confirmBuy(`${f.name} finish`,f.price,esc(f.desc))))return;grantItem('fin',f.id)}PREF.eq.fin=f.id;savePref();draw();railProfile()};F.append(b)});
     const pl=T.querySelector('#tPlay');if(pl)pl.onclick=()=>{const other=setup.slots.findIndex((s,i)=>i>0&&s.tok===sel);if(other>0)setup.slots[other].tok=setup.slots[0].tok;setup.slots[0].tok=sel;saveSlot(0,setup.slots[0]);draw()};
-    const up=T.querySelector('#tUp');if(up)up.onclick=async()=>{if(await confirmBuy(`Upgrade ${info[0]} to level ${tl+1}`,next.cost,esc(next.txt))){PREF.tokLv[sel]=tl+1;savePref();achBump();toast(`${info[0]} is now level ${tl+1}!`);draw();railProfile()}};
+    const up=T.querySelector('#tUp');if(up)up.onclick=async()=>{if(await confirmBuy(`Upgrade ${info[0]} to ${next.name}`,next.cost,esc(next.txt))){PREF.tokLv[sel]=tl+1;savePref();achBump();toast(`${info[0]} is now ${next.name}!`);draw();railProfile()}};
     const bu=T.querySelector('#tBuy');if(bu)bu.onclick=async()=>{if(await confirmBuy(`Unlock ${info[0]}`,TOKEN_HOW[sel].coins)){grantItem('tok',sel);draw();railProfile()}}};
   draw()}
 function paneSeason(T){const S=season(),t=seasonTierNow(),left=Math.max(0,Math.ceil((seasonEnds()-Date.now())/864e5)),into=S.sxp-t*TIER_XP,W=weekly();
@@ -3645,7 +3654,7 @@ function paneLearn(T){
     <h3>HOUSE RULES</h3><div class="learn">${RULE_INFO.map(r=>`<div class="lcard"><i>⚙️</i><div><b>${r[1]}</b><p>${esc(loc(r[2]))}</p></div></div>`).join('')}<div class="lcard"><i>⏱️</i><div><b>Turn timer</b><p>Optional 90 seconds per turn. When time runs out the game finishes the turn for that player.</p></div></div></div>
     <h3>PROGRESS</h3><div class="learn"><div class="lcard"><i>🌍</i><div><b>World</b><p>18 countries and 31 cities, each with its own board, landscape and 15 achievements. Level up to open new countries; play in a country to open its other cities.</p></div></div>
     <div class="lcard"><i>${COIN}</i><div><b>Coins</b><p>Earn coins from wins, level-ups, achievements, missions, the Lucky Spin, season tiers and league promotions. Spend them on tokens, upgrades, finishes, dice, board surrounds and early unlocks.</p></div></div>
-    <div class="lcard"><i>⬆️</i><div><b>Token upgrades</b><p>Upgrade a token up to level 5 for a bigger payday, re-rolls and a Lucky Pass. Hosts can switch perks off.</p></div></div>
+    <div class="lcard"><i>⬆️</i><div><b>Token upgrades</b><p>Upgrade a token from Common to Rare, Epic and Legendary. Each tier repaints it (blue, purple, then gold) and adds a bigger payday, re-rolls and a Lucky Pass. Hosts can switch perks off.</p></div></div>
     <div class="lcard"><i>📅</i><div><b>Seasons</b><p>Every 30 days a new season starts with 30 tiers of rewards and weekly challenges. All XP counts toward the season.</p></div></div>
     <div class="lcard"><i>🏆</i><div><b>Leagues</b><p>Win trophies to climb from Bronze to Legend and earn promotion rewards. The global leaderboard shows the top players each season.</p></div></div></div>`}
 function paneSettings(T){const rows=[['riders','Riders on tokens','Show each player’s character riding their token. Switch off on slower phones.'],['sfx','Game sounds','Dice, coins and token movement.'],['amb','Street ambience','Crowd chatter, traffic, birds or rain to match the city.'],['radio','Skyline FM','One station for every city, playing a shuffled mix of 13 Kenstylez tracks.']];
@@ -3663,7 +3672,7 @@ function paneSettings(T){const rows=[['riders','Riders on tokens','Show each pla
   const pi=T.querySelector('#sPromo'),pm=T.querySelector('#sPromoMsg');T.querySelector('#sRedeem').onclick=async()=>{const r=await redeemPromo(pi.value);pm.textContent=r.msg;pm.className='small'+(r.ok?' okmsg':' errmsg');if(r.ok){pi.value='';railProfile()}};pi.onkeydown=e=>{if(e.key==='Enter')T.querySelector('#sRedeem').click()};
   const ub=T.querySelector('#sUnblock');if(ub)ub.onclick=()=>{PREF.blocked=[];savePref();paneSettings(T)};
   T.querySelector('#sReset').onclick=async()=>{const k=await modal({html:'<div class="mh">Reset all progress?</div><div class="mtxt">This deletes your XP, levels, coins, items, token upgrades, achievements, unlocked cities and tokens, season progress, trophies, daily streak and saved game on this device. It can’t be undone.</div>',btns:[{k:'no',label:'Keep progress'},{k:'yes',label:'Reset everything',danger:true}]});
-    if(k==='yes'){['ach','stats','cach','cstat','daily','boost','boostGames','coins','inv','eq','tokLv','season','trophies','leagueBest','lastCountry','qseen'].forEach(x=>delete PREF[x]);try{localStorage.setItem(PKEY,JSON.stringify(PREF));localStorage.removeItem(SKEY)}catch(e){}location.reload()}}}
+    if(k==='yes'){['ach','stats','cach','cstat','daily','boost','boostGames','coins','inv','eq','tokLv','season','tokTierV','trophies','leagueBest','lastCountry','qseen'].forEach(x=>delete PREF[x]);try{localStorage.setItem(PKEY,JSON.stringify(PREF));localStorage.removeItem(SKEY)}catch(e){}location.reload()}}}
 if(PREF.ai)setup.ai=PREF.ai;if(PREF.speed)setup.speed=PREF.speed;if(PREF.cam)camMode=PREF.cam;if(PREF.cash&&CASH_OPTS.includes(PREF.cash))setup.cash=PREF.cash;
 
 
