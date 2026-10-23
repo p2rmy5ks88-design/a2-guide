@@ -1248,7 +1248,7 @@ void main(){vec4 base=uC;if(uUseTex>0.)base*=texture2D(uTex,vT);if(base.a<.02)di
   col=base.rgb*(hemi+uSun*d)+s+base.rgb*uEm;}
  float f=clamp((length(uCam-vW)-uFog.x)/(uFog.y-uFog.x),0.,1.);gl_FragColor=vec4(mix(col,uFogC,f),base.a);}`;
 function glInit(cv){
-  const gl=cv.getContext('webgl',{antialias:true,alpha:true,premultipliedAlpha:false})||cv.getContext('experimental-webgl');if(!gl)return false;
+  const ca={antialias:true,alpha:true,premultipliedAlpha:false};const gl=cv.getContext('webgl2',ca)||cv.getContext('webgl',ca)||cv.getContext('experimental-webgl');if(!gl)return false;
   const sh=(t,s)=>{const o=gl.createShader(t);gl.shaderSource(o,s);gl.compileShader(o);if(!gl.getShaderParameter(o,gl.COMPILE_STATUS))throw new Error(gl.getShaderInfoLog(o));return o};
   const p=gl.createProgram();gl.attachShader(p,sh(gl.VERTEX_SHADER,VS));gl.attachShader(p,sh(gl.FRAGMENT_SHADER,FS));gl.linkProgram(p);
   if(!gl.getProgramParameter(p,gl.LINK_STATUS))throw new Error(gl.getProgramInfoLog(p));gl.useProgram(p);
@@ -3693,9 +3693,9 @@ Object.assign(MOVE,{'🚕':{ms:240,kind:'bus'},'⛵':{ms:330,kind:'canoe'},'✈�
    wave, celebrate, fist pump, applause, point, think, facepalm and a victory dance. Unlocked by playing. */
 const CHARS=[
   {id:'ava',name:'Ava Mensah',role:'The Executive',desc:'Runs the boardroom and the board.',skin:'#b98262',hair:'#231712',style:'bun',top:'#1d2b45',bottom:'#1a2235',shirt:'#efe9df',acc:['lapels']},
-  {id:'kofi',name:'Kofi Asante',role:'The Developer',desc:'Turns empty plots into skylines.',skin:'#6a4430',hair:'#15100c',style:'buzz',top:'#2c3e57',bottom:'#3b3f46',shirt:'#9fb4c8',acc:['helmet','vest']},
-  {id:'mei',name:'Mei Lin',role:'The Restaurateur',desc:'Owns every corner café in town.',skin:'#e2b896',hair:'#120e0c',style:'bob',top:'#f3f1ec',bottom:'#2a2d33',shirt:'#f3f1ec',acc:['apron','chefcap'],unlock:{wins:3}},
-  {id:'diego',name:'Diego Ruiz',role:'The Producer',desc:'Keeps the city’s nightlife running.',skin:'#a7744f',hair:'#1c1410',style:'short',top:'#202226',bottom:'#2e3138',shirt:'#3a3d44',acc:['headphones','watch'],unlock:{lvl:5}},
+  {id:'kofi',name:'Sam Walker',role:'The Developer',desc:'Turns empty plots into skylines.',skin:'#d9a98a',hair:'#1c1612',style:'short',top:'#4a4c52',bottom:'#4b4639',shirt:'#5a5d64',acc:['helmet','vest','beard'],real:1},
+  {id:'mei',name:'Elena Costa',role:'The Restaurateur',desc:'Owns every corner café in town.',real:1,skin:'#e8c0a0',hair:'#8a6a44',style:'bob',top:'#f3f1ec',bottom:'#2a2d33',shirt:'#f3f1ec',acc:['apron','chefcap'],unlock:{wins:3}},
+  {id:'diego',name:'Diego Ruiz',role:'The Producer',desc:'Keeps the city’s nightlife running.',real:1,skin:'#dcae8a',hair:'#3a2616',style:'short',top:'#c4262b',bottom:'#9fb6c9',shirt:'#c4262b',acc:[],unlock:{lvl:5}},
   {id:'amara',name:'Amara Okafor',role:'The Explorer',desc:'Has done business in every country on the map.',skin:'#6e432b',hair:'#140d09',style:'long',top:'#5d6142',bottom:'#6b5a40',shirt:'#d8cdb4',acc:['widebrim','scarf'],unlock:{ach:'countries3'}},
   {id:'nils',name:'Nils Berg',role:'The Captain',desc:'Ran the harbour before he bought it.',skin:'#e9c3a3',hair:'#9a7a52',style:'short',top:'#18243a',bottom:'#22262e',shirt:'#e9e9e9',acc:['captain','beard','buttons'],unlock:{streak:7}},
   {id:'ruby',name:'Ruby Hale',role:'The Artist',desc:'Her gallery fills every tower she builds.',skin:'#dfae8c',hair:'#7a1f2e',style:'long',top:'#18181c',bottom:'#2a2530',shirt:'#5a1f2a',acc:['shades'],unlock:{wins:10}},
@@ -3703,7 +3703,7 @@ const CHARS=[
   {id:'yuki',name:'Yuki Sato',role:'The Racer',desc:'Fastest token in the city.',skin:'#efcfae',hair:'#0f0f12',style:'bob',top:'#b8202c',bottom:'#b8202c',shirt:'#f2f2f2',acc:['racehelmet','stripe'],unlock:{league:'gold'}},
   {id:'zara',name:'Zara Diallo',role:'The Astronaut',desc:'Her portfolio is out of this world.',skin:'#7b4f35',hair:'#140d09',style:'short',top:'#e9ecf1',bottom:'#e9ecf1',shirt:'#e9ecf1',acc:['astro','patch'],unlock:{lvl:20}},
   {id:'bolt',name:'Unit B-07',role:'The Android',desc:'Calculates every rent to the cent.',skin:'#2b2f36',hair:'#2b2f36',style:'none',top:'#d8dde4',bottom:'#3a3f48',shirt:'#3a3f48',acc:['android'],unlock:{season:25}},
-  {id:'omar',name:'Omar Haddad',role:'The Tycoon',desc:'Owns the skyline. All of it.',skin:'#b07c58',hair:'#15100d',style:'slick',top:'#b08a5a',bottom:'#1c1d22',shirt:'#1c1d22',acc:['coat','shades','watch','turtleneck'],unlock:{wins:25}},
+  {id:'omar',name:'Adrian Cole',role:'The Tycoon',desc:'Owns the skyline. All of it.',real:1,skin:'#e3b896',hair:'#2a1c14',style:'slick',top:'#1f2a44',bottom:'#1f2a44',shirt:'#eef0f2',acc:['lapels','tie'],tie:'#3a4a6a',unlock:{wins:25}},
   {id:'nova',name:'Nova Laurent',role:'The Icon',desc:'Only for those who earn every trophy.',skin:'#d6a98a',hair:'#e9e4dc',style:'long',top:'#f2efe8',bottom:'#f2efe8',shirt:'#1c1d22',acc:['lapels','goldtrim'],unlock:{ach:'platinum'}}];
 PREF.eq.char=PREF.eq.char||'ava';PREF.inv.char=PREF.inv.char||{};PREF.riders=PREF.riders!==false;
 function charUnlocked(id){const c=CHARS.find(x=>x.id===id);if(!c)return false;const u=c.unlock;if(!u||PREF.inv.char[id])return true;
@@ -3715,7 +3715,7 @@ function charCheck(){PREF.charSeen=PREF.charSeen||['ava','kofi'];const fresh=CHA
 /* portrait for menus: an illustrated head-and-shoulders bust in the same palette as the 3D figure */
 let SVGN=0;
 function shade(hx,k){const n=parseInt(hx.slice(1),16);let r=n>>16,g=n>>8&255,b=n&255;const f=v=>Math.max(0,Math.min(255,Math.round(k<0?v*(1+k):v+(255-v)*k)));return '#'+[f(r),f(g),f(b)].map(v=>v.toString(16).padStart(2,'0')).join('')}
-function charSVG(id,size=56){const c=CHARS.find(x=>x.id===id)||CHARS[0],a=c.acc||[],u='c'+(++SVGN),s=c.skin,h=c.hair,top=c.top,sh=c.shirt||'#eee';
+function charSVG(id,size=56){{const r=CHARS.find(x=>x.id===id);if(r&&r.real)return `<img class="csvg" src="riders/por_${id}.jpg" width="${size}" height="${size}" alt="" aria-hidden="true" style="object-fit:cover;display:block">`}const c=CHARS.find(x=>x.id===id)||CHARS[0],a=c.acc||[],u='c'+(++SVGN),s=c.skin,h=c.hair,top=c.top,sh=c.shirt||'#eee';
   const defs=`<defs><radialGradient id="${u}bg" cx="50%" cy="35%" r="75%"><stop offset="0" stop-color="#f4f6f9"/><stop offset="1" stop-color="#c9d3df"/></radialGradient><linearGradient id="${u}sk" x1="0" x2="1"><stop offset="0" stop-color="${shade(s,.12)}"/><stop offset="1" stop-color="${shade(s,-.18)}"/></linearGradient><linearGradient id="${u}tp" x1="0" x2="1"><stop offset="0" stop-color="${shade(top,.1)}"/><stop offset="1" stop-color="${shade(top,-.25)}"/></linearGradient><linearGradient id="${u}hr" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="${shade(h,.18)}"/><stop offset="1" stop-color="${shade(h,-.2)}"/></linearGradient></defs>`;
   const back={long:`<path d="M19 26 Q18 12 32 11 Q46 12 45 26 L46 47 Q40 50 32 50 Q24 50 18 47Z" fill="url(#${u}hr)"/>`,bob:`<path d="M19 27 Q18 12 32 11 Q46 12 45 27 L45 38 Q32 41 19 38Z" fill="url(#${u}hr)"/>`}[c.style]||'';
   const android=a.includes('android');
@@ -3824,7 +3824,7 @@ function updateFigs(dt,time){if(S3.preview)S3.preview.r=[0,time*.5,0];const L=S3
 {const _rd=rollDice;rollDice=async function(){const p=G&&P(G.turn);if(p)figG(p.id,'point',1.1);return _rd()}}
 {const _bp=buyProp;buyProp=function(p,i,price){_bp(p,i,price);figG(p.id,'pump',1.5)}}
 {const _py=pay;pay=async function(p,amt,to,kind){const ok=await _py(p,amt,to,kind);if(ok&&kind==='rent'&&to){figG(p.id,amt>=100?'sulk':'think',1.6);figG(to.id,amt>=100?'cheer':'pump',1.5)}else if(ok&&!to&&amt>=100)figG(p.id,'sulk',1.4);return ok}}
-{const _sj=sendToJail;sendToJail=async function(p){figG(p.id,'sulk',2.2);return _sj(p)}}
+{const _sj=sendToJail;sendToJail=async function(p){figG(p.id,'jail',2.6);return _sj(p)}}
 {const _og=onPassGo;onPassGo=function(p){_og(p);figG(p.id,'cheer',1.2)}}
 {const _bd=build;build=function(pid,i){_bd(pid,i);figG(pid,'clap',1.3)}}
 {const _ex=executeTrade;executeTrade=function(t){_ex(t);figG(t.from,'clap',1.2);figG(t.to,'clap',1.2)}}
@@ -3851,6 +3851,66 @@ function hsl(h,s,l){const f=n=>{const k=(n+h*12)%12,a=s*Math.min(l,1-l);return l
 {const _uf=updateFigs;updateFigs=function(dt,time){_uf(dt,time);const A=S3.auras;if(!A)return;for(let i=A.length-1;i>=0;i--){const a=A[i];if(!a.g.parent){A.splice(i,1);continue}
   if(a.kind==='mythic'){const p=.5+.5*Math.sin(time*3+a.ph);a.ring.em=.5+p*.8;a.g.s=[1+p*.12,1,1+p*.12];a.g.r=[0,time*.6,0]}
   else{a.ring.c=hsl((time*.15+a.ph)%1,.85,.55);a.ring2.c=hsl((time*.15+a.ph+.5)%1,.85,.6);a.g.r=[0,time*1.2,0];a.sparks.forEach((s,k)=>{const an=time*2+k*1.2566;s.p=[Math.cos(an)*.3,.15+Math.sin(time*3+k)*.12,Math.sin(an)*.3]})}}}}
+
+/* ================= REALISTIC RIDERS: motion-captured characters drawn by three.js in the board's own WebGL context ================= */
+/* The simple figure is mounted first and stays as the fallback. When the character's model has loaded, the simple figure is hidden
+   and the model is drawn in the same frame with the board's depth buffer, so buildings in front still hide it. */
+const RIG_CLIP={wave:'thumbs',pump:'thumbs',cheer:'clap',clap:'clap',think:'disbelief',sulk:'disbelief',jail:'struck',dance:'dance'};
+const RIG_STAND={struck:1,dance1:1,dance2:1};
+const RIG={p:null,clips:{},models:{},live:[],dead:false,last:0};
+PREF.rig=PREF.rig!==false;
+const rigOn=id=>{const c=CHARS.find(x=>x.id===id);return !!(PREF.rig&&c&&c.real&&!RIG.dead&&GL&&typeof WebGL2RenderingContext!=='undefined'&&GL instanceof WebGL2RenderingContext)};
+function rigLib(){return RIG.p||(RIG.p=(async()=>{
+  const T=await import('./lib/three.module.min.js'),{GLTFLoader}=await import('./lib/GLTFLoader.js'),SU=await import('./lib/SkeletonUtils.js');
+  RIG.T=T;RIG.SU=SU;RIG.L=new GLTFLoader();
+  GL.pixelStorei(GL.UNPACK_FLIP_Y_WEBGL,false);const r=new T.WebGLRenderer({canvas:GL.canvas,context:GL});r.autoClear=false;r.outputColorSpace=T.SRGBColorSpace;r.setPixelRatio(1);RIG.ren=r;rigRestore();
+  const sc=new T.Scene();RIG.scene=sc;RIG.hemi=new T.HemisphereLight(0xffffff,0x444444,Math.PI);RIG.sun=new T.DirectionalLight(0xffffff,Math.PI*1.1);sc.add(RIG.hemi,RIG.sun,RIG.sun.target);
+  const cam=new T.PerspectiveCamera();cam.matrixAutoUpdate=false;cam.matrixWorldAutoUpdate=false;RIG.cam=cam;
+  await rigClip('idle')})().catch(e=>{console.warn('Realistic riders unavailable:',e);RIG.dead=true;rigRestore();throw e}))}
+function rigClip(n){return RIG.clips[n]||(RIG.clips[n]=RIG.L.loadAsync('riders/anim_'+n+'.glb').then(g=>{const c=g.animations[0];
+  c.tracks=c.tracks.filter(t=>!/\.scale$/.test(t.name)&&(!/\.position$/.test(t.name)||/Hips\.position$/.test(t.name)));c.tracks.forEach(t=>t.name=t.name.replace(/^mixamorig\d*/,''));return c}))}
+function rigModel(id){return RIG.models[id]||(RIG.models[id]=RIG.L.loadAsync('riders/'+id+'.glb').then(g=>{g.scene.traverse(o=>{o.name=o.name.replace(/^mixamorig\d*/,'');if(o.isMesh)o.frustumCulled=false});return g.scene}))}
+async function rigMount(f,id){if(!rigOn(id))return null;
+  try{await rigLib();const[tpl,idle]=await Promise.all([rigModel(id),rigClip('idle')]);if(!f.node.parent||f.rig)return f.rig||null;
+    const T=RIG.T,m=RIG.SU.clone(tpl),hold=new T.Group(),root=new T.Group();hold.rotation.y=Math.PI/2;hold.add(m);root.add(hold);root.matrixAutoUpdate=false;
+    const mx=new T.AnimationMixer(m),ia=mx.clipAction(idle);ia.play();mx.update(Math.random()*idle.duration);root.updateMatrixWorld(true);
+    const hips=m.getObjectByName('Hips'),head=m.getObjectByName('Head'),a=new T.Vector3(),b=new T.Vector3();hips.getWorldPosition(a);head.getWorldPosition(b);
+    m.scale.setScalar(.17/a.distanceTo(b));root.updateMatrixWorld(true);hips.getWorldPosition(a);hold.worldToLocal(a);
+    const seat=new T.Vector3(-a.x*.6,.05-a.y,-a.z*.6),stand=new T.Vector3(0,0,0);m.position.copy(seat);
+    const r={f,id,root,m,mx,idle:ia,cur:ia,seat,stand,up:false,until:0};RIG.scene.add(root);RIG.live.push(r);f.rig=r;f.node.visible=false;return r}
+  catch(e){return null}}
+async function rigPlay(r,g,dur=1.6){let n=RIG_CLIP[g];if(!n||!r)return;if(n==='dance')n=Math.random()<.5?'dance1':'dance2';let c;try{c=await rigClip(n)}catch(e){return}
+  const T=RIG.T,a=r.mx.clipAction(c),loop=n.startsWith('dance');
+  a.reset();a.setLoop(loop?T.LoopRepeat:T.LoopOnce,Infinity);a.clampWhenFinished=true;a.play();if(a!==r.cur)r.cur.crossFadeTo(a,.3,false);r.cur=a;
+  r.up=!!RIG_STAND[n];r.until=performance.now()/1000+(loop?Math.max(dur,4):Math.max(.8,c.duration-.35))}
+function rigIdle(r){const a=r.idle;if(r.cur===a)return;a.reset();a.play();r.cur.crossFadeTo(a,.45,false);r.cur=a;r.up=false}
+function rigWorld(n){const ch=[];let k=n;while(k){ch.push(k);if(k===ROOT)break;k=k.parent}if(ch[ch.length-1]!==ROOT)return null;
+  for(let i=1;i<ch.length;i++)if(!ch[i].visible)return 0;let m=null;for(let i=ch.length-1;i>=0;i--){const c=M4.compose(ch[i].p,ch[i].r,ch[i].s);m=m?M4.mul(m,c):c}return m}
+function rigRestore(){const gl=GL;if(!gl)return;gl.useProgram(PRG);gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LESS);gl.depthMask(true);gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
+  gl.disable(gl.CULL_FACE);gl.disable(gl.SCISSOR_TEST);gl.colorMask(true,true,true,true);gl.activeTexture(gl.TEXTURE0);
+  gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL,false);gl.pixelStorei(gl.UNPACK_ALIGNMENT,4);gl.bindBuffer(gl.ARRAY_BUFFER,null);
+  const keep=[LOC.aP,LOC.aN,LOC.aT],n=Math.min(16,gl.getParameter(gl.MAX_VERTEX_ATTRIBS));for(let i=0;i<n;i++)if(!keep.includes(i))gl.disableVertexAttribArray(i)}
+function rigFrame(time){const L=RIG.live,now=performance.now()/1000,dt=Math.min(.1,Math.max(0,now-(RIG.last||now)));RIG.last=now;let any=false;
+  for(let i=L.length-1;i>=0;i--){const r=L[i],w=rigWorld(r.f.node);
+    if(w===null){RIG.scene.remove(r.root);r.mx.stopAllAction();r.f.rig=null;L.splice(i,1);continue}
+    r.root.visible=!!w&&PREF.riders;if(!r.root.visible)continue;any=true;
+    r.root.matrix.fromArray(w);r.root.matrixWorldNeedsUpdate=true;if(r.cur!==r.idle&&now>r.until)rigIdle(r);
+    r.mx.update(dt);r.m.position.lerp(r.up?r.stand:r.seat,Math.min(1,dt*7))}
+  if(!any)return;const T=RIG.T,gl=GL,cv=gl.canvas,w=cv.width,h=cv.height,cam=RIG.cam;
+  cam.projectionMatrix.fromArray(M4.persp(CAMV.fov*Math.PI/180,w/h,.1,200));cam.projectionMatrixInverse.copy(cam.projectionMatrix).invert();
+  cam.matrixWorldInverse.fromArray(M4.lookAt(CAMV.pos,CAMV.look,[0,1,0]));cam.matrixWorld.copy(cam.matrixWorldInverse).invert();
+  RIG.hemi.color.setRGB(...env.sky.map(v=>Math.min(1,v)),T.SRGBColorSpace);RIG.hemi.groundColor.setRGB(...env.gnd.map(v=>Math.min(1,v)),T.SRGBColorSpace);
+  RIG.sun.color.setRGB(...env.sun.map(v=>Math.min(1,v/.62)),T.SRGBColorSpace);RIG.sun.position.set(...env.L);
+  const ren=RIG.ren;try{ren.resetState();gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,false);gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL,false);ren.setViewport(0,0,w,h);ren.render(RIG.scene,cam)}catch(e){console.warn(e);RIG.dead=true;L.forEach(r=>{r.f.node.visible=true;r.f.rig=null;RIG.scene.remove(r.root)});L.length=0}
+  ren.resetState();rigRestore()}
+{const _ds=drawScene;drawScene=function(time){_ds(time);if(RIG.ren&&RIG.live.length)rigFrame(time)}}
+{const _fg=figG;figG=function(pid,g,dur=1.6){const f=!FAST&&S3&&tok3&&tok3[pid]&&tok3[pid].fig;if(f&&f.rig)rigPlay(f.rig,g,dur);return _fg(pid,g==='jail'?'sulk':g,dur)}}
+{const _ar=attachRider;attachRider=function(p,t){_ar(p,t);if(t.fig&&t.fig.pid===p.id&&!FAST)rigMount(t.fig,p.ch)}}
+{const _pc=previewChar;previewChar=function(id,tok){_pc(id,tok);const f=S3&&S3.previewFig;if(f)f.cid=id;if(f)rigMount(f,id).then(r=>{if(r&&S3.previewFig===f)rigPlay(r,'wave')})}}
+{const _pg=previewGesture;previewGesture=function(g){_pg(g);const f=S3&&S3.previewFig;if(f&&f.rig)rigPlay(f.rig,g,g==='dance'?4:1.8)}}
+function rigToggle(){if(!PREF.rig){RIG.live.forEach(r=>{RIG.scene.remove(r.root);r.mx.stopAllAction();r.f.rig=null;r.f.node.visible=true});RIG.live.length=0;return}
+  if(S3&&tok3)Object.values(tok3).forEach(t=>{if(t&&t.fig&&!t.fig.rig){const p=G&&G.players.find(x=>x.id===t.fig.pid);if(p&&p.ch)rigMount(t.fig,p.ch)}});
+  const f=S3&&S3.previewFig;if(f&&!f.rig&&f.cid)rigMount(f,f.cid)}
 
 /* ================= SHOP: COIN PACKS (IN-APP PURCHASE) ================= */
 /* Coin packs are consumable in-app purchases in the iOS and Android apps (cordova-plugin-purchase).
@@ -4073,7 +4133,7 @@ function paneLearn(T){
     <div class="lcard"><i>⬆️</i><div><b>Token upgrades</b><p>Upgrade a token from Common to Rare, Epic, Legendary, Mythic and Chaotic. Each tier repaints it (blue, purple, gold, crimson, then a shifting rainbow) and adds a bigger payday, re-rolls and Lucky Passes. Mythic and Chaotic also need wins with that token, a high level and (for Chaotic) the Diamond league, and add a Rent Shield, Chaos Surge and bonus coins and XP. Hosts can switch in-game perks off.</p></div></div>
     <div class="lcard"><i>📅</i><div><b>Seasons</b><p>Every 30 days a new season starts with 30 tiers of rewards and weekly challenges. All XP counts toward the season.</p></div></div>
     <div class="lcard"><i>🏆</i><div><b>Leagues</b><p>Win trophies to climb from Bronze to Legend and earn promotion rewards. The global leaderboard shows the top players each season.</p></div></div></div>`}
-function paneSettings(T){const rows=[['riders','Riders on tokens','Show each player’s character riding their token. Switch off on slower phones.'],['sfx','Game sounds','Dice, coins and token movement.'],['amb','Street ambience','Crowd chatter, traffic, birds or rain to match the city.'],['radio','Skyline FM','One station for every city, playing a shuffled mix of 13 Kenstylez tracks.']];
+function paneSettings(T){const rows=[['riders','Riders on tokens','Show each player’s character riding their token. Switch off on slower phones.'],['rig','Realistic riders','Lifelike characters with motion-captured gestures. Each one downloads once (about 2 MB). Switch off to save data.'],['sfx','Game sounds','Dice, coins and token movement.'],['amb','Street ambience','Crowd chatter, traffic, birds or rain to match the city.'],['radio','Skyline FM','One station for every city, playing a shuffled mix of 13 Kenstylez tracks.']];
   const blocked=PREF.blocked||[];
   T.innerHTML=`<div class="phead"><h2>Settings</h2></div>
     <div class="card"><div class="ch">Sound</div><div class="rchips" id="sChips"></div><label class="vol"><span>Volume</span><input type="range" id="sVol" min="0" max="1" step="0.05"></label></div>
@@ -4082,7 +4142,7 @@ function paneSettings(T){const rows=[['riders','Riders on tokens','Show each pla
     <div class="card"><div class="ch">Promo code</div><div class="brow"><input id="sPromo" class="uname" maxlength="20" placeholder="Enter code" autocomplete="off" autocapitalize="characters" spellcheck="false"><button class="sm go" id="sRedeem">Redeem</button></div><div class="small" id="sPromoMsg">Codes are given out in events and by the Skyline Estates team.</div></div>
     <div class="card"><div class="ch">Online safety</div><div class="small">Names are filtered. You can report or block a player from the online lobby or during a game. ${blocked.length?`Blocked: ${blocked.map(b=>esc(b.n)).join(', ')}`:'You haven’t blocked anyone.'}</div>${blocked.length?'<div class="brow"><button class="sm" id="sUnblock">Unblock everyone</button></div>':''}</div>
     <div class="card"><div class="ch">About</div><p class="small">Skyline Estates ${IS_APP?'app':'web'} · a property trading game.<br>Radio music by Kenstylez.<br>Progress and coins are saved on this device.${SUPPORT_EMAIL?`<br>Support: <a href="mailto:${SUPPORT_EMAIL}">${SUPPORT_EMAIL}</a>`:''}</p><div class="brow"><a class="btn" href="${PRIVACY_URL}" target="_blank" rel="noopener">Privacy policy</a><button class="btn danger" id="sReset">Reset progress</button></div></div>`;
-  const draw=()=>{const E=T.querySelector('#sChips');E.innerHTML='';rows.forEach(([k,l,d])=>{const on=k==='riders'?PREF.riders:PREF.audio[k];const b=el('button','rchip'+(on?' on':''),`<b>${l}</b><small>${d}</small>`);b.setAttribute('aria-pressed',on?'true':'false');b.onclick=()=>{if(k==='riders'){PREF.riders=!PREF.riders;savePref();draw();return}initAudio();PREF.audio[k]=!PREF.audio[k];savePref();syncAudio();draw()};E.append(b)})};draw();
+  const draw=()=>{const E=T.querySelector('#sChips');E.innerHTML='';rows.forEach(([k,l,d])=>{const on=k==='riders'?PREF.riders:k==='rig'?PREF.rig:PREF.audio[k];const b=el('button','rchip'+(on?' on':''),`<b>${l}</b><small>${d}</small>`);b.setAttribute('aria-pressed',on?'true':'false');b.onclick=()=>{if(k==='riders'){PREF.riders=!PREF.riders;savePref();draw();return}if(k==='rig'){PREF.rig=!PREF.rig;savePref();draw();if(typeof rigToggle==='function')rigToggle();return}initAudio();PREF.audio[k]=!PREF.audio[k];savePref();syncAudio();draw()};E.append(b)})};draw();
   const v=T.querySelector('#sVol');v.value=PREF.audio.vol;v.oninput=()=>{PREF.audio.vol=+v.value;savePref();syncAudio()};
   segIn(T,'#sAi',[['easy','Easy'],['normal','Normal'],['hard','Hard']],()=>setup.ai,x=>{setup.ai=x;PREF.ai=x;savePref()});segIn(T,'#sSpd',[['normal','Normal'],['fast','Fast']],()=>setup.speed,x=>{setup.speed=x;PREF.speed=x;savePref()});
   segIn(T,'#sUi',[['dark','Midnight'],['light','Daylight']],()=>PREF.ui||'dark',x=>{PREF.ui=x;savePref();applyUI()});segIn(T,'#sCam',[['follow','Follow token'],['board','Whole board']],()=>PREF.cam||'follow',x=>{PREF.cam=x;camMode=x;savePref()});segIn(T,'#sLang',[['en','English']],()=>PREF.lang,x=>{PREF.lang=x;savePref()});

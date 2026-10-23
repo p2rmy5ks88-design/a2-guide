@@ -1,4 +1,4 @@
-// Builds www/ for the native apps from the web game in ../skyline-estates (radio tracks and Firebase settings come from ../eko-estates).
+// Builds www/ for the native apps from the web game in ../skyline-estates, with its lib/ and riders/ folders (radio tracks and Firebase settings come from ../eko-estates).
 // Swaps Google Fonts for bundled font files so the game works fully offline.
 import fs from 'node:fs';import path from 'node:path';import {fileURLToPath} from 'node:url';
 const here=path.dirname(fileURLToPath(import.meta.url)),app=path.resolve(here,'..'),src=path.resolve(app,'../skyline-estates'),shared=path.resolve(app,'../eko-estates'),www=path.join(app,'www');
@@ -13,4 +13,6 @@ const head=`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta nam
 fs.writeFileSync(path.join(www,'index.html'),head+body+'</body></html>');
 fs.cpSync(path.join(shared,'audio'),path.join(www,'audio'),{recursive:true});
 fs.copyFileSync(path.join(shared,'firebase-config.js'),path.join(www,'firebase-config.js'));
+// realistic riders: three.js modules, character models, animations and portraits
+for(const d of ['lib','riders'])fs.cpSync(path.join(src,d),path.join(www,d),{recursive:true});
 console.log('www built:',fs.readdirSync(www).join(', '),'| fonts:',faces.length);

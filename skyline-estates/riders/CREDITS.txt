@@ -1,0 +1,2 @@
+Rider characters and animations: Adobe Mixamo (mixamo.com), converted and optimised for this game. Used under the Mixamo terms, which allow use in commercial games.
+Rendered with three.js r160 (MIT licence, see ../lib/three-LICENSE.txt).
