@@ -911,6 +911,13 @@ html.rot #title .home{padding:0}
 html.rot .rail{width:auto;align-items:center}
 html.rot .tab{flex-direction:column;font-size:11px}
 html.rot .rail .tabs{flex-direction:column}
+/* YouTube radio mini player (must stay visible while it plays) */
+.ytbox{position:fixed;right:max(16px,env(safe-area-inset-right,0px));top:calc(max(10px,env(safe-area-inset-top,0px)) + 56px);z-index:35;width:236px;border-radius:14px;overflow:hidden;background:#0B1424;border:1px solid var(--ln2);box-shadow:0 12px 32px rgba(0,0,0,.4)}
+.ythead{display:flex;align-items:center;justify-content:space-between;padding:4px 6px 4px 10px;font:800 11px var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--gold2)}
+.ythead button{width:32px;height:28px;border-radius:8px;border:none;background:transparent;color:#C7D3E3;font-size:14px}
+.ytframe{width:236px;height:200px;background:#000}
+.ytframe iframe,.ytframe>div{width:100%;height:100%;display:block;border:0}
+html.rot .ytbox{top:calc(max(10px,env(safe-area-inset-right,0px)) + 56px)}
 /* ================= DAYLIGHT THEME (generated from the dark theme) ================= */
 html.light{
   --ink:#13284A;--ink2:#3E5270;--mute:#5A6D84;--bg0:#EEF2F7;--bg1:#F4F6FA;--bg2:#FFFFFF;--bg3:#E8EEF6;--ln:#DCE3EC;--ln2:#C9D4E2;
@@ -977,6 +984,8 @@ html.light .rtray{background:rgba(255,255,255,.95);border:1px solid var(--ln2)}
 html.light .float.plus{color:#12884A}
 html.light #rotate{background:#EEF2F7;color:var(--ink)}
 html.light .startbar{background:linear-gradient(180deg,rgba(244,246,250,0),#F4F6FA 40%)!important;box-shadow:none!important;border:none!important}
+html.light .ytbox{position:fixed;right:max(16px,env(safe-area-inset-right,0px));top:calc(max(10px,env(safe-area-inset-top,0px)) + 56px);z-index:35;width:236px;border-radius:14px;overflow:hidden;background:#EEF2F7;border:1px solid var(--ln2);box-shadow:0 12px 32px rgba(0,0,0,.4)}
+html.light .ythead button{width:32px;height:28px;border-radius:8px;border:none;background:transparent;color:#3E5270;font-size:14px}
 html.light .hero{border-color:#C9D4E2}
 html.light .herotxt p{color:#C7D3E3}
 html.light .eyebrow{color:#F3CF76}
@@ -4076,13 +4085,17 @@ function paneLearn(T){
 function paneSettings(T){const rows=[['riders','Riders on tokens','Show each player’s character riding their token. Switch off on slower phones.'],['sfx','Game sounds','Dice, coins and token movement.'],['amb','Street ambience','Crowd chatter, traffic, birds or rain to match the city.'],['radio','Skyline FM','One station for every city, playing a shuffled mix of 13 Kenstylez tracks.']];
   const blocked=PREF.blocked||[];
   T.innerHTML=`<div class="phead"><h2>Settings</h2></div>
-    <div class="card"><div class="ch">Sound</div><div class="rchips" id="sChips"></div><label class="vol"><span>Volume</span><input type="range" id="sVol" min="0" max="1" step="0.05"></label></div>
+    <div class="card"><div class="ch">Sound</div><div class="rchips" id="sChips"></div><label class="vol"><span>Volume</span><input type="range" id="sVol" min="0" max="1" step="0.05"></label><div class="opts"><span>Radio station</span><div class="seg" id="sSrc"></div></div><div id="sYt"></div></div>
     <div class="card"><div class="ch">Appearance</div><div class="opts"><span>Colour theme</span><div class="seg" id="sUi"></div></div><div class="small">Midnight is dark navy and gold. Daylight is white and gold for bright places.</div></div>
     <div class="card"><div class="ch">Defaults</div><div class="opts"><span>AI skill</span><div class="seg" id="sAi"></div><span>Game speed</span><div class="seg" id="sSpd"></div><span>Camera</span><div class="seg" id="sCam"></div><span>Language</span><div class="seg" id="sLang"></div></div><div class="small">More languages are on the way.</div></div>
     <div class="card"><div class="ch">Promo code</div><div class="brow"><input id="sPromo" class="uname" maxlength="20" placeholder="Enter code" autocomplete="off" autocapitalize="characters" spellcheck="false"><button class="sm go" id="sRedeem">Redeem</button></div><div class="small" id="sPromoMsg">Codes are given out in events and by the Skyline Estates team.</div></div>
     <div class="card"><div class="ch">Online safety</div><div class="small">Names are filtered. You can report or block a player from the online lobby or during a game. ${blocked.length?`Blocked: ${blocked.map(b=>esc(b.n)).join(', ')}`:'You haven’t blocked anyone.'}</div>${blocked.length?'<div class="brow"><button class="sm" id="sUnblock">Unblock everyone</button></div>':''}</div>
     <div class="card"><div class="ch">About</div><p class="small">Skyline Estates ${IS_APP?'app':'web'} · a property trading game.<br>Radio music by Kenstylez.<br>Progress and coins are saved on this device.${SUPPORT_EMAIL?`<br>Support: <a href="mailto:${SUPPORT_EMAIL}">${SUPPORT_EMAIL}</a>`:''}</p><div class="brow"><a class="btn" href="${PRIVACY_URL}" target="_blank" rel="noopener">Privacy policy</a><button class="btn danger" id="sReset">Reset progress</button></div></div>`;
   const draw=()=>{const E=T.querySelector('#sChips');E.innerHTML='';rows.forEach(([k,l,d])=>{const on=k==='riders'?PREF.riders:PREF.audio[k];const b=el('button','rchip'+(on?' on':''),`<b>${l}</b><small>${d}</small>`);b.setAttribute('aria-pressed',on?'true':'false');b.onclick=()=>{if(k==='riders'){PREF.riders=!PREF.riders;savePref();draw();return}initAudio();PREF.audio[k]=!PREF.audio[k];savePref();syncAudio();draw()};E.append(b)})};draw();
+  const drawYt=()=>{const E=T.querySelector('#sYt');if(PREF.radioSrc!=='yt'){E.innerHTML='<div class="small">Skyline FM plays the built-in tracks, works offline and has no ads.</div>';return}
+    E.innerHTML=`<label class="small" for="sYtL">YouTube playlist link</label><div class="brow"><input id="sYtL" class="uname" style="max-width:340px" value="${esc('https://youtube.com/playlist?list='+ytListId())}" autocomplete="off" spellcheck="false"><button class="sm go" id="sYtS">Save</button></div><div class="small">Plays in a small video window while the radio is on. Needs internet and may show YouTube ads. Use a playlist you own or have permission to use.</div>`;
+    E.querySelector('#sYtS').onclick=()=>{const id=ytParse(E.querySelector('#sYtL').value);if(!id){toast('That doesn’t look like a playlist link');return}PREF.ytList=id;savePref();ytRestart();toast('Playlist saved')}};
+  segIn(T,'#sSrc',[['fm','Skyline FM'],['yt','YouTube playlist']],()=>PREF.radioSrc||'fm',x=>{if((PREF.radioSrc||'fm')===x)return;const on=AUD.radioOn;if(on)stopRadio();PREF.radioSrc=x;savePref();if(x!=='yt')ytDestroy();if(on){PREF.audio.radio=true;startRadio()}drawYt()});drawYt();
   const v=T.querySelector('#sVol');v.value=PREF.audio.vol;v.oninput=()=>{PREF.audio.vol=+v.value;savePref();syncAudio()};
   segIn(T,'#sAi',[['easy','Easy'],['normal','Normal'],['hard','Hard']],()=>setup.ai,x=>{setup.ai=x;PREF.ai=x;savePref()});segIn(T,'#sSpd',[['normal','Normal'],['fast','Fast']],()=>setup.speed,x=>{setup.speed=x;PREF.speed=x;savePref()});
   segIn(T,'#sUi',[['dark','Midnight'],['light','Daylight']],()=>PREF.ui||'dark',x=>{PREF.ui=x;savePref();applyUI()});segIn(T,'#sCam',[['follow','Follow token'],['board','Whole board']],()=>PREF.cam||'follow',x=>{PREF.cam=x;camMode=x;savePref()});segIn(T,'#sLang',[['en','English']],()=>PREF.lang,x=>{PREF.lang=x;savePref()});
@@ -4136,6 +4149,33 @@ async function redeemPromo(raw){const n=String(raw||'').toUpperCase().replace(/[
 /* ---- colour theme: Midnight (dark) or Daylight (light) ---- */
 function applyUI(){const light=PREF.ui==='light';document.documentElement.classList.toggle('light',light);const m=document.querySelector('meta[name=theme-color]');if(m)m.setAttribute('content',light?'#F4F6FA':'#10223f')}
 applyUI();
+
+/* ---- YouTube radio: a playlist in a small visible player (YouTube does not allow hidden, audio-only playback) ---- */
+const YT_DEFAULT='PLZCmWi3CubIo';
+const YTR={player:null,title:'',errs:0};
+const ytListId=()=>PREF.ytList||YT_DEFAULT;
+function ytParse(s){s=String(s||'').trim();const m=s.match(/[?&]list=([A-Za-z0-9_-]+)/);if(m)return m[1];return /^[A-Za-z0-9_-]{10,64}$/.test(s)?s:null}
+function ytLoadApi(){return new Promise((res,rej)=>{if(window.YT&&window.YT.Player)return res();const prev=window.onYouTubeIframeAPIReady;window.onYouTubeIframeAPIReady=()=>{if(prev)try{prev()}catch(e){}res()};
+  if(!document.getElementById('ytapi')){const s=document.createElement('script');s.id='ytapi';s.src='https://www.youtube.com/iframe_api';s.onerror=()=>rej(new Error('yt'));document.head.append(s)}setTimeout(()=>rej(new Error('timeout')),15000)})}
+function ytBox(){let b=$('#ytbox');if(!b){b=el('div','ytbox');b.id='ytbox';b.innerHTML='<div class="ythead"><span>YouTube radio</span><button type="button" aria-label="Turn the YouTube radio off">✕</button></div><div class="ytframe"><div id="ytplayer"></div></div>';document.body.append(b);
+  b.querySelector('button').onclick=()=>{PREF.audio.radio=false;savePref();syncAudio()}}return b}
+async function ytStart(){FMS.slots.forEach(s=>s.a.pause());const b=ytBox();b.hidden=false;
+  try{await ytLoadApi()}catch(e){toast('YouTube couldn’t load. Check your connection.');ytFail();return}
+  if(!AUD.radioOn||PREF.radioSrc!=='yt')return;if(YTR.player){try{YTR.player.playVideo()}catch(e){}return}YTR.errs=0;
+  YTR.player=new window.YT.Player('ytplayer',{width:'100%',height:'100%',host:'https://www.youtube-nocookie.com',playerVars:{listType:'playlist',list:ytListId(),playsinline:1,autoplay:1,rel:0,modestbranding:1},
+    events:{onReady:e=>{try{e.target.setShuffle(true);e.target.setLoop(true);e.target.setVolume(Math.round((PREF.audio.vol||.8)*100));if(AUD.radioOn)e.target.playVideo()}catch(x){}},
+      onStateChange:e=>{try{if(e.data===1)YTR.errs=0;const d=e.target.getVideoData&&e.target.getVideoData();if(d&&d.title&&d.title!==YTR.title){YTR.title=d.title;lastPill='';renderRadioPill()}}catch(x){}},
+      onError:e=>{YTR.errs++;if(e.data===2||YTR.errs>4){toast('This YouTube playlist can’t be played here. Switching back to Skyline FM.');ytFail()}else{try{e.target.nextVideo()}catch(x){}}}}})}
+function ytStop(){const b=$('#ytbox');if(b)b.hidden=true;try{YTR.player&&YTR.player.pauseVideo()}catch(e){}}
+function ytDestroy(){try{YTR.player&&YTR.player.destroy()}catch(e){}YTR.player=null;YTR.title='';const b=$('#ytbox');if(b)b.remove()}
+function ytRestart(){const on=AUD.radioOn&&PREF.radioSrc==='yt';ytDestroy();if(on){AUD.radioOn=false;startRadio()}}
+function ytFail(){const on=AUD.radioOn;ytDestroy();PREF.radioSrc='fm';savePref();if(on){AUD.radioOn=false;startRadio()}if($('#sSrc'))homeTab('settings')}
+{const _sr=startRadio;startRadio=function(){if(PREF.radioSrc==='yt'){if(AUD.radioOn||!AC)return;AUD.radioOn=true;if(AUD.buses)AUD.buses.rad.gain.setTargetAtTime(0,AC.currentTime,.2);ytStart();renderRadioPill();return}return _sr()}}
+{const _so=stopRadio;stopRadio=function(){ytStop();return _so()}}
+{const _ft=fmTrack;fmTrack=function(){return PREF.radioSrc==='yt'?(YTR.title||'Loading playlist…'):_ft()}}
+{const _rp=renderRadioPill;renderRadioPill=function(){_rp();const b=$('#radio .rl b');if(b)b.textContent=PREF.radioSrc==='yt'?'YOUTUBE RADIO':fmShort()}}
+{const _sa=syncAudio;syncAudio=function(){_sa();try{YTR.player&&YTR.player.setVolume&&YTR.player.setVolume(Math.round(PREF.audio.vol*100))}catch(e){}}}
+{const _sk=fmSkip;fmSkip=function(){if(PREF.radioSrc==='yt'){try{YTR.player&&YTR.player.nextVideo()}catch(e){}return}return _sk()}}
 /* ================= ORIENTATION ================= */
 let rotDismissed=false;
 function checkRotate(){$('#rotate').hidden=true}

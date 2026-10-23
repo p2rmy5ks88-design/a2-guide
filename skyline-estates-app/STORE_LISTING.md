@@ -50,6 +50,9 @@ Coins buy cosmetic items (board surrounds, token finishes, dice), token upgrades
 - Apple "App Privacy": **Identifiers → User ID** (random anonymous Firebase ID), **User Content → Gameplay Content** (username, moves, leaderboard score), **Purchases → Purchase History** (handled by Apple; the app only records which coin packs were delivered on the device). Used only for **App Functionality**, **not linked to identity**, **not used for tracking**.
 - Google "Data safety": **App activity → Other actions**, **Device or other IDs**, **Financial info → Purchase history** (via Google Play Billing). For app functionality only, encrypted in transit, not shared.
 
+## YouTube radio
+The optional YouTube radio uses the official YouTube embedded player, kept visible while it plays, so it follows YouTube's API Terms. Only use playlists you own or have rights to (the default is the Kenstylez playlist). Apple's review may ask about it: the answer is that the music is the developer's own content, played through the official YouTube player.
+
 ## Screenshots needed
 - iPhone 6.9" landscape (2868 × 1320)
 - iPad 13" landscape (2752 × 2064), only if you keep iPad support
