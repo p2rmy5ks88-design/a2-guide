@@ -14,7 +14,7 @@ Play on the web: https://p2rmy5ks88-design.github.io/a2-guide/skyline-estates/
 ## What's in the game
 - **World:** 18 countries unlock with player level (or early with coins); a country's other cities unlock as you play there (or with coins). Every city has its own board, centrepiece, landscape around the board and 15 achievements.
 - **Board surrounds:** each city has its own ground and water (snowfields, dunes, canals, harbours, savanna, plazas). Premium surrounds such as Golden Marble, Neon Night, Sky Deck and Lava Isle unlock through levels, seasons and leagues, or with coins.
-- **Characters:** 13 original adult characters ride on the tokens and react with gestures. They are unlocked only by playing: wins, levels, streaks, leagues, season tiers and trophies.
+- **Characters:** 14 original characters ride on the tokens and react with gestures. They are unlocked only by playing: wins, levels, streaks, leagues, season tiers and trophies.
 - **Tokens:** 16 tokens with upgrade levels 1–5 (payday bonus, re-rolls, Lucky Pass). The host can switch perks off.
 - **Trophies:** about 60 Bronze, Silver and Gold trophies plus Skyline Platinum.
 - **Seasons:** 30 days, 30 tiers, free and premium reward tracks and weekly challenges.

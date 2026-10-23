@@ -18,7 +18,7 @@ Build your skyline in 31 cities around the world.
 Skyline Estates is a 3D property trading board game. Roll the dice, buy streets, build houses and towers, trade with rivals and collect rent until everyone else is broke.
 
 • 18 COUNTRIES, 31 CITIES: from Lagos, Stockholm and New York to Tokyo, Rio, Dubai, Nairobi and Sydney. Every city has its own streets, board, landmarks and landscape: snowfields, desert dunes, canals, harbours, savanna and more.
-• CHARACTERS THAT REACT: 13 original characters ride on your token. They wave on their turn, celebrate a big rent, facepalm when they pay up and dance when they win. Unlock them by winning and progressing.
+• CHARACTERS THAT REACT: 14 original characters ride on your token. They wave on their turn, celebrate a big rent, facepalm when they pay up and dance when they win. Unlock them by winning and progressing.
 • 16 TOKENS WITH UPGRADES: upgrade a token to level 5 for a bigger payday, re-rolls and a Lucky Pass. Hosts can switch perks off for a level playing field.
 • TROPHIES: 60 Bronze, Silver and Gold trophies plus Skyline Platinum, and 15 achievements in every city.
 • 30-DAY SEASONS: climb 30 tiers of rewards with weekly challenges, plus an optional premium track.

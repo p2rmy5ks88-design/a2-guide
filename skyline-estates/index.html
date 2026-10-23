@@ -3698,12 +3698,13 @@ const CHARS=[
   {id:'diego',name:'Diego Ruiz',role:'The Producer',desc:'Keeps the city’s nightlife running.',real:1,skin:'#dcae8a',hair:'#3a2616',style:'short',top:'#c4262b',bottom:'#9fb6c9',shirt:'#c4262b',acc:[],unlock:{lvl:5}},
   {id:'amara',name:'Amara Okafor',role:'The Explorer',desc:'Has done business in every country on the map.',skin:'#6e432b',hair:'#140d09',style:'long',top:'#5d6142',bottom:'#6b5a40',shirt:'#d8cdb4',acc:['widebrim','scarf'],unlock:{ach:'countries3'}},
   {id:'nils',name:'Nils Berg',role:'The Captain',desc:'Ran the harbour before he bought it.',skin:'#e9c3a3',hair:'#9a7a52',style:'short',top:'#18243a',bottom:'#22262e',shirt:'#e9e9e9',acc:['captain','beard','buttons'],unlock:{streak:7}},
-  {id:'ruby',name:'Ruby Hale',role:'The Artist',desc:'Her gallery fills every tower she builds.',skin:'#dfae8c',hair:'#7a1f2e',style:'long',top:'#18181c',bottom:'#2a2530',shirt:'#5a1f2a',acc:['shades'],unlock:{wins:10}},
+  {id:'ruby',name:'Ruby Hale',role:'The Artist',desc:'Her gallery fills every tower she builds.',real:1,skin:'#e8bfa0',hair:'#a8452a',style:'short',top:'#e8e4dc',bottom:'#b89a6a',shirt:'#7a1f2e',acc:[],unlock:{wins:10}},
   {id:'sofia',name:'Sofia Marquez',role:'The Pilot',desc:'Lands on every transit hub.',skin:'#cf9a74',hair:'#2e1d12',style:'bun',top:'#f4f4f2',bottom:'#1c2333',shirt:'#f4f4f2',acc:['pilotcap','epaulettes','tie'],tie:'#1c2333',unlock:{ach:'countries8'}},
   {id:'yuki',name:'Yuki Sato',role:'The Racer',desc:'Fastest token in the city.',skin:'#efcfae',hair:'#0f0f12',style:'bob',top:'#b8202c',bottom:'#b8202c',shirt:'#f2f2f2',acc:['racehelmet','stripe'],unlock:{league:'gold'}},
   {id:'zara',name:'Zara Diallo',role:'The Astronaut',desc:'Her portfolio is out of this world.',skin:'#7b4f35',hair:'#140d09',style:'short',top:'#e9ecf1',bottom:'#e9ecf1',shirt:'#e9ecf1',acc:['astro','patch'],unlock:{lvl:20}},
   {id:'bolt',name:'Unit B-07',role:'The Android',desc:'Calculates every rent to the cent.',skin:'#2b2f36',hair:'#2b2f36',style:'none',top:'#d8dde4',bottom:'#3a3f48',shirt:'#3a3f48',acc:['android'],unlock:{season:25}},
   {id:'omar',name:'Adrian Cole',role:'The Tycoon',desc:'Owns the skyline. All of it.',real:1,skin:'#e3b896',hair:'#2a1c14',style:'slick',top:'#1f2a44',bottom:'#1f2a44',shirt:'#eef0f2',acc:['lapels','tie'],tie:'#3a4a6a',unlock:{wins:25}},
+  {id:'rosa',name:'Rosa Grant',role:'The Coach',desc:'Seventy-two, undefeated, and blows the whistle on late rent.',real:1,skin:'#efcdb4',hair:'#f2a6c4',style:'bob',top:'#2a8fd6',bottom:'#2a8fd6',shirt:'#f4f4f2',acc:['stripe'],unlock:{streak:3}},
   {id:'nova',name:'Nova Laurent',role:'The Icon',desc:'Only for those who earn every trophy.',skin:'#d6a98a',hair:'#e9e4dc',style:'long',top:'#f2efe8',bottom:'#f2efe8',shirt:'#1c1d22',acc:['lapels','goldtrim'],unlock:{ach:'platinum'}}];
 PREF.eq.char=PREF.eq.char||'ava';PREF.inv.char=PREF.inv.char||{};PREF.riders=PREF.riders!==false;
 function charUnlocked(id){const c=CHARS.find(x=>x.id===id);if(!c)return false;const u=c.unlock;if(!u||PREF.inv.char[id])return true;
@@ -3873,16 +3874,19 @@ function rigModel(id){return RIG.models[id]||(RIG.models[id]=RIG.L.loadAsync('ri
 async function rigMount(f,id){if(!rigOn(id))return null;
   try{await rigLib();const[tpl,idle]=await Promise.all([rigModel(id),rigClip('idle')]);if(!f.node.parent||f.rig)return f.rig||null;
     const T=RIG.T,m=RIG.SU.clone(tpl),hold=new T.Group(),root=new T.Group();hold.rotation.y=Math.PI/2;hold.add(m);root.add(hold);root.matrixAutoUpdate=false;
-    const mx=new T.AnimationMixer(m),ia=mx.clipAction(idle);ia.play();mx.update(Math.random()*idle.duration);root.updateMatrixWorld(true);
+    const restY=tpl.getObjectByName('Hips').position.y,mx=new T.AnimationMixer(m),ia=mx.clipAction(rigFit({id,restY},idle));ia.play();mx.update(Math.random()*idle.duration);root.updateMatrixWorld(true);
     const hips=m.getObjectByName('Hips'),head=m.getObjectByName('Head'),a=new T.Vector3(),b=new T.Vector3();hips.getWorldPosition(a);head.getWorldPosition(b);
     m.scale.setScalar(.17/a.distanceTo(b));root.updateMatrixWorld(true);hips.getWorldPosition(a);hold.worldToLocal(a);
     const seat=new T.Vector3(-a.x*.6,.05-a.y,-a.z*.6),stand=new T.Vector3(0,0,0);m.position.copy(seat);
-    const r={f,id,root,m,mx,idle:ia,cur:ia,seat,stand,up:false,until:0};RIG.scene.add(root);RIG.live.push(r);f.rig=r;f.node.visible=false;return r}
+    const r={f,id,root,m,mx,idle:ia,cur:ia,seat,stand,up:false,until:0,restY};RIG.scene.add(root);RIG.live.push(r);f.rig=r;f.node.visible=false;return r}
   catch(e){return null}}
-async function rigPlay(r,g,dur=1.6){let n=RIG_CLIP[g];if(!n||!r)return;if(n==='dance')n=Math.random()<.5?'dance1':'dance2';let c;try{c=await rigClip(n)}catch(e){return}
+async function rigPlay(r,g,dur=1.6){let n=RIG_CLIP[g];if(!n||!r)return;if(n==='dance')n=Math.random()<.5?'dance1':'dance2';let c;try{c=await rigClip(n)}catch(e){return}c=rigFit(r,c);
   const T=RIG.T,a=r.mx.clipAction(c),loop=n.startsWith('dance');
   a.reset();a.setLoop(loop?T.LoopRepeat:T.LoopOnce,Infinity);a.clampWhenFinished=true;a.play();if(a!==r.cur)r.cur.crossFadeTo(a,.3,false);r.cur=a;
   r.up=!!RIG_STAND[n];r.until=performance.now()/1000+(loop?Math.max(dur,4):Math.max(.8,c.duration-.35))}
+/* some skeletons use other units (Mixamo hips stand about 1.0 high); hip movement is rescaled for those */
+function rigFit(r,c){const k=r.id+'|'+c.name,F=RIG.fit||(RIG.fit={});if(F[k])return F[k];const tr=c.tracks.find(x=>/Hips\.position$/.test(x.name));
+  const q=r.restY;if(!tr||!isFinite(q)||q<=0||(q>.5&&q<2))return F[k]=c;const cc=c.clone();const t2=cc.tracks.find(x=>/Hips\.position$/.test(x.name));t2.values=t2.values.map(v=>v*q);return F[k]=cc}
 function rigIdle(r){const a=r.idle;if(r.cur===a)return;a.reset();a.play();r.cur.crossFadeTo(a,.45,false);r.cur=a;r.up=false}
 function rigWorld(n){const ch=[];let k=n;while(k){ch.push(k);if(k===ROOT)break;k=k.parent}if(ch[ch.length-1]!==ROOT)return null;
   for(let i=1;i<ch.length;i++)if(!ch[i].visible)return 0;let m=null;for(let i=ch.length-1;i>=0;i--){const c=M4.compose(ch[i].p,ch[i].r,ch[i].s);m=m?M4.mul(m,c):c}return m}
