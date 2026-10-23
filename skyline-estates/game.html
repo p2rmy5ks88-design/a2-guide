@@ -3899,7 +3899,7 @@ function rigFrame(time){const L=RIG.live,now=performance.now()/1000,dt=Math.min(
     if(w===null){RIG.scene.remove(r.root);r.mx.stopAllAction();r.f.rig=null;L.splice(i,1);continue}
     r.root.visible=!!w&&PREF.riders;if(!r.root.visible)continue;any=true;
     r.root.matrix.fromArray(w);r.root.matrixWorldNeedsUpdate=true;if(r.cur!==r.idle&&now>r.until)rigIdle(r);
-    r.mx.update(dt);r.m.position.lerp(r.up?r.stand:r.seat,Math.min(1,dt*7))}
+    r.mx.update(dt);r.m.position.lerp(r.up?r.stand:r.seat,Math.min(1,dt*7));if(!r.headB)r.headB=r.m.getObjectByName('Head');r.root.updateMatrixWorld(true);r.headY=r.headB.getWorldPosition(RIG.v||(RIG.v=new RIG.T.Vector3())).y}
   if(!any)return;const T=RIG.T,gl=GL,cv=gl.canvas,w=cv.width,h=cv.height,cam=RIG.cam;
   cam.projectionMatrix.fromArray(M4.persp(CAMV.fov*Math.PI/180,w/h,.1,200));cam.projectionMatrixInverse.copy(cam.projectionMatrix).invert();
   cam.matrixWorldInverse.fromArray(M4.lookAt(CAMV.pos,CAMV.look,[0,1,0]));cam.matrixWorld.copy(cam.matrixWorldInverse).invert();
@@ -3907,7 +3907,9 @@ function rigFrame(time){const L=RIG.live,now=performance.now()/1000,dt=Math.min(
   RIG.sun.color.setRGB(...env.sun.map(v=>Math.min(1,v/.62)),T.SRGBColorSpace);RIG.sun.position.set(...env.L);
   const ren=RIG.ren;try{ren.resetState();gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,false);gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL,false);ren.setViewport(0,0,w,h);ren.render(RIG.scene,cam)}catch(e){console.warn(e);RIG.dead=true;L.forEach(r=>{r.f.node.visible=true;r.f.rig=null;RIG.scene.remove(r.root)});L.length=0}
   ren.resetState();rigRestore()}
-{const _ds=drawScene;drawScene=function(time){_ds(time);if(RIG.ren&&RIG.live.length)rigFrame(time)}}
+/* turn marker: hidden when the token has a rider, so it never covers the character's gestures (the ring and the PLAYING tag still show the turn) */
+function riderMarker(){const mk=S3&&S3.marker;if(!mk||!G||!tok3)return;const t=tok3[G.turn],f=t&&t.fig;if(f&&PREF.riders&&f.node.parent)mk.visible=false}
+{const _ds=drawScene;drawScene=function(time){try{riderMarker()}catch(e){}_ds(time);if(RIG.ren&&RIG.live.length)rigFrame(time)}}
 {const _fg=figG;figG=function(pid,g,dur=1.6){const f=!FAST&&S3&&tok3&&tok3[pid]&&tok3[pid].fig;if(f&&f.rig)rigPlay(f.rig,g,dur);return _fg(pid,g==='jail'?'sulk':g,dur)}}
 {const _ar=attachRider;attachRider=function(p,t){_ar(p,t);if(t.fig&&t.fig.pid===p.id&&!FAST)rigMount(t.fig,p.ch)}}
 {const _pc=previewChar;previewChar=function(id,tok){_pc(id,tok);const f=S3&&S3.previewFig;if(f)f.cid=id;if(f)rigMount(f,id).then(r=>{if(r&&S3.previewFig===f)rigPlay(r,'wave')})}}
