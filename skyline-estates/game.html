@@ -3493,7 +3493,7 @@ const GROUND_Y=-.7;
 const SURR={
   // tropical island on open sea, the original look
   lagos:{kind:'island'},
-  abuja:{base:'#5f6b3c',plinth:'#6d7848',rim:'#4f5a32',water:'#2f6f8f',ops:[['speck',['#55613a','#6f7c47','#8a5536','#4a5532'],60,.05,.22],['ring',12.6,14.2,'#43474d'],['dash',13.4,'#d8d2c0'],['canopy',110,['#3f5a26','#4d6a2e','#35501f'],18,60,.55,1.2],['rocks',16,['#5f5a54','#77716a','#4e4a45'],1.6,3.8,20,50],['lake',-24,-20,7,4.5,'#2f6f8f']]},
+  abuja:{base:'#7a9460',plinth:'#5f7d48',rim:'#4c6a3a',water:'#3a86a8',ops:[['speck',['#6f8a55','#86a06a','#5f7a48','#93a878'],70,.05,.24],['ring',12.6,14.2,'#4a4f55'],['dash',13.4,'#e6e0cc'],['canopy',220,['#3f6a2e','#4d7a36','#5a8a3e','#355d28'],16,60,.5,1.15],['rocks',10,['#8a7d6e','#9c8f7e'],1.4,3,24,50],['lake',-24,-20,7,4.5,'#3a86a8']]},
   ph:{base:'#4f7a3a',plinth:'#c7b27a',rim:'#a8925a',water:'#356f6a',ops:[['speck',['#3f6a30','#5f8a44','#47703a'],60,.06,.2],['ring',12.6,14,'#7f7a70'],['canopy',260,['#2f5a2a','#3a6a30','#2a4f26'],15,70,.4,.9],['river',[[-70,8],[-40,16],[-20,22],[0,26],[20,20],[40,30],[70,24]],5,'#8a7a50'],['river',[[-10,26],[-18,40],[-12,60]],3,'#8a7a50'],['river',[[30,-70],[24,-40],[34,-22],[60,-18]],4,'#8a7a50']]},
   warri:{base:'#5a7f3e',plinth:'#c9b07a',rim:'#a8925a',water:'#3a6a62',ops:[['speck',['#4a6f34','#6a8a48'],50,.06,.2],['ring',12.6,14,'#7a766c'],['canopy',200,['#2f5a2a','#3f6a30'],15,70,.4,.9],['river',[[-70,-20],[-30,-16],[-16,-24],[10,-18],[30,-28],[70,-22]],6,'#8f8058'],['river',[[-40,-17],[-46,10],[-60,30]],3,'#8f8058'],['river',[[22,-24],[30,0],[44,20],[50,70]],3.5,'#8f8058'],['river',[[-20,40],[0,34],[24,44]],2.5,'#8f8058']]},
   enugu:{base:'#6f9a4a',plinth:'#8a6a48',rim:'#6a4f36',water:'#3f7fa8',ops:[['speck',['#5f8a3e','#7fa858','#6a924a'],50,.06,.22],['fields',7,['#7fa858','#6f9a4a','#8aaa5a','#a4a85a'],.3,16],['path',[[-70,-30],[-30,-18],[-14,-13],[0,-14]],1.4,'#7a5a3e'],['ring',12.6,14,'#7a5a3e'],['canopy',120,['#3f6a30','#4f7a36'],16,70,.5,1.1]]},
@@ -4722,7 +4722,7 @@ updateCell=function(i,anim){
   const strip=S3.strips[i];strip.visible=o.o>=0;if(o.o>=0)strip.mat=mat(P(o.o).col,{spec:.3});S3.morts[i].visible=o.m;
   const col=(SQ[i].g&&GC[SQ[i].g])||'#9aa4b2';
   if(SQ[i].t==='prop'){const hn=S3.houses[i];hn.kids.slice().forEach(k=>hn.remove(k));
-    const n=o.h===5?1:o.h;for(let k=0;k<n;k++){const x=(k-(n-1)/2)*.215;const h=(o.h===5?sqTower(col):sqHouse(col)).at(x,0,0);hn.add(h);if(anim&&(k>=prev.h||o.h===5)){h.sc(.01);tween(450,t=>h.sc(Math.max(.01,t)),eBack)}}
+    const n=o.h===5?1:o.h;for(let k=0;k<n;k++){const x=(k-(n-1)/2)*.18;const h=(o.h===5?sqTower(col):sqHouse(col)).at(x,0,0);hn.add(h);if(anim&&(k>=prev.h||o.h===5)){h.sc(.01);tween(450,t=>h.sc(Math.max(.01,t)),eBack)}}
     const want=o.o<0?0:o.h===5?7:1+o.h,hotel=o.h===5;if(pl.sign)pl.sign.visible=o.o<0;
     const prevWant=prev.o<0?0:prev.h===5?7:1+prev.h,same=prev.o===o.o&&(prev.h===5)===hotel;
     pl.floors.forEach(f=>pl.node.remove(f));pl.floors=[];
@@ -4737,17 +4737,107 @@ updateCell=function(i,anim){
 /* the current event sits on its own line in the round chip, and the radio pill moves up to make room */
 {const _rr=renderRoster;renderRoster=function(){const r=_rr.apply(this,arguments);try{const R=$('#round'),e=G&&evDef();if(R&&e){const tt=evText(e,'t'),s=R.textContent,k=s.lastIndexOf(' · '+tt);if(k>=0){R.textContent=s.slice(0,k);const sp=document.createElement('span');sp.className='rev';sp.textContent=tt;R.append(sp)}}
   if(R)document.documentElement.style.setProperty('--roundH',R.offsetHeight+'px')}catch(_){}return r}}
-/* Abuja: a deeper, more natural look (savanna green, laterite, granite) instead of bright sand */
-(function(){try{
-  const ab=(ctx,ph)=>{const rnd=seeded(17);
-    if(ph==='bg'){const g=ctx.createLinearGradient(0,140,0,960);g.addColorStop(0,'#5c7238');g.addColorStop(1,'#4a5e2e');ctx.fillStyle=g;ctx.fillRect(140,140,820,820);
-      for(let k=0;k<240;k++){const r=rnd();ctx.fillStyle=r<.45?`rgba(40,62,24,${.18+rnd()*.15})`:r<.8?`rgba(120,146,72,${.14+rnd()*.12})`:`rgba(150,88,52,${.12+rnd()*.1})`;ctx.beginPath();ctx.arc(150+rnd()*800,150+rnd()*800,5+rnd()*16,0,7);ctx.fill()}return}
-    ctx.fillStyle='#cfc8b6';ctx.fillRect(330,440,440,250);ctx.strokeStyle='#b8b09c';ctx.lineWidth=2;for(let x=330;x<=770;x+=40){ctx.beginPath();ctx.moveTo(x,440);ctx.lineTo(x,690);ctx.stroke()}
-    ctx.fillStyle='#1f6b3f';ctx.fillRect(470,700,53,90);ctx.fillStyle='#f4f2ea';ctx.fillRect(523,700,54,90);ctx.fillStyle='#1f6b3f';ctx.fillRect(577,700,53,90);
-    ctx.fillStyle='#1f5a36';ctx.font=`700 22px ${FD}`;ctx.textAlign='center';ctx.fillText('EAGLE SQUARE',550,470)};
-  if(typeof BOARDS!=='undefined'&&BOARDS.abuja)Object.assign(BOARDS.abuja,{center:ab,pave:'#c3c8b4',plot:'#aab197',slab:'#5f5444',trim:'#33291f'});
-  if(typeof THEMES!=='undefined'&&THEMES.abuja)Object.assign(THEMES.abuja,{sky:'linear-gradient(180deg,#2f6fa8 0%,#7fb0d6 60%,#c9cdb8 100%)',fogC:'#bfc8b4',skyL:'#a9bfd0',gnd:'#4f5a36',sun:['#ffe6bf',.6],island:'#5f6b3c',water:'#2f6f8f'});
-}catch(e){}})();
+
+
+/* ================= ABUJA: EMERALD, IVORY AND BRASS ================= */
+/* Dark petrol frame with a thin brass inset, warm-ivory squares, a green capital-park centre with the National Mosque,
+   Zuma Rock, Eagle Square and the national tower, and dense greenery around the board. */
+const CLEAN_PAL={cell:'#F1E7D5',line:'#cdbf9c',text:'#172B32',frame:'#142B36',slab:'#142B36',trim:'#0b1b22',pave:'#ddd6c2',plot:'#cfcab4',road:'#454b52',lane:'#f1e7d5',gold:'#C3A465',logo:['#F1E7D5','#0D5C4D'],ribbon:['#0D5C4D','#F1E7D5'],clean:true};
+function abujaCenter(ctx,ph){const rnd=seeded(17);
+  if(ph==='bg'){const g=ctx.createLinearGradient(0,140,0,960);g.addColorStop(0,'#6f9a4e');g.addColorStop(1,'#5e8a42');ctx.fillStyle=g;ctx.fillRect(140,140,820,820);
+    for(let k=0;k<260;k++){const r=rnd();ctx.fillStyle=r<.5?`rgba(45,80,30,${.16+rnd()*.14})`:`rgba(150,190,100,${.12+rnd()*.12})`;ctx.beginPath();ctx.arc(150+rnd()*800,150+rnd()*800,5+rnd()*15,0,7);ctx.fill()}return}
+  /* Eagle Square: ivory plaza, reflecting pool and two paths */
+  ctx.fillStyle='#e9e1cd';ctx.fillRect(455,470,190,250);ctx.strokeStyle='#d3c8ad';ctx.lineWidth=2;for(let y=490;y<720;y+=26){ctx.beginPath();ctx.moveTo(455,y);ctx.lineTo(645,y);ctx.stroke()}
+  ctx.fillStyle='#3d8fb2';ctx.fillRect(505,600,90,46);ctx.strokeStyle='#e9e1cd';ctx.lineWidth=4;ctx.strokeRect(505,600,90,46);
+  ctx.fillStyle='#e2d9c3';ctx.fillRect(330,575,125,22);ctx.fillRect(645,520,140,22);ctx.fillRect(538,720,24,80);
+  ctx.fillStyle='#0D5C4D';ctx.font=`700 20px ${FD}`;ctx.textAlign='center';ctx.fillText('EAGLE SQUARE',550,500)}
+Object.assign(BOARDS.abuja,CLEAN_PAL,{center:abujaCenter,tag:'FEDERAL CAPITAL'});
+Object.assign(THEMES.abuja,{sky:'linear-gradient(180deg,#3a7fbd 0%,#9cc6e6 60%,#dfe7d6 100%)',fogC:'#cfdccb',fog:[30,70],skyL:'#b4cde0',gnd:'#5d7046',sun:['#fff0d6',.68],L:[.5,.8,.35]});
+/* clean frame for boards that ask for it: no repeating pattern, one brass inset, a few geometric corner marks */
+{const _pf=premiumFinish;premiumFinish=function(ctx){if(!BP.clean)return _pf(ctx);const gold=BP.gold;
+  ctx.save();ctx.strokeStyle='rgba(23,43,50,.06)';ctx.lineWidth=3;for(let i=0;i<40;i++){const r=rect(i);ctx.strokeRect(r.x+4,r.y+4,r.w-8,r.h-8)}ctx.restore();
+  ctx.strokeStyle=BP.frame;ctx.lineWidth=6;ctx.strokeRect(140,140,820,820);ctx.strokeStyle=gold;ctx.lineWidth=2;ctx.strokeRect(146,146,808,808);
+  ctx.strokeStyle=BP.frame;ctx.lineWidth=8;ctx.strokeRect(4,4,1092,1092);ctx.strokeStyle=gold;ctx.lineWidth=2;ctx.strokeRect(11,11,1078,1078)}}
+{const _ft=frameTex;frameTex=function(){if(!BP.clean)return _ft();return cnv(256,32,ctx=>{ctx.fillStyle=BP.frame;ctx.fillRect(0,0,256,32);ctx.fillStyle=BP.gold;ctx.fillRect(0,14,256,3);
+  for(const x of[64,192]){ctx.save();ctx.translate(x,15.5);ctx.rotate(Math.PI/4);ctx.fillRect(-4,-4,8,8);ctx.restore()}})}}
+{const _bf=buildFrame;buildFrame=function(){_bf();const G0=S3;if(!G0||!G0.medMat)return;if(BP.clean){G0.medMat.c=hex(BP.gold);G0.medIn.c=hex(BP.frame)}}}
+/* the centre in 3D */
+CITY_CENTERS.abuja=function(g){const geo=S3.geo,M=S3.M,P=(X,Y)=>[wx(X),wz(Y)];
+  const lime=mat('#f2ece0',{spec:.25}),lime2=mat('#e4dccb'),gold=mat('#e0b23a',{spec:.95,em:.08}),green=mat('#0D5C4D',{spec:.4});
+  /* National Mosque: main hall, golden dome on a drum, four tall minarets */
+  {const[x,z]=P(380,560),m=new Node().at(x,0,z);m.add(N(geo.box,lime,0,.22,0).sc(.86,.44,.74),N(geo.box,lime2,0,.46,0).sc(.92,.05,.8),N(geo.cyl,lime,0,.56,0).sc(.32,.16,.32),N(geo.sph,gold,0,.72,0).sc(.36,.34,.36),N(geo.cone,gold,0,1.08,0).sc(.03,.12,.03));
+    for(const[sx,sz]of[[-1,-1],[1,-1],[-1,1],[1,1]])m.add(N(geo.sph,gold,sx*.3,.5,sz*.26).sc(.1),N(geo.cyl8,lime,sx*.56,.75,sz*.48).sc(.05,1.5,.05),N(geo.cyl8,lime2,sx*.56,1.2,sz*.48).sc(.075,.04,.075),N(geo.cone,gold,sx*.56,1.6,sz*.48).sc(.05,.2,.05));
+    for(let k=-2;k<=2;k++)m.add(N(geo.box,mat('#1d3a40'),k*.15,.18,.375).sc(.07,.2,.01));g.add(m);S3.shadow(x,z,.9,g)}
+  /* Zuma Rock: a granite monolith with a rounded top and streaked faces */
+  {const[x,z]=P(735,420),r=new Node().at(x,0,z),gr=mat('#a8987f',{spec:.15}),gr2=mat('#857664'),gr3=mat('#b8a88f');
+    r.add(N(geo.sph,gr,0,.5,0).sc(1.1,1.0,.86),N(geo.sph,gr3,.05,.92,0).sc(.85,.36,.72),N(geo.sph,gr2,.55,.25,.2).sc(.45,.5,.38),N(geo.sph,gr3,-.6,.2,-.1).sc(.4,.38,.34));
+    for(let k=0;k<6;k++){const a=-.9+k*.32;r.add(N(geo.box,gr2,Math.sin(a)*.9,.65,Math.cos(a)*.74).sc(.05,.9,.02).rot(0,a,0))}g.add(r);S3.shadow(x,z,1.3,g)}
+  /* national tower (blue spire) and the city gate */
+  {const[x,z]=P(705,615),n=new Node().at(x,0,z);n.add(N(geo.box,lime,0,.15,0).sc(.4,.3,.4),N(geo.cone4,mat('#2f5f9e',{spec:.6}),0,.95,0).sc(.24,1.3,.24).rot(0,Math.PI/4,0),N(geo.cyl8,gold,0,1.7,0).sc(.012,.2,.012));g.add(n);S3.shadow(x,z,.5,g)}
+  {const[x,z]=P(550,790),gt=new Node().at(x,0,z);gt.add(N(geo.box,lime,-.3,.32,0).sc(.12,.64,.16),N(geo.box,lime,.3,.32,0).sc(.12,.64,.16),N(geo.box,green,0,.68,0).sc(.84,.1,.2),N(geo.box,gold,0,.74,0).sc(.5,.02,.16));g.add(gt)}
+  /* flagpoles at the plaza, offices along the paths */
+  for(const X of[520,550,580]){const[x,z]=P(X,525),fp=new Node().at(x,0,z);fp.add(N(geo.cyl8,M.white,0,.42,0).sc(.01,.84,.01));const fl=new Node().at(.1,.76,0);fl.add(N(geo.box,green,-.065,0,0).sc(.065,.1,.008),N(geo.box,M.white,0,0,0).sc(.065,.1,.008),N(geo.box,green,.065,0,0).sc(.065,.1,.008));fp.add(fl);g.add(fp);g.movers.push((dt,t)=>{fl.r=[0,Math.sin(t*3+X)*.25,0]})}
+  for(const[X,Y,w,h]of[[760,700,.4,.7],[400,700,.5,.45],[690,330,.45,.4],[420,350,.5,.35]]){const[x,z]=P(X,Y);g.add(N(S3.floorGeo,mat('#ece6d8',{tex:S3.winTex,spec:.4}),x,h/2,z).sc(w,h,w*.8),N(geo.box,green,x,h+.015,z).sc(w+.04,.03,w*.8+.04))}
+  /* trees: a capital in a park */
+  const rnd=seeded(91);for(let k=0;k<44;k++){let X,Y;do{X=310+rnd()*480;Y=310+rnd()*480}while((X>440&&X<660&&Y>455&&Y<735)||Math.hypot(X-380,Y-560)<120||Math.hypot(X-735,Y-420)<120||(Math.abs(X-550)<60&&Y>740)||(X>400&&X<700&&Y>290&&Y<465)||Math.hypot(X-705,Y-615)<60);
+    const[x,z]=P(X,Y);treeAt(k%6===0?'cypress':'round',x,z,k%6===0?.8:.45+rnd()*.2,g)}
+  addWalkers(g,16,[[460,480,640,710],[340,578,450,595]])};
+/* dense greenery and a low city around the board, only in Abuja */
+function abujaGreen(){S3.envs=S3.envs||{};if(S3.envs.abujaGreen)return S3.envs.abujaGreen;const g=new Node().at(0,GROUND_Y,0);ROOT.add(g);S3.envs.abujaGreen=g;const rnd=seeded(4242),tex=S3.winTex;
+  for(let k=0;k<150;k++){const a=rnd()*Math.PI*2,r=12.9+Math.pow(rnd(),1.4)*20,x=Math.cos(a)*r,z=Math.sin(a)*r;if(Math.abs(Math.abs(x)-13.4)<.6||Math.abs(Math.abs(z)-13.4)<.6)continue;treeAt(rnd()<.2?'palm':'round',x,z,.9+rnd()*.7,g)}
+  for(let k=0;k<26;k++){const a=k/26*Math.PI*2+rnd()*.15,r=24+rnd()*9,h=.8+rnd()*2.2,w=1.2+rnd()*1.2;g.add(N(S3.floorGeo,mat(['#ece6d8','#e2dccb','#d8d6cf'][k%3],{tex,spec:.4}),Math.cos(a)*r,h/2,Math.sin(a)*r).sc(w,h,w*.8))}
+  return g}
+{const _ae=applyEnv;applyEnv=function(T){_ae(T);try{const on=CUR_THEME==='abuja'&&!equippedSurround();if(on)abujaGreen();if(S3.envs&&S3.envs.abujaGreen)S3.envs.abujaGreen.visible=on}catch(e){}}}
+
+/* ================= BUILDING FAMILY WITH OWNERSHIP BASES ================= */
+/* Each owned street gets a dark base with a brass edge and a plate in the owner's colour on the street side.
+   Development grows through an architectural family in limestone, terracotta and teal glass:
+   1 house courtyard home, 2 townhouse, 3 apartments, 4 boutique hotel, hotel = skyline hotel.
+   The street squares only carry small, low markers so names and prices stay readable. */
+function FM(){if(S3.FM)return S3.FM;const m=(c,o)=>mat(c,Object.assign({spec:.25},o||{}));
+  return S3.FM={base:m('#142B36',{spec:.35}),brass:m('#C3A465',{spec:.9,em:.06}),stone:m('#efe6d4'),stone2:m('#e2d7c1'),terra:m('#c4704e'),wood:m('#9a6a3e'),
+    glass:m('#1f6f6a',{spec:.85}),glassL:m('#2a8a82',{spec:.9,em:.05}),win:m('#173a40',{spec:.8}),lit:m('#f5d995',{em:.35}),grass:m('#6f9a4e'),leaf:m('#3f7a34'),solar:m('#22344e',{spec:.95}),mort:m('#7a7f86')}}
+function bBox(p,mt,x,y,z,w,h,d){p.add(N(S3.geo.box,mt,x,y+h/2,z).sc(w,h,d))}
+function bTree(p,x,y,z,h,kind='round'){const n=new Node().at(x,y,z);p.add(n);treeAt(kind,0,0,h,n)}
+function famBase(p,col,mort){const F=FM();bBox(p,F.base,0,0,0,.62,.06,.62);bBox(p,F.brass,0,.06,0,.6,.006,.6);bBox(p,F.base,0,.066,0,.57,.004,.57);
+  bBox(p,mort?F.mort:mat(col,{spec:.5,em:.12}),0,.012,.312,.3,.036,.012);bBox(p,F.brass,0,.008,.313,.32,.044,.006)}
+function famHome(p){const F=FM(),y=.07;bBox(p,F.stone,0,y,-.02,.44,.2,.36);bBox(p,F.stone2,0,y+.2,-.02,.46,.02,.38);bBox(p,F.grass,-.04,y+.22,-.04,.22,.025,.18);bTree(p,-.04,y+.24,-.04,.22);
+  bBox(p,F.wood,.15,y,.161,.1,.18,.012);bBox(p,F.glass,-.08,y,.161,.1,.13,.01);bBox(p,F.terra,-.08,y+.13,.17,.14,.012,.04);bBox(p,F.win,-.2,y+.06,.05,.012,.08,.12);
+  bTree(p,.24,y,.22,.32,'cypress');bTree(p,-.25,y,.22,.28,'cypress');return y+.25}
+function famTown(p){const F=FM(),y=.07;bBox(p,F.stone,.04,y,-.02,.34,.44,.36);bBox(p,F.terra,-.17,y,-.02,.12,.48,.36);
+  for(let k=0;k<4;k++)bBox(p,F.wood,.1+k*.03,y+.02,.163,.014,.4,.01);bBox(p,F.glass,-.04,y+.24,.18,.18,.07,.03);bBox(p,F.glass,-.04,y+.02,.163,.12,.16,.01);
+  bBox(p,F.win,-.04,y+.25,.163,.12,.14,.008);bBox(p,F.stone2,.04,y+.44,-.02,.36,.02,.38);bBox(p,F.grass,-.2,y,.22,.16,.04,.1);bTree(p,-.2,y+.04,.22,.22);return y+.48}
+function famApts(p){const F=FM(),y=.07,fl=.19;bBox(p,F.stone,0,y,-.02,.46,fl*3,.4);
+  for(let k=0;k<3;k++){const yy=y+k*fl;for(const x of[-.12,.12]){bBox(p,F.win,x,yy+.04,.181,.12,.12,.008);if(k>0){bBox(p,F.glass,x,yy,.2,.15,.05,.05);bBox(p,F.leaf,x+.05,yy+.05,.2,.03,.03,.03)}}
+    bBox(p,F.win,.231,yy+.05,-.02,.008,.1,.26);bBox(p,F.win,-.231,yy+.05,-.02,.008,.1,.26)}
+  bBox(p,F.stone2,0,y+fl*3,-.02,.48,.02,.42);bBox(p,F.solar,.06,y+fl*3+.02,-.06,.2,.02,.12);bBox(p,F.grass,-.15,y+fl*3+.02,.06,.1,.03,.1);bTree(p,-.15,y+fl*3+.05,.06,.16);
+  bBox(p,F.glass,0,y,.181,.12,.12,.01);bTree(p,.24,y,.24,.3);bTree(p,-.24,y,.24,.34,'cypress');return y+fl*3+.05}
+function famBoutique(p){const F=FM(),y=.07,fl=.18;bBox(p,F.stone,.03,y,-.02,.4,fl*4,.4);bBox(p,F.terra,-.19,y,-.02,.08,fl*4+.08,.42);bBox(p,F.terra,-.12,y,.2,.03,fl*4+.04,.02);
+  for(let k=1;k<4;k++){const yy=y+k*fl;for(const x of[-.02,.13])bBox(p,(k+Math.round(x*10))%3?F.lit:F.win,x,yy+.04,.181,.1,.11,.008);bBox(p,F.leaf,.05,yy,.2,.26,.03,.03)}
+  bBox(p,F.glass,.05,y+.13,.23,.3,.02,.08);bBox(p,F.lit,.05,y,.181,.22,.12,.008);bBox(p,F.stone2,.03,y+fl*4,-.02,.42,.02,.42);
+  bBox(p,F.wood,.08,y+fl*4+.02,-.06,.18,.01,.14);for(const[x,z]of[[0,-.12],[.16,-.12],[0,0],[.16,0]])bBox(p,F.wood,x,y+fl*4+.02,z,.012,.1,.012);bBox(p,F.wood,.08,y+fl*4+.12,-.06,.2,.012,.16);
+  bTree(p,-.08,y+fl*4+.02,.1,.18);bTree(p,.24,y,.22,.34,'cypress');return y+fl*4+.14}
+function famSkyline(p){const F=FM(),y=.07,H=1.12;bBox(p,F.stone,0,y,-.02,.52,.2,.44);bBox(p,F.brass,0,y+.2,.2,.5,.02,.08);for(const x of[-.2,.2])bBox(p,F.brass,x,y,.23,.02,.2,.02);bBox(p,F.lit,0,y,.201,.34,.15,.008);
+  bBox(p,F.glass,.03,y+.2,-.03,.3,H,.3);bBox(p,F.stone,-.15,y+.2,-.03,.07,H+.06,.32);bBox(p,F.stone,.2,y+.2,-.03,.05,H*.82,.32);
+  for(let k=0;k<7;k++)bBox(p,F.stone2,.03,y+.32+k*.14,.121,.3,.012,.008);bBox(p,F.stone,.03,y+.2+H,-.03,.36,.03,.34);
+  bBox(p,F.brass,.03,y+.23+H,-.03,.26,.12,.012);bBox(p,F.brass,.03,y+.23+H,-.03,.012,.12,.26);bBox(p,F.brass,.03,y+.35+H,-.03,.3,.02,.3);
+  bTree(p,-.24,y,.24,.4);bTree(p,.26,y,.24,.46,'cypress');return y+.4+H}
+function famGarden(p){const F=FM(),y=.07;bBox(p,F.grass,0,y,0,.5,.02,.5);bTree(p,-.12,y+.02,-.08,.32);bTree(p,.14,y+.02,.06,.26);bTree(p,.12,y+.02,-.16,.3,'cypress');return y+.1}
+const FAM=[famGarden,famHome,famTown,famApts,famBoutique,famSkyline];
+function sqMarker(col,hotel){const F=FM(),h=new Node();if(hotel){bBox(h,F.glass,0,0,0,.09,.14,.08);bBox(h,F.brass,0,.14,0,.1,.015,.09)}else{bBox(h,F.stone,0,0,0,.07,.06,.07);h.add(N(S3.geo.cone4,F.base,0,.085,0).sc(.065,.05,.065).rot(0,Math.PI/4,0))}return h}
+updateCell=function(i,anim){
+  if(FAST||!S3||!S3.strips||!buyable(i))return;const o=G.own[i],prev=cellState[i]||{o:-1,h:0,m:false},pl=S3.plots[i];
+  const strip=S3.strips[i];strip.visible=o.o>=0;if(o.o>=0)strip.mat=mat(P(o.o).col,{spec:.3});S3.morts[i].visible=o.m;
+  if(SQ[i].t==='prop'){const hn=S3.houses[i];hn.kids.slice().forEach(k=>hn.remove(k));
+    const n=o.h===5?1:o.h;for(let k=0;k<n;k++){const h=sqMarker(null,o.h===5).at((k-(n-1)/2)*.12,0,0);hn.add(h);if(anim&&(k>=prev.h||o.h===5)){h.sc(.01);tween(400,t=>h.sc(Math.max(.01,t)),eBack)}}
+    if(pl.sign)pl.sign.visible=o.o<0;pl.floors.forEach(f=>pl.node.remove(f));pl.floors=[];
+    if(o.o>=0){const b=new Node();famBase(b,P(o.o).col,o.m);const lv=o.m?0:o.h,top=FAM[lv](b);pl.node.add(b);pl.floors.push(b);pl.top=top;
+      if(anim&&!FAST&&(prev.h!==o.h||prev.o!==o.o)){b.sc(1,.01,1);tween(520,t=>b.sc(1,Math.max(.01,t),1),eBack)}}else pl.top=0;
+    if(o.o>=0&&!pl.shadowN)pl.shadowN=S3.shadow(0,0,.5,pl.node,.013);if(pl.shadowN)pl.shadowN.visible=o.o>=0;
+    if(pl.flag){pl.node.remove(pl.flag);pl.flag=null}}
+  else{if(o.o>=0&&!o.m){if(!pl.flag){pl.flag=new Node();pl.flag.add(N(S3.geo.cyl8,S3.M.white,0,.2,0).sc(.012,.4,.012));const fl=N(S3.geo.box,mat('#fff'),.09,.34,0).sc(.17,.11,.012);pl.flag.add(fl);pl.flag.cloth=fl;pl.node.add(pl.flag)}
+      pl.flag.cloth.mat=mat(P(o.o).col,{spec:.2});pl.flag.p=[0,pl.top,0]}else if(pl.flag){pl.node.remove(pl.flag);pl.flag=null}}
+  cellState[i]={o:o.o,h:o.h,m:o.m}};
 /* ================= ORIENTATION ================= */
 let rotDismissed=false;
 function checkRotate(){$('#rotate').hidden=true}
