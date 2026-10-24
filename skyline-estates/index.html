@@ -2107,7 +2107,7 @@ async function playTurnInner(p){
   else await actions(`<b>${esc(p.name)}</b>, anything else?<span class="sub">Build, mortgage or trade before you end your turn.</span>`,[{k:'end',label:'End turn',primary:true}]);
   G.phase='busy';
 }
-function advanceTurn(){do{G.turn=(G.turn+1)%G.players.length;if(G.turn===0)G.round++}while(P(G.turn).bankrupt)}
+function advanceTurn(){do{G.turn=(G.turn+1)%G.players.length;if(G.turn===(G.first||0))G.round++}while(P(G.turn).bankrupt)}
 async function run(){
   const g=GEN;
   try{
@@ -2531,7 +2531,7 @@ function startOnlineFromDoc(code,ref,d){
 const PKEY='skylinePrefs';
 const PREF=(()=>{try{return JSON.parse(localStorage.getItem(PKEY)||'{}')||{}}catch(e){return{}}})();
 function savePref(){try{localStorage.setItem(PKEY,JSON.stringify(PREF))}catch(e){}}
-const RULE_INFO=[['minigames','Mini-games','World Quiz on Lucky Break and City Hall squares, and Catch the Cash when you land on Start or the Rest Stop.'],['perks','Token perks','Upgraded tokens get their payday bonus, re-rolls and Lucky Pass. Switch off for a level playing field.'],['ffa','Free-for-all building','Build houses and towers on any street you own. No full colour set needed.'],['events','City events','Every two rounds something happens: power cuts, party weekends, storms, building booms, lucky draws and each city’s own festival.'],['speedDie','Turbo die','After your first lap, roll a third die: add 1–4, the star draws a Lucky Break card, the taxi rides to the next transit hub.'],['pot','Rest Stop jackpot','Taxes and fees pile up at the Rest Stop. Land there to scoop them.'],['goDouble','Double payday','Land exactly on Start to collect a double payday.'],['jailRent','No rent from the Lockup','Owners sitting in the Lockup can’t collect rent.'],['auction','Auctions','Property nobody buys goes to auction.'],['even','Even building','Build and sell evenly across a colour set.'],['interest','Mortgage interest','Redeeming costs the mortgage plus 10%.']];
+const RULE_INFO=[['minigames','Mini-games','A quiz about the country you’re playing in, its board and the world on Lucky Break and City Hall squares, and Catch the Cash in the local currency when you land on Start or the Rest Stop.'],['perks','Token perks','Upgraded tokens get their payday bonus, re-rolls and Lucky Pass. Switch off for a level playing field.'],['ffa','Free-for-all building','Build houses and towers on any street you own. No full colour set needed.'],['events','City events','Every two rounds something happens in the city you’re playing: its own weather, local happenings like power cuts or rail strikes only where they really occur, building booms, lucky draws and the city’s own festival.'],['speedDie','Turbo die','After your first lap, roll a third die: add 1–4, the star draws a Lucky Break card, the taxi rides to the next transit hub.'],['pot','Rest Stop jackpot','Taxes and fees pile up at the Rest Stop. Land there to scoop them.'],['goDouble','Double payday','Land exactly on Start to collect a double payday.'],['jailRent','No rent from the Lockup','Owners sitting in the Lockup can’t collect rent.'],['auction','Auctions','Property nobody buys goes to auction.'],['even','Even building','Build and sell evenly across a colour set.'],['interest','Mortgage interest','Redeeming costs the mortgage plus 10%.']];
 const CASH_OPTS=[1200,1600,2000];
 const SUPPORT_EMAIL=(window.SKYLINE_CONFIG&&window.SKYLINE_CONFIG.supportEmail)||'';
 const PRIVACY_URL='https://p2rmy5ks88-design.github.io/a2-guide/skyline-estates/privacy.html';
@@ -2544,8 +2544,8 @@ const setup={slots:NAMES.slice(0,6).map((n,i)=>{const sv=(PREF.slots||[])[i]||{}
   rules:Object.assign({minigames:true,perks:true,ffa:false,events:false,speedDie:false,pot:false,goDouble:false,jailRent:false,auction:true,even:true,interest:true},PREF.rules||{})};
 function startWith(g){
   GEN++;netStop();XPGAME=0;XPLOG=[];COINLOG=[];G=g;applyTheme(G.set.city||G.set.theme||setup.city);applyDiceSkin();$('#title').hidden=true;$('#ui').hidden=false;$('#modals').innerHTML='';buildBoard();renderRoster();$('#log').textContent='';
-  log(G.round===1&&G.turn===0&&!G.log.length?(G.set.mode==='quick'?'Quick deal: everyone starts with 2 properties.':G.set.mode==='timed'?`Round limit: richest after ${G.set.rounds} rounds wins.`:'Welcome to Skyline Estates. First to bankrupt the rest wins.'):'Game resumed.');
-  cam.rz=0;camOverview(P(G.turn).pos,0);checkRotate();run();
+  log(G.round===1&&!G.log.length?(G.set.mode==='quick'?'Quick deal: everyone starts with 2 properties.':G.set.mode==='timed'?`Round limit: richest after ${G.set.rounds} rounds wins.`:'Welcome to Skyline Estates. First to bankrupt the rest wins.'):'Game resumed.');
+  cam.rz=0;camOverview(P(G.turn).pos,0);checkRotate();(typeof keyReveal==='function'?keyReveal():Promise.resolve()).then(run);
 }
 async function openThemePicker(){
   const opts=[{id:null,name:'City default',icon:'🗺️'}].concat(SURROUND_PREMIUM.filter(s=>itemOwned('surr',s.id)));
@@ -3737,21 +3737,37 @@ const EVENTS=[
   {id:'fuel',t:'⛽ Fuel shortage!',d:'Transit rent is doubled this round.',rent:(s,r)=>s.t==='rail'?r*2:r},
   {id:'taxfree',t:'🧾 Tax holiday!',d:'No tax or fee to pay this round.'},
   {id:'bonus',t:'💰 City Hall bonus!',d:'Every player collects {m50}.',apply:()=>alive().forEach(p=>{p.cash+=50;float(p.id,50)})},
-  {id:'storm',t:'🌧️ Storm season!',d:'Rent on the two cheapest colour sets is halved this round.',rent:(s,r)=>s.t==='prop'&&(s.g==='brown'||s.g==='sky')?Math.round(r/2):r},
+  {id:'storm',t:'🌧️ Storm season!',d:'Bad weather: rent on the two cheapest colour sets is halved this round.',rent:(s,r)=>s.t==='prop'&&(s.g==='brown'||s.g==='sky')?Math.round(r/2):r},
   {id:'boom',t:'🏗️ Building boom!',d:'Houses and towers cost half price this round.'},
   {id:'grant',t:'🎁 Start-up grant!',d:'The player with the least cash gets {m150}.',apply:()=>{const p=alive().reduce((a,b)=>b.cash<a.cash?b:a);p.cash+=150;float(p.id,150);log(`${p.name} received the ${fmt(150)} start-up grant`)}},
   {id:'lottery',t:'🎟️ Lucky draw!',d:'One lucky player wins {m100}.',apply:()=>{const a=alive(),p=a[Math.floor(Math.random()*a.length)];p.cash+=100;float(p.id,100);log(`${p.name} won the ${fmt(100)} lucky draw`);if(!FAST)toast(`🎟️ ${p.name} wins the lucky draw!`)}},
   {id:'holiday',t:'🏖️ Public holiday!',d:'Passing Start pays double this round.'},
   {id:'jam',t:'🚦 Traffic jam on {traffic}!',d:'Transit hubs collect no rent this round.',rent:(s,r)=>s.t==='rail'?0:r},
   {id:'market',t:'🛒 Market day!',d:()=>`Rent on ${GNAME.orange} and ${GNAME.red} streets is up 50% this round.`,rent:(s,r)=>s.t==='prop'&&(s.g==='orange'||s.g==='red')?Math.round(r*1.5):r},
+  {id:'strike',t:'🚆 Rail strike!',d:'Trains stop: transit hubs collect no rent this round.',rent:(s,r)=>s.t==='rail'?0:r},
   {id:'fest',t:()=>`🥁 ${CITY.festival}!`,d:()=>`Rent on ${GNAME[festGroup()]} streets doubles this round, and everyone gets ${fmt(50)} to celebrate.`,
     rent:(s,r)=>s.t==='prop'&&s.g===festGroup()?r*2:r,apply:()=>{alive().forEach(p=>{p.cash+=50;float(p.id,50)});if(trackable()&&G.players.some(p=>isLocalHuman(p)))achAward('festival')}}];
-const evText=(e,k)=>loc(typeof e[k]==='function'?e[k]():e[k]);
+/* events are local: weather, power cuts and strikes only where they really happen, with local names */
+const EV_UNIVERSAL=['party','taxfree','bonus','boom','grant','lottery','holiday','jam','market','storm'];
+const EV_LOCAL={
+  NG:{extra:['outage','fuel'],t:{storm:'🌧️ Rainy season downpour!',party:'🎉 Owambe weekend!',fuel:'⛽ Fuel scarcity!'}},
+  GH:{extra:['outage'],t:{storm:'🌧️ Rainy season!',outage:'⚡ Dumsor power cut at {14}!'}},
+  ZA:{extra:['outage'],t:{storm:'⛈️ Highveld thunderstorm!',outage:'⚡ Load-shedding hits {14}!'},city:{capetown:{storm:'💨 The Cape Doctor is blowing!'}}},
+  SE:{t:{storm:'❄️ Snowstorm!'}},CA:{t:{storm:'🧊 Ice storm!'}},
+  GB:{extra:['strike'],t:{storm:'🌧️ A week of rain!'}},FR:{extra:['strike'],t:{storm:'🌧️ Autumn storm!',strike:'🚆 Transport strike!'}},DE:{extra:['strike'],t:{storm:'🌨️ Winter storm!',strike:'🚆 Train drivers’ strike!'}},
+  ES:{t:{storm:'☀️ Heatwave!'}},IT:{t:{storm:'☀️ Heatwave!'}},AU:{t:{storm:'☀️ Heatwave!'}},
+  US:{t:{storm:'❄️ Nor’easter!'},city:{la:{storm:'☀️ Heatwave!'}}},
+  JP:{t:{storm:'🌀 Typhoon warning!'}},IN:{t:{storm:'🌧️ Monsoon rains!'}},BR:{t:{storm:'⛈️ Tropical storm!',party:'⚽ Big match weekend!'}},
+  AE:{t:{storm:'🌪️ Sandstorm!'}},KE:{t:{storm:'🌧️ The long rains!'}},MX:{t:{storm:'⛈️ Rainy season storm!'}}};
+const evLocal=()=>{const c=(G&&G.set.city)||CUR_CITY||'lagos';return EV_LOCAL[countryOf(c).key]||{}};
+function evPool(){const L=evLocal();return EV_UNIVERSAL.concat(L.extra||[]).map(id=>EVENTS.find(e=>e.id===id)).filter(Boolean)}
+function evTitle(e){const L=evLocal(),c=(G&&G.set.city)||CUR_CITY;const o=(L.city&&L.city[c]&&L.city[c][e.id])||(L.t&&L.t[e.id]);return o||null}
+const evText=(e,k)=>{if(k==='t'){const o=evTitle(e);if(o)return loc(o)}return loc(typeof e[k]==='function'?e[k]():e[k])};
 const evNow=()=>G&&G.event&&G.event.round===G.round?G.event.id:null;
 const evDef=()=>{const id=evNow();return id?EVENTS.find(e=>e.id===id):null};
 const _rentFor=rentFor;rentFor=function(i,dsum,o2){const r=_rentFor(i,dsum,o2);const e=evDef();if(!r||!e||!e.rent)return r;return e.rent(SQ[i],r)};
 const _advanceTurn=advanceTurn;advanceTurn=function(){const r0=G.round;_advanceTurn();if(G.round!==r0&&G.set.events&&G.round%2===0){
-  const e=Math.random()<.25?EVENTS.find(x=>x.id==='fest'):EVENTS[Math.floor(Math.random()*(EVENTS.length-1))];G.event={id:e.id,round:G.round};
+  const pool=evPool(),e=Math.random()<.25?EVENTS.find(x=>x.id==='fest'):pool[Math.floor(Math.random()*pool.length)];G.event={id:e.id,round:G.round};
   if(e.apply)e.apply();log(`${evText(e,'t')} ${evText(e,'d')}`);if(!FAST)evBanner(e)}};
 function evBanner(e){const b=el('div','evban',`<b>${esc(evText(e,'t'))}</b><span>${esc(evText(e,'d'))}</span>`);document.body.append(b);setTimeout(()=>b.classList.add('bye'),3400);setTimeout(()=>b.remove(),3900)}
 
@@ -3780,9 +3796,33 @@ const QUIZ=[
   ['The Eiffel Tower is in which city?','Paris',['Lyon','Brussels','Geneva']],['Which city hosts a famous carnival with samba schools?','Rio de Janeiro',['Madrid','Lima','Havana']],['How many squares are on a Skyline Estates board?','40',['36','48','52']],
   ['What do tenants pay to a landlord?','Rent',['Bail','Tax','Interest']],['Which continent is Ghana in?','Africa',['Asia','South America','Europe']],['Barcelona is in which country?','Spain',['Portugal','Italy','France']],
   ['Manchester is in which country?','England',['Scotland','Wales','Ireland']],['Which country is Uppsala in?','Sweden',['Norway','Finland','Denmark']],['Which sea lies between Europe and Africa?','Mediterranean Sea',['Red Sea','Baltic Sea','North Sea']]];
-async function quiz(p){const qs=PREF.qseen||[];let pool=QUIZ.map((_,i)=>i).filter(i=>!qs.includes(i));if(!pool.length){pool=QUIZ.map((_,i)=>i);PREF.qseen=[]}
-  const qi=pool[Math.floor(Math.random()*pool.length)];(PREF.qseen=PREF.qseen||[]).push(qi);savePref();const[q,a,wr]=QUIZ[qi];const opts=shuffle([a,...wr]);
-  const k=await modal({cls:'wide quizm',tdef:-1,onMount:(pn,close)=>setTimeout(()=>close(-1),20000),html:`<div class="mh">🧠 World Quiz</div><div class="mtxt">Answer right to win <b>${fmt(50)}</b>. You have 20 seconds.</div><div class="qq">${esc(q)}</div>`,btns:opts.map((o,i)=>({k:i,label:o}))});
+/* country questions for wherever you're playing (local first), questions about the board itself, then the world */
+const QUIZ_LOCAL={
+  NG:[['What is the largest city in Nigeria?','Lagos',['Kano','Ibadan','Abuja']],['What is the currency of Nigeria?','Naira',['Cedi','Rand','Shilling']],['Which river gives Nigeria its name?','Niger',['Benue','Congo','Volta']],['What is the capital of Nigeria?','Abuja',['Lagos','Kano','Ibadan']],['Nigeria’s film industry is nicknamed…','Nollywood',['Bollywood','Ghallywood','Hollywood']]],
+  SE:[['What is the capital of Sweden?','Stockholm',['Gothenburg','Malmö','Uppsala']],['What is the currency of Sweden?','Krona',['Euro','Franc','Peso']],['Which sea lies east of Sweden?','Baltic Sea',['North Sea','Black Sea','Irish Sea']],['The Liseberg amusement park is in which Swedish city?','Gothenburg',['Stockholm','Malmö','Uppsala']],['Stockholm is spread across how many main islands?','14',['3','40','100']]],
+  US:[['What is the capital of the United States?','Washington, D.C.',['New York','Philadelphia','Boston']],['Hollywood is a neighbourhood of which city?','Los Angeles',['San Diego','San Francisco','Las Vegas']],['The Statue of Liberty stands in which city’s harbour?','New York',['Boston','Baltimore','Miami']],['Which city is nicknamed “the Big Apple”?','New York',['Chicago','Boston','Los Angeles']]],
+  GB:[['What is the capital of the United Kingdom?','London',['Manchester','Birmingham','Edinburgh']],['What is the currency of the United Kingdom?','Pound sterling',['Euro','Dollar','Krona']],['Which river flows through London?','Thames',['Seine','Tiber','Spree']],['What colour are London’s classic double-decker buses?','Red',['Blue','Green','Yellow']],['Manchester is in which country?','England',['Scotland','Wales','Ireland']]],
+  FR:[['What is the capital of France?','Paris',['Lyon','Marseille','Nice']],['What is the currency of France?','Euro',['Franc','Pound','Krona']],['The Louvre museum is in which city?','Paris',['Lyon','Bordeaux','Lille']],['Which river flows through Paris?','Seine',['Thames','Rhine','Danube']],['The Eiffel Tower is in which city?','Paris',['Lyon','Brussels','Geneva']]],
+  DE:[['What is the capital of Germany?','Berlin',['Munich','Hamburg','Frankfurt']],['Which river flows through Berlin?','Spree',['Rhine','Elbe','Main']],['The Brandenburg Gate is in which city?','Berlin',['Munich','Vienna','Hamburg']],['What is the currency of Germany?','Euro',['Mark','Franc','Krona']]],
+  ES:[['What is the capital of Spain?','Madrid',['Barcelona','Seville','Valencia']],['Gaudí’s Sagrada Família is in which city?','Barcelona',['Madrid','Seville','Bilbao']],['What is the currency of Spain?','Euro',['Peseta','Peso','Franc']],['Barcelona is in which country?','Spain',['Portugal','Italy','France']]],
+  IT:[['What is the capital of Italy?','Rome',['Milan','Naples','Florence']],['The Colosseum is in which city?','Rome',['Athens','Naples','Milan']],['Which river flows through Rome?','Tiber',['Po','Arno','Seine']],['Vatican City is surrounded by which city?','Rome',['Milan','Florence','Naples']]],
+  JP:[['What is the capital of Japan?','Tokyo',['Kyoto','Osaka','Sapporo']],['What is the currency of Japan?','Yen',['Won','Yuan','Rupee']],['Mount Fuji is in which country?','Japan',['China','South Korea','Nepal']],['Japan’s high-speed trains are called…','Shinkansen',['TGV','Eurostar','Acela']],['Which country is called the Land of the Rising Sun?','Japan',['China','Thailand','Korea']]],
+  IN:[['What is the capital of India?','New Delhi',['Mumbai','Kolkata','Bengaluru']],['What is the currency of India?','Rupee',['Rupiah','Taka','Dinar']],['The Gateway of India stands in which city?','Mumbai',['Delhi','Chennai','Kolkata']],['Mumbai’s Hindi film industry is nicknamed…','Bollywood',['Nollywood','Hollywood','Kollywood']]],
+  BR:[['What is the capital of Brazil?','Brasília',['Rio de Janeiro','São Paulo','Salvador']],['What is the main language of Brazil?','Portuguese',['Spanish','French','Italian']],['The Christ the Redeemer statue overlooks which city?','Rio de Janeiro',['São Paulo','Lisbon','Buenos Aires']],['Sugarloaf Mountain rises over which city?','Rio de Janeiro',['Lisbon','Buenos Aires','Lima']]],
+  AE:[['What is the capital of the United Arab Emirates?','Abu Dhabi',['Dubai','Sharjah','Ajman']],['What is the currency of the United Arab Emirates?','Dirham',['Riyal','Dinar','Rupee']],['The Burj Khalifa, the world’s tallest building, is in which city?','Dubai',['Abu Dhabi','Doha','Riyadh']]],
+  GH:[['What is the capital of Ghana?','Accra',['Kumasi','Tamale','Cape Coast']],['What is the currency of Ghana?','Cedi',['Naira','Rand','Shilling']],['Lake Volta, one of the world’s largest man-made lakes, is in which country?','Ghana',['Nigeria','Kenya','Togo']]],
+  KE:[['What is the capital of Kenya?','Nairobi',['Mombasa','Kisumu','Nakuru']],['What is the currency of Kenya?','Shilling',['Rand','Cedi','Birr']],['Kenya’s famous wildlife reserve is the…','Maasai Mara',['Serengeti','Kruger','Etosha']]],
+  ZA:[['What is the currency of South Africa?','Rand',['Shilling','Naira','Cedi']],['Table Mountain overlooks which city?','Cape Town',['Johannesburg','Durban','Nairobi']],['Which South African city is nicknamed “the Mother City”?','Cape Town',['Johannesburg','Durban','Pretoria']]],
+  CA:[['What is the capital of Canada?','Ottawa',['Toronto','Montreal','Vancouver']],['Which is the largest city in Canada?','Toronto',['Montreal','Vancouver','Ottawa']],['The CN Tower is in which city?','Toronto',['Montreal','Vancouver','Calgary']],['Which country’s flag has a red maple leaf?','Canada',['Switzerland','Austria','Denmark']]],
+  AU:[['What is the capital of Australia?','Canberra',['Sydney','Melbourne','Perth']],['The Sydney Opera House is in which city?','Sydney',['Melbourne','Brisbane','Perth']],['Which city’s harbour bridge is nicknamed “the Coathanger”?','Sydney',['Melbourne','Auckland','Perth']]],
+  MX:[['What is the capital of Mexico?','Mexico City',['Guadalajara','Monterrey','Cancún']],['What is the currency of Mexico?','Peso',['Real','Sol','Bolívar']],['Mexico City was built on the site of which Aztec city?','Tenochtitlan',['Machu Picchu','Cusco','Chichen Itza']]]};
+function boardQuestion(){const C=CITY,pairs=(C.props||[]).filter(x=>x&&x[0]&&x[1]),areas=[...new Set(pairs.map(x=>x[1]))];if(areas.length<4)return null;
+  const [s,a]=pairs[Math.floor(Math.random()*pairs.length)];return[`On the ${C.name} board, where is ${s}?`,a,shuffle(areas.filter(x=>x!==a)).slice(0,3)]}
+function pickQuestion(){const ck=countryOf((G&&G.set.city)||CUR_CITY).key,L=QUIZ_LOCAL[ck]||[],seen=PREF.qseen2=PREF.qseen2||[],r=Math.random();
+  const from=(list,pre)=>{let ids=list.map((_,i)=>pre+i).filter(id=>!seen.includes(id));if(!ids.length){PREF.qseen2=seen.filter(x=>!x.startsWith(pre));ids=list.map((_,i)=>pre+i)}const id=ids[Math.floor(Math.random()*ids.length)];PREF.qseen2.push(id);savePref();return list[+id.slice(pre.length)]};
+  if(r<.5&&L.length)return from(L,ck+':');if(r<.75){const b=boardQuestion();if(b)return b}return from(QUIZ,'w:')}
+async function quiz(p){const[q,a,wr]=pickQuestion();const opts=shuffle([a,...wr]);const cname=countryOf((G&&G.set.city)||CUR_CITY).name;
+  const k=await modal({cls:'wide quizm',tdef:-1,onMount:(pn,close)=>setTimeout(()=>close(-1),20000),html:`<div class="mh">🧠 ${esc(cname)} Quiz</div><div class="mtxt">Answer right to win <b>${fmt(50)}</b>. You have 20 seconds.</div><div class="qq">${esc(q)}</div>`,btns:opts.map((o,i)=>({k:i,label:o}))});
   const right=opts[k]===a;if(right){sfx('win');toast(`Correct! ${a} 🎉`);await collect(p,50);PREF.stats.quiz=(PREF.stats.quiz||0)+1;savePref();achBump()}else{sfx('bad');toast(`Not quite. The answer is ${a}.`)}}
 async function catchCash(p){let n=0;const sym=(CUR.pre||'$').trim()||'$';
   await modal({cls:'wide catchm',tdef:'x',html:`<div class="mh">💸 Catch the Cash!</div><div class="mtxt">Tap the notes before they fly away. ${fmt(10)} each, 6 seconds.</div><div class="cfield"><b class="cn">0</b></div>`,onMount:(pn,close)=>{const F=pn.querySelector('.cfield'),C=pn.querySelector('.cn');let live=true;
@@ -4262,7 +4302,7 @@ function pickChar(s,act){if(s.i===0&&s.type==='human')return myChar();const used
 async function previewSurround(id){const old=PREF.eq.surr;PREF.eq.surr=id;PREF.inv.surr=PREF.inv.surr||{};const had=PREF.inv.surr[id];PREF.inv.surr[id]=1;applyTheme(setup.city);$('#title').classList.add('peek');TITLE_CAM={look:[0,0,0],L:34,pitch:.5,spin:.08};
   await modal({cls:'peekm',html:`<div class="mtxt">Previewing <b>${esc(SURROUND_PREMIUM.find(s=>s.id===id).name)}</b></div>`,btns:[{k:'x',label:'Done',primary:true}]});
   if(!had)delete PREF.inv.surr[id];PREF.eq.surr=old;$('#title').classList.remove('peek');applyTheme(setup.city);TITLE_CAM=null}
-const LEARN=[['🎯','The goal','Be the last landlord standing. Everyone else goes bankrupt, or you are the richest when the game ends.'],['🎲','Your turn','Roll two dice and move. Passing Start pays a payday of {m220}. Doubles roll again, but three doubles in a row sends you to the Lockup.'],
+const LEARN=[['🗝️','Who starts','Before the first turn everyone draws a Skyline Key to a random floor of the city’s tallest tower. The highest floor opens the game and play goes round from them. Whoever goes last gets a {m100} late-start bonus.'],['🎯','The goal','Be the last landlord standing. Everyone else goes bankrupt, or you are the richest when the game ends.'],['🎲','Your turn','Roll two dice and move. Passing Start pays a payday of {m220}. Doubles roll again, but three doubles in a row sends you to the Lockup.'],
   ['🏠','Buying property','Land on an unowned street, transit hub or utility to buy it. If you pass, it goes to auction and anyone can bid.'],['💸','Rent','Land on someone else’s property and you pay rent. A full colour set doubles the base rent. Transit hubs pay more the more you own; utilities charge 5× or 12× the dice.'],
   ['🏗️','Building','Own a full colour set with no mortgages to build houses evenly, then a tower after four houses. The bank has 36 houses and 12 towers.'],['🏦','Mortgages','Mortgage a property for half its price. It collects no rent until you redeem it for the mortgage plus 10%.'],
   ['🚔','The Lockup','Landing on Police Check sends you to the Lockup. Pay {m60} bail, use a Bail Pass, or roll doubles for up to three turns. After the third miss you pay bail and move.'],['🤝','Trading','On your turn, trade streets, cash and Bail Passes with any player. You can accept, decline or send a counter offer.'],
@@ -4571,6 +4611,27 @@ function champCard(c){const f=frameDef('c:'+c),[n,g]=f.prog,done=f.own,wear=PREF
 {const _cs=cityScan;cityScan=function(f){_cs(f);try{champCheck(true)}catch(e){}}}
 {const _ht=homeTab;homeTab=function(k){_ht(k);setTimeout(frameReveal,700)}}
 setTimeout(()=>{try{champCheck(false);railProfile();frameReveal()}catch(e){}},1500);
+
+/* ================= SKYLINE KEYS: WHO OPENS THE GAME ================= */
+/* Instead of rolling the dice for first turn, every player draws a sealed key to a random floor of the city's tallest
+   tower. The highest floor opens the game and play goes round from them. Whoever goes last gets a late-start bonus. */
+const LATE_BONUS=100;
+{const _ng=newGame;newGame=function(cfg){const r=_ng(cfg);try{if(G&&G.players.length>1&&!G.keys){const n=G.players.length,pool=shuffle([...Array(98).keys()].map(k=>k+2)).slice(0,n);
+    G.keys=pool;const first=pool.indexOf(Math.max(...pool));G.first=first;G.turn=first;const last=(first-1+n)%n;G.lateBonus=last;G.players[last].cash+=LATE_BONUS;G.keysShown=false}}catch(e){}return r}}
+function keyReveal(){if(!G||!G.keys||G.keysShown||G.round>1||FAST||G.sim)return Promise.resolve();G.keysShown=true;try{save()}catch(e){}
+  const tower=(CITY&&CITY.name)||'the city',order=G.players.map((p,i)=>({p,k:G.keys[i]})),first=P(G.first),late=P(G.lateBonus);
+  return modal({cls:'wide keysm',auto:12000,html:`<div class="mh">🗝️ Skyline Keys</div><div class="mtxt">Everyone draws a key to a random floor of ${esc(tower)}’s tallest tower. The highest floor opens the game.</div>
+    <div class="keyrow">${order.map(({p,k},j)=>`<div class="keyc" style="--pc:${p.col};--d:${j*.35}s"><span class="kt">${p.tok}</span><b>${esc(p.name)}</b><span class="kf"><i>FLOOR</i><em>${k}</em></span></div>`).join('')}</div>
+    <div class="mtxt keyres"><b>${esc(first.name)}</b> opens the game on floor ${G.keys[G.first]}. Play goes round from there. ${esc(late.name)} goes last and gets a ${fmt(LATE_BONUS)} late-start bonus.</div>`,
+    btns:[{k:'go',label:'Let’s go',primary:true}],onMount:pn=>{const cards=[...pn.querySelectorAll('.keyc')];cards.forEach((c,j)=>setTimeout(()=>{c.classList.add('open');try{tone(700+j*90,.06,'triangle',.05)}catch(e){}},400+j*350));
+      setTimeout(()=>{const w=cards[G.first];if(w)w.classList.add('win');pn.querySelector('.keyres').classList.add('show');try{sfx('win')}catch(e){}},500+cards.length*350)}}).then(()=>{log(`🗝️ ${first.name} drew the top floor (${G.keys[G.first]}) and opens the game. ${late.name} gets a ${fmt(LATE_BONUS)} late-start bonus.`)})}
+(function(){const st=document.createElement('style');st.textContent=`.keyrow{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin:10px 0}
+.keyc{width:110px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 8px;border-radius:14px;background:var(--bg2,#13213A);border:2px solid var(--ln,#22324F);color:var(--ink,#EEF2F8);transition:transform .3s,border-color .3s,box-shadow .3s}
+.keyc .kt{font:28px/1 var(--emoji,system-ui)}.keyc b{font:700 13px var(--display,system-ui);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.keyc .kf{display:flex;flex-direction:column;align-items:center;width:64px;height:54px;justify-content:center;border-radius:10px;background:linear-gradient(160deg,#3A2A0E,#1A2238);border:1px solid #6B5320;transform:rotateY(90deg);transition:transform .35s}
+.keyc .kf i{font:800 9px var(--body,system-ui);letter-spacing:.12em;color:#C7B48A;font-style:normal}.keyc .kf em{font:700 24px var(--display,system-ui);font-style:normal;color:#F3CF76}
+.keyc.open .kf{transform:none}.keyc.win{border-color:var(--pc);box-shadow:0 0 18px var(--pc);transform:translateY(-4px)}
+.keyres{opacity:0;transition:opacity .4s}.keyres.show{opacity:1}`;document.head.appendChild(st)})();
 /* ================= ORIENTATION ================= */
 let rotDismissed=false;
 function checkRotate(){$('#rotate').hidden=true}
