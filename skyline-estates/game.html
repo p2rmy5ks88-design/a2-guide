@@ -1209,6 +1209,41 @@ html.rot .idstage .iart.surr.xl{transform:scale(1.6)}
 html.rot .idsum{margin-top:4px}
 html.rot .idsum span{padding:6px 4px}
 html.rot .idsum b{font-size:14px}}
+/* token workshop */
+.ws{display:flex;flex-direction:column;gap:12px;padding:14px;background:linear-gradient(160deg,color-mix(in srgb,var(--now) 18%,#13213A),#13213A 60%,color-mix(in srgb,var(--nxt) 16%,#13213A))}
+.wshead{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.wstok{display:flex;flex-direction:column;align-items:center;gap:5px;flex:none}
+.wstok>small{font-size:10px;font-weight:800;letter-spacing:.1em;opacity:.7}
+.wstok .tem.big{width:78px;height:78px;border-radius:50%;display:grid;place-items:center;font:42px/1 var(--emoji)}
+.wsarrow{font-size:22px;opacity:.75;color:var(--gold,#E2B54A);flex:none}
+.wsname{flex:1;min-width:200px;display:flex;flex-direction:column;gap:4px}.wsname>b{font-size:20px}.wsname>small{opacity:.8}
+.wstrack{display:flex;gap:4px;margin:4px 0 2px}
+.wstrack span{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;min-width:0}
+.wstrack i{display:block;width:100%;height:6px;border-radius:4px;background:rgba(255,255,255,.12)}
+.wstrack .done i,.wstrack .now i{background:var(--tc)}.wstrack .next i{background:var(--tc);opacity:.35;outline:1px dashed var(--tc);outline-offset:1px}
+.wstrack b{font-size:9.5px;font-weight:700;opacity:.55;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}.wstrack .now b{opacity:1}.wstrack .next b{opacity:.85}
+.wsbody{display:grid;grid-template-columns:1.4fr 1fr;gap:12px;align-items:start}
+.wscmp{width:100%;border-collapse:collapse;font-size:13px}
+.wscmp th,.wscmp td{padding:6px 8px;text-align:left;border-bottom:1px solid rgba(255,255,255,.07)}
+.wscmp thead th{font-size:11px;letter-spacing:.06em;text-transform:uppercase;opacity:.7}
+.wscmp tbody th{font-weight:600;opacity:.75}
+.wscmp tr.up td:last-child{color:#5fd39a;font-weight:800}.wscmp tr.up{background:rgba(95,211,154,.07)}
+.wscmp em{font-style:normal;font-size:10px;margin-left:5px}
+.wsneed{display:flex;flex-direction:column;gap:7px;padding:10px 12px;border-radius:14px;background:rgba(0,0,0,.22)}
+.wsneed>div{display:flex;gap:8px;align-items:flex-start;font-size:13px}.wsneed>div i{font-style:normal;font-weight:900;width:18px;flex:none;text-align:center}
+.wsneed .ok i{color:#5fd39a}.wsneed .no i{color:#ff7a6b}.wsneed span{display:flex;flex-direction:column}.wsneed span small{opacity:.65;font-size:11px}
+.wsafter{display:flex;justify-content:space-between;font-size:12px;opacity:.9;border-top:1px solid rgba(255,255,255,.08);padding-top:7px}.wsafter b.neg{color:#ff7a6b}
+.wsbtn{width:100%}.wsbtn[disabled]{opacity:.5}
+.wsmax small{opacity:.7}
+.ws.locked .wsname small:last-child{opacity:1}
+@keyframes wspop{0%{transform:scale(.6)}60%{transform:scale(1.15)}100%{transform:scale(1)}}.tem.wspop{animation:wspop .6s var(--ease,ease-out)}
+@media (max-width:700px){.wsbody{grid-template-columns:1fr}}
+html.rot .wsbody{grid-template-columns:1fr}
+html.light .ws{background:linear-gradient(160deg,color-mix(in srgb,var(--now) 14%,#fff),#fff 60%,color-mix(in srgb,var(--nxt) 12%,#fff))}
+html.light .wsneed{background:rgba(0,0,0,.05)}html.light .wscmp th,html.light .wscmp td{border-color:rgba(0,0,0,.08)}html.light .wstrack i{background:rgba(0,0,0,.1)}
+html.light .wscmp tr.up td:last-child{color:#1f9a5c}
+.wstok .tem.big{background:radial-gradient(circle at 40% 35%,#fff7d6,#ffc61a);box-shadow:0 5px 0 #c98f00}
+.wslater{display:block;margin-top:6px;font-size:11.5px;opacity:.7}
 </style>
 
 <canvas id="gl" aria-label="3D game board"></canvas>
@@ -5215,6 +5250,63 @@ const CAT_OF={Sound:'audio',Appearance:'visuals','Board view':'visuals',Riders:'
 html.bigtext #title,html.bigtext #modals{zoom:1.14}
 html.bigtext .pcard,html.bigtext #prompt,html.bigtext #log,html.bigtext #round{zoom:1.12}
 html.calm *,html.calm *::before,html.calm *::after{animation-duration:.001s!important;animation-iteration-count:1!important;transition-duration:.001s!important}`;document.head.appendChild(st)})();
+
+/* ================= TOKEN WORKSHOP ================= */
+/* The Tokens page opens on a workshop for the selected token: the token now beside the token after the next
+   upgrade, every perk compared line by line (what changes is marked), the six-tier track, what the upgrade needs
+   with ticks, and your coins before and after. */
+const WS_PERKS=[
+  ['Look',L=>L.name==='Common'?'Your player colour':L.aura==='chaos'?'Rainbow aura and sparks':L.aura==='mythic'?'Crimson with ember aura':`${L.name==='Legendary'?'Gold with glowing base':L.name==='Epic'?'Purple finish':'Blue finish'}`,null],
+  ['Payday bonus',L=>L.pay?`+${Math.round(L.pay*100)}%`:'None',L=>L.pay||0],
+  ['Re-rolls a game',L=>L.rr?String(L.rr):'None',L=>L.rr||0],
+  ['Lucky Pass',L=>L.pass?(L.pass>1?`${L.pass} a game`:'1 a game'):'None',L=>L.pass||0],
+  ['Rent Shield',L=>L.shield?'First rent halved':'None',L=>L.shield||0],
+  ['Chaos Surge',L=>L.surge?'Triple first payday':'None',L=>L.surge||0],
+  ['Coins from games',L=>L.coinX?`+${Math.round(L.coinX*100)}%`:'None',L=>L.coinX||0],
+  ['XP from games',L=>L.xpX?`+${Math.round(L.xpX*100)}%`:'None',L=>L.xpX||0]];
+function wsNeeds(t,lv){const R=TOKEN_LV[lv],o=[];if(!R)return o;
+  o.push({ok:PREF.coins>=R.cost,txt:`${nfmt(R.cost)} coins`,sub:`you have ${nfmt(PREF.coins)}`});
+  const q=R.req||{};
+  if(q.wins){const n=PREF.tokWins[t]||0;o.push({ok:n>=q.wins,txt:`Win ${q.wins} games with this token`,sub:`${Math.min(n,q.wins)} of ${q.wins}`})}
+  if(q.lvl){const n=lvlOf(PREF.xp);o.push({ok:n>=q.lvl,txt:`Player level ${q.lvl}`,sub:`now level ${n}`})}
+  if(q.league){const L=LEAGUES.find(l=>l.id===q.league);o.push({ok:leagueIdx()>=LEAGUES.findIndex(l=>l.id===q.league),txt:`${L.name} league`,sub:`now ${LEAGUES[leagueIdx()].name}`})}
+  return o}
+function wsHTML(sel){const tl=tokLv(sel),next=TOKEN_LV[tl+1],un=tokenUnlocked(sel),info=TOKEN_INFO[sel],R=rarityOf(tl);
+  const tok=(lv,lbl)=>`<div class="wstok"><small>${lbl}</small><div class="tem big r${lv}">${sel}</div><span class="rar" style="background:${TOKEN_LV[lv].ui}">${TOKEN_LV[lv].name}</span></div>`;
+  const track=`<div class="wstrack" aria-label="Tier ${tl} of ${TL_MAX}">${[1,2,3,4,5,6].map(i=>`<span class="${i<tl?'done':i===tl?'now':i===tl+1?'next':''}" style="--tc:${TOKEN_LV[i].ui}"><i></i><b>${TOKEN_LV[i].name}</b></span>`).join('')}</div>`;
+  if(!un)return `<div class="ws card locked"><div class="wshead">${tok(1,'LOCKED')}<div class="wsname"><b>${esc(info[0])}</b><small>${esc(info[1])}</small><small>🔒 ${esc(tokenHowText(sel))}</small>
+    <div class="brow">${TOKEN_HOW[sel]&&TOKEN_HOW[sel].coins?`<button class="sm warn" id="tBuy">Unlock ${fmtC(TOKEN_HOW[sel].coins)}</button>`:''}</div></div></div></div>`;
+  const later=[];const rows=WS_PERKS.map(([k,f,v])=>{const a=f(TOKEN_LV[tl]),b=next?f(next):null,up=next&&(v?v(next)>v(TOKEN_LV[tl]):a!==b);
+    if(a==='None'&&(!next||b==='None')){const at=TOKEN_LV.findIndex((L,i)=>L&&i>tl&&v&&v(L)>0);if(at>0)later.push(`${k} (${TOKEN_LV[at].name})`);return ''}
+    return `<tr class="${up?'up':''}"><th>${k}</th><td>${esc(a)}</td>${next?`<td>${esc(b)}${up?'<em>▲</em>':''}</td>`:''}</tr>`}).join('');
+  const needs=next?wsNeeds(sel,tl+1):[],ready=needs.every(n=>n.ok),after=next?PREF.coins-next.cost:0;
+  return `<div class="ws card" style="--now:${R.ui};--nxt:${next?next.ui:R.ui}">
+    <div class="wshead">${tok(tl,'NOW')}${next?`<span class="wsarrow" aria-hidden="true">➜</span>${tok(tl+1,'NEXT UPGRADE')}`:''}
+      <div class="wsname"><b>${esc(info[0])}</b><small>${esc(info[1])}</small>${track}
+        <div class="brow"><button class="sm go" id="tPlay">${setup.slots[0].tok===sel?'Your token':'Play as this'}</button></div></div></div>
+    <div class="wsbody"><div><table class="wscmp"><thead><tr><th></th><th>${R.name}</th>${next?`<th>${next.name}</th>`:''}</tr></thead><tbody>${rows}</tbody></table>${later.length?`<small class="wslater">Later tiers add: ${esc(later.join(', '))}</small>`:''}</div>
+      ${next?`<div class="wsneed"><b>Upgrade needs</b>${needs.map(n=>`<div class="${n.ok?'ok':'no'}"><i>${n.ok?'✓':'✗'}</i><span>${esc(n.txt)}<small>${esc(n.sub)}</small></span></div>`).join('')}
+        <div class="wsafter">Coins after upgrading <b class="${after<0?'neg':''}">${after<0?`${nfmt(-after)} short`:nfmt(after)}</b></div>
+        <button class="sm warn wsbtn" id="tUp"${tierReqMet(sel,tl+1)?'':' disabled'}>${ready?`Upgrade to ${next.name}`:tierReqMet(sel,tl+1)?'Get coins to upgrade':'Not ready yet'} ${fmtC(next.cost)}</button></div>`
+      :'<div class="wsneed wsmax"><b>Chaotic: the highest tier ✨</b><small>This token has every perk there is.</small></div>'}</div></div>`}
+paneTokens=function(T){const all=TOKENS.concat(NEW_TOKENS);let sel=setup.slots[0].tok;
+  const draw=()=>{const tl=tokLv(sel),next=TOKEN_LV[tl+1],info=TOKEN_INFO[sel];
+    T.innerHTML=`<div class="phead"><h2>Tokens</h2><span class="small">${unlockedTokens().length} of ${all.length} unlocked</span></div>
+      ${wsHTML(sel)}
+      <div class="small">Upgrades give a little extra luck, never a sure win. The game host can switch token perks off for a level playing field.</div>
+      <div class="tokgrid"></div>
+      <h3>TOKEN FINISH</h3><div class="small">A finish paints your token. It shows for you and, online, for everyone in your game.</div><div class="fingrid"></div>`;
+    const G2=T.querySelector('.tokgrid');all.forEach(t=>{const u=tokenUnlocked(t),lv=tokLv(t);const b=el('button','tcard'+(u?'':' locked')+(sel===t?' on':''),`<span class="tem r${u?lv:1}">${t}</span><b>${esc(TOKEN_INFO[t][0])}</b><small>${u?`<span class="rar" style="background:${rarityOf(lv).ui}">${rarityOf(lv).name}</span>`:'🔒 Locked'}</small>${setup.slots[0].tok===t?'<em>Your token</em>':''}`);
+      b.onclick=()=>{sel=t;draw();const w=T.querySelector('.ws');if(w)w.scrollIntoView({block:'nearest',behavior:'smooth'})};G2.append(b)});
+    const F=T.querySelector('.fingrid');[{id:null,name:'Player colour',col:PCOL[0],price:0}].concat(FINISHES).forEach(f=>{const own=f.id===null||itemOwned('fin',f.id),on=(PREF.eq.fin||null)===f.id;
+      const b=el('button','fcard'+(on?' on':'')+(own?'':' locked'),`<i style="background:radial-gradient(circle at 35% 30%,#fff,${f.col} 55%,#000 140%)"></i><b>${esc(f.name)}</b><small>${on?'Equipped':own?'Tap to use':f.price?fmtC(f.price):esc(f.desc)}</small>`);
+      b.onclick=()=>{if(!own&&f.id){if(!f.price){toast(f.desc);return}itemDetail('fin',f.id,f.price,0,draw);return}PREF.eq.fin=f.id;savePref();draw();railProfile()};F.append(b)});
+    const pl=T.querySelector('#tPlay');if(pl)pl.onclick=()=>{const other=setup.slots.findIndex((s,i)=>i>0&&s.tok===sel);if(other>0)setup.slots[other].tok=setup.slots[0].tok;setup.slots[0].tok=sel;saveSlot(0,setup.slots[0]);draw()};
+    const up=T.querySelector('#tUp');if(up)up.onclick=async()=>{if(!tierReqMet(sel,tl+1)){toast('Not yet: '+tierReqText(sel,tl+1));return}
+      if(!(await confirmBuy(`Upgrade ${info[0]} to ${next.name}`,next.cost,`Coins after: ${nfmt(PREF.coins-next.cost)}.`)))return;PREF.tokLv[sel]=tl+1;savePref();achBump();toast(`${info[0]} is now ${next.name}!`);draw();railProfile();
+      const t=T.querySelector('.ws .wstok .tem');if(t&&!document.documentElement.classList.contains('calm')){t.classList.add('wspop');try{confetti()}catch(e){}}};
+    const bu=T.querySelector('#tBuy');if(bu)bu.onclick=async()=>{if(await confirmBuy(`Unlock ${info[0]}`,TOKEN_HOW[sel].coins)){grantItem('tok',sel);draw();railProfile()}}};
+  draw()};
 /* ================= ORIENTATION ================= */
 let rotDismissed=false;
 function checkRotate(){$('#rotate').hidden=true}
