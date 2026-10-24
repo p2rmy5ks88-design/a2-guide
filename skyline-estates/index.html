@@ -3493,7 +3493,7 @@ const GROUND_Y=-.7;
 const SURR={
   // tropical island on open sea, the original look
   lagos:{kind:'island'},
-  abuja:{base:'#b99a58',plinth:'#c9a96a',rim:'#a8894c',water:'#3f8fbf',ops:[['speck',['#a88a4a','#cdb071','#9a7f45'],40,.05,.18],['ring',12.6,14.2,'#8f8478'],['dash',13.4,'#e9e2cf'],['canopy',90,['#7a8a3a','#6a7a32'],18,60,.5,1.1],['rocks',14,['#8b7f6e','#a1937e'],1.5,3.5,20,50],['lake',-24,-20,7,4.5,'#d8c48c']]},
+  abuja:{base:'#5f6b3c',plinth:'#6d7848',rim:'#4f5a32',water:'#2f6f8f',ops:[['speck',['#55613a','#6f7c47','#8a5536','#4a5532'],60,.05,.22],['ring',12.6,14.2,'#43474d'],['dash',13.4,'#d8d2c0'],['canopy',110,['#3f5a26','#4d6a2e','#35501f'],18,60,.55,1.2],['rocks',16,['#5f5a54','#77716a','#4e4a45'],1.6,3.8,20,50],['lake',-24,-20,7,4.5,'#2f6f8f']]},
   ph:{base:'#4f7a3a',plinth:'#c7b27a',rim:'#a8925a',water:'#356f6a',ops:[['speck',['#3f6a30','#5f8a44','#47703a'],60,.06,.2],['ring',12.6,14,'#7f7a70'],['canopy',260,['#2f5a2a','#3a6a30','#2a4f26'],15,70,.4,.9],['river',[[-70,8],[-40,16],[-20,22],[0,26],[20,20],[40,30],[70,24]],5,'#8a7a50'],['river',[[-10,26],[-18,40],[-12,60]],3,'#8a7a50'],['river',[[30,-70],[24,-40],[34,-22],[60,-18]],4,'#8a7a50']]},
   warri:{base:'#5a7f3e',plinth:'#c9b07a',rim:'#a8925a',water:'#3a6a62',ops:[['speck',['#4a6f34','#6a8a48'],50,.06,.2],['ring',12.6,14,'#7a766c'],['canopy',200,['#2f5a2a','#3f6a30'],15,70,.4,.9],['river',[[-70,-20],[-30,-16],[-16,-24],[10,-18],[30,-28],[70,-22]],6,'#8f8058'],['river',[[-40,-17],[-46,10],[-60,30]],3,'#8f8058'],['river',[[22,-24],[30,0],[44,20],[50,70]],3.5,'#8f8058'],['river',[[-20,40],[0,34],[24,44]],2.5,'#8f8058']]},
   enugu:{base:'#6f9a4a',plinth:'#8a6a48',rim:'#6a4f36',water:'#3f7fa8',ops:[['speck',['#5f8a3e','#7fa858','#6a924a'],50,.06,.22],['fields',7,['#7fa858','#6f9a4a','#8aaa5a','#a4a85a'],.3,16],['path',[[-70,-30],[-30,-18],[-14,-13],[0,-14]],1.4,'#7a5a3e'],['ring',12.6,14,'#7a5a3e'],['canopy',120,['#3f6a30','#4f7a36'],16,70,.5,1.1]]},
@@ -4737,6 +4737,17 @@ updateCell=function(i,anim){
 /* the current event sits on its own line in the round chip, and the radio pill moves up to make room */
 {const _rr=renderRoster;renderRoster=function(){const r=_rr.apply(this,arguments);try{const R=$('#round'),e=G&&evDef();if(R&&e){const tt=evText(e,'t'),s=R.textContent,k=s.lastIndexOf(' · '+tt);if(k>=0){R.textContent=s.slice(0,k);const sp=document.createElement('span');sp.className='rev';sp.textContent=tt;R.append(sp)}}
   if(R)document.documentElement.style.setProperty('--roundH',R.offsetHeight+'px')}catch(_){}return r}}
+/* Abuja: a deeper, more natural look (savanna green, laterite, granite) instead of bright sand */
+(function(){try{
+  const ab=(ctx,ph)=>{const rnd=seeded(17);
+    if(ph==='bg'){const g=ctx.createLinearGradient(0,140,0,960);g.addColorStop(0,'#5c7238');g.addColorStop(1,'#4a5e2e');ctx.fillStyle=g;ctx.fillRect(140,140,820,820);
+      for(let k=0;k<240;k++){const r=rnd();ctx.fillStyle=r<.45?`rgba(40,62,24,${.18+rnd()*.15})`:r<.8?`rgba(120,146,72,${.14+rnd()*.12})`:`rgba(150,88,52,${.12+rnd()*.1})`;ctx.beginPath();ctx.arc(150+rnd()*800,150+rnd()*800,5+rnd()*16,0,7);ctx.fill()}return}
+    ctx.fillStyle='#cfc8b6';ctx.fillRect(330,440,440,250);ctx.strokeStyle='#b8b09c';ctx.lineWidth=2;for(let x=330;x<=770;x+=40){ctx.beginPath();ctx.moveTo(x,440);ctx.lineTo(x,690);ctx.stroke()}
+    ctx.fillStyle='#1f6b3f';ctx.fillRect(470,700,53,90);ctx.fillStyle='#f4f2ea';ctx.fillRect(523,700,54,90);ctx.fillStyle='#1f6b3f';ctx.fillRect(577,700,53,90);
+    ctx.fillStyle='#1f5a36';ctx.font=`700 22px ${FD}`;ctx.textAlign='center';ctx.fillText('EAGLE SQUARE',550,470)};
+  if(typeof BOARDS!=='undefined'&&BOARDS.abuja)Object.assign(BOARDS.abuja,{center:ab,pave:'#c3c8b4',plot:'#aab197',slab:'#5f5444',trim:'#33291f'});
+  if(typeof THEMES!=='undefined'&&THEMES.abuja)Object.assign(THEMES.abuja,{sky:'linear-gradient(180deg,#2f6fa8 0%,#7fb0d6 60%,#c9cdb8 100%)',fogC:'#bfc8b4',skyL:'#a9bfd0',gnd:'#4f5a36',sun:['#ffe6bf',.6],island:'#5f6b3c',water:'#2f6f8f'});
+}catch(e){}})();
 /* ================= ORIENTATION ================= */
 let rotDismissed=false;
 function checkRotate(){$('#rotate').hidden=true}
