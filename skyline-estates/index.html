@@ -4927,7 +4927,7 @@ html.light #acts:not(:empty){background:rgba(255,255,255,.95);border-color:rgba(
 
 /* ================= WORLD: COUNTRY -> CITY -> CITY PASSPORT, WITH PHOTOS ================= */
 /* Photos are free-licensed (Wikimedia Commons); credits in Settings. A city without a photo falls back to its colour swatch. */
-const PHOTO_OK=new Set([]);
+const PHOTO_OK=new Set(["abuja", "accra", "barcelona", "benin", "berlin", "calabar", "capetown", "dubai", "enugu", "gothenburg", "johannesburg", "la", "lagos", "linkoping", "london", "malmo", "manchester", "mexico", "mumbai", "nairobi", "nyc", "paris", "ph", "rio", "rome", "stockholm", "sydney", "tokyo", "toronto", "uppsala", "warri"]);
 const cityPhoto=k=>PHOTO_OK.has(k)?`photos/${k}.jpg`:null;
 const photoBg=(k,fallback)=>{const p=cityPhoto(k);return p?`background-image:linear-gradient(180deg,rgba(11,20,36,0) 45%,rgba(11,20,36,.85)),url(${p});background-size:cover;background-position:center`:`background:${fallback||CITY_DATA[k].sw}`};
 const featured=C=>C.cities.find(k=>k===setup.city)||C.cities.find(cityUnlocked)||C.cities[0];
@@ -5095,6 +5095,43 @@ html.flat #gl{display:none}html.flat #title:not([hidden])~.flatwrap,html.flat #f
 #oMode button{min-height:64px;border-radius:14px!important;border:1px solid var(--ln2)!important;background:var(--bg1)!important;font:700 15px var(--display)!important;color:var(--ink)!important;letter-spacing:.04em;text-transform:uppercase}
 #oMode button.on{border:2px solid var(--gold)!important;box-shadow:0 0 0 1px var(--gold);background:color-mix(in srgb,var(--gold) 14%,var(--bg1))!important}
 @media (max-width:760px){html:not(.rot) .gsetup{grid-template-columns:minmax(0,1fr)}}`;document.head.appendChild(s)})();
+
+/* ================= DAILY GOALS AND LEAGUES, RESTYLED ================= */
+{const _pd=paneDaily;paneDaily=function(T){_pd(T);const D=daily(),s=streakNow(),done=D.list.filter(id=>D.done[id]).length;
+  const g=T.querySelector('.dgrid'),mc=g&&g.querySelector('.card'),wc=g&&g.querySelector('.wheelcard');if(!mc)return;
+  const goals=D.list.map(id=>{const m=MISSIONS.find(x=>x.id===id),d=!!D.done[id],v=Math.min(m.g,D.best[id]||0),pct=d?100:v/m.g*100;
+    return `<div class="goal${d?' done':''}"><div class="gi"><b>${esc(loc(m.n))}</b><small>${m.end?'Counts when the game ends.':'Progress counts within one game.'}</small><span class="gbar"><i style="width:${pct}%"></i></span><em>${m.money?`${fmt(v)} / ${fmt(m.g)}`:`${v} / ${m.g}`}</em></div>
+      <div class="grw"><span>+${MISSION_XP} XP</span><span>+${MISSION_COINS} coins</span></div>${d?'<span class="gst ok">✓ Rewarded</span>':'<button class="gst go" data-play="1">▶ Play</button>'}</div>`}).join('');
+  mc.innerHTML=`<div class="gh"><h3>Today’s goals</h3><span>${done} of 3 complete</span></div>${goals}
+    <div class="goal bonus${D.bonus?' done':''}"><div class="gi"><b>Finish all three goals</b><small>Complete today’s goals to earn a bonus.</small></div><div class="grw"><span>+250 XP</span><span>+60 coins</span></div><span class="gdots">${D.list.map(id=>`<i class="${D.done[id]?'on':''}"></i>`).join('')}</span></div>`;
+  mc.querySelectorAll('[data-play]').forEach(b=>b.onclick=()=>{homeTab('play');setTimeout(()=>{const q=$('#qAI');if(q)q.click()},50)});
+  if(wc){const sk=el('div','card streak',`<div class="gh"><h3>${s}-day streak</h3><span>Finish a daily goal each day to keep it going</span></div><div class="sdots">${[1,2,3,4,5,6,7].map(d=>`<span class="${d<=s%7||(s>=7&&s%7===0)?'on':''}"><i>${d<=s%7||(s>=7&&s%7===0)?'✓':''}</i><small>Day ${d}</small></span>`).join('')}</div>`);wc.before(sk);
+    const side=el('div','dside');wc.before(side);side.append(sk,wc)}}}
+{const _pl=paneLeagues;paneLeagues=function(T){_pl(T);const i=leagueIdx(),L=LEAGUES[i],N=LEAGUES[i+1],lh=T.querySelector('.leaguehead'),ld=T.querySelector('.ladder'),lb=T.querySelector('#lb'),lbc=lb&&lb.closest('.card');if(!lh||!ld||!lbc)return;
+  const lay=el('div','lgrid'),left=el('div','lgl');lh.before(lay);
+  const hero=el('div','lhero',`<span class="lbig">${L.icon}</span><div><small>YOUR LEAGUE</small><b>${esc(L.name.toUpperCase())} LEAGUE</b><span class="xpbar"><i style="width:${N?Math.min(100,(PREF.trophies-L.min)/(N.min-L.min)*100):100}%"></i></span><em>${PREF.trophies} / ${N?N.min:L.min} 🏆${N?` · ${N.min-PREF.trophies} trophies to ${esc(N.name)}`:' · top league'}</em></div>`);
+  left.append(hero,ld);lh.remove();lay.append(left,lbc);
+  ld.querySelectorAll('.lrung').forEach((r,k)=>{if(k===i+1)r.classList.add('next')})}}
+(function(){const st=document.createElement('style');st.textContent=`
+.dgrid{grid-template-columns:minmax(0,1.6fr) minmax(0,1fr)!important;align-items:start}
+.gh{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:8px}.gh h3{margin:0;font:700 20px var(--display);color:var(--ink);letter-spacing:0;text-transform:none}.gh span{font-size:12.5px;color:var(--mute);font-weight:700}
+.goal{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:12px;align-items:center;padding:12px;border-radius:14px;background:var(--bg1);border:1px solid var(--ln);margin-bottom:8px}
+.goal.done{border-color:color-mix(in srgb,var(--green) 50%,var(--ln))}.goal.bonus{background:color-mix(in srgb,var(--gold) 10%,var(--bg1));border-color:color-mix(in srgb,var(--gold) 45%,var(--ln))}
+.gi{display:flex;flex-direction:column;gap:3px;min-width:0}.gi b{font:700 15px var(--display);color:var(--ink)}.gi small{font-size:11.5px;color:var(--mute)}.gi em{font-style:normal;font-size:12px;font-weight:800;color:var(--ink2)}
+.gbar{display:block;height:8px;border-radius:999px;background:var(--bg0);overflow:hidden}.gbar i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#3fd0a0,#6be38b)}
+.grw{display:flex;flex-direction:column;gap:2px;font-size:12px;font-weight:800;color:var(--gold2);text-align:right;white-space:nowrap}
+.gst{min-width:104px;min-height:42px;border-radius:12px;display:grid;place-items:center;font:800 13px var(--body)}.gst.ok{color:var(--green);border:1px solid color-mix(in srgb,var(--green) 50%,var(--ln))}.gst.go{border:none;background:var(--goldgrad);color:#1A1406;cursor:pointer}
+.gdots{display:flex;gap:6px}.gdots i{width:22px;height:22px;border-radius:50%;border:2px solid var(--ln2)}.gdots i.on{background:var(--green);border-color:var(--green)}
+.dside{display:flex;flex-direction:column;gap:12px}
+.sdots{display:flex;justify-content:space-between;gap:4px}.sdots span{display:flex;flex-direction:column;align-items:center;gap:3px}.sdots i{width:30px;height:30px;border-radius:50%;border:2px solid var(--ln2);display:grid;place-items:center;font-style:normal;font-weight:800;color:#06210F}.sdots span.on i{background:var(--green);border-color:var(--green)}.sdots small{font-size:10.5px;color:var(--mute)}
+.lgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;align-items:start}.lgl{display:flex;flex-direction:column;gap:10px}
+.lhero{display:flex;gap:16px;align-items:center;padding:16px;border-radius:18px;background:linear-gradient(140deg,color-mix(in srgb,var(--gold) 20%,var(--bg2)),var(--bg2));border:1px solid color-mix(in srgb,var(--gold) 45%,var(--ln));color:var(--ink)}
+.lhero .lbig{font-size:56px;line-height:1}.lhero div{flex:1;display:flex;flex-direction:column;gap:5px}.lhero small{font:800 11px var(--body);letter-spacing:.12em;color:var(--gold2)}.lhero b{font:700 22px var(--display);letter-spacing:.06em}.lhero em{font-style:normal;font-size:12.5px;color:var(--ink2);font-weight:700}
+.lgl .ladder{display:flex!important;flex-direction:column!important;gap:6px!important;overflow:visible!important}
+.lgl .lrung{display:grid!important;grid-template-columns:36px 1fr auto;grid-template-rows:auto auto;align-items:center;column-gap:10px;width:auto!important;min-width:0!important;padding:8px 12px!important;text-align:left!important}
+.lgl .lrung>span{grid-row:1/3;font-size:26px}.lgl .lrung b{font:700 15px var(--display)}.lgl .lrung small{grid-column:2}.lgl .lrung em{grid-column:3;grid-row:1/3;font-style:normal;font-size:12px;font-weight:800;text-align:right}
+.lgl .lrung.next{border-color:var(--gold)!important;box-shadow:0 0 0 1px var(--gold)}.lgl .lrung.next::after{content:'Next reward';grid-column:3;grid-row:1;align-self:start;font-size:9.5px;font-weight:800;letter-spacing:.08em;color:var(--gold2);text-transform:uppercase}
+@media (max-width:760px){html:not(.rot) .lgrid,html:not(.rot) .dgrid{grid-template-columns:minmax(0,1fr)!important}}`;document.head.appendChild(st)})();
 /* ================= ORIENTATION ================= */
 let rotDismissed=false;
 function checkRotate(){$('#rotate').hidden=true}
