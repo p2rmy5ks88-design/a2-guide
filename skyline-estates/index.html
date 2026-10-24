@@ -5307,6 +5307,17 @@ paneTokens=function(T){const all=TOKENS.concat(NEW_TOKENS);let sel=setup.slots[0
       const t=T.querySelector('.ws .wstok .tem');if(t&&!document.documentElement.classList.contains('calm')){t.classList.add('wspop');try{confetti()}catch(e){}}};
     const bu=T.querySelector('#tBuy');if(bu)bu.onclick=async()=>{if(await confirmBuy(`Unlock ${info[0]}`,TOKEN_HOW[sel].coins)){grantItem('tok',sel);draw();railProfile()}}};
   draw()};
+
+/* ================= CITY BOARD PALETTES ================= */
+/* The clean Abuja style (dark frame, one brass inset, warm squares, deep colour bands) in each city's own colours.
+   Each city keeps its own centre painting and surroundings. */
+const CITY_PALS={
+  stockholm:{cell:'#E2D9C2',line:'#9a8f78',text:'#0E2338',frame:'#0B2E4F',slab:'#0B2E4F',trim:'#071d33',pave:'#a3a497',plot:'#8d9384',road:'#454b52',lane:'#efe6d2',gold:'#D2AE4E',logo:['#F2C230','#0B2E4F'],ribbon:['#0B2E4F','#F2C230']},
+  nyc:{cell:'#DDD6C8',line:'#958c7d',text:'#16181D',frame:'#1B1E24',slab:'#1B1E24',trim:'#0e1013',pave:'#9c9a94',plot:'#86857f',road:'#3e4248',lane:'#eae2d0',gold:'#C9A04E',logo:['#F5C518','#1B1E24'],ribbon:['#1B1E24','#F5C518']},
+  london:{cell:'#E3DAC6',line:'#9c8f7a',text:'#1D1416',frame:'#3B1219',slab:'#3B1219',trim:'#24090e',pave:'#a29f92',plot:'#8a917c',road:'#43474d',lane:'#efe5d1',gold:'#C7A35C',logo:['#F1E7D5','#3B1219'],ribbon:['#3B1219','#F1E7D5']},
+  paris:{cell:'#E6DCC6',line:'#a0927a',text:'#18222E',frame:'#22303F',slab:'#22303F',trim:'#141d27',pave:'#aaa594',plot:'#929a80',road:'#474b51',lane:'#f1e8d4',gold:'#C9A75E',logo:['#F1E7D5','#22303F'],ribbon:['#22303F','#F1E7D5']},
+  berlin:{cell:'#DCD6CA',line:'#958d7e',text:'#151618',frame:'#1F2124',slab:'#1F2124',trim:'#101113',pave:'#9d9c95',plot:'#878d7c',road:'#404449',lane:'#ebe4d4',gold:'#CDA349',logo:['#F1E7D5','#1F2124'],ribbon:['#1F2124','#CDA349']}};
+for(const k in CITY_PALS)if(BOARDS[k])Object.assign(BOARDS[k],CITY_PALS[k],{clean:true});
 /* ================= ORIENTATION ================= */
 let rotDismissed=false;
 function checkRotate(){$('#rotate').hidden=true}
