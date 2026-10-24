@@ -13,6 +13,6 @@ const head = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta n
 fs.writeFileSync(path.join(www, 'index.html'), head + body + '</body></html>');
 fs.cpSync(path.join(shared, 'audio'), path.join(www, 'audio'), { recursive: true });
 fs.copyFileSync(path.join(shared, 'firebase-config.js'), path.join(www, 'firebase-config.js'));
-for (const d of ['lib', 'riders']) fs.cpSync(path.join(src, d), path.join(www, d), { recursive: true });
+for (const d of ['lib', 'riders', 'photos'].filter(d => fs.existsSync(path.join(src, d)))) fs.cpSync(path.join(src, d), path.join(www, d), { recursive: true });
 fs.copyFileSync(path.join(src, 'icon-512.png'), path.join(www, 'icon-512.png'));
 console.log('www built:', fs.readdirSync(www).join(', '), '| fonts:', faces.length);

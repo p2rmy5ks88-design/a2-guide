@@ -4924,6 +4924,177 @@ html.rot .mp.pfm,.mp.pfm{max-height:92%}`;document.head.appendChild(st)})();
 #acts .pill{min-height:44px;border-radius:14px}
 html.light #acts:not(:empty){background:rgba(255,255,255,.95);border-color:rgba(195,164,101,.7)}
 .nowtag{white-space:nowrap}.nowtag.mine{background:#C3A465!important;color:#142B36!important}`;document.head.appendChild(st)})();
+
+/* ================= WORLD: COUNTRY -> CITY -> CITY PASSPORT, WITH PHOTOS ================= */
+/* Photos are free-licensed (Wikimedia Commons); credits in Settings. A city without a photo falls back to its colour swatch. */
+const PHOTO_OK=new Set([]);
+const cityPhoto=k=>PHOTO_OK.has(k)?`photos/${k}.jpg`:null;
+const photoBg=(k,fallback)=>{const p=cityPhoto(k);return p?`background-image:linear-gradient(180deg,rgba(11,20,36,0) 45%,rgba(11,20,36,.85)),url(${p});background-size:cover;background-position:center`:`background:${fallback||CITY_DATA[k].sw}`};
+const featured=C=>C.cities.find(k=>k===setup.city)||C.cities.find(cityUnlocked)||C.cities[0];
+const medalIco=n=>{const m=medalOf(n);return `<span class="wmedal ${m?m[1].toLowerCase():'none'}" title="${m?m[1]+' medal':'No medal yet'}" aria-hidden="true"></span>`};
+function paneWorld(T){const view=setup.wview||'countries',C=setup.wcountry&&COUNTRIES.find(x=>x.key===setup.wcountry);
+  if(setup.wcity&&CITY_DATA[setup.wcity])return passport(T,setup.wcity);
+  const nUn=CITY_ORDER.filter(cityUnlocked).length,q=(setup.wq||'').trim().toLowerCase();
+  T.innerHTML=`<div class="whead"><div><h2>${C?esc(C.flag+' '+C.name):'Explore the world'}</h2><p>${C?'Choose where to build next.':'Choose a country, then a city.'}</p></div>
+    <div class="wctl">${C?`<button class="wbtn" id="wBack">‹ All countries</button>`:`<div class="wseg" role="tablist"><button class="${view==='countries'?'on':''}" data-v="countries">Countries</button><button class="${view==='cities'?'on':''}" data-v="cities">All cities</button></div>`}
+      <label class="wsearch"><span class="sr">Search</span><input id="wQ" placeholder="Search destinations" value="${esc(setup.wq||'')}" autocomplete="off"></label></div>
+    <span class="wcount">${nUn} of ${CITY_ORDER.length} cities · ${COUNTRIES.filter(countryUnlocked).length} of ${COUNTRIES.length} countries</span></div><div class="wgrid" id="wgrid"></div>`;
+  T.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>{setup.wview=b.dataset.v;paneWorld(T)});const bk=T.querySelector('#wBack');if(bk)bk.onclick=()=>{setup.wcountry=null;paneWorld(T)};
+  const qi=T.querySelector('#wQ');qi.oninput=()=>{setup.wq=qi.value;clearTimeout(T._q);T._q=setTimeout(()=>{paneWorld(T);const n=T.querySelector('#wQ');n.focus();n.setSelectionRange(n.value.length,n.value.length)},250)};
+  const W=T.querySelector('#wgrid');
+  if(!C&&view==='countries'&&!q){COUNTRIES.forEach(X=>{const cu=countryUnlocked(X),f=featured(X),done=X.cities.filter(k=>cityDone(k)>=CT.length).length;
+      const b=el('article','wcard'+(X.cities.includes(setup.city)?' sel':'')+(cu?'':' locked'),`<div class="wpic" style="${photoBg(f)}"><span class="wcode">${esc(X.key)}</span>${X.cities.includes(setup.city)?'<span class="wsel">✓ Selected</span>':''}</div>
+        <div class="wbody"><b>${esc(X.name)}</b><small>${X.cities.length} cit${X.cities.length>1?'ies':'y'}${done?` · ${done} champion`:''}</small><span class="wfeat">${cu?`Featured city · <em>${esc(CITY_DATA[f].name)}</em>`:`Opens at level ${X.lvl}`}</span>
+        ${cu?`<button class="wgo">View cit${X.cities.length>1?'ies':'y'}</button>`:`<button class="wgo buy">Unlock ${fmtC(countryCost(X))}</button>`}</div>`);
+      b.querySelector('.wgo').onclick=async()=>{if(!cu){if(await confirmBuy(`Unlock ${X.name}`,countryCost(X),`Open ${X.name} now instead of at level ${X.lvl}.`)){PREF.inv.country[X.key]=Date.now();savePref();railProfile();setup.wcountry=X.key;paneWorld(T)}return}setup.wcountry=X.key;paneWorld(T)};W.append(b)});return}
+  const keys=(C?C.cities:CITY_ORDER).filter(k=>!q||CITY_DATA[k].name.toLowerCase().includes(q)||countryOf(k).name.toLowerCase().includes(q));
+  if(!keys.length)W.innerHTML='<div class="small">No destinations match your search.</div>';
+  keys.forEach(k=>{const c=CITY_DATA[k],un=cityUnlocked(k),cu=countryUnlocked(countryOf(k)),n=cityDone(k),sel=setup.city===k;
+    const b=el('article','wcard wcity'+(sel?' sel':'')+(un?'':' locked'),`<button class="wpic" data-a="pass" style="${photoBg(k)}" aria-label="Open the ${esc(c.name)} passport">${sel?'<span class="wsel">✓ Selected</span>':''}${un?'':'<span class="wlock">🔒</span>'}</button>
+      <div class="wbody"><div class="wtt"><b>${esc(c.name)}</b>${medalIco(n)}</div><small>${un?esc(c.blurb):esc(cityLockText(k))}</small><span class="wprog"><span class="bar"><i style="width:${n/CT.length*100}%"></i></span><em>${n} / ${CT.length}</em></span>
+      <div class="wbtns">${un?`<button class="wgo${sel?' on':''}" data-a="pick">${sel?'Selected':'Play here'}</button>`:cu?`<button class="wgo buy" data-a="buy">Unlock ${fmtC(cityCost(k))}</button>`:''}<button class="wghost" data-a="pass">Awards</button></div></div>`);
+    b.querySelectorAll('[data-a="pass"]').forEach(x=>x.onclick=()=>{setup.wcity=k;paneWorld(T)});
+    const pk=b.querySelector('[data-a="pick"]');if(pk)pk.onclick=()=>{setup.city=k;PREF.city=k;savePref();applyTheme(k);paneWorld(T)};
+    const bu=b.querySelector('[data-a="buy"]');if(bu)bu.onclick=async()=>{if(await confirmBuy(`Unlock ${c.name}`,cityCost(k))){PREF.inv.city[k]=Date.now();setup.city=k;PREF.city=k;savePref();applyTheme(k);railProfile();paneWorld(T)}};W.append(b)})}
+const CT_ICO=['M4 20V9l8-5 8 5v11M9 20v-6h6v6','M12 3v18M5 21h14M8 8h8','M3 20h18M6 20V10h12v10M9 6h6','M4 17h16M6 17l2-6h8l2 6M9 11V7h6v4','M6 20V6h5v14M13 20V10h5v10',
+  'M12 4l2.5 5 5.5.8-4 3.9.9 5.5L12 16.6 7.1 19.2 8 13.7 4 9.8 9.5 9z','M4 12h16M12 4v16','M5 19l7-14 7 14z','M12 21s-7-5.5-7-11a7 7 0 0114 0c0 5.5-7 11-7 11z','M3 12a9 9 0 0118 0v6H3z',
+  'M4 20h16M7 20V8l5-4 5 4v12','M2 18c4-6 16-6 20 0M7 18v-4M17 18v-4M12 18v-6','M5 20V4h14v16M9 8h6M9 12h6','M12 3a9 9 0 100 18 9 9 0 000-18zM12 3v18M3 12h18','M3 20l6-10 4 6 3-4 5 8z'];
+function passport(T,k){const c=CITY_DATA[k],C=countryOf(k),un=cityUnlocked(k),n=cityDone(k),done=cach(k),names=CNAMES[k]||[];
+  const todo=CT.map((t,j)=>({t,j})).filter(x=>!done[x.t.id]).slice(0,3);
+  T.innerHTML=`<div class="pass">
+    <div class="passl"><nav class="crumb" aria-label="Breadcrumb"><button data-c="world">World</button><span>›</span><button data-c="country">${esc(C.name)}</button><span>›</span><b>${esc(c.name)}</b></nav>
+      <div class="passhead"><span class="pflag">${C.flag}</span><div><h2>${esc(c.name.toUpperCase())}</h2><p>${esc(c.blurb)} · your city passport</p></div></div>
+      <div class="passpic" style="${photoBg(k)}"></div>
+      <div class="passbtns">${un?`<button class="playbtn" id="ppPlay">▶ Play ${esc(c.name)}</button>`:`<button class="playbtn" disabled>🔒 Locked</button>`}<button class="ghostbtn" id="ppSel">${setup.city===k?'Selected city':'Make this my city'}</button></div>${un?'':`<p class="plock">${esc(cityLockText(k))}</p>`}</div>
+    <div class="passr"><section class="pcard2"><div class="pch"><h3>City awards</h3><em>${n} / ${CT.length}</em></div><div class="stamps">${CT.map((t,j)=>`<span class="stamp${done[t.id]?' got':''}" title="${esc((names[j]||t.id)+': '+cdesc(t,k))}"><i>${j+1}</i><svg viewBox="0 0 24 24" aria-hidden="true"><path d="${CT_ICO[j%CT_ICO.length]}" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/></svg><span class="sr">${esc(names[j]||'')}</span></span>`).join('')}</div></section>
+      ${todo.length?`<section class="pcard2"><div class="pch"><h3>Start here</h3></div>${todo.map(({t,j})=>`<div class="srow"><span>${esc(names[j]||'')}<small>${esc(cdesc(t,k))}</small></span><em>+20 coins · +100 XP</em></div>`).join('')}</section>`:''}
+      ${typeof champCard==='function'?champCard(k):''}</div></div>`;
+  T.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{setup.wcity=null;if(b.dataset.c==='world')setup.wcountry=null;else setup.wcountry=C.key;paneWorld(T)});
+  const pl=T.querySelector('#ppPlay');if(pl)pl.onclick=()=>{setup.city=k;PREF.city=k;savePref();applyTheme(k);setup.wcity=null;homeTab('play');setTimeout(()=>{const b=$('#qAI');if(b)b.click()},50)};
+  T.querySelector('#ppSel').onclick=()=>{if(!un){toast(cityLockText(k));return}setup.city=k;PREF.city=k;savePref();applyTheme(k);passport(T,k)};
+  T.querySelectorAll('[data-wear]').forEach(b=>b.onclick=()=>{PREF.eq.frame=b.dataset.wear;savePref();railProfile();passport(T,k)})}
+/* the home hero shows the selected city's photo */
+{const _pp=paneP;paneP=function(T){_pp(T);const h=T.querySelector('.heroart'),p=cityPhoto(setup.city);if(h&&p){h.innerHTML='';h.style.cssText=`background:url(${p}) center/cover;`;h.classList.add('photo')}}}
+{const _ht=homeTab;homeTab=function(k){if(k!=='world'){setup.wcity=null}return _ht(k)}}
+(function(){const st=document.createElement('style');st.textContent=`
+.whead{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}.whead h2{margin:0;font:700 28px var(--display);color:var(--ink)}.whead p{margin:2px 0 0;color:var(--ink2);font-size:14px}
+.wctl{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.wcount{width:100%;font-size:12px;color:var(--mute);font-weight:700}
+.wseg{display:flex;padding:3px;border-radius:12px;background:var(--bg2);border:1px solid var(--ln)}.wseg button{height:32px;padding:0 14px;border:none;border-radius:9px;background:transparent;color:var(--ink2);font:800 12.5px var(--body);cursor:pointer}.wseg button.on{background:var(--gold);color:#1A1406}
+.wbtn{height:38px;padding:0 14px;border-radius:12px;border:1px solid var(--gold);background:transparent;color:var(--ink);font:800 13px var(--body);cursor:pointer}
+.wsearch input{height:38px;width:min(260px,40vw);padding:0 14px;border-radius:12px;border:1px solid var(--ln2);background:var(--bg2);color:var(--ink);font:600 13.5px var(--body)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.wgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;margin-top:10px}
+.wcard{border-radius:18px;overflow:hidden;background:var(--bg2);border:1px solid var(--ln);display:flex;flex-direction:column;color:var(--ink)}
+.wcard.sel{border:2px solid var(--gold);box-shadow:0 0 0 1px var(--gold),0 8px 24px rgba(0,0,0,.3)}.wcard.locked .wpic{filter:grayscale(.7) brightness(.8)}
+.wpic{position:relative;display:block;width:100%;height:118px;border:none;padding:0;cursor:pointer}
+.wcode{position:absolute;left:10px;top:10px;padding:3px 8px;border-radius:8px;background:rgba(11,20,36,.85);color:#F1E7D5;font:800 12px var(--body)}
+.wsel{position:absolute;right:10px;top:10px;padding:4px 10px;border-radius:999px;background:rgba(11,20,36,.85);color:var(--gold2);font:800 11.5px var(--body)}.wlock{position:absolute;right:10px;top:10px;font-size:18px}
+.wbody{display:flex;flex-direction:column;gap:5px;padding:10px 12px 12px}.wbody b{font:700 19px var(--display)}.wbody small{color:var(--mute);font-size:12.5px}
+.wfeat{font-size:12.5px;color:var(--ink2);border-top:1px solid var(--ln);padding-top:6px}.wfeat em{font-style:normal;color:var(--gold2);font-weight:800}
+.wtt{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.wmedal{width:20px;height:20px;border-radius:50%;flex:none;box-shadow:inset 0 0 0 2px rgba(0,0,0,.2)}.wmedal.gold{background:radial-gradient(circle at 35% 30%,#fff2c2,#e2b13c 55%,#8a5f0c)}.wmedal.silver{background:radial-gradient(circle at 35% 30%,#fff,#b9c2cc 55%,#6c7682)}.wmedal.bronze{background:radial-gradient(circle at 35% 30%,#ffe0c2,#c27a44 55%,#6e3e1c)}.wmedal.none{background:var(--bg1);box-shadow:inset 0 0 0 2px var(--ln2)}
+.wprog{display:flex;align-items:center;gap:8px}.wprog .bar{flex:1;height:6px;border-radius:999px;background:var(--bg0);overflow:hidden}.wprog .bar i{display:block;height:100%;background:var(--goldgrad)}.wprog em{font:800 12px var(--body);font-style:normal;color:var(--ink2)}
+.wbtns{display:flex;gap:6px;margin-top:3px}.wgo,.wghost{flex:1;min-height:38px;border-radius:11px;font:800 13px var(--body);cursor:pointer}
+.wgo{border:none;background:var(--goldgrad);color:#1A1406}.wgo.on{background:color-mix(in srgb,var(--gold) 40%,var(--bg1));color:var(--ink)}.wgo.buy{background:var(--bg1);border:1px solid var(--gold);color:var(--ink)}.wghost{background:transparent;border:1px solid var(--ln2);color:var(--ink)}
+.pass{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:14px}
+.passl,.passr{display:flex;flex-direction:column;gap:10px;min-width:0}
+.crumb{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--mute)}.crumb button{border:none;background:none;color:var(--ink2);font:700 13px var(--body);cursor:pointer;padding:4px 0}.crumb b{color:var(--ink)}
+.passhead{display:flex;align-items:center;gap:12px}.pflag{font-size:38px;line-height:1}.passhead h2{margin:0;font:700 30px var(--display);letter-spacing:.04em;color:var(--ink)}.passhead p{margin:0;color:var(--ink2);font-size:13.5px}
+.passpic{height:220px;border-radius:18px;border:2px solid color-mix(in srgb,var(--gold) 55%,var(--ln));box-shadow:0 10px 28px rgba(0,0,0,.3)}
+.passbtns{display:flex;gap:8px}.passbtns .playbtn,.passbtns .ghostbtn{flex:1}
+.plock{margin:0;font-size:13px;color:var(--ink2)}.pcard2{border-radius:16px;background:var(--bg2);border:1px solid var(--ln);padding:10px 12px}.pch{display:flex;align-items:center;justify-content:space-between}.pch h3{margin:0;font:700 15px var(--display);letter-spacing:.08em;text-transform:uppercase;color:var(--ink)}.pch em{font:700 16px var(--display);font-style:normal;color:var(--gold2)}
+.stamps{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin-top:8px}
+.stamp{position:relative;aspect-ratio:1.15;border-radius:10px;border:2px dashed var(--ln2);display:grid;place-items:center;color:var(--mute);background:var(--bg1)}.stamp svg{width:58%;height:58%}
+.stamp i{position:absolute;left:4px;top:3px;font:800 10px var(--body);font-style:normal}.stamp.got{border:2px solid var(--gold);color:var(--gold2);background:color-mix(in srgb,var(--gold) 14%,var(--bg1))}
+.srow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 0;border-top:1px solid var(--ln);font-size:13px;font-weight:700;color:var(--ink)}.srow small{display:block;font-weight:600;color:var(--mute);font-size:11.5px}.srow em{font-style:normal;font-size:11.5px;font-weight:800;color:var(--gold2);white-space:nowrap}
+.heroart.photo{border-radius:inherit}.heroart.photo::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,rgba(11,20,36,.85) 0%,rgba(11,20,36,.35) 55%,rgba(11,20,36,.05))}
+html.light .wcode,html.light .wsel{background:rgba(255,255,255,.92);color:#13284A}
+@media (max-width:760px){html:not(.rot) .pass{grid-template-columns:minmax(0,1fr)}}`;document.head.appendChild(st)})();
+/* photo credits, required by the Creative Commons licences */
+const PHOTO_CREDITS={};
+{const _ps=paneSettings;paneSettings=function(T){_ps(T);const ks=Object.keys(PHOTO_CREDITS);if(!ks.length)return;
+  const c=el('div','card',`<div class="ch">Photo credits <small>City photos from Wikimedia Commons, used under their free licences</small></div><div class="creds">${ks.map(k=>{const v=PHOTO_CREDITS[k];return `<p><b>${esc((CITY_DATA[k]||{}).name||k)}</b>: ${esc(v.artist||'Unknown author')} · <a href="${esc(v.page)}" target="_blank" rel="noopener">${esc(v.title.replace(/^File:/,''))}</a> · ${v.licenseUrl?`<a href="${esc(v.licenseUrl)}" target="_blank" rel="noopener">${esc(v.license)}</a>`:esc(v.license)}</p>`}).join('')}</div>`);T.append(c)}}
+(function(){const st=document.createElement('style');st.textContent='.creds{display:flex;flex-direction:column;gap:6px;max-height:260px;overflow:auto;font-size:12px;color:var(--ink2)}.creds p{margin:0;line-height:1.4}.creds a{color:var(--gold2)}';document.head.appendChild(st)})();
+
+/* ================= 2D VIEW: STARTUP RECOVERY AND A LOW-POWER OPTION ================= */
+/* If 3D can't start (WebGL off or unsupported), players get "Try again" or "Use 2D view" instead of a dead end.
+   The 2D view plays the full game on a flat board drawn from the map; it can also be chosen in Settings. */
+let FLAT=false;
+function flatDraw(){const H=$('#flatbd');if(!H||!G)return;const W=Math.min(innerWidth,innerHeight)-24,S=Math.max(280,Math.min(W,900)),k=S/1100,cp=G.over?null:P(G.turn),fs=Math.max(5.5,CW*k*.15);
+  const sig=JSON.stringify([S,G.turn,G.houses,G.hotels,G.players.map(p=>[p.pos,p.bankrupt,p.inJail]),G.own.map(o=>[o.o,o.h,o.m])]);if(H.dataset.sig===sig)return;H.dataset.sig=sig;
+  let h='';for(let i=0;i<40;i++)h+=mapCellHTML(i,k,cp);
+  h+=`<div class="mcen" style="left:${C*k}px;top:${C*k}px;width:${(1100-2*C)*k}px;height:${(1100-2*C)*k}px;--fs:${fs}px"><b>${esc(CITY.name)}</b><span>${'Round '+G.round}${cp?' · '+esc(cp.name)+'’s turn':''}</span><span>🏷️ ${forSale()} for sale · 🏠 ${G.houses} · 🏨 ${G.hotels}</span></div>`;
+  H.style.width=H.style.height=S+'px';H.innerHTML=h;H.querySelectorAll('.mc').forEach(c=>c.onclick=()=>showSquare(+c.dataset.i))}
+function flatOn(){FLAT=true;document.documentElement.classList.add('flat');if(!$('#flatbd')){const w=el('div','mapm flatwrap');const d=el('div','mapbd');d.id='flatbd';w.append(d);document.body.insertBefore(w,$('#ui'))}
+  setInterval(()=>{if(G&&$('#title').hidden)flatDraw()},400)}
+{const _rr=renderRoster;renderRoster=function(){const r=_rr.apply(this,arguments);if(FLAT)flatDraw();return r}}
+{const _om=openMap;openMap=function(){if(FLAT){toast('The board is already shown in 2D');return}return _om()}}
+function bootFlatChoice(){const T=$('#title');T.hidden=false;
+  T.innerHTML=`<div class="recov"><div class="recard"><span class="reic" aria-hidden="true">⚠️</span><div><h2>3D view unavailable</h2><p>This device couldn’t start the 3D board (WebGL is off or not supported). You can still play the whole game on a 2D board.</p></div>
+    <div class="rebtns"><button class="ghostbtn" id="reTry">Try again</button><button class="playbtn" id="re2d">Use 2D view</button></div><small>Tip: in Chrome, check that hardware acceleration is on in Settings › System.</small></div></div>`;
+  $('#reTry').onclick=()=>location.reload();$('#re2d').onclick=()=>{flatOn();showTitle()}}
+boot=function(data){
+  if(PREF.flat2d){flatOn();showTitle();return}
+  let ok=false;try{ok=initScene()}catch(e){console.error(e)}
+  if(!ok){bootFlatChoice();return}
+  if(data&&data.G){try{const g=JSON.parse(data.G);startWith(g);return}catch(e){}}
+  showTitle()};
+/* Settings: a Visuals choice between the 3D board and the 2D board */
+{const _ps=paneSettings;paneSettings=function(T){_ps(T);const c=el('div','card',`<div class="ch">Board view</div><p class="small">The 2D board uses much less battery and works on every device. Changing it restarts the game screen; your progress is kept.</p><div class="seg" id="sView"><button class="${PREF.flat2d?'':'on'}" data-v="3d">3D city</button><button class="${PREF.flat2d?'on':''}" data-v="2d">2D board</button></div>`);
+  const first=T.querySelector('.card');if(first)first.after(c);else T.append(c);
+  c.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>{const v=b.dataset.v==='2d';if(v===!!PREF.flat2d)return;PREF.flat2d=v;savePref();toast(v?'Switching to the 2D board…':'Switching to the 3D city…');setTimeout(()=>location.reload(),600)})}}
+(function(){const st=document.createElement('style');st.textContent=`
+html.flat body{background:radial-gradient(circle at 50% 40%,#1c3a48,#0b1424)!important}
+#flatbd{position:fixed!important;left:50%;top:50%;transform:translate(-50%,-50%);z-index:0;margin:0!important;border-radius:14px;box-shadow:0 20px 50px rgba(0,0,0,.5);background:#e9efe2}
+html.flat #gl{display:none}html.flat #title:not([hidden])~.flatwrap,html.flat #flatbd:empty{display:none}
+.recov{min-height:100%;display:grid;place-items:center;padding:20px;box-sizing:border-box}
+.recard{max-width:560px;display:grid;grid-template-columns:auto 1fr;gap:14px 16px;padding:22px;border-radius:20px;background:var(--bg2);border:1px solid var(--ln2);color:var(--ink);box-shadow:0 20px 50px rgba(0,0,0,.4)}
+.reic{font-size:34px}.recard h2{margin:0 0 4px;font:700 22px var(--display)}.recard p{margin:0;color:var(--ink2);font-size:14px;line-height:1.45}
+.rebtns{grid-column:1/-1;display:flex;gap:10px}.rebtns button{flex:1;min-height:48px}.recard small{grid-column:1/-1;color:var(--mute)}
+.seg{display:flex;padding:3px;border-radius:12px;background:var(--bg1);border:1px solid var(--ln);width:max-content}.seg button{height:34px;padding:0 16px;border:none;border-radius:9px;background:transparent;color:var(--ink2);font:800 13px var(--body);cursor:pointer}.seg button.on{background:var(--gold);color:#1A1406}`;document.head.appendChild(st)})();
+/* without 3D, applyTheme stops early; the city (names, currency, board palette) must still be applied */
+{const _at=applyTheme;applyTheme=function(k){_at(k);if(!S3){try{const T=THEMES[k]||THEMES.beach;CUR_THEME=THEMES[k]?k:'beach';applyCity(cityOf(CUR_THEME));BP=BOARDS[CUR_THEME]||BP}catch(e){}}}}
+
+/* ================= GUIDED GAME SETUP ================= */
+/* Three steps (Players, Rules, Review) with a match summary beside them. Same options as before. */
+{const _pc=paneCustom;paneCustom=function(T){_pc(T);const st=setup.cstep||1,bar=T.querySelector('.startbar'),cd=s=>{const e=T.querySelector(s);return e&&e.closest('.card')};
+  const cPl=cd('.slots'),cMode=cd('#oMode'),cRules=cd('#oRules'),cOpt=cd('#oCash');const k=setup.city,c=CITY_DATA[k],C=countryOf(k);
+  const wrap=el('div','gsetup'),left=el('div','gsl'),right=el('aside','gsum');
+  const steps=['Players','Rules','Review'];
+  left.innerHTML=`<ol class="gsteps">${steps.map((s,i)=>`<li class="${i+1===st?'on':i+1<st?'done':''}"><button data-s="${i+1}"><i>${i+1<st?'✓':i+1}</i>${s}</button></li>`).join('')}</ol>`;
+  const body=el('div','gsb');left.append(body);
+  if(st===1)body.append(cPl);else if(st===2){body.append(cMode,cRules,cOpt)}else{body.innerHTML=`<div class="card"><div class="ch">Ready to play</div><p class="small">Check the summary, then start. You can change anything by going back a step.</p></div>`}
+  [cPl,cMode,cRules,cOpt].forEach(x=>{if(x&&!body.contains(x))x.style.display='none'});
+  const players=slotPlayers(setup.slots),M=MODES.find(m=>m[0]===setup.mode);
+  right.innerHTML=`<h3>Match summary</h3><div class="gpic" style="${typeof photoBg==='function'?photoBg(k):'background:'+c.sw}"><b>${esc(c.name)}</b><span>${esc(C.flag+' '+C.name)}</span></div>
+    <dl><dt>Players</dt><dd>${players.length} (${players.filter(p=>p.type==='human').length} human, ${players.filter(p=>p.type==='ai').length} AI)</dd><dt>Mode</dt><dd>${esc(M[1])}${setup.mode==='timed'?' · '+setup.rounds+' rounds':''}</dd>
+    <dt>AI</dt><dd>${{easy:'Easy',normal:'Normal',hard:'Hard'}[setup.ai]||setup.ai}</dd><dt>Starting cash</dt><dd>${fmt(setup.cash)}</dd><dt>Timer</dt><dd>${setup.timer?setup.timer+' sec':'Off'}</dd></dl>
+    <div class="gav">${players.map(p=>`<span class="${p.type}" style="--pc:${PCOL[p.i]}"><em>${p.tok}</em><b>${esc((p.name||'').trim()||NAMES[p.i])}</b><small>${p.type==='ai'?'AI':'Human'}</small></span>`).join('')}</div>`;
+  const nav=el('div','gnav');nav.innerHTML=`<button class="ghostbtn" id="gBack">‹ ${st===1?'Back to Play':'Back'}</button>${st<3?`<button class="playbtn" id="gNext">${st===1?'Next: rules':'Review game'} ›</button>`:''}`;
+  if(st===3&&bar){bar.querySelector('#tStart').textContent='▶ Start game';nav.append(bar.querySelector('#tStart'))}
+  if(bar)bar.style.display='none';left.append(nav);if(bar)left.append(bar);
+  wrap.append(left,right);const head=T.querySelector('.phead');head.after(wrap);
+  const go=s=>{setup.cstep=s;paneCustom(T)};
+  left.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>go(+b.dataset.s));
+  nav.querySelector('#gBack').onclick=()=>st===1?(setup.cstep=1,homeTab('play')):go(st-1);const nx=nav.querySelector('#gNext');if(nx)nx.onclick=()=>{if(st===1&&slotPlayers(setup.slots).length<2){toast('Pick at least two players');return}go(st+1)};
+  /* keep the summary in sync while editing */
+  T.querySelectorAll('.slots .seg button,.seg button').forEach(b=>b.addEventListener('click',()=>setTimeout(()=>{if(T.isConnected&&setup.cstep===st)paneCustom(T)},0)))}}
+{const _ht=homeTab;homeTab=function(k){if(k==='custom'&&setup.sub&&setup.sub.play!=='custom')setup.cstep=1;return _ht(k)}}
+(function(){const s=document.createElement('style');s.textContent=`
+.gsetup{display:grid;grid-template-columns:minmax(0,1fr) minmax(220px,300px);gap:14px;align-items:start}
+.gsl{display:flex;flex-direction:column;gap:10px;min-width:0}.gsb{display:flex;flex-direction:column;gap:10px}
+.gsteps{display:flex;gap:6px;margin:0;padding:0;list-style:none}.gsteps li{flex:1}.gsteps button{width:100%;display:flex;align-items:center;gap:8px;min-height:42px;padding:0 12px;border-radius:12px;border:1px solid var(--ln);background:var(--bg2);color:var(--ink2);font:800 13px var(--body);cursor:pointer}
+.gsteps i{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;border:2px solid currentColor;font-style:normal;font-size:12px}
+.gsteps li.on button{border-color:var(--gold);color:var(--ink);box-shadow:0 0 0 1px var(--gold)}.gsteps li.on i{background:var(--gold);border-color:var(--gold);color:#1A1406}.gsteps li.done i{background:var(--green);border-color:var(--green);color:#06210F}
+.gnav{display:flex;gap:10px}.gnav>*{flex:1;min-height:48px}.gnav #tStart{border-radius:14px}
+.gsum{position:sticky;top:0;display:flex;flex-direction:column;gap:10px;padding:12px;border-radius:18px;background:var(--bg2);border:1px solid var(--ln);color:var(--ink)}
+.gsum h3{margin:0;font:700 18px var(--display)}.gpic{height:120px;border-radius:14px;display:flex;flex-direction:column;justify-content:flex-end;padding:10px;color:#fff}.gpic b{font:700 20px var(--display)}.gpic span{font-size:12px}
+.gsum dl{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;margin:0;font-size:12.5px}.gsum dt{color:var(--mute);font-weight:700}.gsum dd{margin:0;font-weight:800;text-align:right}
+.gav{display:flex;flex-wrap:wrap;gap:6px}.gav span{display:flex;flex-direction:column;align-items:center;width:62px;padding:6px 2px;border-radius:12px;background:var(--bg1);border:2px solid var(--pc)}.gav em{font:22px/1 var(--emoji);font-style:normal}.gav b{font-size:11px;max-width:58px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.gav small{font-size:10px;color:var(--mute)}
+#oMode{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;background:none!important;border:none!important;padding:0!important}
+#oMode button{min-height:64px;border-radius:14px!important;border:1px solid var(--ln2)!important;background:var(--bg1)!important;font:700 15px var(--display)!important;color:var(--ink)!important;letter-spacing:.04em;text-transform:uppercase}
+#oMode button.on{border:2px solid var(--gold)!important;box-shadow:0 0 0 1px var(--gold);background:color-mix(in srgb,var(--gold) 14%,var(--bg1))!important}
+@media (max-width:760px){html:not(.rot) .gsetup{grid-template-columns:minmax(0,1fr)}}`;document.head.appendChild(s)})();
 /* ================= ORIENTATION ================= */
 let rotDismissed=false;
 function checkRotate(){$('#rotate').hidden=true}
