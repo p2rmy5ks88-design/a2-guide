@@ -4662,6 +4662,17 @@ function hostCheck(){if(!NET.on||!G||!G.online||G.over)return;const h=electHost(
 /* the game state remembers who hosts, so a returning old host doesn't take over again */
 {const _ps=pushState;pushState=function(){if(G&&G.online&&NET.host)G.hostUid=NET.me;return _ps()}}
 async function netLeaveMark(){if(!G||!G.online||!NET.on)return;const me=G.players.find(p=>p.uid===NET.me);try{await Promise.race([hbBeat(true),new Promise(r=>setTimeout(r,1500))])}catch(e){}if(me)log(`${me.name} left the game`)}
+/* last human standing: when everyone else has left, the game ends and the remaining human wins */
+const HB_LAST_STALE=120000;
+{const _sd=standings;standings=function(){const s=_sd();if(G&&G.forceWin!=null){const w=s.find(p=>p.id===G.forceWin);if(w)return [w].concat(s.filter(p=>p!==w))}return s}}
+function lastHumanDue(){if(!NET.on||!G||!G.online||G.over||NET.lastEnding)return false;const humans=G.players.filter(p=>p.uid);if(humans.length<2)return false;const here=humans.filter(p=>hbPresent(p.uid,HB_LAST_STALE));return here.length===1&&here[0].uid===NET.me}
+async function lastHumanCheck(){if(!lastHumanDue())return;if(NET.driving||NET.applying){NET.wantEnd=true;return}NET.wantEnd=false;const humans=G.players.filter(p=>p.uid);if(humans.length<2)return;
+  const here=humans.filter(p=>hbPresent(p.uid,HB_LAST_STALE));if(here.length!==1||here[0].uid!==NET.me)return;const me=here[0];
+  NET.lastEnding=true;G.forceWin=me.id;G.over=true;G.endNote=`Everyone else left the game, so ${me.name} wins.`;log(`🏆 ${G.endNote}`);toast(G.endNote);
+  try{NET.driving=true;await pushNow()}catch(e){}finally{NET.driving=false}finish()}
+{const _hc=hostCheck;hostCheck=function(){_hc();lastHumanCheck()}}
+{const _ot=onlineTick;onlineTick=function(){if(NET.wantEnd&&!NET.driving&&!NET.applying){NET.wantEnd=false;return lastHumanCheck()}return _ot()}}
+{const _f=finish;finish=function(){const r=_f.apply(this,arguments);setTimeout(()=>{if(G&&G.endNote){const m=document.querySelector('#modals .mp .mh');if(m&&!m.parentElement.querySelector('.endnote'))m.insertAdjacentHTML('afterend',`<div class="mtxt endnote"><b>${esc(G.endNote)}</b></div>`)}},400);return r}}
 /* ================= ORIENTATION ================= */
 let rotDismissed=false;
 function checkRotate(){$('#rotate').hidden=true}
