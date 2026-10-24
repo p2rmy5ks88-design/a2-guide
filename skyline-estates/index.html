@@ -1178,6 +1178,37 @@ html.light .champcard small{color:#7A5200}
 #round{max-width:calc(50% - min(23%,220px) - 44px);box-sizing:border-box;white-space:normal;line-height:1.35;border-radius:16px}
 #round .rev{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #radio{bottom:calc(max(12px,env(safe-area-inset-bottom,0px)) + var(--roundH,32px) + 8px)}
+
+/* item page */
+.icard[data-k]{cursor:pointer}.icard[data-k]:focus-visible{outline:2px solid var(--gold,#E2B54A);outline-offset:2px}
+.mp.idetm{max-width:min(420px,100%)}
+.idet{display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px}
+.idstage{width:100%;height:170px;display:grid;place-items:center;border-radius:18px;margin-bottom:6px;
+  background:radial-gradient(circle at 50% 55%,color-mix(in srgb,var(--rc) 45%,transparent),transparent 65%),linear-gradient(160deg,rgba(255,255,255,.06),rgba(0,0,0,.25));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--rc) 60%,transparent)}
+.idstage .iart.xl{transform:scale(2.3)}.idstage .iart.surr.xl{transform:scale(1.9)}
+.idtier{color:var(--rc);font-weight:800;letter-spacing:.08em;text-transform:uppercase;font-size:11px}
+.idet .mh{margin:0}
+.idnote{font-size:12px;opacity:.72;margin-top:2px}
+.idsum{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;width:100%;margin-top:8px}
+.idsum span{display:flex;flex-direction:column;gap:3px;padding:8px 6px;border-radius:12px;background:rgba(255,255,255,.06);font-size:11px;opacity:.95}
+.idsum b{display:flex;align-items:center;justify-content:center;gap:4px;font-size:16px}.idsum b .coin{width:14px;height:14px}
+.idsum s{opacity:.55;font-weight:600;font-size:12px}
+.idsum .pos b{color:#5fd39a}.idsum .neg b{color:#ff7a6b}
+.idown{margin-top:8px;padding:8px 12px;border-radius:12px;background:rgba(255,255,255,.06);font-size:13px}
+html.light .idsum span,html.light .idown{background:rgba(0,0,0,.05)}
+@media (max-height:520px){.mp.idetm{max-width:min(640px,100%)}.idet{display:grid;grid-template-columns:200px 1fr;column-gap:14px;text-align:left;align-items:start}
+  .idet .idstage{grid-row:1/span 6;height:100%;min-height:150px;margin:0}.idet>*:not(.idstage){grid-column:2}.idstage .iart.xl{transform:scale(1.9)}.idstage .iart.surr.xl{transform:scale(1.6)}
+  .idsum{margin-top:4px}.idsum span{padding:6px 4px}.idsum b{font-size:14px}}
+@media (max-width:520px){
+html.rot .mp.idetm{max-width:min(640px,100%)}
+html.rot .idet{display:grid;grid-template-columns:200px 1fr;column-gap:14px;text-align:left;align-items:start}
+html.rot .idet .idstage{grid-row:1/span 6;height:100%;min-height:150px;margin:0}
+html.rot .idet>*:not(.idstage){grid-column:2}
+html.rot .idstage .iart.xl{transform:scale(1.9)}
+html.rot .idstage .iart.surr.xl{transform:scale(1.6)}
+html.rot .idsum{margin-top:4px}
+html.rot .idsum span{padding:6px 4px}
+html.rot .idsum b{font-size:14px}}
 </style>
 
 <canvas id="gl" aria-label="3D game board"></canvas>
@@ -4411,12 +4442,28 @@ function unlockTxt(u){if(!u)return '';return u.level?`Free at level ${u.level}`:
 /* one item card; price can be a daily deal */
 function itemCard(k,it,o={}){const r=RAR[ITEM_RAR[k][it.id]||'R'],own=itemOwned(k,it.id),on=isEquipped(k,it.id),price=o.price||it.price;
   const act=on?'<span class="iown">Equipped</span>':own?'<button class="ibuy use" data-a="eq">Use</button>':price?`<button class="ibuy" data-a="buy" aria-label="Buy ${esc(it.name)} for ${nfmt(price)} coins">${COIN_I}${o.was?`<s>${nfmt(o.was)}</s>`:''}<span>${nfmt(price)}</span></button>`:`<span class="ihow">${esc(unlockTxt(it.unlock||it))}</span>`;
-  return `<article class="icard" style="--rc:${r[1]}" data-k="${k}" data-id="${it.id}" data-p="${price||0}">${o.deal&&!own?`<em class="ideal">${o.deal}</em>`:''}${k==='surr'?`<button class="ipv" data-a="pv" aria-label="Preview ${esc(it.name)}">Preview</button>`:''}
+  return `<article class="icard" style="--rc:${r[1]}" data-k="${k}" data-id="${it.id}" data-p="${price||0}" data-w="${o.was||0}" tabindex="0" aria-label="${esc(it.name)}: details">${o.deal&&!own?`<em class="ideal">${o.deal}</em>`:''}${k==='surr'?`<button class="ipv" data-a="pv" aria-label="Preview ${esc(it.name)}">Preview</button>`:''}
     <div class="iwrap">${itemArt(k,it)}</div><b>${esc(it.name)}</b><small class="itier">${KIND_NAME[k]} · ${r[0]}</small>${act}</article>`}
 function bindCards(E,redraw){E.querySelectorAll('.icard[data-k]').forEach(c=>{const k=c.dataset.k,id=c.dataset.id,it=itemOf(k,id);if(!it)return;
-  const b=c.querySelector('[data-a="buy"]');if(b)b.onclick=async()=>{const p=+c.dataset.p;if(await confirmBuy(`${it.name} ${KIND_NAME[k].toLowerCase()}`,p,esc(it.desc||''))){grantItem(k,id);equipItem(k,id);sfx('buy');redraw()}};
-  const u=c.querySelector('[data-a="eq"]');if(u)u.onclick=()=>{equipItem(k,id);redraw()};
-  const v=c.querySelector('[data-a="pv"]');if(v)v.onclick=()=>previewSurround(id)})}
+  const open=e=>{if(e)e.stopPropagation();itemDetail(k,id,+c.dataset.p,+c.dataset.w,redraw)};
+  const b=c.querySelector('[data-a="buy"]');if(b)b.onclick=open;
+  c.onclick=e=>{if(!e.target.closest('button'))open()};c.onkeydown=e=>{if((e.key==='Enter'||e.key===' ')&&e.target===c){e.preventDefault();open()}};
+  const u=c.querySelector('[data-a="eq"]');if(u)u.onclick=e=>{e.stopPropagation();equipItem(k,id);redraw()};
+  const v=c.querySelector('[data-a="pv"]');if(v)v.onclick=e=>{e.stopPropagation();previewSurround(id)}})}
+/* the item page: a big look at the item, what it changes, and the coins before and after buying */
+const KIND_WHAT={fin:'Changes the colour and shine of your token on the board.',dice:'Changes how your dice look every time you roll.',surr:'Changes the land, water and plinth around the board in every city.'};
+async function itemDetail(k,id,price,was,redraw){const it=itemOf(k,id);if(!it)return;const r=RAR[ITEM_RAR[k][id]||'R'],own=itemOwned(k,id),on=isEquipped(k,id),p=price||it.price||0,bal=PREF.coins,after=bal-p,short=after<0;
+  const sum=own?`<div class="idown">${on?'You own this and it’s in use.':'You own this. Tap Use to switch to it.'}</div>`
+    :p?`<div class="idsum"><span>Your coins<b>${COIN_I}${nfmt(bal)}</b></span><span>Price<b>${COIN_I}${was?`<s>${nfmt(was)}</s>`:''}${nfmt(p)}</b></span><span class="${short?'neg':'pos'}">${short?'You need':'After buying'}<b>${COIN_I}${nfmt(short?-after:after)}${short?' more':''}</b></span></div>`
+    :`<div class="idown">${esc(unlockTxt(it.unlock||it))}</div>`;
+  const btns=[{k:'x',label:'Close'}];if(k==='surr')btns.push({k:'pv',label:'Preview'});
+  if(own){if(!on)btns.push({k:'eq',label:'Use',primary:true})}else if(p)btns.push(short?{k:'coins',label:'Get coins',primary:true}:{k:'buy',label:`Buy for ${nfmt(p)}`,primary:true});
+  const a=await modal({cls:'idetm',html:`<div class="idet" style="--rc:${r[1]}"><div class="idstage">${itemArt(k,it,'xl')}</div><small class="idtier">${KIND_NAME[k]} · ${r[0]}</small><div class="mh">${esc(it.name)}</div>
+    <div class="mtxt">${it.desc?esc(it.desc)+' ':''}${KIND_WHAT[k]}</div><div class="idnote">Cosmetic only. It never changes rents, dice or who wins.</div>${sum}</div>`,btns});
+  if(a==='pv')previewSurround(id);
+  else if(a==='eq'){equipItem(k,id);redraw()}
+  else if(a==='coins'){setup.shopTab='coins';setup.shopTabSet=1;homeTab('shop')}
+  else if(a==='buy'){if(!spendCoins(p))return;grantItem(k,id);equipItem(k,id);sfx('buy');try{achAward('shopper')}catch(e){}toast(`${it.name} is yours and now in use.`);redraw()}}
 /* daily picks: fixed for the whole local day, chosen from items the player didn't own that morning */
 function dailyKey(){const d=new Date();return d.getFullYear()*1e4+(d.getMonth()+1)*100+d.getDate()}
 function dailyPicks(){const key=dailyKey();if(PREF.dshop&&PREF.dshop.key===key)return PREF.dshop;
