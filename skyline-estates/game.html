@@ -4693,29 +4693,29 @@ function bTex(){if(S3.bTex)return S3.bTex;
       g.addColorStop(0,on?'#fff4cc':'#6f92bd');g.addColorStop(1,on?'#ffcf73':'#1b2d48');c.fillStyle=g;c.fillRect(X,Y,W,H);c.fillStyle='rgba(255,255,255,.32)';c.fillRect(X+2,Y+2,4,H-4)}
     c.fillStyle='rgba(0,0,0,.14)';c.fillRect(0,121,128,7)}));
   S3.bTex={a:mk(0),b:mk(1),c:mk(2)};S3.bGeo=geoBox(1,1,1,[[0,0,1,1],[0,0,1,1],[0,.97,.03,1],[0,.97,.03,1],[0,0,1,1],[0,0,1,1]]);
-  S3.BW={wall:mat('#f6efe2',{spec:.25}),slab:mat('#f2f4f7',{spec:.45}),roof:mat('#8b95a4',{spec:.3}),win:mat('#20324c',{spec:.85}),gold:S3.M.gold};return S3.bTex}
+  S3.BW={stone:mat('#e8e3d8',{spec:.3}),wall:mat('#f6efe2',{spec:.25}),slab:mat('#f2f4f7',{spec:.45}),roof:mat('#8b95a4',{spec:.3}),win:mat('#20324c',{spec:.85}),gold:S3.M.gold};return S3.bTex}
 function bMat(col,kind){const key=col+'|'+kind,C=S3.BMC||(S3.BMC={});if(C[key])return C[key];const c=hex(col),mix=t=>c.map(v=>v*(1-t)+t),T=bTex();
-  const m={glass:()=>mat(mix(.55),{tex:T.a,spec:.75}),glassLit:()=>mat(mix(.55),{tex:T.b,spec:.75,em:.04}),hglass:()=>mat(mix(.35),{tex:T.c,spec:.95,em:.05}),
+  const m={glass:()=>mat(mix(.86),{tex:T.a,spec:.75}),glassLit:()=>mat(mix(.86),{tex:T.b,spec:.75,em:.04}),hglass:()=>mat(mix(.8),{tex:T.c,spec:.95,em:.05}),
     solid:()=>mat(c,{spec:.45}),dark:()=>mat(c.map(v=>v*.62),{spec:.35}),glow:()=>mat(mix(.2),{em:.6,spec:.6})}[kind]();return C[key]=m}
 function sqHouse(col){const g=S3.geo,W=S3.BW,h=new Node();
   h.add(N(g.box,W.wall,0,.075,0).sc(.17,.15,.17),N(g.cone4,bMat(col,'solid'),0,.205,0).sc(.155,.1,.155).rot(0,Math.PI/4,0),
     N(g.box,bMat(col,'dark'),0,.045,.086).sc(.045,.09,.012),N(g.box,W.win,-.052,.1,.086).sc(.036,.036,.012),N(g.box,W.win,.052,.1,.086).sc(.036,.036,.012),
     N(g.box,W.win,-.052,.1,-.086).sc(.036,.036,.012),N(g.box,W.win,.052,.1,-.086).sc(.036,.036,.012),N(g.box,W.roof,.05,.245,.02).sc(.026,.07,.026));return h}
 function sqTower(col){const g=S3.geo,W=S3.BW,h=new Node();
-  h.add(N(g.box,bMat(col,'solid'),0,.03,0).sc(.3,.06,.24),N(S3.bGeo,bMat(col,'hglass'),0,.25,0).sc(.24,.38,.19),N(g.box,W.slab,0,.455,0).sc(.27,.03,.22),
-    N(g.box,bMat(col,'glow'),0,.495,0).sc(.2,.05,.15),N(g.cone4,W.gold,0,.6,0).sc(.05,.13,.05));return h}
+  h.add(N(g.box,S3.BW.stone,0,.03,0).sc(.3,.06,.24),N(S3.bGeo,bMat(col,'hglass'),0,.25,0).sc(.24,.38,.19),N(g.box,W.slab,0,.455,0).sc(.27,.03,.22),
+    N(g.box,bMat(col,'glow'),0,.495,0).sc(.2,.05,.15),N(g.cone4,bMat(col,'solid'),0,.6,0).sc(.05,.13,.05));return h}
 /* the plot building: floor k of `want` floors */
 function plotFloor(col,k,want,hotel){const g=S3.geo,W=S3.BW,fh=.24,f=new Node().at(0,k*fh,0);
   if(!hotel){const fw=.56;
-    if(k===0)f.add(N(g.box,bMat(col,'solid'),0,fh/2,0).sc(fw+.02,fh,fw+.02),N(g.box,W.win,0,fh*.42,fw/2+.012).sc(fw*.72,fh*.5,.01),N(g.box,W.win,0,fh*.42,-fw/2-.012).sc(fw*.72,fh*.5,.01),N(g.box,bMat(col,'dark'),0,fh*.86,fw/2+.03).sc(fw*.8,.025,.05));
+    if(k===0)f.add(N(g.box,S3.BW.stone,0,fh/2,0).sc(fw+.02,fh,fw+.02),N(g.box,W.win,0,fh*.42,fw/2+.012).sc(fw*.72,fh*.5,.01),N(g.box,W.win,0,fh*.42,-fw/2-.012).sc(fw*.72,fh*.5,.01),N(g.box,bMat(col,'solid'),0,fh*.86,fw/2+.03).sc(fw*.8,.025,.05),N(g.box,bMat(col,'solid'),0,fh*.86,-fw/2-.03).sc(fw*.8,.025,.05));
     else f.add(N(S3.bGeo,bMat(col,k%2?'glassLit':'glass'),0,fh/2,0).sc(fw,fh-.02,fw));
     f.add(N(g.box,W.slab,0,fh-.006,0).sc(fw+.04,.024,fw+.04));
     if(k===want-1)f.add(N(g.box,bMat(col,'solid'),0,fh+.025,0).sc(fw+.04,.035,fw+.04),N(g.box,W.roof,.11,fh+.08,-.08).sc(.15,.08,.13),N(g.cyl,W.roof,-.13,fh+.1,.11).sc(.06,.12,.06),N(g.box,W.slab,-.12,fh+.06,-.12).sc(.08,.04,.08))}
   else{const pod=k<2,fw=pod?.6:.42;
-    if(pod)f.add(N(g.box,bMat(col,'solid'),0,fh/2,0).sc(fw,fh,fw),N(g.box,W.win,0,fh*.45,fw/2+.006).sc(fw*.8,fh*.55,.01),N(g.box,W.win,0,fh*.45,-fw/2-.006).sc(fw*.8,fh*.55,.01),N(g.box,W.win,fw/2+.006,fh*.45,0).sc(.01,fh*.55,fw*.8),N(g.box,W.win,-fw/2-.006,fh*.45,0).sc(.01,fh*.55,fw*.8));
+    if(pod)f.add(N(g.box,S3.BW.stone,0,fh/2,0).sc(fw,fh,fw),N(g.box,W.win,0,fh*.45,fw/2+.006).sc(fw*.8,fh*.55,.01),N(g.box,W.win,0,fh*.45,-fw/2-.006).sc(fw*.8,fh*.55,.01),N(g.box,W.win,fw/2+.006,fh*.45,0).sc(.01,fh*.55,fw*.8),N(g.box,W.win,-fw/2-.006,fh*.45,0).sc(.01,fh*.55,fw*.8));
     else{f.add(N(S3.bGeo,bMat(col,'hglass'),0,fh/2,0).sc(fw,fh,fw));for(const[x,z]of[[1,1],[1,-1],[-1,1],[-1,-1]])f.add(N(g.box,bMat(col,'solid'),x*fw/2,fh/2,z*fw/2).sc(.035,fh,.035))}
     if(k===1)f.add(N(g.box,W.slab,0,fh-.005,0).sc(.64,.03,.64));
-    if(k===want-1)f.add(N(g.box,bMat(col,'glow'),0,fh+.04,0).sc(fw*.92,.08,fw*.92),N(g.box,W.slab,0,fh+.09,0).sc(fw*.8,.02,fw*.8),N(g.cyl,W.gold,0,fh+.2,0).sc(.05,.2,.05),N(g.cone,W.gold,0,fh+.38,0).sc(.05,.16,.05),N(g.sph,bMat(col,'glow'),0,fh+.47,0).sc(.035))}
+    if(k===want-1)f.add(N(g.box,bMat(col,'glow'),0,fh+.04,0).sc(fw*.92,.08,fw*.92),N(g.box,W.slab,0,fh+.09,0).sc(fw*.8,.02,fw*.8),N(g.cyl,bMat(col,'solid'),0,fh+.2,0).sc(.05,.2,.05),N(g.cone,bMat(col,'solid'),0,fh+.38,0).sc(.05,.16,.05),N(g.sph,bMat(col,'glow'),0,fh+.47,0).sc(.035))}
   return f}
 updateCell=function(i,anim){
   if(FAST||!S3||!S3.strips||!buyable(i))return;const o=G.own[i],prev=cellState[i]||{o:-1,h:0,m:false},pl=S3.plots[i];bTex();
