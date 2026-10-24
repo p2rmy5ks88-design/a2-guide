@@ -1173,6 +1173,11 @@ html.light .champcard small{color:#7A5200}
 #rprof .avf,.who .avf{width:auto!important;height:auto!important;min-width:0;padding:3px!important;box-sizing:content-box;flex:none;display:inline-grid;line-height:0}
 #rprof .avf>.rav{width:36px!important;height:36px!important;margin:0!important}
 #rprof .avf>.rav>img,#rprof .avf>.rav>svg{width:100%!important;height:100%!important;display:block;object-fit:cover;border-radius:50%}
+/* bottom bar: the round chip never runs into the centred log message */
+#log{max-width:min(46%,440px)}
+#round{max-width:calc(50% - min(23%,220px) - 44px);box-sizing:border-box;white-space:normal;line-height:1.35;border-radius:16px}
+#round .rev{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#radio{bottom:calc(max(12px,env(safe-area-inset-bottom,0px)) + var(--roundH,32px) + 8px)}
 </style>
 
 <canvas id="gl" aria-label="3D game board"></canvas>
@@ -4677,6 +4682,61 @@ async function lastHumanCheck(){if(!lastHumanDue())return;if(NET.driving||NET.ap
 {const _hc=hostCheck;hostCheck=function(){_hc();lastHumanCheck()}}
 {const _ot=onlineTick;onlineTick=function(){if(NET.wantEnd&&!NET.driving&&!NET.applying){NET.wantEnd=false;return lastHumanCheck()}return _ot()}}
 {const _f=finish;finish=function(){const r=_f.apply(this,arguments);setTimeout(()=>{if(G&&G.endNote){const m=document.querySelector('#modals .mp .mh');if(m&&!m.parentElement.querySelector('.endnote'))m.insertAdjacentHTML('afterend',`<div class="mtxt endnote"><b>${esc(G.endNote)}</b></div>`)}},400);return r}}
+
+/* ================= BUILDINGS IN THE OWNER'S COLOURS ================= */
+/* Every house and tower is built in its owner's colour: on the street squares, small houses with roofs and doors
+   in that colour (a glass tower for a hotel); on the plot behind the street, a mid-rise that grows a floor per house,
+   with tinted glass, lit windows, floor slabs and a rooftop, and a set-back skyscraper with a glowing crown for a hotel. */
+function bTex(){if(S3.bTex)return S3.bTex;
+  const mk=lit=>texFrom(cnv(128,128,c=>{c.fillStyle='#ffffff';c.fillRect(0,0,128,128);
+    for(let y=0;y<2;y++)for(let x=0;x<4;x++){const X=9+x*29,Y=9+y*58,W=22,H=48,on=lit&&((x*7+y*3+lit)%4===1),g=c.createLinearGradient(X,Y,X+W,Y+H);
+      g.addColorStop(0,on?'#fff4cc':'#6f92bd');g.addColorStop(1,on?'#ffcf73':'#1b2d48');c.fillStyle=g;c.fillRect(X,Y,W,H);c.fillStyle='rgba(255,255,255,.32)';c.fillRect(X+2,Y+2,4,H-4)}
+    c.fillStyle='rgba(0,0,0,.14)';c.fillRect(0,121,128,7)}));
+  S3.bTex={a:mk(0),b:mk(1),c:mk(2)};S3.bGeo=geoBox(1,1,1,[[0,0,1,1],[0,0,1,1],[0,.97,.03,1],[0,.97,.03,1],[0,0,1,1],[0,0,1,1]]);
+  S3.BW={wall:mat('#f6efe2',{spec:.25}),slab:mat('#f2f4f7',{spec:.45}),roof:mat('#8b95a4',{spec:.3}),win:mat('#20324c',{spec:.85}),gold:S3.M.gold};return S3.bTex}
+function bMat(col,kind){const key=col+'|'+kind,C=S3.BMC||(S3.BMC={});if(C[key])return C[key];const c=hex(col),mix=t=>c.map(v=>v*(1-t)+t),T=bTex();
+  const m={glass:()=>mat(mix(.55),{tex:T.a,spec:.75}),glassLit:()=>mat(mix(.55),{tex:T.b,spec:.75,em:.04}),hglass:()=>mat(mix(.35),{tex:T.c,spec:.95,em:.05}),
+    solid:()=>mat(c,{spec:.45}),dark:()=>mat(c.map(v=>v*.62),{spec:.35}),glow:()=>mat(mix(.2),{em:.6,spec:.6})}[kind]();return C[key]=m}
+function sqHouse(col){const g=S3.geo,W=S3.BW,h=new Node();
+  h.add(N(g.box,W.wall,0,.075,0).sc(.17,.15,.17),N(g.cone4,bMat(col,'solid'),0,.205,0).sc(.155,.1,.155).rot(0,Math.PI/4,0),
+    N(g.box,bMat(col,'dark'),0,.045,.086).sc(.045,.09,.012),N(g.box,W.win,-.052,.1,.086).sc(.036,.036,.012),N(g.box,W.win,.052,.1,.086).sc(.036,.036,.012),
+    N(g.box,W.win,-.052,.1,-.086).sc(.036,.036,.012),N(g.box,W.win,.052,.1,-.086).sc(.036,.036,.012),N(g.box,W.roof,.05,.245,.02).sc(.026,.07,.026));return h}
+function sqTower(col){const g=S3.geo,W=S3.BW,h=new Node();
+  h.add(N(g.box,bMat(col,'solid'),0,.03,0).sc(.3,.06,.24),N(S3.bGeo,bMat(col,'hglass'),0,.25,0).sc(.24,.38,.19),N(g.box,W.slab,0,.455,0).sc(.27,.03,.22),
+    N(g.box,bMat(col,'glow'),0,.495,0).sc(.2,.05,.15),N(g.cone4,W.gold,0,.6,0).sc(.05,.13,.05));return h}
+/* the plot building: floor k of `want` floors */
+function plotFloor(col,k,want,hotel){const g=S3.geo,W=S3.BW,fh=.24,f=new Node().at(0,k*fh,0);
+  if(!hotel){const fw=.56;
+    if(k===0)f.add(N(g.box,bMat(col,'solid'),0,fh/2,0).sc(fw+.02,fh,fw+.02),N(g.box,W.win,0,fh*.42,fw/2+.012).sc(fw*.72,fh*.5,.01),N(g.box,W.win,0,fh*.42,-fw/2-.012).sc(fw*.72,fh*.5,.01),N(g.box,bMat(col,'dark'),0,fh*.86,fw/2+.03).sc(fw*.8,.025,.05));
+    else f.add(N(S3.bGeo,bMat(col,k%2?'glassLit':'glass'),0,fh/2,0).sc(fw,fh-.02,fw));
+    f.add(N(g.box,W.slab,0,fh-.006,0).sc(fw+.04,.024,fw+.04));
+    if(k===want-1)f.add(N(g.box,bMat(col,'solid'),0,fh+.025,0).sc(fw+.04,.035,fw+.04),N(g.box,W.roof,.11,fh+.08,-.08).sc(.15,.08,.13),N(g.cyl,W.roof,-.13,fh+.1,.11).sc(.06,.12,.06),N(g.box,W.slab,-.12,fh+.06,-.12).sc(.08,.04,.08))}
+  else{const pod=k<2,fw=pod?.6:.42;
+    if(pod)f.add(N(g.box,bMat(col,'solid'),0,fh/2,0).sc(fw,fh,fw),N(g.box,W.win,0,fh*.45,fw/2+.006).sc(fw*.8,fh*.55,.01),N(g.box,W.win,0,fh*.45,-fw/2-.006).sc(fw*.8,fh*.55,.01),N(g.box,W.win,fw/2+.006,fh*.45,0).sc(.01,fh*.55,fw*.8),N(g.box,W.win,-fw/2-.006,fh*.45,0).sc(.01,fh*.55,fw*.8));
+    else{f.add(N(S3.bGeo,bMat(col,'hglass'),0,fh/2,0).sc(fw,fh,fw));for(const[x,z]of[[1,1],[1,-1],[-1,1],[-1,-1]])f.add(N(g.box,bMat(col,'solid'),x*fw/2,fh/2,z*fw/2).sc(.035,fh,.035))}
+    if(k===1)f.add(N(g.box,W.slab,0,fh-.005,0).sc(.64,.03,.64));
+    if(k===want-1)f.add(N(g.box,bMat(col,'glow'),0,fh+.04,0).sc(fw*.92,.08,fw*.92),N(g.box,W.slab,0,fh+.09,0).sc(fw*.8,.02,fw*.8),N(g.cyl,W.gold,0,fh+.2,0).sc(.05,.2,.05),N(g.cone,W.gold,0,fh+.38,0).sc(.05,.16,.05),N(g.sph,bMat(col,'glow'),0,fh+.47,0).sc(.035))}
+  return f}
+updateCell=function(i,anim){
+  if(FAST||!S3||!S3.strips||!buyable(i))return;const o=G.own[i],prev=cellState[i]||{o:-1,h:0,m:false},pl=S3.plots[i];bTex();
+  const strip=S3.strips[i];strip.visible=o.o>=0;if(o.o>=0)strip.mat=mat(P(o.o).col,{spec:.3});S3.morts[i].visible=o.m;
+  const col=o.o>=0?P(o.o).col:'#9aa4b2';
+  if(SQ[i].t==='prop'){const hn=S3.houses[i];hn.kids.slice().forEach(k=>hn.remove(k));
+    const n=o.h===5?1:o.h;for(let k=0;k<n;k++){const x=(k-(n-1)/2)*.215;const h=(o.h===5?sqTower(col):sqHouse(col)).at(x,0,0);hn.add(h);if(anim&&(k>=prev.h||o.h===5)){h.sc(.01);tween(450,t=>h.sc(Math.max(.01,t)),eBack)}}
+    const want=o.o<0?0:o.h===5?7:1+o.h,hotel=o.h===5;if(pl.sign)pl.sign.visible=o.o<0;
+    const prevWant=prev.o<0?0:prev.h===5?7:1+prev.h,same=prev.o===o.o&&(prev.h===5)===hotel;
+    pl.floors.forEach(f=>pl.node.remove(f));pl.floors=[];
+    for(let k=0;k<want;k++){const f=plotFloor(col,k,want,hotel);pl.node.add(f);pl.floors.push(f);
+      if(anim&&!FAST&&(!same||k>=prevWant-1)&&k>=(same?prevWant-1:0)){f.sc(1,.01,1);const d=Math.max(0,k-(same?prevWant-1:0))*110;setTimeout(()=>tween(420,t=>f.sc(1,Math.max(.01,t),1),eBack),d)}}
+    if(want&&!pl.shadowN)pl.shadowN=S3.shadow(0,0,.5,pl.node,.013);if(pl.shadowN)pl.shadowN.visible=!!want;
+    pl.top=want*.24+(want?(hotel?.5:.12):0)}
+  if(o.o>=0&&!o.m){if(!pl.flag){pl.flag=new Node();pl.flag.add(N(S3.geo.cyl8,S3.M.white,0,.2,0).sc(.012,.4,.012));const fl=N(S3.geo.box,mat('#fff'),.09,.34,0).sc(.17,.11,.012);pl.flag.add(fl);pl.flag.cloth=fl;pl.node.add(pl.flag);if(anim){pl.flag.sc(1,.01,1);tween(500,t=>pl.flag.sc(1,Math.max(.01,t),1),eBack)}}
+    pl.flag.cloth.mat=mat(P(o.o).col,{spec:.2});pl.flag.p=[SQ[i].t==='prop'&&o.h>0?.22:0,SQ[i].t==='prop'&&o.h===5?pl.top-.45:pl.top,SQ[i].t==='prop'&&o.h>0?.22:0]}
+  else if(pl.flag){pl.node.remove(pl.flag);pl.flag=null}
+  cellState[i]={o:o.o,h:o.h,m:o.m}};
+/* the current event sits on its own line in the round chip, and the radio pill moves up to make room */
+{const _rr=renderRoster;renderRoster=function(){const r=_rr.apply(this,arguments);try{const R=$('#round'),e=G&&evDef();if(R&&e){const tt=evText(e,'t'),s=R.textContent,k=s.lastIndexOf(' · '+tt);if(k>=0){R.textContent=s.slice(0,k);const sp=document.createElement('span');sp.className='rev';sp.textContent=tt;R.append(sp)}}
+  if(R)document.documentElement.style.setProperty('--roundH',R.offsetHeight+'px')}catch(_){}return r}}
 /* ================= ORIENTATION ================= */
 let rotDismissed=false;
 function checkRotate(){$('#rotate').hidden=true}
