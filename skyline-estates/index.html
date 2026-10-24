@@ -4684,7 +4684,7 @@ async function lastHumanCheck(){if(!lastHumanDue())return;if(NET.driving||NET.ap
 {const _f=finish;finish=function(){const r=_f.apply(this,arguments);setTimeout(()=>{if(G&&G.endNote){const m=document.querySelector('#modals .mp .mh');if(m&&!m.parentElement.querySelector('.endnote'))m.insertAdjacentHTML('afterend',`<div class="mtxt endnote"><b>${esc(G.endNote)}</b></div>`)}},400);return r}}
 
 /* ================= BUILDINGS IN THE OWNER'S COLOURS ================= */
-/* Every house and tower is built in its owner's colour: on the street squares, small houses with roofs and doors
+/* Buildings carry their street's colour-group accent (ownership shows on the flag and the strip along the square): on the street squares, small houses with roofs and doors
    in that colour (a glass tower for a hotel); on the plot behind the street, a mid-rise that grows a floor per house,
    with tinted glass, lit windows, floor slabs and a rooftop, and a set-back skyscraper with a glowing crown for a hotel. */
 function bTex(){if(S3.bTex)return S3.bTex;
@@ -4720,7 +4720,7 @@ function plotFloor(col,k,want,hotel){const g=S3.geo,W=S3.BW,fh=.24,f=new Node().
 updateCell=function(i,anim){
   if(FAST||!S3||!S3.strips||!buyable(i))return;const o=G.own[i],prev=cellState[i]||{o:-1,h:0,m:false},pl=S3.plots[i];bTex();
   const strip=S3.strips[i];strip.visible=o.o>=0;if(o.o>=0)strip.mat=mat(P(o.o).col,{spec:.3});S3.morts[i].visible=o.m;
-  const col=o.o>=0?P(o.o).col:'#9aa4b2';
+  const col=(SQ[i].g&&GC[SQ[i].g])||'#9aa4b2';
   if(SQ[i].t==='prop'){const hn=S3.houses[i];hn.kids.slice().forEach(k=>hn.remove(k));
     const n=o.h===5?1:o.h;for(let k=0;k<n;k++){const x=(k-(n-1)/2)*.215;const h=(o.h===5?sqTower(col):sqHouse(col)).at(x,0,0);hn.add(h);if(anim&&(k>=prev.h||o.h===5)){h.sc(.01);tween(450,t=>h.sc(Math.max(.01,t)),eBack)}}
     const want=o.o<0?0:o.h===5?7:1+o.h,hotel=o.h===5;if(pl.sign)pl.sign.visible=o.o<0;
