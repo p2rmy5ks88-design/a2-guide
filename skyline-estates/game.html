@@ -2156,7 +2156,7 @@ async function openMenu(){
   else if(k==='snd')await openSound();
   else if(k==='spd')G.set.speed=G.set.speed==='fast'?'normal':'fast';
   else if(k==='end'){const c=await modal({html:'<div class="mh">End the game now?</div><div class="mtxt">The richest player by net worth wins.</div>',btns:[{k:'no',label:'Keep playing'},{k:'yes',label:'End & score',primary:true}]});if(c==='yes'){GEN++;$('#modals').innerHTML='';G.over=true;if(G.online){NET.driving=true;await pushNow();NET.driving=false}finish()}}
-  else if(k==='quit'){save();GEN++;$('#modals').innerHTML='';showTitle()}
+  else if(k==='quit'){if(G&&G.online){const c=await modal({html:'<div class=mh>Leave this online game?</div><div class=mtxt>The game carries on without you: the AI plays your seat, and if you’re hosting, the next player takes over. You can rejoin with the game code.</div>',btns:[{k:'x',label:'Stay'},{k:'go',label:'Leave',danger:true}]});if(c!=='go')return;await netLeaveMark()}save();GEN++;$('#modals').innerHTML='';showTitle()}
 }
 $('#bAssets').onclick=()=>{if(!G||$('#modals').children.length)return;if($('#bAssets').classList.contains('off')){const me=G.players.find(isLocalHuman);if(me)openAssets(me,{readonly:true});else toast('Properties open on your turn');return}openAssets(P(G.turn))};
 $('#bTrade').onclick=()=>{if(!G||$('#modals').children.length)return;if($('#bTrade').classList.contains('off')){toast(alive().length>1?'You can trade on your own turn, before or after rolling':'No one left to trade with');return}openTrade(P(G.turn))};
@@ -4632,6 +4632,36 @@ function keyReveal(){if(!G||!G.keys||G.keysShown||G.round>1||FAST||G.sim)return 
 .keyc .kf i{font:800 9px var(--body,system-ui);letter-spacing:.12em;color:#C7B48A;font-style:normal}.keyc .kf em{font:700 24px var(--display,system-ui);font-style:normal;color:#F3CF76}
 .keyc.open .kf{transform:none}.keyc.win{border-color:var(--pc);box-shadow:0 0 18px var(--pc);transform:translateY(-4px)}
 .keyres{opacity:0;transition:opacity .4s}.keyres.show{opacity:1}`;document.head.appendChild(st)})();
+
+/* ================= ONLINE: PRESENCE AND AUTOMATIC HOST HAND-OVER ================= */
+/* Every phone in an online game says "still here" every 10 seconds. The host's phone drives the AI seats and skips
+   bankrupt players, so if the host leaves (on purpose or by going silent for 45 seconds) the next player in seat
+   order takes over automatically. Every phone runs the same election, so no vote is needed. A player who has left
+   gets an AI stand-in when their turn comes; they can take their seat back with "Take back control". */
+const HB_EVERY=10000,HB_HOST_STALE=45000,HB_TURN_STALE=60000;
+const hbId=u=>String(u).replace(/[^A-Za-z0-9_-]/g,'_');
+function hbBeat(left){if(!NET.on||!NET.ref||!NET.me)return Promise.resolve();try{return NET.ref.collection('hb').doc(hbId(NET.me)).set({uid:NET.me,at:Date.now(),left:!!left}).catch(()=>{})}catch(e){return Promise.resolve()}}
+function hbPresent(uid,stale=HB_HOST_STALE){if(!uid)return false;if(uid===NET.me)return true;const s=NET.seen&&NET.seen[uid];
+  if(!s)return Date.now()-(NET.joinAt||0)<stale;if(s.left)return false;return Date.now()-s.local<stale}
+function electHost(){if(!G||!G.players)return NET.origHost;const humans=G.players.filter(p=>p.uid);if(!humans.length)return NET.origHost;
+  const cur=G.hostUid||NET.origHost;let k=humans.findIndex(p=>p.uid===cur);if(k<0)k=0;
+  for(let j=0;j<humans.length;j++){const p=humans[(k+j)%humans.length];if(hbPresent(p.uid))return p.uid}return NET.me}
+function hostCheck(){if(!NET.on||!G||!G.online||G.over)return;const h=electHost(),was=NET.host;NET.host=h===NET.me;
+  if(h!==NET.lastHost){if(NET.lastHost!==undefined){const p=G.players.find(x=>x.uid===h);if(p)toast(h===NET.me?'You’re now hosting this game':`${p.name} is now hosting`)}NET.lastHost=h}
+  if(NET.host){if(G.hostUid!==NET.me)G.hostUid=NET.me;
+    if(!was&&!NET.ctlOn){NET.ctlOn=true;NET.unsubs.push(NET.ref.collection('ctl').onSnapshot(qs=>{NET.reclaim=NET.reclaim||{};qs.docs.forEach(d=>{const v=d.data();if(v&&v.uid)NET.reclaim[v.uid]=true})},()=>{}))}
+    /* a player who has left gets an AI stand-in when their turn comes */
+    const p=P(G.turn);if(p&&!p.ai&&!p.bankrupt&&p.uid&&p.uid!==NET.me&&!NET.driving&&!hbPresent(p.uid,HB_TURN_STALE)){p.ai=true;p.awayBot=true;toast(`${p.name} has left. AI is playing for them.`);log(`🤖 ${p.name} left the game, so the AI plays for them`)}
+    if(!was||!NET.driving)setTimeout(onlineTick,50)}}
+{const _ns=netStartGame;netStartGame=async function(code,ref,data){NET.origHost=data.host;NET.joinAt=Date.now();NET.seen={};NET.lastHost=undefined;NET.ctlOn=!!(data.host===NET.me);
+  const r=await _ns(code,ref,data);
+  NET.unsubs.push(ref.collection('hb').onSnapshot(qs=>{qs.docs.forEach(d=>{const v=d.data();if(!v||!v.uid)return;const o=NET.seen[v.uid];
+    if(!o||o.at!==v.at||o.left!==!!v.left)NET.seen[v.uid]={at:v.at,left:!!v.left,local:o||Date.now()-v.at<HB_HOST_STALE?Date.now():0}});hostCheck()},()=>{}));
+  hbBeat();clearInterval(NET.hbT);NET.hbT=setInterval(()=>{hbBeat();hostCheck()},HB_EVERY);clearInterval(NET.hcT);NET.hcT=setInterval(hostCheck,3000);return r}}
+{const _st=netStop;netStop=function(){clearInterval(NET.hbT);clearInterval(NET.hcT);NET.ctlOn=false;return _st()}}
+/* the game state remembers who hosts, so a returning old host doesn't take over again */
+{const _ps=pushState;pushState=function(){if(G&&G.online&&NET.host)G.hostUid=NET.me;return _ps()}}
+async function netLeaveMark(){if(!G||!G.online||!NET.on)return;const me=G.players.find(p=>p.uid===NET.me);try{await Promise.race([hbBeat(true),new Promise(r=>setTimeout(r,1500))])}catch(e){}if(me)log(`${me.name} left the game`)}
 /* ================= ORIENTATION ================= */
 let rotDismissed=false;
 function checkRotate(){$('#rotate').hidden=true}
