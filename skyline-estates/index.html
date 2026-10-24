@@ -1244,6 +1244,25 @@ html.light .wsneed{background:rgba(0,0,0,.05)}html.light .wscmp th,html.light .w
 html.light .wscmp tr.up td:last-child{color:#1f9a5c}
 .wstok .tem.big{background:radial-gradient(circle at 40% 35%,#fff7d6,#ffc61a);box-shadow:0 5px 0 #c98f00}
 .wslater{display:block;margin-top:6px;font-size:11.5px;opacity:.7}
+/* ===== brand art: emerald, ivory and brass pieces ===== */
+/* World: the night coastline behind the header */
+.tab-world .whead{flex:none;position:relative;border-radius:18px;padding:16px 18px;margin-bottom:6px;overflow:hidden;isolation:isolate;
+  background:linear-gradient(90deg,#0b1730 0%,rgba(11,23,48,.92) 38%,rgba(11,23,48,.35) 70%,rgba(11,23,48,.15)),url(art/coast.jpg) 70% 45%/cover no-repeat;box-shadow:inset 0 0 0 1px rgba(226,181,74,.25)}
+.tab-world .whead h2,.tab-world .whead p{color:#F4EBD6;text-shadow:0 2px 8px rgba(0,0,0,.5)}
+/* Shop: the bundle shows the token, coins and dice scene */
+.bundle .bstage{height:118px;background:url(art/shop.jpg) center 60%/cover no-repeat!important;box-shadow:inset 0 0 0 1px rgba(226,181,74,.35),inset 0 -30px 40px -20px rgba(0,0,0,.45)}
+.bundle .bstage>*{display:none}
+/* Lucky Spin card: the brass wheel on its column */
+.wheelcard{flex:none;background:linear-gradient(90deg,#0e1a33 0%,rgba(14,26,51,.94) 42%,rgba(14,26,51,.25) 75%),url(art/spin.jpg) 85% 40%/cover no-repeat!important;min-height:140px}
+.wheelcard .ch,.wheelcard .small{color:#F4EBD6}
+/* Settings: brass sliders above the categories */
+.setnav::before{content:'';display:block;height:96px;border-radius:14px;margin-bottom:4px;background:url(art/sliders.jpg) center 45%/cover no-repeat;box-shadow:inset 0 0 0 1px rgba(226,181,74,.3)}
+@media (max-width:640px){html:not(.rot) .setnav::before{display:none}}
+/* Collection: the three brass figures beside the heading */
+.tab-cast .phead,.tab-tokens .phead{flex:none;position:relative;min-height:52px;padding-right:86px}
+.tab-cast .phead::after,.tab-tokens .phead::after{content:'';position:absolute;right:0;top:50%;transform:translateY(-50%);width:74px;height:52px;border-radius:12px;background:url(art/people.jpg) center 40%/cover no-repeat;box-shadow:inset 0 0 0 1px rgba(226,181,74,.3),0 4px 12px rgba(0,0,0,.3)}
+.tab-tokens .phead::after{background-image:url(art/globe.jpg)}
+html.calm .wheelcard{background-attachment:scroll}
 </style>
 
 <canvas id="gl" aria-label="3D game board"></canvas>
