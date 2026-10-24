@@ -1129,6 +1129,46 @@ html.light .swc b{color:#7A5200}
 .dshop{grid-template-columns:minmax(190px,250px) minmax(0,1fr)}
 .sban{flex-wrap:nowrap}.sbb{flex:none}
 @media (max-width:560px){html:not(.rot) .sban{flex-wrap:wrap}}
+/* ================= AVATAR FRAMES AND CITY CHAMPION ================= */
+.avf{position:relative;display:inline-grid;place-items:center;border-radius:50%;padding:3px;isolation:isolate;flex:none;vertical-align:middle}
+.avf::before{content:'';position:absolute;inset:0;border-radius:50%;z-index:-1;background:conic-gradient(var(--a,#E2B54A),var(--c,#E2B54A),var(--b,#fff),var(--c,#E2B54A),var(--a,#E2B54A));animation:avspin 5s linear infinite}
+.avf::after{content:'';position:absolute;inset:-3px;border-radius:50%;z-index:-2;background:conic-gradient(transparent 0 72%,rgba(255,255,255,.85) 80%,transparent 88%);animation:avspin 2.4s linear infinite;filter:blur(1.5px)}
+.avf>.rav,.avf>.pav{box-shadow:none!important;margin:0}
+.avf.fr-city{filter:drop-shadow(0 0 5px color-mix(in srgb,var(--a) 60%,transparent))}
+.avf.fr-prism::before{background:conic-gradient(#FF3F6C,#FFB02E,#6BE38B,#3FD0FF,#8F3FD8,#FF3F6C);animation-duration:2.6s}
+.avf.fr-prism{filter:drop-shadow(0 0 7px rgba(143,63,216,.65))}
+.avf.fr-crown::before{background:conic-gradient(#FFF6D6,#E2B13C,#9A6F10,#F3CF76,#FFF6D6)}
+.avf.fr-crown{filter:drop-shadow(0 0 9px rgba(226,181,74,.8))}
+.avcrown{position:absolute;top:-9px;left:50%;transform:translateX(-50%);width:22px;height:13px;background:linear-gradient(180deg,#FFF2C2,#E2B13C);clip-path:polygon(0 100%,0 25%,25% 60%,50% 0,75% 60%,100% 25%,100% 100%);z-index:2}
+@keyframes avspin{to{transform:rotate(1turn)}}
+@media (prefers-reduced-motion:reduce){.avf::before,.avf::after{animation:none}}
+.pav.big{width:120px;height:120px}.pav.sm{width:44px;height:44px}.champsum .pav.sm{width:40px;height:40px}
+.champcard{display:flex;align-items:center;gap:14px;padding:12px 14px;border-radius:16px;color:var(--ink);border:1px solid color-mix(in srgb,var(--gold) 40%,var(--ln));
+  background:radial-gradient(ellipse at 0% 50%,color-mix(in srgb,var(--gold) 22%,transparent),transparent 60%),var(--bg2)}
+.champcard.got{border-color:var(--gold);box-shadow:0 0 18px color-mix(in srgb,var(--gold) 25%,transparent)}
+.champcard .cci{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.champcard small{font:800 10.5px var(--body);letter-spacing:.1em;color:var(--gold2)}
+html.light .champcard small{color:#7A5200}
+.champcard b{font:700 17px var(--display)}
+.champcard span{font-size:12px;color:var(--ink2)}
+.ccbar{display:block;height:8px;border-radius:999px;background:var(--bg0);border:1px solid var(--ln2);overflow:hidden;margin-top:2px}
+.ccbar i{display:block;height:100%;border-radius:999px;background:var(--goldgrad)}
+.champcard em{font:800 11.5px var(--body);font-style:normal;color:var(--mute)}
+.champcard.got em{color:var(--green)}
+.champsum{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:14px;background:var(--bg2);border:1px solid var(--ln);color:var(--ink)}
+.champsum b{display:block;font:700 15px var(--display)}.champsum small{font-size:12px;color:var(--mute)}
+.frrow{display:flex;gap:8px;overflow-x:auto;padding:6px 2px 4px}
+.frchip{flex:none;width:92px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 6px 8px;border-radius:14px;border:1px solid var(--ln);background:var(--bg2);color:var(--ink);cursor:pointer}
+.frchip b{font:700 12px var(--display);max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.frchip small{font-size:10.5px;font-weight:700;color:var(--mute)}
+.frchip.on{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold)}
+.frchip.lock .avf,.frchip.lock>.pav{filter:grayscale(.85) brightness(.7)}
+.frchip.lock .avf::after{display:none}
+.frev{display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px}
+.frev small{font:800 11px var(--body);letter-spacing:.12em;color:var(--gold2)}
+.frstage{padding:18px;border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--gold) 30%,transparent),transparent 70%);margin-bottom:4px}
+.avf>.pav,.frchip .pav,.champsum .pav,.champcard .pav,.frev .pav{display:block;border-radius:50%;overflow:hidden;background:#1C2E4D}
+.avf>.pav>img,.avf>.pav>svg,.frchip .pav>img,.frchip .pav>svg{display:block;width:100%;height:100%;object-fit:cover;border-radius:50%}
 </style>
 
 <canvas id="gl" aria-label="3D game board"></canvas>
@@ -4483,6 +4523,54 @@ function padScrollable(e){for(let n=e;n&&n!==document.documentElement;n=n.parent
 function padStickScroll(ry,rx,dt){const inGame=G&&!G.over&&$('#title').hidden&&!$('#modals').children.length;if(inGame)return false;
   const sc=padScrollable(PAD.cur&&PAD.cur.isConnected?PAD.cur:padScope())||padScrollable(document.querySelector('.subpane,.pane'));if(!sc)return true;
   if(Math.abs(ry)>.2)sc.scrollTop+=ry*dt*1100;if(Math.abs(rx)>.2)sc.scrollLeft+=rx*dt*1100;return true}
+
+/* ================= CITY CHAMPION REWARDS AND AVATAR FRAMES ================= */
+/* Earning all 15 awards in a city makes you its Champion: 2,000 coins, 1,000 XP and an animated avatar frame in
+   that country's colours. Five Champion cities add the Prism frame; all of them the Skyline Crown.
+   Each city's award page previews the frame you're playing for. */
+const CHAMP_COINS=2000,CHAMP_XP=1000,PRISM_AT=5,PRISM_COINS=3000,CROWN_COINS=10000;
+PREF.champ=PREF.champ||{};PREF.champM=PREF.champM||{};PREF.frameNew=PREF.frameNew||[];if(PREF.eq.frame===undefined)PREF.eq.frame='';
+const champCount=()=>Object.keys(PREF.champ).length;
+function frameDef(id){if(!id)return null;
+  if(id==='prism')return{id,name:'Prism',cls:'fr-prism',how:`Become Champion of ${PRISM_AT} cities`,own:champCount()>=PRISM_AT,coins:PRISM_COINS,prog:[Math.min(PRISM_AT,champCount()),PRISM_AT]};
+  if(id==='crown')return{id,name:'Skyline Crown',cls:'fr-crown',how:`Become Champion of all ${CITY_ORDER.length} cities`,own:champCount()>=CITY_ORDER.length,coins:CROWN_COINS,prog:[champCount(),CITY_ORDER.length]};
+  const c=id.slice(2);if(!CITY_DATA[c])return null;const cols=countryOf(c).cols||['#E2B54A','#FFFFFF'];
+  return{id,city:c,name:`${CITY_DATA[c].name} Champion`,cls:'fr-city',st:`--a:${cols[0]};--b:${cols[1]||'#FFFFFF'};--c:${cols[2]||'#E2B54A'}`,how:`Earn all ${CT.length} awards in ${CITY_DATA[c].name}`,own:cityDone(c)>=CT.length,coins:CHAMP_COINS,xp:CHAMP_XP,prog:[cityDone(c),CT.length]}}
+const myFrame=()=>{const f=frameDef(PREF.eq.frame);return f&&f.own?f:null};
+function framed(inner,f){if(f===undefined)f=myFrame();if(!f)return inner;return `<span class="avf ${f.cls}" style="${f.st||''}">${inner}${f.id==='crown'?'<i class="avcrown" aria-hidden="true"></i>':''}</span>`}
+/* pay Champion rewards (also for cities finished before this update) and queue the frame reveals */
+function champCheck(live){let any=false;
+  CITY_ORDER.forEach(c=>{if(cityDone(c)>=CT.length&&!PREF.champ[c]){PREF.champ[c]=Date.now();const nm=CITY_DATA[c].name;addCoins(CHAMP_COINS,`${nm} Champion`);addXP(CHAMP_XP,`${nm} Champion`);PREF.frameNew.push('c:'+c);any=true;
+    if(live)achQ.push({name:`${nm} Champion`,medal:'👑',xp:CHAMP_XP,coins:CHAMP_COINS})}});
+  [['prism',PRISM_AT,PRISM_COINS],['crown',CITY_ORDER.length,CROWN_COINS]].forEach(([id,at,coins])=>{if(champCount()>=at&&!PREF.champM[id]){PREF.champM[id]=Date.now();addCoins(coins,`${frameDef(id).name} frame`);PREF.frameNew.push(id);any=true;
+    if(live)achQ.push({name:`${frameDef(id).name} frame`,medal:'👑',coins})}});
+  if(any){savePref();if(live)achShow()}}
+function frameReveal(){if(!PREF.frameNew.length||$('#modals').children.length||$('#title').hidden)return;const id=PREF.frameNew.shift();savePref();const f=frameDef(id);if(!f){frameReveal();return}
+  const what=f.city?`You earned every award in ${esc(CITY_DATA[f.city].name)}. +${nfmt(f.coins)} coins and +${nfmt(f.xp)} XP.`:`+${nfmt(f.coins)} coins.`;
+  modal({cls:'frevm',html:`<div class="frev"><div class="frstage">${framed(`<span class="pav big">${charSVG(myChar(),120)}</span>`,f)}</div><small>NEW AVATAR FRAME</small><div class="mh">${esc(f.name)}</div><div class="mtxt">${what}</div></div>`,
+    btns:[{k:'x',label:'Later'},{k:'eq',label:'Wear it',primary:true}]}).then(k=>{if(k==='eq'){PREF.eq.frame=id;savePref();railProfile();const P=$('.pane.tab-cast');if(P)homeTab('cast')}setTimeout(frameReveal,500)});
+  try{confetti();sfx('win')}catch(e){}}
+/* the avatar wears the frame in the top bar and on the profile card */
+{const _rp=railProfile;railProfile=function(){_rp();const r=document.querySelector('#rprof .rav');if(r&&myFrame()&&!r.parentElement.classList.contains('avf'))r.outerHTML=framed(r.outerHTML)}}
+/* frame picker on the Characters page: owned frames plus a peek at the nearest ones to earn */
+function framePicker(){const ids=frameIds(),defs=ids.map(frameDef).filter(Boolean),own=defs.filter(f=>f.own);
+  const next=defs.filter(f=>!f.own).sort((a,b)=>(b.prog[0]/b.prog[1])-(a.prog[0]/a.prog[1])).slice(0,Math.max(2,5-own.length));
+  const chip=(f,lock)=>`<button class="frchip${lock?' lock':''}${(PREF.eq.frame||'')===(f?f.id:'')?' on':''}" data-f="${f?f.id:''}"${lock?' aria-disabled="true"':''} title="${esc(f?(lock?f.how:f.name):'No frame')}">${framed(`<span class="pav sm">${charSVG(myChar(),44)}</span>`,f||null)}<b>${esc(f?f.name.replace(' Champion',''):'None')}</b><small>${f?(lock?`${f.prog[0]}/${f.prog[1]}`:(PREF.eq.frame===f.id?'Wearing':'Owned')):(PREF.eq.frame?'':'Wearing')}</small></button>`;
+  return `<div class="card frcard"><div class="ch">Avatar frame <small>Become a City Champion (all ${CT.length} awards in a city) to earn its frame</small></div><div class="frrow">${chip(null)}${own.map(f=>chip(f)).join('')}${next.map(f=>chip(f,true)).join('')}</div></div>`}
+const frameIds=()=>['prism','crown'].concat(CITY_ORDER.map(c=>'c:'+c));
+{const _pc=paneCast;paneCast=function(T){_pc(T);const pv=T.querySelector('.profcard .pav');if(pv&&myFrame())pv.outerHTML=framed(pv.outerHTML);const pc=T.querySelector('.profcard');if(!pc)return;
+  pc.insertAdjacentHTML('afterend',framePicker());T.querySelectorAll('.frchip').forEach(b=>b.onclick=()=>{if(b.classList.contains('lock')){toast(b.title);return}PREF.eq.frame=b.dataset.f;savePref();railProfile();homeTab('cast')})}}
+/* the peek: every city's award page shows the Champion frame it pays out */
+function champCard(c){const f=frameDef('c:'+c),[n,g]=f.prog,done=f.own,wear=PREF.eq.frame===f.id;
+  return `<div class="champcard${done?' got':''}">${framed(`<span class="pav">${charSVG(myChar(),56)}</span>`,f)}<div class="cci"><small>${done?'CITY CHAMPION':'CITY CHAMPION REWARD'}</small><b>${esc(f.name)} frame</b><span>+${nfmt(CHAMP_COINS)} coins · +${nfmt(CHAMP_XP)} XP · on top of the medals</span><span class="ccbar" aria-hidden="true"><i style="width:${n/g*100}%"></i></span><em>${done?'Unlocked':`${g-n} award${g-n===1?'':'s'} to go`}</em></div>${done?(wear?'<span class="iown">Wearing</span>':`<button class="ibtn gold" data-wear="${f.id}">Wear</button>`):''}</div>`}
+{const _pa=paneAch;paneAch=function(T){_pa(T);const ch=T.querySelector('.cityhead'),c=setup.achTab;
+  if(ch&&c&&CITY_DATA[c])ch.insertAdjacentHTML('afterend',champCard(c));
+  else{const cab=T.querySelector('.cabinet');if(cab){const n=champCount(),nx=n<PRISM_AT?frameDef('prism'):frameDef('crown');
+    cab.insertAdjacentHTML('afterend',`<div class="champsum">${framed(`<span class="pav sm">${charSVG(myChar(),40)}</span>`,nx)}<div><b>City Champions: ${n} of ${CITY_ORDER.length}</b><small>${nx.own?'All frames earned. Legend.':`Next: the ${esc(nx.name)} frame and ${nfmt(nx.coins)} coins at ${nx.prog[1]} Champion cities.`}</small></div></div>`)}}
+  T.querySelectorAll('[data-wear]').forEach(b=>b.onclick=()=>{PREF.eq.frame=b.dataset.wear;savePref();railProfile();paneAch(T)})}}
+{const _cs=cityScan;cityScan=function(f){_cs(f);try{champCheck(true)}catch(e){}}}
+{const _ht=homeTab;homeTab=function(k){_ht(k);setTimeout(frameReveal,700)}}
+setTimeout(()=>{try{champCheck(false);railProfile();frameReveal()}catch(e){}},1500);
 /* ================= ORIENTATION ================= */
 let rotDismissed=false;
 function checkRotate(){$('#rotate').hidden=true}
