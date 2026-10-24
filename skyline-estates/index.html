@@ -4742,7 +4742,7 @@ updateCell=function(i,anim){
 /* ================= ABUJA: EMERALD, IVORY AND BRASS ================= */
 /* Dark petrol frame with a thin brass inset, warm-ivory squares, a green capital-park centre with the National Mosque,
    Zuma Rock, Eagle Square and the national tower, and dense greenery around the board. */
-const CLEAN_PAL={cell:'#F1E7D5',line:'#cdbf9c',text:'#172B32',frame:'#142B36',slab:'#142B36',trim:'#0b1b22',pave:'#ddd6c2',plot:'#cfcab4',road:'#454b52',lane:'#f1e7d5',gold:'#C3A465',logo:['#F1E7D5','#0D5C4D'],ribbon:['#0D5C4D','#F1E7D5'],clean:true};
+const CLEAN_PAL={cell:'#E6D9BF',line:'#a8987a',text:'#14262C',frame:'#142B36',slab:'#142B36',trim:'#0b1b22',pave:'#a7ae92',plot:'#8e9978',road:'#454b52',lane:'#f1e7d5',gold:'#C3A465',logo:['#F1E7D5','#0D5C4D'],ribbon:['#0D5C4D','#F1E7D5'],clean:true};
 function abujaCenter(ctx,ph){const rnd=seeded(17);
   if(ph==='bg'){const g=ctx.createLinearGradient(0,140,0,960);g.addColorStop(0,'#6f9a4e');g.addColorStop(1,'#5e8a42');ctx.fillStyle=g;ctx.fillRect(140,140,820,820);
     for(let k=0;k<260;k++){const r=rnd();ctx.fillStyle=r<.5?`rgba(45,80,30,${.16+rnd()*.14})`:`rgba(150,190,100,${.12+rnd()*.12})`;ctx.beginPath();ctx.arc(150+rnd()*800,150+rnd()*800,5+rnd()*15,0,7);ctx.fill()}return}
@@ -4760,7 +4760,7 @@ Object.assign(THEMES.abuja,{sky:'linear-gradient(180deg,#3a7fbd 0%,#9cc6e6 60%,#
   ctx.strokeStyle=BP.frame;ctx.lineWidth=8;ctx.strokeRect(4,4,1092,1092);ctx.strokeStyle=gold;ctx.lineWidth=2;ctx.strokeRect(11,11,1078,1078)}}
 {const _ft=frameTex;frameTex=function(){if(!BP.clean)return _ft();return cnv(256,32,ctx=>{ctx.fillStyle=BP.frame;ctx.fillRect(0,0,256,32);ctx.fillStyle=BP.gold;ctx.fillRect(0,14,256,3);
   for(const x of[64,192]){ctx.save();ctx.translate(x,15.5);ctx.rotate(Math.PI/4);ctx.fillRect(-4,-4,8,8);ctx.restore()}})}}
-{const _bf=buildFrame;buildFrame=function(){_bf();const G0=S3;if(!G0||!G0.medMat)return;if(BP.clean){G0.medMat.c=hex(BP.gold);G0.medIn.c=hex(BP.frame)}}}
+{const _bf=buildFrame;buildFrame=function(){_bf();const G0=S3;if(!G0)return;if(G0.boardMat){G0.boardMat.c=BP.clean?[.84,.84,.84]:[1,1,1];G0.boardMat.spec=0}if(G0.medMat&&BP.clean){G0.medMat.c=hex(BP.gold);G0.medIn.c=hex(BP.frame)}}}
 /* the centre in 3D */
 CITY_CENTERS.abuja=function(g){const geo=S3.geo,M=S3.M,P=(X,Y)=>[wx(X),wz(Y)];
   const lime=mat('#f2ece0',{spec:.25}),lime2=mat('#e4dccb'),gold=mat('#e0b23a',{spec:.95,em:.08}),green=mat('#0D5C4D',{spec:.4});
@@ -4788,6 +4788,11 @@ function abujaGreen(){S3.envs=S3.envs||{};if(S3.envs.abujaGreen)return S3.envs.a
   for(let k=0;k<26;k++){const a=k/26*Math.PI*2+rnd()*.15,r=24+rnd()*9,h=.8+rnd()*2.2,w=1.2+rnd()*1.2;g.add(N(S3.floorGeo,mat(['#ece6d8','#e2dccb','#d8d6cf'][k%3],{tex,spec:.4}),Math.cos(a)*r,h/2,Math.sin(a)*r).sc(w,h,w*.8))}
   return g}
 {const _ae=applyEnv;applyEnv=function(T){_ae(T);try{const on=CUR_THEME==='abuja'&&!equippedSurround();if(on)abujaGreen();if(S3.envs&&S3.envs.abujaGreen)S3.envs.abujaGreen.visible=on}catch(e){}}}
+/* clean boards: deeper colour bands on the street squares so groups read at a glance */
+{const _dc=drawCell;drawCell=function(ctx,i){_dc(ctx,i);if(!BP.clean)return;const s=SQ[i];if(s.t!=='prop')return;const r=rect(i);ctx.save();ctx.translate(r.x+r.w/2,r.y+r.h/2);ctx.rotate(sideOf(i)*Math.PI/2);
+  const w=CW,h=C;ctx.fillStyle=GC[s.g];ctx.fillRect(-w/2,-h/2,w,34);ctx.fillStyle='rgba(0,0,0,.18)';ctx.fillRect(-w/2,-h/2+34,w,3);ctx.restore();
+  ctx.save();ctx.translate(r.x+r.w/2,r.y+r.h/2);ctx.rotate(sideOf(i)*Math.PI/2);ctx.textAlign='center';ctx.textBaseline='top';const f=fitText(ctx,s.n.toUpperCase(),w-10,15,800,FB,3);ctx.font=`800 ${f.s}px ${FB}`;
+  ctx.fillStyle=BP.cell;ctx.fillRect(-w/2+1,-h/2+37,w-2,f.lines.length*f.s*1.02+4);ctx.fillStyle=BP.text;f.lines.forEach((l,k)=>ctx.fillText(l,0,-h/2+40+k*f.s*1.02));ctx.restore()}}
 
 /* ================= BUILDING FAMILY WITH OWNERSHIP BASES ================= */
 /* Each owned street gets a dark base with a brass edge and a plate in the owner's colour on the street side.
