@@ -4838,6 +4838,92 @@ updateCell=function(i,anim){
   else{if(o.o>=0&&!o.m){if(!pl.flag){pl.flag=new Node();pl.flag.add(N(S3.geo.cyl8,S3.M.white,0,.2,0).sc(.012,.4,.012));const fl=N(S3.geo.box,mat('#fff'),.09,.34,0).sc(.17,.11,.012);pl.flag.add(fl);pl.flag.cloth=fl;pl.node.add(pl.flag)}
       pl.flag.cloth.mat=mat(P(o.o).col,{spec:.2});pl.flag.p=[0,pl.top,0]}else if(pl.flag){pl.node.remove(pl.flag);pl.flag=null}}
   cellState[i]={o:o.o,h:o.h,m:o.m}};
+
+/* ================= PORTFOLIO INSPECTOR ================= */
+/* Properties grouped by district, a detail panel per street with its development ladder, why an action is blocked,
+   and what an action costs (cash now, cost, cash after). Same rules and actions as before. */
+const LADDER=[['Plot','M3 20h18M6 20v-6h12v6'],['Home','M4 11l8-6 8 6v9H4z'],['Townhouse','M5 20V7h7v13M12 20V4h7v16'],['Apartments','M5 20V5h14v15M9 9h2M13 9h2M9 13h2M13 13h2'],['Boutique','M6 20V4h12v16M10 20v-4h4v4M9 8h2M13 8h2M9 12h2M13 12h2'],['Skyline hotel','M9 20V2h6v18M6 20V9h3M15 20V9h3']];
+const ladIco=(k,on)=>`<svg viewBox="0 0 24 24" class="lad${on?' on':''}" aria-hidden="true"><path d="${LADDER[k][1]}" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>`;
+function whyNoBuild(p,i,debt){const s=SQ[i],o=G.own[i];if(s.t!=='prop')return s.t==='rail'?'Transit hubs earn more as you collect them, but can’t be built on.':'Utilities earn more with both, but can’t be built on.';
+  if(debt)return 'Pay what you owe first.';const gr=GROUPS[s.g],own=gr.filter(j=>G.own[j].o===p.id).length;
+  if(!FFA()&&own<gr.length)return `Own all ${gr.length} streets in ${GNAME[s.g]} to build (${own}/${gr.length}).`;
+  if(o.m)return 'Redeem this street before building.';if(grp(p.id,s.g).some(j=>G.own[j].m))return `Redeem the mortgaged streets in ${GNAME[s.g]} first.`;
+  if(o.h>=5)return 'Fully developed.';if(G.set.even!==false&&o.h>Math.min(...grp(p.id,s.g).map(j=>G.own[j].h)))return `Build evenly: develop the other streets in ${GNAME[s.g]} first.`;
+  if(o.h===4&&G.hotels<=0)return 'The bank has no towers left.';if(o.h<4&&G.houses<=0)return 'The bank has no houses left.';if(p.cash<s.h)return `You need ${fmt(s.h-p.cash)} more cash.`;return ''}
+openAssets=function(p,opts={}){const debt=opts.debt||0,ro=!!opts.readonly;let filter='all',sel=null;
+  return modal({cls:'wide pfm',tdef:ro?undefined:debt?'auto':'done',html:'<div class="pfh"></div><div class="pfb"><div class="pfl"><div class="pft" role="tablist"></div><div class="pfg"></div></div><div class="pfd"></div></div><div class="mbar foot"></div>',onMount:(pn,close)=>{
+    const groupsOf=()=>{const out=[];Object.keys(GROUPS).forEach(g=>{const all=GROUPS[g],mine=all.filter(j=>G.own[j].o===p.id);if(mine.length)out.push({k:g,name:GNAME[g],col:GC[g],all,mine})});
+      const rails=RAILS.filter(j=>G.own[j].o===p.id),utils=UTILS.filter(j=>G.own[j].o===p.id);if(rails.length)out.push({k:'rail',name:'Transit hubs',col:'#7f8a96',all:RAILS,mine:rails});if(utils.length)out.push({k:'util',name:'Utilities',col:'#9aa3ad',all:UTILS,mine:utils});return out};
+    const pass=i=>filter==='all'||(filter==='build'?(!ro&&canBuild(p.id,i)):G.own[i].m);
+    const draw=()=>{const list=propsOf(p.id);if(sel==null||G.own[sel].o!==p.id)sel=list.find(i=>!ro&&canBuild(p.id,i))??list[0]??null;
+      pn.querySelector('.pfh').innerHTML=`<div class="mh">${ro?esc(p.name)+'’s portfolio':'Your portfolio'}</div><div class="pfs"><span><small>Cash</small><b>${fmt(p.cash)}</b></span><span><small>Assets</small><b>${list.length} propert${list.length===1?'y':'ies'}</b></span><span><small>Net worth</small><b>${fmt(netWorth(p))}</b></span></div>`+
+        (debt?`<div class="debt">${opts.who?'<b>'+esc(p.name)+'</b>: ':''}You owe <b>${fmt(debt)}</b>${opts.to?' to '+esc(opts.to.name):''}. ${p.cash>=debt?'You can pay now.':`Raise <b>${fmt(debt-p.cash)}</b> more by selling buildings or mortgaging (up to ${fmt(liquidity(p))} in total).`}</div>`:'');
+      const T=pn.querySelector('.pft');T.innerHTML=[['all','All'],['build','Can build'],['mort','Mortgaged']].filter(([k])=>!(ro&&k==='build')).map(([k,l])=>`<button class="pftab${filter===k?' on':''}" role="tab" aria-selected="${filter===k}" data-f="${k}">${l}</button>`).join('');
+      T.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{filter=b.dataset.f;draw()});
+      const L=pn.querySelector('.pfg');L.innerHTML='';const gs=groupsOf();
+      if(!gs.length)L.innerHTML='<div class="mtxt muted">No properties yet. Land on an unowned street and buy it, or win it at auction.</div>';
+      gs.forEach(gq=>{const rows=gq.all.filter(i=>G.own[i].o===p.id?pass(i):filter==='all');if(!rows.length)return;const full=gq.mine.length===gq.all.length;
+        const box=el('div','pgrp');box.innerHTML=`<div class="pgh"><i style="background:${gq.col}"></i><b>${esc(gq.name)}</b><em class="${full?'full':''}">${full&&gq.k!=='rail'&&gq.k!=='util'?'Complete set':gq.mine.length+' / '+gq.all.length}</em></div>`;
+        rows.forEach(i=>{const o=G.own[i],mine=o.o===p.id;const b=el(mine?'button':'div','prow'+(i===sel?' on':'')+(mine?'':' lock')+(o.m?' mort':''));
+          b.innerHTML=mine?`<span>${esc(SQ[i].n)}</span>${o.m?'<small>Mortgaged</small>':SQ[i].t==='prop'?`<small>${LADDER[o.h][0]}</small>`:''}<span class="chev" aria-hidden="true">›</span>`:`<span>${esc(SQ[i].n)}</span><small>${o.o>=0?'Owned by '+esc(P(o.o).name):'Not owned yet'}</small>`;
+          if(mine){b.onclick=()=>{sel=i;draw()};b.ondblclick=()=>showSquare(i)}box.append(b)});L.append(box)});
+      const D=pn.querySelector('.pfd');if(sel==null){D.innerHTML='';return}const i=sel,s=SQ[i],o=G.own[i],gr=s.g?GROUPS[s.g]:null,own=gr?gr.filter(j=>G.own[j].o===p.id).length:0;
+      const isP=s.t==='prop',why=ro?'':whyNoBuild(p,i,debt),can=!ro&&!debt&&canBuild(p.id,i),cost=isP?s.h:0;
+      D.innerHTML=`<div class="pdh"><i style="background:${s.g?GC[s.g]:'#9aa3ad'}"></i><div><b>${esc(s.n)}</b><small>${esc(isP?GNAME[s.g]+(s.lm?' · '+s.lm:''):s.t==='rail'?'Transit hub':'Utility')}</small></div>${isP?`<em class="${own===gr.length?'full':''}">${own===gr.length?'Complete set':'Set'} (${own}/${gr.length})</em>`:''}</div>
+        <div class="pdr"><span>Rent now <b>${o.m?'none (mortgaged)':fmt(rentFor(i,7))}${s.t==='util'&&!o.m?' at a roll of 7':''}</b></span><span>Bought for <b>${fmt(s.p)}</b></span></div>
+        ${isP?`<div class="pdl"><small>Development</small><div class="pladder">${LADDER.map((_,k)=>`<span class="lstep${k===o.h?' cur':''}${k<o.h?' done':''}">${ladIco(k,k<=o.h)}<i>${LADDER[k][0]}</i></span>`).join('')}</div></div>`:''}
+        ${!ro?`<div class="pdw ${can?'ok':'no'}">${can?`<b>Next build: ${o.h===4?'Skyline hotel':LADDER[o.h+1][0]}</b><span>Rent rises to ${fmt(s.r[o.h+1])}.</span>`:why?`<b>Can’t build here</b><span>${esc(why)}</span>`:''}</div>`:''}
+        ${isP&&!ro&&o.h<5&&!o.m?`<div class="pdm"><span><small>Cash now</small><b>${fmt(p.cash)}</b></span><span><small>Build cost</small><b>${fmt(cost)}</b></span><span><small>Cash after</small><b class="${p.cash-cost<0?'neg':''}">${fmt(p.cash-cost)}</b></span></div>`:''}
+        <div class="pda"></div>`;
+      const A=D.querySelector('.pda');const B=(lab,cls,ok,fn,title)=>{const b=el('button','btn '+cls,lab);b.disabled=!ok;if(title)b.title=title;b.onclick=()=>{fn();renderRoster();draw()};A.append(b)};
+      if(!ro){if(isP&&!o.m&&o.h<5)B(o.h===4?'Build hotel':'Build house','pri',can,()=>{build(p.id,i);sfx('buy')},why);
+        if(isP&&o.h)B(`Sell building +${fmt(s.h/2)}`,'',canSell(p.id,i),()=>sell(p.id,i));
+        if(o.m)B(`Redeem ${fmt(unmCost(i))}`,'',!debt&&canUnmort(p.id,i),()=>unmortgage(p.id,i));else B(`Mortgage +${fmt(s.p/2)}`,'',canMortgage(p.id,i),()=>mortgage(p.id,i),isP&&!canMortgage(p.id,i)?'Sell the buildings in this district first.':'')}
+      const loc=el('button','btn ghost','Locate on board');loc.onclick=()=>{close(debt?'auto':'done');setTimeout(()=>{camFocus(i);highlight(i)},250)};A.append(loc);
+      const F=pn.querySelector('.foot');F.innerHTML='';
+      if(debt){const bk=el('button','btn danger','Declare bankruptcy');bk.onclick=()=>close('bankrupt');const pb=el('button','btn pri','Pay '+fmt(debt));pb.disabled=p.cash<debt;pb.onclick=()=>close('pay');F.append(bk,pb)}
+      else{const d=el('button','btn pri','Done');d.onclick=()=>close('done');F.append(d)}};
+    draw()}})};
+(function(){const st=document.createElement('style');st.textContent=`
+.mp.pfm{width:min(980px,96vw);max-height:min(92vh,720px);display:flex;flex-direction:column;gap:8px}
+.pfh{display:flex;flex-direction:column;gap:8px}.pfh .mh{margin:0}
+.pfs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.pfs span{display:flex;flex-direction:column;padding:7px 12px;border-radius:12px;background:var(--bg1);border:1px solid var(--ln)}
+.pfs small,.pdm small,.pdl small{font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mute)}.pfs b{font:700 17px var(--display);color:var(--ink)}
+.pfb{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:10px;min-height:0;flex:1}
+.pfl,.pfd{min-height:0;overflow:auto;display:flex;flex-direction:column;gap:8px}
+.pft{display:flex;gap:4px;padding:3px;border-radius:12px;background:var(--bg1);border:1px solid var(--ln);flex:none}
+.pftab{flex:1;height:32px;border-radius:9px;border:none;background:transparent;color:var(--ink2);font:800 12.5px var(--body);cursor:pointer}.pftab.on{background:var(--gold);color:#1A1406}
+.pgrp{border-radius:14px;background:var(--bg1);border:1px solid var(--ln);padding:6px;display:flex;flex-direction:column;gap:4px}
+.pgh{display:flex;align-items:center;gap:8px;padding:4px 6px}.pgh i{width:14px;height:14px;border-radius:4px;flex:none}.pgh b{flex:1;font:700 14px var(--display);color:var(--ink)}
+.pgh em{font:800 11px var(--body);font-style:normal;color:var(--gold2)}.pgh em.full{color:var(--green)}
+.prow{display:flex;align-items:center;gap:8px;min-height:36px;padding:0 10px;border-radius:10px;border:1px solid transparent;background:var(--bg2);color:var(--ink);font:700 13px var(--body);text-align:left;cursor:pointer}
+.prow span:first-child{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.prow small{font-size:11px;font-weight:700;color:var(--mute)}.prow .chev{color:var(--mute);font-size:18px}
+.prow.on{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold)}.prow.lock{opacity:.6;cursor:default;background:transparent;border:1px dashed var(--ln2)}.prow.mort small{color:var(--bad)}
+.pfd{border-radius:16px;background:var(--bg1);border:1px solid var(--ln);padding:12px}
+.pdh{display:flex;align-items:center;gap:10px}.pdh>i{width:8px;align-self:stretch;border-radius:4px}.pdh div{flex:1;min-width:0;display:flex;flex-direction:column}.pdh b{font:700 19px var(--display);color:var(--ink)}.pdh small{font-size:12px;color:var(--mute)}
+.pdh em{font:800 11px var(--body);font-style:normal;padding:4px 10px;border-radius:999px;background:var(--bg2);border:1px solid var(--ln2);color:var(--ink2);white-space:nowrap}.pdh em.full{border-color:var(--green);color:var(--green)}
+.pdr{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--mute)}.pdr b{color:var(--ink)}
+.pladder{display:flex;gap:4px;margin-top:4px}.lstep{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border-radius:10px;background:var(--bg2);border:1px solid var(--ln);color:var(--mute)}
+.lstep i{font-size:9.5px;font-weight:800;font-style:normal;text-align:center;line-height:1.1}.lstep.done{color:var(--ink2)}.lstep.cur{border-color:var(--gold);color:var(--gold2);box-shadow:0 0 0 1px var(--gold)}
+svg.lad{width:24px;height:24px}
+.pdw{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;padding:9px 12px;border-radius:12px;font-size:12.5px}.pdw b{font-size:13.5px}.pdw.ok{background:color-mix(in srgb,var(--green) 14%,var(--bg2));border:1px solid color-mix(in srgb,var(--green) 50%,var(--ln))}.pdw.no{background:var(--bg2);border:1px solid var(--ln2)}.pdw span{color:var(--ink2)}
+.pdm{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.pdm span{display:flex;flex-direction:column;padding:7px 10px;border-radius:10px;background:var(--bg2);border:1px solid var(--ln)}.pdm b{font:700 15px var(--display);color:var(--ink)}.pdm b.neg{color:var(--bad)}
+.pda{display:flex;gap:6px;flex-wrap:wrap}.pda .btn{flex:1 1 140px}.pda .btn.ghost{background:transparent;border:1px solid var(--ln2);color:var(--ink2)}
+html.light .pftab.on{color:#1A1406}
+@media (max-width:700px){html:not(.rot) .pfb{grid-template-columns:minmax(0,1fr)}}
+html.rot .mp.pfm,.mp.pfm{max-height:92%}`;document.head.appendChild(st)})();
+/* turn label: "YOUR TURN" on your own card, the player's state on others */
+{const _rr=renderRoster;renderRoster=function(){const r=_rr.apply(this,arguments);try{const c=G&&P(G.turn),t=document.querySelector('#roster .pcard.cur .nowtag');if(t&&c){const mine=isLocalHuman(c)&&(!G.online||c.uid===NET.me);t.textContent=mine?'YOUR TURN':c.ai?'AI PLAYING':'PLAYING';t.classList.toggle('mine',mine)}}catch(e){}return r}}
+(function(){const st=document.createElement('style');st.textContent=`
+/* action dock: dice and actions in one panel at the bottom right */
+#acts:not(:empty){padding:8px;border-radius:20px;background:rgba(20,43,54,.92);border:1px solid rgba(195,164,101,.55);box-shadow:0 12px 30px rgba(0,0,0,.35);gap:8px;align-items:center}
+#acts .bigb{width:auto;min-width:118px;height:58px;padding:0 20px;border-radius:16px;border:2px solid #C3A465;background:linear-gradient(180deg,#127a64,#0D5C4D);color:#F1E7D5;flex-direction:row;gap:8px;font:700 19px var(--display);letter-spacing:.06em;box-shadow:0 4px 0 #083c32,0 10px 20px rgba(0,0,0,.3)}
+#acts .bigb svg{width:22px;height:22px}
+#acts .bigb.end{background:#1c3a48;color:#F1E7D5;border-color:#C3A465;box-shadow:0 4px 0 #0b1b22}
+#acts .bigb:active{transform:translateY(3px);box-shadow:0 1px 0 #083c32}
+#acts .pill{min-height:44px;border-radius:14px}
+html.light #acts:not(:empty){background:rgba(255,255,255,.95);border-color:rgba(195,164,101,.7)}
+.nowtag{white-space:nowrap}.nowtag.mine{background:#C3A465!important;color:#142B36!important}`;document.head.appendChild(st)})();
 /* ================= ORIENTATION ================= */
 let rotDismissed=false;
 function checkRotate(){$('#rotate').hidden=true}
