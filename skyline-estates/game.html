@@ -4706,15 +4706,15 @@ function sqTower(col){const g=S3.geo,W=S3.BW,h=new Node();
     N(g.box,bMat(col,'glow'),0,.495,0).sc(.2,.05,.15),N(g.cone4,bMat(col,'solid'),0,.6,0).sc(.05,.13,.05));return h}
 /* the plot building: floor k of `want` floors */
 function plotFloor(col,k,want,hotel){const g=S3.geo,W=S3.BW,fh=.24,f=new Node().at(0,k*fh,0);
-  if(!hotel){const fw=.56;
+  if(!hotel){const fw=.46;
     if(k===0)f.add(N(g.box,S3.BW.stone,0,fh/2,0).sc(fw+.02,fh,fw+.02),N(g.box,W.win,0,fh*.42,fw/2+.012).sc(fw*.72,fh*.5,.01),N(g.box,W.win,0,fh*.42,-fw/2-.012).sc(fw*.72,fh*.5,.01),N(g.box,bMat(col,'solid'),0,fh*.86,fw/2+.03).sc(fw*.8,.025,.05),N(g.box,bMat(col,'solid'),0,fh*.86,-fw/2-.03).sc(fw*.8,.025,.05));
     else f.add(N(S3.bGeo,bMat(col,k%2?'glassLit':'glass'),0,fh/2,0).sc(fw,fh-.02,fw));
-    f.add(N(g.box,W.slab,0,fh-.006,0).sc(fw+.04,.024,fw+.04));
-    if(k===want-1)f.add(N(g.box,bMat(col,'solid'),0,fh+.025,0).sc(fw+.04,.035,fw+.04),N(g.box,W.roof,.11,fh+.08,-.08).sc(.15,.08,.13),N(g.cyl,W.roof,-.13,fh+.1,.11).sc(.06,.12,.06),N(g.box,W.slab,-.12,fh+.06,-.12).sc(.08,.04,.08))}
-  else{const pod=k<2,fw=pod?.6:.42;
+    f.add(N(g.box,W.slab,0,fh-.006,0).sc(fw+.03,.024,fw+.03));
+    if(k===want-1)f.add(N(g.box,bMat(col,'solid'),0,fh+.025,0).sc(fw+.03,.035,fw+.03),N(g.box,W.roof,.09,fh+.08,-.07).sc(.13,.08,.11),N(g.cyl,W.roof,-.11,fh+.1,.09).sc(.05,.12,.05),N(g.box,W.slab,-.1,fh+.06,-.1).sc(.07,.04,.07))}
+  else{const pod=k<2,fw=pod?.48:.36;
     if(pod)f.add(N(g.box,S3.BW.stone,0,fh/2,0).sc(fw,fh,fw),N(g.box,W.win,0,fh*.45,fw/2+.006).sc(fw*.8,fh*.55,.01),N(g.box,W.win,0,fh*.45,-fw/2-.006).sc(fw*.8,fh*.55,.01),N(g.box,W.win,fw/2+.006,fh*.45,0).sc(.01,fh*.55,fw*.8),N(g.box,W.win,-fw/2-.006,fh*.45,0).sc(.01,fh*.55,fw*.8));
     else{f.add(N(S3.bGeo,bMat(col,'hglass'),0,fh/2,0).sc(fw,fh,fw));for(const[x,z]of[[1,1],[1,-1],[-1,1],[-1,-1]])f.add(N(g.box,bMat(col,'solid'),x*fw/2,fh/2,z*fw/2).sc(.035,fh,.035))}
-    if(k===1)f.add(N(g.box,W.slab,0,fh-.005,0).sc(.64,.03,.64));
+    if(k===1)f.add(N(g.box,W.slab,0,fh-.005,0).sc(.5,.03,.5));
     if(k===want-1)f.add(N(g.box,bMat(col,'glow'),0,fh+.04,0).sc(fw*.92,.08,fw*.92),N(g.box,W.slab,0,fh+.09,0).sc(fw*.8,.02,fw*.8),N(g.cyl,bMat(col,'solid'),0,fh+.2,0).sc(.05,.2,.05),N(g.cone,bMat(col,'solid'),0,fh+.38,0).sc(.05,.16,.05),N(g.sph,bMat(col,'glow'),0,fh+.47,0).sc(.035))}
   return f}
 updateCell=function(i,anim){
@@ -4737,6 +4737,13 @@ updateCell=function(i,anim){
 /* the current event sits on its own line in the round chip, and the radio pill moves up to make room */
 {const _rr=renderRoster;renderRoster=function(){const r=_rr.apply(this,arguments);try{const R=$('#round'),e=G&&evDef();if(R&&e){const tt=evText(e,'t'),s=R.textContent,k=s.lastIndexOf(' · '+tt);if(k>=0){R.textContent=s.slice(0,k);const sp=document.createElement('span');sp.className='rev';sp.textContent=tt;R.append(sp)}}
   if(R)document.documentElement.style.setProperty('--roundH',R.offsetHeight+'px')}catch(_){}return r}}
+/* corners: the plots either side of a corner sat almost on top of each other, so at each corner the one with a
+   non-street neighbour (card, tax or utility square) moves along its side, away from the corner */
+{const _bb=buildBoard;buildBoard=function(){const r=_bb.apply(this,arguments);try{[[1,39],[9,11],[19,21],[29,31]].forEach(([a,b])=>{
+  if(!(SQ[a].t==='prop'&&SQ[b].t==='prop'))return;const nb=i=>i%10===1?i+1:i-1,free=i=>!SQ[nb(i)]||SQ[nb(i)].t!=='prop';
+  const along=free(a)?a:free(b)?b:null,i=along==null?(a%10===1?a:b):along,pl=S3&&S3.plots&&S3.plots[i];if(!pl||pl.cornerShift)return;const th=(pl.node.r&&pl.node.r[1])||0;
+  if(along!=null){const s=(i%10===1?1:-1)*.6;pl.node.p=[pl.node.p[0]-Math.cos(th)*s,pl.node.p[1],pl.node.p[2]+Math.sin(th)*s]}
+  else{const s=(i%10===1?1:-1)*.6;pl.node.p=[pl.node.p[0]-Math.cos(th)*s-Math.sin(th)*.6,pl.node.p[1],pl.node.p[2]+Math.sin(th)*s-Math.cos(th)*.6]}pl.cornerShift=1})}catch(e){}return r}}
 /* ================= ORIENTATION ================= */
 let rotDismissed=false;
 function checkRotate(){$('#rotate').hidden=true}
