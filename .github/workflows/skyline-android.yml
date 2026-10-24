@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   android:
@@ -57,3 +57,11 @@ jobs:
             skyline-estates-app/android/app/build/outputs/apk/release/*.apk
             skyline-estates-app/android/app/build/outputs/bundle/release/*.aab
           if-no-files-found: warn
+      - name: Publish the test APK for sideloading
+        working-directory: skyline-estates-app/android/app/build/outputs/apk/debug
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp app-debug.apk Skyline-Estates-Android-test.apk
+          gh release view skyline-android-test >/dev/null 2>&1 || gh release create skyline-android-test --title "Skyline Estates for Android (test build)" --notes "Test build for installing directly on Android phones. Not signed for Google Play."
+          gh release upload skyline-android-test Skyline-Estates-Android-test.apk --clobber
