@@ -1796,6 +1796,76 @@ html.rot .mp.pf2{width:calc(var(--sh,100vh) * .8)}
 html.rot .pf2s i{display:none}html.rot .pf2s span{padding:5px 10px}html.rot .pf2s b{font-size:14px}
 html.rot .pf2h h2{font-size:19px}html.rot .pfdi{width:28px;height:28px}html.rot .pfdi svg{width:15px;height:15px}html.rot .pf2gn b{font-size:13.5px}
 html.rot .pf2row{min-height:34px;font-size:12.5px}html.rot .pf2t button{height:30px;font-size:12.5px}html.rot .pf2dh h3{font-size:16px}html.rot .pf2m b{font-size:13px}html.rot .pf2m span i{display:none}
+/* ===== Set up your game ===== */
+.pane:has(.suw){display:block!important;overflow:auto!important}
+.suw{display:grid;grid-template-columns:minmax(0,1fr) minmax(250px,330px);gap:16px;align-items:start}
+.sul{display:flex;flex-direction:column;gap:12px;min-width:0}
+.suh{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.suback{background:none;border:0;color:#d8e0e8;font:600 15px var(--body,inherit);cursor:pointer;padding:0}
+.suh h2{margin:0;flex:1;font:800 28px var(--display,inherit);letter-spacing:-.01em;text-transform:none;color:#fff;white-space:nowrap}
+.sust{display:flex;align-items:flex-start;gap:6px;margin:0;padding:0;list-style:none}
+.sust li{display:flex;flex-direction:column;align-items:center;gap:4px}.sust li small{font-size:12px;color:#d8e0e8}
+.sust li.suln{width:42px;height:2px;background:#5b6f82;margin-top:16px}
+.sust button{width:34px;height:34px;border-radius:50%;border:2px solid #9fb0c2;background:#0b1b28;color:#fff;cursor:pointer;padding:0}
+.sust i{font-style:normal;font:800 15px var(--display,inherit)}
+.sust li.on button{background:linear-gradient(#ffe098,#e5b551);border-color:#f0ce7d;color:#172632}.sust li.done button{background:#1f7a5a;border-color:#5fe8b4}
+.sucard{padding:14px 16px;border-radius:18px;background:#0e2232;border:1px solid #2a4658;display:flex;flex-direction:column;gap:10px}
+.sucard h3{margin:0;font:800 21px var(--display,inherit);letter-spacing:0;text-transform:none;color:#fff}
+.susub{margin:0;font-size:13px;color:#b9c6d2}
+.sumodes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.sumode{position:relative;min-height:190px;display:flex;flex-direction:column;justify-content:flex-end;gap:4px;padding:12px 14px;border-radius:16px;border:1.5px solid #3a5568;background:#16304a center/cover no-repeat;color:#fff;text-align:left;cursor:pointer}
+.sumode b{font:800 20px var(--display,inherit);letter-spacing:.04em;text-transform:uppercase}.sumode small{font-size:13.5px;line-height:1.3;color:#e7eef4}
+.sumode.on{border:3px solid #e9c46a;box-shadow:0 0 0 2px rgba(233,196,106,.25)}
+.sumode em{position:absolute;top:10px;right:10px;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(#ffe098,#e5b551);color:#172632;font-style:normal;font-weight:900;font-size:17px}
+.surounds{display:flex;align-items:center;gap:14px}.surounds b{font-size:16px;white-space:nowrap}
+.suseg{display:flex;flex:1;border-radius:12px;border:1px solid #3a5568;background:#0b1b28;overflow:hidden}
+.suseg button{flex:1;min-height:36px;border:0;background:none;color:#e7eef4;font:700 14px var(--body,inherit);cursor:pointer;padding:0 8px}
+.suseg button+button{border-left:1px solid #2a4658}.suseg button.on{background:linear-gradient(#ffe098,#e5b551);color:#172632}
+.suseg.big button{min-height:42px;font-size:17px}
+.surules{display:grid;grid-template-columns:1fr 1fr;gap:4px 18px}
+.surule{display:grid;grid-template-columns:32px minmax(0,1fr) auto;gap:10px;align-items:center;padding:7px 2px;border:0;background:none;color:#fff;text-align:left;cursor:pointer}
+.surule i{font-style:normal;font-size:22px;text-align:center}.surule span{display:flex;flex-direction:column;min-width:0}.surule b{font-size:15px;font-weight:600}.surule small{font-size:12px;color:#b9c6d2;line-height:1.3}
+.susw{position:relative;width:48px;height:28px;border-radius:999px;background:#3c4a58;flex:none;transition:background .2s}.susw i{position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#f4efe2;transition:transform .2s}
+.susw.on{background:#2fae7e}.susw.on i{transform:translateX(20px)}
+.sumore{grid-column:2;align-self:center;min-height:42px;border-radius:12px;border:1px solid #3a5568;background:#0b1b28;color:#fff;font:600 14px var(--body,inherit);cursor:pointer}
+.surules.extra{padding-top:8px;border-top:1px solid #2a4658}
+.suopts{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;padding-top:8px;border-top:1px solid #2a4658}.suopts>div{display:flex;flex-direction:column;gap:6px}.suopts b{font-size:13px}
+.suslots{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.suslot{display:grid;grid-template-columns:auto auto minmax(0,1fr);grid-template-rows:auto auto;gap:6px 10px;align-items:center;padding:8px 10px;border-radius:14px;background:#132c3d;border:1.5px solid color-mix(in srgb,var(--pc) 70%,#2a4658)}
+.suslot.off{opacity:.55;border-color:#2a4658}
+.supor{grid-row:1/span 2;width:52px;height:52px;border-radius:12px;overflow:hidden;background:#0b1b28}.supor svg{width:52px;height:52px}
+.sutok{grid-row:1/span 2;width:40px;height:40px;border-radius:50%;border:2px solid var(--pc);background:#0b1b28;font:22px/1 var(--emoji);cursor:pointer}
+.suslot input{min-width:0;height:32px;border-radius:9px;border:1px solid #2a4658;background:#0b1b28;color:#fff;padding:0 10px;font:600 14px var(--body,inherit)}
+.suslot .suseg{grid-column:3}
+.sunav{display:grid;grid-template-columns:1fr 1.15fr;gap:14px}
+.sunb{min-height:54px;border-radius:14px;font:800 19px var(--display,inherit);cursor:pointer}
+.sunb.dark{background:#0b1b28;border:1.5px solid #3a5568;color:#fff}.sunb.gold{background:linear-gradient(#ffe098,#e5b551);border:1px solid #f0ce7d;color:#172632;box-shadow:inset 0 -3px #b68d35}
+.susum{position:sticky;top:0;display:flex;flex-direction:column;gap:10px;padding:14px;border-radius:20px;background:#0e2232;border:1px solid #2a4658}
+.susum h3{margin:0;font:800 21px var(--display,inherit);letter-spacing:0;text-transform:none;color:#fff}
+.supic{position:relative;height:170px;border-radius:14px;background:#16304a center/cover no-repeat;display:flex;align-items:flex-end;padding:12px;color:#fff;overflow:hidden}
+.supic span{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}.supic b{font:800 26px var(--display,inherit)}.supic small{font-size:14px}
+.supic em{position:absolute;right:12px;bottom:12px;font:28px/1 var(--emoji);font-style:normal}
+.supic button{position:absolute;top:10px;right:10px;padding:5px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.5);background:rgba(7,20,32,.7);color:#fff;font:700 12px var(--body,inherit);cursor:pointer}
+.susum dl{margin:0;display:flex;flex-direction:column;gap:6px}
+.susum dl>div{display:grid;grid-template-columns:120px minmax(0,1fr) auto;align-items:center;gap:8px;font-size:13.5px}
+.susum dt{color:#d8e0e8}.susum dd{margin:0;color:#c9d3dc}
+.suedit{padding:5px 10px;border-radius:10px;border:1px solid #3a5568;background:#0b1b28;color:#fff;font:700 12px var(--body,inherit);cursor:pointer}
+.suav{display:flex;gap:8px;flex-wrap:wrap;padding-top:10px;border-top:1px solid #2a4658}
+.suav>span{display:flex;flex-direction:column;align-items:center;gap:2px;width:64px}
+.suav i{position:relative;width:56px;height:56px;border-radius:14px;border:2px solid #3a5568;background:#0b1b28;overflow:visible;font-style:normal}
+.suav i svg{width:52px;height:52px;border-radius:12px}.suav span.human:first-child i{border-color:#e9c46a}
+.suav i em{position:absolute;right:-4px;bottom:-4px;font-style:normal;font-size:10px;font-weight:800;padding:1px 6px;border-radius:999px;background:#0b1b28;border:1px solid #9fb0c2;color:#fff}
+.suav .crown{position:absolute;right:-6px;top:-8px;font-size:15px}
+.suav b{font-size:13px;color:#fff;max-width:64px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.suav small{font-size:10.5px;color:#b9c6d2;white-space:nowrap}
+.suchips{display:flex;gap:6px;flex-wrap:wrap}.suchips span{padding:5px 11px;border-radius:999px;background:#13453a;border:1px solid #2fae7e;font-size:12.5px;color:#d9fbe9}
+html.light .sucard,html.light .susum{background:#fff;border-color:#d8dfe8}html.light .suh h2,html.light .sucard h3,html.light .susum h3,html.light .surule{color:#13222c}html.light .suseg,html.light .sumore,html.light .sunb.dark,html.light .suslot input{background:#f3f5f9;color:#13222c;border-color:#d0d8e3}html.light .suseg button{color:#13222c}html.light .suslot{background:#f7f9fb}html.light .susum dt,html.light .susum dd,html.light .suback,html.light .sust li small{color:#2a3b45}
+@media (max-height:520px){.suh h2{font-size:22px}.sumode{min-height:130px}.sumode b{font-size:16px}.sumode small{font-size:12px}.supic{height:110px}.supic b{font-size:20px}.sunb{min-height:46px;font-size:16px}}
+html.rot .suh h2{font-size:22px}html.rot .sumode{min-height:130px}html.rot .sumode b{font-size:16px}html.rot .supic{height:110px}html.rot .suw{grid-template-columns:minmax(0,1fr) 250px}html.rot .surules{grid-template-columns:1fr}html.rot .sumore{grid-column:1}
+@media (max-width:820px){html:not(.rot) .suw{grid-template-columns:1fr}html:not(.rot) .susum{position:static}html:not(.rot) .surules,html:not(.rot) .suslots{grid-template-columns:1fr}html:not(.rot) .sumore{grid-column:1}html:not(.rot) .sumodes{grid-template-columns:1fr}}
+.sunav{position:sticky;bottom:0;z-index:2;padding-top:6px;background:linear-gradient(180deg,rgba(11,26,40,0),rgba(11,26,40,.9) 30%)}html.light .sunav{background:linear-gradient(180deg,rgba(244,246,250,0),rgba(244,246,250,.95) 30%)}
+@media (max-height:520px){.sumode small{display:none}.sunb{min-height:40px;font-size:15px}.sucard{padding:10px 12px}.sucard h3{font-size:17px}.susum dl>div{grid-template-columns:90px minmax(0,1fr) auto;font-size:12px}.susum h3{font-size:17px}}
+html.rot .sumode small{display:none}html.rot .sumode{min-height:110px}html.rot .sunb{min-height:40px;font-size:15px}html.rot .sucard h3,html.rot .susum h3{font-size:17px}
+html.rot .susum dl>div{grid-template-columns:86px minmax(0,1fr);font-size:12px}html.rot .suedit{grid-column:1/-1;justify-self:start}html.rot .suav>span{width:52px}html.rot .suav i{width:46px;height:46px}html.rot .suav i svg{width:42px;height:42px}
 </style>
 
 <canvas id="gl" aria-label="3D game board"></canvas>
@@ -6503,6 +6573,61 @@ function mergeStatic(g,keep){const B=new Map();
   g.kids.slice().forEach(k=>{if(!keep.includes(k))g.remove(k)});g.p=[0,0,0];
   B.forEach(b=>{for(let o=0;o<b.idx.length;o+=600000){}g.add(new Node(mkGeo(b.v,b.idx),b.mat))});
   return B.size}
+
+/* ================= SET UP YOUR GAME (concept look) ================= */
+/* Back to Play, title and a 1–2–3 stepper; Players as cards; Rules as three picture cards for the mode, a rounds bar,
+   the main house rules as switches with icons and "More house rules" for the rest and the options; Review; and a
+   match summary with the city picture, rows with icons and the players' portraits. Same settings as before. */
+const SU_MODE_PIC={classic:'rome',quick:'uppsala',timed:'london'};
+const SU_MAIN=['auction','even','perks','events','minigames'];
+const SU_IC={auction:'🔨',even:'🏘️',perks:'🎖️',events:'✨',minigames:'🎮',ffa:'🏗️',speedDie:'🎲',pot:'💰',goDouble:'⭐',jailRent:'🔒',interest:'📈'};
+const SU_SHORT={auction:'Unbought streets go to auction.',even:'Build evenly across a district.',perks:'Upgraded tokens get their perks.',events:'Local events every two rounds.',minigames:'Quizzes and Catch the Cash.'};
+const suSw=(on,label)=>`<span class="susw${on?' on':''}" role="switch" aria-checked="${!!on}" aria-label="${esc(label)}"><i></i></span>`;
+paneCustom=function(T){const st=setup.cstep||1,k=setup.city,c=CITY_DATA[k],C=countryOf(k);
+  const players=slotPlayers(setup.slots),M=MODES.find(m=>m[0]===setup.mode);
+  const steps=['Players','Rules','Review'];
+  T.innerHTML=`<div class="suw"><div class="sul">
+    <header class="suh"><button class="suback" id="suBack">‹ Back to Play</button><h2>Set up your game</h2>
+      <ol class="sust">${steps.map((s,i)=>`<li class="${i+1===st?'on':i+1<st?'done':''}"><button data-s="${i+1}" aria-label="Step ${i+1}: ${s}"><i>${i+1<st?'✓':i+1}</i></button><small>${s}</small></li>`).join('<li class="suln" aria-hidden="true"></li>')}</ol></header>
+    <div class="subody"></div>
+    <div class="sunav"><button class="sunb dark" id="suPrev">‹ ${st===1?'Back to Play':'Back'}</button><button class="sunb gold" id="suNext">${st===1?'Next: rules ›':st===2?'▷ Review game':'▶ Start game'}</button></div></div>
+    <aside class="susum"><h3>Match summary</h3><div class="supic"${cityPhoto(k)?` style="background-image:linear-gradient(180deg,rgba(0,0,0,0) 45%,rgba(7,20,32,.92)),url(${cityPhoto(k)})"`:''}><span><b>${esc(c.name)}</b><small>${esc(C.name)}</small></span><em>${C.flag}</em><button id="suCity">Change</button></div>
+      <dl>
+        <div><dt>👥 Players</dt><dd>${players.length} (${players.filter(p=>p.type==="human").length} human + ${players.filter(p=>p.type==="ai").length} AI)</dd>${st!==1?'<button class="suedit" id="suEdit">✎ Edit</button>':''}</div>
+        <div><dt>◎ ${setup.mode==='timed'?'Round limit':'Mode'}</dt><dd>${setup.mode==='timed'?setup.rounds+' rounds':esc(M[1])}</dd></div>
+        <div><dt>⚙ AI</dt><dd>${{easy:'Easy',normal:'Normal',hard:'Hard'}[setup.ai]||setup.ai}</dd></div>
+        <div><dt>💵 Starting cash</dt><dd>${fmt(setup.cash)}</dd></div>
+        <div><dt>⏱ Timer</dt><dd>${setup.timer?setup.timer+' sec':'Off'}</dd></div></dl>
+      <div class="suav">${players.map((p,n)=>`<span class="${p.type}"><i style="--pc:${PCOL[p.i]}">${charSVG(pickChar(p,players),60)}${p.type==='ai'?'<em>AI</em>':n===0?'<b class="crown">👑</b>':''}</i><b>${esc((p.name||'').trim()||NAMES[p.i])}</b><small>${p.type==='ai'?'AI · '+({easy:'Easy',normal:'Normal',hard:'Hard'}[setup.ai]||''):'Human'}</small></span>`).join('')}</div></aside></div>`;
+  const B=T.querySelector('.subody'),go=s=>{setup.cstep=s;paneCustom(T)},redraw=()=>paneCustom(T);
+  if(st===1){B.innerHTML=`<section class="sucard"><h3>Who’s playing</h3><p class="susub">Tap a token to change it. Your upgrades and finish apply to player 1.</p><div class="suslots"></div></section>`;
+    const S=B.querySelector('.suslots');setup.slots.forEach((s,i)=>{const d=el('div','suslot'+(s.type==='off'?' off':''));d.style.setProperty('--pc',PCOL[i]);
+      d.innerHTML=`<span class="supor">${charSVG(pickChar(Object.assign({i},s),players.length?players:[Object.assign({i},s)]),52)}</span><button class="sutok" aria-label="Change token">${s.tok}</button><input maxlength="12" value="${esc(s.name)}" aria-label="Player ${i+1} name"><div class="suseg">${['human','ai','off'].map(t=>`<button data-t="${t}" class="${s.type===t?'on':''}">${t==='human'?'Human':t==='ai'?'AI':'Off'}</button>`).join('')}</div>`;
+      d.querySelector('.sutok').onclick=()=>{const used=setup.slots.filter((x,j)=>j!==i&&x.type!=='off').map(x=>x.tok);const TK=unlockedTokens();let q=TK.indexOf(s.tok);for(let n=0;n<TK.length;n++){q=(q+1)%TK.length;if(!used.includes(TK[q]))break}s.tok=TK[q];saveSlot(i,s);redraw()};
+      d.querySelector('input').oninput=e=>{s.name=e.target.value;saveSlot(i,s)};d.querySelector('input').onchange=redraw;
+      d.querySelectorAll('.suseg button').forEach(b=>b.onclick=()=>{s.type=b.dataset.t;saveSlot(i,s);redraw()});S.append(d)})}
+  else if(st===2){const more=!!setup.suMore;
+    B.innerHTML=`<section class="sucard"><h3>Choose how you play</h3><div class="sumodes">${MODES.map(([id,name,desc])=>{const ph=cityPhoto(SU_MODE_PIC[id])||cityPhoto(k);return `<button class="sumode${setup.mode===id?' on':''}" data-m="${id}"${ph?` style="background-image:linear-gradient(180deg,rgba(7,20,32,0) 30%,rgba(7,20,32,.95) 62%),url(${ph})"`:''}>${setup.mode===id?'<em>✓</em>':''}<b>${esc(name)}</b><small>${esc(id==='quick'?'Start with 2 properties; first bankruptcy ends the game.':id==='timed'?'Richest after the final round.':'Last player standing.')}</small></button>`}).join('')}</div>
+      ${setup.mode==='timed'?`<div class="surounds"><b>Number of rounds</b><div class="suseg big">${[10,20,30,45].map(n=>`<button data-r="${n}" class="${setup.rounds===n?'on':''}">${n}</button>`).join('')}</div></div>`:''}</section>
+      <section class="sucard"><h3>Rules</h3><div class="surules">${RULE_INFO.filter(r=>SU_MAIN.includes(r[0])).map(([id,l])=>`<button class="surule" data-r="${id}"><i>${SU_IC[id]||'•'}</i><span><b>${esc(l)}</b><small>${esc(SU_SHORT[id]||'')}</small></span>${suSw(setup.rules[id],l)}</button>`).join('')}
+        <button class="sumore" id="suMore">${more?'▴ Fewer rules':'▾ More house rules'}</button></div>
+        ${more?`<div class="surules extra">${RULE_INFO.filter(r=>!SU_MAIN.includes(r[0])).map(([id,l,d])=>`<button class="surule" data-r="${id}" title="${esc(loc(d))}"><i>${SU_IC[id]||'•'}</i><span><b>${esc(l)}</b><small>${esc(loc(d)).slice(0,90)}${loc(d).length>90?'…':''}</small></span>${suSw(setup.rules[id],l)}</button>`).join('')}</div>
+        <div class="suopts"><div><b>Starting cash</b><div class="suseg" id="suCash"></div></div><div><b>AI skill</b><div class="suseg" id="suAi"></div></div><div><b>Speed</b><div class="suseg" id="suSpd"></div></div><div><b>Turn timer</b><div class="suseg" id="suTimer"></div></div></div>`:''}</section>`;
+    B.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{setup.mode=b.dataset.m;redraw()});
+    B.querySelectorAll('.surounds [data-r]').forEach(b=>b.onclick=()=>{setup.rounds=+b.dataset.r;redraw()});
+    B.querySelectorAll('.surule[data-r]').forEach(b=>b.onclick=()=>{const id=b.dataset.r;setup.rules[id]=!setup.rules[id];PREF.rules=setup.rules;savePref();redraw()});
+    B.querySelector('#suMore').onclick=()=>{setup.suMore=!more;redraw()};
+    const seg=(sel,opts,get,set)=>{const E=B.querySelector(sel);if(!E)return;E.innerHTML=opts.map(([v,l])=>`<button class="${get()===v?'on':''}">${l}</button>`).join('');E.querySelectorAll('button').forEach((b,n)=>b.onclick=()=>{set(opts[n][0]);redraw()})};
+    seg('#suCash',CASH_OPTS.map(v=>[v,fmt(v)]),()=>setup.cash,v=>{setup.cash=v;PREF.cash=v;savePref()});seg('#suAi',[['easy','Easy'],['normal','Normal'],['hard','Hard']],()=>setup.ai,v=>{setup.ai=v;PREF.ai=v;savePref()});
+    seg('#suSpd',[['normal','Normal'],['fast','Fast']],()=>setup.speed,v=>{setup.speed=v;PREF.speed=v;savePref()});seg('#suTimer',[[0,'Off'],[90,'90 sec']],()=>setup.timer,v=>{setup.timer=v;PREF.timer=v;savePref()})}
+  else{const on=RULE_INFO.filter(r=>setup.rules[r[0]]).map(r=>r[1]);
+    B.innerHTML=`<section class="sucard"><h3>Ready to play</h3><p class="susub">${esc(M[1])}${setup.mode==='timed'?' · '+setup.rounds+' rounds':''} in ${esc(c.name)}. ${players.filter(p=>p.type==='human').length>1?'Pass-and-play: hand the device round on each human turn.':'You against the AI.'}</p>
+      <div class="suchips">${on.map(r=>`<span>✓ ${esc(r)}</span>`).join('')||'<span>No house rules</span>'}</div><p class="susub">Change anything by going back a step.</p></section>`}
+  T.querySelectorAll('.sust [data-s]').forEach(b=>b.onclick=()=>{const s=+b.dataset.s;if(s>1&&slotPlayers(setup.slots).length<2){toast('Pick at least two players');return}go(s)});
+  T.querySelector('#suBack').onclick=()=>{setup.cstep=1;homeTab('play')};
+  T.querySelector('#suPrev').onclick=()=>st===1?(setup.cstep=1,homeTab('play')):go(st-1);
+  T.querySelector('#suNext').onclick=()=>{if(slotPlayers(setup.slots).length<2){toast('Pick at least two players');return}if(st<3)go(st+1);else{setup.cstep=1;startFromSetup(T)}};
+  T.querySelector('#suCity').onclick=()=>homeTab('world');const ed=T.querySelector('#suEdit');if(ed)ed.onclick=()=>go(1)};
 /* ================= ORIENTATION ================= */
 let rotDismissed=false;
 function checkRotate(){$('#rotate').hidden=true}
