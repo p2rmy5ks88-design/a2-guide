@@ -6936,7 +6936,7 @@ function bldTex(l,cb){let e=BLDTEX[l];if(e){e.t?cb(e.t):e.q.push(cb);return}e=BL
 const BLD_SC=[.8,.88,.98,1.04,1.14,1.32];
 function bldBill(b,lv,col,mort){const F=FM();
   
-  const mt=mat(mort?'#8a8f96':'#ffffff',{unlit:1,blend:1}),q=N(bQuad(),mt,0,0,0).sc(BLD_SC[lv]);q.visible=false;b.add(q);
+  b.add(N(S3.geo.plane,S3.blob,0,.014,0).sc(BLD_SC[lv]*.95,1,BLD_SC[lv]*.8));const mt=mat(mort?'#8a8f96':'#ffffff',{unlit:1,blend:1}),q=N(bQuad(),mt,0,0,0).sc(BLD_SC[lv]);q.bs=BLD_SC[lv];q.visible=false;b.add(q);
   bldTex(lv,tx=>{mt.tex=tx;q.visible=true});faceOut(q);
   if(lv===5&&!mort)towerLights(q,col);return BLD_SC[lv]*.9}
 /* the Skyline Tower glows at night: a warm halo behind it and a beacon blinking on the crown */
@@ -6961,7 +6961,7 @@ function nodeWorld(n){const ch=[];let k=n;while(k){ch.unshift(k);k=k.parent}let 
 function faceOut(q){(S3.bq=S3.bq||new Set()).add(q);q.snap=null}
 /* upright, no tilt; all buildings face the side of the board the camera is on, snapped to 90°, so they stay still while you play */
 {const _ds3=drawScene;drawScene=function(time){if(S3&&S3.bq&&S3.bq.size&&CAMV){const dx=CAMV.pos[0]-CAMV.look[0],dy=CAMV.pos[1]-CAMV.look[1],dz=CAMV.pos[2]-CAMV.look[2],Q=Math.PI/2,sn=Math.round(Math.atan2(dx,dz)/Q)*Q,tl=-Math.round(Math.atan2(dy,Math.hypot(dx,dz))*.55*40)/40;
-    for(const q of S3.bq){const w=nodeWorld(q.parent);if(!w.root){if(q.snap!=null)S3.bq.delete(q);continue}if(q.snap!==sn||q.tl!==tl){q.snap=sn;q.tl=tl;q.r=[tl,sn-w.yaw,0]}}}return _ds3(time)}}
+    for(const q of S3.bq){const w=nodeWorld(q.parent);if(!w.root){if(q.snap!=null)S3.bq.delete(q);continue}if(q.snap!==sn||q.tl!==tl){q.snap=sn;q.tl=tl;const a=sn-w.yaw,k=q.bs||1;q.r=[tl,a,0];q.p=[Math.sin(a)*k*.2,-k*.07,Math.cos(a)*k*.2]}}}return _ds3(time)}}
 /* double-tap a building (or any owned street) to fly the camera close; double-tap again to return */
 let BZ=null;
 function plotAt(cx,cy){if(!S3||!G||!CAMM.vp)return -1;const cv=$('#gl'),r=cv.getBoundingClientRect(),m=CAMM.vp;let best=-1,bd=1e9;
