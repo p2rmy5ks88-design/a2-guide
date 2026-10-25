@@ -2581,12 +2581,12 @@ function modal({html,btns=[],cls='',auto=0,onMount,tdef}){
 }
 function deedHTML(i){
   const s=SQ[i],o=G?G.own[i]:{o:-1};let rows='';
-  if(s.t==='prop'){rows=`<tr><td>Rent</td><td>${fmt(s.r[0])}</td></tr><tr><td>Full colour set</td><td>${fmt(s.r[0]*2)}</td></tr>`+[1,2,3,4].map(k=>`<tr><td>With ${k} house${k>1?'s':''}</td><td>${fmt(s.r[k])}</td></tr>`).join('')+`<tr><td>With hotel</td><td>${fmt(s.r[5])}</td></tr><tr class="sep"><td>House / hotel cost</td><td>${fmt(s.h)}</td></tr>`}
+  if(s.t==='prop'){rows=`<tr><td>Rent</td><td>${fmt(s.r[0])}</td></tr><tr><td>Full colour set</td><td>${fmt(s.r[0]*2)}</td></tr>`+[1,2,3,4].map(k=>`<tr><td>With ${k} house${k>1?'s':''}</td><td>${fmt(s.r[k])}</td></tr>`).join('')+`<tr><td>With tower</td><td>${fmt(s.r[5])}</td></tr><tr class="sep"><td>House / tower cost</td><td>${fmt(s.h)}</td></tr>`}
   else if(s.t==='rail')rows=[1,2,3,4].map(k=>`<tr><td>Own ${k} hub${k>1?'s':''}</td><td>${fmt(RAIL_RENT[k-1])}</td></tr>`).join('');
   else rows=`<tr><td>Own 1 utility</td><td>${UTIL_X[0]}× dice</td></tr><tr><td>Own both</td><td>${UTIL_X[1]}× dice</td></tr>`;
   rows+=`<tr class="${s.t==='prop'?'':'sep'}"><td>Mortgage value</td><td>${fmt(s.p/2)}</td></tr>`;
   const gc=s.g?GC[s.g]:(s.t==='rail'?'#cfd8d4':'#9fe0f5');
-  const ownLine=o.o>=0?`Owned by ${esc(P(o.o).name)}${o.m?' · mortgaged':''}${o.h?` · ${o.h===5?'hotel':o.h+' house'+(o.h>1?'s':'')}`:''}`:`Price ${fmt(s.p)}`;
+  const ownLine=o.o>=0?`Owned by ${esc(P(o.o).name)}${o.m?' · mortgaged':''}${o.h?` · ${o.h===5?'tower':o.h+' house'+(o.h>1?'s':'')}`:''}`:`Price ${fmt(s.p)}`;
   return `<div class="deed"><div class="dh" style="--gc:${gc}"><small>${s.t==='prop'?'PROPERTY CARD · '+GNAME[s.g].toUpperCase():s.t==='rail'?'TRANSPORT HUB':'UTILITY'}</small><b>${s.ic?s.ic+' ':''}${s.n}</b></div><div class="dl">${s.lm||''}</div><table>${rows}</table><div class="own">${ownLine}</div></div>`;
 }
 const SQINFO={go:'Collect your payday every time you pass Start.',tax:'Pay the amount shown to the bank.',chance:'Draw a Lucky Break card and do what it says.',esusu:'Draw a City Hall card. Paperwork can be good news or bad news.',jail:'The city Lockup. If you are only passing through, nothing happens.',free:'A rest stop. Nothing happens here, unless the jackpot rule is on.',gojail:'Police check! Go straight to the Lockup. You do not collect your payday.'};
@@ -2748,12 +2748,12 @@ function openAssets(p,opts={}){
       const list=propsOf(p.id);
       if(!list.length)L.innerHTML='<div class="mtxt muted">No properties yet. Land on an unowned street and buy it, or win it at auction.</div>';
       list.forEach(i=>{const s=SQ[i],o=G.own[i];const r=el('div','arow');
-        const st=o.m?'Mortgaged':o.h===5?'Hotel':o.h?o.h+' house'+(o.h>1?'s':''):s.t==='prop'?(ownsAll(p.id,s.g)?'Full set':'—'):s.t==='rail'?'Transport':'Utility';
+        const st=o.m?'Mortgaged':o.h===5?'Tower':o.h?o.h+' house'+(o.h>1?'s':''):s.t==='prop'?(ownsAll(p.id,s.g)?'Full set':'—'):s.t==='rail'?'Transport':'Utility';
         r.innerHTML=`<i style="background:${s.g?GC[s.g]:'#cfd8d4'}"></i><div class="an">${s.n}<small>${st}</small></div><div class="ab"></div>`;
         const ab=r.querySelector('.ab');
         if(!ro){
           const B=(lab,cls,ok,fn)=>{const b=el('button','sm '+cls,lab);b.disabled=!ok;b.onclick=()=>{fn();renderRoster();draw()};ab.append(b)};
-          if(s.t==='prop'&&(ownsAll(p.id,s.g)||FFA())&&!o.m){B(`${o.h===4?'+Hotel':'+House'} ${fmt(s.h)}<small>${p.cash>=s.h?'leaves '+fmt(p.cash-s.h):'not enough cash'}</small>`,'go',!debt&&canBuild(p.id,i),()=>build(p.id,i));if(o.h)B(`Sell +${fmt(s.h/2)}`,'warn',canSell(p.id,i),()=>sell(p.id,i))}
+          if(s.t==='prop'&&(ownsAll(p.id,s.g)||FFA())&&!o.m){B(`${o.h===4?'+Tower':'+House'} ${fmt(s.h)}<small>${p.cash>=s.h?'leaves '+fmt(p.cash-s.h):'not enough cash'}</small>`,'go',!debt&&canBuild(p.id,i),()=>build(p.id,i));if(o.h)B(`Sell +${fmt(s.h/2)}`,'warn',canSell(p.id,i),()=>sell(p.id,i))}
           if(o.m)B(`Redeem ${fmt(unmCost(i))}`,'go',!debt&&canUnmort(p.id,i),()=>unmortgage(p.id,i));
           else B(`Mortgage +${fmt(s.p/2)}`,'warn',canMortgage(p.id,i),()=>mortgage(p.id,i));
         }
@@ -3004,7 +3004,7 @@ function showDiceHud(d){if(FAST)return;const h=$('#diceHud');const sp=d.s!=null?
   h.innerHTML=dieFace(d[0])+dieFace(d[1])+sp+`<b>${tot}</b>${d[0]===d[1]?'<em>DOUBLES</em>':d.s==='star'?'<em class="oga">STAR</em>':d.s==='taxi'?'<em class="oga">TAXI</em>':''}`;h.classList.remove('on');void h.offsetWidth;h.classList.add('on');clearTimeout(diceHudT);diceHudT=setTimeout(()=>h.classList.remove('on'),3200*spd())}
 
 /* ================= PROPERTY CHIPS ================= */
-function houseLabel(i){const h=G.own[i].h;return h===5?'Hotel':h?h+' house'+(h>1?'s':''):''}
+function houseLabel(i){const h=G.own[i].h;return h===5?'Tower':h?h+' house'+(h>1?'s':''):''}
 function ownHint(i,viewer,incoming,t){if(viewer==null)return '';const s=SQ[i];
   if(s.g){const gr=GROUPS[s.g],have=gr.filter(j=>G.own[j].o===viewer).length;
     if(incoming){const after=gr.filter(j=>G.own[j].o===viewer||t.give.includes(j)||(t.from===viewer&&t.get.includes(j))).length;
@@ -5674,7 +5674,7 @@ updateCell=function(i,anim){
 /* ================= PORTFOLIO INSPECTOR ================= */
 /* Properties grouped by district, a detail panel per street with its development ladder, why an action is blocked,
    and what an action costs (cash now, cost, cash after). Same rules and actions as before. */
-const LADDER=[['Plot','M3 20h18M6 20v-6h12v6'],['Home','M4 11l8-6 8 6v9H4z'],['Townhouse','M5 20V7h7v13M12 20V4h7v16'],['Apartments','M5 20V5h14v15M9 9h2M13 9h2M9 13h2M13 13h2'],['Boutique','M6 20V4h12v16M10 20v-4h4v4M9 8h2M13 8h2M9 12h2M13 12h2'],['Skyline hotel','M9 20V2h6v18M6 20V9h3M15 20V9h3']];
+const LADDER=[['Plot','M3 20h18M6 20v-6h12v6'],['Home','M4 11l8-6 8 6v9H4z'],['Townhouse','M5 20V7h7v13M12 20V4h7v16'],['Apartments','M5 20V5h14v15M9 9h2M13 9h2M9 13h2M13 13h2'],['Boutique','M6 20V4h12v16M10 20v-4h4v4M9 8h2M13 8h2M9 12h2M13 12h2'],['Skyline Tower','M9 20V2h6v18M6 20V9h3M15 20V9h3']];
 const ladIco=(k,on)=>`<svg viewBox="0 0 24 24" class="lad${on?' on':''}" aria-hidden="true"><path d="${LADDER[k][1]}" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>`;
 function whyNoBuild(p,i,debt){const s=SQ[i],o=G.own[i];if(s.t!=='prop')return s.t==='rail'?'Transit hubs earn more as you collect them, but can’t be built on.':'Utilities earn more with both, but can’t be built on.';
   if(debt)return 'Pay what you owe first.';const gr=GROUPS[s.g],own=gr.filter(j=>G.own[j].o===p.id).length;
@@ -5704,11 +5704,11 @@ openAssets=function(p,opts={}){const debt=opts.debt||0,ro=!!opts.readonly;let fi
       D.innerHTML=`<div class="pdh"><i style="background:${s.g?GC[s.g]:'#9aa3ad'}"></i><div><b>${esc(s.n)}</b><small>${esc(isP?GNAME[s.g]+(s.lm?' · '+s.lm:''):s.t==='rail'?'Transit hub':'Utility')}</small></div>${isP?`<em class="${own===gr.length?'full':''}">${own===gr.length?'Complete set':'Set'} (${own}/${gr.length})</em>`:''}</div>
         <div class="pdr"><span>Rent now <b>${o.m?'none (mortgaged)':fmt(rentFor(i,7))}${s.t==='util'&&!o.m?' at a roll of 7':''}</b></span><span>Bought for <b>${fmt(s.p)}</b></span></div>
         ${isP?`<div class="pdl"><small>Development</small><div class="pladder">${LADDER.map((_,k)=>`<span class="lstep${k===o.h?' cur':''}${k<o.h?' done':''}">${ladIco(k,k<=o.h)}<i>${LADDER[k][0]}</i></span>`).join('')}</div></div>`:''}
-        ${!ro?`<div class="pdw ${can?'ok':'no'}">${can?`<b>Next build: ${o.h===4?'Skyline hotel':LADDER[o.h+1][0]}</b><span>Rent rises to ${fmt(s.r[o.h+1])}.</span>`:why?`<b>Can’t build here</b><span>${esc(why)}</span>`:''}</div>`:''}
+        ${!ro?`<div class="pdw ${can?'ok':'no'}">${can?`<b>Next build: ${o.h===4?'Skyline Tower':LADDER[o.h+1][0]}</b><span>Rent rises to ${fmt(s.r[o.h+1])}.</span>`:why?`<b>Can’t build here</b><span>${esc(why)}</span>`:''}</div>`:''}
         ${isP&&!ro&&o.h<5&&!o.m?`<div class="pdm"><span><small>Cash now</small><b>${fmt(p.cash)}</b></span><span><small>Build cost</small><b>${fmt(cost)}</b></span><span><small>Cash after</small><b class="${p.cash-cost<0?'neg':''}">${fmt(p.cash-cost)}</b></span></div>`:''}
         <div class="pda"></div>`;
       const A=D.querySelector('.pda');const B=(lab,cls,ok,fn,title)=>{const b=el('button','btn '+cls,lab);b.disabled=!ok;if(title)b.title=title;b.onclick=()=>{fn();renderRoster();draw()};A.append(b)};
-      if(!ro){if(isP&&!o.m&&o.h<5)B(o.h===4?'Build hotel':'Build house','pri',can,()=>{build(p.id,i);sfx('buy')},why);
+      if(!ro){if(isP&&!o.m&&o.h<5)B(o.h===4?'Build tower':'Build house','pri',can,()=>{build(p.id,i);sfx('buy')},why);
         if(isP&&o.h)B(`Sell building +${fmt(s.h/2)}`,'',canSell(p.id,i),()=>sell(p.id,i));
         if(o.m)B(`Redeem ${fmt(unmCost(i))}`,'',!debt&&canUnmort(p.id,i),()=>unmortgage(p.id,i));else B(`Mortgage +${fmt(s.p/2)}`,'',canMortgage(p.id,i),()=>mortgage(p.id,i),isP&&!canMortgage(p.id,i)?'Sell the buildings in this district first.':'')}
       const loc=el('button','btn ghost','Locate on board');loc.onclick=()=>{close(debt?'auto':'done');setTimeout(()=>{camFocus(i);highlight(i)},250)};A.append(loc);
@@ -6351,10 +6351,10 @@ const mdTokCol=t=>{const L=TOKEN_LV[tokLv(t)];return L&&L.col&&!String(L.col).st
 {const _tg=tkGridHTML;tkGridHTML=function(sel){const h=_tg(sel);return h.replace(/<span class="tem r(\d)">([^<]+)<\/span>/g,(m0,lv,t)=>{t=t.trim();if(!TOKEN_INFO[t])return m0;const u=tokenUnlocked(t);
   return mdl({token:t,col:u?(setup.slots[0].tok===t?mdFinCol():mdTokCol(t)):'#7d8a96',label:TOKEN_INFO[t][0]},'tkm'+(u?'':' lockm'),160,128)})}}
 /* Collection → Buildings */
-const BLD=[['Garden plot','Owned, nothing built yet. A planted lot with trees.','0 houses'],['Courtyard home','A limestone home with a planted roof, pergola and slatted screen.','1 house'],['Townhouse','Terracotta fins, timber louvres and a glass balcony.','2 houses'],['Apartments','Three floors with glass balconies, planters and solar panels.','3 houses'],['Boutique hotel','Terracotta pilasters, a garden terrace and a timber roof pavilion.','4 houses'],['Skyline hotel','A glass tower with stone fins, a brass crown and palms at the door.','Hotel']];
+const BLD=[['Garden plot','Owned, nothing built yet. A planted lot with trees.','0 houses'],['Courtyard home','A limestone home with a planted roof, pergola and slatted screen.','1 house'],['Townhouse','Terracotta fins, timber louvres and a glass balcony.','2 houses'],['Apartments','Three floors with glass balconies, planters and solar panels.','3 houses'],['Boutique hotel','Terracotta pilasters, a garden terrace and a timber roof pavilion.','4 houses'],['Skyline Tower','A glass tower with stone fins, a brass crown and palms at the door.','Tower']];
 SUBS.collection.push(['buildings','Buildings']);SEC_OF.buildings='collection';
 function paneBuildings(T){const col=(P0=>P0)(PCOL[0]);
-  T.innerHTML=`<div class="phead"><h2>Buildings &amp; hotels</h2><span class="small">What grows on your streets as you build</span></div>
+  T.innerHTML=`<div class="phead"><h2>Buildings &amp; towers</h2><span class="small">What grows on your streets as you build</span></div>
     <div class="small">Every street you own gets a dark base with a brass edge and a plate in your colour. Each house you add grows it to the next building; four houses and a hotel make the Skyline hotel.</div>
     <div class="bldgrid">${BLD.map(([n,d,h],i)=>`<article class="bldc"><div class="bldst">${mdl({kind:'building',level:i,owner:col,label:n},'bldm',300,300)}<em>${h}</em></div><b>${n}</b><small>${d}</small></article>`).join('')}</div>`}
 {const _ht=homeTab;homeTab=function(k){const want=k==='buildings'||(k==='collection'&&setup.sub&&setup.sub.collection==='buildings');if(!want)return _ht(k);
@@ -6559,7 +6559,7 @@ const PF_IC={cash:'<svg viewBox="0 0 24 24"><path d="M3 7h15a3 3 0 013 3v8a2 2 0
   up:'<svg viewBox="0 0 24 24"><path d="M6 15l6-6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>'};
 const PF_DIST=['M12 3l2 5h-4zM9 21V8h6v13M5 21h14','M12 3v6M7 21V12l5-3 5 3v9M5 21h14','M4 21V11a8 8 0 0116 0v10M9 21v-6h6v6','M6 21V7l6-4 6 4v14M10 11h4M10 15h4','M12 3l7 7v11H5V10zM10 21v-5h4v5','M5 21V9h14v12M8 9V5h8v4M9 13h2M13 13h2'];
 const pfDistIc=(g,col)=>{const k=Object.keys(GROUPS).indexOf(g);return `<span class="pfdi" style="--c:${col}"><svg viewBox="0 0 24 24"><path d="${PF_DIST[(k<0?0:k)%PF_DIST.length]}" fill="none" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/></svg></span>`};
-const PF_LV=['Home','Townhouse','Apartments','Boutique hotel','Skyline hotel'];
+const PF_LV=['Home','Townhouse','Apartments','Boutique hotel','Skyline Tower'];
 openAssets=function(p,opts={}){const debt=opts.debt||0,ro=!!opts.readonly;let filter='all',sel=null;const shut={};
   return modal({cls:'pf2',tdef:ro?undefined:debt?'auto':'done',html:'<div class="pf2h"></div><div class="pf2s"></div><div class="pf2debt"></div><div class="pf2b"><div class="pf2l"><div class="pf2t" role="tablist"></div><div class="pf2g"></div></div><div class="pf2d"></div></div><div class="pf2f"></div>',onMount:(pn,close)=>{
     pn.closest('.ov')&&pn.closest('.ov').classList.add('pf2ov');
@@ -6590,12 +6590,12 @@ openAssets=function(p,opts={}){const debt=opts.debt||0,ro=!!opts.readonly;let fi
         <div class="pf2pic"${photo?` style="background-image:linear-gradient(180deg,rgba(255,255,255,0) 40%,rgba(241,231,213,.55)),url(${photo})"`:''}>${isP?mdl({kind:'building',level:o.m?0:o.h,owner:P(o.o).col,label:s.n+' building'},'pf2bm',420,300):''}<span class="pf2rent">Rent now <b>${o.m?'none':fmt(rentFor(i,7))}</b></span></div>
         ${isP&&!ro?`<div class="pf2set ${full?'ok':''}"><i>${full?PF_IC.check:PF_IC.lock}</i><div><b>${full?'Full set owned':`${own} of ${gr.length} in ${esc(GNAME[s.g])}`}</b><small>${full?(G.set.even!==false?'All properties in this set must be developed evenly. ':'')+(can?'You can build on this property.':esc(why)):'Own the whole district to start building.'}</small></div></div>`:''}
         ${isP?`<div class="pf2lad"><b>Development level</b><div class="pf2steps">${PF_LV.map((n,k)=>{const lv=k+1;return `<span class="pf2st${lv<=o.h?' done':''}${lv===nextLv&&o.h<5?' next':''}${lv===o.h&&o.h===5?' next':''}" title="${n}">${mdl({kind:'building',level:lv,owner:P(o.o).col,label:n},'pf2sm',120,100)}</span>`}).join('<i class="pf2ln"></i>')}</div>
-          ${!ro&&o.h<5&&!o.m?`<p class="pf2nx"><b>Next build: ${o.h===4?'Skyline hotel':'Add 1 house'}</b><small>${can?`Rent rises to ${fmt(s.r[o.h+1])}.`:esc(why)}</small></p>`:o.h===5?'<p class="pf2nx"><b>Fully developed</b></p>':''}</div>`:''}
+          ${!ro&&o.h<5&&!o.m?`<p class="pf2nx"><b>Next build: ${o.h===4?'Skyline Tower':'Add 1 house'}</b><small>${can?`Rent rises to ${fmt(s.r[o.h+1])}.`:esc(why)}</small></p>`:o.h===5?'<p class="pf2nx"><b>Fully developed</b></p>':''}</div>`:''}
         ${isP&&!ro&&o.h<5&&!o.m?`<div class="pf2m"><span><i>${PF_IC.cash}</i><small>Cash now</small><b>${fmt(p.cash)}</b></span><span><i>${PF_IC.hammer}</i><small>Build cost</small><b>${fmt(cost)}</b></span><i class="pf2ar">${PF_IC.chev}</i><span><i>${PF_IC.cash}</i><small>Cash after</small><b class="${p.cash-cost<0?'neg':''}">${fmt(p.cash-cost)}</b></span></div>`:''}
         <div class="pf2a"></div><div class="pf2a2"></div>`;
       const A=D.querySelector('.pf2a'),A2=D.querySelector('.pf2a2');
       const Bt=(box,lab,cls,ok,fn,title)=>{const b=el('button','pf2btn '+cls,lab);b.disabled=!ok;if(title)b.title=title;b.onclick=()=>{fn();renderRoster();draw()};box.append(b);return b};
-      if(!ro){if(isP&&!o.m&&o.h<5)Bt(A,`${PF_IC.hammer}<span>${o.h===4?'Build hotel':'Build house'}</span>`,'gold',can,()=>{build(p.id,i);sfx('buy')},why);
+      if(!ro){if(isP&&!o.m&&o.h<5)Bt(A,`${PF_IC.hammer}<span>${o.h===4?'Build tower':'Build house'}</span>`,'gold',can,()=>{build(p.id,i);sfx('buy')},why);
         if(isP&&o.h)Bt(A,`<span>Sell +${fmt(s.h/2)}</span>`,'dark',canSell(p.id,i),()=>sell(p.id,i));
         if(o.m)Bt(A,`${PF_IC.house}<span>Redeem ${fmt(unmCost(i))}</span>`,'dark',!debt&&canUnmort(p.id,i),()=>unmortgage(p.id,i));
         else Bt(A,`${PF_IC.house}<span>Mortgage</span>`,'dark',canMortgage(p.id,i),()=>mortgage(p.id,i),isP&&!canMortgage(p.id,i)?'Sell the buildings in this district first.':`Mortgage for +${fmt(s.p/2)}`)}
@@ -6942,10 +6942,10 @@ function drawMap(pn){const W=pn.querySelector('.mapwrap'),B=pn.querySelector('.m
   const base=Math.max(220,Math.min(W.clientWidth,W.clientHeight)-12),S=Math.round(base*mapZoom),k=S/1100,cp=G.over?null:P(G.turn),fs=Math.max(5.5,CW*k*.15);
   B.style.width=S+'px';B.style.height=S+'px';
   let h='';for(let i=0;i<40;i++)h+=mapCellHTML(i,k,cp);
-  h+=`<div class="mcen" style="left:${C*k}px;top:${C*k}px;width:${(1100-2*C)*k}px;height:${(1100-2*C)*k}px;--fs:${fs}px"><b>${esc(CITY.name)}</b><span>${'Round '+G.round}${cp?' · '+`${esc(cp.name)}’s turn`:' · '+'Game over'}</span><span>${`🏷️ ${forSale()} for sale`}</span><span>${`🏠 ${G.houses} houses left`} · ${`🏨 ${G.hotels} hotels left`}</span><small>Tap a square for details. Double-tap a player on the left to see where their token is.</small></div>`;
+  h+=`<div class="mcen" style="left:${C*k}px;top:${C*k}px;width:${(1100-2*C)*k}px;height:${(1100-2*C)*k}px;--fs:${fs}px"><b>${esc(CITY.name)}</b><span>${'Round '+G.round}${cp?' · '+`${esc(cp.name)}’s turn`:' · '+'Game over'}</span><span>${`🏷️ ${forSale()} for sale`}</span><span>${`🏠 ${G.houses} houses left`} · ${`🏨 ${G.hotels} towers left`}</span><small>Tap a square for details. Double-tap a player on the left to see where their token is.</small></div>`;
   B.innerHTML=h;
   B.querySelectorAll('.mc').forEach(c=>{const go=()=>showSquare(+c.dataset.i);c.onclick=go;c.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go()}}});
-  pn.querySelector('#mapH').textContent=`🏠 ${G.houses} houses left`;pn.querySelector('#mapS').textContent=`🏷️ ${forSale()} for sale`;pn.querySelector('#mapT').textContent=`🏨 ${G.hotels} hotels left`}
+  pn.querySelector('#mapH').textContent=`🏠 ${G.houses} houses left`;pn.querySelector('#mapS').textContent=`🏷️ ${forSale()} for sale`;pn.querySelector('#mapT').textContent=`🏨 ${G.hotels} towers left`}
 async function openMap(){if(!G||$('#modals').children.length)return;sfx('tap');let iv=0;
   await modal({cls:'wide mapm',html:`<div class="maphd"><div class="mh">Map</div><span class="chip" id="mapS"></span><span class="chip" id="mapH"></span><span class="chip" id="mapT"></span><button class="btn" id="mapZ">${mapZoom>1?'🔍 Zoom out':'🔍 Zoom in'}</button><button class="btn mapx" id="mapX" aria-label="Close the map">✕</button></div><div class="mapwrap"><div class="mapbd"></div></div>`,
     btns:[],onMount:(pn,close)=>{pn.querySelector('#mapX').onclick=()=>close('x');
