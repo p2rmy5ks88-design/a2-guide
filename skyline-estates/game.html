@@ -6635,7 +6635,8 @@ const illOn=tok=>PREF.illTok&&GL&&TOK_SLUG[tok]&&ITEM_PICS['tok-'+TOK_SLUG[tok]]
       let M=null,yaw=0;for(const n of chain){const cm=M4.compose(n.p,n.r,n.s);M=M?M4.mul(M,cm):cm;yaw+=n.r[1]}
       const dx=c[0]-M[12],dy=c[1]-M[13],dz=c[2]-M[14];
       q.r=[-Math.atan2(dy,Math.hypot(dx,dz))*.45,Math.atan2(dx,dz)-yaw,0]}}
-  if(S3&&S3.ring&&S3.ring.visible&&typeof G!=='undefined'&&G&&tok3[G.turn]&&tok3[G.turn].ill)S3.ring.s=S3.ring.s.map(v=>v*.78);
+  if(S3&&S3.ring&&S3.ring.visible&&typeof G!=='undefined'&&G&&tok3[G.turn]&&tok3[G.turn].ill){S3.ring.s=S3.ring.s.map(v=>v*.78)}
+  if(S3&&S3.marker&&typeof G!=='undefined'&&G&&tok3&&tok3[G.turn]&&tok3[G.turn].ill)S3.marker.visible=false;
   return _ds(time)}}
 /* ================= ORIENTATION ================= */
 let rotDismissed=false;
