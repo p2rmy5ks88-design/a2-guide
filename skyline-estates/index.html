@@ -1720,6 +1720,82 @@ html.rot .clhead p{display:none}html.rot .clhead h2{font-size:22px}html.rot .clc
 .stp .stcard .ch{font-size:13.5px}.stp .stcard .small,.stp .stcard p{font-size:11.5px}
 html.rot .stw{grid-template-columns:135px minmax(0,1fr)}html.rot .stnav button{font-size:12.5px;min-height:36px}
 html.rot .clstage{min-height:150px}html.rot .clstage canvas.mdl.clbig{max-width:220px}
+/* ===== Portfolio, concept look ===== */
+.ov.pf2ov{background:linear-gradient(90deg,rgba(5,10,20,0) 0%,rgba(5,10,20,.15) 45%,rgba(5,10,20,.55) 100%)!important;justify-content:flex-end!important;align-items:stretch!important}
+.mp.pf2{position:relative;width:min(900px,72vw);max-width:none;height:min(100%,760px);max-height:100%;margin-left:auto;padding:16px 18px 14px;display:flex;flex-direction:column;gap:10px;overflow:hidden;
+  background:linear-gradient(180deg,#0f2433,#0b1b28);border:1.5px solid rgba(225,188,102,.55);border-radius:22px;color:#f1e7d5;box-shadow:0 20px 50px rgba(0,0,0,.5)}
+.pf2h h2{margin:0;padding-right:56px;font:800 30px var(--display,inherit);letter-spacing:-.01em;text-transform:none;color:#fff}
+.pf2x{position:absolute;top:14px;right:16px;width:44px;height:44px;border-radius:12px;border:1.5px solid rgba(225,188,102,.7);background:#0b1b28;color:#e1bc66;font-size:20px;cursor:pointer}
+.pf2s{flex:none;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-radius:14px;background:#0a1823;border:1px solid #2a4658}
+.pf2s span{display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;column-gap:12px;align-items:center;padding:10px 16px}
+.pf2s span+span{border-left:1px solid #2a4658}
+.pf2s i{grid-row:1/span 2;width:34px;height:34px;color:#e1bc66}.pf2s i svg{width:100%;height:100%}
+.pf2s small{font-size:12px;color:#c9d3dc}.pf2s b{font:700 20px var(--display,inherit);color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pf2debt:empty{display:none}.pf2debt .debt{padding:8px 12px;border-radius:12px;background:rgba(255,122,107,.12);border:1px solid rgba(255,122,107,.5);font-size:13px}
+.pf2b{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,.95fr) minmax(0,1.05fr);gap:12px}
+.pf2l{min-height:0;display:flex;flex-direction:column;gap:8px}
+.pf2t{flex:none;display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:4px;border-radius:14px;background:#0a1823;border:1px solid #2a4658}
+.pf2t button{height:38px;border-radius:10px;border:0;background:none;color:#e7dfcf;font:600 14px var(--body,inherit);cursor:pointer}
+.pf2t button.on{background:#14594a;border:1.5px solid #e1bc66;color:#fff;font-weight:800}
+.pf2g{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:8px;padding-right:2px;overscroll-behavior:contain}
+.pf2grp{border-radius:14px;background:#0f2433;border:1px solid #2a4658;padding:6px;display:flex;flex-direction:column;gap:5px}
+.pf2gh{display:flex;align-items:center;gap:10px;padding:4px 6px;border:0;background:none;color:inherit;text-align:left;cursor:pointer;width:100%}
+.pfdi{flex:none;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 35% 30%,color-mix(in srgb,var(--c) 70%,#fff),var(--c) 60%,color-mix(in srgb,var(--c) 60%,#000));box-shadow:0 0 0 2px rgba(255,255,255,.18),0 3px 8px rgba(0,0,0,.35)}
+.pfdi svg{width:22px;height:22px}
+.pf2gn{flex:1;display:flex;flex-direction:column;min-width:0}.pf2gn b{font:700 15.5px var(--display,inherit);color:#fff}.pf2gn small.ok{font-size:13px;font-weight:700;color:#6fe0a8}
+.pf2gh em{font:800 15px var(--display,inherit);font-style:normal;color:#e1bc66}
+.pf2fold{width:20px;height:20px;color:#e7dfcf}.pf2fold svg{width:100%;height:100%}.pf2grp.shut .pf2fold{transform:rotate(180deg)}
+.pf2row{display:flex;align-items:center;gap:10px;min-height:40px;padding:0 12px;border-radius:10px;border:1px solid #2a4658;background:#132c3d;color:#fff;font:600 14px var(--body,inherit);text-align:left;cursor:pointer}
+.pf2rn{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pf2hc{display:flex;align-items:center;gap:8px;font-weight:700;color:#f1e7d5}.pf2hc i{width:18px;height:18px;color:#d9d2c3}.pf2hc i svg{width:100%;height:100%}
+.pf2ch{width:16px;height:16px;color:#c9d3dc}.pf2ch svg{width:100%;height:100%}
+.pf2row.on{border:1.5px solid #e1bc66;background:#1d2f2c;box-shadow:inset 0 0 0 1px rgba(225,188,102,.3)}
+.pf2row.lock{cursor:default;background:#0f2433;color:#8fa0ad}.pf2lk{display:flex;align-items:center;gap:6px;max-width:55%}.pf2lk i{flex:none;width:16px;height:16px}.pf2lk i svg{width:100%;height:100%}.pf2lk small{font-size:10.5px;line-height:1.2}
+.pf2row small.bad{color:#ff8b7a;font-weight:700}
+.pf2none{opacity:.75;font-size:13px;padding:10px}
+.pf2d{min-height:0;overflow:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:9px;padding:12px;border-radius:16px;background:#f4ecdb;color:#13222c;border:1px solid #d9caa8}
+.pf2dh{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.pf2dh h3{margin:0;font:800 22px var(--display,inherit);text-transform:uppercase;letter-spacing:.01em;color:#13222c}
+.pf2dd{display:flex;align-items:center;gap:8px;margin-top:4px;font-size:14px;color:#2a3b45}.pf2dd .pfdi{width:28px;height:28px}.pf2dd .pfdi svg{width:16px;height:16px}
+.pf2dh em{flex:none;font-style:normal;font-size:12.5px;font-weight:700;padding:5px 12px;border-radius:999px;background:#e5ddcc;border:1px solid #c9bc9f;color:#3a4a52}.pf2dh em.ok{background:#bfe9d4;border-color:#47b98a;color:#14523b}
+.pf2pic{position:relative;flex:none;height:170px;border-radius:12px;overflow:hidden;background:linear-gradient(180deg,#bcd8e8,#e8e1cd) center/cover no-repeat;background-size:cover;background-position:center;display:grid;place-items:end center}
+.pf2pic canvas.mdl.pf2bm{width:auto;height:96%;max-width:90%;filter:drop-shadow(0 8px 10px rgba(0,0,0,.35))}
+.pf2rent{position:absolute;left:8px;top:8px;font-size:11.5px;padding:3px 9px;border-radius:999px;background:rgba(19,34,44,.82);color:#f1e7d5}.pf2rent b{color:#e1bc66}
+.pf2set{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;background:#ece3cf;border:1px solid #d9caa8}
+.pf2set>i{flex:none;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:#8a96a0;color:#fff}.pf2set>i svg{width:22px;height:22px}
+.pf2set.ok>i{background:#14594a}.pf2set b{font:800 16px var(--display,inherit)}.pf2set small{display:block;font-size:12.5px;color:#2a3b45;line-height:1.35}
+.pf2lad>b{font-size:14px}
+.pf2steps{display:flex;align-items:center;gap:0;margin-top:6px}
+.pf2st{flex:1;min-width:0;display:grid;place-items:center;aspect-ratio:1.15;border-radius:10px;background:#e8dfcb;border:1.5px solid #d4c6a6}
+.pf2st canvas.mdl.pf2sm{width:92%;height:auto}
+.pf2st.done{background:#d9eee2;border-color:#77c49c}.pf2st.next{border:2.5px solid #e1bc66;background:#fff6dd;box-shadow:0 0 0 2px rgba(225,188,102,.35)}
+.pf2ln{flex:0 0 10px;height:2px;background:#9aa2a3}
+.pf2nx{margin:6px 0 0;display:flex;flex-direction:column}.pf2nx b{font-size:14px}.pf2nx small{font-size:12px;color:#3a4a52}
+.pf2m{display:grid;grid-template-columns:1fr 1fr 18px 1fr;gap:6px;align-items:center}
+.pf2m span{display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;column-gap:8px;align-items:center;padding:7px 10px;border-radius:10px;background:#ece3cf;border:1px solid #d9caa8}
+.pf2m span i{grid-row:1/span 2;width:28px;height:28px;color:#14594a}.pf2m span i svg{width:100%;height:100%}
+.pf2m small{font-size:11px;color:#3a4a52}.pf2m b{font:800 16px var(--display,inherit);white-space:nowrap}.pf2m b.neg{color:#c0392b}
+.pf2ar{width:18px;height:18px;color:#3a4a52}.pf2ar svg{width:100%;height:100%}
+.pf2a{display:grid;grid-template-columns:1.25fr 1fr;gap:8px}.pf2a:has(>:only-child){grid-template-columns:1fr}.pf2a:has(>:nth-child(3)){grid-template-columns:1.2fr 1fr 1fr}
+.pf2a2{display:grid;grid-template-columns:1fr 1fr;gap:8px}.pf2a2:has(>:only-child){grid-template-columns:1fr}
+.pf2btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:52px;padding:0 14px;border-radius:12px;font:800 15px var(--display,inherit);letter-spacing:.06em;text-transform:uppercase;cursor:pointer}
+.pf2btn svg{width:22px;height:22px;flex:none}
+.pf2btn.gold{background:linear-gradient(180deg,#f6d987,#d9a842);border:1.5px solid #b98a2f;color:#1a1406;box-shadow:inset 0 -3px #b68d35,0 4px 10px rgba(0,0,0,.2)}
+.pf2btn.dark{background:#0f2433;border:1.5px solid #0f2433;color:#fff}
+.pf2btn.small{min-height:40px;font-size:12.5px;background:#0f2433;border:1px solid #0f2433;color:#fff}.pf2btn.small svg{width:18px;height:18px}
+.pf2btn[disabled]{opacity:.5;cursor:default}
+.pf2f:empty{display:none}.pf2f{display:flex;gap:8px;justify-content:flex-end}
+@media (max-height:520px){.mp.pf2{padding:10px 12px;gap:7px;height:100%}.pf2h h2{font-size:22px}.pf2x{width:36px;height:36px;top:8px;right:10px}.pf2s span{padding:6px 12px}.pf2s i{width:26px;height:26px}.pf2s b{font-size:16px}.pf2pic{height:120px}.pf2btn{min-height:44px;font-size:13px}.pfdi{width:32px;height:32px}.pf2t button{height:32px}}
+html.rot .mp.pf2{width:min(860px,78vw);padding:10px 12px;gap:7px;height:100%}html.rot .pf2h h2{font-size:22px}html.rot .pf2pic{height:110px}html.rot .pf2s b{font-size:16px}html.rot .pf2btn{min-height:42px;font-size:12.5px}
+@media (max-width:700px){html:not(.rot) .mp.pf2{width:100%;height:100%}html:not(.rot) .pf2b{grid-template-columns:1fr;overflow:auto}html:not(.rot) .pf2s b{font-size:15px}html:not(.rot) .pf2s i{display:none}}
+.pf2pic{height:150px}.pf2pic canvas.mdl.pf2bm{height:82%;margin-bottom:4px}
+.pf2d{gap:8px}.pf2set{padding:8px 10px}.pf2set>i{width:34px;height:34px}.pf2set b{font-size:15px}.pf2set small{font-size:12px}
+.pf2st{aspect-ratio:1.35}
+.pf2dh h3{font-size:20px}
+html.rot .mp.pf2{width:calc(var(--sh,100vh) * .8)}
+html.rot .pf2s i{display:none}html.rot .pf2s span{padding:5px 10px}html.rot .pf2s b{font-size:14px}
+html.rot .pf2h h2{font-size:19px}html.rot .pfdi{width:28px;height:28px}html.rot .pfdi svg{width:15px;height:15px}html.rot .pf2gn b{font-size:13.5px}
+html.rot .pf2row{min-height:34px;font-size:12.5px}html.rot .pf2t button{height:30px;font-size:12.5px}html.rot .pf2dh h3{font-size:16px}html.rot .pf2m b{font-size:13px}html.rot .pf2m span i{display:none}
 </style>
 
 <canvas id="gl" aria-label="3D game board"></canvas>
@@ -6270,6 +6346,163 @@ paneTokens=function(T){clearPreview();peekOver(null);const all=TOKENS.concat(NEW
   const up=T.querySelector('#clUp');if(up)up.onclick=async()=>{if(!(await confirmBuy(`Upgrade ${info[0]} to ${next.name}`,next.cost,`Coins after: ${nfmt(PREF.coins-next.cost)}.`)))return;PREF.tokLv[sel]=lv+1;savePref();achBump();toast(`${info[0]} is now ${next.name}!`);railProfile();paneTokens(T);try{confetti()}catch(e){}};
   const un=T.querySelector('#clUnl');if(un)un.onclick=async()=>{if(await confirmBuy(`Unlock ${info[0]}`,TOKEN_HOW[sel].coins)){grantItem('tok',sel);railProfile();paneTokens(T)}}};
 {const _ht=homeTab;homeTab=function(k){const r=_ht(k);try{const h=$('#title .home');if(h&&document.querySelector('.clhead'))h.classList.remove('peek-r','peek-t')}catch(e){}return r}}
+
+/* ================= PORTFOLIO (concept look) ================= */
+/* A panel docked to the right so the board stays visible: big title and close, one stats bar (cash, assets, net
+   worth), All / Can build / Mortgaged, districts that fold open with a round icon and n/3, street rows with their
+   building count; on the right an ivory detail card with the street's building, the set banner, the development
+   ladder of building models, cash now / build cost / cash after, and Build, Mortgage, Locate on board, Offer trade. */
+const PF_IC={cash:'<svg viewBox="0 0 24 24"><path d="M3 7h15a3 3 0 013 3v8a2 2 0 01-2 2H5a2 2 0 01-2-2zM3 7l12-3 1 3M16 13h3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>',
+  assets:'<svg viewBox="0 0 24 24"><path d="M3 21h18M5 21V10l4-3v14M9 21V4h6v17M15 21V9h4v12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>',
+  worth:'<svg viewBox="0 0 24 24"><path d="M4 21V13h3v8M10 21V9h3v12M16 21V4h3v17" fill="currentColor"/></svg>',
+  house:'<svg viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v9h-5v-6H9v6H4z" fill="currentColor"/></svg>',
+  tower:'<svg viewBox="0 0 24 24"><path d="M6 21V8h5v13M11 21V3h7v18M8 11h1M8 14h1M8 17h1M13 7h2M13 10h2M13 13h2M13 16h2" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>',
+  lock:'<svg viewBox="0 0 24 24"><path d="M6 11h12v10H6zM8 11V8a4 4 0 018 0v3" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>',
+  check:'<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  hammer:'<svg viewBox="0 0 24 24"><path d="M14 4l6 6-3 3-6-6zM12 8l-9 9 3 3 9-9" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>',
+  pin:'<svg viewBox="0 0 24 24"><path d="M12 21s7-6.5 7-12a7 7 0 10-14 0c0 5.5 7 12 7 12z" fill="currentColor"/><circle cx="12" cy="9" r="2.6" fill="#0d2230"/></svg>',
+  trade:'<svg viewBox="0 0 24 24"><path d="M3 12l4-4h5l3 3-3 1-2-1M21 12l-4 4h-5l-3-3M7 8l-4 4 4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>',
+  chev:'<svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>',
+  up:'<svg viewBox="0 0 24 24"><path d="M6 15l6-6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>'};
+const PF_DIST=['M12 3l2 5h-4zM9 21V8h6v13M5 21h14','M12 3v6M7 21V12l5-3 5 3v9M5 21h14','M4 21V11a8 8 0 0116 0v10M9 21v-6h6v6','M6 21V7l6-4 6 4v14M10 11h4M10 15h4','M12 3l7 7v11H5V10zM10 21v-5h4v5','M5 21V9h14v12M8 9V5h8v4M9 13h2M13 13h2'];
+const pfDistIc=(g,col)=>{const k=Object.keys(GROUPS).indexOf(g);return `<span class="pfdi" style="--c:${col}"><svg viewBox="0 0 24 24"><path d="${PF_DIST[(k<0?0:k)%PF_DIST.length]}" fill="none" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/></svg></span>`};
+const PF_LV=['Home','Townhouse','Apartments','Boutique hotel','Skyline hotel'];
+openAssets=function(p,opts={}){const debt=opts.debt||0,ro=!!opts.readonly;let filter='all',sel=null;const shut={};
+  return modal({cls:'pf2',tdef:ro?undefined:debt?'auto':'done',html:'<div class="pf2h"></div><div class="pf2s"></div><div class="pf2debt"></div><div class="pf2b"><div class="pf2l"><div class="pf2t" role="tablist"></div><div class="pf2g"></div></div><div class="pf2d"></div></div><div class="pf2f"></div>',onMount:(pn,close)=>{
+    pn.closest('.ov')&&pn.closest('.ov').classList.add('pf2ov');
+    const groupsOf=()=>{const out=[];Object.keys(GROUPS).forEach(g=>{const all=GROUPS[g],mine=all.filter(j=>G.own[j].o===p.id);if(mine.length)out.push({k:g,name:GNAME[g],col:GC[g],all,mine})});
+      const rails=RAILS.filter(j=>G.own[j].o===p.id),utils=UTILS.filter(j=>G.own[j].o===p.id);if(rails.length)out.push({k:'rail',name:'Transit hubs',col:'#7f8a96',all:RAILS,mine:rails});if(utils.length)out.push({k:'util',name:'Utilities',col:'#9aa3ad',all:UTILS,mine:utils});return out};
+    const pass=i=>filter==='all'||(filter==='build'?(!ro&&canBuild(p.id,i)):G.own[i].m);
+    const draw=()=>{const list=propsOf(p.id);if(sel==null||G.own[sel].o!==p.id)sel=list.find(i=>!ro&&canBuild(p.id,i))??list[0]??null;
+      pn.querySelector('.pf2h').innerHTML=`<h2>${ro?esc(p.name)+'’s portfolio':'Your portfolio'}</h2>`;
+      pn.querySelector('.pf2s').innerHTML=`<span><i>${PF_IC.cash}</i><small>Cash</small><b>${fmt(p.cash)}</b></span><span><i>${PF_IC.assets}</i><small>Assets</small><b>${list.length} propert${list.length===1?'y':'ies'}</b></span><span><i>${PF_IC.worth}</i><small>Net worth</small><b>${fmt(netWorth(p))}</b></span>`;
+      pn.querySelector('.pf2debt').innerHTML=debt?`<div class="debt">${opts.who?'<b>'+esc(p.name)+'</b>: ':''}You owe <b>${fmt(debt)}</b>${opts.to?' to '+esc(opts.to.name):''}. ${p.cash>=debt?'You can pay now.':`Raise <b>${fmt(debt-p.cash)}</b> more by selling buildings or mortgaging (up to ${fmt(liquidity(p))} in total).`}</div>`:'';
+      const T=pn.querySelector('.pf2t');T.innerHTML=[['all','All'],['build','Can build'],['mort','Mortgaged']].filter(([k])=>!(ro&&k==='build')).map(([k,l])=>`<button class="${filter===k?'on':''}" role="tab" aria-selected="${filter===k}" data-f="${k}">${l}</button>`).join('');
+      T.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{filter=b.dataset.f;draw()});
+      const L=pn.querySelector('.pf2g');L.innerHTML='';const gs=groupsOf();
+      if(!gs.length)L.innerHTML='<p class="pf2none">No properties yet. Land on an unowned street and buy it, or win it at auction.</p>';
+      gs.forEach(gq=>{const rows=gq.all.filter(i=>G.own[i].o===p.id?pass(i):filter==='all');if(!rows.length)return;const full=gq.mine.length===gq.all.length,isSet=gq.k!=='rail'&&gq.k!=='util',open=!shut[gq.k];
+        const box=el('div','pf2grp'+(open?'':' shut'));
+        box.innerHTML=`<button class="pf2gh" aria-expanded="${open}">${pfDistIc(gq.k,gq.col)}<span class="pf2gn"><b>${esc(gq.name)}</b>${full&&isSet?`<small class="ok">Complete set (${gq.all.length} / ${gq.all.length})</small>`:''}</span>${full&&isSet?'':`<em>${gq.mine.length} / ${gq.all.length}</em>`}<i class="pf2fold">${PF_IC.up}</i></button>`;
+        box.querySelector('.pf2gh').onclick=()=>{shut[gq.k]=!shut[gq.k];draw()};
+        if(open)rows.forEach(i=>{const o=G.own[i],mine=o.o===p.id,isP=SQ[i].t==='prop';const b=el(mine?'button':'div','pf2row'+(i===sel?' on':'')+(mine?'':' lock')+(o.m?' mort':''));
+          b.innerHTML=mine?`<span class="pf2rn">${esc(SQ[i].n)}</span>${o.m?'<small class="bad">Mortgaged</small>':isP?`<span class="pf2hc"><i>${o.h>=3?PF_IC.tower:PF_IC.house}</i>${o.h===5?'H':o.h}</span>`:''}<i class="pf2ch">${PF_IC.chev}</i>`
+            :`<span class="pf2rn">${esc(SQ[i].n)}</span><span class="pf2lk"><i>${PF_IC.lock}</i><small>${o.o>=0?'Owned by '+esc(P(o.o).name):isSet?'Complete this district to build':'Not owned yet'}</small></span>`;
+          if(mine){b.onclick=()=>{sel=i;draw()};b.ondblclick=()=>showSquare(i)}box.append(b)});L.append(box)});
+      const D=pn.querySelector('.pf2d');if(sel==null){D.innerHTML='<p class="pf2none">Pick a property to see it here.</p>';return}
+      const i=sel,s=SQ[i],o=G.own[i],gr=s.g?GROUPS[s.g]:null,own=gr?gr.filter(j=>G.own[j].o===p.id).length:0,isP=s.t==='prop',full=gr&&own===gr.length;
+      const why=ro?'':whyNoBuild(p,i,debt),can=!ro&&!debt&&canBuild(p.id,i),cost=isP?s.h:0,photo=cityPhoto(setup.city);
+      const nextLv=Math.min(5,o.h+1);
+      D.innerHTML=`<div class="pf2dh"><div><h3>${esc(s.n)}</h3><span class="pf2dd">${isP?pfDistIc(s.g,GC[s.g]):''}${esc(isP?GNAME[s.g]:s.t==='rail'?'Transit hub':'Utility')}</span></div>${isP?`<em class="${full?'ok':''}">${full?'Complete set':'Set'} (${own} / ${gr.length})</em>`:''}</div>
+        <div class="pf2pic"${photo?` style="background-image:linear-gradient(180deg,rgba(255,255,255,0) 40%,rgba(241,231,213,.55)),url(${photo})"`:''}>${isP?mdl({kind:'building',level:o.m?0:o.h,owner:P(o.o).col,label:s.n+' building'},'pf2bm',420,300):''}<span class="pf2rent">Rent now <b>${o.m?'none':fmt(rentFor(i,7))}</b></span></div>
+        ${isP&&!ro?`<div class="pf2set ${full?'ok':''}"><i>${full?PF_IC.check:PF_IC.lock}</i><div><b>${full?'Full set owned':`${own} of ${gr.length} in ${esc(GNAME[s.g])}`}</b><small>${full?(G.set.even!==false?'All properties in this set must be developed evenly. ':'')+(can?'You can build on this property.':esc(why)):'Own the whole district to start building.'}</small></div></div>`:''}
+        ${isP?`<div class="pf2lad"><b>Development level</b><div class="pf2steps">${PF_LV.map((n,k)=>{const lv=k+1;return `<span class="pf2st${lv<=o.h?' done':''}${lv===nextLv&&o.h<5?' next':''}${lv===o.h&&o.h===5?' next':''}" title="${n}">${mdl({kind:'building',level:lv,owner:P(o.o).col,label:n},'pf2sm',120,100)}</span>`}).join('<i class="pf2ln"></i>')}</div>
+          ${!ro&&o.h<5&&!o.m?`<p class="pf2nx"><b>Next build: ${o.h===4?'Skyline hotel':'Add 1 house'}</b><small>${can?`Rent rises to ${fmt(s.r[o.h+1])}.`:esc(why)}</small></p>`:o.h===5?'<p class="pf2nx"><b>Fully developed</b></p>':''}</div>`:''}
+        ${isP&&!ro&&o.h<5&&!o.m?`<div class="pf2m"><span><i>${PF_IC.cash}</i><small>Cash now</small><b>${fmt(p.cash)}</b></span><span><i>${PF_IC.hammer}</i><small>Build cost</small><b>${fmt(cost)}</b></span><i class="pf2ar">${PF_IC.chev}</i><span><i>${PF_IC.cash}</i><small>Cash after</small><b class="${p.cash-cost<0?'neg':''}">${fmt(p.cash-cost)}</b></span></div>`:''}
+        <div class="pf2a"></div><div class="pf2a2"></div>`;
+      const A=D.querySelector('.pf2a'),A2=D.querySelector('.pf2a2');
+      const Bt=(box,lab,cls,ok,fn,title)=>{const b=el('button','pf2btn '+cls,lab);b.disabled=!ok;if(title)b.title=title;b.onclick=()=>{fn();renderRoster();draw()};box.append(b);return b};
+      if(!ro){if(isP&&!o.m&&o.h<5)Bt(A,`${PF_IC.hammer}<span>${o.h===4?'Build hotel':'Build house'}</span>`,'gold',can,()=>{build(p.id,i);sfx('buy')},why);
+        if(isP&&o.h)Bt(A,`<span>Sell +${fmt(s.h/2)}</span>`,'dark',canSell(p.id,i),()=>sell(p.id,i));
+        if(o.m)Bt(A,`${PF_IC.house}<span>Redeem ${fmt(unmCost(i))}</span>`,'dark',!debt&&canUnmort(p.id,i),()=>unmortgage(p.id,i));
+        else Bt(A,`${PF_IC.house}<span>Mortgage</span>`,'dark',canMortgage(p.id,i),()=>mortgage(p.id,i),isP&&!canMortgage(p.id,i)?'Sell the buildings in this district first.':`Mortgage for +${fmt(s.p/2)}`)}
+      const loc=el('button','pf2btn small',`${PF_IC.pin}<span>Locate on board</span>`);loc.onclick=()=>{close(debt?'auto':'done');setTimeout(()=>{camFocus(i);highlight(i)},250)};A2.append(loc);
+      if(!ro&&!debt&&typeof openTrade==='function'&&G.players.filter(q=>!q.bankrupt&&q.id!==p.id).length){const tr=el('button','pf2btn small',`${PF_IC.trade}<span>Offer trade</span>`);tr.onclick=()=>{close('done');setTimeout(()=>{try{openTrade(p)}catch(e){toast('Trading isn’t available right now')}},250)};A2.append(tr)}
+      const F=pn.querySelector('.pf2f');F.innerHTML='';
+      if(debt){const bk=el('button','btn danger','Declare bankruptcy');bk.onclick=()=>close('bankrupt');const pb=el('button','btn pri','Pay '+fmt(debt));pb.disabled=p.cash<debt;pb.onclick=()=>close('pay');F.append(bk,pb)}
+      const x=pn.querySelector('.pf2x')||el('button','pf2x','✕');x.setAttribute('aria-label','Close');x.onclick=()=>close(debt?'auto':'done');if(!x.parentElement)pn.append(x);if(debt)x.hidden=true};
+    draw()}})};
+
+/* ================= THE TOWN AROUND THE BOARD ================= */
+/* Outside the ring road every land city now has a living town: a street grid with lane markings and moving cars,
+   blocks of mid-rise buildings in that country's colours (windows, slabs, rooftop gardens), and trees along the
+   streets. Built once per city style and reused; hidden on island boards and when a premium board style is on. */
+const TOWN_STYLE={
+  NG:{walls:['#efe6d2','#e8dcc2','#f3ede0','#d9c7a3','#e9b77a','#d98a5c','#b9d1a8','#f2d38c'],accent:['#c4704e','#1f6f6a','#2f5f9e','#b8893e','#7d4f9e','#e07a3f'],roof:'#6f8f4e',glass:'#2a6f78'},
+  SE:{walls:['#e8c48a','#d89a6a','#f0dcb0','#c45c3c','#f2ead8','#b8763e'],accent:['#3f6f4f','#5a4a3a','#2a5a7a'],roof:'#5a6a4a',glass:'#4f7f98'},
+  US:{walls:['#d8d2c6','#a9b4bd','#c7a27a','#e6e0d4','#9a6a52'],accent:['#3f5f7f','#2f4f5f','#7f2f2f'],roof:'#5f6a5a',glass:'#5a86a8'},
+  GB:{walls:['#c9a07e','#b8775e','#e6dccb','#d6c9b0','#9a5a46'],accent:['#2f4a3a','#3a3a4a','#7a2f2f'],roof:'#4f5f4a',glass:'#4f7a8a'},
+  FR:{walls:['#ebe0c8','#e3d6b8','#f2ead8','#d9cba8'],accent:['#3a4a5a','#5a6a7a'],roof:'#5f6f7a',glass:'#4f7a8f'},
+  DE:{walls:['#d6d2c6','#e6dcc6','#c9b89a','#b8bcb4','#e8e2d4'],accent:['#3a4a3a','#7a3a2a'],roof:'#5a6a5a',glass:'#4f6f8a'},
+  JP:{walls:['#e6e6e0','#d6d8d2','#efe9df','#c9cfc9'],accent:['#b8574e','#2f4f5f'],roof:'#5a7a5a',glass:'#4f7f9a'},
+  AE:{walls:['#e6d3a8','#efe1c2','#d9c08f','#f3ead6'],accent:['#2f6f78','#b8893e'],roof:'#8a7f5a',glass:'#3f8fa8'},
+  _:{walls:['#ece4d2','#e2d6bc','#d6c4a2','#f2ece0','#c9b08a'],accent:['#c4704e','#2a6f78','#4f6f8f'],roof:'#6a8a52',glass:'#3f7f8f'}};
+function townRoadTex(){if(S3.townRoad)return S3.townRoad;S3.townRoad=texFrom(cnv(512,32,c=>{c.fillStyle='#4a4f56';c.fillRect(0,0,512,32);c.fillStyle='#3f444a';c.fillRect(0,0,512,3);c.fillRect(0,29,512,3);
+  c.fillStyle='#e9e2cf';for(let x=6;x<512;x+=32)c.fillRect(x,15,18,2);c.fillStyle='#d9d2bf';c.fillRect(0,4,512,1.5);c.fillRect(0,26.5,512,1.5)}));return S3.townRoad}
+function townWinTex(){if(S3.townWin)return S3.townWin;const mk=(lit)=>texFrom(cnv(64,64,c=>{c.fillStyle='#ffffff';c.fillRect(0,0,64,64);
+  for(let y=6;y<62;y+=14)for(let x=5;x<62;x+=12){const on=lit&&((x*3+y)%5===0);c.fillStyle=on?'#f6dfa0':'#3f5f7a';c.fillRect(x,y,7,8);c.fillStyle='rgba(255,255,255,.35)';c.fillRect(x,y,2,8)}
+  c.fillStyle='rgba(0,0,0,.10)';for(let y=3;y<64;y+=14)c.fillRect(0,y,64,1.5)}));S3.townWin=[mk(0),mk(1)];return S3.townWin}
+function townBuilding(g,x,z,w,d,h,st,rnd){const geo=S3.geo,wall=st.walls[Math.floor(rnd()*st.walls.length)],acc=st.accent[Math.floor(rnd()*st.accent.length)],T=townWinTex();
+  const glassy=h>2.2&&rnd()<.45,b=new Node().at(x,0,z);g.add(b);
+  b.add(N(S3.floorGeo||geo.box,mat(glassy?st.glass:wall,{tex:T[rnd()<.5?0:1],spec:glassy?.7:.3}),0,h/2,0).sc(w,h,d));
+  b.add(N(geo.box,mat(acc,{spec:.3}),0,.16,0).sc(w+.04,.32,d+.04));
+  const top=mat('#e9e2d2',{spec:.2});b.add(N(geo.box,top,0,h+.03,0).sc(w+.06,.06,d+.06));
+  const r=rnd();if(r<.45)b.add(N(geo.box,mat(st.roof),0,h+.08,0).sc(w*.7,.05,d*.7),N(geo.sph,mat('#4f8a3e'),w*.18,h+.18,d*.15).sc(.18,.16,.18));
+  else if(r<.7)b.add(N(geo.box,mat('#9aa3ad',{spec:.4}),w*.2,h+.16,-d*.15).sc(w*.3,.22,d*.3));
+  else if(r<.82&&h>2)b.add(N(geo.box,mat(acc),0,h+.3,0).sc(w*.5,.5,d*.5),N(geo.cyl8,mat('#c9ced6',{spec:.8}),0,h+.8,0).sc(.02,.5,.02));
+  if(rnd()<.45){const side=rnd()<.5?1:-1;b.add(N(geo.box,mat(acc,{spec:.35}),side*w*.3,h/2+.02,d/2+.012).sc(w*.28,h-.1,.03))}
+  if(rnd()<.3)b.add(N(geo.box,mat(st.glass,{tex:T[1],spec:.8}),0,h/2,-d/2-.012).sc(w*.6,h*.8,.02));
+  if(h>1.4&&rnd()<.5)for(let k=1;k<Math.min(5,h/.55);k++)b.add(N(geo.box,mat(acc,{spec:.3}),0,k*.55,d/2+.03).sc(w*.92,.04,.06));
+  S3.shadow&&S3.shadow(x,z,Math.max(w,d)*.75,g,.012);return b}
+function townCar(g,col){const geo=S3.geo,c=new Node();c.add(N(geo.box,mat(col,{spec:.7}),0,.07,0).sc(.34,.09,.17),N(geo.box,mat('#2f3f4f',{spec:.8}),-.02,.14,0).sc(.18,.07,.15));
+  for(const x of[-.11,.11])for(const z of[-.085,.085])c.add(N(geo.cyl8,mat('#1c1f24'),x,.04,z).sc(.045,.02,.045).rot(Math.PI/2,0,0));g.add(c);return c}
+const TOWN_DROP=new Set(['ring','dash','grid','canopy','fields','cobble','tiles','path','parterre','promenade','fountain','dump','cactus','rocks','rake','hedges','cracks']);
+const TOWN_WATER=new Set(['bay','canal','lake','river','sea','seaAll','waves']);
+function townEligible(){if(!S3||FAST)return false;const S=surroundFor(CUR_THEME);return S.kind!=='island'&&!(typeof equippedSurround==='function'&&equippedSurround())}
+{const _sf=surroundFor;surroundFor=function(k){const S=_sf(k);if(S.kind==='island'||(typeof equippedSurround==='function'&&equippedSurround())||FAST)return S;
+  return Object.assign({},S,{key:S.key+'|town',ops:(S.ops||[]).filter(o=>!TOWN_DROP.has(o[0]))})}}
+function townWater(S){const ops=(S.ops||[]).filter(o=>TOWN_WATER.has(o[0]));if(!ops.length)return()=>false;const span=90,Wp=180;
+  const c=document.createElement('canvas');c.width=c.height=Wp;const ctx=c.getContext('2d',{willReadFrequently:true});
+  try{paintSurround(ctx,Wp,span,Object.assign({},S,{base:'#000',key:S.key+'|mask',ops}),0)}catch(e){}
+  const d=ctx.getImageData(0,0,Wp,Wp).data;return(x,z)=>{const px=Math.floor((x/span+.5)*Wp),pz=Math.floor((z/span+.5)*Wp);if(px<0||pz<0||px>=Wp||pz>=Wp)return false;return d[(pz*Wp+px)*4+3]<40}}
+function buildTown(key,cc){const g=new Node();ROOT.add(g);const st=TOWN_STYLE[cc]||TOWN_STYLE._,rnd=seeded(key.split('').reduce((a,ch)=>a+ch.charCodeAt(0),77)),geo=S3.geo;
+  const warm=['NG','GH','KE','ZA','AE','IN','BR','MX','AU','EG','TZ'].includes(cc);const wet=townWater(surroundFor(CUR_THEME)),dryRect=(x0,z0,x1,z1)=>!(wet(x0,z0)||wet(x1,z1)||wet(x0,z1)||wet(x1,z0)||wet((x0+x1)/2,(z0+z1)/2));
+  const L=[8.1,13.7,19.3,24.9,30.5,36.1],E=[-L[5],-L[4],-L[3],-L[2],-L[1],-L[0],L[0],L[1],L[2],L[3],L[4],L[5]];const roadM=mat('#ffffff',{tex:townRoadTex(),spec:.1});g.cars=[];
+  /* streets: segments between crossings, left out where there is water */
+  for(const c of E)for(let k=0;k<E.length-1;k++){const a=E[k],b=E[k+1],m=(a+b)/2,len=b-a+.9;if(Math.abs(c)<L[0]-.1&&Math.abs(m)<L[0])continue;
+    if(dryRect(a,c-.4,b,c+.4))g.add(N(geo.box,roadM,m,.012,c).sc(len,.024,.9));if(dryRect(c-.4,a,c+.4,b))g.add(N(geo.box,roadM,c,.013,m).sc(len,.024,.9).rot(0,Math.PI/2,0))}
+  /* blocks */
+  for(let ix=0;ix<E.length-1;ix++)for(let iz=0;iz<E.length-1;iz++){const x0=E[ix]+.6,x1=E[ix+1]-.6,z0=E[iz]+.6,z1=E[iz+1]-.6,cx=(x0+x1)/2,cz=(z0+z1)/2;
+    if(Math.abs(cx)<L[0]&&Math.abs(cz)<L[0])continue;if(!dryRect(x0,z0,x1,z1))continue;
+    const ring=Math.max(Math.abs(cx),Math.abs(cz)),park=rnd()<.14;
+    if(park){g.add(N(geo.box,mat('#6f9a4e'),cx,.02,cz).sc(x1-x0,.03,z1-z0));for(let k=0;k<9;k++)treeAt(rnd()<.3?'cypress':'round',x0+.5+rnd()*(x1-x0-1),z0+.5+rnd()*(z1-z0-1),.6+rnd()*.5,g);continue}
+    g.add(N(geo.box,mat('#cfc8b6'),cx,.018,cz).sc(x1-x0+.3,.03,z1-z0+.3));
+    const sz=ring<15?2.3:ring<26?2.8:3.4,nx=Math.max(1,Math.round((x1-x0)/sz)),nz=Math.max(1,Math.round((z1-z0)/sz));for(let a=0;a<nx;a++)for(let b=0;b<nz;b++){if(rnd()<.12)continue;const bw=(x1-x0)/nx,bd=(z1-z0)/nz,x=x0+bw*(a+.5),z=z0+bd*(b+.5);
+      const h=ring<15?.7+rnd()*1.3:ring<26?1+rnd()*2.2:1.4+rnd()*3.6;townBuilding(g,x,z,bw*.74,bd*.74,h*(rnd()<.06?1.8:1),st,rnd)}
+    for(let k=0;k<(ring<15?4:2);k++){const t=rnd(),onX=rnd()<.5;const x=onX?x0+t*(x1-x0):(rnd()<.5?x0-.15:x1+.15),z=onX?(rnd()<.5?z0-.15:z1+.15):z0+t*(z1-z0);treeAt(rnd()<.2?'cypress':'round',x,z,.5+rnd()*.3,g)}}
+  /* a green strip right around the board */
+  for(let k=0;k<44;k++){const t=rnd()*4,side=Math.floor(t),f=(t%1)*2-1,d=6.75+rnd()*.7;const x=[f*7.4,d,-f*7.4,-d][side],z=[d,f*7.4,-d,-f*7.4][side];if(!wet(x,z))treeAt(warm&&rnd()<.3?'palm':'round',x,z,.55+rnd()*.35,g)}
+  /* cars */
+  const cols=['#e8e4da','#c0392b','#2f5f9e','#e2b54a','#3a3f46','#6f8f9a','#ffffff','#2e7d5b'];
+  for(let k=0;k<18;k++){const c=townCar(g,cols[k%cols.length]),li=L[k%3]*(k%6<3?1:-1),lane=(k%2?.22:-.22);c.lane=lane;c.L=li;c.alongX=k%4<2;c.t=rnd()*80-40;c.v=(1.1+rnd()*1.2)*(lane>0?1:-1);c.wet=wet;g.cars.push(c)}
+  const y0=GROUND_Y+.005;g.kids.forEach(k=>{if(!g.cars.includes(k))k.p=[k.p[0],k.p[1]+y0,k.p[2]]});g.merged=mergeStatic(g,g.cars);return g}
+function townTick(dt){const g=S3&&S3.town;if(!g||!g.visible||document.documentElement.classList.contains('calm'))return;
+  g.cars.forEach(c=>{c.t+=c.v*dt;if(c.t>40)c.t=-40;if(c.t<-40)c.t=40;const cy=GROUND_Y+.005;if(c.alongX){c.p=[c.t,cy,c.L+c.lane];c.r=[0,c.v>0?0:Math.PI,0]}else{c.p=[c.L+c.lane,cy,c.t];c.r=[0,c.v>0?-Math.PI/2:Math.PI/2,0]}c.visible=!c.wet(c.p[0],c.p[2])&&(Math.abs(c.p[0])>7.6||Math.abs(c.p[2])>7.6)})}
+{let last=0;const loop=ts=>{const dt=Math.min(.05,(ts-(last||ts))/1000);last=ts;try{townTick(dt)}catch(e){}requestAnimationFrame(loop)};requestAnimationFrame(loop)}
+{const _ae=applyEnv;applyEnv=function(T){_ae(T);try{if(!S3)return;S3.towns=S3.towns||{};const k=CUR_THEME,S=surroundFor(k),island=S.kind==='island',prem=typeof equippedSurround==='function'&&equippedSurround();
+  const cc=((typeof cityOf==='function'?countryOf(cityOf(k)):countryOf(k))||{}).key||'_',key=cc+'|'+k;
+  Object.values(S3.towns).forEach(t=>t.visible=false);S3.town=null;
+  const on=!island&&!prem&&!FAST;townBase(on);
+  if(on){const t=S3.towns[key]||(S3.towns[key]=buildTown(key,cc));t.visible=true;S3.town=t;Object.values(S3.envs||{}).forEach(e=>e.visible=false);if(S3.highlands)S3.highlands.visible=false;(S3.islandPalms||[]).forEach(p=>p.visible=false)}}catch(e){console.warn('town',e)}}}
+
+/* the raised base under the board shrinks to a small plinth when the town is on */
+function townBase(on){if(!S3)return;if(!S3.baseNodes){S3.baseNodes=ROOT.kids.filter(n=>n.mat===S3.islandMat||n.mat===S3.rimMat)}S3.baseNodes.forEach(n=>{if(!n.s0)n.s0=n.s.slice();const f=on?.62:1;n.s=[n.s0[0]*f,n.s0[1],n.s0[2]*f]})}
+/* merge everything that never moves into one mesh per material: a few dozen draws instead of thousands */
+const TEXID=new WeakMap();let texN=0;const texId=t=>t?(TEXID.get(t)||(TEXID.set(t,++texN),texN)):0;
+function matKey(m){return [m.c&&m.c.map(v=>v.toFixed(3)).join(','),m.a,texId(m.tex),m.em,m.spec,m.unlit,m.wave,m.blend||0,m.layer||0].join('|')}
+function mergeStatic(g,keep){const B=new Map();
+  (function walk(n,pm){if(!n.visible)return;const local=M4.compose(n.p,n.r,n.s),m=pm?M4.mul(pm,local):local;
+    if(n.geo&&n.geo.v&&n.mat){const k=matKey(n.mat);let b=B.get(k);if(!b){b={mat:n.mat,v:[],idx:[]};B.set(k,b)}
+      const v=n.geo.v,idx=n.geo.idx,base=b.v.length/8;
+      for(let i=0;i<v.length;i+=8){const x=v[i],y=v[i+1],z=v[i+2],nx=v[i+3],ny=v[i+4],nz=v[i+5];
+        const X=m[0]*x+m[4]*y+m[8]*z+m[12],Y=m[1]*x+m[5]*y+m[9]*z+m[13],Z=m[2]*x+m[6]*y+m[10]*z+m[14];
+        let a=m[0]*nx+m[4]*ny+m[8]*nz,bb=m[1]*nx+m[5]*ny+m[9]*nz,c=m[2]*nx+m[6]*ny+m[10]*nz;const L=Math.hypot(a,bb,c)||1;
+        b.v.push(X,Y,Z,a/L,bb/L,c/L,v[i+6],v[i+7])}
+      for(let i=0;i<idx.length;i++)b.idx.push(idx[i]+base)}
+    for(const k of n.kids)if(!keep.includes(k))walk(k,m)})(g,null);
+  g.kids.slice().forEach(k=>{if(!keep.includes(k))g.remove(k)});g.p=[0,0,0];
+  B.forEach(b=>{for(let o=0;o<b.idx.length;o+=600000){}g.add(new Node(mkGeo(b.v,b.idx),b.mat))});
+  return B.size}
 /* ================= ORIENTATION ================= */
 let rotDismissed=false;
 function checkRotate(){$('#rotate').hidden=true}
