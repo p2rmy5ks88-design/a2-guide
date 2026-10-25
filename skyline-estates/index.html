@@ -6623,9 +6623,9 @@ function bQuad(){if(!BQUAD)BQUAD=mkGeo([-.5,0,0,0,0,1,0,0, .5,0,0,0,0,1,1,0, .5,
 const illOn=tok=>PREF.illTok&&GL&&TOK_SLUG[tok]&&ITEM_PICS['tok-'+TOK_SLUG[tok]];
 {const _tm=tokenModel;tokenModel=function(tok,col){if(!illOn(tok))return _tm(tok,col);
   const geo=S3.geo,t=new Node(),m=new Node();t.add(m);t.m=m;t.ill=1;
-  t.add(N(geo.plane,S3.blob,0,.012,0).sc(.62,1,.5));
-  t.add(N(geo.torus,mat(col,{spec:.5,em:.35}),0,.03,0).sc(.25,.25,.08).rot(Math.PI/2,0,0));
-  const mt=mat('#ffffff',{unlit:1,blend:1}),q=N(bQuad(),mt,0,.01,0).sc(.82);q.visible=false;m.add(q);t.bq=q;
+  t.add(N(geo.plane,S3.blob,0,.012,0).sc(.54,1,.44));
+  t.add(N(geo.torus,mat(col,{spec:.5,em:.35}),0,.03,0).sc(.22,.22,.07).rot(Math.PI/2,0,0));
+  const mt=mat('#ffffff',{unlit:1,blend:1}),q=N(bQuad(),mt,0,.01,0).sc(.70);q.visible=false;m.add(q);t.bq=q;
   boardTex(TOK_SLUG[tok],tx=>{mt.tex=tx;q.visible=true});(S3.bills=S3.bills||new Set()).add(q);return t}}
 {const _ar=attachRider;attachRider=function(p,t){if(t&&t.ill)return;return _ar(p,t)}}
 {const _ds=drawScene;drawScene=function(time){
@@ -6635,6 +6635,7 @@ const illOn=tok=>PREF.illTok&&GL&&TOK_SLUG[tok]&&ITEM_PICS['tok-'+TOK_SLUG[tok]]
       let M=null,yaw=0;for(const n of chain){const cm=M4.compose(n.p,n.r,n.s);M=M?M4.mul(M,cm):cm;yaw+=n.r[1]}
       const dx=c[0]-M[12],dy=c[1]-M[13],dz=c[2]-M[14];
       q.r=[-Math.atan2(dy,Math.hypot(dx,dz))*.45,Math.atan2(dx,dz)-yaw,0]}}
+  if(S3&&S3.ring&&S3.ring.visible&&typeof G!=='undefined'&&G&&tok3[G.turn]&&tok3[G.turn].ill)S3.ring.s=S3.ring.s.map(v=>v*.78);
   return _ds(time)}}
 /* ================= ORIENTATION ================= */
 let rotDismissed=false;
