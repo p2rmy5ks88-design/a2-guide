@@ -1655,6 +1655,12 @@ html.rot .gsb .slots{grid-template-columns:minmax(0,1fr)!important}html.rot .gse
 html.bigtext .gsb .slots{grid-template-columns:minmax(0,1fr)!important}html.bigtext .gsetup{grid-template-columns:minmax(0,1fr) minmax(190px,24vw)}
 .gsum .gpic{height:clamp(80px,22vh,120px)}
 #oMode{width:100%!important;display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important}#oMode button{min-height:54px}
+/* size by the panel's own width, whatever the screen or text size */
+.gsl{container-type:inline-size;container-name:gsl}
+.gsb .slots{grid-template-columns:repeat(auto-fill,minmax(min(100%,380px),1fr))!important}
+.gsb .slot{min-width:0}.gsb .slot input{flex:1 1 auto;min-width:50px;width:auto}.gsb .slot .seg{flex:none;white-space:nowrap}
+@container gsl (max-width:640px){#oMode button{font-size:12px!important;letter-spacing:0!important;padding:0 4px!important}.gsteps button{font-size:12px;padding:0 8px;gap:6px}.gsteps i{width:20px;height:20px}}
+@container gsl (max-width:460px){.gsb .slot .seg button{padding:0 8px}}
 /* ===== Collection after the redesign: solid background, cards ===== */
 .home:has(.clhead){background:linear-gradient(90deg,#0b1a2c,#0d2236 60%,#0f2a3a)!important}
 html.light .home:has(.clhead){background:#f3f5f9!important}
