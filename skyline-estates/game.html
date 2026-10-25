@@ -1897,9 +1897,9 @@ img.mdl.ipic{display:block;object-fit:cover;border-radius:14px;aspect-ratio:1/1;
 /* ---- loading screen ---- */
 #boot{position:fixed;inset:0;z-index:9999;background:#0d1b33;display:grid;place-items:center;transition:opacity .5s ease,visibility .5s}
 #boot.out{opacity:0;visibility:hidden}
-#boot .bimg{position:absolute;inset:0;background:url(art/coast.jpg) center/cover no-repeat;transform:scale(1.06);animation:bootzoom 6s ease-out forwards}
+#boot .bimg{position:absolute;inset:0;background:url(art/boot.jpg) center/cover no-repeat;transform:scale(1.06);animation:bootzoom 6s ease-out forwards}
 @keyframes bootzoom{to{transform:scale(1)}}
-#boot .bshade{position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(13,27,51,.25),rgba(13,27,51,.85) 75%),linear-gradient(to top,rgba(13,27,51,.95),transparent 45%)}
+#boot .bshade{position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(13,27,51,.15),rgba(13,27,51,.6) 80%),linear-gradient(to top,rgba(13,27,51,.85),transparent 40%)}
 #boot .bmid{position:relative;text-align:center;color:#fff;padding:0 24px;animation:bootin .8s ease-out both}
 @keyframes bootin{from{opacity:0;transform:translateY(10px)}}
 #boot .blogo svg{width:64px;height:64px;filter:drop-shadow(0 6px 18px rgba(0,0,0,.45))}
@@ -1911,7 +1911,7 @@ img.mdl.ipic{display:block;object-fit:cover;border-radius:14px;aspect-ratio:1/1;
 .wlm .mpanel,.wlm{max-width:min(560px,94vw)}
 .wl{text-align:center}
 .wl .wlstep{display:inline-block;font:700 11px/1 Manrope,system-ui;letter-spacing:1px;text-transform:uppercase;color:#e2b13c;margin-bottom:6px}
-.wl .wlhero{height:96px;margin:-6px -6px 10px;border-radius:14px;background:url(art/coast.jpg) center 60%/cover;display:flex;align-items:flex-start;justify-content:center;padding-top:8px}
+.wl .wlhero{height:96px;margin:-6px -6px 10px;border-radius:14px;background:url(art/boot.jpg) center 55%/cover;display:flex;align-items:flex-start;justify-content:center;padding-top:8px}
 .wl .wlhero .wlstep{background:rgba(13,27,51,.75);padding:5px 9px;border-radius:999px}
 .wl .uname{margin:10px auto 4px;display:block;max-width:260px;text-align:center}
 .wlchars,.wltoks{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:10px}
