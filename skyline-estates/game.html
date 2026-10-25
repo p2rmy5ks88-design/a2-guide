@@ -1526,64 +1526,80 @@ html.light .bldc{background:#fff;border-color:rgba(0,0,0,.08)}html.light .bldst{
 .pfmdl{display:flex;flex-direction:column;align-items:center;border-radius:12px;background:linear-gradient(180deg,#1f3456,#15243d);padding:4px 0 6px}.pfmdl canvas.mdl{width:200px;height:134px}.pfmdl small{font-size:11px;font-weight:700;color:var(--gold,#E2B54A)}
 html.light .pfmdl{background:linear-gradient(180deg,#eef2f8,#dde5f0)}
 .tkcb canvas.mdl{width:36px;height:28px}
-/* ===== Collection: two calm columns ===== */
-.pane.tab-tokens:has(.cvw),.pane.tab-cast:has(.cvw){overflow:hidden;display:flex;flex-direction:column;flex:1 1 auto!important}
-.pane:has(.cvw) .subpane{flex:1;min-height:0}
-.cvw{height:100%;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(300px,1.05fr);gap:14px}
-.cvleft{position:relative;min-height:0;display:flex;flex-direction:column;justify-content:flex-end}
-.cvstage{position:absolute;inset:0;cursor:grab;touch-action:pan-y;border-radius:18px}
-.cvctl{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;padding-bottom:4px;pointer-events:none}
-.cvrow{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;pointer-events:auto}
-.cvctl .sm{background:rgba(15,27,48,.88);border:1px solid rgba(255,255,255,.16);color:var(--ink)}.cvctl .sm.on{border-color:var(--gold,#E2B54A);color:var(--gold,#E2B54A)}
-html.light .cvctl .sm{background:rgba(255,255,255,.92);border-color:rgba(0,0,0,.12)}
-.cvp{min-height:0;overflow:auto;overscroll-behavior:contain;padding:12px 14px;display:flex;flex-direction:column;gap:10px;background:rgba(15,27,48,.95)!important}
-html.light .cvp{background:rgba(255,255,255,.97)!important}
-.cvchips{display:flex;align-items:center;gap:6px;flex-wrap:wrap;flex:none}
-.cvchips button{height:28px;padding:0 12px;border-radius:999px;border:1px solid rgba(255,255,255,.16);background:none;color:var(--ink);font:700 12px var(--body,inherit);cursor:pointer}
-.cvchips button.on{border-color:var(--gold,#E2B54A);color:var(--gold,#E2B54A);background:rgba(226,181,74,.1)}
-.cvchips span{margin-left:auto;font-size:11.5px;opacity:.7}.cvchips span:only-child{margin-left:0;font-weight:700;opacity:.8}
-.cvstrip{flex:none;display:flex;gap:8px;overflow-x:auto;padding:2px 2px 6px;scroll-snap-type:x proximity}
-.cvt{flex:0 0 92px;scroll-snap-align:start;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 4px 7px;border-radius:14px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:var(--ink);cursor:pointer}
-.cvt canvas.mdl.cvtm{width:72px;height:58px}.cvt b{font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}.cvt small{font-size:10px;opacity:.75}
-.cvt.on{border-color:var(--gold,#E2B54A);box-shadow:0 0 0 1px var(--gold,#E2B54A);background:rgba(226,181,74,.08)}
-.cvh{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.cvh h2{margin:0;font:700 24px var(--display,inherit);letter-spacing:0;text-transform:none}
-.cvdesc{margin:-4px 0 0;font-size:12.5px;opacity:.75}
-.cvbox{flex:none;display:flex;flex-direction:column;gap:8px;padding:10px 12px;border-radius:14px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03)}
-.cvbox p{margin:0;font-size:13px}
-.cvup{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.cvup small{margin-left:auto;font-size:11px;opacity:.65}
-.cvperks{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
-.cvperks li{display:grid;grid-template-columns:22px minmax(0,1fr) auto auto;gap:8px;align-items:center;font-size:13px}
-.cvperks i{font-style:normal}.cvperks em{font-style:normal;opacity:.6;font-size:12px;text-align:right}.cvperks b{color:#5fd39a;white-space:nowrap}
-html.light .cvperks b{color:#1f9a5c}
-.cvneeds{display:flex;flex-direction:column;gap:3px;font-size:12px}.cvneeds .ok{color:#5fd39a}.cvneeds .no{color:#ff9a8b}.cvneeds small{opacity:.7;color:var(--ink)}
-.cvbuy{display:grid;grid-template-columns:auto 1fr;gap:8px}
-.cvcost{display:flex;align-items:center;gap:5px;padding:0 12px;border-radius:12px;border:1px solid rgba(255,255,255,.14);font-weight:800}.cvcost.short{color:#ff7a6b}.cvcost .coin{width:15px;height:15px}
-.cvbuy .ibtn{min-height:42px}.cvbuy .ibtn[disabled]{opacity:.5}
-.cvafter{text-align:center;font-size:12px;opacity:.85}.cvafter .neg{color:#ff7a6b}
-.cvnote{font-size:11.5px;opacity:.6}
-.cvuse{flex:none;align-self:flex-start;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);color:var(--ink)}
-.cvfin{flex:none;display:flex;flex-direction:column;gap:6px}.cvfin>b{color:var(--gold,#E2B54A)}.cvfin>small{margin-top:-6px;font-size:11px;opacity:.65}
-.cvfrow{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px}
-.cvf{flex:0 0 80px;display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 4px;border-radius:12px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:var(--ink);cursor:pointer}
-.cvf i{width:28px;height:28px;border-radius:50%;box-shadow:0 3px 8px rgba(0,0,0,.35)}.cvf b{font-size:10.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}.cvf small{font-size:10px;opacity:.75}
-.cvf.on{border-color:var(--gold,#E2B54A);box-shadow:0 0 0 1px var(--gold,#E2B54A)}.cvf.locked i{opacity:.7}
-.cvprof{flex:none;display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 12px;align-items:center;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,.08)}
-.cvprof>.avf,.cvprof>.pav{grid-row:1/span 2}.cvprof .pav{width:52px;height:52px}
-.cvname{display:flex;gap:6px;min-width:0}.cvname input{flex:1;min-width:0;height:34px;font-size:14px}
-.cvprof>small{font-size:11.5px;opacity:.8}
-.cvsel{flex:none;display:flex;flex-direction:column;gap:8px}
-.cvrole{font-size:12px;font-weight:700;color:var(--gold,#E2B54A)}
-.cvsel .ibtn{align-self:flex-start;min-height:40px}.cvyours{color:#5fd39a;font-weight:800;font-size:13px}.cvlock{margin:0;font-size:13px;opacity:.85}
-.cvgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(82px,1fr));gap:6px}
-.cvc{display:flex;flex-direction:column;align-items:center;gap:2px;padding:7px 4px;border-radius:12px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:var(--ink);cursor:pointer;min-width:0}
-.cvc svg{width:52px;height:52px}.cvc b{font-size:12px}.cvc small{font-size:10px;opacity:.75;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
-.cvc.on{border-color:var(--gold,#E2B54A);box-shadow:0 0 0 1px var(--gold,#E2B54A)}.cvc.locked svg{filter:grayscale(.8) brightness(.75)}
-html.light .cvt,html.light .cvf,html.light .cvc,html.light .cvbox{background:#fff;border-color:rgba(0,0,0,.1)}html.light .cvchips button,html.light .cvcost{border-color:rgba(0,0,0,.15)}
-@media (max-height:460px){.cvp{padding:10px}.cvh h2{font-size:20px}.cvdesc,.cvnote{display:none}}
-html.rot .cvdesc,html.rot .cvnote{display:none}html.rot .cvh h2{font-size:20px}
-@media (max-width:700px){html:not(.rot) .pane:has(.cvw){overflow:auto;display:block}html:not(.rot) .cvw{display:flex;flex-direction:column;height:auto}html:not(.rot) .cvleft{height:300px;flex:none}html:not(.rot) .cvp{overflow:visible}}
-.cvstage{inset:0 0 86px 0}
-.home:has(.cvw) .topbar .who,.home:has(.sistage.live) .topbar .who{background:rgba(14,26,46,.88);border-radius:999px;padding:2px 14px 2px 2px}html.light .home:has(.cvw) .topbar .who{background:rgba(255,255,255,.9)}
+/* ===== Collection showroom ===== */
+.pane.tab-tokens:has(.shw),.pane.tab-cast:has(.shw){overflow:hidden;display:flex;flex-direction:column;flex:1 1 auto!important}
+.pane:has(.shw) .subpane{flex:1;min-height:0;position:relative}
+.shw{position:relative;height:100%;min-height:0;display:flex;flex-direction:column;gap:8px}
+.shst{position:relative;flex:1;min-height:0;display:flex;flex-direction:column;justify-content:flex-end}
+.shmodel{position:absolute;inset:0 60px 118px 60px;cursor:grab;touch-action:pan-y}
+.sharr{position:absolute;top:calc(50% - 70px);width:44px;height:44px;border-radius:50%;border:1px solid rgba(255,255,255,.22);background:rgba(13,24,43,.7);color:#fff;font:700 26px/1 sans-serif;cursor:pointer;backdrop-filter:blur(6px)}
+.sharr.l{left:4px}.sharr.r{right:4px}
+.shtools{position:absolute;top:4px;right:4px;display:flex;flex-direction:column;gap:6px}
+.shtools button{width:38px;height:38px;border-radius:12px;border:1px solid rgba(255,255,255,.18);background:rgba(13,24,43,.7);color:#fff;font-size:17px;cursor:pointer;backdrop-filter:blur(6px)}
+.shtools button.on{border-color:var(--gold,#E2B54A);color:var(--gold,#E2B54A)}
+.shinfo{position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;padding:10px 12px 4px;
+  background:linear-gradient(180deg,transparent,rgba(13,24,43,.82) 40%);border-radius:0 0 18px 18px}
+.shname{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center}
+.shname h2{margin:0;font:700 26px var(--display,inherit);letter-spacing:0;text-transform:none;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.5)}
+.shrole{font-size:13px;font-weight:700;color:var(--gold,#E2B54A)}.shmine{font-size:12px;font-weight:800;color:#5fe8b4}
+.shline{margin:0;font-size:13px;color:#e8e1cf;max-width:520px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.shbtns{display:flex;gap:8px;justify-content:center;margin-top:4px;flex-wrap:wrap}
+.shbtns .ibtn{min-height:42px;padding:0 18px}.shbtns .ibtn[disabled]{opacity:.55}
+.shghost{background:rgba(13,24,43,.7);border:1px solid rgba(255,255,255,.25);color:#fff}
+.shcar{flex:none;display:flex;gap:8px;overflow-x:auto;padding:8px;border-radius:18px;background:rgba(13,24,43,.94);border:1px solid rgba(255,255,255,.08);scroll-snap-type:x proximity}
+.shcar button{flex:0 0 76px;scroll-snap-align:center;display:flex;flex-direction:column;align-items:center;gap:2px;padding:5px 3px;border-radius:14px;border:1px solid transparent;background:rgba(255,255,255,.04);color:var(--ink);cursor:pointer}
+.shcar button canvas.mdl.shm{width:62px;height:50px}.shcar button svg{width:48px;height:48px}
+.shcar button small{font-size:10.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;opacity:.85}
+.shcar button.on{border-color:var(--gold,#E2B54A);background:rgba(226,181,74,.12);box-shadow:0 0 0 1px var(--gold,#E2B54A)}
+.shcar button.locked svg{filter:grayscale(.85) brightness(.7)}
+.shsheet{position:absolute;inset:0;z-index:5;display:flex;align-items:flex-end;justify-content:center}
+.shback{position:absolute;inset:0;background:rgba(5,10,20,.45);opacity:0;transition:opacity .2s}
+.shpanel{position:relative;width:min(560px,100%);max-height:88%;overflow:auto;overscroll-behavior:contain;padding:16px 16px 18px;border-radius:20px 20px 0 0;background:#13213A;border:1px solid rgba(255,255,255,.1);box-shadow:0 -10px 30px rgba(0,0,0,.4);transform:translateY(100%);transition:transform .22s ease}
+.shsheet.open .shback{opacity:1}.shsheet.open .shpanel{transform:none}
+html.calm .shpanel,html.calm .shback{transition:none}
+.shx{position:absolute;top:10px;right:10px;width:32px;height:32px;border-radius:50%;border:1px solid rgba(255,255,255,.2);background:none;color:var(--ink);cursor:pointer}
+.shbody{display:flex;flex-direction:column;gap:12px}
+.shbody h3{margin:0;font:700 22px var(--display,inherit);letter-spacing:0;text-transform:none}
+.shsub{margin:0;font-size:12.5px;opacity:.75}
+.shsec{display:flex;flex-direction:column;gap:6px;padding-top:10px;border-top:1px solid rgba(255,255,255,.08)}
+.shsec>b{color:var(--gold,#E2B54A)}.shsec>small{margin-top:-6px;font-size:11px;opacity:.65}
+.shperks{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:5px}
+.shperks li{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(90px,auto);gap:10px;font-size:13px;align-items:center}
+.shperks em{font-style:normal;opacity:.65;text-align:right}.shperks b{text-align:right;opacity:.5}.shperks b.up{color:#5fd39a;opacity:1}
+.shneed{margin:0;font-size:12px}.shneed.ok{color:#5fd39a}.shneed.no{color:#ff9a8b}
+.shafter{margin:0;font-size:13px;display:flex;align-items:center;gap:4px;flex-wrap:wrap}.shafter .coin{width:13px;height:13px}.shafter .neg{color:#ff7a6b}
+.shnote{font-size:11.5px;opacity:.6}
+.shfin{display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:6px}
+.shfin button{display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 4px;border-radius:12px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:var(--ink);cursor:pointer}
+.shfin i{width:28px;height:28px;border-radius:50%;box-shadow:0 3px 8px rgba(0,0,0,.35)}.shfin b{font-size:10.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}.shfin small{font-size:10px;opacity:.75}
+.shfin button.on{border-color:var(--gold,#E2B54A);box-shadow:0 0 0 1px var(--gold,#E2B54A)}
+.shprof{display:flex;align-items:center;gap:12px;padding-right:36px}.shprof .pav{width:58px;height:58px}
+.shname2{display:flex;gap:6px}.shname2 input{flex:1;min-width:0;height:36px}
+.home:has(.shw) .topbar .who{background:rgba(14,26,46,.88);border-radius:999px;padding:2px 14px 2px 2px}
+html.light .shpanel{background:#fff}html.light .shcar{background:rgba(255,255,255,.96);border-color:rgba(0,0,0,.08)}html.light .home:has(.shw) .topbar .who{background:rgba(255,255,255,.9)}
+html.light .shcar button,html.light .shfin button{background:#f3f5f9}
+@media (max-height:460px){.shname h2{font-size:21px}.shmodel{inset:0 54px 104px 54px}.shbtns .ibtn{min-height:38px}.shcar button{flex-basis:66px}.shcar button canvas.mdl.shm{width:54px;height:42px}.shcar button svg{width:40px;height:40px}.shcar{padding:6px}}
+html.rot .shname h2{font-size:21px}html.rot .shmodel{inset:0 54px 104px 54px}html.rot .shcar button{flex-basis:66px}html.rot .shcar button svg{width:40px;height:40px}html.rot .shcar button canvas.mdl.shm{width:54px;height:42px}
+@media (max-width:700px){html:not(.rot) .shline{white-space:normal}}
+.shtools{flex-direction:row;top:2px;right:2px}
+.shtools button{width:36px;height:36px}
+.sharr{top:calc(50% - 80px)}
+.shmodel{inset:44px 60px 118px 60px}
+@media (max-height:460px){.shmodel{inset:40px 54px 104px 54px}}html.rot .shmodel{inset:40px 54px 104px 54px}
+/* one slim info row: name and line on the left, buttons on the right */
+.shinfo{flex-direction:row;align-items:center;justify-content:space-between;text-align:left;gap:14px;padding:10px 14px;border-radius:16px;background:rgba(13,24,43,.86);border:1px solid rgba(255,255,255,.08);backdrop-filter:blur(8px)}
+.shinfo>.shname,.shinfo>.shline{}
+.shinfo{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto auto}
+.shinfo .shname{grid-column:1;justify-content:flex-start}.shinfo .shline{grid-column:1;max-width:none}
+.shinfo .shbtns{grid-column:2;grid-row:1/span 2;margin:0;flex-wrap:nowrap}
+.shname h2{font-size:22px}
+.shmodel{inset:44px 60px 80px 60px}
+@media (max-height:460px){.shmodel{inset:40px 54px 72px 54px}.shinfo{padding:7px 10px}.shname h2{font-size:18px}.shline{font-size:12px}.shbtns .ibtn{min-height:36px;padding:0 12px;font-size:13px}}
+html.rot .shmodel{inset:40px 54px 72px 54px}html.rot .shinfo{padding:7px 10px}html.rot .shname h2{font-size:18px}html.rot .shline{font-size:12px}html.rot .shbtns .ibtn{min-height:36px;padding:0 12px;font-size:13px}
+@media (max-width:700px){html:not(.rot) .shinfo{grid-template-columns:1fr}html:not(.rot) .shinfo .shbtns{grid-column:1;grid-row:auto;justify-content:flex-start;flex-wrap:wrap}}
+html.light .shinfo{background:rgba(255,255,255,.92);border-color:rgba(0,0,0,.08)}html.light .shname h2{color:var(--ink);text-shadow:none}html.light .shline{color:var(--ink2,#445)}html.light .shghost{background:#fff;color:var(--ink);border-color:rgba(0,0,0,.15)}
+@media (max-height:420px){.shcar button small,.shline{display:none}.shmodel{inset:40px 54px 56px 54px}}
+html.rot .shcar button small,html.rot .shline{display:none}html.rot .shmodel{inset:40px 54px 56px 54px}
 </style>
 
 <canvas id="gl" aria-label="3D game board"></canvas>
@@ -5764,11 +5780,11 @@ function peekOver(el){const h=$('#title .home');if(!h)return;if(!el){h.style.bac
   const dark=document.documentElement.classList.contains('light')?'rgba(244,246,250,.95)':'rgba(13,24,43,.96)';
   if(r.width>=a.width*.8){const y0=r.top-a.top,y1=r.bottom-a.top;h.style.background=`linear-gradient(180deg,${dark} 0,${dark} ${y0-30}px,transparent ${y0+10}px,transparent ${y1-10}px,${dark} ${y1+30}px,${dark} 100%)`;return}
   const x0=r.left-a.left,x1=r.right-a.left;h.style.background=`linear-gradient(90deg,${dark} 0,${dark} ${x0-24}px,rgba(0,0,0,0) ${x0+18}px,rgba(0,0,0,0) ${x1-18}px,${dark} ${x1+24}px,${dark} 100%)`}
-function aimAt(sel,off=.22){const m=document.querySelector(sel),cv=$('#gl');if(!m||!cv||!S3||!S3.preview)return;const r=m.getBoundingClientRect(),c=cv.getBoundingClientRect();if(!r.width||!c.width)return;
+function aimAt(sel,off=.22,zoom=1){const m=document.querySelector(sel),cv=$('#gl');if(!m||!cv||!S3||!S3.preview)return;const r=m.getBoundingClientRect(),c=cv.getBoundingClientRect();if(!r.width||!c.width)return;
   const rot=document.documentElement.classList.contains('rot'),ddx=(r.left+r.width/2)-(c.left+c.width/2),ddy=(r.top+r.height/2)-(c.top+c.height/2);
   /* the rotated phone layout turns the page 90° clockwise: work in the page's own frame */
   const W=rot?c.height:c.width,H=rot?c.width:c.height,rw=rot?r.height:r.width,rh=rot?r.width:r.height,asp=W/H,t=Math.tan(19*Math.PI/180),fx=(rot?ddy:ddx)/(W/2),fy=(rot?-ddx:ddy)/(H/2);
-  const L=Math.max(7.6,Math.min(26,7.6*Math.max(.62*H/Math.max(120,rh),.5*W/Math.max(120,rw)*asp/2.1)));
+  const L=Math.max(5,zoom*Math.max(7.6,Math.min(26,7.6*Math.max(.62*H/Math.max(120,rh),.5*W/Math.max(120,rw)*asp/2.1))));
   TITLE_CAM={look:[0,4.25+(fy+off)*L*t*.92,0],L,pitch:.16,spin:0,dx:fx*L*t*asp*.9}}
 tkAim=()=>{aimAt('.tkstage');peekOver(document.querySelector('.tkstage'))};
 function pvLoop(ts){const on=document.querySelector('.tab-shop .sipage .sistage.live');if(!on){PV.raf=0;return}const dt=Math.min(.05,(ts-(PV.last||ts))/1000);PV.last=ts;
@@ -5989,72 +6005,75 @@ busModel=function(col,k=1){const g=S3.geo,m=new Node(),body=mat(col,{spec:.65}),
   for(const x of[-.13,.13])for(const z of[-.1,.1])m.add(N(g.cyl,dark,x,.075,z).sc(.058,.025,.058).rot(Math.PI/2,0,0),N(g.cyl,chrome,x,.075,z*1.16).sc(.028,.01,.028).rot(Math.PI/2,0,0));
   for(const z of[-.07,.07])m.add(N(g.sph,mat('#fff1b9'),.216,.15,z).sc(.012,.022,.022));for(const z of[-.099,.099]){m.add(N(g.box,chrome,0,.14,z).sc(.34,.008,.005));for(let x=-.16;x<.17;x+=.04)m.add(N(g.box,chrome,x,.16,z).sc(.02,.012,.005))}return true}}
 
-/* ================= COLLECTION: CALMER TOKENS AND CHARACTERS ================= */
-/* Two columns on both pages: the 3D preview on the left (drag to turn, gesture buttons), one scrolling panel on the
-   right. Tokens: a scrolling row of tokens, then only the perks that change with the next upgrade, the cost and the
-   finishes. Characters: a compact profile, the selected character and the character grid. Frames have their own tab. */
-const CV={yaw:0,spin:false,raf:0,last:0,filter:'all'};
-function cvLoop(ts){if(!document.querySelector('.cvw')){CV.raf=0;return}const dt=Math.min(.05,(ts-(CV.last||ts))/1000);CV.last=ts;if(CV.spin)CV.yaw+=dt*.9;if(S3&&S3.preview)S3.preview.r=[0,CV.yaw,0];CV.raf=requestAnimationFrame(cvLoop)}
-function cvAim(){const st=document.querySelector('.cvstage');if(!st)return;aimAt('.cvstage',.02);peekOver(document.querySelector('.cvleft'))}
-function cvStage(gest){return `<section class="cvleft"><div class="cvstage" aria-label="Drag to turn"></div>
-  <div class="cvctl"><div class="cvrow">${gest.map(([g,l],i)=>`<button class="sm${i?'':' on'}" data-g="${g}">${l}</button>`).join('')}</div>
-  <div class="cvrow"><button class="sm" id="cvRot">⟳ Rotate</button><button class="sm" id="cvReset">◎ Reset</button></div></div></section>`}
-function cvBind(T){const st=T.querySelector('.cvstage');let drag=null;
-  st.onpointerdown=e=>{drag={x:e.clientX,y:CV.yaw};CV.spin=false;T.querySelector('#cvRot').classList.remove('on');try{st.setPointerCapture(e.pointerId)}catch(_){}};
-  st.onpointermove=e=>{if(drag)CV.yaw=drag.y+(e.clientX-drag.x)*.012};st.onpointerup=st.onpointercancel=()=>{drag=null};
-  T.querySelector('#cvRot').onclick=e=>{CV.spin=!CV.spin;e.currentTarget.classList.toggle('on',CV.spin)};
-  T.querySelector('#cvReset').onclick=()=>{CV.spin=false;CV.yaw=0;T.querySelector('#cvRot').classList.remove('on')};
-  T.querySelectorAll('.cvctl [data-g]').forEach(b=>b.onclick=()=>{T.querySelectorAll('.cvctl [data-g]').forEach(x=>x.classList.toggle('on',x===b));previewGesture(b.dataset.g);const f=S3&&S3.previewFig;if(f&&f.rig)try{rigPlay(f.rig,b.dataset.g)}catch(e){}});
-  if(!CV.raf){CV.last=0;CV.raf=requestAnimationFrame(cvLoop)}}
-function cvPreview(id,tok){previewChar(id,tok);CV.yaw=0;requestAnimationFrame(()=>{cvAim();setTimeout(cvAim,80)})}
-const PERK_IC={'Look':'🎨','Payday bonus':'💰','Re-rolls a game':'🎲','Lucky Pass':'⭐','Rent Shield':'🛡️','Chaos Surge':'⚡','Coins from games':'🪙','XP from games':'📈'};
+/* ================= COLLECTION SHOWROOM ================= */
+/* Tokens and Characters as a game-lobby showroom: the rider in 3D across the whole page, ‹ › to flip, a name line,
+   one main button and Details; a carousel along the bottom. Perks, finishes, profile and descriptions live in a
+   sheet that slides up only when Details is tapped. */
+const SR={yaw:0,spin:false,raf:0,last:0};
+function srLoop(ts){if(!document.querySelector('.shw')){SR.raf=0;return}const dt=Math.min(.05,(ts-(SR.last||ts))/1000);SR.last=ts;if(SR.spin)SR.yaw+=dt*.8;if(S3&&S3.preview)S3.preview.r=[0,SR.yaw,0];SR.raf=requestAnimationFrame(srLoop)}
+function srAim(){const st=document.querySelector('.shst');if(!st)return;const m=document.querySelector('.shmodel'),rc=m.getBoundingClientRect(),hh=document.documentElement.classList.contains('rot')?rc.width:rc.height;aimAt('.shmodel',hh<200?.12:-.05,hh<200?.9:.62);peekOver(st)}
+function srPreview(id,tok){previewChar(id,tok);SR.yaw=0;requestAnimationFrame(()=>{srAim();setTimeout(srAim,80)})}
+function srFrame(gests){return `<div class="shw"><section class="shst"><div class="shmodel" aria-label="Drag to turn"></div>
+    <button class="sharr l" data-step="-1" aria-label="Previous">‹</button><button class="sharr r" data-step="1" aria-label="Next">›</button>
+    <div class="shtools">${gests.map(([g,i,l])=>`<button data-g="${g}" title="${l}" aria-label="${l}">${i}</button>`).join('')}<button id="shSpin" title="Rotate" aria-label="Rotate">⟳</button></div>
+    <div class="shinfo"></div></section><nav class="shcar" aria-label="Choose"></nav><div class="shsheet" hidden><div class="shback"></div><div class="shpanel" role="dialog" aria-modal="true"><button class="shx" aria-label="Close">✕</button><div class="shbody"></div></div></div></div>`}
+function srBind(T,step){const st=T.querySelector('.shmodel');let drag=null;
+  st.onpointerdown=e=>{drag={x:e.clientX,y:SR.yaw,t:Date.now()};SR.spin=false;T.querySelector('#shSpin').classList.remove('on');try{st.setPointerCapture(e.pointerId)}catch(_){}};
+  st.onpointermove=e=>{if(drag)SR.yaw=drag.y+(e.clientX-drag.x)*.012};st.onpointerup=st.onpointercancel=()=>{drag=null};
+  T.querySelector('#shSpin').onclick=e=>{SR.spin=!SR.spin;e.currentTarget.classList.toggle('on',SR.spin)};
+  T.querySelectorAll('.shtools [data-g]').forEach(b=>b.onclick=()=>{previewGesture(b.dataset.g);const f=S3&&S3.previewFig;if(f&&f.rig)try{rigPlay(f.rig,b.dataset.g)}catch(e){}});
+  T.querySelectorAll('.sharr').forEach(b=>b.onclick=()=>step(+b.dataset.step));
+  const sh=T.querySelector('.shsheet');const close=()=>{sh.classList.remove('open');setTimeout(()=>sh.hidden=true,220)};sh.querySelector('.shback').onclick=close;sh.querySelector('.shx').onclick=close;
+  T._sheet=(html,bind)=>{sh.querySelector('.shbody').innerHTML=html;sh.hidden=false;requestAnimationFrame(()=>sh.classList.add('open'));if(bind)bind(sh.querySelector('.shbody'),close)};
+  if(!SR.raf){SR.last=0;SR.raf=requestAnimationFrame(srLoop)}}
+function srCarousel(T,html,onPick){const C=T.querySelector('.shcar');C.innerHTML=html;C.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>onPick(b.dataset.k));const on=C.querySelector('.on');if(on)on.scrollIntoView({block:'nearest',inline:'center'})}
 /* ---------- Tokens ---------- */
-paneTokens=function(T){const all=TOKENS.concat(NEW_TOKENS);let sel=setup.tkSel&&all.includes(setup.tkSel)?setup.tkSel:setup.slots[0].tok;
-  T.innerHTML=`<div class="cvw">${cvStage([['wave','Wave'],['cheer','Celebrate'],['dance','Victory']])}<section class="cvp card"></section></div>`;
-  const P=T.querySelector('.cvp');
-  const draw=()=>{const tl=tokLv(sel),next=TOKEN_LV[tl+1],un=tokenUnlocked(sel),R=rarityOf(tl),info=TOKEN_INFO[sel],now=TOKEN_LV[tl];
-    const list=all.filter(t=>CV.filter==='all'||(CV.filter==='own')===tokenUnlocked(t));
-    const strip=`<div class="cvchips">${[['all','All'],['own','Owned'],['lock','Locked']].map(([k,l])=>`<button class="${CV.filter===k?'on':''}" data-f="${k}">${l}</button>`).join('')}<span>${unlockedTokens().length} of ${all.length} unlocked</span></div>
-      <div class="cvstrip">${list.map(t=>{const u=tokenUnlocked(t),eq=setup.slots[0].tok===t;return `<button class="cvt${t===sel?' on':''}${u?'':' locked'}" data-t="${t}">${mdl({token:t,col:u?(eq?mdFinCol():mdTokCol(t)):'#7d8a96',label:TOKEN_INFO[t][0]},'cvtm'+(u?'':' lockm'),150,120)}<b>${esc(TOKEN_INFO[t][0])}</b><small>${eq?'✓ Yours':u?rarityOf(tokLv(t)).name:'🔒'}</small></button>`}).join('')}</div>`;
-    let body=`<div class="cvh"><h2>${esc(info[0])}</h2>${un?`<span class="rar" style="background:${R.ui}">${R.name}</span>`:'<span class="rar lockp">Locked</span>'}</div><p class="cvdesc">${esc(info[1])}</p>`;
-    if(!un){body+=`<div class="cvbox"><p>🔒 ${esc(tokenHowText(sel))}</p>${TOKEN_HOW[sel]&&TOKEN_HOW[sel].coins?`<div class="cvbuy"><span class="cvcost">${COIN_I}${nfmt(TOKEN_HOW[sel].coins)}</span><button class="ibtn gold" id="tBuy">Unlock token</button></div><small class="cvafter">Balance after: ${nfmt(PREF.coins-TOKEN_HOW[sel].coins)}</small>`:''}</div>`}
-    else if(next){const rows=WS_PERKS.map(([k,f,v])=>{const a=f(now),b=f(next),up=v?v(next)>v(now):a!==b;return up?`<li><i>${PERK_IC[k]||'•'}</i><span>${k}</span><em>${esc(a)}</em><b>→ ${esc(b)}</b></li>`:''}).join('');
-      const needs=wsNeeds(sel,tl+1).slice(1),ok=tierReqMet(sel,tl+1),after=PREF.coins-next.cost;
-      body+=`<div class="cvbox"><div class="cvup"><span class="rar" style="background:${R.ui}">${R.name}</span><span>→</span><span class="rar" style="background:${next.ui}">${next.name}</span><small>What the upgrade adds</small></div>
-        <ul class="cvperks">${rows}</ul>${needs.length?`<div class="cvneeds">${needs.map(n=>`<span class="${n.ok?'ok':'no'}">${n.ok?'✓':'✗'} ${esc(n.txt)} <small>${esc(n.sub)}</small></span>`).join('')}</div>`:''}
-        <div class="cvbuy"><span class="cvcost${after<0?' short':''}">${COIN_I}${nfmt(next.cost)}</span><button class="ibtn gold" id="tUp"${ok?'':' disabled'}>Upgrade to ${next.name}</button></div>
-        <small class="cvafter">${after<0?`You need <b class="neg">${nfmt(-after)}</b> more coins`:`Balance after: <b>${nfmt(after)}</b>`}</small></div><small class="cvnote">Perks only apply when the host turns on Token perks.</small>`}
-    else body+=`<div class="cvbox"><p>✨ Chaotic is the highest tier. This token has every perk.</p></div>`;
-    if(un&&setup.slots[0].tok!==sel)body+=`<button class="ibtn cvuse" id="tPlay">Use this token</button>`;
-    body+=`<div class="cvfin"><b>Finish</b> <small>cosmetic only</small><div class="cvfrow">${[{id:null,name:'Player colour',col:PCOL[0]}].concat(FINISHES).map(f=>{const own=f.id===null||itemOwned('fin',f.id),on=(PREF.eq.fin||null)===f.id;
-      return `<button class="cvf${on?' on':''}${own?'':' locked'}" data-fin="${f.id||''}"><i style="background:radial-gradient(circle at 35% 30%,#fff,${f.col} 55%,#000 140%)"></i><b>${esc(f.name)}</b><small>${on?'✓ In use':own?'Owned':f.price?nfmt(f.price):'Reward'}</small></button>`}).join('')}</div></div>`;
-    P.innerHTML=strip+body;
-    const cur=P.querySelector('.cvt.on');if(cur)cur.scrollIntoView({block:'nearest',inline:'center'});
-    P.querySelectorAll('.cvchips [data-f]').forEach(b=>b.onclick=()=>{CV.filter=b.dataset.f;draw()});
-    P.querySelectorAll('.cvt').forEach(b=>b.onclick=()=>{sel=b.dataset.t;setup.tkSel=sel;draw();cvPreview(myChar(),sel)});
-    const up=P.querySelector('#tUp');if(up)up.onclick=async()=>{if(!(await confirmBuy(`Upgrade ${info[0]} to ${next.name}`,next.cost,`Coins after: ${nfmt(PREF.coins-next.cost)}.`)))return;PREF.tokLv[sel]=tl+1;savePref();achBump();toast(`${info[0]} is now ${next.name}!`);railProfile();draw();cvPreview(myChar(),sel);try{confetti()}catch(e){}};
-    const bu=P.querySelector('#tBuy');if(bu)bu.onclick=async()=>{if(await confirmBuy(`Unlock ${info[0]}`,TOKEN_HOW[sel].coins)){grantItem('tok',sel);railProfile();draw()}};
-    const pl=P.querySelector('#tPlay');if(pl)pl.onclick=()=>{const other=setup.slots.findIndex((s,i)=>i>0&&s.tok===sel);if(other>0)setup.slots[other].tok=setup.slots[0].tok;setup.slots[0].tok=sel;saveSlot(0,setup.slots[0]);toast(`${info[0]} is your token`);draw();cvPreview(myChar(),sel)};
-    P.querySelectorAll('[data-fin]').forEach(b=>b.onclick=()=>{const id=b.dataset.fin||null,f=id&&FINISHES.find(x=>x.id===id);if(id&&!itemOwned('fin',id)){if(!f.price){toast(f.desc);return}openItem('fin',id,f.price,0,'tokens');return}PREF.eq.fin=id;savePref();railProfile();draw();cvPreview(myChar(),sel)})};
-  cvBind(T);draw();cvPreview(myChar(),sel)};
+paneTokens=function(T){const all=TOKENS.concat(NEW_TOKENS).sort((a,b)=>tokenUnlocked(b)-tokenUnlocked(a));let sel=setup.tkSel&&all.includes(setup.tkSel)?setup.tkSel:setup.slots[0].tok;
+  T.innerHTML=srFrame([['wave','👋','Wave'],['cheer','🎉','Celebrate'],['dance','💃','Victory']]);
+  const info=()=>{const tl=tokLv(sel),next=TOKEN_LV[tl+1],un=tokenUnlocked(sel),R=rarityOf(tl),I=TOKEN_INFO[sel],mine=setup.slots[0].tok===sel;
+    let line,main;
+    if(!un){line=`🔒 ${tokenHowText(sel)}`;main=TOKEN_HOW[sel]&&TOKEN_HOW[sel].coins?`<button class="ibtn gold" id="shMain">${COIN_I}<span>Unlock · ${nfmt(TOKEN_HOW[sel].coins)}</span></button>`:''}
+    else if(next){const adds=WS_PERKS.filter(([k,f,v])=>v?v(next)>v(TOKEN_LV[tl]):f(next)!==f(TOKEN_LV[tl])).map(([k,f])=>k==='Look'?null:`${k} ${f(next)}`).filter(Boolean).slice(0,2);
+      line=`Next: ${next.name}${adds.length?' · '+adds.join(' · '):''}`;main=`<button class="ibtn gold" id="shMain"${tierReqMet(sel,tl+1)?'':' disabled'}>${COIN_I}<span>Upgrade · ${nfmt(next.cost)}</span></button>`}
+    else{line='Chaotic: every perk unlocked';main=''}
+    const use=un&&!mine?`<button class="ibtn shghost" id="shUse">Use this token</button>`:'';
+    T.querySelector('.shinfo').innerHTML=`<div class="shname"><h2>${esc(I[0])}</h2>${un?`<span class="rar" style="background:${R.ui}">${R.name}</span>`:'<span class="rar lockp">Locked</span>'}${mine?'<span class="shmine">✓ Your token</span>':''}</div>
+      <p class="shline">${esc(line)}</p><div class="shbtns"><button class="ibtn shghost" id="shDet">Details</button>${use}${main}</div>`;
+    const m=T.querySelector('#shMain');if(m)m.onclick=async()=>{if(!un){if(await confirmBuy(`Unlock ${I[0]}`,TOKEN_HOW[sel].coins)){grantItem('tok',sel);railProfile();redraw()}return}
+      if(!tierReqMet(sel,tl+1)){toast('Not yet: '+tierReqText(sel,tl+1));return}
+      if(!(await confirmBuy(`Upgrade ${I[0]} to ${next.name}`,next.cost,`Coins after: ${nfmt(PREF.coins-next.cost)}.`)))return;PREF.tokLv[sel]=tl+1;savePref();achBump();toast(`${I[0]} is now ${next.name}!`);railProfile();redraw();srPreview(myChar(),sel);try{confetti()}catch(e){}};
+    const u=T.querySelector('#shUse');if(u)u.onclick=()=>{const other=setup.slots.findIndex((s,i)=>i>0&&s.tok===sel);if(other>0)setup.slots[other].tok=setup.slots[0].tok;setup.slots[0].tok=sel;saveSlot(0,setup.slots[0]);toast(`${I[0]} is your token`);redraw();srPreview(myChar(),sel)};
+    T.querySelector('#shDet').onclick=()=>details()};
+  const details=()=>{const tl=tokLv(sel),next=TOKEN_LV[tl+1],now=TOKEN_LV[tl],I=TOKEN_INFO[sel];
+    const perks=WS_PERKS.map(([k,f,v])=>{const a=f(now),b=next?f(next):null,up=next&&(v?v(next)>v(now):a!==b);if(a==='None'&&(!next||b==='None'))return '';return `<li><span>${k}</span><em>${esc(a)}</em>${next?`<b class="${up?'up':''}">${up?'→ '+esc(b):'—'}</b>`:''}</li>`}).join('');
+    const needs=next?wsNeeds(sel,tl+1).slice(1):[];
+    T._sheet(`<h3>${esc(I[0])}</h3><p class="shsub">${esc(I[1])}</p>
+      <div class="shsec"><b>Perks</b>${next?`<small>${now.name} → ${next.name}</small>`:''}<ul class="shperks">${perks||'<li><span>No perks yet</span></li>'}</ul>${needs.map(n=>`<p class="shneed ${n.ok?'ok':'no'}">${n.ok?'✓':'✗'} ${esc(n.txt)} · ${esc(n.sub)}</p>`).join('')}
+        ${next?`<p class="shafter">Upgrade costs ${COIN_I}<b>${nfmt(next.cost)}</b> · balance after <b class="${PREF.coins<next.cost?'neg':''}">${nfmt(PREF.coins-next.cost)}</b></p>`:''}<small class="shnote">Perks apply only when the host turns on Token perks.</small></div>
+      <div class="shsec"><b>Finish</b><small>cosmetic only</small><div class="shfin">${[{id:null,name:'Player colour',col:PCOL[0]}].concat(FINISHES).map(f=>{const own=f.id===null||itemOwned('fin',f.id),on=(PREF.eq.fin||null)===f.id;
+        return `<button class="${on?'on':''}${own?'':' locked'}" data-fin="${f.id||''}"><i style="background:radial-gradient(circle at 35% 30%,#fff,${f.col} 55%,#000 140%)"></i><b>${esc(f.name)}</b><small>${on?'✓ In use':own?'Owned':f.price?nfmt(f.price):'Reward'}</small></button>`}).join('')}</div></div>`,
+      (B,close)=>B.querySelectorAll('[data-fin]').forEach(b=>b.onclick=()=>{const id=b.dataset.fin||null,f=id&&FINISHES.find(x=>x.id===id);if(id&&!itemOwned('fin',id)){if(!f.price){toast(f.desc);return}close();openItem('fin',id,f.price,0,'tokens');return}PREF.eq.fin=id;savePref();railProfile();redraw();srPreview(myChar(),sel);details()}))};
+  const redraw=()=>{info();srCarousel(T,all.map(t=>{const u=tokenUnlocked(t),eq=setup.slots[0].tok===t;return `<button class="${t===sel?'on':''}${u?'':' locked'}" data-k="${t}" aria-label="${esc(TOKEN_INFO[t][0])}">${mdl({token:t,col:u?(eq?mdFinCol():mdTokCol(t)):'#7d8a96',label:TOKEN_INFO[t][0]},'shm'+(u?'':' lockm'),150,120)}<small>${esc(TOKEN_INFO[t][0])}</small></button>`}).join(''),k=>{sel=k;setup.tkSel=k;redraw();srPreview(myChar(),sel)})};
+  srBind(T,d=>{const i=all.indexOf(sel);sel=all[(i+d+all.length)%all.length];setup.tkSel=sel;redraw();srPreview(myChar(),sel)});
+  redraw();srPreview(myChar(),sel)};
 /* ---------- Characters ---------- */
-paneCast=function(T){let sel=setup.castSel||myChar();const tok=setup.slots[0].tok;
-  T.innerHTML=`<div class="cvw">${cvStage([['wave','Wave'],['cheer','Celebrate'],['dance','Victory'],['think','Think'],['sulk','Facepalm']])}<section class="cvp card"></section></div>`;
-  const P=T.querySelector('.cvp');
-  const draw=()=>{const c=CHARS.find(x=>x.id===sel),un=charUnlocked(sel),n=CHARS.filter(x=>charUnlocked(x.id)).length,tc=trophyCount();
-    P.innerHTML=`<div class="cvprof">${framed(`<span class="pav">${charSVG(myChar(),48)}</span>`)}<div class="cvname"><input id="uName2" class="uname" maxlength="12" value="${esc(myName())}" placeholder="Pick a username" aria-label="Username"><button class="sm go" id="uSave">Save</button></div>
-        <small>${TIER_INFO.p[1]} ${tc.p} · ${TIER_INFO.g[1]} ${tc.g} · ${TIER_INFO.s[1]} ${tc.s} · ${TIER_INFO.b[1]} ${tc.b} · Level ${lvlOf(PREF.xp)} · ${LEAGUES[leagueIdx()].name}</small></div>
-      <div class="cvsel"><div class="cvh"><h2>${esc(c.name)}</h2><span class="cvrole">${esc(c.role)}</span></div><p class="cvdesc">${esc(c.desc)}</p>
-        ${un?(myChar()===sel?'<span class="cvyours">✓ Riding with you</span>':`<button class="ibtn gold" id="cUse">Ride with ${esc(c.name.split(' ')[0])}</button>`):`<p class="cvlock">🔒 ${esc(charHow(c))}</p>`}</div>
-      <div class="cvchips"><span>Characters · ${n} of ${CHARS.length} unlocked</span></div>
-      <div class="cvgrid">${CHARS.map(x=>{const u=charUnlocked(x.id);return `<button class="cvc${x.id===sel?' on':''}${u?'':' locked'}" data-c="${x.id}">${charSVG(x.id,56)}<b>${esc(x.name.split(' ')[0])}</b><small>${myChar()===x.id?'✓ Yours':u?esc(x.role):'🔒'}</small></button>`}).join('')}</div>
-      <small class="cvnote">Characters ride your token and react to the game: they wave on their turn, cheer when they buy, sulk when they pay and dance when they win.</small>`;
-    P.querySelector('#uSave').onclick=()=>{if(setUsername(P.querySelector('#uName2').value)){toast('Username saved');railProfile();draw()}else toast('Use 2–12 letters or numbers')};
-    P.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{sel=b.dataset.c;setup.castSel=sel;draw();cvPreview(sel,tok)});
-    const u=P.querySelector('#cUse');if(u)u.onclick=()=>{PREF.eq.char=sel;savePref();railProfile();draw()}};
-  cvBind(T);draw();cvPreview(sel,tok)};
-{const _ht=homeTab;homeTab=function(k){const r=_ht(k);try{const h=$('#title .home');if(h&&document.querySelector('.cvw'))h.classList.remove('peek-r','peek-t');if(!document.querySelector('.cvw')&&!document.querySelector('.sipage .sistage.live'))peekOver(null)}catch(e){}return r}}
-addEventListener('resize',()=>{if(document.querySelector('.cvw'))setTimeout(cvAim,80)});
+paneCast=function(T){const all=CHARS.map(c=>c.id).sort((a,b)=>charUnlocked(b)-charUnlocked(a));let sel=setup.castSel&&all.includes(setup.castSel)?setup.castSel:myChar();const tok=setup.slots[0].tok;
+  T.innerHTML=srFrame([['wave','👋','Wave'],['cheer','🎉','Celebrate'],['dance','💃','Victory'],['think','🤔','Think'],['sulk','🤦','Facepalm']]);
+  const info=()=>{const c=CHARS.find(x=>x.id===sel),un=charUnlocked(sel),mine=myChar()===sel;
+    T.querySelector('.shinfo').innerHTML=`<div class="shname"><h2>${esc(c.name)}</h2><span class="shrole">${esc(c.role)}</span>${mine?'<span class="shmine">✓ Riding with you</span>':''}</div>
+      <p class="shline">${un?esc(c.desc):'🔒 '+esc(charHow(c))}</p><div class="shbtns"><button class="ibtn shghost" id="shDet">Profile</button>${un&&!mine?`<button class="ibtn gold" id="shMain">Ride with ${esc(c.name.split(' ')[0])}</button>`:''}</div>`;
+    const m=T.querySelector('#shMain');if(m)m.onclick=()=>{PREF.eq.char=sel;savePref();railProfile();redraw()};
+    T.querySelector('#shDet').onclick=()=>{const tc=trophyCount(),n=CHARS.filter(x=>charUnlocked(x.id)).length;
+      T._sheet(`<div class="shprof">${framed(`<span class="pav">${charSVG(myChar(),56)}</span>`)}<div><h3>${esc(myName()||'Player')}</h3><p class="shsub">Level ${lvlOf(PREF.xp)} · ${LEAGUES[leagueIdx()].name} league · ${n} of ${CHARS.length} characters</p></div></div>
+        <div class="shsec"><b>Username</b><div class="shname2"><input id="uName2" class="uname" maxlength="12" value="${esc(myName())}" placeholder="Pick a username"><button class="sm go" id="uSave">Save</button></div></div>
+        <div class="shsec"><b>Trophies</b><p class="shsub">${TIER_INFO.p[1]} ${tc.p} platinum · ${TIER_INFO.g[1]} ${tc.g} gold · ${TIER_INFO.s[1]} ${tc.s} silver · ${TIER_INFO.b[1]} ${tc.b} bronze</p></div>
+        <small class="shnote">Characters ride your token and react to the game: they wave on their turn, cheer when they buy, sulk when they pay and dance when they win.</small>`,
+        (B,close)=>{B.querySelector('#uSave').onclick=()=>{if(setUsername(B.querySelector('#uName2').value)){toast('Username saved');railProfile();close()}else toast('Use 2–12 letters or numbers')}})}};
+  const redraw=()=>{info();srCarousel(T,all.map(id=>{const c=CHARS.find(x=>x.id===id),u=charUnlocked(id);return `<button class="${id===sel?'on':''}${u?'':' locked'}" data-k="${id}" aria-label="${esc(c.name)}">${charSVG(id,52)}<small>${esc(c.name.split(' ')[0])}</small></button>`}).join(''),k=>{sel=k;setup.castSel=k;redraw();srPreview(sel,tok)})};
+  srBind(T,d=>{const i=all.indexOf(sel);sel=all[(i+d+all.length)%all.length];setup.castSel=sel;redraw();srPreview(sel,tok)});
+  redraw();srPreview(sel,tok)};
+{const _ht=homeTab;homeTab=function(k){const r=_ht(k);try{const h=$('#title .home');if(h&&document.querySelector('.shw'))h.classList.remove('peek-r','peek-t')}catch(e){}return r}}
+addEventListener('resize',()=>{if(document.querySelector('.shw'))setTimeout(srAim,80)});
 /* ================= ORIENTATION ================= */
 let rotDismissed=false;
 function checkRotate(){$('#rotate').hidden=true}
