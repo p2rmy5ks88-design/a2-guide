@@ -1645,6 +1645,16 @@ html.rot .sthead p{display:none}html.rot .sthead h2{font-size:26px}html.rot .stw
 .s3card .xpbar{height:6px;max-width:100%}
 @media (max-height:460px){.herotxt h2{font-size:44px!important}.h3tag{font-size:15px!important}.h3aw{margin-top:6px}.s3nm{font-size:19px}.seasoncard.s3card{padding:10px 12px}}
 html.rot .h3tag{font-size:15px!important}html.rot .s3nm{font-size:19px}
+/* custom game: fit narrower landscape phones and larger text */
+.gsetup{grid-template-columns:minmax(0,1fr) minmax(200px,clamp(200px,28vw,300px))}
+#oMode{grid-template-columns:repeat(auto-fit,minmax(110px,1fr))!important}
+#oMode button{min-width:0;padding:0 8px!important;white-space:normal;line-height:1.15;font-size:clamp(12px,1.5vw,15px)!important}
+.gsb .rchips{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))!important}
+@media (max-width:1100px){.gsb .slots{grid-template-columns:minmax(0,1fr)!important}.gsb .slot input{flex:1;min-width:60px}.gsb .slot .seg{flex:none}}
+html.rot .gsb .slots{grid-template-columns:minmax(0,1fr)!important}html.rot .gsetup{grid-template-columns:minmax(0,1fr) 200px}
+html.bigtext .gsb .slots{grid-template-columns:minmax(0,1fr)!important}html.bigtext .gsetup{grid-template-columns:minmax(0,1fr) minmax(190px,24vw)}
+.gsum .gpic{height:clamp(80px,22vh,120px)}
+#oMode{width:100%!important;display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important}#oMode button{min-height:54px}
 /* ===== Collection after the redesign: solid background, cards ===== */
 .home:has(.clhead){background:linear-gradient(90deg,#0b1a2c,#0d2236 60%,#0f2a3a)!important}
 html.light .home:has(.clhead){background:#f3f5f9!important}
