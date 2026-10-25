@@ -1873,6 +1873,12 @@ canvas.mdl.med{aspect-ratio:1/1!important;height:auto!important}
 .iart.ball{background:radial-gradient(circle at 38% 32%,color-mix(in srgb,var(--c) 55%,#fff),var(--c) 55%,color-mix(in srgb,var(--c) 55%,#000))!important;box-shadow:0 0 0 3px #0a1724,0 0 0 4.5px rgba(214,182,103,.75),0 6px 12px rgba(0,0,0,.35)!important;width:44px!important;height:44px!important}
 .subpane>.clhead:has(#clTok){display:none}
 .subpane>.clhead{margin-top:0}
+img.mdl.ipic{display:block;object-fit:cover;border-radius:14px;aspect-ratio:1/1;height:auto!important;background:#0b1c2b;box-shadow:0 0 0 1px rgba(214,182,103,.35)}
+.cltok img.mdl.ipic{width:72px!important;border-radius:12px}
+.clstage img.mdl.ipic{width:min(220px,70%)!important;border-radius:18px}
+.icard .iwrap img.mdl.ipic{height:90%!important;width:auto!important}
+.shcar img.mdl.ipic,.cvt img.mdl.ipic,.tkc img.mdl.ipic{width:58px!important}
+.sisib img.mdl.ipic{width:58px!important}.sibig img.mdl.ipic{width:min(220px,60%)!important}
 </style>
 
 <canvas id="gl" aria-label="3D game board"></canvas>
@@ -6585,6 +6591,19 @@ function mergeStatic(g,keep){const B=new Map();
   g.kids.slice().forEach(k=>{if(!keep.includes(k))g.remove(k)});g.p=[0,0,0];
   B.forEach(b=>{for(let o=0;o<b.idx.length;o+=600000){}g.add(new Node(mkGeo(b.v,b.idx),b.mat))});
   return B.size}
+
+/* ================= ITEM PICTURES ================= */
+/* When an illustration exists in items/ (tok-bus.png, surr-marble.png, dice-gold.png …) it replaces the drawn model
+   picture for that item. Anything without a picture keeps the drawn version. */
+const ITEM_PICS={"tok-bus": "png", "tok-tuktuk": "png"};
+const TOK_SLUG={'🚌':'bus','🛺':'tuktuk','🏍️':'scooter','🥁':'drum','🍲':'pot','🦅':'eagle','🚕':'taxi','⛵':'sailboat','🐎':'horse','🛶':'canoe','🚂':'train','🎭':'mask','✈️':'jet','🚀':'rocket','👑':'crown','🛢️':'barrel'};
+function itemPic(spec){const k=!spec.kind?'tok-'+TOK_SLUG[spec.token]:spec.kind==='surround'&&spec.id?'surr-'+spec.id:spec.kind==='dice'&&spec.id?'dice-'+spec.id:null;
+  return k&&ITEM_PICS[k]?`items/${k}.${ITEM_PICS[k]}`:null}
+{const _m=mdl;mdl=function(spec,cls='',w,h){const p=spec.pal?null:itemPic(spec);if(!p)return _m(spec,cls,w,h);
+  return `<img class="mdl ipic ${cls}" src="${p}" alt="${esc(spec.label||'')}" loading="lazy" decoding="async">`}}
+/* finishes keep the drawn model so the colour shows; give the drawn calls the item id for board styles and dice */
+{const _ia=itemArt;itemArt=function(k,it,cls=''){if(!it)return '';if(k==='surr'||k==='dice'){const p=itemPic({kind:k==='surr'?'surround':'dice',id:it.id});if(p)return `<img class="mdl ipic iart ${k} ${cls}" src="${p}" alt="${esc(it.name)}" loading="lazy">`}
+  if(k==='fin')return mdl({token:setup.slots[0].tok,col:it.col,label:it.name+' finish',pal:1},'iart fin '+cls);return _ia(k,it,cls)}}
 /* ================= ORIENTATION ================= */
 let rotDismissed=false;
 function checkRotate(){$('#rotate').hidden=true}
