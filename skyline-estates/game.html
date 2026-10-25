@@ -1942,6 +1942,38 @@ html.light .wlc,html.light .wlt{background:rgba(19,40,74,.05)}
 #wback .wbc button{border:0;border-radius:999px;padding:5px 10px;background:rgba(255,255,255,.1);color:#fff;font:700 12px/1 Manrope,system-ui;cursor:pointer}
 #wback .wbc small{opacity:.8;font:600 12px Manrope,system-ui}
 #wback .wbx{flex:none;align-self:flex-start;border:0;background:none;color:#fff;opacity:.6;font-size:14px;cursor:pointer;padding:2px 4px}
+/* ---- beginner's tutorial ---- */
+.tutm{max-width:min(640px,94vw)}
+.tut{display:grid;gap:10px}
+.tslide{min-height:170px}
+.tin{display:grid;grid-template-columns:150px 1fr;gap:18px;align-items:center;animation:tutin .3s ease-out both}
+@keyframes tutin{from{opacity:0;transform:translateX(12px)}}
+.tvis{width:150px;height:150px;border-radius:18px;background:radial-gradient(circle at 50% 35%,#24406e,#0d1b33);display:grid;place-items:center;position:relative;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(226,177,60,.35)}
+.tvis img.ttok,.tvis img.tdice{width:132px;height:132px;object-fit:cover;border-radius:14px}
+.tgoal .tcrown{position:absolute;top:6px;right:10px;font-size:30px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))}
+.tpc{width:104px;background:#fbf7ee;color:#1d2433;border-radius:10px;overflow:hidden;text-align:center;box-shadow:0 6px 16px rgba(0,0,0,.35);display:grid;padding-bottom:8px}
+.tpc i{height:22px}.tpc b{font:800 12px/1.15 Manrope,system-ui;padding:8px 6px 2px}.tpc small{font:700 12px Manrope,system-ui;opacity:.75}
+.tpc em{font:800 10px/1 Manrope,system-ui;font-style:normal;letter-spacing:.6px;text-transform:uppercase;color:#c8173c;margin-top:5px}
+.trent .tcoin{position:absolute;top:8px;left:10px;font-size:26px}
+.tbuild{display:flex;gap:2px;align-items:flex-end;padding-bottom:30px;font-size:24px}.tbuild .tow{font-size:42px}
+.tcards{display:flex;gap:8px}.tcard{width:58px;height:84px;border-radius:8px;background:#ffc61a;display:grid;place-items:center;font-size:24px;transform:rotate(-6deg);box-shadow:0 4px 10px rgba(0,0,0,.35)}
+.tcard.alt{background:#2e6fd6;transform:rotate(6deg)}.tcard small{font:800 8px/1.1 Manrope,system-ui;color:#1d2433;text-align:center;padding:0 3px}.tcard.alt small{color:#fff}
+.tcash,.tgrow{display:flex;gap:10px;font-size:40px}.tgrow .iart{width:48px;height:48px}
+.ttx small{font:800 11px/1 Manrope,system-ui;letter-spacing:1px;color:#e2b13c}
+.ttx h3{margin:6px 0 6px;font:800 22px/1.15 var(--display,'Outfit',system-ui)}
+.ttx p{margin:0;font:600 14px/1.45 Manrope,system-ui;opacity:.92}.ttx p b{color:#ffd36a}
+html.light .ttx p b{color:#a67812}
+.tdots{display:flex;justify-content:center;gap:6px}.tdots i{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.25);cursor:pointer}.tdots i.on{background:#e2b13c;width:20px;border-radius:5px}
+html.light .tdots i{background:rgba(19,40,74,.2)}
+.tnav{display:grid;grid-template-columns:auto auto 1fr;gap:8px}
+.tbtn{border:0;border-radius:12px;padding:12px 16px;font:800 14px/1 Manrope,system-ui;cursor:pointer}
+.tbtn.ghost{background:rgba(255,255,255,.08);color:inherit;border:1px solid rgba(255,255,255,.14)}
+html.light .tbtn.ghost{background:rgba(19,40,74,.06);border-color:rgba(19,40,74,.14)}
+.tbtn.gold{background:linear-gradient(180deg,#f3cf76,#e2b13c);color:#1a1405}
+@media (max-height:460px){.tslide{min-height:130px}.tin{grid-template-columns:120px 1fr;gap:14px}.tvis{width:120px;height:120px}.tvis img.ttok,.tvis img.tdice{width:108px;height:108px}.ttx h3{font-size:19px}.ttx p{font-size:13px}}
+.tbuild{font-size:19px;gap:1px}.tbuild .tow{font-size:34px}
+.tcash,.tgrow{font-size:30px;gap:6px}.tgrow .iart{width:36px;height:36px}
+.tbuild{font-size:16px;justify-content:center}.tbuild .tow{font-size:30px}
 </style>
 
 <canvas id="gl" aria-label="3D game board"></canvas>
@@ -5084,14 +5116,19 @@ const LEARN=[['🗝️','Who starts','Before the first turn everyone draws a Sky
   ['🚔','The Lockup','Landing on Police Check sends you to the Lockup. Pay {m60} bail, use a Bail Pass, or roll doubles for up to three turns. After the third miss you pay bail and move.'],['🤝','Trading','On your turn, trade streets, cash and Bail Passes with any player. You can accept, decline or send a counter offer.'],
   ['🃏','Lucky Break and City Hall','Land on these squares to draw a card: money, moves, repairs and the odd Bail Pass.'],['📉','Bankruptcy','If you can’t pay, sell buildings and mortgage. If that still isn’t enough you’re out, and your assets go to whoever you owed.']];
 function paneLearn(T){
-  T.innerHTML=`<div class="phead"><h2>How to play</h2></div><div class="learn">${LEARN.map(l=>`<div class="lcard"><i>${l[0]}</i><div><b>${l[1]}</b><p>${esc(loc(l[2]))}</p></div></div>`).join('')}</div>
+  T.innerHTML=`<div class="phead"><h2>How to play</h2><button class="sm go" id="lTut">▶ Beginner’s tutorial</button></div><div class="learn">${LEARN.map(l=>`<div class="lcard"><i>${l[0]}</i><div><b>${l[1]}</b><p>${esc(loc(l[2]))}</p></div></div>`).join('')}</div>
     <h3>GAME MODES</h3><div class="learn">${MODES.map(m=>`<div class="lcard"><i>${m[0]==='classic'?'♟️':m[0]==='quick'?'⚡':'⏱️'}</i><div><b>${m[1]}</b><p>${esc(m[2])}</p></div></div>`).join('')}</div>
     <h3>HOUSE RULES</h3><div class="learn">${RULE_INFO.map(r=>`<div class="lcard"><i>⚙️</i><div><b>${r[1]}</b><p>${esc(loc(r[2]))}</p></div></div>`).join('')}<div class="lcard"><i>⏱️</i><div><b>Turn timer</b><p>Optional 90 seconds per turn. When time runs out the game finishes the turn for that player.</p></div></div></div>
     <h3>PROGRESS</h3><div class="learn"><div class="lcard"><i>🌍</i><div><b>World</b><p>18 countries and 31 cities, each with its own board, landscape and 15 achievements. Level up to open new countries; play in a country to open its other cities.</p></div></div>
     <div class="lcard"><i>${COIN}</i><div><b>Coins</b><p>Earn coins from wins, level-ups, achievements, missions, the Lucky Spin, season tiers and league promotions. Spend them on tokens, upgrades, finishes, dice, board surrounds and early unlocks.</p></div></div>
     <div class="lcard"><i>⬆️</i><div><b>Token upgrades</b><p>Upgrade a token from Common to Rare, Epic, Legendary, Mythic and Chaotic. Each tier repaints it (blue, purple, gold, crimson, then a shifting rainbow) and adds a bigger payday, re-rolls and Lucky Passes. Mythic and Chaotic also need wins with that token, a high level and (for Chaotic) the Diamond league, and add a Rent Shield, Chaos Surge and bonus coins and XP. Hosts can switch in-game perks off.</p></div></div>
     <div class="lcard"><i>📅</i><div><b>Seasons</b><p>Every 45 days a new season starts with 40 tiers of rewards and weekly challenges. All XP counts toward the season.</p></div></div>
-    <div class="lcard"><i>🏆</i><div><b>Leagues</b><p>Win trophies to climb from Bronze to Legend and earn promotion rewards. The global leaderboard shows the top players each season.</p></div></div></div>`}
+    <div class="lcard"><i>🏆</i><div><b>Leagues</b><p>Win trophies to climb from Bronze to Legend and earn promotion rewards. The global leaderboard shows the top players each season.</p></div></div>
+    <div class="lcard"><i>🎯</i><div><b>Daily missions and Lucky Spin</b><p>Three new missions every day pay XP and coins, with a bonus for finishing all three. Missions on back-to-back days build a streak. The Lucky Spin is free once a day.</p></div></div>
+    <div class="lcard"><i>👑</i><div><b>City Champion and frames</b><p>Earn all 15 awards in a city to become its Champion: coins, XP and an animated avatar frame. Five Champion cities add the Prism frame, all of them the Skyline Crown. Season frames come from the premium track.</p></div></div>
+    <div class="lcard"><i>🎨</i><div><b>Collection and cosmetics</b><p>Characters, tokens, frames, board styles, dice and finishes change how you look, never the rules. Finishes recolour your token, board styles change the scenery round the board, and dice sets change the dice you roll.</p></div></div>
+    <div class="lcard"><i>🎁</i><div><b>New players</b><p>Your first launch includes a 500-coin welcome gift, this tutorial and a few tips during your first game. Replay the tutorial any time from the button at the top of this page.</p></div></div></div>`;
+  const lt=T.querySelector('#lTut');if(lt)lt.onclick=()=>openTutorial(false)}
 function paneSettings(T){const rows=[['riders','Riders on tokens','Show each player’s character riding their token. Switch off on slower phones.'],['rig','Realistic riders','Lifelike characters with motion-captured gestures. Each one downloads once (about 2 MB). Switch off to save data.'],['sfx','Game sounds','Dice, coins and token movement.'],['amb','Street ambience','Crowd chatter, traffic, birds or rain to match the city.'],['radio','Skyline FM','One station for every city, playing a shuffled mix of 13 Kenstylez tracks.']];
   const blocked=PREF.blocked||[];
   T.innerHTML=`<div class="phead"><h2>Settings</h2></div>
@@ -6765,7 +6802,7 @@ PREF.coach=PREF.coach||{};
 (function boot(){if(typeof FAST!=='undefined'&&FAST)return;const b=document.createElement('div');b.id='boot';b.setAttribute('aria-hidden','true');
   b.innerHTML=`<div class="bimg"></div><div class="bshade"></div><div class="bmid"><div class="blogo"><svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#f2c14a"/><g fill="#13284a"><rect x="12" y="30" width="9" height="22" rx="1"/><rect x="23" y="20" width="9" height="32" rx="1"/><rect x="34" y="12" width="9" height="40" rx="1"/><rect x="45" y="26" width="8" height="26" rx="1"/></g></svg></div><h1>Skyline Estates</h1><p>Buy streets. Build towers. Own the skyline.</p></div><div class="bbar"><i></i></div>`;
   document.body.append(b);const t0=performance.now(),bar=b.querySelector('.bbar i');let pr=0;
-  const tick=()=>{const el=performance.now()-t0,ready=document.readyState==='complete'&&(typeof S3!=='undefined'&&S3||el>2500)&&el>1300;pr=ready?100:Math.min(92,pr+(92-pr)*.06);bar.style.width=pr+'%';
+  const tick=()=>{const el=performance.now()-t0,ready=document.readyState==='complete'&&(typeof S3!=='undefined'&&S3||el>2500)&&el>2600;pr=ready?100:Math.min(92,pr+(92-pr)*.06);bar.style.width=pr+'%';
     if(ready||el>8000){b.classList.add('out');setTimeout(()=>{b.remove();document.dispatchEvent(new Event('sk-booted'))},520)}else requestAnimationFrame(tick)};requestAnimationFrame(tick)})();
 /* ---- 2. first-launch welcome ---- */
 const FREE_TOKS=['🚌','🛺','🏍️','🥁','🍲','🦅'];
@@ -6790,8 +6827,9 @@ async function welcomeFlow(){if(PREF.welcomed||setup.welcoming)return;setup.welc
   setup.slots[0].tok=tok;PREF.tok=tok;saveSlot(0,setup.slots[0]);savePref();
   addCoins(WELCOME_GIFT,'Welcome gift');try{sfx('win');confetti()}catch(e){}
   const k3=await modal({cls:'wlm',html:`<div class="wl"><span class="wlstep">3 of 3</span><div class="wlgift"><span class="iart coin1"></span><b>+${nfmt(WELCOME_GIFT)}</b></div>
-    <div class="mh">A welcome gift</div><div class="mtxt">${nfmt(WELCOME_GIFT)} coins to spend on board styles, dice and finishes in the Shop. Ready for your first game? You’ll play solo against the computer, with a few tips along the way.</div></div>`,
-    btns:[{k:'later',label:'Look around first'},{k:'play',label:'Play my first game',primary:true}]});
+    <div class="mh">A welcome gift</div><div class="mtxt">${nfmt(WELCOME_GIFT)} coins to spend on board styles, dice and finishes in the Shop. New here? The quick tutorial shows you how to play in about a minute.</div></div>`,
+    btns:[{k:'later',label:'Look around'},{k:'play',label:'Skip, just play'},{k:'tut',label:'Show me how to play',primary:true}]});
+  if(k3==='tut'){await openTutorial(true);finishWelcome(true);return}
   finishWelcome(k3==='play')}
 function finishWelcome(play){PREF.welcomed=Date.now();PREF.lastOpen=Date.now();savePref();setup.welcoming=0;railProfile();homeTab('play');
   if(play)setTimeout(()=>{const q=$('#qAI');if(q)q.click()},250)}
@@ -6822,6 +6860,30 @@ function welcomeBack(){if(FAST||!PREF.welcomed||setup.welcoming)return;const now
   w.querySelector('.wbx').onclick=close;w.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{close();const k=b.dataset.k;if(k==='spin')openWheel();else homeTab(k)});setTimeout(close,8000)}
 document.addEventListener('sk-booted',()=>setTimeout(welcomeBack,400));
 document.addEventListener('visibilitychange',()=>{if(document.hidden){PREF.lastOpen=Date.now();savePref()}else setTimeout(welcomeBack,600)});
+/* ---- 5. beginner's tutorial: eight illustrated steps, offered after the welcome gift and on How to play ---- */
+function tutSq(i,f){try{return SQ[i]&&SQ[i].n||f}catch(e){return f}}
+function tutSteps(){const a=tutSq(1,'Market Road'),b=tutSq(3,'Lucky Break'),r=tutSq(39,'Harbour Drive'),ti=t=>{const s=TOK_SLUG[t],e=ITEM_PICS['tok-'+s];return e?`<img class="ttok" src="items/tok-${s}.${e}" alt="">`:''};
+  const card=(n,c,p,extra='')=>`<div class="tpc"><i style="background:${c}"></i><b>${esc(n)}</b><small>${loc(`{m${p}}`)}</small>${extra}</div>`;
+  const dpic=ITEM_PICS['dice-classic']?`<img class="tdice" src="items/dice-classic.${ITEM_PICS['dice-classic']}" alt="">`:'🎲';
+  return[
+  {k:'goal',vis:`<div class="tvis tgoal">${ti(setup.slots[0].tok)}<span class="tcrown">👑</span></div>`,h:'The goal',p:'Buy streets, collect rent and build. Be the last landlord standing when everyone else has gone bankrupt.'},
+  {k:'roll',vis:`<div class="tvis">${dpic}</div>`,h:'Roll and move',p:loc('Tap <b>Roll</b> to throw two dice and move round the board. Each time you pass <b>START</b> you collect a payday of {m220}. Doubles let you roll again.')},
+  {k:'buy',vis:`<div class="tvis">${card(a,'#8a5a3c',50,'<em>For sale</em>')}</div>`,h:'Buy streets',p:'Land on a street nobody owns and you can buy it. If you pass, it goes to auction and anyone can bid, sometimes cheaply.'},
+  {k:'rent',vis:`<div class="tvis trent"><span class="tcoin">💸</span>${card(r,'#1f4fb8',400,'<em>Rent due</em>')}</div>`,h:'Collect rent',p:'When other players land on your street, they pay you rent. Own every street of one colour (a full set) and the rent doubles.'},
+  {k:'build',vis:`<div class="tvis tbuild"><span>🏠</span><span>🏠</span><span>🏠</span><span>🏠</span><span class="tow">🏢</span></div>`,h:'Build to win',p:'With a full colour set, build houses evenly, then a tower after four houses. Every building raises the rent a lot. This is how games are won.'},
+  {k:'cards',vis:`<div class="tvis tcards"><span class="tcard">🃏<small>${esc(b)}</small></span><span class="tcard alt">🏛️<small>City Hall</small></span></div>`,h:'Cards and taxes',p:loc('Lucky Break and City Hall squares draw a card: money, moves or repairs. Tax squares cost you money. Police Check sends you to the Lockup: pay {m60} bail or roll doubles to get out.')},
+  {k:'cash',vis:`<div class="tvis tcash"><span>🤝</span><span>🏦</span></div>`,h:'Short of cash?',p:'Trade with other players on your turn, mortgage a street for half its price, or sell buildings. If you still can’t pay, you’re out of the game.'},
+  {k:'grow',vis:`<div class="tvis tgrow"><span class="iart coin1"></span><span>⭐</span><span>🏆</span></div>`,h:'Grow your empire',p:'Every game earns XP and coins. Unlock new cities and tokens, climb the season and the leagues, and collect board styles, dice and finishes. These are cosmetic and never change the rules.'}]}
+async function openTutorial(fromWelcome){const S=tutSteps();let i=0,res='done';
+  await new Promise(done=>{modal({cls:'tutm',html:`<div class="tut"><div class="tslide"></div><div class="tdots">${S.map((_,k)=>`<i data-d="${k}"></i>`).join('')}</div>
+    <div class="tnav"><button class="tbtn ghost" id="tSkip">Skip</button><button class="tbtn ghost" id="tBack">Back</button><button class="tbtn gold" id="tNext">Next</button></div></div>`,btns:[],
+    onMount:(pn,mclose)=>{const sl=pn.querySelector('.tslide'),dots=[...pn.querySelectorAll('.tdots i')],nx=pn.querySelector('#tNext'),bk=pn.querySelector('#tBack');
+      const show=()=>{const s=S[i];sl.innerHTML=`<div class="tin">${s.vis}<div class="ttx"><small>STEP ${i+1} OF ${S.length}</small><h3>${s.h}</h3><p>${s.p}</p></div></div>`;
+        dots.forEach((d,k)=>d.classList.toggle('on',k===i));bk.style.visibility=i?'visible':'hidden';nx.textContent=i<S.length-1?'Next':fromWelcome?'Play my first game':'Got it'};
+      const close=k=>{res=k;PREF.tutDone=Date.now();savePref();mclose(k);done()};
+      nx.onclick=()=>{if(i<S.length-1){i++;show();try{sfx('tap')}catch(e){}}else close('done')};bk.onclick=()=>{if(i){i--;show()}};pn.querySelector('#tSkip').onclick=()=>close('skip');
+      dots.forEach((d,k)=>d.onclick=()=>{i=k;show()});show()}})});
+  return res}
 /* ================= ORIENTATION ================= */
 let rotDismissed=false;
 function checkRotate(){$('#rotate').hidden=true}
