@@ -1556,6 +1556,29 @@ html.light .dpk{background:#fff;border-color:rgba(0,0,0,.08)}html.light .dpb{bor
 html.rot .b2stage{height:120px}html.rot .dpst{height:92px}html.rot .dpgr{grid-template-columns:repeat(auto-fill,minmax(170px,1fr))}
 @media (max-width:620px){html:not(.rot) .dshop2{grid-template-columns:minmax(0,1fr)}html:not(.rot) .dpgr{grid-template-columns:repeat(2,minmax(0,1fr))}html:not(.rot) .dpac{flex-wrap:wrap}}
 .dpst.k-surr .iart{transform:scale(1.45)}@media (max-height:460px){.dpst .iart{transform:scale(1.05) translateY(-4px)}.dpst.k-surr .iart{transform:scale(1.2)}}html.rot .dpst .iart{transform:scale(1.05) translateY(-4px)}
+/* ===== model pictures ===== */
+canvas.mdl{display:block;flex:none;transform:none!important;background:none!important;border:0!important;box-shadow:none!important;border-radius:0!important;width:64px;height:52px}
+.icard .iwrap{height:64px}.icard .iwrap canvas.mdl{width:80px;height:64px}
+.dpst canvas.mdl{width:170px;height:136px;position:relative;z-index:1;margin-top:-8px}.dpst::after{display:none}
+@media (max-height:460px){.dpst canvas.mdl{width:130px;height:104px}}html.rot .dpst canvas.mdl{width:130px;height:104px}
+.sibig canvas.mdl{width:min(420px,80%);height:auto;aspect-ratio:5/4}
+.sisib canvas.mdl{width:84px;height:66px}
+.b2box li canvas.mdl{width:30px;height:24px;margin:0}
+.sart canvas.mdl{width:72px;height:58px}.sart.item canvas.mdl{width:84px;height:66px}
+.idstage canvas.mdl{width:220px;height:176px}
+.scell canvas.mdl{width:56px;height:45px}
+canvas.mdl.tkm{width:58px;height:46px}canvas.mdl.lockm{opacity:.55;filter:grayscale(.7)}
+.bldgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
+.bldc{display:flex;flex-direction:column;gap:4px;padding:10px;border-radius:16px;background:rgba(15,27,48,.9);border:1px solid rgba(255,255,255,.1)}
+.bldst{position:relative;border-radius:12px;background:radial-gradient(circle at 50% 60%,rgba(226,181,74,.16),transparent 65%),linear-gradient(180deg,#1f3456,#15243d);display:grid;place-items:center}
+.bldst canvas.mdl{width:100%;height:auto;aspect-ratio:1}
+.bldst em{position:absolute;top:8px;left:8px;font-style:normal;font-size:11px;font-weight:800;padding:2px 9px;border-radius:999px;background:rgba(226,181,74,.18);border:1px solid rgba(226,181,74,.5);color:var(--gold,#E2B54A)}
+.bldc b{font-size:15px}.bldc small{font-size:12px;opacity:.75}
+html.light .bldc{background:#fff;border-color:rgba(0,0,0,.08)}html.light .bldst{background:radial-gradient(circle at 50% 60%,rgba(226,181,74,.2),transparent 65%),linear-gradient(180deg,#eef2f8,#dde5f0)}
+.mode .mi.miart{width:58px;height:44px;border-radius:10px;background-size:cover;background-position:center;box-shadow:inset 0 0 0 1px rgba(226,181,74,.35)}
+.pfmdl{display:flex;flex-direction:column;align-items:center;border-radius:12px;background:linear-gradient(180deg,#1f3456,#15243d);padding:4px 0 6px}.pfmdl canvas.mdl{width:200px;height:134px}.pfmdl small{font-size:11px;font-weight:700;color:var(--gold,#E2B54A)}
+html.light .pfmdl{background:linear-gradient(180deg,#eef2f8,#dde5f0)}
+.tkcb canvas.mdl{width:36px;height:28px}
 </style>
 
 <canvas id="gl" aria-label="3D game board"></canvas>
@@ -1821,9 +1844,9 @@ function glInit(cv){
   gl.enable(gl.DEPTH_TEST);gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
   GL=gl;PRG=p;GL.aniso=gl.getExtension('EXT_texture_filter_anisotropic');return true;
 }
-function mkGeo(v,idx){const gl=GL;const vb=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,vb);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(v),gl.STATIC_DRAW);
+function mkGeo(v,idx){if(!GL)return{v,idx,n:idx.length};const gl=GL;const vb=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,vb);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(v),gl.STATIC_DRAW);
   const big=v.length/8>65535;const ib=gl.createBuffer();gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,ib);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,big?new Uint32Array(idx):new Uint16Array(idx),gl.STATIC_DRAW);
-  return{vb,ib,n:idx.length,big}}
+  return{vb,ib,n:idx.length,big,v,idx}}
 function geoBox(w,h,d,fuv){const x=w/2,y=h/2,z=d/2;const F=[
   [[1,0,0],[[x,-y,z],[x,-y,-z],[x,y,-z],[x,y,z]]],[[-1,0,0],[[-x,-y,-z],[-x,-y,z],[-x,y,z],[-x,y,-z]]],
   [[0,1,0],[[-x,y,z],[x,y,z],[x,y,-z],[-x,y,-z]]],[[0,-1,0],[[-x,-y,-z],[x,-y,-z],[x,-y,z],[-x,-y,z]]],
@@ -5934,6 +5957,90 @@ function bundleCard2(){const f=itemOf('fin',STARTER.fin),d=itemOf('dice',STARTER
       <div class="idnote">${IAP.ready?'Paid through the App Store or Google Play.':'Available in the Skyline Estates app for iPhone and Android.'}</div></div>`,btns:[{k:'x',label:'Close'},{k:'buy',label:esc(IAP_BUNDLE.price),primary:true}]}).then(k=>{if(k==='buy')IAP.buy(IAP_BUNDLE)})};
   clearInterval(SHOP_TICK);SHOP_TICK=setInterval(()=>{const e=document.getElementById('dTimer2');if(!e){clearInterval(SHOP_TICK);return}if(dailyKey()!==D.key){clearInterval(SHOP_TICK);redraw();return}e.textContent=untilMidnight()},1000);
   return r}}
+
+/* ================= MODEL PICTURES (from the Revision 2 redesign) ================= */
+/* The game's own 3D meshes drawn into small canvases by a software projection, so cards show the real token, dice,
+   board style and buildings rather than colour balls and emoji. Also: a Buildings tab, illustrated Home mode cards,
+   the detailed bus and taxi, and the selected property's building in the portfolio. */
+let MDcpu=null;const MDmesh=new Map(),MDimg=new Map();
+function mdWith(fn){const real=S3,old=S3;try{if(!MDcpu){MDcpu={};const g=real&&real.geo&&real.geo.box&&real.geo.box.v?real.geo:null;
+    MDcpu.geo=g||{box:geoBox(1,1,1),cyl:geoCyl(1,1,1,16),cyl8:geoCyl(1,1,1,8),cone:geoCyl(0,1,1,14),cone4:geoCyl(0,1,1,4),sph:geoSphere(1,12,8),plane:geoPlane(1,1),torus:geoTorus(1,.28,16,6)};
+    MDcpu.M=(real&&real.M)||{dark:mat('#202b32'),white:mat('#f1e7d5'),gold:mat('#c3a465',{spec:.9})};MDcpu.shadow=()=>{const n=new Node();n.visible=false;return n}}
+  S3=MDcpu;return fn()}finally{S3=old}}
+function mdTree(spec){const key=JSON.stringify(spec);if(MDmesh.has(key))return MDmesh.get(key);
+  const n=mdWith(()=>{const g=MDcpu.geo;let m;
+    if(spec.kind==='building'){m=new Node();famBase(m,spec.owner||'#2ec4a6',false);FAM[Math.max(0,Math.min(5,spec.level||0))](m)}
+    else if(spec.kind==='dice'){m=new Node();m.add(N(g.box,mat(spec.col||'#172c42',{spec:.4}),0,.15,0).sc(.3));const pip=mat(spec.pip||'#f1e7d5'),one=mat(spec.one||spec.pip||'#d2361f');
+      const dk=n=>{n.decal=1;return n};m.add(dk(N(g.cyl,one,0,.302,0).sc(.034,.006,.034)));for(const[x,y]of[[-.07,.08],[.07,.22],[-.07,.22],[.07,.08]])m.add(dk(N(g.cyl,pip,x,y,.152).sc(.026,.006,.026).rot(Math.PI/2,0,0)));for(const[y,z]of[[.08,-.07],[.15,0],[.22,.07]])m.add(dk(N(g.cyl,pip,.152,y,z).sc(.026,.006,.026).rot(0,0,Math.PI/2)))}
+    else if(spec.kind==='surround'){m=new Node();const s=spec.s||{},ops=(s.ops||[]).map(x=>x[0]),add=(geo,col,x,y,z,w,h,d)=>m.add(N(geo,mat(col),x,y,z).sc(w,h,d));
+      add(g.box,s.plinth||'#164c43',0,0,0,1,.12,.85);add(g.box,s.base||'#d8ccad',0,.075,0,.94,.04,.79);add(g.box,s.water||'#4e9cae',0,.105,0,.64,.025,.49);
+      for(const z of[-.39,.39])add(g.box,s.rim||'#c3a465',0,.105,z,.94,.015,.012);for(const x of[-.47,.47])add(g.box,s.rim||'#c3a465',x,.105,0,.012,.015,.79);
+      if(ops.includes('ice')){for(const[x,z,h]of[[-.3,-.22,.25],[.25,.2,.35],[-.28,.2,.16],[.3,-.25,.22],[0,0,.4]])add(g.cone4,'#9fdaef',x,.12+h/2,z,.08,h,.08)}
+      else if(ops.includes('hedges')){for(const z of[-.3,.3])add(g.box,'#3b7954',0,.16,z,.74,.09,.05);for(const x of[-.35,.35])add(g.box,'#3b7954',x,.16,0,.05,.09,.6);add(g.cyl,'#efe6d0',0,.14,0,.12,.06,.12)}
+      else if(ops.includes('neon')){for(let i=-3;i<=3;i++){add(g.box,'#36d8e5',i*.12,.13,0,.006,.008,.72);add(g.box,'#e761b3',0,.135,i*.1,.86,.008,.006)}}
+      else if(ops.includes('clouds')){for(const[x,z]of[[-.3,-.2],[.25,.2],[-.2,.2],[.3,-.2]])add(g.sph,'#f0f5fa',x,-.1,z,.23,.12,.18)}
+      else if(ops.includes('marble')){m.add(N(g.torus,mat('#d9b44a'),0,.13,0).sc(.3,.3,.015).rot(Math.PI/2,0,0));for(const x of[-.3,.3])for(const z of[-.25,.25])add(g.cyl,'#e8dfcc',x,.23,z,.035,.24,.035)}
+      else if(ops.includes('lagoon')){for(let i=0;i<8;i++){const a=i/8*Math.PI*2;add(g.sph,['#d1897e','#cebf84','#5ca88e'][i%3],Math.cos(a)*.25,.13,Math.sin(a)*.18,.04,.04,.03)}}
+      else if((s.water||'').toLowerCase()==='#ff6a1a'){for(let i=0;i<5;i++)m.add(N(g.box,mat('#ff7b2d'),i*.15-.3,.13,0).sc(.015,.008,.65).rot(0,i*.25,0))}
+      else if(ops.includes('tiles')){for(let x=0;x<5;x++)for(let z=0;z<4;z++)add(g.box,['#ef476f','#ffd166','#06d6a0','#118ab2'][((x*3+z)%4)],x*.16-.32,.13,z*.16-.24,.13,.015,.13)}
+      else{for(const x of[-.32,.32])for(const z of[-.25,.25]){add(g.cyl,'#b39563',x,.17,z,.035,.16,.035);add(g.sph,'#4c805f',x,.28,z,.1,.13,.1)}add(g.box,'#eee1c6',0,.21,0,.24,.2,.23);add(g.box,'#d3b46b',0,.33,0,.29,.04,.28)}}
+    else m=tokenModel(spec.token||'🚌',spec.col||'#267391');
+    return m});MDmesh.set(key,n);return n}
+const mdTx=(m,p)=>[m[0]*p[0]+m[4]*p[1]+m[8]*p[2]+m[12],m[1]*p[0]+m[5]*p[1]+m[9]*p[2]+m[13],m[2]*p[0]+m[6]*p[1]+m[10]*p[2]+m[14]];
+function mdRender(canvas,spec,angle=-.65){const key=JSON.stringify(spec)+'|'+angle+'|'+canvas.width;const ctx=canvas.getContext('2d');if(MDimg.has(key)){ctx.clearRect(0,0,canvas.width,canvas.height);ctx.drawImage(MDimg.get(key),0,0);return}
+  const node=mdTree(spec),faces=[],cy=Math.cos(angle),sy=Math.sin(angle),pitch=spec.pitch||.34,cp=Math.cos(pitch),sp=Math.sin(pitch);
+  const view=p=>{const x=p[0]*cy+p[2]*sy,z=-p[0]*sy+p[2]*cy;return[x,-p[1]*cp+z*sp,z*cp+p[1]*sp]};
+  (function walk(n,parent){if(!n.visible)return;const local=M4.compose(n.p,n.r,n.s),m=parent?M4.mul(parent,local):local;
+    if(n.geo&&n.geo.v&&n.mat){const v=n.geo.v,idx=n.geo.idx,c=n.mat.c||[.8,.8,.8],em=n.mat.em||0;
+      for(let k=0;k<idx.length;k+=3){const w=[idx[k],idx[k+1],idx[k+2]].map(i=>mdTx(m,[v[i*8],v[i*8+1],v[i*8+2]])),p=w.map(view),a=w[0],u=[w[1][0]-a[0],w[1][1]-a[1],w[1][2]-a[2]],b=[w[2][0]-a[0],w[2][1]-a[1],w[2][2]-a[2]];
+        const nr=[u[1]*b[2]-u[2]*b[1],u[2]*b[0]-u[0]*b[2],u[0]*b[1]-u[1]*b[0]],len=Math.hypot(nr[0],nr[1],nr[2])||1;
+        if(nr[0]*(-sy*cp)+nr[1]*sp+nr[2]*cy*cp<0)continue;
+        const sh=Math.min(1.15,.58+.42*Math.max(0,(nr[0]*.35+nr[1]*.85+nr[2]*.4)/len)+em*.5);faces.push({p,z:(p[0][2]+p[1][2]+p[2][2])/3-(n.decal?9:0),c:c.map(x=>Math.round(Math.min(255,x*255*sh)))})}}
+    n.kids.forEach(k=>walk(k,m))})(node,null);
+  if(!faces.length)return;let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;faces.forEach(f=>f.p.forEach(p=>{if(p[0]<x0)x0=p[0];if(p[0]>x1)x1=p[0];if(p[1]<y0)y0=p[1];if(p[1]>y1)y1=p[1]}));
+  const W=canvas.width,H=canvas.height,s=Math.min(W*.84/(x1-x0||1),H*.8/(y1-y0||1)),cx=(x0+x1)/2,cyy=(y0+y1)/2;ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='rgba(0,0,0,.28)';ctx.beginPath();ctx.ellipse(W/2,H/2+(y1-cyy)*s+H*.015,W*.3,H*.04,0,0,Math.PI*2);ctx.fill();
+  ctx.lineJoin='round';faces.sort((a,b)=>b.z-a.z).forEach(f=>{ctx.beginPath();f.p.forEach((p,i)=>{const X=W/2+(p[0]-cx)*s,Y=H/2+(p[1]-cyy)*s;i?ctx.lineTo(X,Y):ctx.moveTo(X,Y)});ctx.closePath();const col=`rgb(${f.c[0]},${f.c[1]},${f.c[2]})`;ctx.fillStyle=col;ctx.strokeStyle=col;ctx.lineWidth=.6;ctx.fill();ctx.stroke()});
+  try{const c2=document.createElement('canvas');c2.width=W;c2.height=H;c2.getContext('2d').drawImage(canvas,0,0);MDimg.set(key,c2)}catch(e){}}
+function mdl(spec,cls='',w=240,h=192){return `<canvas class="mdl ${cls}" width="${w}" height="${h}" data-model="${esc(JSON.stringify(spec))}" role="img" aria-label="${esc(spec.label||'Model')}"></canvas>`}
+function mdPaint(root){(root||document).querySelectorAll('canvas[data-model]:not([data-done])').forEach(c=>{c.dataset.done=1;try{mdRender(c,JSON.parse(c.dataset.model),+(c.dataset.angle||-.65))}catch(e){c.dataset.err=String(e).slice(0,80)}})}
+{let q=0;new MutationObserver(()=>{if(q)return;q=requestAnimationFrame(()=>{q=0;mdPaint()})}).observe(document.body,{childList:true,subtree:true})}
+const mdFinCol=()=>{const f=myFinish()&&FINISHES.find(x=>x.id===myFinish());return f?f.col:PCOL[0]};
+const mdTokCol=t=>{const L=TOKEN_LV[tokLv(t)];return L&&L.col&&!String(L.col).startsWith('linear')?L.col:PCOL[0]};
+/* item pictures: finishes on your token, dice as dice, board styles as a small board */
+{const _ia=itemArt;itemArt=function(k,it,cls=''){if(!it)return '';if(/\bglyph\b/.test(cls))return _ia(k,it,cls);
+  const spec=k==='fin'?{token:setup.slots[0].tok,col:it.col,label:it.name+' finish'}:k==='dice'?{kind:'dice',col:it.face,pip:it.pip,one:it.one,label:it.name+' dice'}:{kind:'surround',s:it.s,label:it.name+' board style'};
+  return mdl(spec,'iart '+k+' '+cls)}}
+/* token list: the real token, in its tier colour (yours in your finish) */
+{const _tg=tkGridHTML;tkGridHTML=function(sel){const h=_tg(sel);return h.replace(/<span class="tem r(\d)">([^<]+)<\/span>/g,(m0,lv,t)=>{t=t.trim();if(!TOKEN_INFO[t])return m0;const u=tokenUnlocked(t);
+  return mdl({token:t,col:u?(setup.slots[0].tok===t?mdFinCol():mdTokCol(t)):'#7d8a96',label:TOKEN_INFO[t][0]},'tkm'+(u?'':' lockm'),160,128)})}}
+/* Collection → Buildings */
+const BLD=[['Garden plot','Owned, nothing built yet. A planted lot with trees.','0 houses'],['Courtyard home','A limestone home with a planted roof, pergola and slatted screen.','1 house'],['Townhouse','Terracotta fins, timber louvres and a glass balcony.','2 houses'],['Apartments','Three floors with glass balconies, planters and solar panels.','3 houses'],['Boutique hotel','Terracotta pilasters, a garden terrace and a timber roof pavilion.','4 houses'],['Skyline hotel','A glass tower with stone fins, a brass crown and palms at the door.','Hotel']];
+SUBS.collection.push(['buildings','Buildings']);SEC_OF.buildings='collection';
+function paneBuildings(T){const col=(P0=>P0)(PCOL[0]);
+  T.innerHTML=`<div class="phead"><h2>Buildings &amp; hotels</h2><span class="small">What grows on your streets as you build</span></div>
+    <div class="small">Every street you own gets a dark base with a brass edge and a plate in your colour. Each house you add grows it to the next building; four houses and a hotel make the Skyline hotel.</div>
+    <div class="bldgrid">${BLD.map(([n,d,h],i)=>`<article class="bldc"><div class="bldst">${mdl({kind:'building',level:i,owner:col,label:n},'bldm',300,300)}<em>${h}</em></div><b>${n}</b><small>${d}</small></article>`).join('')}</div>`}
+{const _ht=homeTab;homeTab=function(k){const want=k==='buildings'||(k==='collection'&&setup.sub&&setup.sub.collection==='buildings');if(!want)return _ht(k);
+  setup.sub=setup.sub||{};setup.sub.collection='cast';_ht('cast');clearPreview();setup.sub.collection='buildings';setup.tab='buildings';
+  const P=$('#pane');P.className='pane tab-buildings sec-collection';const h=$('#title .home');if(h)h.classList.remove('peek-r');
+  P.querySelectorAll('.stab').forEach(b=>{const on=b.dataset.s==='buildings';b.classList.toggle('on',on);b.setAttribute('aria-selected',on)});const host=P.querySelector('.subpane');host.innerHTML='';paneBuildings(host)}}
+/* Home: the brass figures, globe and sliders on the three mode cards */
+{const _pp=paneP;paneP=function(T){const r=_pp.apply(this,arguments);try{[['#qPP','people'],['#tOnline','globe'],['#qCustom','sliders']].forEach(([id,a])=>{const b=T.querySelector(id),mi=b&&b.querySelector('.mi');if(mi){mi.classList.add('miart');mi.style.backgroundImage=`url(art/${a}.jpg)`;mi.innerHTML=''}})}catch(e){}return r}}
+/* portfolio: the selected street's building */
+{let ob=null;const ill=()=>{const D=document.querySelector('.pfm .pfd'),h=D&&D.querySelector('.pdh');if(!D||!h||D.querySelector('.pfmdl')||!G)return;const nm=h.querySelector('b');const i=SQ.findIndex(s=>s.n===(nm&&nm.textContent));if(i<0||SQ[i].t!=='prop')return;const o=G.own[i];if(o.o<0)return;
+  h.insertAdjacentHTML('afterend',`<div class="pfmdl">${mdl({kind:'building',level:o.m?0:o.h,owner:P(o.o).col,label:SQ[i].n+' building'},'',300,200)}<small>${o.m?'Mortgaged':BLD[o.m?0:o.h][0]}</small></div>`)};
+  const _oa=openAssets;openAssets=function(){const r=_oa.apply(this,arguments);if(!ob){ob=new MutationObserver(()=>ill());ob.observe($('#modals'),{childList:true,subtree:true})}setTimeout(ill,50);return r}}
+/* the detailed bus and taxi from the redesign; finishes paint their bodies */
+busModel=function(col,k=1){const g=S3.geo,m=new Node(),body=mat(col,{spec:.65}),glass=mat('#2f647c',{spec:.85}),chrome=mat('#d8ddd9',{spec:.9}),dark=mat('#172630');const add=(geo,mt,x,y,z,w,h,d)=>m.add(N(geo,mt,x*k,y*k,z*k).sc(w*k,h*k,d*k));
+  add(g.box,body,0,.17,0,.55,.23,.22);add(g.box,body,0,.3,0,.51,.035,.23);add(g.box,glass,.277,.23,0,.008,.115,.2);
+  for(const z of[-.115,.115]){for(let i=0;i<5;i++)add(g.box,glass,-.2+i*.09,.24,z,.074,.08,.008);add(g.box,chrome,0,.11,z,.54,.014,.008);add(g.box,dark,.16,.14,z,.055,.19,.01);
+    for(const x of[-.16,.16]){m.add(N(g.cyl,dark,x*k,.07*k,z*k).sc(.06*k,.025*k,.06*k).rot(Math.PI/2,0,0),N(g.cyl,chrome,x*k,.07*k,z*1.14*k).sc(.03*k,.01*k,.03*k).rot(Math.PI/2,0,0))}add(g.box,chrome,.275,.25,z*1.2,.025,.035,.02)}
+  add(g.box,chrome,.284,.1,0,.02,.025,.23);for(const z of[-.08,.08])add(g.sph,mat('#fff2bb',{em:.2}),.285,.15,z,.012,.025,.025);return m};
+{const _tx=tokenModelX;tokenModelX=function(tok,col,t,m){if(tok!=='🚕')return _tx(tok,col,t,m);const g=S3.geo,body=mat(col,{spec:.75}),dark=mat('#172630'),chrome=mat('#cfd5d5',{spec:.9}),glass=mat('#447f91',{spec:.9});
+  m.add(N(g.box,body,0,.12,0).sc(.42,.1,.19),N(g.box,glass,-.025,.21,0).sc(.2,.1,.17),N(g.box,body,-.025,.268,0).sc(.22,.025,.18),N(g.box,body,.14,.18,0).sc(.15,.035,.18),N(g.box,chrome,.216,.11,0).sc(.012,.035,.2),N(g.box,chrome,-.216,.11,0).sc(.012,.03,.2),N(g.box,mat('#e5c879'),0,.301,0).sc(.075,.04,.055));
+  for(const x of[-.13,.13])for(const z of[-.1,.1])m.add(N(g.cyl,dark,x,.075,z).sc(.058,.025,.058).rot(Math.PI/2,0,0),N(g.cyl,chrome,x,.075,z*1.16).sc(.028,.01,.028).rot(Math.PI/2,0,0));
+  for(const z of[-.07,.07])m.add(N(g.sph,mat('#fff1b9'),.216,.15,z).sc(.012,.022,.022));for(const z of[-.099,.099]){m.add(N(g.box,chrome,0,.14,z).sc(.34,.008,.005));for(let x=-.16;x<.17;x+=.04)m.add(N(g.box,chrome,x,.16,z).sc(.02,.012,.005))}return true}}
 /* ================= ORIENTATION ================= */
 let rotDismissed=false;
 function checkRotate(){$('#rotate').hidden=true}
