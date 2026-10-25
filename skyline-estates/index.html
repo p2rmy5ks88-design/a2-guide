@@ -1817,6 +1817,62 @@ html.rot .pf2row{min-height:34px;font-size:12.5px}html.rot .pf2t button{height:3
 #acts .bigb.end{background:linear-gradient(180deg,#f08a5d,#c95434)!important;border:2px solid #ffd9c4!important;color:#fff!important;box-shadow:0 4px 0 #7f2f17,0 10px 22px rgba(0,0,0,.35)!important}
 #acts .bigb:active{box-shadow:0 1px 0 #9a6a14!important}#acts .bigb.end:active{box-shadow:0 1px 0 #7f2f17!important}
 #acts:not(:empty){background:rgba(255,255,255,.12)!important;border-color:rgba(255,255,255,.35)!important;backdrop-filter:blur(6px)}
+/* ================= POLISH: one calm design system across the menus ================= */
+:root{--p-card:#0f2433;--p-card2:#132c3d;--p-line:#23405a;--p-mute:#9fb0c0;--p-gold:#d6b667;--p-r:16px}
+html.light{--p-card:#ffffff;--p-card2:#f4f6f9;--p-line:#dde3ea;--p-mute:#5b6b7a}
+/* page titles: same size everywhere; sub-tab pages rely on the tab name, so their big titles go */
+.subpane>.clhead h2,.subpane>.sthead h2{display:none}
+.clhead,.sthead{margin:2px 0 10px}.clhead p,.sthead p{margin:0;font-size:13px;color:var(--p-mute)}
+.clhead .clbtn{min-height:34px;font-size:12.5px}
+.phead h2,.shophead h2{font:700 22px var(--display)!important;letter-spacing:-.005em}
+/* token medallions: a dark disc with a thin brass ring, the token as a cast miniature */
+canvas.mdl.med{aspect-ratio:1;height:auto!important;border-radius:50%!important;
+  background:radial-gradient(circle at 50% 38%,#24405a 0%,#13283a 55%,#0a1724 100%)!important;box-shadow:inset 0 0 0 1.5px rgba(214,182,103,.7),0 4px 10px rgba(0,0,0,.35)!important}
+html.light canvas.mdl.med{background:radial-gradient(circle at 50% 38%,#f6f1e4 0%,#e4dccb 70%,#d3c8b1 100%)!important}
+/* shop: plain cards, item on a quiet stage, rarity as a small dot, one button style */
+.icard{background:var(--p-card)!important;border:1px solid var(--p-line)!important;border-radius:var(--p-r)!important;padding:10px 10px 10px!important;gap:4px!important;box-shadow:none!important}
+.icard .iwrap{width:100%;height:auto!important;aspect-ratio:16/10;border-radius:12px;margin-bottom:4px;display:grid;place-items:center;background:radial-gradient(ellipse at 50% 70%,rgba(214,182,103,.10),transparent 70%),var(--p-card2)}
+.icard .iwrap canvas.mdl{width:auto!important;height:84%!important;max-width:84%}
+.icard .iwrap canvas.mdl.med{height:78%!important;width:auto!important}
+.icard .iwrap .iart.coins,.icard .iwrap .iart.glyph{transform:scale(1.15)}
+.icard b{font:600 14px var(--body)!important;color:var(--ink)}
+.icard .itier{display:flex;align-items:center;gap:6px;font:600 11.5px var(--body)!important;letter-spacing:0!important;color:var(--p-mute)!important}
+.icard .itier::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--rc);flex:none}
+.ibuy{min-height:34px!important;border-radius:10px!important;border:1px solid var(--p-line)!important;background:var(--p-card2)!important;color:var(--ink)!important;font:700 14px var(--body)!important;box-shadow:none!important}
+.ibuy:hover{border-color:var(--p-gold)!important}
+.ibuy.use{color:#7fe0b8!important;border-color:#2c7a60!important}
+.ibuy.cash{background:var(--goldgrad)!important;color:#1A1406!important;border:0!important}
+.iown{font:700 12px var(--body)!important}
+.ideal{background:#1f7a5a!important;color:#e6fff3!important;font:700 10px var(--body)!important}
+.ipv{background:rgba(10,23,36,.7)!important;border-color:var(--p-line)!important;color:var(--ink)!important;font:600 10px var(--body)!important}
+.shoptabs .stab{font:600 12.5px var(--body)!important}
+.bundle{background:var(--p-card)!important;border:1px solid rgba(214,182,103,.55)!important;box-shadow:none!important;border-radius:var(--p-r)!important}
+.bundle .once{background:none!important;border:1px solid var(--p-gold);color:var(--p-gold)!important;font:700 10px var(--body)!important}
+.bundle h3{font:700 18px var(--display)!important}
+.bundle .bstage{height:110px!important;border-radius:12px}
+.bundle ul{font-size:12.5px}
+.dhead h3{font:700 16px var(--display)!important}
+/* season track: quieter rewards */
+.scell{background:var(--p-card)!important;border-color:var(--p-line)!important}
+.scell .iart.coin1,.scell .iart.coins{width:26px!important;height:26px!important;box-shadow:inset 0 0 0 2px #C9962E!important}
+.scell canvas.mdl{width:46px!important;height:auto!important}
+.scell small{font:600 10.5px var(--body)!important;color:var(--p-mute)}
+/* collection grids */
+.cltok,.clcard,.cvt,.tkc{background:var(--p-card)!important;border-color:var(--p-line)!important}
+.cltok.on,.clcard.on{border:2px solid var(--p-gold)!important}
+.cltok canvas.mdl.cltm{width:64px!important}
+.clstage canvas.mdl.clbig.med{width:min(240px,80%)!important;max-width:none}
+.clstage{background:none!important;min-height:200px}
+/* the shop item page uses the same medallion */
+.sibig canvas.mdl.med{width:min(300px,70%)!important}
+.sisib canvas.mdl.med{width:58px!important}
+/* emojis that read as toys: tone down where they sit in UI chrome */
+.gsum .gav em{filter:saturate(.75)}
+canvas.mdl.med{aspect-ratio:1/1!important;height:auto!important}
+.clstage canvas.mdl.clbig.med{width:min(230px,70%)!important}
+.iart.ball{background:radial-gradient(circle at 38% 32%,color-mix(in srgb,var(--c) 55%,#fff),var(--c) 55%,color-mix(in srgb,var(--c) 55%,#000))!important;box-shadow:0 0 0 3px #0a1724,0 0 0 4.5px rgba(214,182,103,.75),0 6px 12px rgba(0,0,0,.35)!important;width:44px!important;height:44px!important}
+.subpane>.clhead:has(#clTok){display:none}
+.subpane>.clhead{margin-top:0}
 </style>
 
 <canvas id="gl" aria-label="3D game board"></canvas>
@@ -6149,29 +6205,34 @@ function mdTree(spec){const key=JSON.stringify(spec);if(MDmesh.has(key))return M
       else if((s.water||'').toLowerCase()==='#ff6a1a'){for(let i=0;i<5;i++)m.add(N(g.box,mat('#ff7b2d'),i*.15-.3,.13,0).sc(.015,.008,.65).rot(0,i*.25,0))}
       else if(ops.includes('tiles')){for(let x=0;x<5;x++)for(let z=0;z<4;z++)add(g.box,['#ef476f','#ffd166','#06d6a0','#118ab2'][((x*3+z)%4)],x*.16-.32,.13,z*.16-.24,.13,.015,.13)}
       else{for(const x of[-.32,.32])for(const z of[-.25,.25]){add(g.cyl,'#b39563',x,.17,z,.035,.16,.035);add(g.sph,'#4c805f',x,.28,z,.1,.13,.1)}add(g.box,'#eee1c6',0,.21,0,.24,.2,.23);add(g.box,'#d3b46b',0,.33,0,.29,.04,.28)}}
-    else m=tokenModel(spec.token||'🚌',spec.col||'#267391');
+    else{m=tokenModel(spec.token||'🚌',spec.col||'#267391');m.kids.forEach((k,i)=>{if(i>0)k.visible=false})}
     return m});MDmesh.set(key,n);return n}
 const mdTx=(m,p)=>[m[0]*p[0]+m[4]*p[1]+m[8]*p[2]+m[12],m[1]*p[0]+m[5]*p[1]+m[9]*p[2]+m[13],m[2]*p[0]+m[6]*p[1]+m[10]*p[2]+m[14]];
 function mdRender(canvas,spec,angle=-.65){const key=JSON.stringify(spec)+'|'+angle+'|'+canvas.width;const ctx=canvas.getContext('2d');if(MDimg.has(key)){ctx.clearRect(0,0,canvas.width,canvas.height);ctx.drawImage(MDimg.get(key),0,0);return}
-  const node=mdTree(spec),faces=[],cy=Math.cos(angle),sy=Math.sin(angle),pitch=spec.pitch||.34,cp=Math.cos(pitch),sp=Math.sin(pitch);
+  const mini=!spec.kind,paint=mini?hex(spec.col||'#267391'):null,node=mdTree(spec),faces=[],cy=Math.cos(angle),sy=Math.sin(angle),pitch=spec.pitch||.34,cp=Math.cos(pitch),sp=Math.sin(pitch);
   const view=p=>{const x=p[0]*cy+p[2]*sy,z=-p[0]*sy+p[2]*cy;return[x,-p[1]*cp+z*sp,z*cp+p[1]*sp]};
   (function walk(n,parent){if(!n.visible)return;const local=M4.compose(n.p,n.r,n.s),m=parent?M4.mul(parent,local):local;
     if(n.geo&&n.geo.v&&n.mat){const v=n.geo.v,idx=n.geo.idx,c=n.mat.c||[.8,.8,.8],em=n.mat.em||0;
       for(let k=0;k<idx.length;k+=3){const w=[idx[k],idx[k+1],idx[k+2]].map(i=>mdTx(m,[v[i*8],v[i*8+1],v[i*8+2]])),p=w.map(view),a=w[0],u=[w[1][0]-a[0],w[1][1]-a[1],w[1][2]-a[2]],b=[w[2][0]-a[0],w[2][1]-a[1],w[2][2]-a[2]];
         const nr=[u[1]*b[2]-u[2]*b[1],u[2]*b[0]-u[0]*b[2],u[0]*b[1]-u[1]*b[0]],len=Math.hypot(nr[0],nr[1],nr[2])||1;
         if(nr[0]*(-sy*cp)+nr[1]*sp+nr[2]*cy*cp<0)continue;
-        const sh=Math.min(1.15,.58+.42*Math.max(0,(nr[0]*.35+nr[1]*.85+nr[2]*.4)/len)+em*.5);faces.push({p,z:(p[0][2]+p[1][2]+p[2][2])/3-(n.decal?9:0),c:c.map(x=>Math.round(Math.min(255,x*255*sh)))})}}
+        const lam=Math.max(0,(nr[0]*.35+nr[1]*.85+nr[2]*.4)/len);let col;
+        if(mini){const body=paint&&Math.abs(c[0]-paint[0])+Math.abs(c[1]-paint[1])+Math.abs(c[2]-paint[2])<.04;
+          if(body){const sh=.32+.68*lam,hi=Math.pow(lam,10)*.55;col=paint.map(x=>Math.min(255,Math.round((x*sh+hi)*255)))}
+          else{const L=Math.min(1,.2126*c[0]+.7152*c[1]+.0722*c[2]+em*.4),t=(.18+.82*L)*(.38+.62*lam)+Math.pow(lam,12)*.25;col=[Math.round(30+t*200),Math.round(36+t*190),Math.round(44+t*170)].map(x=>Math.min(255,x))}}
+        else{const sh=Math.min(1.15,.58+.42*lam+em*.5);col=c.map(x=>Math.round(Math.min(255,x*255*sh)))}
+        faces.push({p,z:(p[0][2]+p[1][2]+p[2][2])/3-(n.decal?9:0),c:col})}}
     n.kids.forEach(k=>walk(k,m))})(node,null);
   if(!faces.length)return;let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;faces.forEach(f=>f.p.forEach(p=>{if(p[0]<x0)x0=p[0];if(p[0]>x1)x1=p[0];if(p[1]<y0)y0=p[1];if(p[1]>y1)y1=p[1]}));
-  const W=canvas.width,H=canvas.height,s=Math.min(W*.84/(x1-x0||1),H*.8/(y1-y0||1)),cx=(x0+x1)/2,cyy=(y0+y1)/2;ctx.clearRect(0,0,W,H);
-  ctx.fillStyle='rgba(0,0,0,.28)';ctx.beginPath();ctx.ellipse(W/2,H/2+(y1-cyy)*s+H*.015,W*.3,H*.04,0,0,Math.PI*2);ctx.fill();
+  const W=canvas.width,H=canvas.height,s=Math.min(W*(mini?.6:.84)/(x1-x0||1),H*(mini?.56:.8)/(y1-y0||1)),cx=(x0+x1)/2,cyy=(y0+y1)/2;ctx.clearRect(0,0,W,H);
+  if(!mini){ctx.fillStyle='rgba(0,0,0,.28)';ctx.beginPath();ctx.ellipse(W/2,H/2+(y1-cyy)*s+H*.015,W*.3,H*.04,0,0,Math.PI*2);ctx.fill()}
   ctx.lineJoin='round';faces.sort((a,b)=>b.z-a.z).forEach(f=>{ctx.beginPath();f.p.forEach((p,i)=>{const X=W/2+(p[0]-cx)*s,Y=H/2+(p[1]-cyy)*s;i?ctx.lineTo(X,Y):ctx.moveTo(X,Y)});ctx.closePath();const col=`rgb(${f.c[0]},${f.c[1]},${f.c[2]})`;ctx.fillStyle=col;ctx.strokeStyle=col;ctx.lineWidth=.6;ctx.fill();ctx.stroke()});
   try{const c2=document.createElement('canvas');c2.width=W;c2.height=H;c2.getContext('2d').drawImage(canvas,0,0);MDimg.set(key,c2)}catch(e){}}
-function mdl(spec,cls='',w=240,h=192){return `<canvas class="mdl ${cls}" width="${w}" height="${h}" data-model="${esc(JSON.stringify(spec))}" role="img" aria-label="${esc(spec.label||'Model')}"></canvas>`}
+function mdl(spec,cls='',w=240,h=192){if(!spec.kind){h=w;cls+=' med'}return `<canvas class="mdl ${cls}" width="${w}" height="${h}" data-model="${esc(JSON.stringify(spec))}" role="img" aria-label="${esc(spec.label||'Model')}"></canvas>`}
 function mdPaint(root){(root||document).querySelectorAll('canvas[data-model]:not([data-done])').forEach(c=>{c.dataset.done=1;try{mdRender(c,JSON.parse(c.dataset.model),+(c.dataset.angle||-.65))}catch(e){c.dataset.err=String(e).slice(0,80)}})}
 {let q=0;new MutationObserver(()=>{if(q)return;q=requestAnimationFrame(()=>{q=0;mdPaint()})}).observe(document.body,{childList:true,subtree:true})}
-const mdFinCol=()=>{const f=myFinish()&&FINISHES.find(x=>x.id===myFinish());return f?f.col:PCOL[0]};
-const mdTokCol=t=>{const L=TOKEN_LV[tokLv(t)];return L&&L.col&&!String(L.col).startsWith('linear')?L.col:PCOL[0]};
+const mdFinCol=()=>{const f=myFinish()&&FINISHES.find(x=>x.id===myFinish());return f?f.col:'#c3a465'};
+const mdTokCol=t=>{const L=TOKEN_LV[tokLv(t)];return L&&L.col&&!String(L.col).startsWith('linear')?L.col:'#b9b2a4'};
 /* item pictures: finishes on your token, dice as dice, board styles as a small board */
 {const _ia=itemArt;itemArt=function(k,it,cls=''){if(!it)return '';if(/\bglyph\b/.test(cls))return _ia(k,it,cls);
   const spec=k==='fin'?{token:setup.slots[0].tok,col:it.col,label:it.name+' finish'}:k==='dice'?{kind:'dice',col:it.face,pip:it.pip,one:it.one,label:it.name+' dice'}:{kind:'surround',s:it.s,label:it.name+' board style'};
