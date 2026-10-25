@@ -1885,6 +1885,11 @@ img.mdl.ipic{display:block;object-fit:cover;border-radius:14px;aspect-ratio:1/1;
 #ui #prompt .sub{font-size:11px}
 #ui #prompt .pav{width:28px;height:28px;font-size:15px}
 #ui #roster{top:calc(max(8px,env(safe-area-inset-top,0px)) + 54px);max-height:calc(100% - 170px)}
+/* Skyline Gala season frame: champagne gold and royal violet */
+.avf.fr-gala::before{background:conic-gradient(#FFE9A8,#E2B13C,#7A3FD8,#FF5FA2,#E2B13C,#FFE9A8);animation-duration:3.2s}
+.avf.fr-gala{filter:drop-shadow(0 0 7px rgba(226,177,60,.7))}
+.iart.gala{display:grid;place-items:center;width:100%;height:100%}
+.iart.gala .pav{width:56px;height:56px}
 </style>
 
 <canvas id="gl" aria-label="3D game board"></canvas>
@@ -3735,7 +3740,7 @@ function payday(p){return Math.round(PAYDAY*(1+perkOf(p).pay))}
 const FINISHES=[{id:'gold',name:'Gold',col:'#e2b13c',price:900,desc:'Polished gold finish for your token.'},{id:'chrome',name:'Chrome',col:'#cfd8e2',price:700,season:15,desc:'Mirror chrome. Free on the season track at tier 15.'},{id:'ruby',name:'Ruby',col:'#c8173c',price:800,desc:'Deep jewel red.'},{id:'obsidian',name:'Obsidian',col:'#26232e',price:800,desc:'Glossy volcanic black.'},
   {id:'neon',name:'Neon',col:'#36e6ff',price:0,prem:10,desc:'Glowing cyan. Premium season pass, tier 10.'},{id:'crystal',name:'Crystal',col:'#bfe6fa',price:0,prem:25,desc:'Ice-clear crystal. Premium season pass, tier 25.'}];
 const DICE_SKINS=[{id:'classic',name:'Classic',face:'#fffdf6',edge:'#e5dcc6',pip:'#16161a',one:'#d2361f',price:0},{id:'midnight',name:'Midnight',face:'#1c2340',edge:'#2f3a66',pip:'#ffffff',one:'#ffc61a',price:500},{id:'gold',name:'Gold Rush',face:'#f2c14a',edge:'#c8962a',pip:'#3a2a08',one:'#ffffff',price:900,lvl:20},
-  {id:'mint',name:'Mint',face:'#c8f2dc',edge:'#8fd8b2',pip:'#0f5a36',one:'#e23b6a',price:400},{id:'candy',name:'Candy',face:'#ffd6e8',edge:'#ff9fc6',pip:'#8a1f5a',one:'#2a9af0',price:0,prem:5},{id:'marble',name:'Marble',face:'#f4f1ea',edge:'#cfc8b8',pip:'#7a6a3a',one:'#c8962a',price:0,league:'platinum'}];
+  {id:'mint',name:'Mint',face:'#c8f2dc',edge:'#8fd8b2',pip:'#0f5a36',one:'#e23b6a',price:400},{id:'candy',name:'Candy',face:'#ffd6e8',edge:'#ff9fc6',pip:'#8a1f5a',one:'#2a9af0',price:0,prem:4},{id:'marble',name:'Marble',face:'#f4f1ea',edge:'#cfc8b8',pip:'#7a6a3a',one:'#c8962a',price:0,league:'platinum'}];
 function itemOwned(kind,id){if(kind==='dice'&&id==='classic')return true;if(PREF.inv[kind]&&PREF.inv[kind][id])return true;
   const it=(kind==='fin'?FINISHES:kind==='dice'?DICE_SKINS:SURROUND_PREMIUM).find(x=>x.id===id);if(!it)return false;const u=it.unlock||it;
   return (u.level&&lvlOf(PREF.xp)>=u.level)||(u.lvl&&lvlOf(PREF.xp)>=u.lvl)||(u.ach&&achDone({id:u.ach}))||(u.league&&leagueIdx()>=LEAGUES.findIndex(l=>l.id===u.league))}
@@ -4357,21 +4362,24 @@ function addXP(n,why){if(!n)return;const before=lvlOf(PREF.xp);PREF.xp+=n;XPGAME
 function xpFloat(n){if(FAST)return;const f=el('div','xpfloat',`+${n} XP`);document.body.append(f);setTimeout(()=>f.remove(),1600)}
 
 /* ---- 30-day seasons ---- */
-const SEASON_EPOCH=Date.UTC(2026,9,15),SEASON_LEN=30*864e5,TIER_XP=250,TIERS=30;
-const SEASON_NAMES=['Harbour Lights','Neon Nights','Golden Hour','Festival Fever','Winter Lights','Summer Skylines'];
-const seasonNo=()=>Math.max(1,Math.floor((Date.now()-SEASON_EPOCH)/SEASON_LEN)+1);
+/* Season 2 (Skyline Gala) restarted the clock on 25 Oct 2026: 45-day seasons, 40 tiers */
+const SEASON_EPOCH=Date.UTC(2026,9,25),SEASON_LEN=45*864e5,TIER_XP=250,TIERS=40,SEASON_DAYS=45;
+const SEASON_NAMES=['Harbour Lights','Skyline Gala','Neon Nights','Golden Hour','Festival Fever','Winter Lights','Summer Skylines'];
+const seasonNo=()=>Math.max(2,Math.floor((Date.now()-SEASON_EPOCH)/SEASON_LEN)+2);
 const seasonName=n=>SEASON_NAMES[(n-1)%SEASON_NAMES.length];
-const seasonEnds=()=>SEASON_EPOCH+seasonNo()*SEASON_LEN;
+const seasonEnds=()=>SEASON_EPOCH+(seasonNo()-1)*SEASON_LEN;
 const PREM_PRICE=1200;
 function season(){const n=seasonNo();let S=PREF.season;if(!S||S.n!==n){if(S&&PREF.trophies>800)PREF.trophies=Math.round(800+(PREF.trophies-800)/2);S=PREF.season={n,sxp:0,prem:false,cf:{},cp:{},tr:0,wk:null};savePref()}return S}
 function seasonXP(n){const S=season();S.sxp+=n}
 const seasonTierNow=()=>Math.min(TIERS,Math.floor(season().sxp/TIER_XP));
-function tierReward(i,prem){if(!prem){if(i===15)return{fin:'chrome'};if(i===30)return{coins:500,boost:3};if(i%10===0)return{coins:200};if(i%5===0)return{coins:120,boost:1};return{coins:40}}
-  if(i===5)return{dice:'candy'};if(i===10)return{fin:'neon'};if(i===20)return{surr:'lagoon'};if(i===25)return{fin:'crystal'};if(i===30)return{surr:'skydeck',coins:500};if(i%5===0)return{coins:200};return{coins:60}}
-function tierText(r){const o=[];if(r.coins)o.push(`${r.coins} ${COIN}`);if(r.boost)o.push(`${r.boost}× 2× XP`);if(r.fin)o.push(FINISHES.find(f=>f.id===r.fin).name+' finish');if(r.dice)o.push(DICE_SKINS.find(f=>f.id===r.dice).name+' dice');if(r.surr)o.push(SURROUND_PREMIUM.find(f=>f.id===r.surr).name);return o.join(' + ')}
-function tierIcon(r){return r.surr?SURROUND_PREMIUM.find(f=>f.id===r.surr).icon:r.fin?'✨':r.dice?'🎲':r.boost?'⚡':COIN}
+/* Skyline Gala rewards: an item every few tiers on both tracks, a free board style, and a season-only avatar frame at the top */
+const GALA_FREE={3:{coins:250},6:{dice:'mint'},9:{coins:300,boost:2},12:{fin:'ruby'},15:{fin:'chrome'},18:{coins:400,boost:2},21:{dice:'midnight'},24:{fin:'obsidian'},27:{coins:600,boost:3},30:{surr:'marble'},33:{coins:700},36:{dice:'gold'},40:{coins:1500,boost:5}};
+const GALA_PREM={1:{coins:500},4:{dice:'candy'},7:{coins:400,boost:2},10:{fin:'neon'},13:{surr:'garden'},16:{coins:600,boost:3},19:{dice:'marble'},22:{surr:'ice'},25:{fin:'crystal'},28:{surr:'confetti'},31:{fin:'gold'},34:{surr:'lava'},37:{coins:2000,boost:5},40:{surr:'skydeck',frame:'gala',coins:2500}};
+function tierReward(i,prem){const T=prem?GALA_PREM:GALA_FREE;if(T[i])return T[i];if(prem)return i%5===0?{coins:250}:{coins:100};return i%5===0?{coins:150,boost:1}:{coins:60}}
+function tierText(r){const o=[];if(r.coins)o.push(`${r.coins} ${COIN}`);if(r.boost)o.push(`${r.boost}× 2× XP`);if(r.fin)o.push(FINISHES.find(f=>f.id===r.fin).name+' finish');if(r.dice)o.push(DICE_SKINS.find(f=>f.id===r.dice).name+' dice');if(r.surr)o.push(SURROUND_PREMIUM.find(f=>f.id===r.surr).name);if(r.frame)o.push('Skyline Gala frame');return o.join(' + ')}
+function tierIcon(r){return r.frame?'👑':r.surr?SURROUND_PREMIUM.find(f=>f.id===r.surr).icon:r.fin?'✨':r.dice?'🎲':r.boost?'⚡':COIN}
 function claimTier(i,prem){const S=season(),box=prem?S.cp:S.cf;if(box[i]||seasonTierNow()<i||(prem&&!S.prem))return false;box[i]=1;const r=tierReward(i,prem);
-  if(r.coins)addCoins(r.coins,`Season tier ${i}`);if(r.boost)PREF.boostGames+=r.boost;if(r.fin)grantItem('fin',r.fin);if(r.dice)grantItem('dice',r.dice);if(r.surr)grantItem('surr',r.surr);savePref();return true}
+  if(r.coins)addCoins(r.coins,`Season tier ${i}`);if(r.boost)PREF.boostGames+=r.boost;[['fin',r.fin],['dice',r.dice],['surr',r.surr]].forEach(([k,id])=>{if(!id)return;if(itemOwned(k,id)){const it=itemOf(k,id);addCoins(Math.max(150,Math.round((it.price||600)/2)),`${it.name} (already owned)`)}else grantItem(k,id)});if(r.frame){PREF.inv.frame=PREF.inv.frame||{};PREF.inv.frame[r.frame]=Date.now();PREF.frameNew.push(r.frame)}savePref();return true}
 function seasonClaimable(){const S=season(),t=seasonTierNow();let n=0;for(let i=1;i<=t;i++){if(!S.cf[i])n++;if(S.prem&&!S.cp[i])n++}return n}
 /* weekly challenges inside the season */
 const WEEKLY=[
@@ -5030,7 +5038,7 @@ function paneLearn(T){
     <h3>PROGRESS</h3><div class="learn"><div class="lcard"><i>🌍</i><div><b>World</b><p>18 countries and 31 cities, each with its own board, landscape and 15 achievements. Level up to open new countries; play in a country to open its other cities.</p></div></div>
     <div class="lcard"><i>${COIN}</i><div><b>Coins</b><p>Earn coins from wins, level-ups, achievements, missions, the Lucky Spin, season tiers and league promotions. Spend them on tokens, upgrades, finishes, dice, board surrounds and early unlocks.</p></div></div>
     <div class="lcard"><i>⬆️</i><div><b>Token upgrades</b><p>Upgrade a token from Common to Rare, Epic, Legendary, Mythic and Chaotic. Each tier repaints it (blue, purple, gold, crimson, then a shifting rainbow) and adds a bigger payday, re-rolls and Lucky Passes. Mythic and Chaotic also need wins with that token, a high level and (for Chaotic) the Diamond league, and add a Rent Shield, Chaos Surge and bonus coins and XP. Hosts can switch in-game perks off.</p></div></div>
-    <div class="lcard"><i>📅</i><div><b>Seasons</b><p>Every 30 days a new season starts with 30 tiers of rewards and weekly challenges. All XP counts toward the season.</p></div></div>
+    <div class="lcard"><i>📅</i><div><b>Seasons</b><p>Every 45 days a new season starts with 40 tiers of rewards and weekly challenges. All XP counts toward the season.</p></div></div>
     <div class="lcard"><i>🏆</i><div><b>Leagues</b><p>Win trophies to climb from Bronze to Legend and earn promotion rewards. The global leaderboard shows the top players each season.</p></div></div></div>`}
 function paneSettings(T){const rows=[['riders','Riders on tokens','Show each player’s character riding their token. Switch off on slower phones.'],['rig','Realistic riders','Lifelike characters with motion-captured gestures. Each one downloads once (about 2 MB). Switch off to save data.'],['sfx','Game sounds','Dice, coins and token movement.'],['amb','Street ambience','Crowd chatter, traffic, birds or rain to match the city.'],['radio','Skyline FM','One station for every city, playing a shuffled mix of 13 Kenstylez tracks.']];
   const blocked=PREF.blocked||[];
@@ -5176,9 +5184,9 @@ function paneShop(T){let tab=setup.shopTab||'daily';if(tab==='surr'&&!setup.shop
     const d=B.querySelector('#sDef');if(d)d.onclick=()=>{equipItem(tab,tab==='dice'?'classic':null);redraw()}}
   else if(tab==='boost'){const S=season();
     B.innerHTML=`<div class="igrid">
-      <article class="icard" style="--rc:#E2B13C"><div class="iwrap"><span class="iart glyph star">${SVG_STAR}</span></div><b>Season ${S.n} premium</b><small class="itier">A second reward on all 30 tiers</small>${S.prem?'<span class="iown">Owned</span>':`<button class="ibuy" id="bPrem">${COIN_I}<span>${nfmt(PREM_PRICE)}</span></button>`}</article>
+      <article class="icard" style="--rc:#E2B13C"><div class="iwrap"><span class="iart glyph star">${SVG_STAR}</span></div><b>Season ${S.n} premium</b><small class="itier">A second reward on all ${TIERS} tiers</small>${S.prem?'<span class="iown">Owned</span>':`<button class="ibuy" id="bPrem">${COIN_I}<span>${nfmt(PREM_PRICE)}</span></button>`}</article>
       <article class="icard" style="--rc:#2F7FE0"><div class="iwrap"><span class="iart glyph bolt">${SVG_BOLT}</span></div><b>Double XP × 3</b><small class="itier">${PREF.boostGames?`${PREF.boostGames} game${PREF.boostGames===1?'':'s'} left`:'Your next 3 games'}</small><button class="ibuy" id="bXP">${COIN_I}<span>300</span></button></article></div>`;
-    const bp=B.querySelector('#bPrem');if(bp)bp.onclick=async()=>{if(await confirmBuy(`Season ${S.n} premium pass`,PREM_PRICE,'Unlocks the premium reward on all 30 tiers this season, including tiers you’ve already reached.')){S.prem=true;savePref();railProfile();redraw()}};
+    const bp=B.querySelector('#bPrem');if(bp)bp.onclick=async()=>{if(await confirmBuy(`Season ${S.n} premium pass`,PREM_PRICE,`Unlocks the premium reward on all ${TIERS} tiers this season, including tiers you’ve already reached.`)){S.prem=true;savePref();railProfile();redraw()}};
     B.querySelector('#bXP').onclick=async()=>{if(await confirmBuy('Double XP × 3',300)){PREF.boostGames+=3;savePref();railProfile();redraw()}}}
   else if(tab==='coins'){B.innerHTML=`<div class="igrid">${IAP_PACKS.map((p,i)=>`<article class="icard" style="--rc:${['#2F7FE0','#2F7FE0','#8F3FD8','#E2B13C'][i]||'#2F7FE0'}">${p.tag?`<em class="ideal">${esc(p.tag)}</em>`:''}<div class="iwrap"><span class="iart coins n${i}"></span></div><b>${nfmt(p.coins)} coins</b><small class="itier">Coin pack</small><button class="ibuy cash" data-i="${i}">${esc(p.price)}</button></article>`).join('')}</div>
       <div class="small shopnote">${IAP.ready?'Purchases are handled by the App Store or Google Play.':'Coin packs are sold in the Skyline Estates app for iPhone and Android.'} You also earn coins from wins, level-ups, missions, the Lucky Spin, season tiers and league promotions.</div>`;
@@ -5186,26 +5194,26 @@ function paneShop(T){let tab=setup.shopTab||'daily';if(tab==='surr'&&!setup.shop
   bindCards(B,redraw)}
 
 /* ---- season: banner, two reward rows, weekly challenges ---- */
-function rewardArt(r){if(r.surr)return itemArt('surr',itemOf('surr',r.surr));if(r.fin)return itemArt('fin',itemOf('fin',r.fin));if(r.dice)return itemArt('dice',itemOf('dice',r.dice));
+function rewardArt(r){if(r.frame)return `<span class="iart gala">${framed(`<span class="pav">${charSVG(myChar(),56)}</span>`,frameDef('gala'))}</span>`;if(r.surr)return itemArt('surr',itemOf('surr',r.surr));if(r.fin)return itemArt('fin',itemOf('fin',r.fin));if(r.dice)return itemArt('dice',itemOf('dice',r.dice));
   if(r.boost&&!r.coins)return `<span class="iart glyph bolt">${SVG_BOLT}</span>`;return `<span class="iart coin1${r.boost?' plus':''}"></span>`}
-function rewardLabel(r){const o=[];if(r.surr)o.push(itemOf('surr',r.surr).name);if(r.fin)o.push(itemOf('fin',r.fin).name+' finish');if(r.dice)o.push(itemOf('dice',r.dice).name+' dice');if(r.coins)o.push(`${r.coins} coins`);if(r.boost)o.push(`${r.boost}× double XP`);return o.join(' + ')}
+function rewardLabel(r){const o=[];if(r.surr)o.push(itemOf('surr',r.surr).name);if(r.fin)o.push(itemOf('fin',r.fin).name+' finish');if(r.dice)o.push(itemOf('dice',r.dice).name+' dice');if(r.coins)o.push(`${r.coins} coins`);if(r.boost)o.push(`${r.boost}× double XP`);if(r.frame)o.unshift('Skyline Gala frame');return o.join(' + ')}
 function paneSeason(T){const S=season(),t=seasonTierNow(),left=Math.max(0,Math.ceil((seasonEnds()-Date.now())/864e5)),into=S.sxp-t*TIER_XP,W=weekly(),ca=seasonClaimable();
   T.innerHTML=`<div class="sban"><div class="sbt"><small>SEASON ${S.n}</small><h2>${esc(seasonName(S.n))}</h2><span>Ends in <b>${left} day${left===1?'':'s'}</b></span></div>
     <div class="sbp"><div class="sbl"><span>Tier <b>${t}</b> of ${TIERS}</span><span>${t>=TIERS?'All tiers reached':`${into} / ${TIER_XP} XP`}</span></div><span class="sbar" aria-hidden="true"><i style="width:${t>=TIERS?100:into/TIER_XP*100}%"></i></span></div>
     <div class="sbb">${ca?`<button class="ibtn ghost" id="sAll">Claim all (${ca})</button>`:''}${S.prem?'<span class="premown">Premium unlocked</span>':`<button class="ibtn gold" id="sPrem">Unlock Premium <span>${COIN_I}${nfmt(PREM_PRICE)}</span></button>`}</div></div>
     <div class="strack" id="track"><span class="snum lab"></span><div class="slab"><b>Free</b><small>Everyone</small></div><div class="slab prem"><b>Premium</b><small>${S.prem?'Unlocked':'Locked'}</small></div></div>
     <div class="sweek"><span class="swl">This week</span>${W.list.map(id=>{const m=WEEKLY.find(x=>x.id===id),d=!!W.done[id],v=Math.min(m.g,W.prog[id]||0);return `<div class="swc${d?' done':''}" title="${WEEK_SXP} season XP + ${WEEK_COINS} coins"><span>${esc(loc(m.n))}</span><b>${d?'Done':m.money?`${fmt(v)} / ${fmt(m.g)}`:`${v}/${m.g}`}</b></div>`}).join('')}</div>
-    <div class="small shopnote">Every XP you earn also counts here. Weekly challenges pay ${WEEK_SXP} season XP and ${WEEK_COINS} coins each. Anything you claim is yours to keep.</div>`;
+    <div class="small shopnote">Every XP you earn also counts here. Weekly challenges pay ${WEEK_SXP} season XP and ${WEEK_COINS} coins each. Anything you claim is yours to keep, and items you already own pay out in coins.</div>`;
   const tk=T.querySelector('#track');
   for(let i=1;i<=TIERS;i++){const num=el('span','snum'+(i===t?' now':i<t?' got':''),String(i));tk.append(num);
-    [false,true].forEach(prem=>{const r=tierReward(i,prem),done=(prem?S.cp:S.cf)[i],reach=t>=i,can=reach&&!done&&(!prem||S.prem),big=!!(r.fin||r.dice||r.surr);
+    [false,true].forEach(prem=>{const r=tierReward(i,prem),done=(prem?S.cp:S.cf)[i],reach=t>=i,can=reach&&!done&&(!prem||S.prem),big=!!(r.fin||r.dice||r.surr||r.frame);
       const st=done?'Claimed':can?'Claim':prem&&!S.prem?'Locked':reach?'':`Tier ${i}`;
       const c=el(can?'button':'div','scell'+(prem?' prem':'')+(big?' big':'')+(done?' done':'')+(can?' can':''),`${rewardArt(r)}<small>${esc(rewardLabel(r))}</small>${st?`<em>${st}</em>`:''}`);
       if(can){c.setAttribute('aria-label',`Claim tier ${i}${prem?' premium':''}: ${rewardLabel(r)}`);c.onclick=()=>{if(claimTier(i,prem)){sfx('win');toast('Reward claimed!');homeTab('season')}}}
       tk.append(c)})}
   const cur=tk.querySelector('.snum.now')||tk.querySelector('.snum.got:last-of-type');if(cur)setTimeout(()=>{tk.scrollLeft=Math.max(0,cur.offsetLeft-tk.clientWidth/2+44)},30);
   const a=T.querySelector('#sAll');if(a)a.onclick=()=>{let n=0;for(let i=1;i<=t;i++){if(claimTier(i,false))n++;if(claimTier(i,true))n++}if(n){sfx('win');toast(`${n} reward${n>1?'s':''} claimed!`)}homeTab('season')};
-  const sp=T.querySelector('#sPrem');if(sp)sp.onclick=async()=>{if(await confirmBuy(`Season ${S.n} premium pass`,PREM_PRICE,'Unlocks the premium reward on all 30 tiers this season, including tiers you’ve already reached.')){S.prem=true;savePref();railProfile();homeTab('season')}}}
+  const sp=T.querySelector('#sPrem');if(sp)sp.onclick=async()=>{if(await confirmBuy(`Season ${S.n} premium pass`,PREM_PRICE,`Unlocks the premium reward on all ${TIERS} tiers this season, including tiers you’ve already reached.`)){S.prem=true;savePref();railProfile();homeTab('season')}}}
 
 /* ================= GAME CONTROLLER (Steam Deck, Xbox, PlayStation) ================= */
 /* D-pad or left stick moves a gold focus ring between buttons, A presses, B goes back.
@@ -5304,6 +5312,7 @@ const CHAMP_COINS=2000,CHAMP_XP=1000,PRISM_AT=5,PRISM_COINS=3000,CROWN_COINS=100
 PREF.champ=PREF.champ||{};PREF.champM=PREF.champM||{};PREF.frameNew=PREF.frameNew||[];if(PREF.eq.frame===undefined)PREF.eq.frame='';
 const champCount=()=>Object.keys(PREF.champ).length;
 function frameDef(id){if(!id)return null;
+  if(id==='gala'){const own=!!(PREF.inv.frame&&PREF.inv.frame.gala),t=typeof seasonTierNow==='function'&&season().n===2?seasonTierNow():0;return{id,name:'Skyline Gala',cls:'fr-gala',how:'Season 2 premium pass, tier 40',own,coins:0,prog:[own?40:Math.min(40,t),40]}}
   if(id==='prism')return{id,name:'Prism',cls:'fr-prism',how:`Become Champion of ${PRISM_AT} cities`,own:champCount()>=PRISM_AT,coins:PRISM_COINS,prog:[Math.min(PRISM_AT,champCount()),PRISM_AT]};
   if(id==='crown')return{id,name:'Skyline Crown',cls:'fr-crown',how:`Become Champion of all ${CITY_ORDER.length} cities`,own:champCount()>=CITY_ORDER.length,coins:CROWN_COINS,prog:[champCount(),CITY_ORDER.length]};
   const c=id.slice(2);if(!CITY_DATA[c])return null;const cols=countryOf(c).cols||['#E2B54A','#FFFFFF'];
@@ -5329,7 +5338,7 @@ function framePicker(){const ids=frameIds(),defs=ids.map(frameDef).filter(Boolea
   const next=defs.filter(f=>!f.own).sort((a,b)=>(b.prog[0]/b.prog[1])-(a.prog[0]/a.prog[1])).slice(0,Math.max(2,5-own.length));
   const chip=(f,lock)=>`<button class="frchip${lock?' lock':''}${(PREF.eq.frame||'')===(f?f.id:'')?' on':''}" data-f="${f?f.id:''}"${lock?' aria-disabled="true"':''} title="${esc(f?(lock?f.how:f.name):'No frame')}">${framed(`<span class="pav sm">${charSVG(myChar(),44)}</span>`,f||null)}<b>${esc(f?f.name.replace(' Champion',''):'None')}</b><small>${f?(lock?`${f.prog[0]}/${f.prog[1]}`:(PREF.eq.frame===f.id?'Wearing':'Owned')):(PREF.eq.frame?'':'Wearing')}</small></button>`;
   return `<div class="card frcard"><div class="ch">Avatar frame <small>Become a City Champion (all ${CT.length} awards in a city) to earn its frame</small></div><div class="frrow">${chip(null)}${own.map(f=>chip(f)).join('')}${next.map(f=>chip(f,true)).join('')}</div></div>`}
-const frameIds=()=>['prism','crown'].concat(CITY_ORDER.map(c=>'c:'+c));
+const frameIds=()=>['gala','prism','crown'].concat(CITY_ORDER.map(c=>'c:'+c));
 {const _pc=paneCast;paneCast=function(T){_pc(T);const pv=T.querySelector('.profcard .pav');if(pv&&myFrame())pv.outerHTML=framed(pv.outerHTML);const pc=T.querySelector('.profcard');if(!pc)return;
   pc.insertAdjacentHTML('afterend',framePicker());T.querySelectorAll('.frchip').forEach(b=>b.onclick=()=>{if(b.classList.contains('lock')){toast(b.title);return}PREF.eq.frame=b.dataset.f;savePref();railProfile();homeTab('cast')})}}
 /* the peek: every city's award page shows the Champion frame it pays out */
