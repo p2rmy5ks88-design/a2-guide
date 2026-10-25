@@ -1256,8 +1256,6 @@ html.light .wscmp tr.up td:last-child{color:#1f9a5c}
 .wheelcard{flex:none;background:linear-gradient(90deg,#0e1a33 0%,rgba(14,26,51,.94) 42%,rgba(14,26,51,.25) 75%),url(art/spin.jpg) 85% 40%/cover no-repeat!important;min-height:140px}
 .wheelcard .ch,.wheelcard .small{color:#F4EBD6}
 /* Settings: brass sliders above the categories */
-.setnav::before{content:'';display:block;height:96px;border-radius:14px;margin-bottom:4px;background:url(art/sliders.jpg) center 45%/cover no-repeat;box-shadow:inset 0 0 0 1px rgba(226,181,74,.3)}
-@media (max-width:640px){html:not(.rot) .setnav::before{display:none}}
 /* Collection: the three brass figures beside the heading */
 .tab-cast .phead{flex:none;position:relative;min-height:52px;padding-right:86px}
 .tab-cast .phead::after{content:'';position:absolute;right:0;top:50%;transform:translateY(-50%);width:74px;height:52px;border-radius:12px;background:url(art/people.jpg) center 40%/cover no-repeat;box-shadow:inset 0 0 0 1px rgba(226,181,74,.3),0 4px 12px rgba(0,0,0,.3)}
@@ -1600,6 +1598,53 @@ html.rot .shmodel{inset:40px 54px 72px 54px}html.rot .shinfo{padding:7px 10px}ht
 html.light .shinfo{background:rgba(255,255,255,.92);border-color:rgba(0,0,0,.08)}html.light .shname h2{color:var(--ink);text-shadow:none}html.light .shline{color:var(--ink2,#445)}html.light .shghost{background:#fff;color:var(--ink);border-color:rgba(0,0,0,.15)}
 @media (max-height:420px){.shcar button small,.shline{display:none}.shmodel{inset:40px 54px 56px 54px}}
 html.rot .shcar button small,html.rot .shline{display:none}html.rot .shmodel{inset:40px 54px 56px 54px}
+/* ===== Settings: clean rows ===== */
+.sthead{flex:none;margin:4px 0 6px}.sthead h2{margin:0;font:700 34px var(--display,inherit);letter-spacing:-.01em;text-transform:none;color:var(--ink)}.sthead p{margin:4px 0 0;font-size:15px;color:var(--ink2,#b8c2d2)}
+.stw{display:grid;grid-template-columns:200px minmax(0,1fr);gap:18px;align-items:start}
+.stnav{display:flex;flex-direction:column;gap:10px;position:sticky;top:0}
+.stnav button{min-height:46px;padding:0 18px;border-radius:14px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:var(--ink);font:700 16px var(--body,inherit);text-align:left;cursor:pointer}
+.stnav button.on{background:#1b4f43;border-color:var(--gold,#E2B54A);box-shadow:0 0 0 1px rgba(226,181,74,.35)}
+.stbody{display:flex;flex-direction:column;gap:14px;min-width:0}
+.stp{padding:20px 22px;border-radius:22px;background:rgba(18,36,58,.92);border:1px solid rgba(255,255,255,.1)}
+.stp>h3{margin:0 0 6px;font:700 24px var(--display,inherit);letter-spacing:0;text-transform:none;color:var(--ink)}
+.strow{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 0;border-bottom:1px solid rgba(255,255,255,.1)}
+.strow:last-child{border-bottom:0}
+.strow>div:first-child{display:flex;flex-direction:column;gap:4px;min-width:0}.strow b{font-size:16px;font-weight:600}.strow small{font-size:13.5px;color:var(--ink2,#b8c2d2);line-height:1.35}
+.stctl{flex:none;display:flex;align-items:center}
+.stp .seg{display:inline-flex;border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,.14);background:rgba(5,14,26,.5)}
+.stp .seg button{min-height:40px;padding:0 16px;border:0;border-radius:0;background:none;color:var(--ink2,#c8d0dc);font:700 14px var(--body,inherit);box-shadow:none}
+.stp .seg button.on{background:#1f5a4a;color:#fff}
+.stsw{position:relative;width:56px;height:32px;border-radius:999px;border:0;background:#46505c;cursor:pointer;transition:background .2s;padding:0}
+.stsw i{position:absolute;top:4px;left:4px;width:24px;height:24px;border-radius:50%;background:#f4efe2;transition:transform .2s;box-shadow:0 2px 4px rgba(0,0,0,.3)}
+.stsw.on{background:#2f9e78}.stsw.on i{transform:translateX(24px)}
+.stsw:focus-visible{outline:2px solid var(--gold,#E2B54A);outline-offset:2px}
+.stchip{padding:7px 16px;border-radius:999px;border:1px solid rgba(255,255,255,.2);font-size:13px;white-space:nowrap}.stchip.ok{border-color:#2f9e78;color:#7fe0b8;background:rgba(47,158,120,.14)}
+.stnote{margin:10px 0 0;font-size:13.5px;color:var(--ink2,#b8c2d2)}
+.stbtn{min-height:40px;padding:0 18px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.2);color:var(--ink)}
+#stVol{width:min(260px,40vw);accent-color:#2f9e78}
+/* carried-over cards look like rows */
+.stp .stcard{background:none!important;border:0!important;box-shadow:none!important;padding:14px 0!important;margin:0;border-top:1px solid rgba(255,255,255,.1)!important;border-radius:0!important}
+.stp h3+.stcard{border-top:0!important;padding-top:4px!important}
+.stp .stcard .ch{font-size:16px;font-weight:600;margin-bottom:6px;color:var(--ink)}
+.stp .stcard .small,.stp .stcard p{font-size:13.5px;color:var(--ink2,#b8c2d2)}
+.stp .stcard .seg{margin-top:6px}
+html.light .stp{background:#fff;border-color:rgba(0,0,0,.08)}html.light .stnav button{background:#fff;border-color:rgba(0,0,0,.1)}html.light .stnav button.on{background:#e3f1ec}
+html.light .strow,html.light .stp .stcard{border-color:rgba(0,0,0,.08)!important}html.light .stp .seg{background:#f1f3f7;border-color:rgba(0,0,0,.1)}html.light .stp .seg button.on{background:#1f5a4a}
+@media (max-height:460px){.sthead h2{font-size:26px}.sthead p{display:none}.stnav button{min-height:40px;font-size:14.5px}.stp{padding:14px 16px}.stp>h3{font-size:20px}.strow{padding:11px 0}}
+html.rot .sthead p{display:none}html.rot .sthead h2{font-size:26px}html.rot .stw{grid-template-columns:150px minmax(0,1fr)}html.rot .stnav button{min-height:40px;font-size:14px;padding:0 12px}html.rot .stp{padding:14px 16px}
+@media (max-width:700px){html:not(.rot) .stw{grid-template-columns:1fr}html:not(.rot) .stnav{flex-direction:row;overflow-x:auto;position:static}html:not(.rot) .stnav button{flex:none}html:not(.rot) .strow{flex-wrap:wrap}}
+/* ===== Home ===== */
+.herotxt h2{font-size:clamp(40px,6vw,64px)!important;line-height:1}
+.h3tag{margin:6px 0 0!important;font-size:18px!important;opacity:.92}
+.h3aw{display:flex;flex-direction:column;gap:8px;margin-top:12px;max-width:340px}.h3aw span:first-child{font-size:15px;opacity:.9}.h3aw .xpbar{height:6px}
+.side .mode{position:relative;padding-right:46px}.side .mode .mi.miart{width:64px;height:58px;border-radius:12px}
+.m3arr{position:absolute;right:16px;top:50%;transform:translateY(-50%);font-size:22px;opacity:.85}
+.seasoncard.s3card{position:relative;display:flex;flex-direction:column;align-items:stretch;gap:6px;text-align:left;padding:14px 16px;border-radius:18px;border:1.5px solid rgba(226,181,74,.75);overflow:hidden;
+  background:linear-gradient(90deg,rgba(10,20,38,.94) 0%,rgba(10,20,38,.78) 50%,rgba(10,20,38,.25)),url(art/coast.jpg) 70% 45%/cover no-repeat!important;color:#F4EBD6}
+.s3eb{font-size:11px;font-weight:800;letter-spacing:.16em;color:var(--gold,#E2B54A)}.s3nm{font:700 24px var(--display,inherit);color:#fff}.s3ft{font-size:13px;opacity:.9}
+.s3card .xpbar{height:6px;max-width:100%}
+@media (max-height:460px){.herotxt h2{font-size:44px!important}.h3tag{font-size:15px!important}.h3aw{margin-top:6px}.s3nm{font-size:19px}.seasoncard.s3card{padding:10px 12px}}
+html.rot .h3tag{font-size:15px!important}html.rot .s3nm{font-size:19px}
 </style>
 
 <canvas id="gl" aria-label="3D game board"></canvas>
@@ -5586,21 +5631,6 @@ html.flat #gl{display:none}html.flat #title:not([hidden])~.flatwrap,html.flat #f
 PREF.a11y=PREF.a11y||{text:'std',motion:false};
 function applyA11y(){const h=document.documentElement;h.classList.toggle('bigtext',PREF.a11y.text==='large');h.classList.toggle('calm',!!PREF.a11y.motion)}
 applyA11y();
-const SET_CATS=[['audio','Audio','M4 9v6h4l5 4V5L8 9zM16 9a4 4 0 010 6M18.5 6.5a8 8 0 010 11'],['visuals','Visuals','M3 5h18v12H3zM8 21h8M12 17v4'],['gameplay','Gameplay','M6 12h4M8 10v4M15 11h.01M18 13h.01M7 6h10a5 5 0 015 5v2a4 4 0 01-7 2.6L14 15h-4l-1 .6A4 4 0 012 13v-2a5 5 0 015-5z'],['access','Accessibility','M12 4a1.5 1.5 0 110 .01M5 8l7 2 7-2M12 10v5l-3 6M12 15l3 6'],['help','Help & data','M12 21a9 9 0 110-18 9 9 0 010 18zM9.5 9a2.5 2.5 0 114 2c-1 .6-1.5 1.2-1.5 2.5M12 17h.01']];
-const CAT_OF={Sound:'audio',Appearance:'visuals','Board view':'visuals',Riders:'visuals',Defaults:'gameplay','Promo code':'gameplay',Accessibility:'access','Online safety':'help',About:'help','Photo credits':'help','Desktop app':'help'};
-{const _ps=paneSettings;paneSettings=function(T){_ps(T);const cat=setup.setCat||'audio';
-  /* riders get their own card under Visuals */
-  const rv=el('div','card',`<div class="ch">Riders</div><div class="rchips" id="sRide"></div>`);T.append(rv);
-  const drawR=()=>{const E=rv.querySelector('#sRide');E.innerHTML='';[['riders','Riders on tokens','Each player’s character rides their token.'],['rig','Realistic riders','Motion-captured characters (about 2 MB each, downloaded once).']].forEach(([k,l,d])=>{const on=k==='riders'?PREF.riders:PREF.rig;const b=el('button','rchip'+(on?' on':''),`<b>${l}</b><small>${d}</small>`);b.setAttribute('aria-pressed',on?'true':'false');
-    b.onclick=()=>{if(k==='riders')PREF.riders=!PREF.riders;else{PREF.rig=!PREF.rig;if(typeof rigToggle==='function')rigToggle()}savePref();drawR()};E.append(b)})};drawR();
-  const ac=el('div','card',`<div class="ch">Accessibility</div><div class="opts"><span>Text size</span><div class="seg" id="sTxt"></div><span>Reduce motion</span><div class="seg" id="sMot"></div></div><div class="small">Large text makes menus and labels bigger. Reduce motion stops spinning frames, pulsing buttons and other movement in the menus.</div>`);T.append(ac);
-  segIn(T,'#sTxt',[['std','Standard'],['large','Large']],()=>PREF.a11y.text,x=>{PREF.a11y.text=x;savePref();applyA11y()});segIn(T,'#sMot',[['off','Off'],['on','On']],()=>PREF.a11y.motion?'on':'off',x=>{PREF.a11y.motion=x==='on';savePref();applyA11y()});
-  const ph=T.querySelector('.phead'),cards=[...T.querySelectorAll(':scope > .card')];
-  const wrap=el('div','setw'),nav=el('nav','setnav'),body=el('div','setbody');nav.setAttribute('aria-label','Settings categories');
-  SET_CATS.forEach(([k,l,d])=>{const b=el('button','setcat'+(k===cat?' on':''),`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${d}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>${l}</span>`);b.setAttribute('aria-current',k===cat?'page':'false');b.onclick=()=>{setup.setCat=k;paneSettings(T)};nav.append(b)});
-  cards.forEach(c=>{const h=c.querySelector('.ch'),t=h?h.childNodes[0].textContent.trim():'',k=CAT_OF[t]||'help';if(k===cat)body.append(c);else c.remove()});
-  if(!body.children.length)body.innerHTML='<div class="small">Nothing here yet.</div>';
-  wrap.append(nav,body);if(ph)ph.after(wrap);else T.prepend(wrap)}}
 (function(){const st=document.createElement('style');st.textContent=`
 .setw{display:grid;grid-template-columns:200px minmax(0,1fr);gap:14px;align-items:start}
 .setnav{display:flex;flex-direction:column;gap:6px;position:sticky;top:0}
@@ -6074,6 +6104,55 @@ paneCast=function(T){const all=CHARS.map(c=>c.id).sort((a,b)=>charUnlocked(b)-ch
   redraw();srPreview(sel,tok)};
 {const _ht=homeTab;homeTab=function(k){const r=_ht(k);try{const h=$('#title .home');if(h&&document.querySelector('.shw'))h.classList.remove('peek-r','peek-t')}catch(e){}return r}}
 addEventListener('resize',()=>{if(document.querySelector('.shw'))setTimeout(srAim,80)});
+
+/* ================= SETTINGS: CLEAN ROWS (after the Revision 2 redesign) ================= */
+/* One panel per category with a title and rows: name and a short description on the left, a switch or a choice on
+   the right. Cards with their own logic (board view, promo code, online safety, about, desktop app, photo credits)
+   are carried over from the existing settings and shown in the same style. */
+const ST_CATS=[['visuals','Visuals'],['audio','Audio'],['gameplay','Gameplay'],['access','Accessibility'],['help','Help & data']];
+const stRow=(name,desc,ctl)=>`<div class="strow"><div><b>${name}</b>${desc?`<small>${desc}</small>`:''}</div><div class="stctl">${ctl}</div></div>`;
+const stSw=(id,on,label)=>`<button class="stsw${on?' on':''}" id="${id}" role="switch" aria-checked="${!!on}" aria-label="${esc(label)}"><i></i></button>`;
+{const _ps=paneSettings;paneSettings=function(T){const tmp=document.createElement('div');_ps(tmp);
+  const cards={};tmp.querySelectorAll('.card').forEach(c=>{const h=c.querySelector('.ch');const t=h?h.childNodes[0].textContent.trim():'';if(t)cards[t]=c});
+  let cat=setup.stCat||'visuals';if(!ST_CATS.some(x=>x[0]===cat))cat='visuals';
+  T.innerHTML=`<div class="sthead"><h2>Settings</h2><p>Make the game comfortable for your device.</p></div><div class="stw"><nav class="stnav" aria-label="Settings categories">${ST_CATS.map(([k,l])=>`<button class="${k===cat?'on':''}" data-c="${k}" aria-pressed="${k===cat}">${l}</button>`).join('')}</nav><div class="stbody"></div></div>`;
+  T.querySelectorAll('.stnav [data-c]').forEach(b=>b.onclick=()=>{setup.stCat=b.dataset.c;paneSettings(T)});
+  const B=T.querySelector('.stbody'),panel=(title,html)=>`<section class="stp"><h3>${title}</h3>${html}</section>`;
+  const carry=(names,into)=>names.forEach(n=>{const c=cards[n];if(!c)return;c.classList.add('stcard');into.append(c)});
+  const sw=(id,get,set)=>{const b=B.querySelector('#'+id);if(b)b.onclick=()=>{set(!get());b.classList.toggle('on',get());b.setAttribute('aria-checked',get())}};
+  if(cat==='visuals'){B.innerHTML=panel('Appearance &amp; camera',
+      stRow('Theme','','<div class="seg" id="stUi"></div>')+stRow('Camera','','<div class="seg" id="stCam"></div>')+
+      stRow('Riders on tokens','Show each player’s character riding their token.',stSw('stRid',PREF.riders,'Riders on tokens'))+
+      stRow('Realistic riders','Lifelike characters, about 2 MB each. Switch off to save data and battery.',stSw('stRig',PREF.rig,'Realistic riders')));
+    segIn(B,'#stUi',[['dark','Midnight'],['light','Daylight']],()=>PREF.ui||'dark',x=>{PREF.ui=x;savePref();applyUI()});
+    segIn(B,'#stCam',[['follow','Follow token'],['board','Whole board']],()=>PREF.cam||'follow',x=>{PREF.cam=x;camMode=x;savePref()});
+    sw('stRid',()=>PREF.riders,v=>{PREF.riders=v;savePref()});sw('stRig',()=>PREF.rig,v=>{PREF.rig=v;savePref();if(typeof rigToggle==='function')rigToggle()});
+    carry(['Board view'],B.querySelector('.stp'))}
+  else if(cat==='audio'){B.innerHTML=panel('Audio',[['sfx','Game sounds','Dice, coins and token movement.'],['amb','Street ambience','City traffic, birds and weather.'],['radio','Skyline FM','Kenstylez music while you build.']].map(([k,l,d])=>stRow(l,d,stSw('stA'+k,PREF.audio[k],l))).join('')+
+      stRow('Volume','',`<input type="range" id="stVol" min="0" max="1" step="0.05" value="${PREF.audio.vol}" aria-label="Volume">`));
+    ['sfx','amb','radio'].forEach(k=>sw('stA'+k,()=>PREF.audio[k],v=>{initAudio();PREF.audio[k]=v;savePref();syncAudio()}));
+    B.querySelector('#stVol').oninput=e=>{initAudio();PREF.audio.vol=+e.target.value;savePref();syncAudio()}}
+  else if(cat==='gameplay'){B.innerHTML=panel('Game defaults',stRow('AI skill','','<div class="seg" id="stAi"></div>')+stRow('Speed','','<div class="seg" id="stSpd"></div>')+stRow('Language','More languages are on the way.','<span class="stchip">English</span>')+
+      '<p class="stnote">Rules for a single match are chosen when you set up the game.</p>');
+    segIn(B,'#stAi',[['easy','Easy'],['normal','Normal'],['hard','Hard']],()=>setup.ai,x=>{setup.ai=x;PREF.ai=x;savePref()});
+    segIn(B,'#stSpd',[['normal','Normal'],['fast','Fast']],()=>setup.speed,x=>{setup.speed=x;PREF.speed=x;savePref()});
+    const pc=document.createElement('section');pc.className='stp';pc.innerHTML='<h3>Promo code</h3>';B.append(pc);carry(['Promo code'],pc)}
+  else if(cat==='access'){B.innerHTML=panel('Accessibility',stRow('Larger text','Bigger labels, controls and descriptions.',stSw('stBig',PREF.a11y.text==='large','Larger text'))+
+      stRow('Reduce motion','Turn off interface animations and movement.',stSw('stCalm',!!PREF.a11y.motion,'Reduce motion'))+
+      stRow('Keyboard &amp; controller','Arrow keys, Tab and Enter work everywhere, and game controllers are supported.','<span class="stchip ok">Always on</span>')+
+      stRow('Ownership symbols','The 2D board shows token icons alongside player colours.','<span class="stchip ok">Always on</span>'));
+    sw('stBig',()=>PREF.a11y.text==='large',v=>{PREF.a11y.text=v?'large':'std';savePref();applyA11y()});sw('stCalm',()=>!!PREF.a11y.motion,v=>{PREF.a11y.motion=v;savePref();applyA11y()})}
+  else{B.innerHTML=panel('Help',stRow('How to play','Rules, squares, building and trading.','<button class="ibtn stbtn" id="stLearn">Open</button>'));B.querySelector('#stLearn').onclick=()=>homeTab('learn');
+    const p2=document.createElement('section');p2.className='stp';p2.innerHTML='<h3>Your data</h3>';B.append(p2);carry(['Online safety','About','Desktop app','Photo credits'],p2)}
+  T.querySelectorAll('.stcard .ch').forEach(h=>{const t=h.childNodes[0].textContent.trim();if(t==='Promo code')h.remove()})}}
+/* ================= HOME (after the Revision 2 redesign) ================= */
+/* Bigger city hero with the city line, awards progress and Play solo; mode cards with arrows; the season card on
+   the harbour picture with a link to its rewards. */
+{const _pp=paneP;paneP=function(T){const r=_pp.apply(this,arguments);try{const c=CITY_DATA[setup.city],n=cityDone(setup.city),S=season(),t=seasonTierNow();
+  const p=T.querySelector('.herotxt p');if(p)p.outerHTML=`<p class="h3tag">${esc(c.blurb)}</p><div class="h3aw"><span>City awards ${n} / ${CT.length}</span><span class="xpbar"><i style="width:${n/CT.length*100}%"></i></span></div>`;
+  const pb=T.querySelector('#qAI');if(pb&&!/solo/i.test(pb.textContent))pb.innerHTML='▶ Play solo';
+  T.querySelectorAll('.side .mode').forEach(b=>{if(!b.querySelector('.m3arr'))b.insertAdjacentHTML('beforeend','<span class="m3arr" aria-hidden="true">→</span>')});
+  const sc=T.querySelector('#qSeason');if(sc){sc.classList.add('s3card');sc.innerHTML=`<small class="s3eb">SEASON ${S.n}</small><b class="s3nm">${esc(seasonName(S.n))}</b><span class="xpbar"><i style="width:${t/TIERS*100}%"></i></span><small class="s3ft">${t>=TIERS?'Season complete':`Tier ${t} of ${TIERS}`} · View rewards →</small>`}}catch(e){}return r}}
 /* ================= ORIENTATION ================= */
 let rotDismissed=false;
 function checkRotate(){$('#rotate').hidden=true}
