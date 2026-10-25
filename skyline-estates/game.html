@@ -1645,6 +1645,81 @@ html.rot .sthead p{display:none}html.rot .sthead h2{font-size:26px}html.rot .stw
 .s3card .xpbar{height:6px;max-width:100%}
 @media (max-height:460px){.herotxt h2{font-size:44px!important}.h3tag{font-size:15px!important}.h3aw{margin-top:6px}.s3nm{font-size:19px}.seasoncard.s3card{padding:10px 12px}}
 html.rot .h3tag{font-size:15px!important}html.rot .s3nm{font-size:19px}
+/* ===== Collection after the redesign: solid background, cards ===== */
+.home:has(.clhead){background:linear-gradient(90deg,#0b1a2c,#0d2236 60%,#0f2a3a)!important}
+html.light .home:has(.clhead){background:#f3f5f9!important}
+.pane:has(.clhead){overflow:auto!important;display:block!important;flex:1 1 auto!important}
+.clhead{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin:6px 0 14px}
+.clhead h2{margin:0;font:700 28px var(--display,inherit);letter-spacing:-.01em;text-transform:none;color:var(--ink)}.clhead p{margin:4px 0 0;font-size:13.5px;color:var(--ink2,#acc4d8)}
+.clbtn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;padding:0 16px;border-radius:11px;border:1px solid #2e536c;background:#15344a;color:var(--ink);font:700 13px var(--body,inherit);cursor:pointer;white-space:nowrap}
+.clbtn.gold{background:linear-gradient(#ffe098,#e5b551);border-color:#f0ce7d;color:#172632;box-shadow:inset 0 -3px #b68d35}
+.clbtn[disabled]{opacity:.6;cursor:default}.clbtn.sm{min-height:32px;padding:0 11px;font-size:11.5px}
+.clchar{display:grid;grid-template-columns:230px minmax(0,1fr);gap:18px;align-items:start}
+.clfeat{position:sticky;top:0;display:flex;flex-direction:column;gap:6px;padding:16px;border-radius:18px;background:#0d2939;border:1px solid #2e536c}
+.clport{display:grid;place-items:center;min-height:170px;border-radius:14px;background:radial-gradient(ellipse at 50% 70%,rgba(101,129,123,.3),transparent 70%)}
+.clport .csvg,.clport svg{width:130px;height:130px;border-radius:22px}
+.clfeat h3{margin:6px 0 0;font:700 19px var(--display,inherit);letter-spacing:0;text-transform:none}
+.clrole{font-size:10.5px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#e1bc66}
+.clfeat p{margin:0;font-size:12.5px;line-height:1.5;color:var(--ink2,#acc4d8)}.clst{opacity:.85}
+.clfeat .clbtn.gold{margin-top:8px}
+.clgest{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}
+.clhint{font-size:11px;color:var(--ink2,#acc4d8);opacity:.85}
+.clgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:10px}
+.clcard{position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;padding:12px 8px;border-radius:14px;border:1px solid #2e536c;background:linear-gradient(145deg,#15384b,#082331);color:var(--ink);cursor:pointer;text-align:center;min-width:0}
+.clpic{width:76px;height:76px;border-radius:14px;overflow:hidden;display:grid;place-items:center;margin-bottom:6px}.clpic svg,.clpic .csvg{width:76px;height:76px}
+.clcard b{font-size:12.5px}.clcard small{font-size:10.5px;line-height:1.3;color:var(--ink2,#acc4d8)}
+.clcard.on{border:2px solid #e1bc66}.clcard.locked .clpic{filter:grayscale(.75) brightness(.8)}
+.clcard em{position:absolute;top:7px;right:7px;font-style:normal;font-size:9.5px;font-weight:800;padding:1px 7px;border-radius:999px;background:#1f7a5a;color:#d9fbe9}
+.clname{display:flex;align-items:center;gap:8px;margin-top:14px;padding:12px 14px;border-radius:14px;background:#0d2939;border:1px solid #2e536c}
+.clname b{font-size:13px}.clname input{flex:1;min-width:0;height:38px;border-radius:10px;border:1px solid #2e536c;background:#071c2b;color:var(--ink);padding:0 12px;font:600 14px var(--body,inherit)}
+@keyframes clw{0%,100%{transform:rotate(0)}25%{transform:rotate(-8deg)}75%{transform:rotate(8deg)}}@keyframes clh{0%,100%{transform:none}40%{transform:translateY(-16px)}}@keyframes cls{to{transform:rotateY(360deg)}}@keyframes clt{0%,100%{transform:none}50%{transform:rotate(-10deg) translateX(-4px)}}
+.clport.wiggle .avf,.clport.wiggle>svg{animation:clw .5s 2}.clport.hop .avf,.clport.hop>svg{animation:clh .45s 2}.clport.spin .avf,.clport.spin>svg{animation:cls .9s}.clport.tilt .avf,.clport.tilt>svg{animation:clt 1.2s}
+html.calm .clport *{animation:none!important}
+/* token workshop */
+.clws{display:grid;grid-template-columns:200px minmax(0,1fr);gap:18px;align-items:start}
+.cltl{display:flex;flex-direction:column;gap:8px;position:sticky;top:0}
+.clfil{display:flex;gap:4px}.clfil button{flex:1;height:30px;border-radius:9px;border:1px solid #2e536c;background:none;color:var(--ink);font:700 11.5px var(--body,inherit);cursor:pointer}.clfil button.on{border-color:#e1bc66;color:#e1bc66;background:rgba(225,188,102,.1)}
+.cltgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;max-height:calc(100dvh - 230px);overflow:auto;padding-right:2px}
+.cltok{display:flex;flex-direction:column;align-items:center;gap:1px;padding:6px 4px 8px;border-radius:13px;border:1px solid #2e536c;background:linear-gradient(145deg,#15384b,#082331);color:var(--ink);cursor:pointer;min-width:0}
+.cltok canvas.mdl.cltm{width:78px;height:62px}.cltok b{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}.cltok small{font-size:10px;color:var(--ink2,#acc4d8)}
+.cltok.on{border:2px solid #e1bc66}
+.clmain{display:flex;flex-direction:column;gap:14px;min-width:0}
+.clshow{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:16px;padding:16px;border-radius:18px;background:#0d2939;border:1px solid #2e536c}
+.clstage{display:grid;place-items:center;min-height:220px;border-radius:14px;background:radial-gradient(ellipse at 50% 70%,rgba(101,129,123,.3),transparent 70%)}
+.clstage canvas.mdl.clbig{width:100%;max-width:320px;height:auto;aspect-ratio:5/4}
+.clinfo{display:flex;flex-direction:column;gap:7px;min-width:0}
+.clnm{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.clnm h3{margin:0;font:700 20px var(--display,inherit);letter-spacing:0;text-transform:none}
+.clinfo>p{margin:0;font-size:12.5px;line-height:1.5;color:var(--ink2,#acc4d8)}
+.clinfo .clbtn.gold{align-self:flex-start;margin-top:4px}
+.cldiv{height:1px;background:#2e536c;margin:6px 0}
+.clinfo>b{font-size:13px}
+.clfin{display:flex;gap:7px;flex-wrap:wrap}.clfin button{width:32px;height:32px;padding:0;border-radius:50%;border:2px solid #2e536c;background:none;cursor:pointer}.clfin i{display:block;width:100%;height:100%;border-radius:50%}
+.clfin button.on{outline:2px solid #e1bc66;outline-offset:2px}.clfin button.locked{opacity:.55}
+.clup{padding:16px;border-radius:18px;background:#0d2939;border:1px solid #2e536c;display:flex;flex-direction:column;gap:8px}
+.clup h3{margin:0;font:700 18px var(--display,inherit);letter-spacing:0;text-transform:none}.clup p{margin:0;font-size:12.5px;color:var(--ink2,#acc4d8)}
+.clcmp{width:100%;border-collapse:collapse;font-size:12.5px}
+.clcmp th,.clcmp td{padding:10px 6px;border-bottom:1px solid #2e536c;text-align:center}.clcmp th{font-size:11px;color:var(--ink2,#acc4d8);font-weight:700}.clcmp th span{color:var(--ink);font-size:12px}
+.clcmp td:first-child{text-align:left;color:var(--ink2,#acc4d8)}.clcmp tr.up td:last-child{color:#76d5b3;font-weight:700}
+.clkv{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid #2e536c;font-size:12.5px}.clkv span{color:var(--ink2,#acc4d8)}.clkv b{display:flex;align-items:center;gap:5px}.clkv .coin{width:13px;height:13px}.clkv .neg{color:#ff8b7a}
+.clup .clbtn.gold{align-self:flex-start;margin-top:6px}
+html.light .clfeat,html.light .clname,html.light .clshow,html.light .clup{background:#fff;border-color:#d8dfe8}
+html.light .clcard,html.light .cltok{background:#fff;border-color:#d8dfe8}html.light .clbtn{background:#eef2f7;border-color:#d0d8e3}html.light .clname input{background:#f5f7fa;border-color:#d0d8e3}
+html.light .clcmp th,html.light .clcmp td,html.light .clkv{border-color:#e1e6ee}html.light .cldiv{background:#e1e6ee}
+@media (max-height:460px){.clhead{margin:2px 0 10px}.clhead h2{font-size:22px}.clhead p{display:none}.clport{min-height:120px}.clport svg{width:100px;height:100px}.clstage{min-height:160px}.cltgrid{max-height:calc(100dvh - 170px)}}
+html.rot .clhead p{display:none}html.rot .clhead h2{font-size:22px}html.rot .clchar{grid-template-columns:190px minmax(0,1fr)}html.rot .clws{grid-template-columns:170px minmax(0,1fr)}html.rot .clshow{grid-template-columns:1fr}html.rot .cltgrid{max-height:calc(100dvw - 170px)}
+@media (max-width:760px){html:not(.rot) .clchar,html:not(.rot) .clws,html:not(.rot) .clshow{grid-template-columns:1fr}html:not(.rot) .clfeat,html:not(.rot) .cltl{position:static}html:not(.rot) .cltgrid{grid-template-columns:repeat(4,minmax(0,1fr));max-height:none}html:not(.rot) .clhead{flex-direction:column;align-items:flex-start}}
+/* Settings text down to the redesign's sizes */
+.sthead h2{font-size:28px}.sthead p{font-size:13.5px}
+.stnav{gap:8px}.stnav button{min-height:40px;font-size:13.5px;padding:0 14px;border-radius:11px}
+.stw{grid-template-columns:165px minmax(0,1fr)}
+.stp{padding:16px 18px;border-radius:18px}.stp>h3{font-size:18px;margin-bottom:2px}
+.strow{padding:12px 0}.strow b{font-size:13.5px}.strow small{font-size:11.5px;line-height:1.5}
+.stp .seg button{min-height:34px;padding:0 13px;font-size:12.5px}
+.stsw{width:46px;height:26px}.stsw i{top:3px;left:3px;width:20px;height:20px}.stsw.on i{transform:translateX(20px)}
+.stchip{font-size:11.5px;padding:5px 12px}.stnote{font-size:11.5px}.stbtn{min-height:34px;font-size:12.5px}
+.stp .stcard .ch{font-size:13.5px}.stp .stcard .small,.stp .stcard p{font-size:11.5px}
+html.rot .stw{grid-template-columns:135px minmax(0,1fr)}html.rot .stnav button{font-size:12.5px;min-height:36px}
+html.rot .clstage{min-height:150px}html.rot .clstage canvas.mdl.clbig{max-width:220px}
 </style>
 
 <canvas id="gl" aria-label="3D game board"></canvas>
@@ -6153,6 +6228,48 @@ const stSw=(id,on,label)=>`<button class="stsw${on?' on':''}" id="${id}" role="s
   const pb=T.querySelector('#qAI');if(pb&&!/solo/i.test(pb.textContent))pb.innerHTML='▶ Play solo';
   T.querySelectorAll('.side .mode').forEach(b=>{if(!b.querySelector('.m3arr'))b.insertAdjacentHTML('beforeend','<span class="m3arr" aria-hidden="true">→</span>')});
   const sc=T.querySelector('#qSeason');if(sc){sc.classList.add('s3card');sc.innerHTML=`<small class="s3eb">SEASON ${S.n}</small><b class="s3nm">${esc(seasonName(S.n))}</b><span class="xpbar"><i style="width:${t/TIERS*100}%"></i></span><small class="s3ft">${t>=TIERS?'Season complete':`Tier ${t} of ${TIERS}`} · View rewards →</small>`}}catch(e){}return r}}
+
+/* ================= COLLECTION (after the Revision 2 redesign) ================= */
+/* Characters: "Your collection" heading, a feature card for the chosen character (portrait, role, ride button,
+   gestures) beside a grid of portrait cards; username below. Tokens: "Token workshop" with the token grid on the
+   left, the selected token's model picture and finish on the right, then the upgrade comparison. Solid background:
+   the 3D board no longer shows through. */
+const CL={tok:null,filter:'all'};
+const clHead=(t,s,right='')=>`<header class="clhead"><div><h2>${t}</h2><p>${s}</p></div>${right}</header>`;
+paneCast=function(T){clearPreview();peekOver(null);const sel=setup.castSel||myChar(),c=CHARS.find(x=>x.id===sel)||CHARS[0],un=charUnlocked(c.id),mine=myChar()===c.id;
+  T.innerHTML=clHead('Your collection','Characters, tokens and the frames you earn by playing.','<button class="clbtn" id="clTok">Token workshop →</button>')+
+    `<div class="clchar"><section class="clfeat"><div class="clport">${framed(charSVG(c.id,150))}</div><h3>${esc(c.name)}</h3><small class="clrole">${esc(c.role)}</small><p>${esc(c.desc)}</p><p class="clst">${un?'Unlocked':'🔒 '+esc(charHow(c))}</p>
+      <button class="clbtn gold" id="clRide"${!un||mine?' disabled':''}>${mine?'✓ Riding with you':un?'Ride with '+esc(c.name.split(' ')[0]):'Locked'}</button>
+      <div class="clgest">${[['wave','Wave'],['cheer','Celebrate'],['dance','Victory'],['think','Think']].map(([g,n])=>`<button class="clbtn sm" data-g="${g}">${n}</button>`).join('')}</div><small class="clhint" id="clHint">Characters react during the game.</small></section>
+    <div class="clright"><div class="clgrid">${CHARS.map(x=>{const u=charUnlocked(x.id);return `<button class="clcard${x.id===c.id?' on':''}${u?'':' locked'}" data-c="${x.id}"><span class="clpic">${charSVG(x.id,84)}</span><b>${esc(x.name)}</b><small>${u?esc(x.role):esc(charHow(x))}</small>${myChar()===x.id?'<em>Yours</em>':''}</button>`}).join('')}</div>
+      <div class="clname"><b>Username</b><input id="clNm" maxlength="12" value="${esc(myName())}" placeholder="Your username" aria-label="Username"><button class="clbtn" id="clSave">Save name</button></div></div></div>`;
+  T.querySelector('#clTok').onclick=()=>homeTab('tokens');
+  T.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{setup.castSel=b.dataset.c;paneCast(T)});
+  const r=T.querySelector('#clRide');if(r)r.onclick=()=>{PREF.eq.char=c.id;savePref();railProfile();paneCast(T)};
+  T.querySelector('#clSave').onclick=()=>{if(setUsername(T.querySelector('#clNm').value)){toast('Username saved');railProfile()}else toast('Use 2–12 letters or numbers')};
+  T.querySelectorAll('.clgest [data-g]').forEach(b=>b.onclick=()=>{const h=T.querySelector('#clHint'),pv=T.querySelector('.clport');pv.classList.remove('wiggle','hop','spin','tilt');void pv.offsetWidth;pv.classList.add({wave:'wiggle',cheer:'hop',dance:'spin',think:'tilt'}[b.dataset.g]);h.textContent={wave:'Waves on their turn.',cheer:'Celebrates when buying, passing Start or collecting rent.',dance:'Dances when they win.',think:'Thinks while deciding.'}[b.dataset.g]})};
+paneTokens=function(T){clearPreview();peekOver(null);const all=TOKENS.concat(NEW_TOKENS);let sel=CL.tok&&all.includes(CL.tok)?CL.tok:setup.slots[0].tok;CL.tok=sel;
+  const lv=tokLv(sel),cur=TOKEN_LV[lv],next=TOKEN_LV[lv+1],owned=tokenUnlocked(sel),info=TOKEN_INFO[sel],mine=setup.slots[0].tok===sel,col=owned?(mine?mdFinCol():mdTokCol(sel)):'#7d8a96';
+  const list=all.filter(t=>CL.filter==='all'||(CL.filter==='own')===tokenUnlocked(t));
+  const rows=WS_PERKS.map(([k,f,v])=>{const a=f(cur),b=next?f(next):null,up=next&&(v?v(next)>v(cur):a!==b);if(a==='None'&&(!next||b==='None'))return '';return `<tr${up?' class="up"':''}><td>${k}</td><td>${esc(a)}</td><td>${next?esc(b):'—'}</td></tr>`}).join('');
+  T.innerHTML=clHead('Token workshop','Preview your token, choose a finish and compare upgrades.')+
+    `<div class="clws"><section class="cltl"><div class="clfil">${[['all','All'],['own','Owned'],['lock','Locked']].map(([k,l])=>`<button class="${CL.filter===k?'on':''}" data-f="${k}">${l}</button>`).join('')}</div>
+      <div class="cltgrid">${list.map(t=>{const u=tokenUnlocked(t);return `<button class="cltok${t===sel?' on':''}${u?'':' locked'}" data-t="${t}">${mdl({token:t,col:u?(setup.slots[0].tok===t?mdFinCol():mdTokCol(t)):'#7d8a96',label:TOKEN_INFO[t][0]},'cltm'+(u?'':' lockm'),160,128)}<b>${esc(TOKEN_INFO[t][0])}</b><small>${u?rarityOf(tokLv(t)).name:'Locked'}</small></button>`}).join('')}</div></section>
+    <div class="clmain"><section class="clshow"><div class="clstage">${mdl({token:sel,col,label:info[0]},'clbig',520,400)}</div>
+      <div class="clinfo"><div class="clnm"><h3>${esc(info[0])}</h3>${owned?`<span class="rar" style="background:${cur.ui}">${cur.name}</span>`:'<span class="rar lockp">Locked</span>'}</div><p>${esc(info[1])}</p>
+        <button class="clbtn gold" id="clEq"${!owned||mine?' disabled':''}>${mine?'✓ Equipped':owned?'Equip token':'Locked'}</button>
+        <div class="cldiv"></div><b>Cosmetic finish</b><div class="clfin">${[{id:null,name:'Player colour',col:PCOL[0]}].concat(FINISHES).map(f=>{const own=f.id===null||itemOwned('fin',f.id),on=(PREF.eq.fin||null)===f.id;return `<button class="${on?'on':''}${own?'':' locked'}" data-fin="${f.id||''}" title="${esc(f.name)}${own?'':' · '+(f.price?nfmt(f.price)+' coins':'reward')}" aria-label="${esc(f.name)} finish"><i style="background:radial-gradient(circle at 35% 30%,#fff,${f.col} 55%,#000 140%)"></i></button>`}).join('')}</div>
+        <small class="clhint">A finish changes how it looks. Upgrade tiers give the perks.</small></div></section>
+    <section class="clup"><h3>${owned?'Compare upgrades':'Unlock this token'}</h3>${owned?`<table class="clcmp"><thead><tr><th></th><th>Now<br><span>${cur.name}</span></th><th>${next?'Next<br><span>'+next.name+'</span>':'Top tier'}</th></tr></thead><tbody>${rows||'<tr><td>Perks</td><td>None yet</td><td>—</td></tr>'}</tbody></table>
+      <p class="clhint">Perks apply only when the host turns on Token perks.</p>${next?`<div class="clkv"><span>Upgrade cost</span><b>${COIN_I}${nfmt(next.cost)}</b></div><div class="clkv"><span>Balance after</span><b class="${PREF.coins<next.cost?'neg':''}">${PREF.coins>=next.cost?nfmt(PREF.coins-next.cost):'Not enough coins'}</b></div>${next.req?`<p class="clhint">${esc(tierReqText(sel,lv+1))}</p>`:''}<button class="clbtn gold" id="clUp"${tierReqMet(sel,lv+1)?'':' disabled'}>Upgrade to ${next.name}</button>`:'<p>Highest tier reached ✨</p>'}`
+      :`<p>${esc(tokenHowText(sel))}</p>${TOKEN_HOW[sel]&&TOKEN_HOW[sel].coins?`<button class="clbtn gold" id="clUnl">Unlock · ${nfmt(TOKEN_HOW[sel].coins)} coins</button>`:''}`}</section></div></div>`;
+  T.querySelectorAll('.clfil [data-f]').forEach(b=>b.onclick=()=>{CL.filter=b.dataset.f;paneTokens(T)});
+  T.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{CL.tok=b.dataset.t;paneTokens(T)});
+  const eq=T.querySelector('#clEq');if(eq)eq.onclick=()=>{const other=setup.slots.findIndex((s,i)=>i>0&&s.tok===sel);if(other>0)setup.slots[other].tok=setup.slots[0].tok;setup.slots[0].tok=sel;saveSlot(0,setup.slots[0]);toast(`${info[0]} is your token`);paneTokens(T)};
+  T.querySelectorAll('[data-fin]').forEach(b=>b.onclick=()=>{const id=b.dataset.fin||null,f=id&&FINISHES.find(x=>x.id===id);if(id&&!itemOwned('fin',id)){if(!f.price){toast(f.desc);return}openItem('fin',id,f.price,0,'tokens');return}PREF.eq.fin=id;savePref();railProfile();paneTokens(T)});
+  const up=T.querySelector('#clUp');if(up)up.onclick=async()=>{if(!(await confirmBuy(`Upgrade ${info[0]} to ${next.name}`,next.cost,`Coins after: ${nfmt(PREF.coins-next.cost)}.`)))return;PREF.tokLv[sel]=lv+1;savePref();achBump();toast(`${info[0]} is now ${next.name}!`);railProfile();paneTokens(T);try{confetti()}catch(e){}};
+  const un=T.querySelector('#clUnl');if(un)un.onclick=async()=>{if(await confirmBuy(`Unlock ${info[0]}`,TOKEN_HOW[sel].coins)){grantItem('tok',sel);railProfile();paneTokens(T)}}};
+{const _ht=homeTab;homeTab=function(k){const r=_ht(k);try{const h=$('#title .home');if(h&&document.querySelector('.clhead'))h.classList.remove('peek-r','peek-t')}catch(e){}return r}}
 /* ================= ORIENTATION ================= */
 let rotDismissed=false;
 function checkRotate(){$('#rotate').hidden=true}
