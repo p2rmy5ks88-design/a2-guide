@@ -6362,11 +6362,12 @@ const stSw=(id,on,label)=>`<button class="stsw${on?' on':''}" id="${id}" role="s
   const sw=(id,get,set)=>{const b=B.querySelector('#'+id);if(b)b.onclick=()=>{set(!get());b.classList.toggle('on',get());b.setAttribute('aria-checked',get())}};
   if(cat==='visuals'){B.innerHTML=panel('Appearance &amp; camera',
       stRow('Theme','','<div class="seg" id="stUi"></div>')+stRow('Camera','','<div class="seg" id="stCam"></div>')+
-      stRow('Riders on tokens','Show each player’s character riding their token.',stSw('stRid',PREF.riders,'Riders on tokens'))+
+      stRow('Illustrated tokens','Show the token pictures on the board. Turn off for 3D models with riders. Applies to the next game.',stSw('stIll',PREF.illTok,'Illustrated tokens'))+
+      stRow('Riders on tokens','Characters ride the 3D model tokens.',stSw('stRid',PREF.riders,'Riders on tokens'))+
       stRow('Realistic riders','Lifelike characters, about 2 MB each. Switch off to save data and battery.',stSw('stRig',PREF.rig,'Realistic riders')));
     segIn(B,'#stUi',[['dark','Midnight'],['light','Daylight']],()=>PREF.ui||'dark',x=>{PREF.ui=x;savePref();applyUI()});
     segIn(B,'#stCam',[['follow','Follow token'],['board','Whole board']],()=>PREF.cam||'follow',x=>{PREF.cam=x;camMode=x;savePref()});
-    sw('stRid',()=>PREF.riders,v=>{PREF.riders=v;savePref()});sw('stRig',()=>PREF.rig,v=>{PREF.rig=v;savePref();if(typeof rigToggle==='function')rigToggle()});
+    sw('stIll',()=>PREF.illTok,v=>{PREF.illTok=v;savePref()});sw('stRid',()=>PREF.riders,v=>{PREF.riders=v;savePref()});sw('stRig',()=>PREF.rig,v=>{PREF.rig=v;savePref();if(typeof rigToggle==='function')rigToggle()});
     carry(['Board view'],B.querySelector('.stp'))}
   else if(cat==='audio'){B.innerHTML=panel('Audio',[['sfx','Game sounds','Dice, coins and token movement.'],['amb','Street ambience','City traffic, birds and weather.'],['radio','Skyline FM','Kenstylez music while you build.']].map(([k,l,d])=>stRow(l,d,stSw('stA'+k,PREF.audio[k],l))).join('')+
       stRow('Volume','',`<input type="range" id="stVol" min="0" max="1" step="0.05" value="${PREF.audio.vol}" aria-label="Volume">`));
@@ -6596,7 +6597,7 @@ function mergeStatic(g,keep){const B=new Map();
 /* ================= ITEM PICTURES ================= */
 /* When an illustration exists in items/ (tok-bus.png, surr-marble.png, dice-gold.png …) it replaces the drawn model
    picture for that item. Anything without a picture keeps the drawn version. */
-const ITEM_PICS={"tok-horse": "jpg", "tok-mask": "jpg", "surr-ice": "jpg", "tok-scooter": "jpg", "surr-neon": "jpg", "tok-eagle": "jpg", "fin-neon": "jpg", "dice-classic": "jpg", "surr-confetti": "jpg", "fin-gold": "jpg", "dice-candy": "jpg", "surr-marble": "jpg", "tok-train": "jpg", "tok-bus": "png", "fin-crystal": "jpg", "dice-marble": "jpg", "tok-crown": "jpg", "tok-tuktuk": "png", "fin-obsidian": "jpg", "fin-chrome": "jpg", "dice-gold": "jpg", "fin-ruby": "jpg", "fin-player": "jpg", "tok-jet": "jpg", "surr-garden": "jpg", "tok-taxi": "jpg", "tok-barrel": "jpg", "tok-canoe": "jpg", "dice-mint": "jpg", "surr-skydeck": "jpg", "tok-drum": "jpg", "surr-lava": "jpg", "tok-pot": "jpg", "surr-lagoon": "jpg", "dice-midnight": "jpg", "tok-rocket": "jpg", "tok-sailboat": "jpg"};
+const ITEM_PICS={"tok-horse": "jpg", "tok-mask": "jpg", "surr-ice": "jpg", "b": "ard", "tok-scooter": "jpg", "surr-neon": "jpg", "tok-eagle": "jpg", "fin-neon": "jpg", "dice-classic": "jpg", "surr-confetti": "jpg", "fin-gold": "jpg", "dice-candy": "jpg", "surr-marble": "jpg", "tok-train": "jpg", "tok-bus": "png", "fin-crystal": "jpg", "dice-marble": "jpg", "tok-crown": "jpg", "tok-tuktuk": "png", "fin-obsidian": "jpg", "fin-chrome": "jpg", "dice-gold": "jpg", "fin-ruby": "jpg", "fin-player": "jpg", "tok-jet": "jpg", "surr-garden": "jpg", "tok-taxi": "jpg", "tok-barrel": "jpg", "tok-canoe": "jpg", "dice-mint": "jpg", "surr-skydeck": "jpg", "tok-drum": "jpg", "surr-lava": "jpg", "tok-pot": "jpg", "surr-lagoon": "jpg", "dice-midnight": "jpg", "tok-rocket": "jpg", "tok-sailboat": "jpg"};
 const TOK_SLUG={'🚌':'bus','🛺':'tuktuk','🏍️':'scooter','🥁':'drum','🍲':'pot','🦅':'eagle','🚕':'taxi','⛵':'sailboat','🐎':'horse','🛶':'canoe','🚂':'train','🎭':'mask','✈️':'jet','🚀':'rocket','👑':'crown','🛢️':'barrel'};
 function itemPic(spec){const k=!spec.kind?'tok-'+TOK_SLUG[spec.token]:spec.kind==='surround'&&spec.id?'surr-'+spec.id:spec.kind==='dice'&&spec.id?'dice-'+spec.id:null;
   return k&&ITEM_PICS[k]?`items/${k}.${ITEM_PICS[k]}`:null}
@@ -6607,6 +6608,34 @@ function itemPic(spec){const k=!spec.kind?'tok-'+TOK_SLUG[spec.token]:spec.kind=
   if(k==='fin'){const fp=finPic(it.id);if(fp)return `<img class="mdl ipic iart fin ${cls}" src="${fp}" alt="${esc(it.name)}" loading="lazy">`}if(k==='fin')return mdl({token:setup.slots[0].tok,col:it.col,label:it.name+' finish',pal:1},'iart fin '+cls);return _ia(k,it,cls)}}
 
 function finPic(id){const k='fin-'+(id||'player');return ITEM_PICS[k]?`items/${k}.${ITEM_PICS[k]}`:null}
+
+/* ================= ILLUSTRATED BOARD TOKENS ================= */
+/* Each player's token on the board is the cut-out illustration from items/board (tok-<slug>.webp), drawn on an upright card
+   that always turns to face the camera. A ring in the player's colour (or finish colour) sits under it.
+   Settings > Visuals > "Illustrated tokens" switches back to the 3D models (which carry the riders). */
+if(PREF.illTok===undefined)PREF.illTok=true;
+const BTEX={};
+function boardTex(slug,cb){let e=BTEX[slug];if(e){e.t?cb(e.t):e.q.push(cb);return}e=BTEX[slug]={t:null,q:[cb]};
+  const im=new Image();im.onload=()=>{if(!GL)return;const c=document.createElement('canvas');c.width=c.height=512;c.getContext('2d').drawImage(im,0,0,512,512);e.t=texFrom(c);e.q.forEach(f=>f(e.t));e.q=[]};
+  im.src='items/board/tok-'+slug+'.webp'}
+let BQUAD=null;
+function bQuad(){if(!BQUAD)BQUAD=mkGeo([-.5,0,0,0,0,1,0,0, .5,0,0,0,0,1,1,0, .5,1,0,0,0,1,1,1, -.5,1,0,0,0,1,0,1],[0,1,2,0,2,3]);return BQUAD}
+const illOn=tok=>PREF.illTok&&GL&&TOK_SLUG[tok]&&ITEM_PICS['tok-'+TOK_SLUG[tok]];
+{const _tm=tokenModel;tokenModel=function(tok,col){if(!illOn(tok))return _tm(tok,col);
+  const geo=S3.geo,t=new Node(),m=new Node();t.add(m);t.m=m;t.ill=1;
+  t.add(N(geo.plane,S3.blob,0,.012,0).sc(.62,1,.5));
+  t.add(N(geo.torus,mat(col,{spec:.5,em:.35}),0,.03,0).sc(.25,.25,.08).rot(Math.PI/2,0,0));
+  const mt=mat('#ffffff',{unlit:1,blend:1}),q=N(bQuad(),mt,0,.01,0).sc(.82);q.visible=false;m.add(q);t.bq=q;
+  boardTex(TOK_SLUG[tok],tx=>{mt.tex=tx;q.visible=true});(S3.bills=S3.bills||new Set()).add(q);return t}}
+{const _ar=attachRider;attachRider=function(p,t){if(t&&t.ill)return;return _ar(p,t)}}
+{const _ds=drawScene;drawScene=function(time){
+  if(S3&&S3.bills&&S3.bills.size){const c=CAMV.pos;
+    for(const q of S3.bills){const chain=[];let k=q.parent;while(k){chain.unshift(k);k=k.parent}
+      if(chain[0]!==ROOT){if(q.seen)S3.bills.delete(q);continue}q.seen=1;
+      let M=null,yaw=0;for(const n of chain){const cm=M4.compose(n.p,n.r,n.s);M=M?M4.mul(M,cm):cm;yaw+=n.r[1]}
+      const dx=c[0]-M[12],dy=c[1]-M[13],dz=c[2]-M[14];
+      q.r=[-Math.atan2(dy,Math.hypot(dx,dz))*.45,Math.atan2(dx,dz)-yaw,0]}}
+  return _ds(time)}}
 /* ================= ORIENTATION ================= */
 let rotDismissed=false;
 function checkRotate(){$('#rotate').hidden=true}
