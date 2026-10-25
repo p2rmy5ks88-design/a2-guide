@@ -6923,7 +6923,7 @@ BLD.splice(0,BLD.length,
   ['Townhouse','A pair of townhouses with terracotta fins, timber louvres and glass balconies.','2 houses'],
   ['Apartments','Three floors of glass balconies and planters, with solar panels on the roof.','3 houses'],
   ['Boutique hotel','Terracotta pilasters, flower-box balconies and a tiled roof pavilion with a garden terrace.','4 houses'],
-  ['Skyline Tower','A glass skyscraper with stone fins, a golden crown and palms at the door.','Tower']);
+  ['Skyline Tower','A stepped art deco tower with lit windows, sky gardens, a gold crown and palms at the door.','Tower']);
 paneBuildings=function(T){
   T.innerHTML=`<div class="phead"><h2>Buildings</h2><span class="small">What grows on your streets as you build</span></div>
     <div class="small">Own a full colour set to start building. Each house you add grows the street to the next building, and after four houses you can build the Skyline Tower. The more you build, the higher the rent.</div>
@@ -6933,7 +6933,7 @@ if(PREF.illBld===undefined)PREF.illBld=true;
 const BLDTEX={};
 function bldTex(l,cb){let e=BLDTEX[l];if(e){e.t?cb(e.t):e.q.push(cb);return}e=BLDTEX[l]={t:null,q:[cb]};
   const im=new Image();im.onload=()=>{if(!GL)return;const c=document.createElement('canvas');c.width=c.height=512;c.getContext('2d').drawImage(im,0,0,512,512);e.t=texFrom(c);e.q.forEach(f=>f(e.t));e.q=[]};im.src=bldPic(l)}
-const BLD_SC=[.8,.88,.98,1.04,1.14,1.5];
+const BLD_SC=[.8,.88,.98,1.04,1.14,1.32];
 function bldBill(b,lv,col,mort){const F=FM();
   
   const mt=mat(mort?'#8a8f96':'#ffffff',{unlit:1,blend:1}),q=N(bQuad(),mt,0,0,0).sc(BLD_SC[lv]);q.visible=false;b.add(q);
@@ -6960,8 +6960,8 @@ SUBS.progress=SUBS.progress.filter(s=>s[0]!=='ach');SEC_OF.ach='ach';
 function nodeWorld(n){const ch=[];let k=n;while(k){ch.unshift(k);k=k.parent}let M=null,yaw=0;for(const x of ch){const cm=M4.compose(x.p,x.r,x.s);M=M?M4.mul(M,cm):cm;yaw+=x.r[1]}return{M,yaw,root:ch[0]===ROOT}}
 function faceOut(q){(S3.bq=S3.bq||new Set()).add(q);q.snap=null}
 /* upright, no tilt; all buildings face the side of the board the camera is on, snapped to 90°, so they stay still while you play */
-{const _ds3=drawScene;drawScene=function(time){if(S3&&S3.bq&&S3.bq.size&&CAMV){const dx=CAMV.pos[0]-CAMV.look[0],dz=CAMV.pos[2]-CAMV.look[2],Q=Math.PI/2,sn=Math.round(Math.atan2(dx,dz)/Q)*Q;
-    for(const q of S3.bq){const w=nodeWorld(q.parent);if(!w.root){if(q.snap!=null)S3.bq.delete(q);continue}if(q.snap!==sn){q.snap=sn;q.r=[0,sn-w.yaw,0]}}}return _ds3(time)}}
+{const _ds3=drawScene;drawScene=function(time){if(S3&&S3.bq&&S3.bq.size&&CAMV){const dx=CAMV.pos[0]-CAMV.look[0],dy=CAMV.pos[1]-CAMV.look[1],dz=CAMV.pos[2]-CAMV.look[2],Q=Math.PI/2,sn=Math.round(Math.atan2(dx,dz)/Q)*Q,tl=-Math.round(Math.atan2(dy,Math.hypot(dx,dz))*.55*40)/40;
+    for(const q of S3.bq){const w=nodeWorld(q.parent);if(!w.root){if(q.snap!=null)S3.bq.delete(q);continue}if(q.snap!==sn||q.tl!==tl){q.snap=sn;q.tl=tl;q.r=[tl,sn-w.yaw,0]}}}return _ds3(time)}}
 /* double-tap a building (or any owned street) to fly the camera close; double-tap again to return */
 let BZ=null;
 function plotAt(cx,cy){if(!S3||!G||!CAMM.vp)return -1;const cv=$('#gl'),r=cv.getBoundingClientRect(),m=CAMM.vp;let best=-1,bd=1e9;
