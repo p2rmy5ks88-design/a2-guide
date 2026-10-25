@@ -1894,6 +1894,54 @@ img.mdl.ipic{display:block;object-fit:cover;border-radius:14px;aspect-ratio:1/1;
 #diceHud .dface:not(.speed){background:var(--dface,#fffdf6);border-color:var(--dedge,#e2d9c3)}
 #diceHud .dface:not(.speed) i.p{background:var(--dpip,#16161a)}
 #diceHud .dface:not(.speed):not(:has(i.p ~ i.p)) i.p{background:var(--done,var(--dpip,#16161a))}
+/* ---- loading screen ---- */
+#boot{position:fixed;inset:0;z-index:9999;background:#0d1b33;display:grid;place-items:center;transition:opacity .5s ease,visibility .5s}
+#boot.out{opacity:0;visibility:hidden}
+#boot .bimg{position:absolute;inset:0;background:url(art/coast.jpg) center/cover no-repeat;transform:scale(1.06);animation:bootzoom 6s ease-out forwards}
+@keyframes bootzoom{to{transform:scale(1)}}
+#boot .bshade{position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(13,27,51,.25),rgba(13,27,51,.85) 75%),linear-gradient(to top,rgba(13,27,51,.95),transparent 45%)}
+#boot .bmid{position:relative;text-align:center;color:#fff;padding:0 24px;animation:bootin .8s ease-out both}
+@keyframes bootin{from{opacity:0;transform:translateY(10px)}}
+#boot .blogo svg{width:64px;height:64px;filter:drop-shadow(0 6px 18px rgba(0,0,0,.45))}
+#boot h1{font:800 clamp(30px,6vw,52px)/1.05 var(--display,'Outfit',system-ui);margin:12px 0 6px;letter-spacing:.5px;color:#ffd36a;text-shadow:0 3px 18px rgba(0,0,0,.55)}
+#boot p{margin:0;font:600 15px/1.4 Manrope,system-ui;color:#e8eef8;opacity:.9}
+#boot .bbar{position:absolute;left:50%;bottom:max(28px,env(safe-area-inset-bottom,0px));transform:translateX(-50%);width:min(240px,50vw);height:5px;border-radius:5px;background:rgba(255,255,255,.18);overflow:hidden}
+#boot .bbar i{display:block;height:100%;width:0;border-radius:5px;background:linear-gradient(90deg,#e2b13c,#ffe08a);transition:width .2s linear}
+/* ---- first-launch welcome ---- */
+.wlm .mpanel,.wlm{max-width:min(560px,94vw)}
+.wl{text-align:center}
+.wl .wlstep{display:inline-block;font:700 11px/1 Manrope,system-ui;letter-spacing:1px;text-transform:uppercase;color:#e2b13c;margin-bottom:6px}
+.wl .wlhero{height:96px;margin:-6px -6px 10px;border-radius:14px;background:url(art/coast.jpg) center 60%/cover;display:flex;align-items:flex-start;justify-content:center;padding-top:8px}
+.wl .wlhero .wlstep{background:rgba(13,27,51,.75);padding:5px 9px;border-radius:999px}
+.wl .uname{margin:10px auto 4px;display:block;max-width:260px;text-align:center}
+.wlchars,.wltoks{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:10px}
+.wlc,.wlt{display:grid;justify-items:center;gap:4px;padding:6px;border-radius:14px;border:2px solid transparent;background:rgba(255,255,255,.06);color:inherit;cursor:pointer;min-width:64px}
+.wlc.on,.wlt.on{border-color:#e2b13c;background:rgba(226,177,60,.14)}
+.wlc small,.wlt small{font:700 11px/1.1 Manrope,system-ui;opacity:.9}
+.wlc .csvg,.wlc svg{border-radius:50%;width:48px;height:48px}
+.wlt img{width:72px;height:72px;border-radius:12px;object-fit:cover;display:block}
+.wlt .wlemo{font-size:40px;line-height:72px}
+.wlgift{display:flex;align-items:center;justify-content:center;gap:10px;margin:6px 0 4px}
+.wlgift .iart{width:56px;height:56px}
+.wlgift b{font:800 34px/1 var(--display,'Outfit',system-ui);color:#e2b13c}
+html.light .wlc,html.light .wlt{background:rgba(19,40,74,.05)}
+/* ---- first-game coach ---- */
+#coach{position:absolute;left:50%;bottom:calc(max(12px,env(safe-area-inset-bottom,0px)) + 64px);transform:translateX(-50%);z-index:40;display:flex;align-items:center;gap:10px;max-width:min(520px,62vw);padding:8px 8px 8px 8px;border-radius:16px;background:rgba(11,20,36,.95);color:#fff;border:1px solid rgba(226,177,60,.55);box-shadow:0 10px 30px rgba(0,0,0,.35);animation:coachin .35s ease-out both;font:600 13px/1.35 Manrope,system-ui}
+#coach.out{opacity:0;transform:translate(-50%,8px);transition:.3s}
+@keyframes coachin{from{opacity:0;transform:translate(-50%,10px)}}
+#coach .cpav{flex:none;width:34px;height:34px;border-radius:50%;overflow:hidden;background:#1b2a48}
+#coach .ctx b{color:#ffd36a}
+#coach .cok{flex:none;border:0;border-radius:10px;padding:7px 12px;background:#e2b13c;color:#1a1405;font:800 12px/1 Manrope,system-ui;cursor:pointer}
+/* ---- welcome back ---- */
+#wback{position:fixed;left:50%;top:max(12px,env(safe-area-inset-top,0px));transform:translateX(-50%);z-index:900;display:flex;align-items:center;gap:10px;max-width:min(560px,92vw);padding:8px 10px 8px 8px;border-radius:18px;background:rgba(11,20,36,.96);color:#fff;border:1px solid rgba(226,177,60,.5);box-shadow:0 12px 34px rgba(0,0,0,.4);animation:wbin .45s cubic-bezier(.2,.9,.3,1.2) both}
+#wback.out{opacity:0;transform:translate(-50%,-10px);transition:.35s}
+@keyframes wbin{from{opacity:0;transform:translate(-50%,-14px)}}
+#wback .wbav{flex:none;width:40px;height:40px;border-radius:50%;overflow:hidden;box-shadow:0 0 0 2px #e2b13c}
+#wback .wbt b{display:block;font:800 15px/1.2 var(--display,'Outfit',system-ui);color:#ffd36a}
+#wback .wbc{display:flex;flex-wrap:wrap;gap:6px;margin-top:5px}
+#wback .wbc button{border:0;border-radius:999px;padding:5px 10px;background:rgba(255,255,255,.1);color:#fff;font:700 12px/1 Manrope,system-ui;cursor:pointer}
+#wback .wbc small{opacity:.8;font:600 12px Manrope,system-ui}
+#wback .wbx{flex:none;align-self:flex-start;border:0;background:none;color:#fff;opacity:.6;font-size:14px;cursor:pointer;padding:2px 4px}
 </style>
 
 <canvas id="gl" aria-label="3D game board"></canvas>
@@ -6704,6 +6752,76 @@ function paintDieFace(c,x0,y0,S,v,L,seed){
 {const _ad2=applyDiceSkin;applyDiceSkin=function(){_ad2();const s=diceSkin(),L=DICE_LOOK[s.id];if(!L)return;const r=document.documentElement.style;
   r.setProperty('--dface',L.marble?`linear-gradient(135deg,#fff,${L.base} 60%,${L.lo})`:`linear-gradient(135deg,${L.hi},${L.base} 55%,${L.lo})`);r.setProperty('--dpip',L.goldPip?'radial-gradient(circle at 35% 35%,#fff0b0,#d9a62e 55%,#8a5d0c)':L.pip);r.setProperty('--done',L.goldPip?'radial-gradient(circle at 35% 35%,#fff0b0,#d9a62e 55%,#8a5d0c)':L.one);r.setProperty('--dedge',L.lo)}}
 
+
+/* ================= WELCOME: LOADING SCREEN, FIRST LAUNCH, FIRST-GAME TIPS, WELCOME BACK ================= */
+/* 1. A branded loading screen covers the gap while the 3D board loads (art/boot.jpg, falling back to art/coast.jpg).
+   2. New players get a three-step welcome once: name + character, token, a 500-coin gift, then their first solo game.
+   3. During that first game a few coach tips explain roll, buy, build and end turn.
+   4. Players returning after 4+ hours see a small "Welcome back" card with anything waiting for them. */
+const WELCOME_GIFT=500,WB_GAP=4*36e5;
+if(PREF.welcomed===undefined){PREF.welcomed=(PREF.nickSet||(PREF.stats&&PREF.stats.games>0))?1:0}
+PREF.coach=PREF.coach||{};
+/* ---- 1. loading screen ---- */
+(function boot(){if(typeof FAST!=='undefined'&&FAST)return;const b=document.createElement('div');b.id='boot';b.setAttribute('aria-hidden','true');
+  b.innerHTML=`<div class="bimg"></div><div class="bshade"></div><div class="bmid"><div class="blogo"><svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#f2c14a"/><g fill="#13284a"><rect x="12" y="30" width="9" height="22" rx="1"/><rect x="23" y="20" width="9" height="32" rx="1"/><rect x="34" y="12" width="9" height="40" rx="1"/><rect x="45" y="26" width="8" height="26" rx="1"/></g></svg></div><h1>Skyline Estates</h1><p>Buy streets. Build towers. Own the skyline.</p></div><div class="bbar"><i></i></div>`;
+  document.body.append(b);const t0=performance.now(),bar=b.querySelector('.bbar i');let pr=0;
+  const tick=()=>{const el=performance.now()-t0,ready=document.readyState==='complete'&&(typeof S3!=='undefined'&&S3||el>2500)&&el>1300;pr=ready?100:Math.min(92,pr+(92-pr)*.06);bar.style.width=pr+'%';
+    if(ready||el>8000){b.classList.add('out');setTimeout(()=>{b.remove();document.dispatchEvent(new Event('sk-booted'))},520)}else requestAnimationFrame(tick)};requestAnimationFrame(tick)})();
+/* ---- 2. first-launch welcome ---- */
+const FREE_TOKS=['🚌','🛺','🏍️','🥁','🍲','🦅'];
+async function welcomeFlow(){if(PREF.welcomed||setup.welcoming)return;setup.welcoming=1;await sleep(500);
+  let ch=myChar(),nm=myName()||'';
+  const chars=CHARS.filter(c=>charUnlocked(c.id)).slice(0,6);
+  const k1=await modal({cls:'wlm',html:`<div class="wl"><div class="wlhero"><span class="wlstep">1 of 3</span></div>
+    <div class="mh">Welcome to Skyline Estates</div><div class="mtxt">Buy streets, build towers and out-earn your rivals in 31 cities around the world. First, who are you?</div>
+    <input id="wlName" class="uname" maxlength="12" placeholder="Your name" autocomplete="off" value="${esc(nm)}">
+    <div class="wlchars">${chars.map(c=>`<button class="wlc${c.id===ch?' on':''}" data-c="${c.id}" aria-label="${esc(c.name)}">${charSVG(c.id,56)}<small>${esc(c.name.split(' ')[0])}</small></button>`).join('')}</div></div>`,
+    btns:[{k:'skip',label:'Skip'},{k:'ok',label:'Next',primary:true}],
+    onMount:pn=>{pn.querySelectorAll('.wlc').forEach(b=>b.onclick=()=>{ch=b.dataset.c;pn.querySelectorAll('.wlc').forEach(x=>x.classList.toggle('on',x===b));sfx&&sfx('tap')})}});
+  const v=(document.querySelector('#wlName')||{}).value;
+  if(k1==='skip'){finishWelcome(false);return}
+  if(v&&v.trim())setUsername(v);PREF.eq.char=ch;savePref();railProfile();
+  let tok=FREE_TOKS.includes(setup.slots[0].tok)?setup.slots[0].tok:FREE_TOKS[0];
+  const pic=t=>{const s=TOK_SLUG[t],e=ITEM_PICS['tok-'+s];return e?`<img src="items/tok-${s}.${e}" alt="">`:`<span class="wlemo">${t}</span>`};
+  await modal({cls:'wlm',html:`<div class="wl"><span class="wlstep">2 of 3</span><div class="mh">Pick your token</div><div class="mtxt">This is you on the board. You can unlock and upgrade more later.</div>
+    <div class="wltoks">${FREE_TOKS.map(t=>`<button class="wlt${t===tok?' on':''}" data-t="${t}">${pic(t)}<small>${esc(TOKNAME[t]||'')}</small></button>`).join('')}</div></div>`,
+    btns:[{k:'ok',label:'Next',primary:true}],
+    onMount:pn=>{pn.querySelectorAll('.wlt').forEach(b=>b.onclick=()=>{tok=b.dataset.t;pn.querySelectorAll('.wlt').forEach(x=>x.classList.toggle('on',x===b));sfx&&sfx('tap')})}});
+  setup.slots[0].tok=tok;PREF.tok=tok;saveSlot(0,setup.slots[0]);savePref();
+  addCoins(WELCOME_GIFT,'Welcome gift');try{sfx('win');confetti()}catch(e){}
+  const k3=await modal({cls:'wlm',html:`<div class="wl"><span class="wlstep">3 of 3</span><div class="wlgift"><span class="iart coin1"></span><b>+${nfmt(WELCOME_GIFT)}</b></div>
+    <div class="mh">A welcome gift</div><div class="mtxt">${nfmt(WELCOME_GIFT)} coins to spend on board styles, dice and finishes in the Shop. Ready for your first game? You’ll play solo against the computer, with a few tips along the way.</div></div>`,
+    btns:[{k:'later',label:'Look around first'},{k:'play',label:'Play my first game',primary:true}]});
+  finishWelcome(k3==='play')}
+function finishWelcome(play){PREF.welcomed=Date.now();PREF.lastOpen=Date.now();savePref();setup.welcoming=0;railProfile();homeTab('play');
+  if(play)setTimeout(()=>{const q=$('#qAI');if(q)q.click()},250)}
+{const _au=askUsername;askUsername=async function(){if(!PREF.welcomed&&!FAST)return welcomeFlow();return _au()}}
+/* ---- 3. first-game coach tips ---- */
+const COACH=[
+  {id:'roll',when:()=>G.phase==='pre',t:'Your turn! Tap <b>Roll</b> to throw the dice and move.'},
+  {id:'buy',when:()=>G.phase==='post',t:'Land on a street nobody owns to <b>buy</b> it. Everyone who lands there later pays you rent.'},
+  {id:'build',when:()=>{const me=G.turn;return Object.keys(GROUPS).some(g=>GROUPS[g].every(i=>G.own[i]&&G.own[i].o===me))},t:'You own a full colour set! Open <b>Properties</b> to build houses and rent goes up fast.'},
+  {id:'end',when:()=>G.phase==='post',t:'Done for this turn? Tap <b>End turn</b>. The last player who isn’t bankrupt wins.'}];
+function coachTip(){if(FAST||!G||G.online||G.over||!PREF.welcomed)return;const p=P(G.turn);if(!isLocalHuman(p))return;if((PREF.stats.games||0)>1)return;
+  const c=COACH.find(x=>!PREF.coach[x.id]&&(()=>{try{return x.when()}catch(e){return false}})());if(!c||$('#coach'))return;
+  if(c.id==='end'&&!PREF.coach.buy)return;
+  PREF.coach[c.id]=1;savePref();const d=document.createElement('div');d.id='coach';d.setAttribute('role','status');
+  d.innerHTML=`<span class="cpav">${charSVG(myChar(),34)}</span><span class="ctx">${c.t}</span><button class="cok">Got it</button>`;
+  $('#ui').append(d);const close=()=>{d.classList.add('out');setTimeout(()=>d.remove(),300)};d.querySelector('.cok').onclick=close;setTimeout(close,9000)}
+{const _sp=setPrompt;setPrompt=function(h){_sp(h);if(!FAST)setTimeout(coachTip,700)}}
+/* ---- 4. welcome back ---- */
+function welcomeBack(){if(FAST||!PREF.welcomed||setup.welcoming)return;const now=Date.now(),last=PREF.lastOpen||0;PREF.lastOpen=now;savePref();
+  if(!last||now-last<WB_GAP||($('#title')&&$('#title').hidden))return;
+  const chips=[];if(typeof wheelReady==='function'&&wheelReady())chips.push(['spin','🎡','Free spin ready']);
+  const S=season();if(PREF.seenSeason!==S.n){chips.push(['season','✨',`New season: ${seasonName(S.n)}`]);PREF.seenSeason=S.n;savePref()}
+  else{const ca=seasonClaimable();if(ca)chips.push(['season','🎁',`${ca} season reward${ca>1?'s':''} to claim`])}
+  const D=daily();if(D.list&&D.list.some(id=>!D.done[id]))chips.push(['daily','🎯','New daily missions']);
+  const w=document.createElement('div');w.id='wback';w.setAttribute('role','status');const nm=myName();
+  w.innerHTML=`<span class="wbav">${charSVG(myChar(),40)}</span><div class="wbt"><b>Welcome back${nm?', '+esc(nm):''}!</b><div class="wbc">${chips.map(([k,i,t])=>`<button data-k="${k}">${i} ${esc(t)}</button>`).join('')||'<small>Good to see you again.</small>'}</div></div><button class="wbx" aria-label="Close">✕</button>`;
+  document.body.append(w);const close=()=>{w.classList.add('out');setTimeout(()=>w.remove(),350)};
+  w.querySelector('.wbx').onclick=close;w.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{close();const k=b.dataset.k;if(k==='spin')openWheel();else homeTab(k)});setTimeout(close,8000)}
+document.addEventListener('sk-booted',()=>setTimeout(welcomeBack,400));
+document.addEventListener('visibilitychange',()=>{if(document.hidden){PREF.lastOpen=Date.now();savePref()}else setTimeout(welcomeBack,600)});
 /* ================= ORIENTATION ================= */
 let rotDismissed=false;
 function checkRotate(){$('#rotate').hidden=true}
