@@ -6935,7 +6935,7 @@ function bldTex(l,cb){let e=BLDTEX[l];if(e){e.t?cb(e.t):e.q.push(cb);return}e=BL
   const im=new Image();im.onload=()=>{if(!GL)return;const c=document.createElement('canvas');c.width=c.height=512;c.getContext('2d').drawImage(im,0,0,512,512);e.t=texFrom(c);e.q.forEach(f=>f(e.t));e.q=[]};im.src=bldPic(l)}
 const BLD_SC=[.8,.88,.98,1.04,1.14,1.5];
 function bldBill(b,lv,col,mort){const F=FM();
-  b.add(N(S3.geo.cyl,mat(col,{spec:.4,em:.15}),0,.004,0).sc(.32,.008,.32));
+  
   const mt=mat(mort?'#8a8f96':'#ffffff',{unlit:1,blend:1}),q=N(bQuad(),mt,0,0,0).sc(BLD_SC[lv]);q.visible=false;b.add(q);
   bldTex(lv,tx=>{mt.tex=tx;q.visible=true});faceOut(q);
   if(lv===5&&!mort)towerLights(q,col);return BLD_SC[lv]*.9}
