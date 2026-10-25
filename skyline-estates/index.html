@@ -1854,7 +1854,7 @@ html.light canvas.mdl.med{background:radial-gradient(circle at 50% 38%,#f6f1e4 0
 .dhead h3{font:700 16px var(--display)!important}
 /* season track: quieter rewards */
 .scell{background:var(--p-card)!important;border-color:var(--p-line)!important}
-.scell .iart.coin1,.scell .iart.coins{width:26px!important;height:26px!important;box-shadow:inset 0 0 0 2px #C9962E!important}
+.scell .iart.coin1,.scell .iart.coins{width:26px!important;height:26px!important}
 .scell canvas.mdl{width:46px!important;height:auto!important}
 .scell small{font:600 10.5px var(--body)!important;color:var(--p-mute)}
 /* collection grids */
@@ -1894,6 +1894,14 @@ img.mdl.ipic{display:block;object-fit:cover;border-radius:14px;aspect-ratio:1/1;
 #diceHud .dface:not(.speed){background:var(--dface,#fffdf6);border-color:var(--dedge,#e2d9c3)}
 #diceHud .dface:not(.speed) i.p{background:var(--dpip,#16161a)}
 #diceHud .dface:not(.speed):not(:has(i.p ~ i.p)) i.p{background:var(--done,var(--dpip,#16161a))}
+/* ---- illustrated coin everywhere ---- */
+i.coin,.coin.cimg,.coinpill i{background:url(art/coin-sm.png) center/contain no-repeat!important;box-shadow:none!important;border-radius:0!important;border:0!important}
+i.coin.cimg{display:inline-block;width:1.05em;height:1.05em;vertical-align:-.16em;margin:0 .08em}
+.iart.coin1,.iart.coins{background:url(art/coin.png) center/contain no-repeat!important;box-shadow:none!important;border-radius:0!important;filter:drop-shadow(0 4px 8px rgba(0,0,0,.35))}
+.iart.coins.n1{background:url(art/coin.png) 100% 0/76% no-repeat,url(art/coin.png) 0 100%/76% no-repeat!important}
+.iart.coins.n2{background:url(art/coin.png) 50% 0/68% no-repeat,url(art/coin.png) 0 100%/68% no-repeat,url(art/coin.png) 100% 100%/68% no-repeat!important}
+.iart.coins.n3{background:url(art/coin.png) 50% 100%/66% no-repeat,url(art/coin.png) 0 40%/58% no-repeat,url(art/coin.png) 100% 40%/58% no-repeat,url(art/coin.png) 50% 0/58% no-repeat!important;filter:drop-shadow(0 0 14px rgba(226,181,74,.6))}
+.iart.coin1,.iart.coins{border:0!important;outline:0!important;border-radius:0!important}.iart.coin1::before,.iart.coins::before{display:none!important}
 /* ---- loading screen ---- */
 #boot{position:fixed;inset:0;z-index:9999;background:#0d1b33;display:grid;place-items:center;transition:opacity .5s ease,visibility .5s}
 #boot.out{opacity:0;visibility:hidden}
@@ -6884,6 +6892,17 @@ async function openTutorial(fromWelcome){const S=tutSteps();let i=0,res='done';
       nx.onclick=()=>{if(i<S.length-1){i++;show();try{sfx('tap')}catch(e){}}else close('done')};bk.onclick=()=>{if(i){i--;show()}};pn.querySelector('#tSkip').onclick=()=>close('skip');
       dots.forEach((d,k)=>d.onclick=()=>{i=k;show()});show()}})});
   return res}
+
+/* ================= COIN ICON ================= */
+/* Every coin in the game uses the illustrated Skyline coin (art/coin.png). CSS draws the icons; this swaps the 🪙
+   emoji inside any text (toasts, rewards, wheel labels) for the same coin picture as it appears on screen. */
+(function coinSwap(){const CH='🪙',mk=()=>{const i=document.createElement('i');i.className='coin cimg';i.setAttribute('aria-label','coins');return i};
+  const fix=n=>{if(n.nodeType===3){const t=n.nodeValue;if(!t||t.indexOf(CH)<0)return;const p=n.parentNode;if(!p||p.nodeName==='SCRIPT'||p.nodeName==='STYLE'||p.nodeName==='TEXTAREA'||p.nodeName==='OPTION')return;
+      const parts=t.split(CH),f=document.createDocumentFragment();parts.forEach((s,k)=>{if(s)f.append(document.createTextNode(s));if(k<parts.length-1)f.append(mk())});p.replaceChild(f,n);return}
+    if(n.nodeType===1&&n.textContent&&n.textContent.indexOf(CH)>=0){const w=document.createTreeWalker(n,NodeFilter.SHOW_TEXT),L=[];while(w.nextNode())if(w.currentNode.nodeValue.indexOf(CH)>=0)L.push(w.currentNode);L.forEach(fix)}};
+  const mo=new MutationObserver(ms=>{for(const m of ms){if(m.type==='characterData')fix(m.target);else m.addedNodes.forEach(fix)}});
+  const go=()=>{fix(document.body);mo.observe(document.body,{childList:true,subtree:true,characterData:true})};
+  if(document.body)go();else addEventListener('DOMContentLoaded',go)})();
 /* ================= ORIENTATION ================= */
 let rotDismissed=false;
 function checkRotate(){$('#rotate').hidden=true}
