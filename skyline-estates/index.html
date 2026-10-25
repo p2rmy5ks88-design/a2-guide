@@ -1879,6 +1879,7 @@ img.mdl.ipic{display:block;object-fit:cover;border-radius:14px;aspect-ratio:1/1;
 .icard .iwrap img.mdl.ipic{height:90%!important;width:auto!important}
 .shcar img.mdl.ipic,.cvt img.mdl.ipic,.tkc img.mdl.ipic{width:58px!important}
 .sisib img.mdl.ipic{width:58px!important}.sibig img.mdl.ipic{width:min(220px,60%)!important}
+.bundle .bstage>img.mdl.ipic{display:none!important}
 </style>
 
 <canvas id="gl" aria-label="3D game board"></canvas>
@@ -6595,7 +6596,7 @@ function mergeStatic(g,keep){const B=new Map();
 /* ================= ITEM PICTURES ================= */
 /* When an illustration exists in items/ (tok-bus.png, surr-marble.png, dice-gold.png …) it replaces the drawn model
    picture for that item. Anything without a picture keeps the drawn version. */
-const ITEM_PICS={"tok-bus": "png", "tok-tuktuk": "png"};
+const ITEM_PICS={"tok-horse": "jpg", "tok-mask": "jpg", "surr-ice": "jpg", "tok-scooter": "jpg", "surr-neon": "jpg", "tok-eagle": "jpg", "dice-classic": "jpg", "surr-confetti": "jpg", "dice-candy": "jpg", "surr-marble": "jpg", "tok-train": "jpg", "tok-bus": "png", "dice-marble": "jpg", "tok-crown": "jpg", "tok-tuktuk": "png", "dice-gold": "jpg", "tok-jet": "jpg", "surr-garden": "jpg", "tok-taxi": "jpg", "tok-barrel": "jpg", "tok-canoe": "jpg", "dice-mint": "jpg", "surr-skydeck": "jpg", "tok-drum": "jpg", "surr-lava": "jpg", "tok-pot": "jpg", "surr-lagoon": "jpg", "dice-midnight": "jpg", "tok-rocket": "jpg", "tok-sailboat": "jpg"};
 const TOK_SLUG={'🚌':'bus','🛺':'tuktuk','🏍️':'scooter','🥁':'drum','🍲':'pot','🦅':'eagle','🚕':'taxi','⛵':'sailboat','🐎':'horse','🛶':'canoe','🚂':'train','🎭':'mask','✈️':'jet','🚀':'rocket','👑':'crown','🛢️':'barrel'};
 function itemPic(spec){const k=!spec.kind?'tok-'+TOK_SLUG[spec.token]:spec.kind==='surround'&&spec.id?'surr-'+spec.id:spec.kind==='dice'&&spec.id?'dice-'+spec.id:null;
   return k&&ITEM_PICS[k]?`items/${k}.${ITEM_PICS[k]}`:null}
