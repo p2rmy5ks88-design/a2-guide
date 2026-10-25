@@ -1880,6 +1880,11 @@ img.mdl.ipic{display:block;object-fit:cover;border-radius:14px;aspect-ratio:1/1;
 .shcar img.mdl.ipic,.cvt img.mdl.ipic,.tkc img.mdl.ipic{width:58px!important}
 .sisib img.mdl.ipic{width:58px!important}.sibig img.mdl.ipic{width:min(220px,60%)!important}
 .bundle .bstage>img.mdl.ipic{display:none!important}
+/* in-game prompt: top-left, directly above the player list */
+#ui #prompt,html.rot #ui #prompt{left:max(16px,env(safe-area-inset-left,0px));right:auto;transform:none;top:max(8px,env(safe-area-inset-top,0px));bottom:auto;max-width:min(46vw,440px);padding:4px 14px 4px 4px;font-size:13px;line-height:1.25}
+#ui #prompt .sub{font-size:11px}
+#ui #prompt .pav{width:28px;height:28px;font-size:15px}
+#ui #roster{top:calc(max(8px,env(safe-area-inset-top,0px)) + 54px);max-height:calc(100% - 170px)}
 </style>
 
 <canvas id="gl" aria-label="3D game board"></canvas>
