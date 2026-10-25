@@ -1890,6 +1890,10 @@ img.mdl.ipic{display:block;object-fit:cover;border-radius:14px;aspect-ratio:1/1;
 .avf.fr-gala{filter:drop-shadow(0 0 7px rgba(226,177,60,.7))}
 .iart.gala{display:grid;place-items:center;width:100%;height:100%}
 .iart.gala .pav{width:56px;height:56px}
+/* score box dice follow the equipped dice set */
+#diceHud .dface:not(.speed){background:var(--dface,#fffdf6);border-color:var(--dedge,#e2d9c3)}
+#diceHud .dface:not(.speed) i.p{background:var(--dpip,#16161a)}
+#diceHud .dface:not(.speed):not(:has(i.p ~ i.p)) i.p{background:var(--done,var(--dpip,#16161a))}
 </style>
 
 <canvas id="gl" aria-label="3D game board"></canvas>
@@ -6652,6 +6656,54 @@ const illOn=tok=>PREF.illTok&&GL&&TOK_SLUG[tok]&&ITEM_PICS['tok-'+TOK_SLUG[tok]]
   if(S3&&S3.ring&&S3.ring.visible&&typeof G!=='undefined'&&G&&tok3[G.turn]&&tok3[G.turn].ill){S3.ring.s=S3.ring.s.map(v=>v*.78)}
   if(S3&&S3.marker&&typeof G!=='undefined'&&G&&tok3&&tok3[G.turn]&&tok3[G.turn].ill)S3.marker.visible=false;
   return _ds(time)}}
+
+/* ================= DICE TO MATCH THE SHOP PICTURES ================= */
+/* Rounded-edge dice with glossy faces and sunken pips, painted per skin to match the illustrations in items/dice-*.
+   Face layout and orientation are the same as the original box, so the rolled number still lands face up. */
+const DICE_LOOK={
+  classic:{base:'#f4ecdc',hi:'#fffaf0',lo:'#d9ccb2',pip:'#1d1b19',one:'#c3261b',spec:.55},
+  midnight:{base:'#1b2752',hi:'#2c3c78',lo:'#0f1733',pip:'#f4f6fb',one:'#f4f6fb',spec:.85},
+  gold:{base:'#e0a92e',hi:'#ffe08a',lo:'#9c6a10',pip:'#2c1d06',one:'#2c1d06',spec:.95,metal:1},
+  mint:{base:'#bfe8c9',hi:'#e2f7e7',lo:'#93caa2',pip:'#11402a',one:'#11402a',spec:.6},
+  candy:{base:'#f7b9cb',hi:'#ffe1ea',lo:'#e38aa6',pip:'#a3123f',one:'#a3123f',spec:.65},
+  marble:{base:'#f1eee8',hi:'#ffffff',lo:'#d6d1c8',pip:'#d9a62e',one:'#d9a62e',spec:.7,marble:1,goldPip:1}};
+/* rounded cube: each face of the unit box is subdivided and pushed onto a box with rounded edges */
+function geoRoundBox(fuv,r=.16,n=10){const h=.5,core=h-r;const F=[
+  [[1,0,0],[[h,-h,h],[h,-h,-h],[h,h,-h],[h,h,h]]],[[-1,0,0],[[-h,-h,-h],[-h,-h,h],[-h,h,h],[-h,h,-h]]],
+  [[0,1,0],[[-h,h,h],[h,h,h],[h,h,-h],[-h,h,-h]]],[[0,-1,0],[[-h,-h,-h],[h,-h,-h],[h,-h,h],[-h,-h,h]]],
+  [[0,0,1],[[-h,-h,h],[h,-h,h],[h,h,h],[-h,h,h]]],[[0,0,-1],[[h,-h,-h],[-h,-h,-h],[-h,h,-h],[h,h,-h]]]];
+  const v=[],idx=[];const lerp=(a,b,t)=>a.map((x,i)=>x+(b[i]-x)*t);
+  F.forEach(([nrm,q],fi)=>{const u=fuv[fi],b=v.length/8;
+    for(let j=0;j<=n;j++)for(let i=0;i<=n;i++){const s=i/n,t=j/n;const p=lerp(lerp(q[0],q[1],s),lerp(q[3],q[2],s),t);
+      const c=p.map(x=>Math.max(-core,Math.min(core,x)));let d=p.map((x,k)=>x-c[k]);const L=Math.hypot(...d)||1;d=d.map(x=>x/L);
+      const P=c.map((x,k)=>x+d[k]*r);v.push(...P,...d,u[0]+(u[2]-u[0])*s,u[1]+(u[3]-u[1])*t)}
+    for(let j=0;j<n;j++)for(let i=0;i<n;i++){const a=b+j*(n+1)+i,c=a+1,e=a+n+2,f=a+n+1;idx.push(a,c,e,a,e,f)}});
+  return mkGeo(v,idx)}
+function paintDieFace(c,x0,y0,S,v,L,seed){
+  const g=c.createLinearGradient(x0,y0,x0+S,y0+S);g.addColorStop(0,L.hi);g.addColorStop(.45,L.base);g.addColorStop(1,L.lo);c.fillStyle=g;c.fillRect(x0,y0,S,S);
+  if(L.metal){c.save();c.globalAlpha=.18;for(let k=0;k<3;k++){const gg=c.createLinearGradient(x0,y0+S*(.15+k*.3),x0+S,y0+S*(.05+k*.3));gg.addColorStop(0,'rgba(255,245,200,0)');gg.addColorStop(.5,'rgba(255,245,200,.9)');gg.addColorStop(1,'rgba(255,245,200,0)');c.fillStyle=gg;c.fillRect(x0,y0+S*(.1+k*.3),S,S*.08)}c.restore()}
+  if(L.marble){let r=seed*9301+49297;const rnd=()=>(r=(r*9301+49297)%233280)/233280;c.save();c.beginPath();c.rect(x0,y0,S,S);c.clip();
+    for(let k=0;k<5;k++){c.strokeStyle=`rgba(110,112,120,${.18+rnd()*.25})`;c.lineWidth=1+rnd()*2.5;c.filter='blur(.6px)';c.beginPath();let x=x0+rnd()*S,y=y0-10;c.moveTo(x,y);
+      for(let s=0;s<6;s++){const nx=x+(rnd()-.5)*S*.5,ny=y+S*.22;c.quadraticCurveTo(x+(rnd()-.5)*S*.4,y+S*.1,nx,ny);x=nx;y=ny}c.stroke()}c.filter='none';c.restore()}
+  c.save();c.globalAlpha=.18;c.strokeStyle='#000';c.lineWidth=S*.05;c.strokeRect(x0+S*.025,y0+S*.025,S*.95,S*.95);c.restore();
+  const k=S/128,PP={1:[[64,64]],2:[[36,36],[92,92]],3:[[36,36],[64,64],[92,92]],4:[[36,36],[92,36],[36,92],[92,92]],5:[[36,36],[92,36],[64,64],[36,92],[92,92]],6:[[36,32],[92,32],[36,64],[92,64],[36,96],[92,96]]}[v];
+  PP.forEach(([px,py])=>{const x=x0+px*k,y=y0+py*k,rad=(v===1?15:11)*k,col=v===1?L.one:L.pip;
+    c.beginPath();c.arc(x+rad*.12,y+rad*.12,rad*1.12,0,7);c.fillStyle='rgba(255,255,255,.45)';c.fill();
+    c.beginPath();c.arc(x,y,rad*1.06,0,7);c.fillStyle='rgba(0,0,0,.35)';c.fill();
+    const pg=c.createRadialGradient(x+rad*.35,y+rad*.35,rad*.1,x,y,rad);
+    if(L.goldPip){pg.addColorStop(0,'#fff0b0');pg.addColorStop(.5,'#e0ac35');pg.addColorStop(1,'#8a5d0c')}else{pg.addColorStop(0,col);pg.addColorStop(1,col)}
+    c.beginPath();c.arc(x,y,rad,0,7);c.fillStyle=pg;c.fill();
+    c.beginPath();c.arc(x-rad*.25,y-rad*.25,rad*.75,0,7);c.fillStyle='rgba(0,0,0,.28)';c.fill()})}
+{const _ad=applyDiceSkin;applyDiceSkin=function(){if(!S3||!S3.diceMat||!GL)return _ad();const s=diceSkin(),L=DICE_LOOK[s.id];if(!L)return _ad();
+  if(!S3.roundDice){const cell=v=>{const col=(v-1)%3,row=Math.floor((v-1)/3);return[col/3,1-(row+1)/2,(col+1)/3,1-row/2]};const rg=geoRoundBox([3,4,1,6,2,5].map(cell));
+    S3.dice.forEach(d=>d.geo=rg);if(S3.sdie)S3.sdie.geo=rg;S3.diceCanvas=cnv(768,512,()=>{});S3.diceMat.tex=texFrom(S3.diceCanvas);S3.roundDice=1;S3.diceSkinNow=null}
+  if(S3.diceSkinNow===s.id)return;S3.diceSkinNow=s.id;const c=S3.diceCanvas.getContext('2d'),S=256;
+  for(let v=1;v<=6;v++){const col=(v-1)%3,row=Math.floor((v-1)/3);paintDieFace(c,col*S,row*S,S,v,L,v*7+3)}
+  S3.diceMat.spec=L.spec;texUpdate(S3.diceMat.tex)}}
+/* the small dice in the roll score box use the same colours */
+{const _ad2=applyDiceSkin;applyDiceSkin=function(){_ad2();const s=diceSkin(),L=DICE_LOOK[s.id];if(!L)return;const r=document.documentElement.style;
+  r.setProperty('--dface',L.marble?`linear-gradient(135deg,#fff,${L.base} 60%,${L.lo})`:`linear-gradient(135deg,${L.hi},${L.base} 55%,${L.lo})`);r.setProperty('--dpip',L.goldPip?'radial-gradient(circle at 35% 35%,#fff0b0,#d9a62e 55%,#8a5d0c)':L.pip);r.setProperty('--done',L.goldPip?'radial-gradient(circle at 35% 35%,#fff0b0,#d9a62e 55%,#8a5d0c)':L.one);r.setProperty('--dedge',L.lo)}}
+
 /* ================= ORIENTATION ================= */
 let rotDismissed=false;
 function checkRotate(){$('#rotate').hidden=true}
