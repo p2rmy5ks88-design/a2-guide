@@ -2,6 +2,10 @@ name: Skyline Estates Desktop (Steam Deck)
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "skyline-estates/game.html"
 
 permissions:
   contents: write
