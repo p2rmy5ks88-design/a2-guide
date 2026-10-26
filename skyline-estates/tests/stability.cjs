@@ -14,7 +14,7 @@ const root=path.resolve(__dirname,'../..');
   let browser;
   try{
     browser=await chromium.launch({headless:true,...(process.env.CHROME_PATH?{executablePath:process.env.CHROME_PATH}:{})});
-    const page=await browser.newPage();const errors=[];
+    const page=await browser.newPage({serviceWorkers:'block'});const errors=[];
     page.on('pageerror',error=>errors.push(error.stack||String(error)));
     // Skip first-launch welcome: simulations change GEN and would cancel its pending sleep.
     await page.addInitScript(()=>localStorage.setItem('skylinePrefs',JSON.stringify({nickSet:true,welcomed:1})));

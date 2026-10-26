@@ -10,7 +10,7 @@ const check=(name,ok)=>{assert.ok(ok,name);report.checks.push(name);console.log(
   const roll=p=>p.getByRole('button',{name:'Roll dice',exact:true}),end=p=>p.getByRole('button',{name:/END.*TURN/i});
   const state=p=>p.evaluate(()=>({players:G.players.map(p=>({cash:p.cash,pos:p.pos,bankrupt:p.bankrupt,inJail:p.inJail})),own:G.own,over:G.over,turn:G.turn,round:G.round,alive:alive().length,winner:standings()[0].id,houses:G.houses,hotels:G.hotels,saveCleared:!localStorage.getItem(SKEY)&&!localStorage.getItem(SAVE_BACKUP)}));
   async function fixture(scenario){
-    const context=await browser.newContext({viewport:{width:1280,height:800},reducedMotion:'reduce',storageState:{cookies:[],origins:[{origin,localStorage:[{name:'skylinePrefs',value:JSON.stringify({flat2d:true,nickSet:true,welcomed:1})}]}]}});
+    const context=await browser.newContext({serviceWorkers:'block',viewport:{width:1280,height:800},reducedMotion:'reduce',storageState:{cookies:[],origins:[{origin,localStorage:[{name:'skylinePrefs',value:JSON.stringify({flat2d:true,nickSet:true,welcomed:1})}]}]}});
     await context.route('**/*',r=>r.request().url().startsWith(origin)?r.continue():r.abort());const page=await context.newPage();page.on('pageerror',e=>report.pageErrors.push({scenario,error:String(e.stack||e)}));
     await page.goto(origin+'/skyline-estates/index.html');await page.addStyleTag({content:'.bigb{animation:none!important}'});await page.waitForFunction(()=>typeof window.__sim==='function');
     const meta=await page.evaluate(scenario=>{

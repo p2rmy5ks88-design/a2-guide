@@ -12,7 +12,7 @@ const check=(name,condition)=>{assert.ok(condition,name);report.checks.push(name
   });await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
   const origin=`http://127.0.0.1:${server.address().port}`,url=origin+'/skyline-estates/index.html';let browser;
   async function pageFor({flat=false,noGL=false}={}){
-    const context=await browser.newContext({viewport:{width:1280,height:800},storageState:{cookies:[],origins:[{origin,localStorage:[{name:'skylinePrefs',value:JSON.stringify({nickSet:true,welcomed:1,flat2d:flat})}]}]}});
+    const context=await browser.newContext({serviceWorkers:'block',viewport:{width:1280,height:800},storageState:{cookies:[],origins:[{origin,localStorage:[{name:'skylinePrefs',value:JSON.stringify({nickSet:true,welcomed:1,flat2d:flat})}]}]}});
     // External services are deliberately unavailable: core local play must not require them.
     await context.route('**/*',route=>route.request().url().startsWith(origin)?route.continue():route.abort());
     await context.addInitScript(({flat,noGL})=>{
@@ -48,8 +48,8 @@ const check=(name,condition)=>{assert.ok(condition,name);report.checks.push(name
     await flat.context.setOffline(true);await flat.page.locator('#bAssets').click();await flat.page.getByRole('heading',{name:'Your portfolio',exact:true}).waitFor({state:'visible'});
     check('portfolio opens during an offline session',true);await flat.page.locator('#modals').getByRole('button',{name:'Close',exact:true}).click();await flat.page.locator('#modals .ov').waitFor({state:'detached'});
     await exit(flat.page);check('Save & exit works during an offline session',true);
-    report.capabilities.offlineReloadAvailable=true;
-    try{await flat.page.reload({waitUntil:'domcontentloaded',timeout:15000})}catch(e){if(!/ERR_INTERNET_DISCONNECTED|ERR_NETWORK_CHANGED|ERR_FAILED/.test(String(e)))throw e;report.capabilities.offlineReloadAvailable=false;report.limits.push('Web cold/reload offline is unavailable without a service worker; this is not native APK offline coverage.')}
+    report.capabilities.offlineReloadWithoutWorkerAvailable=true;
+    try{await flat.page.reload({waitUntil:'domcontentloaded',timeout:15000})}catch(e){if(!/ERR_INTERNET_DISCONNECTED|ERR_NETWORK_CHANGED|ERR_FAILED/.test(String(e)))throw e;report.capabilities.offlineReloadWithoutWorkerAvailable=false;report.limits.push('This isolated view suite disables service workers; offline startup is tested separately in offline-startup.cjs.')}
     await flat.context.setOffline(false);await flat.page.goto(url);await flat.page.locator('#tCont').click();await flat.page.getByRole('button',{name:/END.*TURN/i}).waitFor({state:'visible',timeout:20000});
     check('2D Continue preserves cash, ownership, position and turn across reload',await snapshot(flat.page)===state);await flat.context.close();
     const normal=await pageFor();await normal.page.waitForFunction(()=>!!document.querySelector('#qAI')||!!document.querySelector('#re2d'));
@@ -72,4 +72,3 @@ const check=(name,condition)=>{assert.ok(condition,name);report.checks.push(name
     if(browser)await browser.close();await new Promise(resolve=>server.close(resolve));
   }
 })().catch(e=>{console.error(e);process.exitCode=1});
-

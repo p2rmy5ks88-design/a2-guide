@@ -2,11 +2,12 @@
   "name": "skyline-stability-tests",
   "private": true,
   "scripts": {
-    "test": "node turn-resume.cjs && node save-recovery.cjs && node stability.cjs && node browser-smoke.cjs && node human-flows.cjs",
+    "test": "node offline-worker.cjs && node offline-startup.cjs && node turn-resume.cjs && node save-recovery.cjs && node stability.cjs && node browser-smoke.cjs && node human-flows.cjs",
     "test:turns": "node turn-resume.cjs",
     "test:saves": "node save-recovery.cjs",
     "test:browser": "node browser-smoke.cjs",
-    "test:human": "node human-flows.cjs"
+    "test:human": "node human-flows.cjs",
+    "test:offline": "node offline-worker.cjs && node offline-startup.cjs"
   },
   "devDependencies": {
     "playwright": "1.62.1"
