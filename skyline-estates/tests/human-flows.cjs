@@ -22,7 +22,7 @@ const check=(name,ok)=>{assert.ok(ok,name);report.checks.push(name);console.log(
       if(['mortgage-debt','rent-bankruptcy','quick-finish'].includes(scenario)){G.players[0].cash=1;G.own[5].o=1}
       if(scenario==='mortgage-debt')G.own[39].o=0;
       if(scenario==='rent-bankruptcy'){G.own[1]={o:0,h:2,m:false};G.houses=34}
-      if(scenario==='tax-bankruptcy'){G.players[0].cash=1;G.players[0].pos=1;G.own[1]={o:0,h:2,m:false};G.houses=34}
+      if(scenario==='tax-bankruptcy'){G.players[0].cash=1;G.players[0].pos=SQ.findIndex(s=>s.t==='tax')-3;G.own[1]={o:0,h:2,m:false};G.houses=34}
       if(scenario==='quick-finish')G.players[2].cash=3000;
       if(scenario==='timed-finish'){G.turn=1;G.phase='post';G.players[0].cash=3000}
       if(scenario.startsWith('jail-')){G.players[0].inJail=true;G.players[0].pos=10;if(scenario==='jail-bankruptcy'){G.players[0].jailTurns=2;G.players[0].cash=1}}
@@ -88,5 +88,6 @@ const check=(name,ok)=>{assert.ok(ok,name);report.checks.push(name);console.log(
       await page.getByRole('button',{name:'Roll for doubles',exact:true}).click();await page.getByRole('button',{name:'Declare bankruptcy',exact:true}).click();const s=await finish(page);check('third failed jail attempt can settle through bankruptcy',s.over&&s.players[0].bankrupt&&s.winner===1);check('bankrupt jailed player receives no further roll',await roll(page).count()===0&&s.saveCleared);
     });
     console.log('Human-flow diagnostics: '+JSON.stringify(report.pageErrors));check('human-flow cases have no page exceptions',report.pageErrors.length===0);console.log(`${report.checks.length} human-flow checks passed`);
-  }finally{const output=process.argv[2]||path.join(root,'skyline-estates/test-results/human-flows.json');fs.mkdirSync(path.dirname(path.resolve(output)),{recursive:true});fs.writeFileSync(output,JSON.stringify(report,null,2)+'\n');if(browser)await browser.close();await new Promise(r=>server.close(r))}
+  }finally{console.log('Human-flow completion: '+JSON.stringify({cases:report.fixtures.map(f=>f.scenario),pageErrors:report.pageErrors}));const output=process.argv[2]||path.join(root,'skyline-estates/test-results/human-flows.json');fs.mkdirSync(path.dirname(path.resolve(output)),{recursive:true});fs.writeFileSync(output,JSON.stringify(report,null,2)+'\n');if(browser)await browser.close();await new Promise(r=>server.close(r))}
 })().catch(e=>{console.error(e);process.exitCode=1});
+
