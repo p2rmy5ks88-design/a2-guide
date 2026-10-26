@@ -24,7 +24,7 @@ const check=(name,ok)=>{assert.ok(ok,name);report.checks.push(name);console.log(
   const snapshot=p=>p.evaluate(()=>JSON.stringify({players:G.players.map(p=>({cash:p.cash,pos:p.pos,bankrupt:p.bankrupt})),own:G.own,turn:G.turn,round:G.round,houses:G.houses,hotels:G.hotels,set:G.set}));
   async function resume(page){await page.locator('#tCont').waitFor({state:'visible',timeout:30000});await page.locator('#tCont').click();await end(page).waitFor({state:'visible',timeout:30000})}
   async function exit(page){await page.locator('#bMenu').click();await page.getByRole('button',{name:'Save & exit',exact:true}).click();await page.locator('#tCont').waitFor({state:'visible'})}
-  async function until(fn,ms=30000){const start=Date.now();while(!fn()){if(Date.now()-start>ms)throw Error('Timed out waiting for update download');await new Promise(r=>setTimeout(r,50))}}
+  async function until(fn,ms=30000){const start=Date.now();while(!(await fn())){if(Date.now()-start>ms)throw Error('Timed out waiting for update download');await new Promise(r=>setTimeout(r,50))}}
   try{
     browser=await chromium.launch({headless:true,...(process.env.CHROME_PATH?{executablePath:process.env.CHROME_PATH}:{})});report.browser=browser.version();
     const context=await browser.newContext({viewport:{width:1280,height:800},storageState:{cookies:[],origins:[{origin,localStorage:[{name:'skylinePrefs',value:JSON.stringify({nickSet:true,welcomed:1,flat2d:true})}]}]}});
@@ -54,14 +54,14 @@ const check=(name,ok)=>{assert.ok(ok,name);report.checks.push(name);console.log(
     check('cold-started offline game can roll and buy property',await page.evaluate(({cash,price})=>G.own[5].o===1&&P(1).cash===cash-price&&G.turn===1,before));expected=await snapshot(page);await exit(page);await resume(page);
     check('offline Save & exit preserves newly purchased property',await snapshot(page)===expected);
     await context.setOffline(false);phase='broken';await page.evaluate(async()=>{const r=await navigator.serviceWorker.getRegistration();try{await r.update()}catch{}});await until(()=>missingHits>0);
-    await page.waitForFunction(async({prefix,version})=>{const r=await navigator.serviceWorker.getRegistration(),names=await caches.keys();return!r.installing&&!r.waiting&&names.includes(prefix+version)&&!names.some(n=>n===prefix+version+'-broken')},{prefix,version:manifest.version},{timeout:30000});
+    await until(()=>page.evaluate(async({prefix,version})=>{const r=await navigator.serviceWorker.getRegistration(),names=await caches.keys();return!r.installing&&!r.waiting&&names.includes(prefix+version)&&!names.some(n=>n===prefix+version+'-broken')},{prefix,version:manifest.version}));
     const afterFailure=await page.evaluate(async prefix=>(await caches.keys()).filter(n=>n.startsWith(prefix)),prefix);report.afterFailedUpdate=afterFailure;console.log('Offline failed-update caches: '+JSON.stringify(afterFailure));
     check('failed update keeps the current complete cache',afterFailure.includes(prefix+manifest.version)&&!afterFailure.some(n=>n.endsWith('-broken')));check('failed update does not change the open match',await snapshot(page)===expected);
     await page.evaluate(prefix=>caches.open(prefix+'obsolete'),prefix);phase='next';await page.evaluate(async()=>{const r=await navigator.serviceWorker.getRegistration();await r.update()});
-    await page.waitForFunction(async()=>!!(await navigator.serviceWorker.getRegistration()).waiting,null,{timeout:60000});
+    await until(()=>page.evaluate(async()=>!!(await navigator.serviceWorker.getRegistration()).waiting),60000);
     check('successful update waits instead of replacing an open game',await page.evaluate(()=>document.body.dataset.offlineTestVersion!=='2')&&await snapshot(page)===expected);
     const probe=await newPage();await probe.goto(origin+'/probe.html');await page.close();
-    await probe.waitForFunction(async({prefix,version})=>{const names=(await caches.keys()).filter(n=>n.startsWith(prefix));return names.length===1&&names[0]===prefix+version},{prefix,version:manifest.version+'-next'},{timeout:30000});
+    await until(()=>probe.evaluate(async({prefix,version,scope})=>{const r=await navigator.serviceWorker.getRegistration(scope),names=(await caches.keys()).filter(n=>n.startsWith(prefix));return r?.active?.state==='activated'&&!r.waiting&&names.length===1&&names[0]===prefix+version},{prefix,version:manifest.version+'-next',scope}));
     check('activation removes only obsolete Skyline cache versions',await probe.evaluate(async()=>await caches.has('other-app-keep')&&await(await caches.match('/other-keep')).text()==='keep'));
     await context.setOffline(true);page=await newPage();await page.goto(scope+'index.html?offline-test=1',{waitUntil:'domcontentloaded'});await resume(page);
     report.versionDiagnostics=await page.evaluate(async({prefix,scope})=>{const names=(await caches.keys()).filter(n=>n.startsWith(prefix));const cache=await caches.open(names[0]),response=await cache.match(scope+'index.html'),text=await response.text();return{names,cachedBodyTag:(text.match(/<body[^>]*>/)||[])[0],liveBodyTag:document.body.outerHTML.split('>')[0]+'>',url:location.href}},{prefix,scope});console.log('Offline version diagnostics: '+JSON.stringify({versions:report.versionDiagnostics,afterFailedUpdate:report.afterFailedUpdate,indexRequests}));
