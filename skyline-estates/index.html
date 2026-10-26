@@ -2805,8 +2805,14 @@ async function tradeEditor(p,o){
   if(k!=='go')return null;
   return {from:p.id,to:q.id,give:[...give],get:[...get],gc,rc,gcard,rcard};
 }
-function validTrade(t){const f=P(t.from),r=P(t.to);if(!f||!r||f.bankrupt||r.bankrupt)return false;
-  return t.give.every(i=>G.own[i].o===f.id)&&t.get.every(i=>G.own[i].o===r.id)&&t.gc<=f.cash&&t.rc<=r.cash&&(!t.gcard||f.goojf.length)&&(!t.rcard||r.goojf.length)}
+function validTrade(t){
+  if(!t||!Number.isInteger(t.from)||!Number.isInteger(t.to)||t.from===t.to)return false;
+  const f=P(t.from),r=P(t.to);if(!f||!r||f.bankrupt||r.bankrupt)return false;
+  if(![t.gc,t.rc].every(v=>Number.isFinite(v)&&v>=0)||t.gc>f.cash||t.rc>r.cash)return false;
+  if(![t.gcard,t.rcard].every(v=>v===0||v===1)||t.gcard>f.goojf.length||t.rcard>r.goojf.length)return false;
+  const eligible=(items,pid)=>Array.isArray(items)&&new Set(items).size===items.length&&items.every(i=>Number.isInteger(i)&&tradable(pid).includes(i));
+  return eligible(t.give,f.id)&&eligible(t.get,r.id)
+}
 function counterOf(t){return{from:t.to,to:t.from,give:t.get.slice(),get:t.give.slice(),gc:t.rc,rc:t.gc,gcard:t.rcard,rcard:t.gcard}}
 async function resolveTrade(t,depth=0){
   const f=P(t.from),r=P(t.to);let ok,counter=null;
@@ -2815,16 +2821,17 @@ async function resolveTrade(t,depth=0){
   else if(isRemote(r)){toast(`Waiting for ${r.name} to answer…`);const a=await askRemote(r,'trade',Object.assign({depth},t),depth?60000:40000);ok=!!(a&&a.ok);if(a&&a.counter&&depth<3)counter=a.counter;toast(ok?`${r.name} accepts the deal!`:counter?`${r.name} sent a counter offer`:`${r.name} declined the deal`)}
   else{const k=await modal({cls:'wide',tdef:'no',html:`<div class="mh">${depth?'Counter offer':'Deal offered'} to ${esc(r.name)}</div><div class="mtxt muted">${f.ai||isRemote(f)?'':'Pass the phone to '+esc(r.name)+'.'}</div>${tradeSummary(t)}`,btns:[{k:'no',label:'Decline'},...(depth<3?[{k:'counter',label:'Counter offer'}]:[]),{k:'yes',label:'Accept deal',primary:true}]});
     ok=k==='yes';if(k==='counter'){counter=await tradeEditor(r,{partner:f.id,pre:counterOf(t),title:`Counter offer to ${esc(f.name)}`,cta:'Send counter offer'});if(!counter)log(`${r.name} declined a deal from ${f.name}`)}}
-  if(ok){executeTrade(t);return true}
+  if(ok){return executeTrade(t)}
   if(counter){log(`${r.name} made a counter offer to ${f.name}`);return await resolveTrade(counter,depth+1)}
   log(`${r.name} declined a deal from ${f.name}`);return false;
 }
 function executeTrade(t){
+  if(!validTrade(t)){toast('That deal is no longer possible.');return false}
   const f=P(t.from),r=P(t.to);if(trackable()&&[f,r].some(x=>!x.ai&&(!G.online||x.uid===NET.me))){PREF.stats.deals++;savePref();achBump('deals')}
   t.give.forEach(i=>{G.own[i].o=r.id;updateCell(i)});t.get.forEach(i=>{G.own[i].o=f.id;updateCell(i)});
   f.cash+=t.rc-t.gc;r.cash+=t.gc-t.rc;if(t.gc-t.rc)float(f.id,t.rc-t.gc),float(r.id,t.gc-t.rc);
   if(t.gcard&&f.goojf.length)r.goojf.push(f.goojf.pop());if(t.rcard&&r.goojf.length)f.goojf.push(r.goojf.pop());
-  sfx('buy');log(`${f.name} and ${r.name} closed a deal`);renderRoster();
+  sfx('buy');log(`${f.name} and ${r.name} closed a deal`);renderRoster();return true;
 }
 
 /* ================= AI ================= */
@@ -4663,7 +4670,7 @@ const _build=build;build=function(pid,i){_build(pid,i);const p=P(pid);if(evNow()
 function ffaScan(p,i){if(!FFA()||!trackable())return;const g=SQ[i].g,full=ownsAll(p.id,g);if(!full)achAward('ffa_house')}
 const _sendToJail=sendToJail;sendToJail=async function(p){const pk=perkOf(p);if(pk.pass&&(p.passUsed||0)<pk.pass){p.passUsed=(p.passUsed||0)+1;log(`${p.name} used a Lucky Pass and stays out of the Lockup`);if(!FAST)toast(`🍀 ${p.name}’s Lucky Pass! No Lockup this time.`);renderRoster();return}
   st(p).jail++;if(mine(p))bumpCity('jail');await _sendToJail(p);if(mine(p))cityScan()};
-const _executeTrade=executeTrade;executeTrade=function(t){_executeTrade(t);[P(t.from),P(t.to)].forEach(p=>{st(p).trades++;if(mine(p)){bumpCity('trades');PREF.stats.deals++;savePref()}});if(mine(P(t.from))||mine(P(t.to))){cityScan();achBump()}};
+const _executeTrade=executeTrade;executeTrade=function(t){if(!_executeTrade(t))return false;[P(t.from),P(t.to)].forEach(p=>{st(p).trades++;if(mine(p)){bumpCity('trades');PREF.stats.deals++;savePref()}});if(mine(P(t.from))||mine(P(t.to))){cityScan();achBump()}return true};
 function onPassGo(p){if(evNow()==='holiday'){const x=payday(p);p.cash+=x;float(p.id,x)}if(perkOf(p).surge&&!p.surgeUsed){p.surgeUsed=1;const x=payday(p)*2;p.cash+=x;float(p.id,x);log(`${p.name}’s Chaos Surge: triple payday!`);if(!FAST)toast(`🌀 Chaos Surge! ${p.name} collects a triple payday`)}st(p).go++;if(mine(p)){bumpCity('go');cityScan()}}
 function onAuctionWin(w,i,bid){const s=st(w);s.aucWins++;if(bid<SQ[i].p/2)s.aucCheap++;if(mine(w))cityScan()}
 const _land=land;land=async function(p,d,o2){if(SQ[p.pos].t==='tax'&&evNow()==='taxfree'){toast('Tax holiday! Nothing to pay.');return}await _land(p,d,o2);if(SQ[p.pos].t==='free')st(p).free++;if(mine(p)&&p.cash>=3000)cityScan()};
@@ -4867,7 +4874,7 @@ function updateFigs(dt,time){if(S3.preview)S3.preview.r=[0,time*.5,0];const L=S3
 {const _sj=sendToJail;sendToJail=async function(p){figG(p.id,'jail',2.6);return _sj(p)}}
 {const _og=onPassGo;onPassGo=function(p){_og(p);figG(p.id,'cheer',1.2)}}
 {const _bd=build;build=function(pid,i){_bd(pid,i);figG(pid,'clap',1.3)}}
-{const _ex=executeTrade;executeTrade=function(t){_ex(t);figG(t.from,'clap',1.2);figG(t.to,'clap',1.2)}}
+{const _ex=executeTrade;executeTrade=function(t){if(!_ex(t))return false;figG(t.from,'clap',1.2);figG(t.to,'clap',1.2);return true}}
 {const _fin=finish;finish=async function(){if(!FAST&&G){const sts=standings();sts.forEach((p,k)=>figG(p.id,k===0?'dance':'clap',k===0?9:3))}return _fin()}}
 {const _dc=drawCard;drawCard=function(p,deck,d){if(mine(p)){PREF.stats.cards=(PREF.stats.cards||0)+1;savePref();achBump()}return _dc(p,deck,d)}}
 {const _aw=onAuctionWin;onAuctionWin=function(w,i,bid){_aw(w,i,bid);if(mine(w)){PREF.stats.auctions=(PREF.stats.auctions||0)+1;savePref();achBump()}}}
@@ -6933,14 +6940,21 @@ $('#rotOk').onclick=()=>{rotDismissed=true;checkRotate()};addEventListener('resi
 ['pointerdown','touchend','click'].forEach(ev=>document.addEventListener(ev,initAudio,{passive:true}));
 
 /* ================= TEST HOOK ================= */
-window.__sim=async function(n=20,players=4){
-  FAST=true;const res=[];
-  for(let k=0;k<n;k++){GEN++;newGame({cash:1600,set:{ai:['easy','normal','hard'][k%3],speed:'fast',pot:k%2===0,maxRounds:300},players:[...Array(players)].map((_,i)=>({name:NAMES[i],tok:TOKENS[i],col:PCOL[i],ai:true}))});G.sim=true;
-    let err=null;window.__onErr=e=>err=e;await run();
-    const houses=G.own.reduce((a,o)=>a+(o.h<5?o.h:0),0),hotels=G.own.filter(o=>o.h===5).length;
-    const cashOk=G.players.every(p=>p.cash>=0);
-    res.push({rounds:G.round,alive:alive().length,err:err&&String(err.stack||err),houseBank:G.houses+houses===36,hotelBank:G.hotels+hotels===12,cashOk})}
-  FAST=false;return res;
+window.__sim=async function(n=20,players=4,opts={}){
+  if(!Number.isInteger(n)||n<1||!Number.isInteger(players)||players<2||players>NAMES.length)throw new RangeError('Invalid simulation size');
+  const previousFast=FAST,previousRandom=Math.random,previousError=window.__onErr,res=[];
+  let seed=opts.seed==null?null:opts.seed>>>0;
+  if(seed!==null)Math.random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296};
+  FAST=true;
+  try{
+    for(let k=0;k<n;k++){GEN++;newGame({cash:1600,set:{ai:['easy','normal','hard'][k%3],speed:'fast',pot:k%2===0,maxRounds:300,...opts.set},players:[...Array(players)].map((_,i)=>({name:NAMES[i],tok:TOKENS[i],col:PCOL[i],ai:true}))});G.sim=true;
+      let err=null;window.__onErr=e=>err=e;await run();
+      const houses=G.own.reduce((a,o)=>a+(o.h<5?o.h:0),0),hotels=G.own.filter(o=>o.h===5).length;
+      const cashOk=G.players.every(p=>Number.isFinite(p.cash)&&p.cash>=0);
+      const reason=err?'error':endCheck()?(G.set.mode==='timed'&&G.round>G.set.rounds?'timed':G.set.mode==='quick'&&alive().length>1?'quick':'last-player'):'round-limit';
+      res.push({run:k+1,rounds:G.round,alive:alive().length,survivors:alive().map(p=>p.id),winner:err||reason==='round-limit'?null:standings()[0].id,leader:standings()[0].id,outcome:reason,err:err&&String(err.stack||err),houseBank:Number.isInteger(G.houses)&&G.houses>=0&&G.houses+houses===36,hotelBank:Number.isInteger(G.hotels)&&G.hotels>=0&&G.hotels+hotels===12,cashOk,cash:G.players.map(p=>p.cash)})}
+    return res;
+  }finally{FAST=previousFast;Math.random=previousRandom;window.__onErr=previousError}
 };
 
 

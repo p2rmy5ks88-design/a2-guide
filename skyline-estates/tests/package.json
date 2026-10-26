@@ -1,0 +1,10 @@
+{
+  "name": "skyline-stability-tests",
+  "private": true,
+  "scripts": {
+    "test": "node stability.cjs"
+  },
+  "devDependencies": {
+    "playwright": "1.62.1"
+  }
+}
