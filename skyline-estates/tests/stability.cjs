@@ -23,6 +23,15 @@ const root=path.resolve(__dirname,'../..');
     const regressions=await page.evaluate(async()=>{
       const checks=[];const check=(name,value)=>{if(!value)throw Error(name);checks.push(name)};
       check('browser secure room code preserves five-character format',/^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{5}$/.test(genCode()));
+      const priorMe=NET.me;NET.me='remote-0';
+      try{for(const mode of ['classic','quick','timed']){
+        newGame({cash:1600,set:{mode,rounds:10,city:'lagos',ffa:true,even:false},players:[0,1].map(i=>({uid:'remote-'+i,name:'Remote '+i,tok:TOKENS[i],col:PCOL[i],ai:false}))});
+        Object.assign(G,{online:true,code:'ABCDE',seq:2});const doc={code:'ABCDE',ed:'sk',host:'remote-0',seatIds:['remote-0','remote-1'],status:'playing',seq:2,s:JSON.stringify(G)};
+        check('real '+mode+' game passes remote schema with rules preserved',JSON.stringify(decodeRemoteGame('ABCDE',doc))===doc.s);
+      }
+      G.over=true;const done={code:'ABCDE',ed:'sk',host:'remote-0',seatIds:['remote-0','remote-1'],status:'over',seq:2,s:JSON.stringify(G)};
+      check('real completed game passes remote schema',JSON.stringify(decodeRemoteGame('ABCDE',done))===done.s);
+      }finally{NET.me=priorMe}
       const reset=()=>{FAST=true;newGame({cash:1600,set:{},players:[0,1].map(i=>({name:'P'+i,ai:true}))});G.sim=true;G.players.forEach(p=>p.cash=1600)};
       const deal=()=>({from:0,to:1,give:[],get:[],gc:0,rc:0,gcard:0,rcard:0});
       reset();
