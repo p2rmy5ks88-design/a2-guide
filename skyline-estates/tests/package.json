@@ -2,7 +2,8 @@
   "name": "skyline-stability-tests",
   "private": true,
   "scripts": {
-    "test": "node stability.cjs"
+    "test": "node turn-resume.cjs && node stability.cjs",
+    "test:turns": "node turn-resume.cjs"
   },
   "devDependencies": {
     "playwright": "1.62.1"

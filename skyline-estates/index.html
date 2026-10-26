@@ -2909,10 +2909,11 @@ async function jailTurn(p){
 }
 async function playTurn(p){ttStart(p);try{await playTurnInner(p)}finally{ttStop()}}
 async function playTurnInner(p){
+  const resumePost=G.phase==='post',resumeDoubles=G.phase==='pre'?G.doubles||0:0;
   G.phase='busy';renderRoster();updateTools();setPrompt(`<b>${esc(p.name)}</b>${p.ai?' (AI) is playing…':'’s turn'}`);$('#acts')&&!FAST&&($('#acts').innerHTML='');
   if(!FAST){camOverview(p.pos,700);await banner(p)}
-  let dbl=0;
-  while(!G.over&&!p.bankrupt){
+  let dbl=resumeDoubles;
+  while(!resumePost&&!G.over&&!p.bankrupt){
     if(p.inJail){const r=await jailTurn(p);if(p.bankrupt||r==='stay')break;
       if(r.move){placeToken(p);await moveSteps(p,r.d[0]+r.d[1]);await land(p,r.d);break}}
     G.phase='pre';updateTools();
@@ -2922,7 +2923,7 @@ async function playTurnInner(p){
     G.phase='busy';updateTools();
     const d=await rollDice();
     await offerReroll(p,d);
-    if(d[0]===d[1]){dbl++;if(dbl===3){st(p).dbl3=1;toast('Three doubles in a row. Speeding!');await sendToJail(p);break}}
+    if(d[0]===d[1]){dbl++;G.doubles=dbl;if(dbl===3){st(p).dbl3=1;toast('Three doubles in a row. Speeding!');await sendToJail(p);break}}
     if(d.s!=null){const r=await speedResolve(p,d);if(r==='triples')break}else{await moveSteps(p,d[0]+d[1]);await land(p,d)}
     if(p.bankrupt||p.inJail||G.over||d[0]!==d[1])break;
     toast('Doubles! Roll again');await sleep(500);
@@ -2933,7 +2934,7 @@ async function playTurnInner(p){
   else await actions(`<b>${esc(p.name)}</b>, anything else?<span class="sub">Build, mortgage or trade before you end your turn.</span>`,[{k:'end',label:'End turn',primary:true}]);
   G.phase='busy';
 }
-function advanceTurn(){do{G.turn=(G.turn+1)%G.players.length;if(G.turn===(G.first||0))G.round++}while(P(G.turn).bankrupt)}
+function advanceTurn(){G.doubles=0;do{G.turn=(G.turn+1)%G.players.length;if(G.turn===(G.first||0))G.round++}while(P(G.turn).bankrupt)}
 async function run(){
   const g=GEN;
   try{
