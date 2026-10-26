@@ -32,6 +32,11 @@ const root=path.resolve(__dirname,'../..');
       G.over=true;const done={code:'ABCDE',ed:'sk',host:'remote-0',seatIds:['remote-0','remote-1'],status:'over',seq:2,s:JSON.stringify(G)};
       check('real completed game passes remote schema',JSON.stringify(decodeRemoteGame('ABCDE',done))===done.s);
       }finally{NET.me=priorMe}
+      NET.on=true;NET.code='ABCDE';NET.ref={};const sessionBeforeStop=netSession();
+      check('browser captures the active online session',netSessionActive(sessionBeforeStop));netStop();
+      check('browser stop invalidates the earlier session',!netSessionActive(sessionBeforeStop)&&NET.epoch!==sessionBeforeStop.epoch);
+      NET.on=true;NET.code='ABCDE';NET.ref=sessionBeforeStop.ref;
+      check('browser same-code reuse does not revive an old session',!netSessionActive(sessionBeforeStop));netStop();
       const reset=()=>{FAST=true;newGame({cash:1600,set:{},players:[0,1].map(i=>({name:'P'+i,ai:true}))});G.sim=true;G.players.forEach(p=>p.cash=1600)};
       const deal=()=>({from:0,to:1,give:[],get:[],gc:0,rc:0,gcard:0,rcard:0});
       reset();

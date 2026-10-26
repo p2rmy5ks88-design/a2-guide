@@ -3030,6 +3030,9 @@ function decodeRemoteGame(code,d){
   const dice=g.lastDice;if(dice&&(!int(dice.a,1,6)||!int(dice.b,1,6)||!int(dice.n,1,Number.MAX_SAFE_INTEGER)||dice.sv!=null&&!int(dice.sv,0,6)))return null;
   return g;
 }
+function netSession(){return{epoch:NET.epoch,code:NET.code,ref:NET.ref,gen:GEN}}
+function netSessionActive(s){return NET.on&&NET.epoch===s.epoch&&NET.code===s.code&&NET.ref===s.ref&&GEN===s.gen}
+function guardNetSession(s){if(!netSessionActive(s))throw new Abort()}
 function decodeSave(raw){const data=JSON.parse(raw);let game=data;
   if(data&&Object.prototype.hasOwnProperty.call(data,'saveVersion')){if(data.saveVersion!==SAVE_VERSION){const e=new Error('Unsupported save version');e.newerSave=true;throw e}game=data.game}
   else if(data&&data.v!=null&&data.v!==1){const e=new Error('Unsupported game version');e.newerSave=true;throw e}
@@ -3236,7 +3239,7 @@ async function netInit(){
     if(!NET.me)NET.db=null;else NET.backend='claude'}catch(e){NET.db=null}
   return NET.db;
 }
-function netStop(){NET.unsubs.forEach(u=>{try{u()}catch(e){}});NET.unsubs=[];NET.on=false;NET.badStateWarned=false;NET.pend=null;NET.code=null;NET.ref=null;NET.driving=false;NET.asked=new Set()}
+function netStop(){NET.epoch=(NET.epoch||0)+1;NET.applyRun=false;NET.applying=false;NET.lastEnding=false;NET.wantEnd=false;NET.reclaim={};NET.unsubs.forEach(u=>{try{u()}catch(e){}});NET.unsubs=[];NET.on=false;NET.badStateWarned=false;NET.pend=null;NET.code=null;NET.ref=null;NET.driving=false;NET.asked=new Set()}
 function genCode(){const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',bytes=new Uint8Array(5);crypto.getRandomValues(bytes);return Array.from(bytes,b=>A[b%32]).join('')}
 function pushState(){if(!NET.on||!NET.driving||!G||!G.online)return;NET.dirty=true;if(!NET.pushing)netFlush()}
 async function netFlush(){NET.pushing=true;
@@ -3273,26 +3276,28 @@ function onGameSnap(snap){
   if(Number.isSafeInteger(d.seq)&&d.seq<=NET.seq)return;
   const ng=decodeRemoteGame(NET.code,d);if(!ng){if(!NET.badStateWarned){NET.badStateWarned=true;toast('An invalid game update was ignored. Waiting for the next update.')}return}
   NET.seq=d.seq;NET.pend=ng;if(NET.applyRun)return;NET.applyRun=true;
-  (async()=>{try{while(NET.pend){const x=NET.pend;NET.pend=null;try{await applyRemote(x)}catch(e){console.error(e)}}}finally{NET.applyRun=false}onlineTick()})();
+  const session=netSession();
+  (async()=>{try{while(netSessionActive(session)&&NET.pend){const x=NET.pend;NET.pend=null;try{await applyRemote(x,session)}catch(e){if(!(e instanceof Abort))console.error(e)}}}finally{if(netSessionActive(session)){NET.applyRun=false;onlineTick()}}})();
 }
-async function applyRemote(ng){
+async function applyRemote(ng,session=netSession()){
+  guardNetSession(session);
   NET.applying=true;
   try{
     const old=G;G=ng;G.online=true;
     if(!old||!tok3.length||old.players.length!==G.players.length){buildBoard();renderRoster();camOverview(P(G.turn).pos,0);return}
     renderRoster();
-    if(ng.lastDice&&(!old.lastDice||ng.lastDice.n!==old.lastDice.n)){const dd=[ng.lastDice.a,ng.lastDice.b];if(ng.lastDice.sv){dd.sv=ng.lastDice.sv;dd.s=SPEED_FACE(dd.sv)}await throwDice(dd)}
+    if(ng.lastDice&&(!old.lastDice||ng.lastDice.n!==old.lastDice.n)){const dd=[ng.lastDice.a,ng.lastDice.b];if(ng.lastDice.sv){dd.sv=ng.lastDice.sv;dd.s=SPEED_FACE(dd.sv)}await throwDice(dd);guardNetSession(session)}
     for(const p of G.players){const op=old.players[p.id];if(!op||(op.pos===p.pos&&op.inJail===p.inJail))continue;
       const steps=(p.pos-op.pos+40)%40;
-      if((p.inJail&&!op.inJail)||steps>12||steps===0)await placeToken(p,true);
-      else{const fin=p.pos;for(let k=1;k<=steps;k++){p.pos=(op.pos+k)%40;await hopTo(p)}p.pos=fin;await settleToken(p);highlight(fin)}}
+      if((p.inJail&&!op.inJail)||steps>12||steps===0){await placeToken(p,true);guardNetSession(session)}
+      else{const fin=p.pos;for(let k=1;k<=steps;k++){p.pos=(op.pos+k)%40;await hopTo(p);guardNetSession(session)}p.pos=fin;await settleToken(p);guardNetSession(session);highlight(fin)}}
     SQ.forEach((_,i)=>{const a=old.own[i],b=G.own[i];if(a.o!==b.o||a.h!==b.h||a.m!==b.m)updateCell(i,true)});
     G.players.forEach(p=>{const op=old.players[p.id];if(op&&op.cash!==p.cash)float(p.id,p.cash-op.cash)});
     if((ng.logN||0)!==(old.logN||0)&&ng.log[0]){toast(ng.log[0]);$('#log').textContent=ng.log[0]}
     if(old.turn!==ng.turn&&!ng.over){camOverview(P(G.turn).pos,700);banner(P(G.turn)).catch(()=>{})}
     renderRoster();updateTools();
     if(G.over&&!old.over){NET.applying=false;finish();return}
-  }finally{NET.applying=false}
+  }finally{if(netSessionActive(session))NET.applying=false}
 }
 async function askRemote(p,kind,payload,timeout=kind==='trade'?150000:40000){
   const id='a'+Date.now().toString(36)+Math.floor(Math.random()*1e6).toString(36);
@@ -3315,11 +3320,12 @@ async function handleAsk(snap){
   try{await ansRef.set(ans)}catch(e){}
 }
 async function netStartGame(code,ref,data){
+  NET.epoch=(NET.epoch||0)+1;NET.pend=null;NET.applyRun=false;NET.applying=false;NET.lastEnding=false;NET.wantEnd=false;NET.reclaim={};NET.asked=new Set();
   NET.on=true;NET.code=code;NET.ref=ref;NET.host=data.host===NET.me;NET.seq=data.seq||0;
-  PREF.lastOnline=code;savePref();
-  NET.unsubs.push(ref.onSnapshot(onGameSnap,e=>toast('Lost connection to the online game')));
-  NET.unsubs.push(ref.collection('ask').where('to','==',NET.me).onSnapshot(qs=>qs.docChanges().forEach(c=>{if(c.type==='added')handleAsk(c.doc)}),()=>{}));
-  if(NET.host)NET.unsubs.push(ref.collection('ctl').onSnapshot(qs=>{NET.reclaim=NET.reclaim||{};qs.docs.forEach(d=>{const v=d.data();if(v&&v.uid)NET.reclaim[v.uid]=true})},()=>{}));
+  const session=netSession();PREF.lastOnline=code;savePref();
+  NET.unsubs.push(ref.onSnapshot(s=>{if(netSessionActive(session))onGameSnap(s)},e=>{if(netSessionActive(session))toast('Lost connection to the online game')}));
+  NET.unsubs.push(ref.collection('ask').where('to','==',NET.me).onSnapshot(qs=>{if(!netSessionActive(session))return;qs.docChanges().forEach(c=>{if(c.type==='added')handleAsk(c.doc).catch(e=>{if(!(e instanceof Abort))console.error(e)})})},()=>{}));
+  if(NET.host)NET.unsubs.push(ref.collection('ctl').onSnapshot(qs=>{if(!netSessionActive(session))return;NET.reclaim=NET.reclaim||{};qs.docs.forEach(d=>{const v=d.data();if(v&&v.uid)NET.reclaim[v.uid]=true})},()=>{}));
   onlineTick();
 }
 const SEATCOL=PCOL;
@@ -5564,15 +5570,15 @@ function electHost(){if(!G||!G.players)return NET.origHost;const humans=G.player
 function hostCheck(){if(!NET.on||!G||!G.online||G.over)return;const h=electHost(),was=NET.host;NET.host=h===NET.me;
   if(h!==NET.lastHost){if(NET.lastHost!==undefined){const p=G.players.find(x=>x.uid===h);if(p)toast(h===NET.me?'You’re now hosting this game':`${p.name} is now hosting`)}NET.lastHost=h}
   if(NET.host){if(G.hostUid!==NET.me)G.hostUid=NET.me;
-    if(!was&&!NET.ctlOn){NET.ctlOn=true;NET.unsubs.push(NET.ref.collection('ctl').onSnapshot(qs=>{NET.reclaim=NET.reclaim||{};qs.docs.forEach(d=>{const v=d.data();if(v&&v.uid)NET.reclaim[v.uid]=true})},()=>{}))}
+    if(!was&&!NET.ctlOn){const session=netSession();NET.ctlOn=true;NET.unsubs.push(NET.ref.collection('ctl').onSnapshot(qs=>{if(!netSessionActive(session))return;NET.reclaim=NET.reclaim||{};qs.docs.forEach(d=>{const v=d.data();if(v&&v.uid)NET.reclaim[v.uid]=true})},()=>{}))}
     /* a player who has left gets an AI stand-in when their turn comes */
     const p=P(G.turn);if(p&&!p.ai&&!p.bankrupt&&p.uid&&p.uid!==NET.me&&!NET.driving&&!hbPresent(p.uid,HB_TURN_STALE)){p.ai=true;p.awayBot=true;toast(`${p.name} has left. AI is playing for them.`);log(`🤖 ${p.name} left the game, so the AI plays for them`)}
-    if(!was||!NET.driving)setTimeout(onlineTick,50)}}
+    if(!was||!NET.driving){const session=netSession();setTimeout(()=>{if(netSessionActive(session))onlineTick()},50)}}}
 {const _ns=netStartGame;netStartGame=async function(code,ref,data){NET.origHost=data.host;NET.joinAt=Date.now();NET.seen={};NET.lastHost=undefined;NET.ctlOn=!!(data.host===NET.me);
-  const r=await _ns(code,ref,data);
-  NET.unsubs.push(ref.collection('hb').onSnapshot(qs=>{qs.docs.forEach(d=>{const v=d.data();if(!v||!v.uid)return;const o=NET.seen[v.uid];
+  const pending=_ns(code,ref,data),session=netSession(),r=await pending;if(!netSessionActive(session))return r;
+  NET.unsubs.push(ref.collection('hb').onSnapshot(qs=>{if(!netSessionActive(session))return;qs.docs.forEach(d=>{const v=d.data();if(!v||!v.uid)return;const o=NET.seen[v.uid];
     if(!o||o.at!==v.at||o.left!==!!v.left)NET.seen[v.uid]={at:v.at,left:!!v.left,local:o||Date.now()-v.at<HB_HOST_STALE?Date.now():0}});hostCheck()},()=>{}));
-  hbBeat();clearInterval(NET.hbT);NET.hbT=setInterval(()=>{hbBeat();hostCheck()},HB_EVERY);clearInterval(NET.hcT);NET.hcT=setInterval(hostCheck,3000);return r}}
+  hbBeat();clearInterval(NET.hbT);NET.hbT=setInterval(()=>{if(netSessionActive(session)){hbBeat();hostCheck()}},HB_EVERY);clearInterval(NET.hcT);NET.hcT=setInterval(()=>{if(netSessionActive(session))hostCheck()},3000);return r}}
 {const _st=netStop;netStop=function(){clearInterval(NET.hbT);clearInterval(NET.hcT);NET.ctlOn=false;return _st()}}
 /* the game state remembers who hosts, so a returning old host doesn't take over again */
 {const _ps=pushState;pushState=function(){if(G&&G.online&&NET.host)G.hostUid=NET.me;return _ps()}}
@@ -5581,10 +5587,10 @@ async function netLeaveMark(){if(!G||!G.online||!NET.on)return;const me=G.player
 const HB_LAST_STALE=120000;
 {const _sd=standings;standings=function(){const s=_sd();if(G&&G.forceWin!=null){const w=s.find(p=>p.id===G.forceWin);if(w)return [w].concat(s.filter(p=>p!==w))}return s}}
 function lastHumanDue(){if(!NET.on||!G||!G.online||G.over||NET.lastEnding)return false;const humans=G.players.filter(p=>p.uid);if(humans.length<2)return false;const here=humans.filter(p=>hbPresent(p.uid,HB_LAST_STALE));return here.length===1&&here[0].uid===NET.me}
-async function lastHumanCheck(){if(!lastHumanDue())return;if(NET.driving||NET.applying){NET.wantEnd=true;return}NET.wantEnd=false;const humans=G.players.filter(p=>p.uid);if(humans.length<2)return;
+async function lastHumanCheck(){if(!lastHumanDue())return;const session=netSession();if(NET.driving||NET.applying){NET.wantEnd=true;return}NET.wantEnd=false;const humans=G.players.filter(p=>p.uid);if(humans.length<2)return;
   const here=humans.filter(p=>hbPresent(p.uid,HB_LAST_STALE));if(here.length!==1||here[0].uid!==NET.me)return;const me=here[0];
   NET.lastEnding=true;G.forceWin=me.id;G.over=true;G.endNote=`Everyone else left the game, so ${me.name} wins.`;log(`🏆 ${G.endNote}`);toast(G.endNote);
-  try{NET.driving=true;await pushNow()}catch(e){}finally{NET.driving=false}finish()}
+  try{NET.driving=true;await pushNow()}catch(e){}finally{if(netSessionActive(session))NET.driving=false}if(netSessionActive(session))finish()}
 {const _hc=hostCheck;hostCheck=function(){_hc();lastHumanCheck()}}
 {const _ot=onlineTick;onlineTick=function(){if(NET.wantEnd&&!NET.driving&&!NET.applying){NET.wantEnd=false;return lastHumanCheck()}return _ot()}}
 {const _f=finish;finish=function(){const r=_f.apply(this,arguments);setTimeout(()=>{if(G&&G.endNote){const m=document.querySelector('#modals .mp .mh');if(m&&!m.parentElement.querySelector('.endnote'))m.insertAdjacentHTML('afterend',`<div class="mtxt endnote"><b>${esc(G.endNote)}</b></div>`)}},400);return r}}
