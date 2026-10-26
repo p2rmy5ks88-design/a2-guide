@@ -2,9 +2,10 @@
   "name": "skyline-stability-tests",
   "private": true,
   "scripts": {
-    "test": "node turn-resume.cjs && node save-recovery.cjs && node stability.cjs",
+    "test": "node turn-resume.cjs && node save-recovery.cjs && node stability.cjs && node browser-smoke.cjs",
     "test:turns": "node turn-resume.cjs",
-    "test:saves": "node save-recovery.cjs"
+    "test:saves": "node save-recovery.cjs",
+    "test:browser": "node browser-smoke.cjs"
   },
   "devDependencies": {
     "playwright": "1.62.1"
