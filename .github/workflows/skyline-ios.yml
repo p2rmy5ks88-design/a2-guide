@@ -83,6 +83,7 @@ jobs:
           xcodebuild $T -scheme App -configuration Release -sdk iphonesimulator \
             -destination 'generic/platform=iOS Simulator' -derivedDataPath "$RUNNER_TEMP/skyline-ios" CODE_SIGNING_ALLOWED=NO build 2>&1 | tee "$RUNNER_TEMP/skyline-ios-build.log" | tail -n 20
           test -d "$RUNNER_TEMP/skyline-ios/Build/Products/Release-iphonesimulator/App.app"
+          tar -czf "$RUNNER_TEMP/skyline-ios-simulator.tar.gz" -C "$RUNNER_TEMP/skyline-ios/Build/Products/Release-iphonesimulator" App.app
       - name: Archive and upload to TestFlight
         if: github.event_name == 'workflow_dispatch' && inputs.publish && env.ASC_KEY_B64 != ''
         working-directory: skyline-estates-app/ios/App
@@ -114,6 +115,6 @@ jobs:
         with:
           name: skyline-estates-ios-simulator
           path: |
-            ${{ runner.temp }}/skyline-ios/Build/Products/Release-iphonesimulator/App.app
+            ${{ runner.temp }}/skyline-ios-simulator.tar.gz
             ${{ runner.temp }}/skyline-ios-build.log
           if-no-files-found: warn
