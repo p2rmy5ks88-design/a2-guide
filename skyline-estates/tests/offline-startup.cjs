@@ -5,7 +5,7 @@ const root=path.resolve(__dirname,'../..'),app=path.join(root,'skyline-estates')
 const manifest=metadata.self.SKYLINE_OFFLINE,report={testedAt:new Date().toISOString(),checks:[],pageErrors:[],files:manifest.files.length};
 const check=(name,ok)=>{assert.ok(ok,name);report.checks.push(name);console.log('PASS',name)};
 (async()=>{
-  let phase='base',missingHits=0,browser;const basePath='/a2-guide/skyline-estates/';
+  let phase='base',missingHits=0,browser;const indexRequests=[];const basePath='/a2-guide/skyline-estates/';
   const server=http.createServer((req,res)=>{
     const pathname=new URL(req.url,'http://localhost').pathname;res.setHeader('Cache-Control','no-store');
     if(pathname==='/probe.html'||pathname==='/a2-guide/other-app/index.html'){res.setHeader('Content-Type','text/html');res.end('<!doctype html><body>Other test page</body>');return}
@@ -18,7 +18,7 @@ const check=(name,ok)=>{assert.ok(ok,name);report.checks.push(name);console.log(
     const relative=pathname==='/a2-guide/skyline-estates/'?'skyline-estates/index.html':pathname.replace(/^\/a2-guide\//,'');
     const file=path.resolve(root,relative);if(!file.startsWith(root+path.sep)){res.writeHead(403).end();return}
     const types={'.html':'text/html','.js':'text/javascript','.mjs':'text/javascript','.webmanifest':'application/manifest+json','.css':'text/css','.png':'image/png','.webp':'image/webp','.jpg':'image/jpeg','.svg':'image/svg+xml'};
-    fs.readFile(file,(e,b)=>{res.statusCode=e?404:200;res.setHeader('Content-Type',types[path.extname(file)]||'application/octet-stream');if(!e&&file===path.join(app,'index.html')&&phase==='next')b=Buffer.from(b.toString('utf8').replace('<body>','<body data-offline-test-version="2">'));res.end(e?'Not found':b)});
+    fs.readFile(file,(e,b)=>{res.statusCode=e?404:200;res.setHeader('Content-Type',types[path.extname(file)]||'application/octet-stream');if(!e&&file===path.join(app,'index.html')&&phase==='next')b=Buffer.from(b.toString('utf8').replace('<body>','<body data-offline-test-version="2">'));if(!e&&file===path.join(app,'index.html'))indexRequests.push({phase,marked:b.toString('utf8').includes('data-offline-test-version=\"2\"')});res.end(e?'Not found':b)});
   });await new Promise(r=>server.listen(0,'127.0.0.1',r));const origin=`http://127.0.0.1:${server.address().port}`,scope=origin+basePath,prefix='skyline-estates-offline:'+scope+':';
   const end=p=>p.getByRole('button',{name:/END.*TURN/i});
   const snapshot=p=>p.evaluate(()=>JSON.stringify({players:G.players.map(p=>({cash:p.cash,pos:p.pos,bankrupt:p.bankrupt})),own:G.own,turn:G.turn,round:G.round,houses:G.houses,hotels:G.hotels,set:G.set}));
@@ -64,11 +64,14 @@ const check=(name,ok)=>{assert.ok(ok,name);report.checks.push(name);console.log(
     await probe.waitForFunction(async({prefix,version})=>{const names=(await caches.keys()).filter(n=>n.startsWith(prefix));return names.length===1&&names[0]===prefix+version},{prefix,version:manifest.version+'-next'},{timeout:30000});
     check('activation removes only obsolete Skyline cache versions',await probe.evaluate(async()=>await caches.has('other-app-keep')&&await(await caches.match('/other-keep')).text()==='keep'));
     await context.setOffline(true);page=await newPage();await page.goto(scope+'index.html?offline-test=1',{waitUntil:'domcontentloaded'});await resume(page);
+    report.versionDiagnostics=await page.evaluate(async({prefix,scope})=>{const names=(await caches.keys()).filter(n=>n.startsWith(prefix));const cache=await caches.open(names[0]),response=await cache.match(scope+'index.html'),text=await response.text();return{names,cachedBodyTag:(text.match(/<body[^>]*>/)||[])[0],liveBodyTag:document.body.outerHTML.split('>')[0]+'>',url:location.href}},{prefix,scope});console.log('Offline version diagnostics: '+JSON.stringify({versions:report.versionDiagnostics,indexRequests}));
     check('updated version opens cold offline after old clients close',await page.evaluate(()=>document.body.dataset.offlineTestVersion==='2'));check('cached update preserves the saved game',await snapshot(page)===expected);
     await exit(page);await page.locator('#hGear').click();await page.locator('#sView [data-v="3d"]').click();await page.waitForFunction(()=>!!GL&&!!S3&&!FLAT,null,{timeout:30000});await resume(page);
     check('3D board can start offline using the cached local assets',await page.evaluate(()=>!!GL&&!!S3&&!FLAT)&&await snapshot(page)===expected);
     await context.close();console.log('Offline startup diagnostics: '+JSON.stringify(report.pageErrors));check('offline startup and update paths have no page exceptions',report.pageErrors.length===0);console.log(`${report.checks.length} offline startup checks passed`);
   }finally{
+    console.log('Offline completion: '+JSON.stringify({checks:report.checks.length,pageErrors:report.pageErrors,versions:report.versionDiagnostics,indexRequests}));
     const output=process.argv[2]||path.join(root,'skyline-estates/test-results/offline-startup.json');fs.mkdirSync(path.dirname(path.resolve(output)),{recursive:true});fs.writeFileSync(output,JSON.stringify(report,null,2)+'\n');if(browser)await browser.close();await new Promise(r=>server.close(r));
   }
 })().catch(e=>{console.error(e);process.exitCode=1});
+
