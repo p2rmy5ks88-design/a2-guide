@@ -63,10 +63,11 @@ const check=(name,condition)=>{assert.ok(condition,name);report.checks.push(name
       await normal.page.waitForFunction(()=>document.documentElement.classList.contains('flat'),null,{timeout:20000});await normal.page.locator('#tCont').click();await normal.page.getByRole('button',{name:/END.*TURN/i}).waitFor({state:'visible',timeout:20000});
       check('switching 3D to 2D retains saved game state',await snapshot(normal.page)===state3d)
     }else{report.limits.push('Runner WebGL unavailable; genuine 3D/map switching could not be verified.');await normal.page.locator('#re2d').waitFor({state:'visible'})}
-    await normal.context.close();check('startup/view/offline-session tests have no page exceptions',report.pageErrors.length===0);
+    await normal.context.close();console.log('Browser diagnostics: '+JSON.stringify({pageErrors:report.pageErrors,capabilities:report.capabilities,limits:report.limits}));check('startup/view/offline-session tests have no page exceptions',report.pageErrors.length===0);
     console.log(`${report.checks.length} browser smoke checks passed`);
   }finally{
     const output=process.argv[2]||path.join(root,'skyline-estates/test-results/browser-smoke.json');fs.mkdirSync(path.dirname(path.resolve(output)),{recursive:true});fs.writeFileSync(output,JSON.stringify(report,null,2)+'\n');
     if(browser)await browser.close();await new Promise(resolve=>server.close(resolve));
   }
 })().catch(e=>{console.error(e);process.exitCode=1});
+
