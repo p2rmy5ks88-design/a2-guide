@@ -2119,7 +2119,7 @@ const ESUSU=[
 const $=s=>document.querySelector(s);
 function el(t,c,h){const e=document.createElement(t);if(c)e.className=c;if(h!=null)e.innerHTML=h;return e}
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let CUR={pre:'</body></html>,post:'K',big:'M',bigPre:'</body></html>,m:1};
+let CUR={pre:'$',post:'K',big:'M',bigPre:'$',m:1};
 function fmt(n){const neg=n<0;let v=Math.abs(n)*CUR.m;const num=x=>String(+x.toFixed(2));const s=v>=1000?(CUR.bigPre??CUR.pre)+num(v/1000)+CUR.big:CUR.pre+num(v)+CUR.post;return (neg?'−':'')+s}
 const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
 const nextOf=(arr,pos)=>arr.find(x=>x>pos)??arr[0];
@@ -2574,7 +2574,7 @@ function float(pid,amt){
   const f=el('div','float '+(amt>0?'plus':'minus'),(amt>0?'+':'')+fmt(amt));f.style.left=(x+10)+'px';f.style.top=(y-14)+'px';document.body.append(f);setTimeout(()=>f.remove(),1500);
 }
 function flyCash(from,to){if(FAST)return;const a=cardPt(from),b=to==null?[LW()/2,LH()/2]:cardPt(to);
-  for(let k=0;k<4;k++){const n=el('div','note',esc((CUR.pre||'').trim()||'</body></html>));n.style.left=a[0]+'px';n.style.top=a[1]+'px';document.body.append(n);
+  for(let k=0;k<4;k++){const n=el('div','note',esc((CUR.pre||'').trim()||'$'));n.style.left=a[0]+'px';n.style.top=a[1]+'px';document.body.append(n);
     const an=n.animate([{transform:'translate(0,0) rotate(0deg)',opacity:1},{transform:`translate(${(b[0]-a[0])*.5}px,${(b[1]-a[1])*.5-60}px) rotate(${180+k*40}deg)`,opacity:1,offset:.5},{transform:`translate(${b[0]-a[0]}px,${b[1]-a[1]}px) rotate(${360+k*60}deg)`,opacity:.2}],{duration:800*spd(),delay:k*90,easing:'ease-in-out',fill:'forwards'});
     an.onfinish=()=>n.remove()}}
 let toastT=0;
@@ -4646,7 +4646,7 @@ function pickQuestion(){const ck=countryOf((G&&G.set.city)||CUR_CITY).key,L=QUIZ
 async function quiz(p){const[q,a,wr]=pickQuestion();const opts=shuffle([a,...wr]);const cname=countryOf((G&&G.set.city)||CUR_CITY).name;
   const k=await modal({cls:'wide quizm',tdef:-1,onMount:(pn,close)=>setTimeout(()=>close(-1),20000),html:`<div class="mh">🧠 ${esc(cname)} Quiz</div><div class="mtxt">Answer right to win <b>${fmt(50)}</b>. You have 20 seconds.</div><div class="qq">${esc(q)}</div>`,btns:opts.map((o,i)=>({k:i,label:o}))});
   const right=opts[k]===a;if(right){sfx('win');toast(`Correct! ${a} 🎉`);await collect(p,50);PREF.stats.quiz=(PREF.stats.quiz||0)+1;savePref();achBump()}else{sfx('bad');toast(`Not quite. The answer is ${a}.`)}}
-async function catchCash(p){let n=0;const sym=(CUR.pre||'</body></html>).trim()||'</body></html>;
+async function catchCash(p){let n=0;const sym=(CUR.pre||'$').trim()||'$';
   await modal({cls:'wide catchm',tdef:'x',html:`<div class="mh">💸 Catch the Cash!</div><div class="mtxt">Tap the notes before they fly away. ${fmt(10)} each, 6 seconds.</div><div class="cfield"><b class="cn">0</b></div>`,onMount:(pn,close)=>{const F=pn.querySelector('.cfield'),C=pn.querySelector('.cn');let live=true;
     const spawn=()=>{if(!live)return;const b=el('button','note2',esc(sym));b.style.left=(5+Math.random()*82)+'%';b.style.top=(8+Math.random()*70)+'%';b.style.setProperty('--r',(Math.random()*40-20)+'deg');
       b.onpointerdown=e=>{e.preventDefault();if(b.dataset.got)return;b.dataset.got=1;n++;C.textContent=n;tone(1100+n*20,.06,'square',.04);b.classList.add('got');setTimeout(()=>b.remove(),200)};F.append(b);setTimeout(()=>b.remove(),1100)};
