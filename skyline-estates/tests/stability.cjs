@@ -22,6 +22,7 @@ const root=path.resolve(__dirname,'../..');
     await page.waitForFunction(()=>typeof window.__sim==='function');
     const regressions=await page.evaluate(async()=>{
       const checks=[];const check=(name,value)=>{if(!value)throw Error(name);checks.push(name)};
+      check('browser secure room code preserves five-character format',/^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{5}$/.test(genCode()));
       const reset=()=>{FAST=true;newGame({cash:1600,set:{},players:[0,1].map(i=>({name:'P'+i,ai:true}))});G.sim=true;G.players.forEach(p=>p.cash=1600)};
       const deal=()=>({from:0,to:1,give:[],get:[],gc:0,rc:0,gcard:0,rcard:0});
       reset();
