@@ -6628,6 +6628,9 @@ openAssets=function(p,opts={}){const debt=opts.debt||0,ro=!!opts.readonly;let fi
           b.innerHTML=mine?`<span class="pf2rn">${esc(SQ[i].n)}</span>${o.m?'<small class="bad">Mortgaged</small>':isP?`<span class="pf2hc"><i>${o.h>=3?PF_IC.tower:PF_IC.house}</i>${o.h===5?'H':o.h}</span>`:''}<i class="pf2ch">${PF_IC.chev}</i>`
             :`<span class="pf2rn">${esc(SQ[i].n)}</span><span class="pf2lk"><i>${PF_IC.lock}</i><small>${o.o>=0?'Owned by '+esc(P(o.o).name):isSet?'Complete this district to build':'Not owned yet'}</small></span>`;
           if(mine){b.onclick=()=>{sel=i;draw()};b.ondblclick=()=>showSquare(i)}box.append(b)});L.append(box)});
+      const F=pn.querySelector('.pf2f');F.innerHTML='';
+      if(debt){const bk=el('button','btn danger','Declare bankruptcy');bk.onclick=()=>close('bankrupt');const pb=el('button','btn pri','Pay '+fmt(debt));pb.disabled=p.cash<debt;pb.onclick=()=>close('pay');F.append(bk,pb)}
+      const x=pn.querySelector('.pf2x')||el('button','pf2x','✕');x.setAttribute('aria-label','Close');x.onclick=()=>close(debt?'auto':'done');if(!x.parentElement)pn.append(x);if(debt)x.hidden=true;
       const D=pn.querySelector('.pf2d');if(sel==null){D.innerHTML='<p class="pf2none">Pick a property to see it here.</p>';return}
       const i=sel,s=SQ[i],o=G.own[i],gr=s.g?GROUPS[s.g]:null,own=gr?gr.filter(j=>G.own[j].o===p.id).length:0,isP=s.t==='prop',full=gr&&own===gr.length;
       const why=ro?'':whyNoBuild(p,i,debt),can=!ro&&!debt&&canBuild(p.id,i),cost=isP?s.h:0,photo=cityPhoto(setup.city);
@@ -6647,9 +6650,7 @@ openAssets=function(p,opts={}){const debt=opts.debt||0,ro=!!opts.readonly;let fi
         else Bt(A,`${PF_IC.house}<span>Mortgage</span>`,'dark',canMortgage(p.id,i),()=>mortgage(p.id,i),isP&&!canMortgage(p.id,i)?'Sell the buildings in this district first.':`Mortgage for +${fmt(s.p/2)}`)}
       const loc=el('button','pf2btn small',`${PF_IC.pin}<span>Locate on board</span>`);loc.onclick=()=>{close(debt?'auto':'done');setTimeout(()=>{camFocus(i);highlight(i)},250)};A2.append(loc);
       if(!ro&&!debt&&typeof openTrade==='function'&&G.players.filter(q=>!q.bankrupt&&q.id!==p.id).length){const tr=el('button','pf2btn small',`${PF_IC.trade}<span>Offer trade</span>`);tr.onclick=()=>{close('done');setTimeout(()=>{try{openTrade(p)}catch(e){toast('Trading isn’t available right now')}},250)};A2.append(tr)}
-      const F=pn.querySelector('.pf2f');F.innerHTML='';
-      if(debt){const bk=el('button','btn danger','Declare bankruptcy');bk.onclick=()=>close('bankrupt');const pb=el('button','btn pri','Pay '+fmt(debt));pb.disabled=p.cash<debt;pb.onclick=()=>close('pay');F.append(bk,pb)}
-      const x=pn.querySelector('.pf2x')||el('button','pf2x','✕');x.setAttribute('aria-label','Close');x.onclick=()=>close(debt?'auto':'done');if(!x.parentElement)pn.append(x);if(debt)x.hidden=true};
+    };
     draw()}})};
 
 /* ================= THE TOWN AROUND THE BOARD ================= */

@@ -30,6 +30,7 @@ jobs:
         run: |
           node skyline-estates/tests/turn-resume.cjs
           node skyline-estates/tests/save-recovery.cjs
+          node skyline-estates/tests/human-flows.cjs "$RUNNER_TEMP/skyline-human-flows.json"
           node skyline-estates/tests/stability.cjs "$RUNNER_TEMP/skyline-phase1.json"
           node skyline-estates/tests/browser-smoke.cjs "$RUNNER_TEMP/skyline-browser-smoke.json"
       - name: Upload per-game results
@@ -40,3 +41,5 @@ jobs:
           path: |
             ${{ runner.temp }}/skyline-phase1.json
             ${{ runner.temp }}/skyline-browser-smoke.json
+            ${{ runner.temp }}/skyline-human-flows.json
+
