@@ -12,11 +12,10 @@ const check=(name,condition)=>{assert.ok(condition,name);report.checks.push(name
   });await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
   const origin=`http://127.0.0.1:${server.address().port}`,url=origin+'/skyline-estates/index.html';let browser;
   async function pageFor({flat=false,noGL=false}={}){
-    const context=await browser.newContext({viewport:{width:1280,height:800}});
+    const context=await browser.newContext({viewport:{width:1280,height:800},storageState:{cookies:[],origins:[{origin,localStorage:[{name:'skylinePrefs',value:JSON.stringify({nickSet:true,welcomed:1,flat2d:flat})}]}]}});
     // External services are deliberately unavailable: core local play must not require them.
     await context.route('**/*',route=>route.request().url().startsWith(origin)?route.continue():route.abort());
     await context.addInitScript(({flat,noGL})=>{
-      if(!localStorage.getItem('skylinePrefs'))localStorage.setItem('skylinePrefs',JSON.stringify({nickSet:true,welcomed:1,flat2d:flat}));
       if(noGL){const original=HTMLCanvasElement.prototype.getContext;HTMLCanvasElement.prototype.getContext=function(type,...args){return /webgl/i.test(type)?null:original.call(this,type,...args)}}
     },{flat,noGL});
     const page=await context.newPage();page.on('pageerror',e=>report.pageErrors.push(String(e.stack||e)));
@@ -61,7 +60,10 @@ const check=(name,condition)=>{assert.ok(condition,name);report.checks.push(name
       check('closing the map preserves game state',await snapshot(normal.page)===state3d);
       await exit(normal.page);await normal.page.locator('#hGear').click();await normal.page.locator('#sView [data-v="2d"]').click();
       await normal.page.waitForFunction(()=>document.documentElement.classList.contains('flat'),null,{timeout:20000});await normal.page.locator('#tCont').click();await normal.page.getByRole('button',{name:/END.*TURN/i}).waitFor({state:'visible',timeout:20000});
-      check('switching 3D to 2D retains saved game state',await snapshot(normal.page)===state3d)
+      check('switching 3D to 2D retains saved game state',await snapshot(normal.page)===state3d);
+      await exit(normal.page);await normal.page.locator('#hGear').click();await normal.page.locator('#sView [data-v="3d"]').click();
+      await normal.page.waitForFunction(()=>!!GL&&!!S3&&!FLAT,null,{timeout:20000});await normal.page.locator('#tCont').click();await normal.page.getByRole('button',{name:/END.*TURN/i}).waitFor({state:'visible',timeout:20000});
+      check('switching 2D back to 3D retains saved game state',await snapshot(normal.page)===state3d)
     }else{report.limits.push('Runner WebGL unavailable; genuine 3D/map switching could not be verified.');await normal.page.locator('#re2d').waitFor({state:'visible'})}
     await normal.context.close();console.log('Browser diagnostics: '+JSON.stringify({pageErrors:report.pageErrors,capabilities:report.capabilities,limits:report.limits}));check('startup/view/offline-session tests have no page exceptions',report.pageErrors.length===0);
     console.log(`${report.checks.length} browser smoke checks passed`);
