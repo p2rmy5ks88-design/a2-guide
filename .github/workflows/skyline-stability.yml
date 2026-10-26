@@ -30,9 +30,9 @@ jobs:
         run: |
           node skyline-estates/tests/turn-resume.cjs
           node skyline-estates/tests/save-recovery.cjs
+          node skyline-estates/tests/human-flows.cjs "$RUNNER_TEMP/skyline-human-flows.json"
           node skyline-estates/tests/stability.cjs "$RUNNER_TEMP/skyline-phase1.json"
           node skyline-estates/tests/browser-smoke.cjs "$RUNNER_TEMP/skyline-browser-smoke.json"
-          node skyline-estates/tests/human-flows.cjs "$RUNNER_TEMP/skyline-human-flows.json"
       - name: Upload per-game results
         if: always()
         uses: actions/upload-artifact@v4
@@ -42,3 +42,4 @@ jobs:
             ${{ runner.temp }}/skyline-phase1.json
             ${{ runner.temp }}/skyline-browser-smoke.json
             ${{ runner.temp }}/skyline-human-flows.json
+
