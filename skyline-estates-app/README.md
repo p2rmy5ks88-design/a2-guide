@@ -3,12 +3,14 @@
 The native apps wrap the web game in `../skyline-estates/game.html` with [Capacitor](https://capacitorjs.com). Any change to the game is picked up by the next app build.
 
 ## Automatic builds
-Every push to `main` that touches the game or this folder runs two GitHub Actions workflows:
+Pull requests and pushes to `main` that change the game, bundled assets, shared audio/Firebase configuration, app wrapper or workflow run build checks. They do not publish releases or use signing credentials. Manual runs also default to build-only.
 
-| Workflow | What you get |
+| Workflow | Build-only result |
 | --- | --- |
-| **Skyline Estates Android** | A test APK you can install on any Android phone. With signing secrets set, also a signed `.aab` for Google Play. |
-| **Skyline Estates iOS** | A check that the iOS app compiles. With App Store Connect secrets set, a signed build uploaded to TestFlight. |
+| **Skyline Estates Android** | Debug APK as an Actions artifact. |
+| **Skyline Estates iOS** | Unsigned simulator app and build log as Actions artifacts. |
+
+To publish, run the appropriate workflow manually and explicitly enable **publish**. Android then updates the sideload test release and, if signing credentials are configured, builds signed release outputs. iOS archives and uploads to TestFlight only when publishing is enabled and App Store Connect credentials are configured. Build success does not establish device, purchase or store acceptance.
 
 Download build files from the repo's **Actions** tab › the run › **Artifacts**.
 
@@ -41,4 +43,4 @@ npm run sync            # after changing the game
 ## Skyline notes
 - The radio tracks and Firebase settings are copied from `../eko-estates/` when `npm run build:web` runs.
 - In-app purchases use `cordova-plugin-purchase` (works in Capacitor). Create the four consumable coin products listed in `STORE_LISTING.md` before testing purchases on a device.
-- The GitHub workflows `skyline-ios.yml` and `skyline-android.yml` only run when started by hand (Actions → Run workflow).
+- CI checks the packaged game, every required local asset and all five bundled fonts before native compilation. Pipeline guards cover trigger paths and publication boundaries.

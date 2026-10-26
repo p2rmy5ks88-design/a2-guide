@@ -2,35 +2,92 @@ name: Skyline Estates Desktop (Steam Deck)
 
 on:
   workflow_dispatch:
+    inputs:
+      publish:
+        description: 'Publish the build (and use signing credentials if configured)'
+        type: boolean
+        default: false
+  pull_request:
+    paths:
+      - "skyline-estates/game.html"
+      - "skyline-estates/lib/**"
+      - "skyline-estates/riders/**"
+      - "skyline-estates/photos/**"
+      - "skyline-estates/art/**"
+      - "skyline-estates/items/**"
+      - "skyline-estates/icon-512.png"
+      - "skyline-estates-desktop/**"
+      - "eko-estates/audio/**"
+      - "eko-estates/firebase-config.js"
+      - ".github/workflows/skyline-desktop.yml"
+      - "skyline-estates/tests/build-pipelines.py"
+      - "skyline-estates/tests/verify-bundle.cjs"
   push:
     branches: [main]
     paths:
       - "skyline-estates/game.html"
+      - "skyline-estates/lib/**"
+      - "skyline-estates/riders/**"
+      - "skyline-estates/photos/**"
+      - "skyline-estates/art/**"
+      - "skyline-estates/items/**"
+      - "skyline-estates/icon-512.png"
+      - "skyline-estates-desktop/**"
+      - "eko-estates/audio/**"
+      - "eko-estates/firebase-config.js"
+      - ".github/workflows/skyline-desktop.yml"
+      - "skyline-estates/tests/build-pipelines.py"
+      - "skyline-estates/tests/verify-bundle.cjs"
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   appimage:
+    timeout-minutes: 20
     runs-on: ubuntu-latest
     defaults:
       run:
+        shell: bash
         working-directory: skyline-estates-desktop
     steps:
       - uses: actions/checkout@v4
+        with: { persist-credentials: false }
       - uses: actions/setup-node@v4
         with: { node-version: 22 }
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - name: Check pipeline guardrails
+        working-directory: .
+        run: python3 skyline-estates/tests/build-pipelines.py
       - name: Install
         run: npm install --no-audit --no-fund
       - name: Build AppImage
-        run: npm run dist
+        run: |
+          npm run dist
+          node ../skyline-estates/tests/verify-bundle.cjs .
       - uses: actions/upload-artifact@v4
         with:
           name: skyline-estates-steam-deck
           path: skyline-estates-desktop/dist/*.AppImage
+
+  publish:
+    if: github.event_name == 'workflow_dispatch' && inputs.publish
+    needs: appimage
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: skyline-estates-steam-deck
+          path: downloaded
       - name: Publish to the steam-deck release
         env:
           GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
         run: |
+          set -euo pipefail
+          test -s downloaded/Skyline-Estates-x86_64.AppImage
           gh release view skyline-deck >/dev/null 2>&1 || gh release create skyline-deck --title "Skyline Estates for Steam Deck" --notes "Download Skyline-Estates-x86_64.AppImage on your Steam Deck (Desktop Mode), make it executable, then Add to Steam."
-          gh release upload skyline-deck dist/Skyline-Estates-x86_64.AppImage --clobber
+          gh release upload skyline-deck downloaded/Skyline-Estates-x86_64.AppImage --clobber
