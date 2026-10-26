@@ -35,6 +35,7 @@ const check=(name,ok)=>{assert.ok(ok,name);report.checks.push(name);console.log(
     await page.goto(scope);await page.waitForFunction(()=>!!navigator.serviceWorker.controller,null,{timeout:60000});
     const installed=await page.evaluate(async prefix=>{const names=(await caches.keys()).filter(n=>n.startsWith(prefix)),cache=await caches.open(names[0]);return{names,count:(await cache.keys()).length,other:await caches.has('other-app-keep')}},prefix);
     check('first online visit installs all declared local game assets',installed.count===manifest.files.length&&installed.names.length===1);check('first activation preserves unrelated app storage',installed.other);
+    await page.waitForFunction(()=>document.querySelector('#toast')?.textContent==='Ready to play offline');check('complete installation shows the offline-ready message',true);
     await page.evaluate(()=>{
       newGame({cash:1600,set:{mode:'classic',city:'lagos',speed:'fast',ai:'normal',minigames:false,perks:false,auction:true,ffa:true,even:true,interest:true},players:[0,1].map(i=>({name:'Offline '+i,tok:TOKENS[i],col:PCOL[i],ai:false}))});
       G.first=G.turn=0;G.keysShown=true;G.phase='post';G.own[1]={o:0,h:1,m:false};G.houses=35;G.players[0].cash=1500;startWith(G)
@@ -74,4 +75,3 @@ const check=(name,ok)=>{assert.ok(ok,name);report.checks.push(name);console.log(
     const output=process.argv[2]||path.join(root,'skyline-estates/test-results/offline-startup.json');fs.mkdirSync(path.dirname(path.resolve(output)),{recursive:true});fs.writeFileSync(output,JSON.stringify(report,null,2)+'\n');if(browser)await browser.close();await new Promise(r=>server.close(r));
   }
 })().catch(e=>{console.error(e);process.exitCode=1});
-

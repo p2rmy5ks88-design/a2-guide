@@ -10,13 +10,13 @@ The worker handles only declared GET assets and the Skyline root/index navigatio
 
 Installations succeed only after every declared resource downloads. A failed candidate cache is discarded while the working version is kept. Updates do not call skipWaiting: a new complete version waits until old game tabs close, then activates and removes only this folder's obsolete cache versions. Close all Skyline tabs and reopen to adopt a waiting version; a running match is not forcibly replaced.
 
-No artwork, board spaces, scenery, layout, labels or custom game rules are changed. An inline secure-context registration skips native/desktop wrappers. The app's existing native packaging does not need the web service worker.
+No existing artwork, board spaces, scenery, layout, labels or custom game rules are changed. A brief Ready to play offline message appears only after the first complete installation. An inline secure-context registration skips native/desktop wrappers. The app's existing native packaging does not need the web service worker.
 
 ## Reproducible builds and tests
 
 `python3 skyline-estates/build.py` preserves the standalone wrapper and regenerates `offline-assets.js`. Its version hashes canonical text/binary assets and the worker source. `--check` rejects stale generated output; it runs in CI. Rebuild after game, worker or cached asset changes.
 
-- 13 local worker/client checks passed: installation, failed-install rollback, scoped cleanup, root/index/query navigation, asset caching, storage failure fallback, excluded writes/API/neighbouring apps and native registration guards.
+- 15 local worker/client checks passed: installation, failed-install rollback, scoped cleanup, root/index/query navigation, asset caching, storage failure fallback, excluded writes/API/neighbouring apps native registration guards and the installation-readiness message.
 - The new browser suite exercises cold offline tabs with HTTP cache disabled, local artwork, actual offline roll/buy/save/continue, exclusion of room/write/neighbour traffic, failed and successful updates, delayed activation, safe cleanup, saved-state retention and offline 3D startup. A synthetic version marker is served only by the test server to prove the updated cached document is used.
 - Existing source, human-flow, economy, save and view suites disable service workers for isolation. Their negative no-worker reload case describes that isolated context; production offline behavior is verified by `offline-startup.cjs`.
 - Final CI results and JSON reports are recorded on the PR before merging. Earlier passing results are not evidence for an untested head.

@@ -7071,7 +7071,8 @@ nativeInit();
 /* Offline web copy; native wrappers already ship their own local assets. */
 function registerOffline(){
   if(IS_APP||window.SKYLINE_DESKTOP||!window.isSecureContext||!('serviceWorker' in navigator))return;
-  navigator.serviceWorker.register('./sw.js',{scope:'./',updateViaCache:'none'}).catch(()=>console.warn('Offline installation unavailable; online play still works'));
+  const firstInstall=!navigator.serviceWorker.controller;
+  navigator.serviceWorker.register('./sw.js',{scope:'./',updateViaCache:'none'}).then(()=>firstInstall?navigator.serviceWorker.ready.then(()=>toast('Ready to play offline')):undefined).catch(()=>console.warn('Offline installation unavailable; online play still works'));
 }
 if(document.readyState==='complete')registerOffline();else addEventListener('load',registerOffline,{once:true});
 
