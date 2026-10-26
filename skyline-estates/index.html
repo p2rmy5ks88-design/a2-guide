@@ -3016,6 +3016,20 @@ function validateSave(g){
     if(all.length!==16||new Set(all).size!==16||!all.every(i=>int(i,0,15)))return false}
   return true;
 }
+function decodeRemoteGame(code,d){
+  const int=(x,a,b)=>Number.isSafeInteger(x)&&x>=a&&x<=b;
+  if(!d||d.code!==code||d.ed!=='sk'||!['playing','over'].includes(d.status)||!int(d.seq,1,Number.MAX_SAFE_INTEGER)||typeof d.s!=='string'||!Array.isArray(d.seatIds))return null;
+  let g;try{g=JSON.parse(d.s)}catch(e){return null}
+  if(!g||g.code!==code||g.seq!==d.seq||g.online!==true||g.sim||typeof g.over!=='boolean'||g.over!==(d.status==='over'))return null;
+  // Reuse the pure economy/schema checks without weakening offline save validation.
+  if(!validateSave({...g,online:false,over:false}))return null;
+  const ids=g.players.filter(p=>p.uid!=null).map(p=>p.uid),members=d.seatIds;
+  if(!ids.length||ids.some(u=>typeof u!=='string'||!u)||new Set(ids).size!==ids.length||new Set(members).size!==members.length||members.length!==ids.length||!members.every(u=>ids.includes(u))||!members.includes(NET.me)||!ids.includes(d.host))return null;
+  if(g.players.some(p=>(p.uid==null&&!p.ai)||!TOKENS.includes(p.tok)||!PCOL.includes(p.col)))return null;
+  if(g.hostUid!=null&&!ids.includes(g.hostUid)||g.forceWin!=null&&!int(g.forceWin,0,g.players.length-1))return null;
+  const dice=g.lastDice;if(dice&&(!int(dice.a,1,6)||!int(dice.b,1,6)||!int(dice.n,1,Number.MAX_SAFE_INTEGER)||dice.sv!=null&&!int(dice.sv,0,6)))return null;
+  return g;
+}
 function decodeSave(raw){const data=JSON.parse(raw);let game=data;
   if(data&&Object.prototype.hasOwnProperty.call(data,'saveVersion')){if(data.saveVersion!==SAVE_VERSION){const e=new Error('Unsupported save version');e.newerSave=true;throw e}game=data.game}
   else if(data&&data.v!=null&&data.v!==1){const e=new Error('Unsupported game version');e.newerSave=true;throw e}
@@ -3222,7 +3236,7 @@ async function netInit(){
     if(!NET.me)NET.db=null;else NET.backend='claude'}catch(e){NET.db=null}
   return NET.db;
 }
-function netStop(){NET.unsubs.forEach(u=>{try{u()}catch(e){}});NET.unsubs=[];NET.on=false;NET.pend=null;NET.code=null;NET.ref=null;NET.driving=false;NET.asked=new Set()}
+function netStop(){NET.unsubs.forEach(u=>{try{u()}catch(e){}});NET.unsubs=[];NET.on=false;NET.badStateWarned=false;NET.pend=null;NET.code=null;NET.ref=null;NET.driving=false;NET.asked=new Set()}
 function genCode(){const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',bytes=new Uint8Array(5);crypto.getRandomValues(bytes);return Array.from(bytes,b=>A[b%32]).join('')}
 function pushState(){if(!NET.on||!NET.driving||!G||!G.online)return;NET.dirty=true;if(!NET.pushing)netFlush()}
 async function netFlush(){NET.pushing=true;
@@ -3255,10 +3269,10 @@ function spectatorPrompt(){
 }
 function endCheck(){if(alive().length<=1)return true;if(G.set.mode==='timed'&&G.round>G.set.rounds)return true;if(G.set.mode==='quick'&&G.players.some(p=>p.bankrupt))return true;return false}
 function onGameSnap(snap){
-  if(!snap.exists)return;const d=snap.data();if(d.status==='lobby-sk'||!d.s)return;
-  if(d.seq<=NET.seq)return;if(NET.driving)return;
-  NET.seq=d.seq;let ng;try{ng=JSON.parse(d.s)}catch(e){return}
-  NET.pend=ng;if(NET.applyRun)return;NET.applyRun=true;
+  if(!NET.on||!snap.exists||NET.driving)return;const d=snap.data();if(!d||d.status==='lobby-sk')return;
+  if(Number.isSafeInteger(d.seq)&&d.seq<=NET.seq)return;
+  const ng=decodeRemoteGame(NET.code,d);if(!ng){if(!NET.badStateWarned){NET.badStateWarned=true;toast('An invalid game update was ignored. Waiting for the next update.')}return}
+  NET.seq=d.seq;NET.pend=ng;if(NET.applyRun)return;NET.applyRun=true;
   (async()=>{try{while(NET.pend){const x=NET.pend;NET.pend=null;try{await applyRemote(x)}catch(e){console.error(e)}}}finally{NET.applyRun=false}onlineTick()})();
 }
 async function applyRemote(ng){
@@ -3398,7 +3412,7 @@ async function hostStart(ref,d){
   try{await ref.update({status:'playing',s:JSON.stringify(G),seq:1,at:Date.now()})}catch(e){toast('Couldn’t start the game. Try again.')}
 }
 function startOnlineFromDoc(code,ref,d){
-  let g;try{g=JSON.parse(d.s)}catch(e){toast('The game data looks damaged.');return}
+  const g=decodeRemoteGame(code,d);if(!g){toast('The game data looks damaged.');return}
   g.online=true;GEN++;G=g;applyTheme(G.set.theme||'beach');$('#title').hidden=true;$('#ui').hidden=false;$('#modals').innerHTML='';buildBoard();renderRoster();$('#log').textContent=G.log[0]||'';
   camOverview(P(G.turn).pos,0);checkRotate();NET.ref=ref;netStartGame(code,ref,d);
 }

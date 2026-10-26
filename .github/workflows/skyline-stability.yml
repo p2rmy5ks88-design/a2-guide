@@ -32,6 +32,7 @@ jobs:
         run: |
           node skyline-estates/tests/offline-worker.cjs
           node skyline-estates/tests/offline-startup.cjs "$RUNNER_TEMP/skyline-offline-startup.json"
+          node skyline-estates/tests/remote-state.cjs
           node skyline-estates/tests/online-rooms.cjs
           node skyline-estates/tests/turn-resume.cjs
           node skyline-estates/tests/save-recovery.cjs
