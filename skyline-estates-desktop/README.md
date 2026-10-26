@@ -30,5 +30,5 @@ Typing a username: press **Steam + X** to bring up the on-screen keyboard. The t
 Quit from **Settings → Desktop app → Quit game**, or with the Steam button.
 
 ## Build a new version
-Run the **Skyline Estates Desktop (Steam Deck)** workflow in GitHub Actions. It rebuilds the AppImage from the current game and replaces the file on the `skyline-deck` release, so the link above always gets the latest version.
+Pull requests and relevant pushes to `main` build the AppImage and retain it as an Actions artifact. Changes to the game, assets, shared inputs, desktop wrapper or workflow trigger these checks. Manual runs default to build-only. To replace the file on the `skyline-deck` release, manually run **Skyline Estates Desktop (Steam Deck)** and explicitly enable **publish**. Ordinary validation cannot update the public download. Compilation and packaging do not establish Steam Deck device acceptance.
 Locally: `npm install && npm run dist` (output in `dist/`), or `npm start` to run it.

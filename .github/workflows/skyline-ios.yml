@@ -2,32 +2,74 @@ name: Skyline Estates iOS
 
 on:
   workflow_dispatch:
+    inputs:
+      publish:
+        description: 'Publish the build (and use signing credentials if configured)'
+        type: boolean
+        default: false
+  pull_request:
+    paths:
+      - "skyline-estates/game.html"
+      - "skyline-estates/lib/**"
+      - "skyline-estates/riders/**"
+      - "skyline-estates/photos/**"
+      - "skyline-estates/art/**"
+      - "skyline-estates/items/**"
+      - "skyline-estates/icon-512.png"
+      - "skyline-estates-app/**"
+      - "eko-estates/audio/**"
+      - "eko-estates/firebase-config.js"
+      - ".github/workflows/skyline-ios.yml"
+      - "skyline-estates/tests/build-pipelines.py"
+      - "skyline-estates/tests/verify-bundle.cjs"
   push:
     branches: [main]
     paths:
       - "skyline-estates/game.html"
+      - "skyline-estates/lib/**"
+      - "skyline-estates/riders/**"
+      - "skyline-estates/photos/**"
+      - "skyline-estates/art/**"
+      - "skyline-estates/items/**"
+      - "skyline-estates/icon-512.png"
+      - "skyline-estates-app/**"
+      - "eko-estates/audio/**"
+      - "eko-estates/firebase-config.js"
+      - ".github/workflows/skyline-ios.yml"
+      - "skyline-estates/tests/build-pipelines.py"
+      - "skyline-estates/tests/verify-bundle.cjs"
 
 permissions:
   contents: read
 
 jobs:
   ios:
+    timeout-minutes: 20
     runs-on: macos-15
     defaults:
       run:
+        shell: bash
         working-directory: skyline-estates-app
     env:
       VERSION_NAME: '1.0.${{ github.run_number }}'
       VERSION_CODE: '${{ github.run_number }}'
-      ASC_KEY_B64: ${{ secrets.APP_STORE_CONNECT_KEY_BASE64 }}
+      ASC_KEY_B64: ${{ github.event_name == 'workflow_dispatch' && inputs.publish && secrets.APP_STORE_CONNECT_KEY_BASE64 || '' }}
     steps:
       - uses: actions/checkout@v4
+        with: { persist-credentials: false }
       - uses: actions/setup-node@v4
         with: { node-version: 22 }
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - name: Check pipeline guardrails
+        working-directory: .
+        run: python3 skyline-estates/tests/build-pipelines.py
       - name: Install
         run: npm install --no-audit --no-fund
       - name: Build web game
-        run: npm run build:web
+        run: |
+          npm run build:web
+          node ../skyline-estates/tests/verify-bundle.cjs .
       - name: Create iOS project
         run: |
           npx cap add ios
@@ -39,9 +81,10 @@ jobs:
         run: |
           if [ -d App.xcworkspace ]; then T="-workspace App.xcworkspace"; else T="-project App.xcodeproj"; fi
           xcodebuild $T -scheme App -configuration Release -sdk iphonesimulator \
-            -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build | tail -n 20
+            -destination 'generic/platform=iOS Simulator' -derivedDataPath "$RUNNER_TEMP/skyline-ios" CODE_SIGNING_ALLOWED=NO build 2>&1 | tee "$RUNNER_TEMP/skyline-ios-build.log" | tail -n 20
+          test -d "$RUNNER_TEMP/skyline-ios/Build/Products/Release-iphonesimulator/App.app"
       - name: Archive and upload to TestFlight
-        if: env.ASC_KEY_B64 != ''
+        if: github.event_name == 'workflow_dispatch' && inputs.publish && env.ASC_KEY_B64 != ''
         working-directory: skyline-estates-app/ios/App
         env:
           ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
@@ -65,3 +108,12 @@ jobs:
           PL
           xcodebuild -exportArchive -archivePath "$RUNNER_TEMP/SkylineEstates.xcarchive" \
             -exportOptionsPlist "$RUNNER_TEMP/export.plist" -exportPath "$RUNNER_TEMP/export" $AUTH | tail -n 20
+      - name: Upload simulator build and log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: skyline-estates-ios-simulator
+          path: |
+            ${{ runner.temp }}/skyline-ios/Build/Products/Release-iphonesimulator/App.app
+            ${{ runner.temp }}/skyline-ios-build.log
+          if-no-files-found: warn
