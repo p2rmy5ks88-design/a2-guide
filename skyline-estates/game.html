@@ -2983,17 +2983,61 @@ async function openMenu(){
   else if(k==='snd')await openSound();
   else if(k==='spd')G.set.speed=G.set.speed==='fast'?'normal':'fast';
   else if(k==='end'){const c=await modal({html:'<div class="mh">End the game now?</div><div class="mtxt">The richest player by net worth wins.</div>',btns:[{k:'no',label:'Keep playing'},{k:'yes',label:'End & score',primary:true}]});if(c==='yes'){GEN++;$('#modals').innerHTML='';G.over=true;if(G.online){NET.driving=true;await pushNow();NET.driving=false}finish()}}
-  else if(k==='quit'){if(G&&G.online){const c=await modal({html:'<div class=mh>Leave this online game?</div><div class=mtxt>The game carries on without you: the AI plays your seat, and if you’re hosting, the next player takes over. You can rejoin with the game code.</div>',btns:[{k:'x',label:'Stay'},{k:'go',label:'Leave',danger:true}]});if(c!=='go')return;await netLeaveMark()}save();GEN++;$('#modals').innerHTML='';showTitle()}
+  else if(k==='quit'){if(G&&G.online){const c=await modal({html:'<div class=mh>Leave this online game?</div><div class=mtxt>The game carries on without you: the AI plays your seat, and if you’re hosting, the next player takes over. You can rejoin with the game code.</div>',btns:[{k:'x',label:'Stay'},{k:'go',label:'Leave',danger:true}]});if(c!=='go')return;await netLeaveMark()}if(!G.online&&!save())return;GEN++;$('#modals').innerHTML='';showTitle()}
 }
 $('#bAssets').onclick=()=>{if(!G||$('#modals').children.length)return;if($('#bAssets').classList.contains('off')){const me=G.players.find(isLocalHuman);if(me)openAssets(me,{readonly:true});else toast('Properties open on your turn');return}openAssets(P(G.turn))};
 $('#bTrade').onclick=()=>{if(!G||$('#modals').children.length)return;if($('#bTrade').classList.contains('off')){toast(alive().length>1?'You can trade on your own turn, before or after rolling':'No one left to trade with');return}openTrade(P(G.turn))};
 $('#bMenu').onclick=()=>{if(G&&!$('#modals').children.length)openMenu()};
 
 /* ================= SAVE / HOT ================= */
-const SKEY='skylineSave';
-function save(){try{if(G&&!G.over&&!G.sim&&!G.online)localStorage.setItem(SKEY,JSON.stringify(G))}catch(e){}}
-function clearSave(){try{if(!G.sim)localStorage.removeItem(SKEY)}catch(e){}}
-function loadSave(){try{const s=localStorage.getItem(SKEY);return s?JSON.parse(s):null}catch(e){return null}}
+const SKEY='skylineSave',SAVE_VERSION=1,SAVE_BACKUP=SKEY+'.backup',SAVE_UNREADABLE=SKEY+'.unreadable';
+let saveWarning='';
+function saveNotice(message){if(saveWarning===message)return;saveWarning=message;console.warn('[Skyline save] '+message);if(!FAST)toast(message)}
+function validateSave(g){
+  const obj=x=>x&&typeof x==='object'&&!Array.isArray(x),num=x=>Number.isFinite(x)&&x>=0,int=(x,a,b)=>Number.isInteger(x)&&x>=a&&x<=b;
+  if(!obj(g)||g.v!==1||g.over!==false||g.sim||g.online||!Array.isArray(g.players)||!int(g.players.length,2,6))return false;
+  const n=g.players.length;
+  if(!int(g.turn,0,n-1)||!int(g.round,1,Number.MAX_SAFE_INTEGER)||!obj(g.set)||!Array.isArray(g.log)||!g.log.every(x=>typeof x==='string'))return false;
+  if(g.set.mode!=null&&!['classic','quick','timed'].includes(g.set.mode)||g.set.mode==='timed'&&!int(g.set.rounds,1,Number.MAX_SAFE_INTEGER))return false;
+  if(['minigames','perks','ffa','events','speedDie','pot','goDouble','jailRent','auction','even','interest'].some(k=>g.set[k]!=null&&typeof g.set[k]!=='boolean'))return false;
+  if(g.keys!=null&&(!Array.isArray(g.keys)||g.keys.length!==n||new Set(g.keys).size!==n||!g.keys.every(k=>int(k,2,99))))return false;
+  if(g.set.city!=null&&!Object.prototype.hasOwnProperty.call(CITY_DATA,g.set.city))return false;
+  if(!['busy','pre','post','jail','debt'].includes(g.phase)||g.doubles!=null&&!int(g.doubles,0,3)||g.first!=null&&!int(g.first,0,n-1))return false;
+  if(!num(g.pot)||!int(g.houses,0,36)||!int(g.hotels,0,12))return false;
+  if(!g.players.every((p,i)=>obj(p)&&p.id===i&&typeof p.name==='string'&&typeof p.tok==='string'&&typeof p.col==='string'&&typeof p.ai==='boolean'&&num(p.cash)&&int(p.pos,0,39)&&typeof p.bankrupt==='boolean'&&typeof p.inJail==='boolean'&&int(p.jailTurns,0,3)&&Array.isArray(p.goojf)&&obj(p.declined)&&Number.isFinite(p.lastOffer)&&(p.st==null||obj(p.st))))return false;
+  if(!Array.isArray(g.own)||g.own.length!==40)return false;
+  let houses=g.houses,hotels=g.hotels;
+  for(let i=0;i<40;i++){const o=g.own[i];if(!obj(o)||!int(o.o,-1,n-1)||!int(o.h,0,5)||typeof o.m!=='boolean')return false;
+    if((o.h||o.m)&&o.o<0||o.h&&(SQ[i].t!=='prop'||o.m)||o.o>=0&&!['prop','rail','util'].includes(SQ[i].t))return false;
+    if(o.h===5)hotels++;else houses+=o.h}
+  if(houses!==36||hotels!==12)return false;
+  for(const deck of ['chance','esusu']){const cards=deck==='chance'?CHANCE:ESUSU;if(!Array.isArray(g[deck]))return false;const all=g[deck].slice();
+    for(const p of g.players)for(const c of p.goojf){if(!obj(c)||!['chance','esusu'].includes(c.deck)||!int(c.idx,0,15))return false;if(c.deck===deck){if(!cards[c.idx].goojf)return false;all.push(c.idx)}}
+    if(all.length!==16||new Set(all).size!==16||!all.every(i=>int(i,0,15)))return false}
+  return true;
+}
+function decodeSave(raw){const data=JSON.parse(raw);let game=data;
+  if(data&&Object.prototype.hasOwnProperty.call(data,'saveVersion')){if(data.saveVersion!==SAVE_VERSION){const e=new Error('Unsupported save version');e.newerSave=true;throw e}game=data.game}
+  else if(data&&data.v!=null&&data.v!==1){const e=new Error('Unsupported game version');e.newerSave=true;throw e}
+  if(!validateSave(game))throw new Error('Invalid saved game');return game;
+}
+function save(){
+  if(!G||G.over||G.sim||G.online)return false;
+  try{if(!validateSave(G))throw new Error('Invalid game state');
+    const raw=JSON.stringify({saveVersion:SAVE_VERSION,savedAt:Date.now(),game:G}),previous=localStorage.getItem(SKEY);
+    if(previous){let valid=false;try{decodeSave(previous);valid=true}catch(e){if(e.newerSave)throw e}
+      // Keep the last valid checkpoint. Retain unreadable data locally before replacing it.
+      localStorage.setItem(valid?SAVE_BACKUP:SAVE_UNREADABLE,previous)}
+    localStorage.setItem(SKEY,raw);saveWarning='';return true;
+  }catch(e){saveNotice(e.newerSave?'This save needs a newer game version. Update before saving.':'Could not save this game. Keep it open and check available storage.');return false}
+}
+function clearSave(){if(!G||G.sim||G.online)return false;try{localStorage.removeItem(SAVE_BACKUP);localStorage.removeItem(SKEY);saveWarning='';return true}catch(e){saveNotice('Could not remove the completed game save. Check available storage.');return false}}
+function loadSave(){
+  try{const raw=localStorage.getItem(SKEY);if(raw){try{return decodeSave(raw)}catch(e){if(e.newerSave){saveNotice('This save needs a newer game version. Update before continuing.');return null}}}
+    const backup=localStorage.getItem(SAVE_BACKUP);if(backup){try{const game=decodeSave(backup);saveNotice('The latest save could not be read. An earlier saved turn was recovered.');return game}catch(e){}}
+    if(raw||backup)saveNotice('This saved game could not be read. You can start a new game.');return null;
+  }catch(e){saveNotice('Saved games are unavailable. Check browser storage settings.');return null}
+}
 try{window.claude?.hot?.snapshot?.(()=>({G:G&&!G.over&&!G.online?JSON.stringify(G):null}))}catch(e){}
 
 /* ================= CONFETTI ================= */

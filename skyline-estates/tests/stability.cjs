@@ -40,6 +40,15 @@ const root=path.resolve(__dirname,'../..');
       P(0).cash=50;check('stale cash rejected at execution',executeTrade(t)===false&&G.own[i].o===0);
       P(0).cash=1600;const result=executeTrade(t);check('valid trade succeeds '+JSON.stringify({result,owner:G.own[i].o,cash:G.players.map(p=>p.cash)}),result===true&&G.own[i].o===1&&P(0).cash===1500&&P(1).cash===1700);
       reset();P(0).goojf.push({deck:'chance',idx:0});check('bail pass transfer',executeTrade({...deal(),gcard:1})===true&&P(0).goojf.length===0&&P(1).goojf.length===1);
+      for(const mode of ['classic','quick','timed']){
+        newGame({cash:1600,set:{mode,rounds:20,city:'lagos'},players:[0,1,2,3].map(i=>({name:NAMES[i],tok:TOKENS[i],col:PCOL[i],ai:true}))});
+        check(mode+' real game save succeeds',save());check(mode+' real game round-trips',JSON.stringify(loadSave())===JSON.stringify(G));
+      }
+      const legacy=JSON.stringify(G);localStorage.setItem(SKEY,legacy);check('real legacy save loads',JSON.stringify(loadSave())===legacy);
+      check('real save migrates on write',save()&&JSON.parse(localStorage.getItem(SKEY)).saveVersion===SAVE_VERSION);
+      localStorage.setItem(SKEY,'{broken');check('real corrupt primary recovers backup',JSON.stringify(loadSave())===legacy);
+      // Finish cleanup so seeded games use an independent in-memory state.
+      clearSave();
       FAST=false;
       const random=Math.random,handler=()=>{};window.__onErr=handler;
       const first=await window.__sim(3,4,{seed:42}),second=await window.__sim(3,4,{seed:42});

@@ -5,15 +5,16 @@ const {execFileSync}=require('node:child_process');
 const root=path.resolve(__dirname,'../..');
 const source=process.env.SOURCE_REF?execFileSync('git',['show',`${process.env.SOURCE_REF}:skyline-estates/game.html`],{cwd:root,encoding:'utf8',maxBuffer:4e6}):fs.readFileSync(path.join(root,'skyline-estates/game.html'),'utf8');
 const section=(start,end)=>source.slice(source.indexOf(start),source.indexOf(end,source.indexOf(start)));
-const functions=section('async function playTurnInner(p){','async function run(){')+section("const SKEY='skylineSave';",'try{window.claude?.hot');
+const functions=section('async function playTurnInner(p){','async function run(){')+section("const SKEY='skylineSave'",'try{window.claude?.hot');
 const results=[];
 async function test(name,fn){await fn();results.push(name);console.log('PASS',name)}
 function fixture(phase='post',ai=false,dice=[[2,3]]){
   const events=[],storage=new Map();let roll=0;
   const players=[{id:0,name:'Test',ai,cash:1300,pos:5,bankrupt:false,inJail:false},{id:1,name:'Other',ai:false,cash:1700,pos:12,bankrupt:false,inJail:false}];
-  const g={v:1,players,turn:0,round:2,first:0,phase,over:false,own:[{o:0,h:1,m:false}],houses:35,hotels:12,set:{}};
+  players.forEach(p=>Object.assign(p,{tok:'T',col:'#fff',jailTurns:0,goojf:[],declined:{},lastOffer:-9}));
+  const g={v:1,players,turn:0,round:2,first:0,phase,over:false,own:Array.from({length:40},(_,i)=>({o:i===0?0:-1,h:i===0?1:0,m:false})),houses:35,hotels:12,pot:0,set:{},log:[],chance:Array.from({length:16},(_,i)=>i),esusu:Array.from({length:16},(_,i)=>i)};
   const ctx={G:g,FAST:true,GEN:1,window:{},localStorage:{setItem:(k,v)=>storage.set(k,v),getItem:k=>storage.get(k)||null,removeItem:k=>storage.delete(k)},
-    $:()=>null,P:i=>ctx.G.players[i],esc:x=>x,renderRoster(){},updateTools(){},setPrompt(){},camOverview(){},banner:async()=>{},
+    console:{warn(){}},SQ:Array.from({length:40},()=>({t:'prop'})),CITY_DATA:{lagos:{}},CHANCE:Array.from({length:16},()=>({})),ESUSU:Array.from({length:16},()=>({})),$:()=>null,P:i=>ctx.G.players[i],esc:x=>x,renderRoster(){},updateTools(){},setPrompt(){},camOverview(){},banner:async()=>{},
     actions:async(text,buttons)=>{events.push(['action',buttons[0].k])},sleep:async()=>{},toast(){},
     rollDice:async()=>{events.push(['roll']);return dice[roll++]||[2,3]},offerReroll:async()=>{},
     moveSteps:async(p,n)=>{events.push(['move',n]);p.pos=(p.pos+n)%40},land:async p=>{events.push(['land']);p.cash-=50},
