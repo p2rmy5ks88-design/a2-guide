@@ -26,6 +26,7 @@ jobs:
       - name: Test saved turns and seeded games
         run: |
           node skyline-estates/tests/turn-resume.cjs
+          node skyline-estates/tests/save-recovery.cjs
           node skyline-estates/tests/stability.cjs "$RUNNER_TEMP/skyline-phase1.json"
       - name: Upload per-game results
         if: always()
