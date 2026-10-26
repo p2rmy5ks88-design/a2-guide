@@ -3166,6 +3166,7 @@ const FIRE=(()=>{const C=window.EKO_FIREBASE;if(!C||!C.apiKey||!C.databaseURL)re
   function docRef(p){const id=p.split('/').pop();return{id,path:p,
     get:async()=>snapDoc(id,(await req('GET',p)).val),
     set:async d=>{await req('PUT',p,d);myIndex(p,d)},
+    create:async d=>{const r=await req('PUT',p,d,'',{'if-match':'null_etag'});if(r.status===412)return false;myIndex(p,d);return true},
     update:async d=>{await req('PATCH',p,d);myIndex(p,d)},
     delete:async()=>{await req('DELETE',p)},
     async acquire({holder,ttlMs=4000}){const lp='locks/'+p.split('/').join('~');
@@ -3222,7 +3223,7 @@ async function netInit(){
   return NET.db;
 }
 function netStop(){NET.unsubs.forEach(u=>{try{u()}catch(e){}});NET.unsubs=[];NET.on=false;NET.pend=null;NET.code=null;NET.ref=null;NET.driving=false;NET.asked=new Set()}
-function genCode(){const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let k=0;k<5;k++)s+=A[Math.floor(Math.random()*A.length)];return s}
+function genCode(){const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',bytes=new Uint8Array(5);crypto.getRandomValues(bytes);return Array.from(bytes,b=>A[b%32]).join('')}
 function pushState(){if(!NET.on||!NET.driving||!G||!G.online)return;NET.dirty=true;if(!NET.pushing)netFlush()}
 async function netFlush(){NET.pushing=true;
   while(NET.dirty&&NET.on){NET.dirty=false;G.seq=(G.seq||0)+1;NET.seq=G.seq;const body={s:JSON.stringify(G),seq:G.seq,status:G.over?'over':'playing',turnUid:P(G.turn).uid||null,at:Date.now()};
@@ -3337,11 +3338,15 @@ async function openOnline(pre){
 }
 function cfgSet(){return Object.assign({ai:setup.ai,speed:setup.speed,timer:setup.timer,mode:setup.mode,rounds:setup.rounds,city:setup.city,theme:setup.city,cash:setup.cash},setup.rules)}
 async function createOnline(){
-  const db=NET.db;let code=genCode();const ref=db.doc('games/'+code);
+  const db=NET.db;
   const tok0=setup.slots[0].tok||PREF.tok||TOKENS[0];const seat=Object.assign({uid:NET.me,name:cleanName(myName()||PREF.nick||'Player'),tok:tok0,col:SEATCOL[0],ai:false},seatExtras(tok0));
-  try{await ref.set({code,ed:'sk',host:NET.me,status:'lobby-sk',seats:[seat],seatIds:[NET.me],set:cfgSet(),at:Date.now(),seq:0})}
+  try{for(let attempt=0;attempt<8;attempt++){
+    const code=genCode(),ref=db.doc('games/'+code),room={code,ed:'sk',host:NET.me,status:'lobby-sk',seats:[seat],seatIds:[NET.me],set:cfgSet(),at:Date.now(),seq:0};
+    // Firebase creation must be atomic: an existing room is never replaced on collision.
+    if(NET.backend==='firebase'){if(!await ref.create(room))continue}else await ref.set(room);
+    lobby(code,ref);return;
+  }toast('Couldn’t find a free game code. Try again.')}
   catch(e){toast(e&&e.code==='quota_exceeded'?'The online game list is full. Delete old games and try again.':(NET.backend==='claude'?'Couldn’t create the game. Check you have Editor access, then try again.':'Couldn’t create the game. Check your connection and try again.'));return}
-  lobby(code,ref);
 }
 /* games the player removed from their lists (kept a week) */
 function hiddenGames(){const h=PREF.hidden=PREF.hidden||{};const now=Date.now();Object.keys(h).forEach(c=>{if(now-h[c]>7*864e5)delete h[c]});return h}
