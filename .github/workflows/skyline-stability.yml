@@ -34,6 +34,7 @@ jobs:
           node skyline-estates/tests/offline-startup.cjs "$RUNNER_TEMP/skyline-offline-startup.json"
           node skyline-estates/tests/turn-resume.cjs
           node skyline-estates/tests/save-recovery.cjs
+          node skyline-estates/tests/complete-matches.cjs "$RUNNER_TEMP/skyline-complete-matches.json"
           node skyline-estates/tests/human-flows.cjs "$RUNNER_TEMP/skyline-human-flows.json"
           node skyline-estates/tests/stability.cjs "$RUNNER_TEMP/skyline-phase1.json"
           node skyline-estates/tests/browser-smoke.cjs "$RUNNER_TEMP/skyline-browser-smoke.json"
@@ -47,3 +48,4 @@ jobs:
             ${{ runner.temp }}/skyline-browser-smoke.json
             ${{ runner.temp }}/skyline-human-flows.json
             ${{ runner.temp }}/skyline-offline-startup.json
+            ${{ runner.temp }}/skyline-complete-matches.json
