@@ -1,0 +1,806 @@
+{
+  "browser": "156.0.8078.47",
+  "errors": [],
+  "results": [
+    {
+      "rounds": 95,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 50,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 84,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 92,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 29,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 301,
+      "alive": 2,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 160,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 44,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 17,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 76,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 29,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 121,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 58,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 76,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 32,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 39,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 136,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 43,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 50,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 37,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 113,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 82,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 91,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 77,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 58,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 81,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 34,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 43,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 75,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 122,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 53,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 60,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 51,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 57,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 70,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 58,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 35,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 64,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 37,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 55,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 39,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 54,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 59,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 54,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 133,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 51,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 42,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 66,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 73,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 129,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 67,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 66,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 122,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 44,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 48,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 97,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 40,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 46,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 49,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 45,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 63,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 86,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 45,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 54,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 59,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 62,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 60,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 57,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 54,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 38,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 36,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 93,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 61,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 98,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 54,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 301,
+      "alive": 2,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 78,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 71,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 77,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 81,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 34,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 42,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 68,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 237,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 66,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 75,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 46,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 75,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 41,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 105,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 124,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 116,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 45,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 61,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 57,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 33,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 74,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 51,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 80,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    },
+    {
+      "rounds": 95,
+      "alive": 1,
+      "err": null,
+      "houseBank": true,
+      "hotelBank": true,
+      "cashOk": true
+    }
+  ]
+}
