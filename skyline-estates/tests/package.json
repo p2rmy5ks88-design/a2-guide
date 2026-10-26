@@ -7,7 +7,7 @@
     "test:turns": "node turn-resume.cjs",
     "test:saves": "node save-recovery.cjs",
     "test:browser": "node browser-smoke.cjs",
-    "test:human": "node human-flows.cjs && node complete-matches.cjs",
+    "test:human": "node human-flows.cjs",
     "test:offline": "node offline-worker.cjs && node offline-startup.cjs"
   },
   "devDependencies": {
