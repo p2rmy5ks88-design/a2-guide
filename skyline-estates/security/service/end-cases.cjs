@@ -1,6 +1,7 @@
 const {game:base}=require('./turn-cases.cjs'),{line}=require('./audited-rules.cjs');
 function game(n=2){const g=base();g.phase='post';g.first=0;g.doubles=2;for(let i=2;i<n;i++)g.players.push({...JSON.parse(JSON.stringify(g.players[1])),id:i,uid:'seat-'+i,name:'Player '+i,tok:'🏍️',col:'#41c8ff'});return g}
 function cases(){const out=[],add=(name,change=()=>{},drawSpec=[])=>{const g=game();change(g);out.push({name,game:g,drawSpec})};
+ add('bankrupt current player can finish its busy turn',g=>{Object.assign(g,game(3));g.phase='busy';g.players[0].bankrupt=true;g.players[0].cash=0;g.own.forEach(o=>{if(o.o===0)o.o=-1})});
  add('ordinary turn handoff');add('round wrap',g=>g.turn=1);add('doubles count resets',g=>g.doubles=3);
  add('nonzero opening seat wraps correctly',g=>{g.first=1;g.turn=0});
  add('bankrupt opening seat still counts a round',g=>{const x=game(3);Object.assign(g,x);g.first=1;g.players[1].bankrupt=true;g.players[1].cash=0});
