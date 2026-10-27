@@ -3440,6 +3440,7 @@ function saveSlot(i,sl){if(i===0&&(sl.name||'').trim()){PREF.nick=(sl.name||'').
 const setup={slots:NAMES.slice(0,6).map((n,i)=>{const sv=(PREF.slots||[])[i]||{};return{name:(sv.name||'').trim()||n,tok:TOKENS.includes(sv.tok)?sv.tok:TOKENS[i],type:i===0?'human':i<4?'ai':'off'}}),cash:1600,ai:'normal',speed:'normal',mode:'classic',rounds:20,timer:PREF.timer||0,city:'lagos',theme:'lagos',
   rules:Object.assign({minigames:true,perks:true,ffa:false,events:false,speedDie:false,pot:false,goDouble:false,jailRent:false,auction:true,even:true,interest:true},PREF.rules||{})};
 function startWith(g){
+  if(!g.online&&!g.sim&&!g.masteryId)g.masteryId=crypto.randomUUID();
   GEN++;netStop();XPGAME=0;XPLOG=[];COINLOG=[];G=g;applyTheme(G.set.city||G.set.theme||setup.city);applyDiceSkin();$('#title').hidden=true;$('#ui').hidden=false;$('#modals').innerHTML='';buildBoard();renderRoster();$('#log').textContent='';
   log(G.round===1&&!G.log.length?(G.set.mode==='quick'?'Quick deal: everyone starts with 2 properties.':G.set.mode==='timed'?`Round limit: richest after ${G.set.rounds} rounds wins.`:'Welcome to Skyline Estates. First to bankrupt the rest wins.'):'Game resumed.');
   cam.rz=0;camOverview(P(G.turn).pos,0);checkRotate();(typeof keyReveal==='function'?keyReveal():Promise.resolve()).then(run);
@@ -3901,6 +3902,28 @@ const TOKEN_LV=[null,
     txt:'Crimson finish with a pulsing ember aura · Payday +20% · 2 re-rolls · Lucky Pass · Rent Shield (your first rent bill each game is halved) · +25% coins from every game with this token · Mythic title'},
   {name:'Chaotic',col:'#2a1048',ui:'linear-gradient(90deg,#ff3f6c,#ffb02e,#3fd0ff,#8f3fd8)',cost:30000,pay:.25,rr:3,pass:2,shield:1,coinX:.5,xpX:.25,surge:1,req:{wins:40,lvl:30,league:'diamond'},aura:'chaos',
     txt:'Shifting rainbow aura with orbiting sparks · Payday +25% · 3 re-rolls · 2 Lucky Passes · Rent Shield · Chaos Surge (your first trip past Start each game pays triple) · +50% coins and +25% XP from every game with this token · Chaotic title'}];
+
+// Each token has a distinct path built from the existing bounded perk mechanics.
+const TOKEN_POWER={
+ '🚌':{name:'Safe Passage',pass:[0,1,1,1,1,2],shield:[0,0,0,1,1,1]},
+ '🛺':{name:'Second Chance',rr:[0,1,1,2,2,3]},
+ '🏍️':{name:'Slip Through',pass:[0,1,1,2,2,3]},
+ '🥁':{name:'Drumbeat',xpX:[0,.05,.1,.15,.2,.25]},
+ '🍲':{name:'Steady Pot',pay:[0,.02,.04,.06,.08,.1],shield:[0,0,0,0,1,1]},
+ '🦅':{name:'Eagle Eye',rr:[0,0,1,1,2,2],pass:[0,1,1,1,1,1]},
+ '🚕':{name:'Meter Bonus',pay:[0,.05,.1,.15,.2,.25]},
+ '⛵':{name:'Fair Winds',pay:[0,.03,.06,.09,.12,.15],pass:[0,0,1,1,1,1]},
+ '🐎':{name:'Winning Stride',pay:[0,.02,.04,.06,.08,.1],rr:[0,0,1,1,1,2]},
+ '🛶':{name:'River Guide',rr:[0,1,1,1,1,1],shield:[0,0,0,1,1,1]},
+ '🚂':{name:'Reliable Route',pay:[0,.03,.06,.09,.12,.15],shield:[0,0,0,0,1,1]},
+ '🎭':{name:'Encore',coinX:[0,.05,.1,.15,.2,.25]},
+ '✈️':{name:'Flight Plan',rr:[0,1,1,1,2,2],xpX:[0,0,.05,.1,.15,.2]},
+ '🚀':{name:'Launch Surge',pay:[0,.01,.02,.03,.04,.05],rr:[0,0,0,1,1,1],surge:[0,0,0,0,0,1]},
+ '👑':{name:'Royal Dividend',pay:[0,.02,.04,.06,.08,.1],coinX:[0,.02,.04,.06,.08,.1]},
+ '🛢️':{name:'Reserve Fund',shield:[0,0,0,1,1,1],coinX:[0,.02,.04,.06,.08,.1]}
+};
+function tokenPower(t,level){const lv=Number.isInteger(level)?Math.max(1,Math.min(6,level)):1,F=TOKEN_POWER[t],R={...TOKEN_LV[lv],pay:0,rr:0,pass:0,shield:0,coinX:0,xpX:0,surge:0};for(const k of ['pay','rr','pass','shield','coinX','xpX','surge'])R[k]=F?.[k]?.[lv-1]||0;const e=[];if(R.pay)e.push('Payday +'+Math.round(R.pay*100)+'%');if(R.rr)e.push(R.rr+' re-roll'+(R.rr>1?'s':'')+' per game');if(R.pass)e.push(R.pass+' Lucky Pass'+(R.pass>1?'es':''));if(R.shield)e.push('first rent bill halved');if(R.surge)e.push('first Start payday tripled');if(R.coinX)e.push('game coins +'+Math.round(R.coinX*100)+'%');if(R.xpX)e.push('player XP +'+Math.round(R.xpX*100)+'%');R.powerName=F?.name||'No power';R.txt=R.powerName+' · '+(e.join(' · ')||'No power at Common. Evolve to unlock it.');return R}
+
 const TL_MAX=6;
 PREF.tokWins=PREF.tokWins||{};
 function tierReqText(t,lv){const R=TOKEN_LV[lv];if(!R||!R.req)return'';const q=R.req,o=[];if(q.wins)o.push(`Win ${q.wins} games with this token (${Math.min(q.wins,PREF.tokWins[t]||0)}/${q.wins})`);if(q.lvl)o.push(`Reach player level ${q.lvl} (now ${lvlOf(PREF.xp)})`);if(q.league){const L=LEAGUES.find(l=>l.id===q.league);o.push(`Reach the ${L.name} league`)}return o.join(' · ')}
@@ -3908,8 +3931,35 @@ function tierReqMet(t,lv){const R=TOKEN_LV[lv];if(!R||!R.req)return true;const q
 if(!PREF.tokTierV){Object.keys(PREF.tokLv).forEach(k=>{PREF.tokLv[k]=[1,1,2,2,3,4][Math.min(5,PREF.tokLv[k]||1)]});PREF.tokTierV=1}
 const tokLv=t=>Math.max(1,Math.min(TL_MAX,PREF.tokLv[t]||1));
 const rarityOf=l=>TOKEN_LV[Math.max(1,Math.min(TL_MAX,l||1))];
+
+/* ================= TOKEN MASTERY: DEVICE PROFILE ================= */
+// Completed games only. Existing owned tiers are retained; future games use the earned tier.
+const TOKEN_MASTERY=[null,{xp:0,wins:0},{xp:200,wins:1},{xp:600,wins:3},{xp:1400,wins:7},{xp:3000,wins:15},{xp:6000,wins:40}];
+const masteryCount=n=>Number.isSafeInteger(n)&&n>=0?Math.min(n,1000000000):0;
+function tokenMastery(t,profile=PREF){const r=profile.tokenMastery?.tokens?.[t]||{};return{xp:masteryCount(r.xp),games:masteryCount(r.games),wins:masteryCount(profile.tokWins?.[t])}}
+function earnedTokenStage(t,profile=PREF){const m=tokenMastery(t,profile);let stage=Math.max(1,Math.min(6,masteryCount(profile.tokLv?.[t])||1));for(let i=2;i<=6;i++)if(m.xp>=TOKEN_MASTERY[i].xp&&m.wins>=TOKEN_MASTERY[i].wins)stage=Math.max(stage,i);return stage}
+function tokenMasteryNeeds(t,lv){const q=TOKEN_MASTERY[lv],m=tokenMastery(t);return q?[{ok:m.xp>=q.xp,txt:'Token XP',sub:m.xp+' / '+q.xp},{ok:m.wins>=q.wins,txt:'Wins with this token',sub:m.wins+' / '+q.wins}]:[]}
+function tokenGameId(g){if(g.online){if(typeof g.code!=='string'||!Array.isArray(g.keys))return null;return 'online:'+g.code+':'+g.keys.join('-')+':'+NET.me}if(!g.masteryId)g.masteryId=crypto.randomUUID();return g.masteryId}
+function grantTokenMastery(g,w){if(!g||!g.over||g.sim||FAST)return null;
+ const me=g.players.find(p=>!p.ai&&(!g.online||p.uid===NET.me));if(!me||!Object.hasOwn(TOKEN_INFO,me.tok))return null;
+ const id=tokenGameId(g);if(!id||PREF.tokenMastery?.receipts?.[id])return null;
+ const next=JSON.parse(JSON.stringify(PREF)),m=tokenMastery(me.tok,next),won=w?.id===me.id,xp=100+(won?50:0),before=tokLv(me.tok);
+ next.tokenMastery=next.tokenMastery&&next.tokenMastery.version===1?next.tokenMastery:{version:1,tokens:{},receipts:{}};
+ next.tokenMastery.tokens=next.tokenMastery.tokens||{};next.tokenMastery.receipts=next.tokenMastery.receipts||{};
+ // Bounded device receipt history; this is not a server-verified competitive reward.
+ const ids=Object.keys(next.tokenMastery.receipts);if(ids.length>=1024)delete next.tokenMastery.receipts[ids[0]];
+ next.tokenMastery.tokens[me.tok]={xp:Math.min(1000000000,m.xp+xp),games:Math.min(1000000000,m.games+1)};
+ next.tokWins=next.tokWins||{};next.tokWins[me.tok]=Math.min(1000000000,m.wins+(won?1:0));
+ next.tokLv=next.tokLv||{};next.tokLv[me.tok]=earnedTokenStage(me.tok,next);
+ next.tokenMastery.receipts[id]={token:me.tok,xp,won};
+ try{localStorage.setItem(PKEY,JSON.stringify(next))}catch{toast('Token progress could not be saved. Check device storage.');return null}
+ PREF.tokenMastery=next.tokenMastery;PREF.tokWins=next.tokWins;PREF.tokLv=next.tokLv;
+ return{token:me.tok,xp,stage:next.tokLv[me.tok],before,won};
+}
+/* ================= END TOKEN MASTERY ================= */
+
 const perksOn=()=>!G||G.set.perks!==false;
-const perkOf=p=>TOKEN_LV[perksOn()&&p&&p.tl?Math.max(1,Math.min(TL_MAX,p.tl)):1];
+const perkOf=p=>tokenPower(p?.tok,perksOn()&&p&&p.tl?p.tl:1);
 function payday(p){return Math.round(PAYDAY*(1+perkOf(p).pay))}
 
 /* ---- premium cosmetics ---- */
@@ -4756,14 +4806,14 @@ function progressGameEnd(w){if(!trackable()||G.progDone)return null;G.progDone=t
   const sts=standings(),me=hum.slice().sort((a,b)=>sts.indexOf(a)-sts.indexOf(b))[0],rank=sts.indexOf(me),n=sts.length;
   let base=50+(won?200:0)+Math.min(200,Math.round(Math.max(...hum.map(p=>st(p).rent))/10));
   if(PREF.boostGames>0){base*=2;PREF.boostGames--;XPLOG.push(['Double XP booster',0])}
-  const myT=rarityOf(me.tl);if(myT.xpX){base=Math.round(base*(1+myT.xpX));XPLOG.push([myT.name+' token bonus',0])}
+  const myT=perkOf(me);if(myT.xpX){base=Math.round(base*(1+myT.xpX));XPLOG.push([myT.name+' token bonus',0])}
   addXP(base,won?'Win + game XP':'Game XP');
-  const coins=Math.round(((won?120:40)+(rank===1&&!won?30:0)+(G.online?40:0))*(1+(myT.coinX||0)));addCoins(coins,won?'Win':'Game');if(won){PREF.tokWins[me.tok]=(PREF.tokWins[me.tok]||0)+1;savePref()}
+  const coins=Math.round(((won?120:40)+(rank===1&&!won?30:0)+(G.online?40:0))*(1+(myT.coinX||0)));addCoins(coins,won?'Win':'Game');const mastery=grantTokenMastery(G,w);
   const tr=trophyDelta(rank,n,won);const lc=tr?addTrophies(tr):0;
   const sx=hum.map(st);const sum=k=>sx.reduce((a,s)=>a+(s[k]||0),0);
   weeklyAdd('games',1);if(won)weeklyAdd('wins',1);if(G.online)weeklyAdd('online',1);weeklyAdd('houses',sum('houses'));weeklyAdd('towers',sum('hotels'));weeklyAdd('rent',sum('rent'));weeklyAdd('trades',sum('trades'));weeklyAdd('auctions',sum('aucWins'));
   {const W=weekly(),k=countryOf(c).key;if(!W.cs.includes(k)){W.cs.push(k);weeklyAdd('countries',1)}}
-  cityScan(true);missionScan(true,w);PREF.lastCountry=countryOf(c).key;savePref();achBump();lbSubmit();return {won,coins,tr,lc,rank}}
+  cityScan(true);missionScan(true,w);PREF.lastCountry=countryOf(c).key;savePref();achBump();lbSubmit();return {won,coins,tr,lc,rank,mastery}}
 function highlights(){const pl=G.players,best=(f)=>pl.reduce((b,p)=>(f(p)>(b?f(b):-1)?p:b),null);const out=[];
   const r=best(p=>st(p).maxRent);if(r&&st(r).maxRent)out.push(['💸','Biggest rent',`${r.name} collected ${fmt(st(r).maxRent)} in one go`]);
   const b=best(p=>st(p).buys);if(b&&st(b).buys)out.push(['🏘️','Top buyer',`${b.name} bought ${st(b).buys} properties`]);
@@ -4779,7 +4829,7 @@ async function finish(){
     <div>${hl.length?`<div class="mtxt muted">Highlights</div><div class="hls">${hl.map(h=>`<div><i>${h[0]}</i><span><b>${esc(h[1])}</b><small>${esc(h[2])}</small></span></div>`).join('')}</div>`:''}
     ${res?`<div class="xpcard"><div class="rewrow"><span class="rew"><b>+${XPGAME}</b><small>XP</small></span><span class="rew coin"><b>+${res.coins}</b><small>${COIN} coins</small></span><span class="rew"><b>${res.tr>0?'+':''}${res.tr}</b><small>🏆 trophies</small></span></div>
       <div class="xprow"><span>Level ${lv} · ${rankOf(lv)}</span><span>${L.icon} ${L.name} · ${PREF.trophies} 🏆</span></div><div class="xpbar"><i style="width:${Math.min(100,(PREF.xp-a)/(b-a)*100)}%"></i></div>
-      <small>${PREF.xp-a} / ${b-a} XP to level ${lv+1} · Season tier ${tier}/${TIERS}${seasonClaimable()?' · rewards to claim!':''}</small></div>`:''}</div></div>`,
+      <small>${res.mastery?`${esc(TOKEN_INFO[res.mastery.token][0])}: +${res.mastery.xp} token XP${res.mastery.stage>res.mastery.before?` · Evolved to ${TOKEN_LV[res.mastery.stage].name}!`:""}<br>`:""}${PREF.xp-a} / ${b-a} XP to level ${lv+1} · Season tier ${tier}/${TIERS}${seasonClaimable()?' · rewards to claim!':''}</small></div>`:''}</div></div>`,
     btns:[{k:'season',label:'Season'},{k:'new',label:'New game',primary:true}]});
   if(k==='season'){setup.tab='season';showTitle()}else if(k==='new')showTitle();
 }
@@ -6575,7 +6625,7 @@ const stSw=(id,on,label)=>`<button class="stsw${on?' on':''}" id="${id}" role="s
    gestures) beside a grid of portrait cards; username below. Tokens: "Token workshop" with the token grid on the
    left, the selected token's model picture and finish on the right, then the upgrade comparison. Solid background:
    the 3D board no longer shows through. */
-const CL={tok:null,filter:'all'};
+const CL={tok:null,filter:'all',stage:null};
 const clHead=(t,s,right='')=>`<header class="clhead"><div><h2>${t}</h2><p>${s}</p></div>${right}</header>`;
 paneCast=function(T){clearPreview();peekOver(null);const sel=setup.castSel||myChar(),c=CHARS.find(x=>x.id===sel)||CHARS[0],un=charUnlocked(c.id),mine=myChar()===c.id;
   T.innerHTML=clHead('Your collection','Characters, tokens and the frames you earn by playing.','<button class="clbtn" id="clTok">Token workshop →</button>')+
@@ -6590,10 +6640,10 @@ paneCast=function(T){clearPreview();peekOver(null);const sel=setup.castSel||myCh
   T.querySelector('#clSave').onclick=()=>{if(setUsername(T.querySelector('#clNm').value)){toast('Username saved');railProfile()}else toast('Use 2–12 letters or numbers')};
   T.querySelectorAll('.clgest [data-g]').forEach(b=>b.onclick=()=>{const h=T.querySelector('#clHint'),pv=T.querySelector('.clport');pv.classList.remove('wiggle','hop','spin','tilt');void pv.offsetWidth;pv.classList.add({wave:'wiggle',cheer:'hop',dance:'spin',think:'tilt'}[b.dataset.g]);h.textContent={wave:'Waves on their turn.',cheer:'Celebrates when buying, passing Start or collecting rent.',dance:'Dances when they win.',think:'Thinks while deciding.'}[b.dataset.g]})};
 paneTokens=function(T){clearPreview();peekOver(null);const all=TOKENS.concat(NEW_TOKENS);let sel=CL.tok&&all.includes(CL.tok)?CL.tok:setup.slots[0].tok;CL.tok=sel;
-  const lv=tokLv(sel),cur=TOKEN_LV[lv],next=TOKEN_LV[lv+1],owned=tokenUnlocked(sel),info=TOKEN_INFO[sel],mine=setup.slots[0].tok===sel,col=owned?(mine?mdFinCol():mdTokCol(sel)):'#7d8a96';
+  const lv=tokLv(sel),cur=tokenPower(sel,lv),next=lv<6?tokenPower(sel,lv+1):null,owned=tokenUnlocked(sel),info=TOKEN_INFO[sel],mine=setup.slots[0].tok===sel,col=owned?(mine?mdFinCol():mdTokCol(sel)):'#7d8a96';
   const list=all.filter(t=>CL.filter==='all'||(CL.filter==='own')===tokenUnlocked(t));
   const rows=WS_PERKS.map(([k,f,v])=>{const a=f(cur),b=next?f(next):null,up=next&&(v?v(next)>v(cur):a!==b);if(a==='None'&&(!next||b==='None'))return '';return `<tr${up?' class="up"':''}><td>${k}</td><td>${esc(a)}</td><td>${next?esc(b):'—'}</td></tr>`}).join('');
-  T.innerHTML=clHead('Token workshop','Preview your token, choose a finish and compare upgrades.')+
+  T.innerHTML=clHead('Token evolution','Each token has its own power. Play with it to earn XP, win and evolve.')+
     `<div class="clws"><section class="cltl"><div class="clfil">${[['all','All'],['own','Owned'],['lock','Locked']].map(([k,l])=>`<button class="${CL.filter===k?'on':''}" data-f="${k}">${l}</button>`).join('')}</div>
       <div class="cltgrid">${list.map(t=>{const u=tokenUnlocked(t);return `<button class="cltok${t===sel?' on':''}${u?'':' locked'}" data-t="${t}">${mdl({token:t,col:u?(setup.slots[0].tok===t?mdFinCol():mdTokCol(t)):'#7d8a96',label:TOKEN_INFO[t][0]},'cltm'+(u?'':' lockm'),160,128)}<b>${esc(TOKEN_INFO[t][0])}</b><small>${u?rarityOf(tokLv(t)).name:'Locked'}</small></button>`}).join('')}</div></section>
     <div class="clmain"><section class="clshow"><div class="clstage">${mdl({token:sel,col,label:info[0]},'clbig',520,400)}</div>
@@ -6601,14 +6651,16 @@ paneTokens=function(T){clearPreview();peekOver(null);const all=TOKENS.concat(NEW
         <button class="clbtn gold" id="clEq"${!owned||mine?' disabled':''}>${mine?'✓ Equipped':owned?'Equip token':'Locked'}</button>
         <div class="cldiv"></div><b>Cosmetic finish</b><div class="clfin">${[{id:null,name:'Player colour',col:PCOL[0]}].concat(FINISHES).map(f=>{const own=f.id===null||itemOwned('fin',f.id),on=(PREF.eq.fin||null)===f.id;return `<button class="${on?'on':''}${own?'':' locked'}" data-fin="${f.id||''}" title="${esc(f.name)}${own?'':' · '+(f.price?nfmt(f.price)+' coins':'reward')}" aria-label="${esc(f.name)} finish"><i style="background:${finPic(f.id)?`url(${finPic(f.id)}) 50% 29%/190% no-repeat`:`radial-gradient(circle at 35% 30%,#fff,${f.col} 55%,#000 140%)`}"></i></button>`}).join('')}</div>
         <small class="clhint">A finish changes how it looks. Upgrade tiers give the perks.</small></div></section>
-    <section class="clup"><h3>${owned?'Compare upgrades':'Unlock this token'}</h3>${owned?`<table class="clcmp"><thead><tr><th></th><th>Now<br><span>${cur.name}</span></th><th>${next?'Next<br><span>'+next.name+'</span>':'Top tier'}</th></tr></thead><tbody>${rows||'<tr><td>Perks</td><td>None yet</td><td>—</td></tr>'}</tbody></table>
-      <p class="clhint">Perks apply only when the host turns on Token perks.</p>${next?`<div class="clkv"><span>Upgrade cost</span><b>${COIN_I}${nfmt(next.cost)}</b></div><div class="clkv"><span>Balance after</span><b class="${PREF.coins<next.cost?'neg':''}">${PREF.coins>=next.cost?nfmt(PREF.coins-next.cost):'Not enough coins'}</b></div>${next.req?`<p class="clhint">${esc(tierReqText(sel,lv+1))}</p>`:''}<button class="clbtn gold" id="clUp"${tierReqMet(sel,lv+1)?'':' disabled'}>Upgrade to ${next.name}</button>`:'<p>Highest tier reached ✨</p>'}`
-      :`<p>${esc(tokenHowText(sel))}</p>${TOKEN_HOW[sel]&&TOKEN_HOW[sel].coins?`<button class="clbtn gold" id="clUnl">Unlock · ${nfmt(TOKEN_HOW[sel].coins)} coins</button>`:''}`}</section></div></div>`;
+    <section class="clup"><h3>${esc(cur.powerName)} · Evolution stages</h3><p class="clhint">Completed game +100 token XP · win +50 XP. Both XP and wins are required. Evolution is automatic and costs no coins. Progress is saved on this device.</p><div class="evo-totals"><b>${tokenMastery(sel).xp} token XP</b><b>${tokenMastery(sel).wins} wins</b><span>${tokenMastery(sel).games} completed games</span></div>
+      <nav class="evo-track" aria-label="Evolution stages">${TOKEN_MASTERY.slice(1).map((r,j)=>{const stage=j+1,L=TOKEN_LV[stage];return `<button data-stage="${stage}" aria-pressed="${stage===(CL.stage||lv)}" style="--stage:${L.col||'#8a96a3'}"><span class="tem r${stage}">${sel}</span><b>${L.name}</b><small>${stage===lv?'Current':stage<lv?'Unlocked':'Preview'} · ${r.xp} XP / ${r.wins} wins</small></button>`}).join('')}</nav><section class="evo-peek" aria-live="polite"></section>
+      <p class="clhint">Future stages are previews. Perks apply only when the host enables Token perks. Existing owned stages are kept. No powers are equipped by previewing.</p>
+      ${owned?`<table class="clcmp"><thead><tr><th>Power</th><th>Now · ${cur.name}</th><th>${next?'Next · '+next.name:'Maximum'}</th></tr></thead><tbody>${rows}</tbody></table>`: `<p>${esc(tokenHowText(sel))}</p>${TOKEN_HOW[sel]?.coins?`<button class="clbtn gold" id="clUnl">Unlock · ${nfmt(TOKEN_HOW[sel].coins)} coins</button>`:''}`}</section></div></div>`;
+  const peek=stage=>{CL.stage=stage;const L=tokenPower(sel,stage),r=TOKEN_MASTERY[stage];T.querySelectorAll('[data-stage]').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.stage===stage)));T.querySelector('.evo-peek').innerHTML=`<div><small>${stage===lv?'CURRENT STAGE':stage<lv?'UNLOCKED STAGE':'PREVIEW ONLY — NOT EQUIPPED'}</small><h4>${L.name}</h4><p>${esc(L.txt)}</p><p>${r.xp} XP and ${r.wins} wins required</p></div>${mdl({token:sel,col:L.col||PCOL[0],pal:1,label:info[0]+' '+L.name+' preview'},'evo-model',180,140)}`};
+  T.querySelectorAll('[data-stage]').forEach(b=>b.onclick=()=>peek(+b.dataset.stage));peek(CL.stage||lv);
   T.querySelectorAll('.clfil [data-f]').forEach(b=>b.onclick=()=>{CL.filter=b.dataset.f;paneTokens(T)});
-  T.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{CL.tok=b.dataset.t;paneTokens(T)});
+  T.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{CL.tok=b.dataset.t;CL.stage=null;paneTokens(T)});
   const eq=T.querySelector('#clEq');if(eq)eq.onclick=()=>{const other=setup.slots.findIndex((s,i)=>i>0&&s.tok===sel);if(other>0)setup.slots[other].tok=setup.slots[0].tok;setup.slots[0].tok=sel;saveSlot(0,setup.slots[0]);toast(`${info[0]} is your token`);paneTokens(T)};
   T.querySelectorAll('[data-fin]').forEach(b=>b.onclick=()=>{const id=b.dataset.fin||null,f=id&&FINISHES.find(x=>x.id===id);if(id&&!itemOwned('fin',id)){if(!f.price){toast(f.desc);return}openItem('fin',id,f.price,0,'tokens');return}PREF.eq.fin=id;savePref();railProfile();paneTokens(T)});
-  const up=T.querySelector('#clUp');if(up)up.onclick=async()=>{if(!(await confirmBuy(`Upgrade ${info[0]} to ${next.name}`,next.cost,`Coins after: ${nfmt(PREF.coins-next.cost)}.`)))return;PREF.tokLv[sel]=lv+1;savePref();achBump();toast(`${info[0]} is now ${next.name}!`);railProfile();paneTokens(T);try{confetti()}catch(e){}};
   const un=T.querySelector('#clUnl');if(un)un.onclick=async()=>{if(await confirmBuy(`Unlock ${info[0]}`,TOKEN_HOW[sel].coins)){grantItem('tok',sel);railProfile();paneTokens(T)}}};
 {const _ht=homeTab;homeTab=function(k){const r=_ht(k);try{const h=$('#title .home');if(h&&document.querySelector('.clhead'))h.classList.remove('peek-r','peek-t')}catch(e){}return r}}
 
@@ -6633,27 +6685,31 @@ const PF_DIST=['M12 3l2 5h-4zM9 21V8h6v13M5 21h14','M12 3v6M7 21V12l5-3 5 3v9M5 
 const pfDistIc=(g,col)=>{const k=Object.keys(GROUPS).indexOf(g);return `<span class="pfdi" style="--c:${col}"><svg viewBox="0 0 24 24"><path d="${PF_DIST[(k<0?0:k)%PF_DIST.length]}" fill="none" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/></svg></span>`};
 const PF_LV=['Home','Townhouse','Apartments','Boutique hotel','Skyline Tower'];
 openAssets=function(p,opts={}){const debt=opts.debt||0,ro=!!opts.readonly;let filter='all',sel=null;const shut={};
-  return modal({cls:'pf2',tdef:ro?undefined:debt?'auto':'done',html:'<div class="pf2h"></div><div class="pf2s"></div><div class="pf2debt"></div><div class="pf2b"><div class="pf2l"><div class="pf2t" role="tablist"></div><div class="pf2g"></div></div><div class="pf2d"></div></div><div class="pf2f"></div>',onMount:(pn,close)=>{
+  return modal({cls:'pf2',tdef:ro?undefined:debt?'auto':'done',html:'<div class="pf2h"></div><div class="pf2s"></div><div class="pf3overview"></div><div class="pf2debt"></div><div class="pf2b"><div class="pf2l"><div class="pf2t" role="tablist"></div><div class="pf2g"></div></div><div class="pf2d"></div></div><div class="pf2f"></div>',onMount:(pn,close)=>{
     pn.closest('.ov')&&pn.closest('.ov').classList.add('pf2ov');
-    const groupsOf=()=>{const out=[];Object.keys(GROUPS).forEach(g=>{const all=GROUPS[g],mine=all.filter(j=>G.own[j].o===p.id);if(mine.length)out.push({k:g,name:GNAME[g],col:GC[g],all,mine})});
-      const rails=RAILS.filter(j=>G.own[j].o===p.id),utils=UTILS.filter(j=>G.own[j].o===p.id);if(rails.length)out.push({k:'rail',name:'Transit hubs',col:'#7f8a96',all:RAILS,mine:rails});if(utils.length)out.push({k:'util',name:'Utilities',col:'#9aa3ad',all:UTILS,mine:utils});return out};
+    const groupsOf=()=>{const out=[];Object.keys(GROUPS).forEach(g=>{const all=GROUPS[g],mine=all.filter(j=>G.own[j].o===p.id);out.push({k:g,name:GNAME[g],col:GC[g],all,mine})});
+      const rails=RAILS.filter(j=>G.own[j].o===p.id),utils=UTILS.filter(j=>G.own[j].o===p.id);out.push({k:'rail',name:'Transit hubs',col:'#7f8a96',all:RAILS,mine:rails});out.push({k:'util',name:'Utilities',col:'#9aa3ad',all:UTILS,mine:utils});return out};
     const pass=i=>filter==='all'||(filter==='build'?(!ro&&canBuild(p.id,i)):G.own[i].m);
     const draw=()=>{const list=propsOf(p.id);if(sel==null||G.own[sel].o!==p.id)sel=list.find(i=>!ro&&canBuild(p.id,i))??list[0]??null;
       pn.querySelector('.pf2h').innerHTML=`<h2>${ro?esc(p.name)+'’s portfolio':'Your portfolio'}</h2>`;
       pn.querySelector('.pf2s').innerHTML=`<span><i>${PF_IC.cash}</i><small>Cash</small><b>${fmt(p.cash)}</b></span><span><i>${PF_IC.assets}</i><small>Assets</small><b>${list.length} propert${list.length===1?'y':'ies'}</b></span><span><i>${PF_IC.worth}</i><small>Net worth</small><b>${fmt(netWorth(p))}</b></span>`;
+      const districts=Object.keys(GROUPS).map(g=>({g,owned:GROUPS[g].filter(i=>G.own[i].o===p.id),all:GROUPS[g]})),complete=districts.filter(g=>g.owned.length===g.all.length).length;
+      const ready=list.filter(i=>!ro&&!debt&&canBuild(p.id,i)),near=districts.filter(g=>g.owned.length&&g.owned.length<g.all.length).sort((a,b)=>(a.all.length-a.owned.length)-(b.all.length-b.owned.length))[0];
+      const next=debt?'Raise cash using the property actions below.':ready.length?ready.length+' properties can be developed now.':near?'Complete '+GNAME[near.g]+': missing '+near.all.filter(i=>G.own[i].o!==p.id).map(i=>SQ[i].n).join(', ')+'.':list.length?'Review districts to plan your next purchase or trade.':'Buy an unowned property or win an auction to begin your estate.';
+      pn.querySelector('.pf3overview').innerHTML=`<div class="pf3metrics"><span><b>${complete} / ${districts.length}</b><small>Complete districts</small></span><span><b>${list.reduce((n,i)=>n+(G.own[i].h<5?G.own[i].h:0),0)} / ${list.filter(i=>G.own[i].h===5).length}</b><small>Houses / towers</small></span><span><b>${list.filter(i=>G.own[i].m).length}</b><small>Mortgaged</small></span></div><p><b>${ro?'Estate overview':'Next move'}</b> ${esc(next)}</p>`;
       pn.querySelector('.pf2debt').innerHTML=debt?`<div class="debt">${opts.who?'<b>'+esc(p.name)+'</b>: ':''}You owe <b>${fmt(debt)}</b>${opts.to?' to '+esc(opts.to.name):''}. ${p.cash>=debt?'You can pay now.':`Raise <b>${fmt(debt-p.cash)}</b> more by selling buildings or mortgaging (up to ${fmt(liquidity(p))} in total).`}</div>`:'';
-      const T=pn.querySelector('.pf2t');T.innerHTML=[['all','All'],['build','Can build'],['mort','Mortgaged']].filter(([k])=>!(ro&&k==='build')).map(([k,l])=>`<button class="${filter===k?'on':''}" role="tab" aria-selected="${filter===k}" data-f="${k}">${l}</button>`).join('');
+      const T=pn.querySelector('.pf2t');T.innerHTML=[['all','All'],['build','Can build'],['mort','Mortgaged'],['missing','Missing']].filter(([k])=>!(ro&&k==='build')).map(([k,l])=>`<button class="${filter===k?'on':''}" role="tab" aria-selected="${filter===k}" data-f="${k}">${l}</button>`).join('');
       T.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{filter=b.dataset.f;draw()});
       const L=pn.querySelector('.pf2g');L.innerHTML='';const gs=groupsOf();
       if(!gs.length)L.innerHTML='<p class="pf2none">No properties yet. Land on an unowned street and buy it, or win it at auction.</p>';
-      gs.forEach(gq=>{const rows=gq.all.filter(i=>G.own[i].o===p.id?pass(i):filter==='all');if(!rows.length)return;const full=gq.mine.length===gq.all.length,isSet=gq.k!=='rail'&&gq.k!=='util',open=!shut[gq.k];
+      gs.forEach(gq=>{const rows=gq.all.filter(i=>G.own[i].o===p.id?filter!=='missing'&&pass(i):filter==='all'||filter==='missing');if(!rows.length)return;const full=gq.mine.length===gq.all.length,isSet=gq.k!=='rail'&&gq.k!=='util',open=shut[gq.k]===undefined?(gq.mine.length>0||filter==='missing'):!shut[gq.k];
         const box=el('div','pf2grp'+(open?'':' shut'));
-        box.innerHTML=`<button class="pf2gh" aria-expanded="${open}">${pfDistIc(gq.k,gq.col)}<span class="pf2gn"><b>${esc(gq.name)}</b>${full&&isSet?`<small class="ok">Complete set (${gq.all.length} / ${gq.all.length})</small>`:''}</span>${full&&isSet?'':`<em>${gq.mine.length} / ${gq.all.length}</em>`}<i class="pf2fold">${PF_IC.up}</i></button>`;
-        box.querySelector('.pf2gh').onclick=()=>{shut[gq.k]=!shut[gq.k];draw()};
+        box.innerHTML=`<button class="pf2gh" aria-expanded="${open}">${pfDistIc(gq.k,gq.col)}<span class="pf2gn"><b>${esc(gq.name)}</b>${full&&isSet?`<small class="ok">Complete set (${gq.all.length} / ${gq.all.length})</small>`:''}</span>${full&&isSet?'':`<em>${gq.mine.length} / ${gq.all.length}</em>`}<i class="pf2fold">${PF_IC.up}</i></button><div class="pf3progress" role="progressbar" aria-label="${esc(gq.name)} ownership" aria-valuemin="0" aria-valuemax="${gq.all.length}" aria-valuenow="${gq.mine.length}"><i style="width:${gq.mine.length/gq.all.length*100}%;background:${gq.col}"></i></div>`;
+        box.querySelector('.pf2gh').onclick=()=>{shut[gq.k]=open;draw()};
         if(open)rows.forEach(i=>{const o=G.own[i],mine=o.o===p.id,isP=SQ[i].t==='prop';const b=el(mine?'button':'div','pf2row'+(i===sel?' on':'')+(mine?'':' lock')+(o.m?' mort':''));
-          b.innerHTML=mine?`<span class="pf2rn">${esc(SQ[i].n)}</span>${o.m?'<small class="bad">Mortgaged</small>':isP?`<span class="pf2hc"><i>${o.h>=3?PF_IC.tower:PF_IC.house}</i>${o.h===5?'H':o.h}</span>`:''}<i class="pf2ch">${PF_IC.chev}</i>`
-            :`<span class="pf2rn">${esc(SQ[i].n)}</span><span class="pf2lk"><i>${PF_IC.lock}</i><small>${o.o>=0?'Owned by '+esc(P(o.o).name):isSet?'Complete this district to build':'Not owned yet'}</small></span>`;
-          if(mine){b.onclick=()=>{sel=i;draw()};b.ondblclick=()=>showSquare(i)}box.append(b)});L.append(box)});
+          b.dataset.square=String(i);b.innerHTML=mine?`<span class="pf2rn">${esc(SQ[i].n)}</span>${o.m?'<small class="bad">Mortgaged</small>':isP?`<span class="pf2hc"><i>${o.h>=3?PF_IC.tower:PF_IC.house}</i>${o.h===5?'H':o.h}</span>`:''}<i class="pf2ch">${PF_IC.chev}</i>`
+            :`<span class="pf2rn">${esc(SQ[i].n)}</span><span class="pf3missing">Missing</span><span class="pf2lk"><i>${PF_IC.lock}</i><small>${o.o>=0?'Owned by '+esc(P(o.o).name):'Unowned · available to buy'}</small></span>`;
+          if(mine){b.onclick=()=>{sel=i;draw()};b.ondblclick=()=>showSquare(i)}box.append(b)});L.append(box)});if(!L.children.length)L.innerHTML='<p class="pf2none">No properties match this filter.</p>';
       const F=pn.querySelector('.pf2f');F.innerHTML='';
       if(debt){const bk=el('button','btn danger','Declare bankruptcy');bk.onclick=()=>close('bankrupt');const pb=el('button','btn pri','Pay '+fmt(debt));pb.disabled=p.cash<debt;pb.onclick=()=>close('pay');F.append(bk,pb)}
       const x=pn.querySelector('.pf2x')||el('button','pf2x','✕');x.setAttribute('aria-label','Close');x.onclick=()=>close(debt?'auto':'done');if(!x.parentElement)pn.append(x);if(debt)x.hidden=true;
@@ -7113,4 +7169,15 @@ function boot(data){
 try{const h=window.claude?.hot;if(h&&h.ready)h.ready(boot);else boot(h?.data??{})}catch(e){boot({})}
 setTimeout(()=>{try{const c=(new URLSearchParams(location.search).get('join')||'').toUpperCase();if(!/^[A-Z0-9]{5}$/.test(c)||!FIRE)return;history.replaceState(null,'',location.pathname);if(!G||G.over)openOnline(c)}catch(e){}},1200);
 </script>
+<style>
+.pf3overview{flex:none;border:1px solid #365363;border-radius:12px;background:#102b37;padding:10px 12px;color:#e7f0f1}
+.pf3metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.pf3metrics span{display:flex;flex-direction:column;gap:3px}.pf3metrics b{color:#f0cf87;font-size:17px}.pf3metrics small{font-size:11px;color:#b9ccd4}
+.pf3overview p{font-size:12px;line-height:1.5;margin:8px 0 0}.pf3overview p b{color:#f0cf87;margin-right:6px}.pf2t{grid-template-columns:repeat(4,minmax(0,1fr))}.pf2t button{font-size:12px}
+.pf3progress{height:4px;border-radius:5px;background:#284353;overflow:hidden;margin:0 7px 5px}.pf3progress i{display:block;height:100%;min-width:0}.pf3missing{font-size:10px;color:#f1cf86;border:1px solid #7c704a;border-radius:5px;padding:3px 5px}
+.mastery-mini{max-width:520px;margin:0 auto 9px;color:#d3dfeb;font-size:12px}.mastery-mini .xpbar{display:block;height:5px;margin-top:5px}
+.evo-totals{display:flex;flex-wrap:wrap;gap:10px 20px;padding:12px 0;color:#f0cc7f}.evo-totals span{color:#acbfcd}
+.evo-track{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 0}.evo-track button{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0;padding:12px 8px;border-radius:12px;background:#102a39;color:#eef3f5;border:1px solid #385565;cursor:pointer}.evo-track button[aria-pressed=true]{border:2px solid #edc66f;background:#23433f}.evo-track button:focus-visible{outline:3px solid #fff;outline-offset:2px}.evo-track .tem{font-size:35px}.evo-track small{font-size:10px;line-height:1.5;color:#bed0d9;text-align:center}.evo-track b{color:#e6eef2}
+.evo-peek{display:flex;align-items:center;gap:12px;padding:16px;border:1px solid #56716d;border-radius:14px;background:#102c37;color:#e5eef3}.evo-peek>div{flex:1;min-width:0}.evo-peek h4{font:700 25px var(--display);margin:8px 0;color:#efcb7c}.evo-peek p{font-size:13px;line-height:1.6}.evo-peek small{font-size:10px;letter-spacing:.08em;color:#eacb8b}.evo-model{width:130px!important;max-width:35%;height:auto!important}
+@media(max-width:480px){.pf3missing{display:none}.pf3metrics b{font-size:15px}.pf3overview{padding:8px}.pf2t button{font-size:11px;padding:0 2px}.evo-track{gap:5px}.evo-track button{padding:10px 4px}.evo-peek{padding:10px}.evo-peek p{font-size:12px}}
+</style>
 </body></html>

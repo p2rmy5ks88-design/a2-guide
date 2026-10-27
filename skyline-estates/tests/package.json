@@ -9,7 +9,8 @@
     "test:saves": "node save-recovery.cjs",
     "test:browser": "node browser-smoke.cjs",
     "test:human": "node human-flows.cjs",
-    "test:offline": "node offline-worker.cjs && node offline-startup.cjs"
+    "test:offline": "node offline-worker.cjs && node offline-startup.cjs",
+    "test:mastery": "node token-mastery.cjs && node portfolio-mastery-browser.cjs"
   },
   "devDependencies": {
     "playwright": "1.62.1"

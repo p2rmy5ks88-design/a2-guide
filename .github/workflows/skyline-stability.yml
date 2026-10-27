@@ -30,6 +30,8 @@ jobs:
         run: python3 skyline-estates/build.py --check
       - name: Test saved turns and seeded games
         run: |
+          node skyline-estates/tests/token-mastery.cjs
+          node skyline-estates/tests/portfolio-mastery-browser.cjs "$RUNNER_TEMP/skyline-portfolio-mastery.json"
           node skyline-estates/security/service/management-browser.test.cjs "$RUNNER_TEMP/skyline-management-browser.json"
           node skyline-estates/security/service/game-controls-browser.test.cjs "$RUNNER_TEMP/skyline-controls-browser.json"
           node skyline-estates/security/service/web-connection-browser.test.cjs "$RUNNER_TEMP/skyline-web-connection-browser.json"
@@ -62,6 +64,8 @@ jobs:
         with:
           name: skyline-stability-results
           path: |
+            ${{ runner.temp }}/skyline-portfolio-mastery.json
+            ${{ runner.temp }}/skyline-portfolio-mastery.*.png
             ${{ runner.temp }}/skyline-management-browser.json
             ${{ runner.temp }}/skyline-controls-browser.json
             ${{ runner.temp }}/skyline-web-connection-browser.json
