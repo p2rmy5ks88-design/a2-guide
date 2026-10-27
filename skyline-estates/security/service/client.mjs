@@ -1,0 +1,7 @@
+// Admission-only v2 transport prototype. The shipped game does not import this module.
+export function createAdmissionClient({baseUrl,getIdToken,fetchImpl=globalThis.fetch}){
+ const base=new URL(baseUrl);if(base.protocol!=='http:'||base.hostname!=='127.0.0.1'||base.username||base.password||base.search||base.hash||base.pathname!=='/')throw Error('Use an explicit loopback prototype endpoint');
+ if(typeof getIdToken!=='function')throw Error('An authenticated token provider is required');
+ async function request(method,path,body){const token=await getIdToken();if(typeof token!=='string'||!token)throw Error('Sign in before using rooms');const response=await fetchImpl(new URL(path,base),{method,redirect:'error',credentials:'omit',cache:'no-store',headers:{Authorization:'Bearer '+token,...(body===undefined?{}:{'Content-Type':'application/json'})},...(body===undefined?{}:{body:JSON.stringify(body)})});const data=await response.json();if(!response.ok){const e=Error(data.error||'room-service-error');e.code=data.error;e.status=response.status;throw e}return data}
+ return{requestId:()=>globalThis.crypto.randomUUID(),createRoom:body=>request('POST','/v2/rooms/create',body),joinRoom:body=>request('POST','/v2/rooms/join',body),leaveRoom:body=>request('POST','/v2/rooms/leave',body),room:code=>{if(!/^[A-Z0-9]{5}$/.test(code))throw Error('Invalid room code');return request('GET','/v2/rooms/'+code)},startGame:body=>request('POST','/v2/rooms/start',body)};
+}
