@@ -50,7 +50,7 @@ function createAdmissionService({db,verifyIdToken,clock=Date.now,generateCode=ra
     if(action==='action'){
      if(!room||room.meta.status!=='playing'||room.members?.[uid]!==true)outcome=error(403,'not-authorized');
      else if(room.state?.revision!==body.revision)outcome=error(409,'stale-revision');
-     else if(root.service.rollLocks?.[body.code])outcome=error(409,'roll-pending');
+     else if(root.service.rollLocks?.[body.code]||root.service.rollPlans?.[hash(JSON.stringify([body.code,body.revision]))])outcome=error(409,'roll-pending');
      else if(!Number.isSafeInteger(room.state.revision+1))outcome=error(409,'invalid-revision');
      else{try{
       let stored;try{if(typeof room.state.gameJson!=='string'||Buffer.byteLength(room.state.gameJson)>262144)throw Error();stored=JSON.parse(room.state.gameJson)}catch{throw new AssetError('invalid-game-state')}
