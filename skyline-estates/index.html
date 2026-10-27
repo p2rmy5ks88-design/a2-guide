@@ -3025,7 +3025,7 @@ function decodeRemoteGame(code,d){
   if(!validateSave({...g,online:false,over:false}))return null;
   const ids=g.players.filter(p=>p.uid!=null).map(p=>p.uid),members=d.seatIds;
   if(!ids.length||ids.some(u=>typeof u!=='string'||!u)||new Set(ids).size!==ids.length||new Set(members).size!==members.length||members.length!==ids.length||!members.every(u=>ids.includes(u))||!members.includes(NET.me)||!ids.includes(d.host))return null;
-  if(g.players.some(p=>(p.uid==null&&!p.ai)||!TOKENS.includes(p.tok)||!PCOL.includes(p.col)))return null;
+  if(g.players.some(p=>(p.uid==null&&!p.ai)||!TOKENS.concat(NEW_TOKENS).includes(p.tok)||!PCOL.includes(p.col)))return null;
   if(g.hostUid!=null&&!ids.includes(g.hostUid)||g.forceWin!=null&&!int(g.forceWin,0,g.players.length-1))return null;
   const dice=g.lastDice;if(dice&&(!int(dice.a,1,6)||!int(dice.b,1,6)||!int(dice.n,1,Number.MAX_SAFE_INTEGER)||dice.sv!=null&&!int(dice.sv,0,6)))return null;
   return g;

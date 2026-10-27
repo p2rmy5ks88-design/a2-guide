@@ -2,7 +2,7 @@
 // Node vm is used for rule reuse, not as a security boundary for untrusted code.
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),crypto=require('node:crypto');
 const source=fs.readFileSync(path.resolve(__dirname,'../../game.html'),'utf8').replace(/\r\n/g,'\n');
-const expectedSourceHash='de71d2fe85ab25fd6f75b1982b61da01fd3c8ab7a545f6c99a06061a8faeedc8';
+const expectedSourceHash='dd57292b70b86662b36190e1014c5a5c231feb1580b70dcdaa24c75f3bcca798';
 const sourceHash=crypto.createHash('sha256').update(source).digest('hex');
 if(sourceHash!==expectedSourceHash)throw Error('Game source changed: audit property hooks and rerun browser parity before updating the pinned hash');
 function section(start,end){const a=source.indexOf(start),b=source.indexOf(end,a);if(a<0||b<=a)throw Error('Missing audited game section');return source.slice(a,b)}
