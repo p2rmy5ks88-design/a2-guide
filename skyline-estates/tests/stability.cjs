@@ -29,6 +29,7 @@ const root=path.resolve(__dirname,'../..');
         Object.assign(G,{online:true,code:'ABCDE',seq:2});const doc={code:'ABCDE',ed:'sk',host:'remote-0',seatIds:['remote-0','remote-1'],status:'playing',seq:2,s:JSON.stringify(G)};
         check('real '+mode+' game passes remote schema with rules preserved',JSON.stringify(decodeRemoteGame('ABCDE',doc))===doc.s);
       }
+      for(const token of NEW_TOKENS){G.players[0].tok=token;const d={code:'ABCDE',ed:'sk',host:'remote-0',seatIds:['remote-0','remote-1'],status:'playing',seq:2,s:JSON.stringify(G)};check('unlocked '+token+' passes actual remote game validation',JSON.stringify(decodeRemoteGame('ABCDE',d))===d.s)}
       G.over=true;const done={code:'ABCDE',ed:'sk',host:'remote-0',seatIds:['remote-0','remote-1'],status:'over',seq:2,s:JSON.stringify(G)};
       check('real completed game passes remote schema',JSON.stringify(decodeRemoteGame('ABCDE',done))===done.s);
       }finally{NET.me=priorMe}
