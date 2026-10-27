@@ -1,18 +1,20 @@
 // Resolve a journaled request atomically with its existing command ledger.
 const crypto=require('node:crypto');
 const {ServiceError,identityVerifier,validateAdmissionRequest}=require('./admission.cjs');
+const {validateStartRequest}=require('./start-service.cjs');
 const {validateTurnCommand}=require('./turn-service.cjs');
 const {validateRollPlanRequest}=require('./roll-plans.cjs');
 const hash=s=>crypto.createHash('sha256').update(s).digest('hex');
 const fail=(status,code)=>{throw new ServiceError(status,code)};
 const turns={purchaseAsset:'purchaseAsset',commitRoll:'commit',commitJailRoll:'jailCommit',commitReroll:'rerollCommit',choose:'choose',auctionBid:'bid',debtAction:'debt',endTurn:'end',proposeTrade:'tradePropose',replyTrade:'tradeReply'};
+const lobbyActions=new Set(['startGame','selectSeat']);
 const reserves=new Set(['reserveRoll','reserveJailRoll','reserveReroll']);
 function request(input){
- if(!input||typeof input!=='object'||Array.isArray(input)||Object.keys(input).sort().join(',')!=='action,body,code'||input.action!=='assetAction'&&!reserves.has(input.action)&&!Object.hasOwn(turns,input.action))fail(400,'invalid-fields');
+ if(!input||typeof input!=='object'||Array.isArray(input)||Object.keys(input).sort().join(',')!=='action,body,code'||!lobbyActions.has(input.action)&&input.action!=='assetAction'&&!reserves.has(input.action)&&!Object.hasOwn(turns,input.action))fail(400,'invalid-fields');
  const b=input.body;
  if(!b||typeof b!=='object'||Array.isArray(b)||typeof input.code!=='string'||!/^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{5}$/.test(input.code||'')||b.code!==input.code||typeof b.requestId!=='string'||!/^[A-Za-z0-9_-]{16,64}$/.test(b.requestId)||!Number.isSafeInteger(b.revision)||b.revision<0||!Number.isSafeInteger(b.revision+1)||Buffer.byteLength(JSON.stringify(input))>8192)fail(400,'invalid-fields');
  let digest,invalid=false;
- try{const body=input.action==='assetAction'?validateAdmissionRequest('action',b):reserves.has(input.action)?validateRollPlanRequest(b,'reserve'):validateTurnCommand(b,turns[input.action]);digest=hash(JSON.stringify({action:input.action==='assetAction'?'action':reserves.has(input.action)?input.action:'turn-'+turns[input.action],body}))}
+ try{const body=lobbyActions.has(input.action)?validateStartRequest(input.action,b):input.action==='assetAction'?validateAdmissionRequest('action',b):reserves.has(input.action)?validateRollPlanRequest(b,'reserve'):validateTurnCommand(b,turns[input.action]);digest=hash(JSON.stringify({action:lobbyActions.has(input.action)?'lobby-'+input.action:input.action==='assetAction'?'action':reserves.has(input.action)?input.action:'turn-'+turns[input.action],body}))}
  catch(e){if(!(e instanceof ServiceError)||![400,409,501].includes(e.status))throw e;invalid=true;digest=hash(JSON.stringify({retiredInvalid:input.action,body:b}))}
  return{...input,digest,invalid};
 }
@@ -24,10 +26,12 @@ function createOperationService({db,verifyIdToken,clock=Date.now,operationLimit=
   try{tx=await Promise.race([db.ref('skylineV2').transaction(root=>{
    // Check authority on every retry, including recovery of an earlier acknowledgement.
    const room=root?.rooms?.[r.code];
-   if(room?.members?.[uid]!==true||!['playing','over'].includes(room.meta?.status)){result={error:'not-authorized',status:403};return root}
+   if(room?.members?.[uid]!==true||!(lobbyActions.has(r.action)?['lobby','playing','over']:['playing','over']).includes(room.meta?.status)){result={error:'not-authorized',status:403};return root}
+   if(room.meta.status==='lobby'){if(!lobbyActions.has(r.action)||room.seats?.[uid]?.uid!==uid||!Number.isInteger(room.seats[uid].seat)||!Number.isSafeInteger(room.state?.revision)){result={error:'not-authorized',status:403};return root}}else{
    let game;try{if(typeof room.state?.gameJson!=='string'||Buffer.byteLength(room.state.gameJson)>262144)throw Error();game=JSON.parse(room.state.gameJson)}catch{result={error:'invalid-game-state',status:409};return root}
    const seat=room.seats?.[uid]?.seat;
    if(!Number.isInteger(seat)||game.players?.[seat]?.uid!==uid||game.players[seat].ai||game.code!==r.code||!Number.isSafeInteger(room.state.revision)||room.state.revision<0){result={error:'not-authorized',status:403};return root}
+   }
    const service=root.service||(root.service={}),operations=service.operations||(service.operations={}),ledger=operations[key]||(operations[key]={}),prior=ledger[opKey];
    const ack={protocol:2,code:r.code,revision:room.state.revision,action:r.action,requestId:r.body.requestId};
    if(prior){

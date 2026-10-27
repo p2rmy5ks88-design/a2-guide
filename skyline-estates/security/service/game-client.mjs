@@ -1,11 +1,12 @@
 // Browser transport for the trusted service. Not enabled in the shipped game yet.
 const routes={
+ startGame:'start',selectSeat:'seat',
  assetAction:'asset',purchaseAsset:'purchase-assets',
  reserveRoll:'roll/reserve',commitRoll:'roll/commit',reserveJailRoll:'jail-roll/reserve',commitJailRoll:'jail-roll/commit',
  reserveReroll:'reroll/reserve',commitReroll:'reroll/commit',choose:'choice',auctionBid:'auction-bid',debtAction:'debt',endTurn:'end',
  proposeTrade:'trade/propose',replyTrade:'trade/reply'
 };
-const reads={readGame:'read',readDecision:'decision',readResult:'result',loadRoll:'roll/load',recoverRoll:'roll/recover',
+const reads={readLobby:'lobby',readGame:'read',readDecision:'decision',readResult:'result',loadRoll:'roll/load',recoverRoll:'roll/recover',
  loadJailRoll:'jail-roll/load',recoverJailRoll:'jail-roll/recover',loadReroll:'reroll/load',recoverReroll:'reroll/recover'};
 const error=code=>Object.assign(Error(code),{code});
 export function createGameClient({baseUrl,allowedOrigins,uid,getSession,storage,fetchImpl=globalThis.fetch,randomId=()=>globalThis.crypto.randomUUID(),timeoutMs=8000,allowLoopback=false,locks=globalThis.navigator?.locks}){
