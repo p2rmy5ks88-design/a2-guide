@@ -37,10 +37,12 @@ export function mountGameControls({client,code,document=globalThis.document,onVi
 }
 
 // Opt-in screen adapter. The shipped title/lobby does not activate it.
-export function mountSkylineControls({client,code,onError=()=>{}}){
+export function mountSkylineControls({client,code,onError=()=>{},pollMs=2500}){
+ if(pollMs!==0&&(!Number.isInteger(pollMs)||pollMs<1000||pollMs>30000))throw Error('Invalid refresh interval');
  if(typeof window.__sim!=='function'||typeof buildBoard!=='function'||!document.querySelector('#title')||document.querySelector('#title').hidden||window.__skylineTrustedControls)throw Error('Start from the game title');
  const previous={game:G,menu:openMenu,assets:document.querySelector('#bAssets').onclick,trade:document.querySelector('#bTrade').onclick,menuButton:document.querySelector('#bMenu').onclick};
- let mounted=false,closed=false,current=null,controls;
+ let mounted=false,closed=false,current=null,controls,timer=null;
+ function schedule(){if(closed||timer||!pollMs)return;timer=setTimeout(async()=>{timer=null;if(closed)return;try{if(!controls.controller.status().busy)await controls.refresh()}finally{schedule()}},pollMs)}
  function render(v){
   if(closed)return;current=v;
   // This is a display model, deliberately not a legacy save or an executable game state.
@@ -58,13 +60,13 @@ export function mountSkylineControls({client,code,onError=()=>{}}){
   if(closed)return;if(choice==='sound')return openSound();if(choice==='camera')return document.querySelector('#camBtn').click();if(choice==='rules')return modal({cls:'wide',html:'<div class="mh">How to play</div>'+RULES,btns:[{k:'back',label:'Back',primary:true}]});if(choice==='exit')close();
  }
  function close(){
-  if(closed)return;closed=true;controls.close();GEN++;document.querySelector('#modals').replaceChildren();openMenu=previous.menu;for(const [selector,key]of [['#bAssets','assets'],['#bTrade','trade'],['#bMenu','menuButton']])document.querySelector(selector).onclick=previous[key];G=previous.game;delete window.__skylineTrustedControls;showTitle();
+  if(closed)return;closed=true;clearTimeout(timer);controls.close();GEN++;document.querySelector('#modals').replaceChildren();openMenu=previous.menu;for(const [selector,key]of [['#bAssets','assets'],['#bTrade','trade'],['#bMenu','menuButton']])document.querySelector(selector).onclick=previous[key];G=previous.game;delete window.__skylineTrustedControls;showTitle();
  }
  controls=mountGameControls({client,code,onView:render,onError:e=>{document.querySelector('#modals').replaceChildren();onError(e)},formatMoney:n=>fmt(n),rollIcon:DIE_SVG,setPromptText:text=>setPrompt(esc(text)),openPurchase:async v=>{
   const d=v.decision,p=v.game.players[v.seat];
   return modal({html:'<div class="mh">For sale</div><div class="row2">'+deedHTML(d.square)+'<div class="slotbar sidecol"><div class="mtxt">You have <b>'+fmt(p.cash)+'</b>.</div></div></div>',cls:'wide',btns:[{k:'decline',label:v.game.set.auction===false?'Don’t buy':'Auction'},{k:'buy',label:'Buy for '+fmt(d.price),primary:true,disabled:!d.canBuy}]});
  }});
  openMenu=menu;document.querySelector('#bMenu').onclick=menu;document.querySelector('#bAssets').onclick=()=>{if(current&&!closed)void openAssets(G.players[current.seat],{readonly:true})};document.querySelector('#bTrade').onclick=()=>{};
- const mountedControls={...controls,close};window.__skylineTrustedControls=mountedControls;
+ const mountedControls={...controls,refresh:async()=>{const v=await controls.refresh();schedule();return v},close};window.__skylineTrustedControls=mountedControls;
  return mountedControls;
 }
