@@ -1,9 +1,9 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
-const {applyRoll,chooseTurn,sourceHash}=require('./turn-kernel.cjs'),{cases}=require('./card-cases.cjs');
+const {applyRoll,applyJailRoll,chooseTurn,sourceHash}=require('./turn-kernel.cjs'),{cases}=require('./card-cases.cjs');
 const copy=x=>JSON.parse(JSON.stringify(x)),report={sourceHash,checks:[],failure:null};
 function invariants(g){assert.ok(g.players.every(p=>Number.isSafeInteger(p.cash)&&p.cash>=0));assert.equal(g.houses+g.own.reduce((n,o)=>n+(o.h===5?0:o.h),0),36);assert.equal(g.hotels+g.own.filter(o=>o.h===5).length,12);for(const deck of ['chance','esusu'])assert.deepEqual([...g[deck],...g.players.flatMap(p=>p.goojf.filter(c=>c.deck===deck).map(c=>c.idx))].sort((a,b)=>a-b),Array.from({length:16},(_,i)=>i))}
 function test(name,fn){try{fn();report.checks.push({name,passed:true})}catch(e){console.error('FAILED',name);throw e}}
-const initial=c=>applyRoll(c.game,'host-uid',c.dice),draw=c=>{const r=initial(c);assert.equal(r.boundary.kind,'card');return chooseTurn(r.game,'host-uid',r,'drawCard')};
+const initial=c=>(c.jail?applyJailRoll:applyRoll)(c.game,'host-uid',c.dice),draw=c=>{const r=initial(c);assert.equal(r.boundary.kind,'card');return chooseTurn(r.game,'host-uid',r,'drawCard')};
 try{
  for(const c of cases())test(c.name,()=>{const before=copy(c.game);let r=initial(c);invariants(r.game);assert.equal(r.boundary.kind,'card');let n=0;while(['card','purchase'].includes(r.boundary?.kind)){const old=copy(r),kind=r.boundary.kind==='card'?'drawCard':c.decline?'decline':'buy';if(kind==='buy'&&!r.boundary.canBuy)break;const previous=r;r=chooseTurn(r.game,'host-uid',r,kind);assert.deepEqual(previous,old);invariants(r.game);assert.equal(r.game.lastDice.n,1);assert.ok(++n<12,'bounded card chain')}assert.deepEqual(c.game,before)});
  const find=name=>cases().find(c=>c.name===name);

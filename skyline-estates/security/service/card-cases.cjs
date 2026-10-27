@@ -27,5 +27,6 @@ function cases(){const out=[],add=(name,deck,idx,change=()=>{},opts={})=>{const 
  for(const target of [19,32])for(let idx=0;idx<16;idx++)add('chance '+target+' card '+idx,'chance',idx,g=>g.players[0].pos=target-3);
  for(const target of [25,37])for(let idx=0;idx<16;idx++)add('City Hall '+target+' card '+idx,'esusu',idx,g=>g.players[0].pos=target-12);
  for(const idx of [0,2,8,9]){const g=game();stock(g);g.players[0].lapped=true;g.set.speedDie=true;g.set.minigames=false;top(g,'chance',idx);out.push({name:'turbo taxi card '+idx,game:g,dice:dice(1,2,6),deck:'chance',idx})}
+ for(const idx of [0,6,7,10]){const g=game();stock(g);g.phase='jail';g.doubles=0;Object.assign(g.players[0],{inJail:true,pos:10,jailTurns:0});top(g,'esusu',idx);out.push({name:'jail release City Hall '+idx,game:g,dice:dice(1,1),deck:'esusu',idx,jail:true})}
  return out}
 module.exports={cases,top};
