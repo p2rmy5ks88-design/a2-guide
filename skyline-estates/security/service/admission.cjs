@@ -16,9 +16,10 @@ function settings(value){
  return Object.fromEntries(Object.keys(value).sort().map(k=>[k,value[k]]));
 }
 function randomCode(){return Array.from(crypto.randomBytes(5),b=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[b%32]).join('')}
+function identityVerifier(verifyIdToken){return async function identity(token){if(typeof token!=='string'||!token||token.length>8192)fail(401,'unauthenticated');let user;try{user=await verifyIdToken(token,true)}catch{fail(401,'unauthenticated')}if(!/^[A-Za-z0-9_-]{1,128}$/.test(user?.uid||'')||['__proto__','prototype','constructor'].includes(user.uid))fail(403,'unsupported-identity');return user.uid}}
 function createAdmissionService({db,verifyIdToken,clock=Date.now,generateCode=randomCode,operationLimit=30,readTimeoutMs=3000}){
  if(!db||typeof verifyIdToken!=='function')throw Error('Verified authentication and a privileged store are required');
- async function identity(token){if(typeof token!=='string'||!token||token.length>8192)fail(401,'unauthenticated');let user;try{user=await verifyIdToken(token,true)}catch{fail(401,'unauthenticated')}if(!/^[A-Za-z0-9_-]{1,128}$/.test(user?.uid||'')||['__proto__','prototype','constructor'].includes(user.uid))fail(403,'unsupported-identity');return user.uid}
+ const identity=identityVerifier(verifyIdToken);
  function validate(action,body){
   const keys={create:['requestId','name','settings'],join:['requestId','name','code','invite'],leave:['requestId','code'],action:['requestId','code','revision','command']}[action];if(!keys)fail(501,'game-engine-not-enabled');fields(body,keys);
   if(typeof body.requestId!=='string'||!/^[A-Za-z0-9_-]{16,64}$/.test(body.requestId))fail(400,'invalid-request-id');
@@ -49,6 +50,7 @@ function createAdmissionService({db,verifyIdToken,clock=Date.now,generateCode=ra
     if(action==='action'){
      if(!room||room.meta.status!=='playing'||room.members?.[uid]!==true)outcome=error(403,'not-authorized');
      else if(room.state?.revision!==body.revision)outcome=error(409,'stale-revision');
+     else if(root.service.rollLocks?.[body.code])outcome=error(409,'roll-pending');
      else if(!Number.isSafeInteger(room.state.revision+1))outcome=error(409,'invalid-revision');
      else{try{
       let stored;try{if(typeof room.state.gameJson!=='string'||Buffer.byteLength(room.state.gameJson)>262144)throw Error();stored=JSON.parse(room.state.gameJson)}catch{throw new AssetError('invalid-game-state')}
@@ -81,4 +83,4 @@ function createAdmissionService({db,verifyIdToken,clock=Date.now,generateCode=ra
  }
  return{execute,readRoom};
 }
-module.exports={createAdmissionService,ServiceError};
+module.exports={createAdmissionService,ServiceError,identityVerifier};
