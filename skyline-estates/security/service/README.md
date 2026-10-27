@@ -2,6 +2,10 @@
 
 This is an **isolated development service**. Authenticated lobby admission and property actions have a default local HTTP adapter. Audited setup/dice/turn/jail/card/auction/debt/reroll/trade/end kernels and the first AI auction worker are implemented below. Human game HTTP routes now require explicit service composition; public game start, the complete playable client and production deployment remain disabled. Neither browser transport is imported by the shipped game yet.
 
+## Token power rules version
+
+New games now carry `tokenPowerVersion: 2` and use the 16 token-specific power paths. Saved games without that tag keep the original shared tier perks; unknown future versions are rejected. The public game projection carries the approved tag so the opt-in screen uses the same rules as the server adapter. This versioning does not activate production hosting or signed progression. See [portfolio and token mastery results](../../PORTFOLIO-TOKEN-MASTERY-RESULTS.md).
+
 ## Opt-in human lobby start
 
 `createStartService({db, verifyIdToken, resolveRoster})` now composes verified human lobby seats into the source initializer. The required synchronous roster policy authorizes premium ownership/tier, token/finish/character choices and city/theme; no production default is supplied. `/v2/game/lobby`, `/v2/game/seat` and `/v2/game/start` are available only when explicitly composed as `gameServices.start`. The default admission start remains disabled.
