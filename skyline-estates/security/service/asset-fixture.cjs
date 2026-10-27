@@ -1,0 +1,3 @@
+// Canonical test snapshot only; this is not a server game-start implementation.
+function fixture(uids=['host-uid','guest-uid']){return{v:1,online:true,players:uids.map((uid,id)=>({id,uid,name:'Player '+id,tok:'car',col:'#fff',ai:false,cash:1600,pos:0,inJail:false,jailTurns:0,goojf:[],bankrupt:false,lastOffer:-9,declined:{}})),own:Array.from({length:40},(_,i)=>({o:[1,2,4].includes(i)?0:-1,h:0,m:false})),turn:0,round:1,chance:Array.from({length:16},(_,i)=>i),esusu:Array.from({length:16},(_,i)=>i),pot:0,houses:36,hotels:12,set:{mode:'classic',city:'lagos',even:true},log:[],logN:0,over:false,phase:'pre'}}
+module.exports={fixture};

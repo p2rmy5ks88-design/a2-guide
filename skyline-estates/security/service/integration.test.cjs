@@ -58,5 +58,6 @@ async function serve(runtime,options={}){const allowedOrigins=new Set(['http://1
   await denied(()=>offlineClient.room(offlineRoom.code),403,'not-authorized');
  });
 
+ await require('./asset-integration.cjs')({main,api,apiPeer,account,id,test,denied});
  console.log('ADMISSION SUMMARY',JSON.stringify({checks:report.checks.length,projectId:'demo-skyline-phase1',instances:2,liveDeployment:false}));
 })().catch(e=>{report.failure=String(e.stack||e);console.error(e);process.exitCode=1}).finally(async()=>{try{for(const s of servers){s.closeAllConnections();await new Promise(r=>s.close(r))}for(const r of runtimes)await r.close()}finally{fs.writeFileSync(path.join(__dirname,'../service-results.json'),JSON.stringify(report,null,2)+'\n')}});

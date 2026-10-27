@@ -1,4 +1,5 @@
 const crypto=require('node:crypto');
+const {applyAssetAction,validateCommand,AssetError}=require('./asset-kernel.cjs');
 class ServiceError extends Error{constructor(status,code){super(code);this.status=status;this.code=code}}
 const fail=(status,code)=>{throw new ServiceError(status,code)};
 const plain=x=>x&&typeof x==='object'&&!Array.isArray(x);
@@ -19,11 +20,12 @@ function createAdmissionService({db,verifyIdToken,clock=Date.now,generateCode=ra
  if(!db||typeof verifyIdToken!=='function')throw Error('Verified authentication and a privileged store are required');
  async function identity(token){if(typeof token!=='string'||!token||token.length>8192)fail(401,'unauthenticated');let user;try{user=await verifyIdToken(token,true)}catch{fail(401,'unauthenticated')}if(!/^[A-Za-z0-9_-]{1,128}$/.test(user?.uid||'')||['__proto__','prototype','constructor'].includes(user.uid))fail(403,'unsupported-identity');return user.uid}
  function validate(action,body){
-  const keys={create:['requestId','name','settings'],join:['requestId','name','code','invite'],leave:['requestId','code']}[action];if(!keys)fail(501,'game-engine-not-enabled');fields(body,keys);
+  const keys={create:['requestId','name','settings'],join:['requestId','name','code','invite'],leave:['requestId','code'],action:['requestId','code','revision','command']}[action];if(!keys)fail(501,'game-engine-not-enabled');fields(body,keys);
   if(typeof body.requestId!=='string'||!/^[A-Za-z0-9_-]{16,64}$/.test(body.requestId))fail(400,'invalid-request-id');
   const result={requestId:body.requestId};if(action!=='create'){if(!codePattern.test(body.code||''))fail(400,'invalid-code');result.code=body.code}
-  if(action!=='leave')result.name=name(body.name);if(action==='create')result.settings=settings(body.settings);
+  if(['create','join'].includes(action))result.name=name(body.name);if(action==='create')result.settings=settings(body.settings);
   if(action==='join'){if(typeof body.invite!=='string'||!/^[a-f0-9]{64}$/.test(body.invite))fail(403,'not-authorized');result.invite=body.invite}
+  if(action==='action'){if(!Number.isSafeInteger(body.revision)||body.revision<0)fail(400,'invalid-revision');result.revision=body.revision;try{result.command=validateCommand(body.command)}catch(e){if(e instanceof AssetError)fail(e.status,e.code);throw e}}
   return result;
  }
  function view(room){return{protocol:2,code:room.meta.code,status:room.meta.status,hostUid:room.meta.hostUid,revision:room.state.revision,settings:room.meta.settings,seats:Object.values(room.seats||{}).sort((a,b)=>a.seat-b.seat)}}
@@ -44,7 +46,16 @@ function createAdmissionService({db,verifyIdToken,clock=Date.now,generateCode=ra
     }
    }else{
     const room=root.rooms[body.code];
-    if(!room||room.meta.status!=='lobby')outcome=error(403,'not-authorized');
+    if(action==='action'){
+     if(!room||room.meta.status!=='playing'||room.members?.[uid]!==true)outcome=error(403,'not-authorized');
+     else if(room.state?.revision!==body.revision)outcome=error(409,'stale-revision');
+     else if(!Number.isSafeInteger(room.state.revision+1))outcome=error(409,'invalid-revision');
+     else{try{
+      let stored;try{if(typeof room.state.gameJson!=='string'||Buffer.byteLength(room.state.gameJson)>262144)throw Error();stored=JSON.parse(room.state.gameJson)}catch{throw new AssetError('invalid-game-state')}
+      if(room.seats?.[uid]?.seat!==stored?.turn||stored?.players?.[stored.turn]?.uid!==uid)throw new AssetError('not-your-turn');
+      const game=applyAssetAction(stored,uid,body.command);room.state={...room.state,gameJson:JSON.stringify(game),revision:room.state.revision+1};outcome={status:200,data:{protocol:2,code:body.code,revision:room.state.revision}}
+     }catch(e){if(!(e instanceof AssetError))throw e;outcome=error(e.status,e.code)}}
+    }else if(!room||room.meta.status!=='lobby')outcome=error(403,'not-authorized');
     else if(action==='join'){
      const expected=root.service.invites[body.code],actual=hash(body.invite);
      if(!expected||!crypto.timingSafeEqual(Buffer.from(expected,'hex'),Buffer.from(actual,'hex')))outcome=error(403,'not-authorized');

@@ -3,3 +3,6 @@ node_modules/
 .firebase/
 security-results.json
 service-results.json
+
+asset-results.json
+asset-browser-results.json

@@ -1,0 +1,40 @@
+const {fixture}=require('./asset-fixture.cjs');
+function stock(g){g.houses=36-g.own.reduce((n,o)=>n+(o.h===5?0:o.h),0);g.hotels=12-g.own.filter(o=>o.h===5).length;return g}
+function cases(){const result=[];const add=(name,kind,square,change=()=>{},legal=true,expected={})=>{const game=fixture();change(game);stock(game);result.push({name,game,command:{kind,square},legal,expected})};
+ add('standard house', 'build',1,()=>{},true,{cash:1560,h:1,houses:35,hotels:12});
+ add('boom refund and construction counter','build',1,g=>g.event={id:'boom',round:1},true,{cash:1580,h:1,houses:35,stat:'houses'});
+ add('expired boom has no refund','build',1,g=>g.event={id:'boom',round:0},true,{cash:1560});
+ add('full cost is required before boom refund','build',1,g=>{g.players[0].cash=20;g.event={id:'boom',round:1}},false);
+ add('insufficient cash','build',1,g=>g.players[0].cash=39,false);
+ add('missing complete set','build',1,g=>g.own[2].o=-1,false);
+ add('free for all permits owned single street','build',1,g=>{g.own[2].o=-1;g.set.ffa=true},true,{cash:1560});
+ add('mortgaged peer blocks group construction','build',1,g=>g.own[2].m=true,false);
+ add('mortgaged street blocks construction','build',1,g=>g.own[1].m=true,false);
+ add('even building enforced','build',1,g=>g.own[1].h=1,false);
+ add('uneven house rule preserved','build',1,g=>{g.own[1].h=1;g.set.even=false},true,{h:2});
+ add('hotel conversion returns four houses','build',1,g=>{g.own[1].h=4;g.own[2].h=4;g.own[4].h=4},true,{h:5,houses:28,hotels:11,cash:1560,stat:'hotels'});
+ add('tower cannot exceed hotel','build',1,g=>{g.own[1].h=5;g.own[2].h=5},false);
+ add('sell house refunds half cost','sell',1,g=>g.own[1].h=1,true,{cash:1620,h:0,houses:36});
+ add('sell hotel consumes four houses','sell',1,g=>{g.own[1].h=5;g.own[2].h=5},true,{cash:1620,h:4,houses:32,hotels:11});
+ add('even selling enforced','sell',1,g=>{g.own[1].h=1;g.own[2].h=2},false);
+ add('uneven selling house rule preserved','sell',1,g=>{g.own[1].h=1;g.own[2].h=2;g.set.even=false},true,{h:0});
+ add('empty street cannot sell','sell',1,()=>{},false);
+ add('mortgage street','mortgage',1,()=>{},true,{cash:1625,m:true});
+ add('mortgage transport','mortgage',5,g=>g.own[5].o=0,true,{cash:1700,m:true});
+ add('mortgage utility','mortgage',14,g=>g.own[14].o=0,true,{cash:1670,m:true});
+ add('developed group cannot mortgage','mortgage',1,g=>g.own[2].h=1,false);
+ add('free for all ignores development of another owner','mortgage',1,g=>{g.set.ffa=true;g.own[2]={o:1,h:1,m:false}},true,{m:true});
+ add('already mortgaged cannot pay twice','mortgage',1,g=>g.own[1].m=true,false);
+ add('redeem with interest rounded up','redeem',1,g=>g.own[1].m=true,true,{cash:1572,m:false});
+ add('redeem without interest','redeem',1,g=>{g.own[1].m=true;g.set.interest=false},true,{cash:1575,m:false});
+ add('redeem requires cash','redeem',1,g=>{g.own[1].m=true;g.players[0].cash=27},false);
+ add('unmortgaged street cannot redeem','redeem',1,()=>{},false);
+ for(const kind of ['build','sell','mortgage','redeem']){add(kind+' rejects another owner',kind,1,g=>g.own[1].o=1,false);add(kind+' rejects non-property square',kind,0,()=>{},false)}
+ const props=[7,8,9,11,13,15,17,18,21,22,24,27,28,29,31,33,34,38,39];
+ add('house bank exhaustion blocks building','build',1,g=>{g.set.ffa=true;g.set.even=false;props.slice(0,9).forEach(i=>g.own[i]={o:1,h:4,m:false})},false);
+ add('hotel bank exhaustion blocks conversion','build',1,g=>{g.set.ffa=true;g.set.even=false;g.own[1].h=4;props.slice(0,12).forEach(i=>g.own[i]={o:1,h:5,m:false})},false);
+ add('hotel cannot sell without four bank houses','sell',1,g=>{g.set.ffa=true;g.set.even=false;g.own[1].h=5;props.slice(0,9).forEach(i=>g.own[i]={o:1,h:4,m:false})},false);
+ add('post-roll asset management allowed','mortgage',1,g=>g.phase='post',true,{m:true});
+ return result;
+}
+module.exports={cases,stock};
