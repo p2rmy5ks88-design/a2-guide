@@ -1,0 +1,20 @@
+const {game,dice}=require('./turn-cases.cjs'),{stock}=require('./asset-cases.cjs');
+function cases(){const out=[],add=(name,n=2,turn=0,bids=[10,0],change=()=>{},roll=dice(3,4),route=['decline'])=>{const g=game();g.players=Array.from({length:n},(_,id)=>({...g.players[id?1:0],id,uid:id?'guest-'+id:'host-uid',goojf:[],declined:{}}));g.own.forEach(o=>Object.assign(o,{o:-1,h:0,m:false}));g.turn=turn;g.players.forEach(p=>p.rrUsed=6);change(g);stock(g);out.push({name,game:g,dice:roll,route,bids})};
+ for(let n=2;n<=6;n++)for(let turn=0;turn<n;turn++)for(const [name,bids]of [['all drop',[0]],['opening win',[10,0]],['competitive',[10,50,100,10,0]]])add(n+' seats turn '+turn+' '+name,n,turn,bids);
+ for(const cash of [0,9,10,49,50,99,100,1599])add('cash gate '+cash,3,0,[10,50,0],g=>g.players.forEach((p,i)=>p.cash=i?cash:1600));
+ add('all below opening minimum',4,0,[0],g=>g.players.forEach(p=>p.cash=9));
+ add('opening actor cannot afford bid',3,0,[10,0],g=>g.players[0].cash=0);
+ add('bankrupt middle seat skipped',4,0,[10,50,0],g=>g.players[1].bankrupt=true);
+ add('jail does not exclude bidder',3,0,[10,50,0],g=>Object.assign(g.players[1],{inJail:true,pos:10}));
+ add('cheap win counter',2,0,[10,0]);
+ add('exact cash bid',2,0,[100,0],g=>g.players[0].cash=100);
+ add('AI bidder remains explicit worker boundary',3,0,[10],g=>{g.players[1].ai=true;g.players[1].uid=null});
+ for(const city of ['stockholm','nyc','tokyo','london','paris'])add('localized auction '+city,2,0,[50,0],g=>g.set.city=city);
+ for(const target of [5,14,39])add('property type square '+target,2,0,[10,0],g=>g.players[0].pos=(target-7+40)%40);
+ add('doubles retain additional roll',2,0,[10,0],g=>g.players[0].pos=1,dice(3,3));
+ add('star continuation waits after auction',2,0,[10,0],g=>{g.players[0].pos=38;g.players[0].lapped=true;g.set.speedDie=true},dice(1,2,5));
+ add('taxi starts a separate second purchase',2,0,[10,0],g=>{g.players[0].pos=38;g.players[0].lapped=true;g.set.speedDie=true},dice(1,2,6));
+ add('card nearest-rail auction',2,0,[10,0],g=>{g.chance=[2,...g.chance.filter(i=>i!==2)]},dice(1,2),['drawCard','decline']);
+ add('jail release card property auction',2,0,[10,0],g=>{g.phase='jail';Object.assign(g.players[0],{inJail:true,pos:10,jailTurns:0});g.esusu=[10,...g.esusu.filter(i=>i!==10)]},dice(1,1),['drawCard','decline']);out.at(-1).jail=true;
+ return out}
+module.exports={cases};

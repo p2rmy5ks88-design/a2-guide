@@ -2,7 +2,7 @@
   "name": "skyline-security-emulator-tests",
   "private": true,
   "scripts": {
-    "test": "node service/card-kernel.test.cjs && node service/card-service.test.cjs && node service/jail-kernel.test.cjs && node service/jail-service.test.cjs && node service/end-kernel.test.cjs && node service/end-service.test.cjs && node service/turn-kernel.test.cjs && node service/turn-service.test.cjs && node service/roll-plans.test.cjs && node service/setup-kernel.test.cjs && node service/asset-kernel.test.cjs && firebase emulators:exec --only auth,database --project demo-skyline-phase1 --config firebase.emulator.json \"node rules.test.cjs && node service/integration.test.cjs\""
+    "test": "node service/auction-kernel.test.cjs && node service/auction-service.test.cjs && node service/card-kernel.test.cjs && node service/card-service.test.cjs && node service/jail-kernel.test.cjs && node service/jail-service.test.cjs && node service/end-kernel.test.cjs && node service/end-service.test.cjs && node service/turn-kernel.test.cjs && node service/turn-service.test.cjs && node service/roll-plans.test.cjs && node service/setup-kernel.test.cjs && node service/asset-kernel.test.cjs && firebase emulators:exec --only auth,database --project demo-skyline-phase1 --config firebase.emulator.json \"node rules.test.cjs && node service/integration.test.cjs\""
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "5.0.0",
