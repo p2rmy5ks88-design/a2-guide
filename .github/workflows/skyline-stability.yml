@@ -30,6 +30,7 @@ jobs:
         run: python3 skyline-estates/build.py --check
       - name: Test saved turns and seeded games
         run: |
+          node skyline-estates/security/service/turn-browser.test.cjs "$RUNNER_TEMP/skyline-turn-browser.json"
           node skyline-estates/security/service/setup-browser.test.cjs "$RUNNER_TEMP/skyline-setup-browser.json"
           node skyline-estates/security/service/asset-browser.test.cjs "$RUNNER_TEMP/skyline-asset-browser.json"
           node skyline-estates/tests/offline-worker.cjs
@@ -49,6 +50,7 @@ jobs:
         with:
           name: skyline-stability-results
           path: |
+            ${{ runner.temp }}/skyline-turn-browser.json
             ${{ runner.temp }}/skyline-setup-browser.json
             ${{ runner.temp }}/skyline-asset-browser.json
             ${{ runner.temp }}/skyline-phase1.json
