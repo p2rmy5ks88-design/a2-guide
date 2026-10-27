@@ -4806,7 +4806,7 @@ function progressGameEnd(w){if(!trackable()||G.progDone)return null;G.progDone=t
   const sts=standings(),me=hum.slice().sort((a,b)=>sts.indexOf(a)-sts.indexOf(b))[0],rank=sts.indexOf(me),n=sts.length;
   let base=50+(won?200:0)+Math.min(200,Math.round(Math.max(...hum.map(p=>st(p).rent))/10));
   if(PREF.boostGames>0){base*=2;PREF.boostGames--;XPLOG.push(['Double XP booster',0])}
-  const myT=perkOf(me);if(myT.xpX){base=Math.round(base*(1+myT.xpX));XPLOG.push([myT.name+' token bonus',0])}
+  const myT=perkOf(hum[0]);if(myT.xpX){base=Math.round(base*(1+myT.xpX));XPLOG.push([myT.name+' token bonus',0])}
   addXP(base,won?'Win + game XP':'Game XP');
   const coins=Math.round(((won?120:40)+(rank===1&&!won?30:0)+(G.online?40:0))*(1+(myT.coinX||0)));addCoins(coins,won?'Win':'Game');const mastery=grantTokenMastery(G,w);
   const tr=trophyDelta(rank,n,won);const lc=tr?addTrophies(tr):0;
