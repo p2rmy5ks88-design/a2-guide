@@ -45,3 +45,7 @@ ai-browser-results.json
 
 web-connection-results.json
 web-connection-browser-results.json
+
+operation-results.json
+control-results.json
+control-browser-results.json

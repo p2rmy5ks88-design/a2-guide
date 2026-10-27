@@ -30,35 +30,43 @@ export function createGameClient({baseUrl,allowedOrigins,uid,getSession,storage,
    await session();return data;
   }finally{clearTimeout(timer)}
  }
+ function checkedReceipt(saved,data){const reservation=saved.action.startsWith('reserve');if(data?.protocol!==2||data.code!==saved.body.code||data.revision!==saved.body.revision+(reservation?0:1)||reservation&&(typeof data.planId!=='string'||!/^[a-f0-9]{64}$/.test(data.planId)))throw error('invalid-service-response');return Object.fromEntries(['protocol','code','revision','planId','stage','offerHash'].filter(k=>Object.hasOwn(data,k)).map(k=>[k,data[k]]))}
  async function send(saved){
   if(inFlight)throw error('operation-in-flight');inFlight=true;
   try{
    const data=await request(routes[saved.action],saved.body);
-   const reservation=saved.action.startsWith('reserve');
-   if(data.revision!==saved.body.revision+(reservation?0:1)||reservation&&(typeof data.planId!=='string'||!/^[a-f0-9]{64}$/.test(data.planId)))throw error('invalid-service-response');
+
    // Only a receipt is durable. Never cache private dice, decks or game state here.
-   const receipt=Object.fromEntries(['protocol','code','revision','planId','stage','offerHash'].filter(k=>Object.hasOwn(data,k)).map(k=>[k,data[k]]));
+   const receipt=checkedReceipt(saved,data);
    storage.setItem(key,JSON.stringify({...saved,status:'acknowledged',receipt}));return copy(receipt);
   }finally{inFlight=false}
  }
  return{
   async read(action,body){active();if(!Object.hasOwn(reads,action))throw error('unsupported-read');return request(reads[action],copy(body))},
-  async mutate(action,body){
+  async mutate(action,body,{track=false}={}){
    active();if(inFlight)throw error('operation-in-flight');return exclusive(async()=>{
-   active();if(!Object.hasOwn(routes,action)||!body||typeof body!=='object'||Array.isArray(body)||Object.hasOwn(body,'requestId'))throw error('invalid-operation');
+   active();if(!Object.hasOwn(routes,action)||!body||typeof body!=='object'||Array.isArray(body)||Object.hasOwn(body,'requestId')||typeof body.code!=='string'||!/^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{5}$/.test(body.code||'')||!Number.isSafeInteger(body.revision)||body.revision<0||!Number.isSafeInteger(body.revision+1))throw error('invalid-operation');
    if(inFlight)throw error('operation-in-flight');if(record())throw error('operation-needs-recovery');
    const requestId=randomId();if(typeof requestId!=='string'||!/^[A-Za-z0-9_-]{16,64}$/.test(requestId))throw error('invalid-request-id');
    const saved={version:1,origin:base.origin,uid,action,body:copy({...body,requestId}),status:'pending'};
    // Persistence is required before any authentication or network attempt.
    const serialized=JSON.stringify(saved);if(serialized.length>20000||new TextEncoder().encode(JSON.stringify(saved.body)).length>8192)throw error('request-too-large');
-   storage.setItem(key,serialized);return send(saved);
+   storage.setItem(key,serialized);const receipt=await send(saved);return track?{receipt,requestId}:receipt;
    });
   },
   async retry(){active();if(inFlight)throw error('operation-in-flight');return exclusive(async()=>{const saved=record();if(!saved)throw error('no-pending-operation');
    // Reauthenticate/replay even if an earlier receipt is saved; it is not current authority.
    return send(saved);});
   },
-  pending(){active();const saved=record();return saved?copy({action:saved.action,body:saved.body,status:saved.status,receipt:saved.receipt}):null},
+  async reconcile(expectedRequestId){active();if(inFlight)throw error('operation-in-flight');return exclusive(async()=>{
+   const saved=record();if(!saved)throw error('no-pending-operation');if(expectedRequestId!==undefined&&saved.body.requestId!==expectedRequestId)throw error('operation-changed');inFlight=true;
+   try{const data=await request('operation/settle',{code:saved.body.code,action:saved.action,body:saved.body});
+    if(data.requestId!==saved.body.requestId||data.action!==saved.action||!['committed','rejected','retired'].includes(data.resolution))throw error('invalid-service-response');
+    let receipt,rejection;if(data.resolution==='committed')receipt=checkedReceipt(saved,data.receipt);else{const e=data.rejection;if(!Number.isInteger(e?.status)||e.status<400||e.status>599||typeof e.error!=='string'||!/^[a-z][a-z0-9-]{0,79}$/.test(e.error)||data.resolution==='retired'&&(e.status!==409||e.error!=='operation-retired'))throw error('invalid-service-response');rejection={status:e.status,error:e.error}}
+    const resolution={resolution:data.resolution,...(receipt?{receipt}:{}),...(rejection?{rejection}:{})};storage.setItem(key,JSON.stringify({...saved,status:'acknowledged',...resolution}));return copy({requestId:saved.body.requestId,action:saved.action,code:saved.body.code,...resolution});
+   }finally{inFlight=false}
+  })},
+  pending(){active();const saved=record();return saved?copy({action:saved.action,body:saved.body,status:saved.status,receipt:saved.receipt,resolution:saved.resolution,rejection:saved.rejection}):null},
   async complete(requestId){active();if(inFlight)throw error('operation-in-flight');return exclusive(()=>{const saved=record();if(!saved||saved.body.requestId!==requestId||saved.status!=='acknowledged')throw error('operation-not-acknowledged');storage.removeItem(key)})},
   close(){closed=true}
  };

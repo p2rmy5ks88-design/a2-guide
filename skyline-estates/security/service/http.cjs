@@ -1,5 +1,6 @@
 // Game routes require explicit service composition; default lobby behavior is unchanged.
 const GAME_ROUTES=Object.freeze({
+ "/v2/game/operation/settle":["operations","settle"],
  "/v2/game/roll/reserve": [
   "plans",
   "reserveRoll"

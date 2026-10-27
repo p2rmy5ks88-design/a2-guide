@@ -43,6 +43,8 @@ jobs:
             skyline-estates/security/security-results.json
             skyline-estates/security/service-results.json
             skyline-estates/security/web-connection-results.json
+            skyline-estates/security/operation-results.json
+            skyline-estates/security/control-results.json
             skyline-estates/security/ai-results.json
             skyline-estates/security/ai-service-results.json
             skyline-estates/security/trade-results.json
