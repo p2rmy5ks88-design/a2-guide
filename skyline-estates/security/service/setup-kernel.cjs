@@ -62,4 +62,5 @@ function sample(game,actor,{draw=crypto.randomInt}={},rollKind='roll'){
  const result=JSON.parse(diceScript.runInContext(vm.createContext({input,actor,rollKind,draw:checkedDraw(draw),CITY_DATA:cityRaw,validIdentities},{codeGeneration:{strings:false,wasm:false}}),{timeout:100}));if(result.error)fail(result.error);return result.dice;
 }
 const sampleDice=(game,actor,options)=>sample(game,actor,options,'roll'),sampleJailDice=(game,actor,options)=>sample(game,actor,options,'jail');
-module.exports={initializeGame,sampleDice,sampleJailDice,SetupError,sourceHash};
+function sampleRerollDice(game,actor,options){const p=game?.players?.[game.turn];if(game?.phase!=='busy'||!p||p.inJail||p.ai||p.auto)fail('unsupported-reroll-phase');return sampleDice({...game,phase:'pre'},actor,options)}
+module.exports={sampleRerollDice,initializeGame,sampleDice,sampleJailDice,SetupError,sourceHash};

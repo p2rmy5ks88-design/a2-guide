@@ -1,7 +1,7 @@
 // Internal turn checkpoints. No HTTP route or shipped client uses this module.
 const vm=require('node:vm');
 const {section,line,sourceHash,validIdentities}=require('./audited-rules.cjs');
-const {sampleDice,sampleJailDice}=require('./setup-kernel.cjs');
+const {sampleDice,sampleJailDice,sampleRerollDice}=require('./setup-kernel.cjs');
 class TurnError extends Error{constructor(code,status=409){super(code);this.code=code;this.status=status}}
 const fail=(code,status)=>{throw new TurnError(code,status)};
 // Only audited async UI waits are removed. Financial statements and later economic hooks are reused.
@@ -20,7 +20,7 @@ const p=P(G.turn),d=flow.dice?[flow.dice.a,flow.dice.b]:[];if(flow.dice?.sv){d.s
 let boundary=null,paymentKind=null,answerUsed=false;
 function modal(){if(!answerUsed&&mode==='buy'){if(p.cash<SQ[p.pos].p)throw Error('Cannot afford property');answerUsed=true;return 'buy'}if(!answerUsed&&mode==='decline'){answerUsed=true;return 'auction'}throw new Stop('purchase',{square:p.pos,price:SQ[p.pos].p,canBuy:p.cash>=SQ[p.pos].p})}
 function deedHTML(){return ''}
-function actions(){if(mode==='jail-pay')return 'pay';if(mode==='jail-card')return 'card';if(mode==='jail-roll')return 'roll';if(mode==='keep')return 'keep';throw new Stop('reroll',{remaining:perkOf(p).rr-(p.rrUsed||0),dice:flow.dice})}
+function actions(){if(mode==='replace')return 'rr';if(mode==='jail-pay')return 'pay';if(mode==='jail-card')return 'card';if(mode==='jail-roll')return 'roll';if(mode==='keep')return 'keep';throw new Stop('reroll',{remaining:perkOf(p).rr-(p.rrUsed||0),dice:flow.dice})}
 function auction(i){throw new Stop('auction',{square:i})}
 function drawCard(w,deck){flow.cardDeck=deck;throw new Stop('card',{deck,square:w.pos})}
 const sourceLand=land;land=function(w,d,o2={}){if(mode==='drawCard'||flow.cardEffect)flow.landingOptions={...o2};return sourceLand(w,d,o2)};
@@ -39,8 +39,9 @@ function completeLanding(){
  if(flow.afterLanding==='taxi'){flow.afterLanding=null;moveTo(p,nextOf(RAILS,p.pos));land(p,d);return completeLanding()}
  G.phase=flow.extraRoll?'pre':'post';
 }
-function rollDice(){if(!flow.dice)throw Error('Missing saved jail dice');${record}
+function rollDice(){const saved=mode==='replace'?flow.replacement:flow.dice;if(!saved)throw Error('Missing saved dice');const d=[saved.a,saved.b];if(saved.sv){d.sv=saved.sv;d.s=saved.face}${record}
 ${rollLog}return d}
+
 function beginJail(){
  if(endCheck()||!p.inJail||p.pos!==10||p.jailTurns>=3)throw Error('Invalid jail turn');
  if(mode==='jail-pay'&&p.cash<BAIL)throw Error('Cannot afford bail');if(mode==='jail-card'&&!p.goojf.length)throw Error('No Bail Pass');
@@ -51,11 +52,11 @@ function beginJail(){
 function begin(){
  G.phase='busy';
  if(mode==='roll'){${record}\n${rollLog}}
- offerReroll(p,d);
+ offerReroll(p,d);if(mode==='replace'){flow.dice={a:d[0],b:d[1],sv:d.sv||0,face:d.s??null};flow.extraRoll=d[0]===d[1];flow.afterLanding=d.s==='star'?'star':d.s==='taxi'?'taxi':null;delete flow.replacement}
  if(d[0]===d[1]){G.doubles=(G.doubles||0)+1;if(G.doubles===3){st(p).dbl3=1;sendToJail(p);G.phase='post';flow.afterLanding=null;return}}
  moveSteps(p,d[0]+d[1]+(typeof d.s==='number'?d.s:0));land(p,d);completeLanding();
 }
-try{if(mode==='jail-view'){if(endCheck())throw Error('Game ended');boundary={kind:'jail',seat:p.id,bail:BAIL,canPay:p.cash>=BAIL,passes:p.goojf.length,attempt:p.jailTurns+1}}else if(mode.startsWith('auction-'))resumeAuction();else if(mode==='drawCard')beginCard();else if(mode.startsWith('jail-'))beginJail();else if(mode==='roll'||mode==='keep')begin();else{land(p,d,flow.landingOptions||{});delete flow.cardEffect;completeLanding()}}catch(e){if(!(e instanceof Stop))throw e;boundary=e.boundary}
+try{if(mode==='jail-view'){if(endCheck())throw Error('Game ended');boundary={kind:'jail',seat:p.id,bail:BAIL,canPay:p.cash>=BAIL,passes:p.goojf.length,attempt:p.jailTurns+1}}else if(mode.startsWith('auction-'))resumeAuction();else if(mode==='drawCard')beginCard();else if(mode.startsWith('jail-'))beginJail();else if(mode==='roll'||mode==='keep'||mode==='replace'||mode==='reroll-view')begin();else{land(p,d,flow.landingOptions||{});delete flow.cardEffect;completeLanding()}}catch(e){if(!(e instanceof Stop))throw e;boundary=e.boundary}
 if(debtCursor!==debtTape.length)throw Error('Unused debt action');
 if(!validateSave({...G,online:false,over:false})||!validIdentities(G.players)||G.players.some(w=>!Number.isSafeInteger(w.cash)||w.st&&Object.values(w.st).some(n=>!Number.isFinite(n)||n<0))||!Number.isSafeInteger(G.logN||0))throw Error('Invalid turn result');
 let result=null;if(G.over){const ranking=standings().map((w,i)=>({rank:i+1,id:w.id,cash:w.cash,netWorth:netWorth(w),bankrupt:w.bankrupt}));if(ranking.some(w=>!Number.isSafeInteger(w.netWorth)))throw Error('Unsafe standings');result={reason:'last-player',winnerId:ranking[0].id,standings:ranking}}
@@ -87,6 +88,8 @@ function chooseTurn(game,actor,pending,choice){
  }else if(pending.boundary?.kind==='card'){if(choice!=='drawCard')fail('unsupported-turn-choice',501);if(!['chance','esusu'].includes(pending.boundary.deck)||pending.boundary.square!==game.players[game.turn].pos||pending.context.cardDeck!==pending.boundary.deck)fail('stale-card-choice')}else if(pending.boundary?.kind==='reroll'){if(choice!=='keep')fail('unsupported-turn-choice',501)}else fail('unsupported-turn-choice',501);
  return run(game,actor,pending.context,choice);
 }
+function rerollOffer(game,actor,pending){validGame(game,actor);if(game.phase!=='busy'||pending?.boundary?.kind!=='reroll'||pending.context?.version!==1||game.players[game.turn].inJail)fail('invalid-reroll-checkpoint');const out=run(game,actor,pending.context,'reroll-view');if(JSON.stringify(out.game)!==JSON.stringify(game)||JSON.stringify(out.boundary)!==JSON.stringify(pending.boundary))fail('invalid-reroll-checkpoint');return out.boundary}
+function replaceRoll(game,actor,pending,dice){rerollOffer(game,actor,pending);if(!dice||Object.keys(dice).sort().join(',')!=='a,b,face,sv')fail('invalid-dice');let i=0;const values=[dice.a-1,dice.b-1,dice.sv-1];let expected;try{expected=sampleRerollDice(game,actor,{draw:()=>values[i++]})}catch{fail('invalid-dice')}if(['a','b','sv','face'].some(k=>expected[k]!==dice[k]))fail('invalid-dice');return run(game,actor,{...pending.context,replacement:{...dice}},'replace')}
 function auctionState(game,pending){validGame(game,game?.players?.[game.turn]?.uid);if(game.phase!=='busy'||pending?.context?.version!==1||pending.boundary?.kind!=='auction'||!Number.isInteger(pending.boundary.square)||game.own?.[pending.boundary.square]?.o!==-1)fail('invalid-auction-checkpoint')}
 function startAuction(game,actor,pending){validGame(game,actor);auctionState(game,pending);if(pending.context.auction)fail('auction-already-started');return run(game,actor,{...pending.context,auction:{square:pending.boundary.square,offers:[]}},'auction-start')}
 function bidAuction(game,actor,pending,amount){auctionState(game,pending);const a=pending.context.auction;if(!a||a.square!==pending.boundary.square)fail('invalid-auction-checkpoint');const view=run(game,game.players[game.turn].uid,pending.context,'auction-start');if(JSON.stringify(view.boundary)!==JSON.stringify(pending.boundary))fail('invalid-auction-checkpoint');const q=game.players[pending.boundary.seat];if(!q||q.uid!==actor||q.bankrupt)fail('not-your-bid');if(q.ai)fail('unsupported-ai-auction',501);if(!Number.isSafeInteger(amount)||amount<0)fail('invalid-bid',400);if(amount!==0&&(![pending.boundary.bid+10,pending.boundary.bid+50,pending.boundary.bid+100].includes(amount)||amount>q.cash))fail('invalid-bid');return run(game,game.players[game.turn].uid,pending.context,'auction-bid',amount)}
@@ -94,4 +97,4 @@ function jailState(game,actor){validGame(game,actor);const p=game.players[game.t
 function applyJailChoice(game,actor,choice){jailState(game,actor);if(!['payBail','useBailPass'].includes(choice))fail('unsupported-jail-choice',501);return run(game,actor,{version:1,dice:null,extraRoll:false,afterLanding:null},choice==='payBail'?'jail-pay':'jail-card')}
 function applyJailRoll(game,actor,dice){jailState(game,actor);if(!dice||Object.keys(dice).sort().join(',')!=='a,b,face,sv')fail('invalid-dice');let i=0;const values=[dice.a-1,dice.b-1,dice.sv-1];let expected;try{expected=sampleJailDice(game,actor,{draw:()=>values[i++]})}catch{fail('invalid-dice')}if(['a','b','sv','face'].some(k=>expected[k]!==dice[k]))fail('invalid-dice');return run(game,actor,{version:1,dice:{...dice},extraRoll:false,afterLanding:null},'jail-roll')}
 function jailView(game,actor){jailState(game,actor);return run(game,actor,{version:1,dice:null,extraRoll:false,afterLanding:null},'jail-view').boundary}
-module.exports={resolveDebt,startAuction,bidAuction,applyRoll,chooseTurn,applyJailChoice,applyJailRoll,jailView,TurnError,sourceHash};
+module.exports={rerollOffer,replaceRoll,resolveDebt,startAuction,bidAuction,applyRoll,chooseTurn,applyJailChoice,applyJailRoll,jailView,TurnError,sourceHash};
