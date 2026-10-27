@@ -65,6 +65,7 @@ jobs:
             skyline-estates/security/turn-results.json
             skyline-estates/security/turn-service-results.json
             skyline-estates/security/roll-plan-results.json
+            skyline-estates/security/start-results.json
             skyline-estates/security/setup-results.json
             skyline-estates/security/asset-results.json
             skyline-estates/security/*-debug.log

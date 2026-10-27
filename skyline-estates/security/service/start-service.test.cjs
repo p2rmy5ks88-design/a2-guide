@@ -1,5 +1,6 @@
 // Test-only roster policy. Production must supply its own verified entitlement resolver.
-const assert=require('node:assert/strict'),crypto=require('node:crypto');
+const assert=require('node:assert/strict'),crypto=require('node:crypto'),fs=require('node:fs'),path=require('node:path');
+const report={checks:[],failure:null};
 const {createStartService}=require('./start-service.cjs');
 const {createOperationService}=require('./operation-service.cjs');
 const {config}=require('./setup-cases.cjs');
@@ -15,7 +16,7 @@ function fixture(n=2){
 const body=(requestId='start-request-0001',revision=1)=>({code:'ABCDE',revision,requestId});
 const denied=(fn,code)=>assert.rejects(fn,e=>e.code===code);
 let checks=0;
-async function test(name,fn){await fn();checks++;console.log('PASS start',name)}
+async function test(name,fn){await fn();checks++;report.checks.push({name,passed:true});console.log('PASS start',name)}
 (async()=>{
  await test('one player may view lobby but cannot consume start entropy',async()=>{const f=fixture(1);assert.equal((await f.service.readLobby('seat-0',{code:'ABCDE'})).seats.length,1);await denied(()=>f.service.startGame('seat-0',body()),'two-players-required');assert.equal(f.state.draws,0)});
  await test('only verified host starts; injected outcomes rejected before entropy',async()=>{const f=fixture();await denied(()=>f.service.startGame('bad',body()),'unauthenticated');await denied(()=>f.service.startGame('seat-1',body()),'host-required');await denied(()=>f.service.startGame('seat-0',{...body(),cash:9999}),'invalid-fields');assert.equal(f.state.draws,0)});
@@ -31,5 +32,11 @@ async function test(name,fn){await fn();checks++;console.log('PASS start',name)}
  await test('retained start record fences rollback and new request IDs',async()=>{const f=fixture(),old=copy(f.room());await f.service.startGame('seat-0',body());f.state.root.rooms.ABCDE=old;await denied(()=>f.service.startGame('seat-0',body('different-start-01')),'game-already-started');assert.equal(f.state.draws,1)});
  await test('membership removal blocks recovery of committed start',async()=>{const f=fixture();await f.service.startGame('seat-0',body());delete f.room().members['seat-0'];await denied(()=>f.service.startGame('seat-0',body()),'not-authorized')});
  await test('opening projection validates immutable committed setup',async()=>{const f=fixture();await f.service.startGame('seat-0',body());const {openingView}=require('./opening-view.cjs'),g=JSON.parse(f.room().state.gameJson);assert.equal(openingView(f.state.root,f.room(),g).bonus,100);f.room().state.gameJson=f.room().state.gameJson.replace('"cash":1600','"cash":1601');assert.throws(()=>openingView(f.state.root,f.room(),g),e=>e.code==='invalid-opening')});
+ await test('host revocation between preflight and transaction prevents commit',async()=>{const f=fixture(),service=createStartService({...f.options,randomBytes:n=>{f.room().meta.hostUid='seat-1';return Buffer.alloc(n,17)}});await denied(()=>service.startGame('seat-0',body()),'host-required');assert.equal(f.room().meta.status,'lobby');assert.equal(f.state.root.service.starts.ABCDE,undefined)});
+ await test('join revision change during preparation fences original start',async()=>{const f=fixture(),service=createStartService({...f.options,randomBytes:n=>{f.room().state.revision++;return Buffer.alloc(n,17)}});await denied(()=>service.startGame('seat-0',body()),'stale-revision');assert.equal(f.room().meta.status,'lobby')});
+ await test('rejection-sampling exhaustion cannot partially start a game',async()=>{const f=fixture(),before=copy(f.state.root),service=createStartService({...f.options,randomBytes:n=>Buffer.alloc(n,255)});await denied(()=>service.startGame('seat-0',body()),'entropy-exhausted');assert.deepEqual(f.state.root,before)});
+ await test('sparse lobby seats compact with player identity preserved',async()=>{const f=fixture();f.room().seats['seat-1'].seat=5;await f.service.startGame('seat-0',body());const g=JSON.parse(f.room().state.gameJson);assert.equal(g.players[1].uid,'seat-1');assert.equal(f.room().seats['seat-1'].seat,1)});
+ await test('seat acknowledgement recovers in lobby and after start',async()=>{const f=fixture(),b={...body(),selection:{tok:f.c.players[1].tok,fin:null,ch:null}},ack=await f.service.selectSeat('seat-1',b),q={code:'ABCDE',action:'selectSeat',body:b};assert.deepEqual((await f.ops.settle('seat-1',q)).receipt,ack);await f.service.startGame('seat-0',body('next-start-id-0001',2));assert.deepEqual((await f.ops.settle('seat-1',q)).receipt,ack)});
+ await test('retired seat selection cannot replace member preferences',async()=>{const f=fixture(),b={...body(),selection:{tok:f.c.players[1].tok,fin:null,ch:null}};await f.ops.settle('seat-1',{code:'ABCDE',action:'selectSeat',body:b});await denied(()=>f.service.selectSeat('seat-1',b),'operation-retired');assert.equal(f.room().state.revision,1);assert.equal(f.room().seats['seat-1'].selection,undefined)});
  console.log('START SUMMARY',JSON.stringify({checks}));
-})().catch(e=>{console.error(e);process.exitCode=1});
+})().catch(e=>{report.failure=String(e.stack||e);console.error(e);process.exitCode=1}).finally(()=>fs.writeFileSync(path.join(__dirname,'../start-results.json'),JSON.stringify(report,null,2)+'\n'));
