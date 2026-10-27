@@ -25,6 +25,19 @@ function eligible(root,uid,request){
  return{room,game,gameHash:hash(room.state.gameJson)};
 }
 const ack=plan=>({protocol:2,code:plan.code,revision:plan.revision,planId:plan.id});
+function inspectRoll(root,uid,request){
+  const {game,gameHash}=eligible(root,uid,request),lock=root.service?.rollLocks?.[request.code];
+  if(!lock)fail(404,'roll-not-reserved');
+  const plan=root.service?.rollPlans?.[lock.planId];
+  if(request.planId&&request.planId!==lock.planId)fail(403,'not-authorized');
+  if(!plan||plan.version!==1||plan.id!==lock.planId||plan.id!==hash(JSON.stringify([request.code,request.revision]))||plan.actorUid!==uid||plan.code!==request.code||lock.actorUid!==uid)fail(409,'invalid-roll-plan');
+  if(plan.revision!==request.revision||lock.revision!==request.revision||plan.gameHash!==gameHash||lock.gameHash!==gameHash)fail(409,'roll-plan-stale');
+  if(plan.consumedRevision!=null)fail(409,'roll-already-consumed');
+  if(plan.sourceHash!==sourceHash)fail(409,'roll-plan-incompatible');
+  // Recheck game legality with the existing sampler, using stored values rather than fresh entropy.
+  let dice;try{dice=JSON.parse(plan.diceJson);fields(dice,['a','b','sv','face']);if(![dice.a,dice.b].every(n=>Number.isInteger(n)&&n>=1&&n<=6))throw Error();const turbo=!!(game.set.speedDie&&game.players[game.turn].lapped);if(turbo?!(Number.isInteger(dice.sv)&&dice.sv>=1&&dice.sv<=6):dice.sv!==0)throw Error();let i=0;const values=[dice.a-1,dice.b-1,dice.sv-1],expected=sampleDice(game,uid,{draw:()=>values[i++]});if(['a','b','sv','face'].some(k=>expected[k]!==dice[k]))throw Error()}catch{fail(409,'invalid-roll-plan')}
+  return{...ack(plan),dice};
+ }
 function createRollPlanService({db,verifyIdToken,clock=Date.now,draw=crypto.randomInt,operationLimit=30,timeoutMs=3000}){
  if(!db||typeof verifyIdToken!=='function'||typeof draw!=='function')throw Error('A privileged store, verified authentication and trusted integer provider are required');
  const identity=identityVerifier(verifyIdToken);
@@ -47,6 +60,7 @@ function createRollPlanService({db,verifyIdToken,clock=Date.now,draw=crypto.rand
    let limit=service.limits[identityKey];if(!limit||now-limit.start>=60000)limit={start:now,count:0};
    if(limit.count>=operationLimit){outcome=error(429,'rate-limited');return root}limit.count++;service.limits[identityKey]=limit;
    try{
+    if(service.turns?.[request.code])fail(409,'turn-decision-pending');
     const {game,gameHash}=eligible(root,uid,request);
     if(service.rollLocks[request.code]||service.rollPlans[planId])fail(409,'roll-already-reserved');
     let index=0;const dice=sampleDice(game,uid,{draw:max=>{if(max!==6||index>=candidate.length)throw Error('Unaudited dice draw');return candidate[index++]}});
@@ -57,20 +71,9 @@ function createRollPlanService({db,verifyIdToken,clock=Date.now,draw=crypto.rand
   },undefined,false));
   if(!tx.committed)fail(503,'temporarily-unavailable');return unwrap(outcome);
  }
- function load(root,uid,request){
-  const {game,gameHash}=eligible(root,uid,request),lock=root.service?.rollLocks?.[request.code];
-  if(!lock)fail(404,'roll-not-reserved');
-  const plan=root.service?.rollPlans?.[lock.planId];
-  if(request.planId&&request.planId!==lock.planId)fail(403,'not-authorized');
-  if(!plan||plan.version!==1||plan.id!==lock.planId||plan.id!==hash(JSON.stringify([request.code,request.revision]))||plan.actorUid!==uid||plan.code!==request.code||lock.actorUid!==uid)fail(409,'invalid-roll-plan');
-  if(plan.revision!==request.revision||lock.revision!==request.revision||plan.gameHash!==gameHash||lock.gameHash!==gameHash)fail(409,'roll-plan-stale');
-  if(plan.sourceHash!==sourceHash)fail(409,'roll-plan-incompatible');
-  // Recheck game legality with the existing sampler, using stored values rather than fresh entropy.
-  let dice;try{dice=JSON.parse(plan.diceJson);fields(dice,['a','b','sv','face']);if(![dice.a,dice.b].every(n=>Number.isInteger(n)&&n>=1&&n<=6))throw Error();const turbo=!!(game.set.speedDie&&game.players[game.turn].lapped);if(turbo?!(Number.isInteger(dice.sv)&&dice.sv>=1&&dice.sv<=6):dice.sv!==0)throw Error();let i=0;const values=[dice.a-1,dice.b-1,dice.sv-1],expected=sampleDice(game,uid,{draw:()=>values[i++]});if(['a','b','sv','face'].some(k=>expected[k]!==dice[k]))throw Error()}catch{fail(409,'invalid-roll-plan')}
-  return{...ack(plan),dice};
- }
- async function loadRoll(token,input){const uid=await identity(token),request=body(input,'load');return load(await freshRoot(),uid,request)}
- async function recoverRoll(token,input){const uid=await identity(token),request=body(input,'recover'),loaded=load(await freshRoot(),uid,request);const {dice,...publicAck}=loaded;return publicAck}
+
+ async function loadRoll(token,input){const uid=await identity(token),request=body(input,'load');return inspectRoll(await freshRoot(),uid,request)}
+ async function recoverRoll(token,input){const uid=await identity(token),request=body(input,'recover'),loaded=inspectRoll(await freshRoot(),uid,request);const {dice,...publicAck}=loaded;return publicAck}
  return{reserveRoll,loadRoll,recoverRoll};
 }
-module.exports={createRollPlanService};
+module.exports={createRollPlanService,inspectRoll};
