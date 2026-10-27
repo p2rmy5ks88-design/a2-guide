@@ -7,6 +7,8 @@ try{
   ['outsider',()=>{},'unknown',{kind:'build',square:1},'not-your-turn'],
   ['wrong turn',()=>{},'guest-uid',{kind:'build',square:1},'not-your-turn'],
   ['bankrupt actor',g=>g.players[0].bankrupt=true,'host-uid',{kind:'build',square:1},'not-your-turn'],
+  ['human without identity',g=>g.players[1].uid=null,'host-uid',{kind:'build',square:1},'invalid-game-state'],
+  ['reserved identity',g=>g.players[1].uid='constructor','host-uid',{kind:'build',square:1},'invalid-game-state'],
   ['duplicate identity',g=>g.players[1].uid='host-uid','host-uid',{kind:'build',square:1},'invalid-game-state'],
   ['corrupt cash',g=>g.players[0].cash=-1,'host-uid',{kind:'build',square:1},'invalid-game-state'],
   ['corrupt house bank',g=>g.houses=35,'host-uid',{kind:'build',square:1},'invalid-game-state'],

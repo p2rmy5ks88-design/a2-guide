@@ -35,6 +35,7 @@ function cases(){const result=[];const add=(name,kind,square,change=()=>{},legal
  add('hotel bank exhaustion blocks conversion','build',1,g=>{g.set.ffa=true;g.set.even=false;g.own[1].h=4;props.slice(0,12).forEach(i=>g.own[i]={o:1,h:5,m:false})},false);
  add('hotel cannot sell without four bank houses','sell',1,g=>{g.set.ffa=true;g.set.even=false;g.own[1].h=5;props.slice(0,9).forEach(i=>g.own[i]={o:1,h:4,m:false})},false);
  add('post-roll asset management allowed','mortgage',1,g=>g.phase='post',true,{m:true});
+ add('AI seat without UID preserves owner property actions','build',1,g=>{g.players[1].uid=null;g.players[1].ai=true},true,{cash:1560,h:1});
  return result;
 }
 module.exports={cases,stock};
