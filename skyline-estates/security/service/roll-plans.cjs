@@ -86,4 +86,4 @@ function createRollPlanService({db,verifyIdToken,clock=Date.now,draw=crypto.rand
 }
 const inspectRoll=(root,uid,request)=>inspect(root,uid,request,'roll'),inspectJailRoll=(root,uid,request)=>inspect(root,uid,request,'jail');
 const inspectReroll=(root,uid,request)=>inspect(root,uid,request,'reroll');
-module.exports={inspectReroll,createRollPlanService,inspectRoll,inspectJailRoll};
+module.exports={inspectReroll,createRollPlanService,inspectRoll,inspectJailRoll,validateRollPlanRequest:body};
