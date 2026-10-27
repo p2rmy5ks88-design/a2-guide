@@ -49,12 +49,12 @@ export function mountSkylineControls({client,code,onError=()=>{},pollMs=2500}){
  const terms=t=>Object.fromEntries(['to','give','get','gc','rc','gcard','rcard'].map(k=>[k,t[k]]));
  function schedule(){if(closed||timer||!pollMs)return;timer=setTimeout(async()=>{timer=null;if(closed)return;try{if(!controls.controller.status().busy)await controls.refresh()}finally{schedule()}},pollMs)}
  function safeRoster(){const scan=achScan,push=pushState;try{achScan=()=>{};pushState=()=>{};return previous.roster()}finally{achScan=scan;pushState=push}}
- function fail(e){if(closed)return;dialog=null;serial++;document.querySelector('#modals').replaceChildren();onError(e)}
+ function fail(e){if(closed)return;dialog?.observer?.disconnect();dialog=null;serial++;document.querySelector('#modals').replaceChildren();onError(e)}
  function sync(s){
   if(closed)return;
   const held=s.busy||s.needsRecovery;document.querySelector('#bAssets').disabled=held;document.querySelector('#bTrade').disabled=held||!tradableNow(s.view);
   document.querySelector('#bAssets').classList.toggle('off',!editable(s.view));document.querySelector('#bTrade').classList.toggle('off',!tradableNow(s.view));
-  if(held){if(s.needsRecovery&&!s.busy){dialog=null;serial++;document.querySelector('#modals').replaceChildren()}else for(const b of document.querySelectorAll('#modals button'))b.disabled=true;return}
+  if(held){if(s.needsRecovery&&!s.busy){dialog?.observer?.disconnect();dialog=null;serial++;document.querySelector('#modals').replaceChildren()}else for(const b of document.querySelectorAll('#modals button'))b.disabled=true;return}
   if(dialog?.type==='portfolio'&&!document.querySelector('#modals .pf2'))showPortfolio(dialog);
  }
  function render(v){
@@ -67,12 +67,12 @@ export function mountSkylineControls({client,code,onError=()=>{},pollMs=2500}){
  }
  function showPortfolio(frame){
   if(closed||!current||dialog!==frame)return;
-  const v=current,edit=frame.edit&&editable(v),debt=edit&&v.stage==='debt',token=++serial;frame.token=token;
+  frame.observer?.disconnect();const v=current,edit=frame.edit&&editable(v),debt=edit&&v.stage==='debt',token=++serial;frame.token=token;
   const promise=openAssets(G.players[frame.seat],{readonly:!edit,debt:debt?v.decision.amount:0,who:debt&&v.seat!==v.game.turn,to:debt&&v.decision.to!=null?G.players[v.decision.to]:null});
-  if(debt&&v.game.players[v.seat].cash>=v.decision.amount){const b=[...document.querySelectorAll('#modals button')].find(x=>x.textContent==='Declare bankruptcy');if(b)b.disabled=true}
   if(frame.selected!=null){const name=SQ[frame.selected]?.n;const row=[...document.querySelectorAll('.pf2row')].find(r=>r.tagName==='BUTTON'&&r.querySelector('.pf2rn')?.textContent===name);row?.click()}
+  if(debt){const update=()=>{const b=[...document.querySelectorAll('#modals button')].find(x=>x.textContent==='Declare bankruptcy');if(b)b.disabled=v.game.players[v.seat].cash>=v.decision.amount};update();const foot=document.querySelector('.pf2f');if(foot){frame.observer=new MutationObserver(update);frame.observer.observe(foot,{childList:true})}}
   void promise.then(async choice=>{
-   if(closed||dialog!==frame||frame.token!==token)return;dialog=null;
+   if(closed||dialog!==frame||frame.token!==token)return;frame.observer?.disconnect();dialog=null;
    if(debt&&['pay','bankrupt'].includes(choice)){await controls.dispatch('debtAction',{kind:choice},v.revision)}
    controls.redraw({resetDecision:true});
   }).catch(e=>{if(!closed)fail(e)});
@@ -116,7 +116,7 @@ export function mountSkylineControls({client,code,onError=()=>{},pollMs=2500}){
   if(closed)return;if(choice==='sound')return openSound();if(choice==='camera')return document.querySelector('#camBtn').click();if(choice==='rules')return modal({cls:'wide',html:'<div class="mh">How to play</div>'+RULES,btns:[{k:'back',label:'Back',primary:true}]});if(choice==='exit')close();
  }
  function close(){
-  if(closed)return;closed=true;clearTimeout(timer);dialog=null;serial++;controls.close();GEN++;document.querySelector('#modals').replaceChildren();openMenu=previous.menu;renderRoster=previous.roster;build=previous.build;sell=previous.sell;mortgage=previous.mortgage;unmortgage=previous.redeem;openTrade=previous.openTrade;
+  if(closed)return;closed=true;clearTimeout(timer);dialog?.observer?.disconnect();dialog=null;serial++;controls.close();GEN++;document.querySelector('#modals').replaceChildren();openMenu=previous.menu;renderRoster=previous.roster;build=previous.build;sell=previous.sell;mortgage=previous.mortgage;unmortgage=previous.redeem;openTrade=previous.openTrade;
   for(const [selector,key]of [['#bAssets','assets'],['#bTrade','trade'],['#bMenu','menuButton']]){document.querySelector(selector).onclick=previous[key];document.querySelector(selector).disabled=false}
   G=previous.game;delete window.__skylineTrustedControls;showTitle();
  }
