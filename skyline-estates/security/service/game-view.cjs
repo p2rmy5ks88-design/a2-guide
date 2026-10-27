@@ -2,6 +2,7 @@
 const crypto=require('node:crypto');
 const {ServiceError,identityVerifier}=require('./admission.cjs');
 const {sourceHash}=require('./audited-rules.cjs');
+const {openingView}=require('./opening-view.cjs');
 const {jailView}=require('./turn-kernel.cjs');
 const pick=(value,fields)=>Object.fromEntries(fields.filter(k=>Object.hasOwn(value||{},k)).map(k=>[k,value[k]]));
 const fail=(status,code)=>{throw new ServiceError(status,code)};
@@ -54,7 +55,7 @@ function createGameViewService({db,verifyIdToken,timeoutMs=3000}){
    stage=boundary.kind;
    if(saved.actorUid===uid)decision=publicDecision(boundary.kind==='jail'?jailView(game,uid):boundary);
   }
-  return{protocol:2,code:input.code,revision:room.state.revision,status:room.meta.status,seat,actorSeat,stage,game:publicGame(game),decision};
+  return{protocol:2,code:input.code,revision:room.state.revision,status:room.meta.status,seat,actorSeat,stage,game:publicGame(game),decision,...(root.service?.starts?.[input.code]?{opening:openingView(root,room,game)}:{})};
  }
  return{readGame};
 }

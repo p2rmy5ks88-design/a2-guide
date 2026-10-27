@@ -15,13 +15,14 @@ const registry=JSON.parse(registryScript.runInNewContext({STARS:''},{timeout:100
 const ruleLiteral=/rules:Object.assign\((\{minigames:true[^\n]+?\}),PREF.rules/.exec(source)?.[1];if(!ruleLiteral)throw Error('Audit default rules');
 const defaultRules=new vm.Script('('+ruleLiteral+')').runInNewContext({},{timeout:100});
 function fields(x,allowed){if(!plain(x)||Object.keys(x).some(k=>!allowed.includes(k)))fail('invalid-setup-fields')}
-function normalize(config){
+function normalize(config,{minPlayers=2}={}){
+ if(![1,2].includes(minPlayers))fail('invalid-roster');
  fields(config,['code','settings','players']);if(typeof config.code!=='string'||!/^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{5}$/.test(config.code))fail('invalid-code');
  const input=config.settings;fields(input,['mode','city','theme','cash','rounds','ai','speed','timer',...Object.keys(defaultRules)]);
  const set={cash:1600,mode:'classic',rounds:20,ai:'normal',speed:'normal',timer:0,...defaultRules,...input};
  if(typeof set.city!=='string'||!Object.hasOwn(cityRaw,set.city)||!['classic','quick','timed'].includes(set.mode)||![1200,1600,2000].includes(set.cash)||![10,20,30,45].includes(set.rounds)||!['easy','normal','hard'].includes(set.ai)||!['normal','fast'].includes(set.speed)||![0,90].includes(set.timer)||Object.keys(defaultRules).some(k=>typeof set[k]!=='boolean'))fail('invalid-setup-settings');
  set.theme=Object.hasOwn(input,'theme')?input.theme:set.city;if(typeof set.theme!=='string'||!Object.hasOwn(cityRaw,set.theme)&&!registry.themes.includes(set.theme))fail('invalid-setup-settings');
- if(!Array.isArray(config.players)||config.players.length<2||config.players.length>6)fail('invalid-roster');
+ if(!Array.isArray(config.players)||config.players.length<minPlayers||config.players.length>6)fail('invalid-roster');
  const uids=new Set(),tokens=new Set(),colors=new Set();let humans=0;
  const players=config.players.map(p=>{
   fields(p,['uid','name','tok','col','ai','tl','fin','ch']);
@@ -63,4 +64,4 @@ function sample(game,actor,{draw=crypto.randomInt}={},rollKind='roll'){
 }
 const sampleDice=(game,actor,options)=>sample(game,actor,options,'roll'),sampleJailDice=(game,actor,options)=>sample(game,actor,options,'jail');
 function sampleRerollDice(game,actor,options){const p=game?.players?.[game.turn];if(game?.phase!=='busy'||!p||p.inJail||p.ai||p.auto)fail('unsupported-reroll-phase');return sampleDice({...game,phase:'pre'},actor,options)}
-module.exports={sampleRerollDice,initializeGame,sampleDice,sampleJailDice,SetupError,sourceHash};
+module.exports={normalizeSetupConfig:normalize,sampleRerollDice,initializeGame,sampleDice,sampleJailDice,SetupError,sourceHash};
