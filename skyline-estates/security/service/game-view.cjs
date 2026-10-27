@@ -8,7 +8,7 @@ const pick=(value,fields)=>Object.fromEntries(fields.filter(k=>Object.hasOwn(val
 const fail=(status,code)=>{throw new ServiceError(status,code)};
 function publicGame(game){
  if(!game||!Array.isArray(game.players)||!Array.isArray(game.own)||game.own.length!==40)fail(409,'invalid-game-state');
- const result=pick(game,['v','online','code','turn','round','pot','houses','hotels','over','phase','doubles','first','lateBonus','logN']);
+ const result=pick(game,['v','tokenPowerVersion','online','code','turn','round','pot','houses','hotels','over','phase','doubles','first','lateBonus','logN']);
  result.players=game.players.map(p=>({...pick(p,['id','name','tok','col','ai','cash','pos','inJail','jailTurns','bankrupt','tl','fin','ch','lapped','rrUsed','passUsed','shieldUsed','surgeUsed']),bailPasses:Array.isArray(p.goojf)?p.goojf.length:0}));
  if(game.lastDice)result.lastDice=pick(game.lastDice,['a','b','sv','n']);
  result.own=game.own.map(o=>pick(o,['o','h','m']));
