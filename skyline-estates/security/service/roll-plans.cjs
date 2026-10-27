@@ -60,6 +60,7 @@ function createRollPlanService({db,verifyIdToken,clock=Date.now,draw=crypto.rand
    let limit=service.limits[identityKey];if(!limit||now-limit.start>=60000)limit={start:now,count:0};
    if(limit.count>=operationLimit){outcome=error(429,'rate-limited');return root}limit.count++;service.limits[identityKey]=limit;
    try{
+    if(service.endTurns?.[planId])fail(409,'turn-already-ended');
     if(service.turns?.[request.code])fail(409,'turn-decision-pending');
     const {game,gameHash}=eligible(root,uid,request);
     if(service.rollLocks[request.code]||service.rollPlans[planId])fail(409,'roll-already-reserved');

@@ -3254,9 +3254,10 @@ async function onlineTick(){
   NET.driving=true;const g=GEN;
   try{
     if(NET.host&&NET.reclaim){G.players.forEach(p=>{if(p.awayBot&&NET.reclaim[p.uid]){p.ai=false;p.awayBot=false;delete NET.reclaim[p.uid]}})}
+    if(endCheck()){G.over=true;await pushNow();NET.driving=false;await finish();return}
     const p=P(G.turn);if(!p.bankrupt)await playTurn(p);guard(g);
     if(endCheck()){G.over=true;await pushNow();NET.driving=false;await finish();return}
-    advanceTurn();renderRoster();await pushNow();
+    advanceTurn();if(endCheck()){G.over=true;await pushNow();NET.driving=false;await finish();return}renderRoster();await pushNow();
   }catch(e){if(!(e instanceof Abort))console.error(e)}
   finally{NET.driving=false}
   if(g===GEN)setTimeout(onlineTick,60);
