@@ -1,6 +1,6 @@
-# Trusted admission prototype and v2 client adapter
+# Trusted lobby and property-action prototype
 
-This is an **isolated, admission-only development slice**. It implements authenticated lobby creation, invitation-based join, member rejoin/read and leave, using the candidate `skylineV2` contract. `client.mjs` is a matching transport adapter; the shipped game does not import it. The authoritative game engine, action processing and complete playable v2 client are **not implemented** here. `/start` and `/action` fail closed with 501. Nothing is deployed to live Firebase.
+This is an **isolated development prototype**. It implements authenticated lobby creation, invitation-based join, member rejoin/read and leave, using the candidate `skylineV2` contract. `client.mjs` is a matching transport adapter; the shipped game does not import it. The property-action subset now accepts authenticated build/sell/mortgage/redeem intents against privileged test snapshots. Full turn/game initialization, dice/cards/auctions/debt/trades/minigames and a complete playable v2 client are **not implemented** here. `/start` still fails closed with 501; other action kinds are rejected. Nothing is deployed to live Firebase.
 
 ## Implemented boundary
 
@@ -18,7 +18,7 @@ The HTTP adapter accepts bounded JSON bodies and Authorization bearer headers, r
 
 `emulator-runtime.cjs` refuses initialization unless both Auth and Database emulators use loopback and the exact project is `demo-skyline-phase1`. It has no production startup/deployment entry point. Firebase Admin SDK 13.4.0 is a pinned development dependency. The Auth emulator uses emulator credentials/unsigned test tokens: this verifies adapter/token-validation/account-disable plumbing, **not production signing keys, real-provider identity assurance or abuse prevention**.
 
-Run `npm test` in `skyline-estates/security`. The CLI starts Auth and Database emulators, evaluates the existing permission matrix, then runs `integration.test.cjs`. Two independent Admin SDK app/database connections and two HTTP services contend against the same demo database. Results are saved as `service-results.json`.
+Run `npm test` in `skyline-estates/security`. The CLI starts Auth and Database emulators, first checks the property kernel, evaluates the existing permission matrix, then runs `integration.test.cjs`. Two independent Admin SDK app/database connections and two HTTP services contend against the same demo database. Results are saved as `service-results.json`.
 
 The matching client adapter accepts only a loopback HTTP endpoint, obtains the current token for every request, omits cookies and refuses redirects. Persist/generate the request ID **before** the first attempt, then reuse that ID and body after an uncertain response. Automatic retries with a fresh ID would not be idempotent. A known room can be reopened by an authenticated existing member without resubmitting its invitation.
 
@@ -39,3 +39,15 @@ This adapter is protocol work, **not a UI migration or full playable game client
 ## Required before live rollout
 
 Implement/reuse the approved engine under trusted authority; validate and atomically process intents with server RNG/revision/host fencing, correct idempotency and restart recovery. Add the actual game client integration, real-browser multi-client matches and reconnect/partition tests. Review shared Skyline/Eko rule migration/rollback, production authentication and HTTPS/CORS/App Check/gateway quotas, ledger/secret lifecycle, observability/privacy and signed/device/store requirements. No production security checkbox is closed by this prototype.
+
+## Property actions (isolated test snapshots only)
+
+The action envelope contains only requestId, code, expected revision, and command {kind, square}. Identity comes from the token. Membership, authoritative seat/current turn, revision, rule legality, game/bank validity and the operation receipt are checked in the same privileged transaction. A successful action changes the stored snapshot and increments its revision once; simultaneous old-revision commands conflict. Denials retain a private receipt without altering the room. A replay returns the original acknowledgement, so read the current room after recovering an uncertain response; a receipt is not fresh room state.
+
+Snapshots are stored as state.gameJson strings to preserve empty arrays/objects that Realtime Database would otherwise omit. Clients cannot submit snapshots, prices, actor IDs or ownership. Current room views expose lobby metadata only; a redacted gameplay projection/subscription is still needed before UI integration. The tests seed playing snapshots with privileged emulator access; no client or public endpoint can start this subset.
+
+asset-kernel.cjs evaluates only audited sections of the checked-in game.html in an isolated per-call VM context with a time limit and dynamic code generation disabled. This is rule reuse, not a VM security boundary for untrusted source. The full normalized game source is pinned by SHA-256; any source change fails closed until hooks are audited and parity is rerun. Both basic property functions and the later construction-boom/counter hook are reused. Rendering/local profile reward hooks are disabled, while per-game construction counters remain. No production reward or entitlement authority is claimed.
+
+Only pre/post turn phases are supported. Debt liquidation and other phases remain disabled until the complete turn/debt workflow is implemented. The 40-case real-browser parity test compares complete resulting snapshots or unchanged denials against the fully loaded game (including its later wrappers), with rendering effects suppressed. Kernel tests separately cover malformed commands/state, wrong actor, conservation, input immutability and context isolation. Integration tests use real Auth/Database emulators and two HTTP service instances for replay, concurrency, authorization and rejected-state preservation. Results: asset-results.json, service-results.json, and the stability artifact's skyline-asset-browser.json.
+
+This subset is not a replacement for the existing live multiplayer engine. Keep candidate rules/service isolated until all approved gameplay, hidden-state projections, recovery and actual browser-client migration pass review together.

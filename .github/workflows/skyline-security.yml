@@ -42,5 +42,6 @@ jobs:
           path: |
             skyline-estates/security/security-results.json
             skyline-estates/security/service-results.json
+            skyline-estates/security/asset-results.json
             skyline-estates/security/*-debug.log
           if-no-files-found: warn

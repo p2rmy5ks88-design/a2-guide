@@ -33,3 +33,5 @@ References: [Firebase rule test API](https://firebase.google.com/docs/reference/
 4. Validate trusted rankings/receipts and signed/device acceptance separately. Until these gates pass, keep issue #2 open and make no claim that live multiplayer is secured by this proposal.
 
 Final measured test results are recorded on the associated pull request. This milestone changes no game logic, board artwork, 3D scenery, UI, native package configuration or live rules.
+
+The service prototype now includes four server-controlled property intents against privileged emulator fixtures; see service/README.md. Full game start/turn processing and the actual game UI migration remain open. Nothing is deployed.
