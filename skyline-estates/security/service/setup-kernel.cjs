@@ -54,11 +54,12 @@ const diceScript=new vm.Script(secureCore+'\n'+validation+'\n'+line('function en
 Math.random=()=>{throw Error('Unaudited random draw')};G=JSON.parse(input);
 if(!G.online||G.sim||!validateSave({...G,online:false})||!validIdentities(G.players)||G.players.some(p=>!Number.isSafeInteger(p.cash)))result={error:'invalid-game-state'};
 else if(endCheck())result={error:'game-already-ended'};
-else if(G.phase!=='pre'||P(G.turn).inJail)result={error:'unsupported-roll-phase'};
+else if(rollKind==='jail'?(G.phase!=='jail'||!P(G.turn).inJail||P(G.turn).pos!==10||P(G.turn).jailTurns>=3||P(G.turn).ai):(G.phase!=='pre'||P(G.turn).inJail))result={error:'unsupported-roll-phase'};
 else if(typeof actor!=='string'||!actor||P(G.turn).uid!==actor||P(G.turn).bankrupt)result={error:'not-your-turn'};
 else result={dice:sampleDice()};JSON.stringify(result);`,{filename:'audited-skyline-dice-generation'});
-function sampleDice(game,actor,{draw=crypto.randomInt}={}){
+function sample(game,actor,{draw=crypto.randomInt}={},rollKind='roll'){
  let input;try{input=JSON.stringify(game)}catch{fail('invalid-game-state')}if(typeof input!=='string'||Buffer.byteLength(input)>262144)fail('invalid-game-state');
- const result=JSON.parse(diceScript.runInContext(vm.createContext({input,actor,draw:checkedDraw(draw),CITY_DATA:cityRaw,validIdentities},{codeGeneration:{strings:false,wasm:false}}),{timeout:100}));if(result.error)fail(result.error);return result.dice;
+ const result=JSON.parse(diceScript.runInContext(vm.createContext({input,actor,rollKind,draw:checkedDraw(draw),CITY_DATA:cityRaw,validIdentities},{codeGeneration:{strings:false,wasm:false}}),{timeout:100}));if(result.error)fail(result.error);return result.dice;
 }
-module.exports={initializeGame,sampleDice,SetupError,sourceHash};
+const sampleDice=(game,actor,options)=>sample(game,actor,options,'roll'),sampleJailDice=(game,actor,options)=>sample(game,actor,options,'jail');
+module.exports={initializeGame,sampleDice,sampleJailDice,SetupError,sourceHash};
