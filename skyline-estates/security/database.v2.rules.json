@@ -12,7 +12,7 @@
             ".read": "auth != null && root.child('skylineV2').child('rooms').child($room).child('members').child(auth.uid).val() === true"
           },
           "state": {
-            ".read": "auth != null && root.child('skylineV2').child('rooms').child($room).child('members').child(auth.uid).val() === true"
+            ".read": false
           },
           "presence": {
             "$uid": {

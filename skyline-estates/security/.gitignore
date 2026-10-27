@@ -42,3 +42,6 @@ trade-browser-results.json
 ai-results.json
 ai-service-results.json
 ai-browser-results.json
+
+web-connection-results.json
+web-connection-browser-results.json
