@@ -10,8 +10,8 @@ function settings(value){
  const booleans=['minigames','perks','ffa','events','speedDie','pot','goDouble','jailRent','auction','even','interest'];
  fields(value,['mode','rounds','city','theme','cash','timer','ai','speed',...booleans]);
  if(!['classic','quick','timed'].includes(value.mode)||typeof value.city!=='string'||!/^[a-z][a-z0-9_]{1,23}$/.test(value.city))fail(400,'invalid-settings');
- if(value.cash!=null&&![1200,1600,2000].includes(value.cash)||value.timer!=null&&![0,90].includes(value.timer)||value.rounds!=null&&![10,20,30,45].includes(value.rounds)||value.mode==='timed'&&value.rounds==null)fail(400,'invalid-settings');
- if(value.ai!=null&&!['easy','normal','hard'].includes(value.ai)||value.speed!=null&&!['normal','fast'].includes(value.speed)||value.theme!=null&&(typeof value.theme!=='string'||!/^[a-z][a-z0-9_]{1,23}$/.test(value.theme))||booleans.some(k=>value[k]!=null&&typeof value[k]!=='boolean'))fail(400,'invalid-settings');
+ if(Object.hasOwn(value,'cash')&&![1200,1600,2000].includes(value.cash)||Object.hasOwn(value,'timer')&&![0,90].includes(value.timer)||Object.hasOwn(value,'rounds')&&![10,20,30,45].includes(value.rounds)||value.mode==='timed'&&value.rounds==null)fail(400,'invalid-settings');
+ if(Object.hasOwn(value,'ai')&&!['easy','normal','hard'].includes(value.ai)||Object.hasOwn(value,'speed')&&!['normal','fast'].includes(value.speed)||Object.hasOwn(value,'theme')&&(typeof value.theme!=='string'||!/^[a-z][a-z0-9_]{1,23}$/.test(value.theme))||booleans.some(k=>Object.hasOwn(value,k)&&typeof value[k]!=='boolean'))fail(400,'invalid-settings');
  return Object.fromEntries(Object.keys(value).sort().map(k=>[k,value[k]]));
 }
 function randomCode(){return Array.from(crypto.randomBytes(5),b=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[b%32]).join('')}
