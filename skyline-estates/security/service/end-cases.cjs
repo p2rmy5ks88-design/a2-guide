@@ -5,7 +5,7 @@ function cases(){const out=[],add=(name,change=()=>{},drawSpec=[])=>{const g=gam
  add('nonzero opening seat wraps correctly',g=>{g.first=1;g.turn=0});
  add('bankrupt opening seat still counts a round',g=>{const x=game(3);Object.assign(g,x);g.first=1;g.players[1].bankrupt=true;g.players[1].cash=0});
  add('multiple bankrupt seats are skipped',g=>{Object.assign(g,game(4));g.turn=3;g.first=2;for(const i of [0,1]){g.players[i].bankrupt=true;g.players[i].cash=0}g.own.forEach(o=>{if(o.o===0)o.o=-1})});
- add('next human enters jail decision',g=>{g.players[1].inJail=true;g.players[1].jailTurns=1});
+ add('next human enters jail decision',g=>{g.players[1].inJail=true;g.players[1].pos=10;g.players[1].jailTurns=1});
  add('next UID-less AI waits for trusted worker',g=>{g.players[1].ai=true;g.players[1].uid=null});
  add('AI stand-in waits for trusted worker',g=>g.players[1].ai=true);
  add('events disabled consume no randomness',g=>{g.turn=1;g.set.events=false});
