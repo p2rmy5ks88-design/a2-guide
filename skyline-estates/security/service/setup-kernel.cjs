@@ -50,9 +50,10 @@ function initializeGame(config,{draw=crypto.randomInt}={}){
 let diceSource=section('async function rollDice(){','  if(FAST||!S3)return d;');
 if(diceSource.split('Math.floor(Math.random()*6)').length!==4)throw Error('Audit dice randomness');
 diceSource=diceSource.replace('async function rollDice(){','function sampleDice(){').replaceAll('Math.floor(Math.random()*6)','draw(6)')+'return {a:d[0],b:d[1],sv:d.sv||0,face:d.s??null};}\n';
-const diceScript=new vm.Script(secureCore+'\n'+validation+'\n'+line('const SPEED_FACE=')+'\n'+line('function speedOn(p)')+'\n'+diceSource+`
+const diceScript=new vm.Script(secureCore+'\n'+validation+'\n'+line('function endCheck(){')+'\n'+line('const SPEED_FACE=')+'\n'+line('function speedOn(p)')+'\n'+diceSource+`
 Math.random=()=>{throw Error('Unaudited random draw')};G=JSON.parse(input);
 if(!G.online||G.sim||!validateSave({...G,online:false})||!validIdentities(G.players)||G.players.some(p=>!Number.isSafeInteger(p.cash)))result={error:'invalid-game-state'};
+else if(endCheck())result={error:'game-already-ended'};
 else if(G.phase!=='pre'||P(G.turn).inJail)result={error:'unsupported-roll-phase'};
 else if(typeof actor!=='string'||!actor||P(G.turn).uid!==actor||P(G.turn).bankrupt)result={error:'not-your-turn'};
 else result={dice:sampleDice()};JSON.stringify(result);`,{filename:'audited-skyline-dice-generation'});
