@@ -1,5 +1,6 @@
 // Browser transport for the trusted service. Not enabled in the shipped game yet.
 const routes={
+ assetAction:'asset',purchaseAsset:'purchase-assets',
  reserveRoll:'roll/reserve',commitRoll:'roll/commit',reserveJailRoll:'jail-roll/reserve',commitJailRoll:'jail-roll/commit',
  reserveReroll:'reroll/reserve',commitReroll:'reroll/commit',choose:'choice',auctionBid:'auction-bid',debtAction:'debt',endTurn:'end',
  proposeTrade:'trade/propose',replyTrade:'trade/reply'

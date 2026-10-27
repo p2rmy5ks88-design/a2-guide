@@ -1,5 +1,7 @@
 // Game routes require explicit service composition; default lobby behavior is unchanged.
 const GAME_ROUTES=Object.freeze({
+ "/v2/game/asset":["admission","assetAction"],
+ "/v2/game/purchase-assets":["turns","purchaseAsset"],
  "/v2/game/operation/settle":["operations","settle"],
  "/v2/game/roll/reserve": [
   "plans",
@@ -99,7 +101,7 @@ function createHttpHandler(service,{allowedOrigins=new Set(),gameServices=null}=
    else if(req.method==='POST'&&(/^\/v2\/rooms\/(create|join|leave|start|action)$/.test(req.url)||gameServices&&Object.hasOwn(GAME_ROUTES,req.url))){
     if(!/^application\/json(?:;|$)/i.test(req.headers['content-type']||''))throw new ServiceError(415,'json-required');
     const body=await new Promise((resolve,reject)=>{let data='',size=0,failed=false;req.on('data',chunk=>{size+=chunk.length;if(size>8192){if(!failed){failed=true;reject(new ServiceError(413,'body-too-large'))}return}data+=chunk});req.on('error',reject);req.on('end',()=>{if(failed)return;try{resolve(JSON.parse(data))}catch{reject(new ServiceError(400,'invalid-json'))}})});
-    if(Object.hasOwn(GAME_ROUTES,req.url)){const [group,method]=GAME_ROUTES[req.url];if(typeof gameServices?.[group]?.[method]!=='function')throw new ServiceError(501,'game-route-not-enabled');result=await gameServices[group][method](token,body)}else result=await service.execute(token,req.url.split('/').pop(),body);
+    if(Object.hasOwn(GAME_ROUTES,req.url)){const [group,method]=GAME_ROUTES[req.url];const target=group==='admission'?service:gameServices?.[group];if(typeof target?.[method]!=='function')throw new ServiceError(501,'game-route-not-enabled');result=await target[method](token,body)}else result=await service.execute(token,req.url.split('/').pop(),body);
    }else throw new ServiceError(404,'not-found');
    res.writeHead(200,{'Content-Type':'application/json'}).end(JSON.stringify(result));
   }catch(e){const status=e instanceof ServiceError?e.status:503;res.writeHead(status,{'Content-Type':'application/json'}).end(JSON.stringify({error:e instanceof ServiceError?e.code:'temporarily-unavailable'}))}

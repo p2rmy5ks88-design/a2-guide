@@ -49,3 +49,6 @@ web-connection-browser-results.json
 operation-results.json
 control-results.json
 control-browser-results.json
+
+management-results.json
+management-browser-results.json
