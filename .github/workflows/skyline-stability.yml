@@ -30,6 +30,7 @@ jobs:
         run: python3 skyline-estates/build.py --check
       - name: Test saved turns and seeded games
         run: |
+          node skyline-estates/security/service/web-connection-browser.test.cjs "$RUNNER_TEMP/skyline-web-connection-browser.json"
           node skyline-estates/security/service/ai-browser.test.cjs "$RUNNER_TEMP/skyline-ai-browser.json"
           node skyline-estates/security/service/trade-browser.test.cjs "$RUNNER_TEMP/skyline-trade-browser.json"
           node skyline-estates/security/service/reroll-browser.test.cjs "$RUNNER_TEMP/skyline-reroll-browser.json"
@@ -59,6 +60,7 @@ jobs:
         with:
           name: skyline-stability-results
           path: |
+            ${{ runner.temp }}/skyline-web-connection-browser.json
             ${{ runner.temp }}/skyline-ai-browser.json
             ${{ runner.temp }}/skyline-trade-browser.json
             ${{ runner.temp }}/skyline-reroll-browser.json
