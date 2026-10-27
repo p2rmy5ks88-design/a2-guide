@@ -17,21 +17,22 @@ function settings(value){
 }
 function randomCode(){return Array.from(crypto.randomBytes(5),b=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[b%32]).join('')}
 function identityVerifier(verifyIdToken){return async function identity(token){if(typeof token!=='string'||!token||token.length>8192)fail(401,'unauthenticated');let user;try{user=await verifyIdToken(token,true)}catch{fail(401,'unauthenticated')}if(!/^[A-Za-z0-9_-]{1,128}$/.test(user?.uid||'')||['__proto__','prototype','constructor'].includes(user.uid))fail(403,'unsupported-identity');return user.uid}}
-function createAdmissionService({db,verifyIdToken,clock=Date.now,generateCode=randomCode,operationLimit=30,readTimeoutMs=3000}){
- if(!db||typeof verifyIdToken!=='function')throw Error('Verified authentication and a privileged store are required');
- const identity=identityVerifier(verifyIdToken);
- function validate(action,body){
+function validateAdmissionRequest(action,body){
   const keys={create:['requestId','name','settings'],join:['requestId','name','code','invite'],leave:['requestId','code'],action:['requestId','code','revision','command']}[action];if(!keys)fail(501,'game-engine-not-enabled');fields(body,keys);
   if(typeof body.requestId!=='string'||!/^[A-Za-z0-9_-]{16,64}$/.test(body.requestId))fail(400,'invalid-request-id');
-  const result={requestId:body.requestId};if(action!=='create'){if(!codePattern.test(body.code||''))fail(400,'invalid-code');result.code=body.code}
+  const result={requestId:body.requestId};if(action!=='create'){if(typeof body.code!=='string'||!codePattern.test(body.code||''))fail(400,'invalid-code');result.code=body.code}
   if(['create','join'].includes(action))result.name=name(body.name);if(action==='create')result.settings=settings(body.settings);
   if(action==='join'){if(typeof body.invite!=='string'||!/^[a-f0-9]{64}$/.test(body.invite))fail(403,'not-authorized');result.invite=body.invite}
   if(action==='action'){if(!Number.isSafeInteger(body.revision)||body.revision<0)fail(400,'invalid-revision');result.revision=body.revision;try{result.command=validateCommand(body.command)}catch(e){if(e instanceof AssetError)fail(e.status,e.code);throw e}}
   return result;
  }
+
+function createAdmissionService({db,verifyIdToken,clock=Date.now,generateCode=randomCode,operationLimit=30,readTimeoutMs=3000}){
+ if(!db||typeof verifyIdToken!=='function')throw Error('Verified authentication and a privileged store are required');
+ const identity=identityVerifier(verifyIdToken);
  function view(room){return{protocol:2,code:room.meta.code,status:room.meta.status,hostUid:room.meta.hostUid,revision:room.state.revision,settings:room.meta.settings,seats:Object.values(room.seats||{}).sort((a,b)=>a.seat-b.seat)}}
  async function execute(token,action,input){
-  const uid=await identity(token),identityKey=hash(uid),body=validate(action,input),digest=hash(JSON.stringify({action,body})),now=clock(),candidates=action==='create'?Array.from({length:8},generateCode):[],invite=action==='create'?crypto.randomBytes(32).toString('hex'):null;
+  const uid=await identity(token),identityKey=hash(uid),body=validateAdmissionRequest(action,input),digest=hash(JSON.stringify({action,body})),now=clock(),candidates=action==='create'?Array.from({length:8},generateCode):[],invite=action==='create'?crypto.randomBytes(32).toString('hex'):null;
   if(candidates.some(c=>!codePattern.test(c)))throw Error('Invalid generated room code');let outcome;
   const tx=await db.ref('skylineV2').transaction(root=>{
    root=root||{};root.rooms=root.rooms||{};root.service=root.service||{};root.service.operations=root.service.operations||{};root.service.limits=root.service.limits||{};root.service.invites=root.service.invites||{};
@@ -83,6 +84,6 @@ function createAdmissionService({db,verifyIdToken,clock=Date.now,generateCode=ra
   try{tx=await Promise.race([db.ref('skylineV2/rooms/'+code).transaction(value=>value,undefined,false),new Promise((_,reject)=>timer=setTimeout(()=>reject(new ServiceError(503,'temporarily-unavailable')),readTimeoutMs))])}finally{clearTimeout(timer)}
   if(!tx.committed)fail(503,'temporarily-unavailable');const room=tx.snapshot.val();if(room?.members?.[uid]!==true)fail(403,'not-authorized');return view(room);
  }
- return{execute,readRoom};
+ return{execute,readRoom,assetAction:(token,body)=>execute(token,'action',body)};
 }
-module.exports={createAdmissionService,ServiceError,identityVerifier};
+module.exports={createAdmissionService,ServiceError,identityVerifier,validateAdmissionRequest};

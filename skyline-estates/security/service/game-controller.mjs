@@ -32,7 +32,7 @@ export function createGameController({client,code,onView=()=>{},onState=()=>{}})
   refresh,snapshot:()=>view,status:()=>state(),
   act:(action,fields={},expectedRevision=view?.revision)=>task(async()=>{
    actor();if(expectedRevision!==view.revision)fail('stale-control');if(!fields||typeof fields!=='object'||Array.isArray(fields)||['code','revision','requestId'].some(k=>Object.hasOwn(fields,k)))fail('invalid-control');
-   if(!['choose','auctionBid','debtAction','endTurn','proposeTrade','replyTrade'].includes(action))fail('unsupported-control');
+   if(!['assetAction','purchaseAsset','choose','auctionBid','debtAction','endTurn','proposeTrade','replyTrade'].includes(action))fail('unsupported-control');
    return commit(action,fields,view.revision);
   }),
   roll:(kind='roll',expectedRevision=view?.revision)=>task(async()=>{
