@@ -2,16 +2,16 @@ import {createGameController} from './game-controller.mjs';
 const copy=x=>JSON.parse(JSON.stringify(x));
 export function mountGameControls({client,code,document=globalThis.document,onView=()=>{},formatMoney=n=>String(n),setPromptText,rollIcon='',openPurchase,openTradeReview,isManaging=()=>false,onState=()=>{},onError=()=>{}}){
  const acts=document.querySelector('#acts'),prompt=document.querySelector('#prompt');if(!acts||!prompt)throw Error('Game controls are missing');
- let closed=false,interrupted=false,purchaseRevision=null,tradeRevision=null,controller;
+ let closed=false,interrupted=false,purchaseRevision=null,tradeRevision=null,renderKey=null,controller;
  const say=text=>setPromptText?setPromptText(text):prompt.textContent=text;
- const perform=async fn=>{try{const result=await fn();if(!closed){interrupted=false;render(controller.status())}return result}catch(e){if(!closed){interrupted=true;purchaseRevision=null;tradeRevision=null;render(controller.status());onError(e)}return null}};
+ const perform=async fn=>{try{const result=await fn();if(!closed){interrupted=false;render(controller.status())}return result}catch(e){if(!closed){interrupted=true;purchaseRevision=null;tradeRevision=null;onError(e);render(controller.status())}return null}};
  function button(label,fn,{primary=false,disabled=false,kind='pill'}={}){
   const b=document.createElement('button');b.type='button';b.className=kind==='roll'?'bigb':kind==='end'?'bigb end':'pill'+(primary?' pri':'');b.textContent=label;b.setAttribute('aria-label',label);b.disabled=disabled;
   if(kind==='roll'&&rollIcon){const icon=document.createElement('span');icon.innerHTML=rollIcon;b.prepend(icon)}
   b.onclick=()=>{if(!b.disabled)void perform(fn)};acts.append(b);return b;
  }
  function render(state){
-  if(closed)return;acts.replaceChildren();const v=state.view;if(!v){say('Connecting to your game…');return}
+  if(closed)return;const v=state.view;const key=JSON.stringify([v?.revision,v?.stage,state.busy,state.needsRecovery,interrupted,isManaging()]);if(renderKey===key)return;renderKey=key;acts.replaceChildren();if(!v){say('Connecting to your game…');return}
   if(state.busy){say('Updating your game…');return}
   if(state.needsRecovery){say('Recover your saved action to continue.');button('Recover action',()=>controller.recover(),{primary:true});return}
   if(interrupted){say('Connection interrupted. Reconnect to continue.');button('Reconnect',()=>controller.refresh(),{primary:true});return}
@@ -34,7 +34,7 @@ export function mountGameControls({client,code,document=globalThis.document,onVi
   else say('Waiting for the next decision…');
  }
  controller=createGameController({client,code,onView,onState:s=>{render(s);onState(s)}});
- return{controller,dispatch:(action,fields,revision)=>perform(()=>controller.act(action,fields,revision)),redraw:({resetDecision=false}={})=>{if(resetDecision){purchaseRevision=null;tradeRevision=null}const s=controller.status();render(s);onState(s)},refresh:()=>perform(()=>controller.refresh()),recover:()=>perform(()=>controller.recover()),close(){if(closed)return;closed=true;controller.close();acts.replaceChildren()}};
+ return{controller,dispatch:(action,fields,revision)=>perform(()=>controller.act(action,fields,revision)),redraw:({resetDecision=false}={})=>{if(resetDecision){purchaseRevision=null;tradeRevision=null;renderKey=null}const s=controller.status();render(s);onState(s)},refresh:()=>perform(()=>controller.refresh()),recover:()=>perform(()=>controller.recover()),close(){if(closed)return;closed=true;controller.close();acts.replaceChildren()}};
 }
 
 // Opt-in screen adapter. The shipped title/lobby does not activate it.
