@@ -30,6 +30,7 @@ jobs:
         run: python3 skyline-estates/build.py --check
       - name: Test saved turns and seeded games
         run: |
+          node skyline-estates/security/service/debt-browser.test.cjs "$RUNNER_TEMP/skyline-debt-browser.json"
           node skyline-estates/security/service/auction-browser.test.cjs "$RUNNER_TEMP/skyline-auction-browser.json"
           node skyline-estates/security/service/card-browser.test.cjs "$RUNNER_TEMP/skyline-card-browser.json"
           node skyline-estates/security/service/jail-browser.test.cjs "$RUNNER_TEMP/skyline-jail-browser.json"
@@ -55,6 +56,7 @@ jobs:
         with:
           name: skyline-stability-results
           path: |
+            ${{ runner.temp }}/skyline-debt-browser.json
             ${{ runner.temp }}/skyline-auction-browser.json
             ${{ runner.temp }}/skyline-card-browser.json
             ${{ runner.temp }}/skyline-jail-browser.json

@@ -12,9 +12,9 @@ function valid(){return validateSave({...G,online:false,over:false})&&validIdent
 if(!G.online||G.sim||G.over!==false||!valid())throw Error('Invalid game state');
 if(G.players[G.turn].uid!==actor)throw Error('Wrong actor');
 if(G.forceWin!=null&&(!Number.isInteger(G.forceWin)||G.forceWin<0||G.forceWin>=G.players.length))throw Error('Invalid forced winner');
-const alreadyEnded=endCheck();if(!alreadyEnded&&G.phase!=='post')throw Error('Not post-roll');
+const bankruptPost=G.phase==='busy'&&P(G.turn).bankrupt;const alreadyEnded=endCheck();if(!alreadyEnded&&G.phase!=='post'&&!bankruptPost)throw Error('Not post-roll');
 if(G.set.maxRounds!=null)throw Error('Simulation-only round cap');
-if(G.phase==='post')G.phase='busy';
+if(G.phase==='post'||bankruptPost)G.phase='busy';
 const NET={on:true,host:false,driving:false,applying:false,applyRun:false};
 const console={error:e=>{throw e}};
 let ready=false;
