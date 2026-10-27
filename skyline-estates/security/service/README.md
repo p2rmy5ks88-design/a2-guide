@@ -2,6 +2,12 @@
 
 This is an **isolated development service**. Authenticated lobby admission and property actions have a default local HTTP adapter. Audited setup/dice/turn/jail/card/auction/debt/reroll/trade/end kernels and the first AI auction worker are implemented below. Human game HTTP routes now require explicit service composition; public game start, the complete playable client and production deployment remain disabled. Neither browser transport is imported by the shipped game yet.
 
+## Opt-in human lobby start
+
+`createStartService({db, verifyIdToken, resolveRoster})` now composes verified human lobby seats into the source initializer. The required synchronous roster policy authorizes premium ownership/tier, token/finish/character choices and city/theme; no production default is supplied. `/v2/game/lobby`, `/v2/game/seat` and `/v2/game/start` are available only when explicitly composed as `gameServices.start`. The default admission start remains disabled.
+
+Use the journaled game client for `selectSeat` and `startGame`, with the current lobby revision and no client outcomes. Recover an uncertain command with `reconcile`, fetch fresh lobby/game state, then clear only its acknowledged request ID. The committed opening is an allowlisted announcement; it cannot resample keys or pay another bonus. Timers, minigames and AI roster start remain gated in this slice. Waiting-room buttons and public routing are not yet migrated. See [trusted start results](../TRUSTED-START-RESULTS.md).
+
 ## Implemented boundary
 
 - `admission.cjs` requires a privileged database and an ID-token verifier. Identity always comes from verified authentication, never a caller-supplied UID. Token verification checks revocation/disabled status on every operation.
