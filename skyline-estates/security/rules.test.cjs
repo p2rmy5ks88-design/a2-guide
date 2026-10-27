@@ -25,7 +25,9 @@ const requestPath=(base=room,uid='guest')=>`${base}/requests/${uid}/request_${++
  await test('unauthenticated state read denied',()=>assertFails(read(db.anon,room+'/state')));
  await test('authenticated outsider state read denied',()=>assertFails(read(db.outsider,room+'/state')));
  await test('member of another room cannot read this state',()=>assertFails(read(db.other,room+'/state')));
- await test('member reads its own room state',async()=>assert.equal((await assertSucceeds(read(db.guest,room+'/state'))).val().revision,4));
+ await test('member cannot read raw authoritative state',()=>assertFails(read(db.guest,room+'/state')));
+ await test('host cannot read raw game snapshot beneath state',()=>assertFails(read(db.host,room+'/state/gameJson')));
+ await test('member cannot bypass private state by reading a child',()=>assertFails(read(db.guest,room+'/state/game')));
  await test('member reads server-owned metadata',()=>assertSucceeds(read(db.host,room+'/meta')));
  await test('member reads server-owned membership',()=>assertSucceeds(read(db.guest,room+'/members')));
  await test('outsider cannot inspect member identities',()=>assertFails(read(db.outsider,room+'/members')));

@@ -49,7 +49,7 @@ function createGameViewService({db,verifyIdToken,timeoutMs=3000}){
   if(saved){
    if(saved.version!==1||saved.revision!==room.state.revision||saved.sourceHash!==sourceHash||saved.gameHash!==crypto.createHash('sha256').update(room.state.gameJson).digest('hex'))fail(409,'invalid-turn-checkpoint');
    let boundary;try{boundary=JSON.parse(saved.checkpointJson).boundary;if(typeof boundary?.kind!=='string')throw Error()}catch{fail(409,'invalid-turn-checkpoint')}
-   actorSeat=['auction','auction-ai','trade'].includes(boundary.kind)?boundary.seat:boundary.kind==='debt'?(boundary.payer??game.turn):game.turn;
+   actorSeat=['auction','auction-ai','trade'].includes(boundary.kind)&&Number.isInteger(boundary.seat)?boundary.seat:boundary.kind==='debt'?(boundary.payer??game.turn):game.turn;
    if(!Number.isInteger(actorSeat)||!game.players[actorSeat]||saved.actorUid!==(game.players[actorSeat].uid||''))fail(409,'invalid-turn-checkpoint');
    stage=boundary.kind;
    if(saved.actorUid===uid)decision=publicDecision(boundary.kind==='jail'?jailView(game,uid):boundary);
