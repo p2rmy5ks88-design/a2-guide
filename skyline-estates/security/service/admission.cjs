@@ -15,7 +15,7 @@ function settings(value){
  return Object.fromEntries(Object.keys(value).sort().map(k=>[k,value[k]]));
 }
 function randomCode(){return Array.from(crypto.randomBytes(5),b=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[b%32]).join('')}
-function createAdmissionService({db,verifyIdToken,clock=Date.now,generateCode=randomCode,operationLimit=30}){
+function createAdmissionService({db,verifyIdToken,clock=Date.now,generateCode=randomCode,operationLimit=30,readTimeoutMs=3000}){
  if(!db||typeof verifyIdToken!=='function')throw Error('Verified authentication and a privileged store are required');
  async function identity(token){if(typeof token!=='string'||!token||token.length>8192)fail(401,'unauthenticated');let user;try{user=await verifyIdToken(token,true)}catch{fail(401,'unauthenticated')}if(!/^[A-Za-z0-9_-]{1,128}$/.test(user?.uid||'')||['__proto__','prototype','constructor'].includes(user.uid))fail(403,'unsupported-identity');return user.uid}
  function validate(action,body){
@@ -61,7 +61,13 @@ function createAdmissionService({db,verifyIdToken,clock=Date.now,generateCode=ra
   },undefined,false);
   if(!tx.committed)fail(503,'temporarily-unavailable');if(outcome.error)fail(outcome.status,outcome.error);return outcome.data;
  }
- async function readRoom(token,code){const uid=await identity(token);if(!codePattern.test(code||''))fail(400,'invalid-code');const snap=await db.ref('skylineV2/rooms/'+code).once('value'),room=snap.val();if(room?.members?.[uid]!==true)fail(403,'not-authorized');return view(room)}
+
+ async function readRoom(token,code){
+  const uid=await identity(token);if(!codePattern.test(code||''))fail(400,'invalid-code');let timer,tx;
+  // A no-op transaction requires a server acknowledgement; cached observers are not authorization.
+  try{tx=await Promise.race([db.ref('skylineV2/rooms/'+code).transaction(value=>value,undefined,false),new Promise((_,reject)=>timer=setTimeout(()=>reject(new ServiceError(503,'temporarily-unavailable')),readTimeoutMs))])}finally{clearTimeout(timer)}
+  if(!tx.committed)fail(503,'temporarily-unavailable');const room=tx.snapshot.val();if(room?.members?.[uid]!==true)fail(403,'not-authorized');return view(room);
+ }
  return{execute,readRoom};
 }
 module.exports={createAdmissionService,ServiceError};

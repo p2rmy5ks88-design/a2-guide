@@ -36,7 +36,7 @@ async function serve(runtime,options={}){const allowedOrigins=new Set(['http://1
  await test('adapter rejects remote endpoints before requesting credentials',()=>{let calls=0;assert.throws(()=>clientModule.createAdmissionClient({baseUrl:'https://example.com/',getIdToken:()=>calls++}));assert.equal(calls,0)});
  await test('adapter obtains current authentication for every call',async()=>{let calls=0;const c=clientModule.createAdmissionClient({baseUrl:api.baseUrl,getIdToken:async()=>{calls++;return guest.token}});await c.room(created.code);await c.room(created.code);assert.equal(calls,2)});
  const leaveId=id();
- await test('host leave transfers lobby ownership atomically',async()=>{await hostClient.leaveRoom({requestId:leaveId,code:created.code});const r=await guestClient.room(created.code);assert.equal(r.hostUid,guest.uid);assert.equal(r.seats.length,1);assert.equal(r.revision,2)});
+ await test('host leave transfers lobby ownership atomically',async()=>{await apiPeer.client(host).leaveRoom({requestId:leaveId,code:created.code});const r=await guestClient.room(created.code);assert.equal(r.hostUid,guest.uid);assert.equal(r.seats.length,1);assert.equal(r.revision,2)});
  await test('removed member immediately loses service read access',()=>denied(()=>hostClient.room(created.code),403,'not-authorized'));
  await test('leave replay remains idempotent after removal',async()=>{await hostClient.leaveRoom({requestId:leaveId,code:created.code});assert.equal((await guestClient.room(created.code)).revision,2)});
  await test('last leave closes room and invalidates invitation',async()=>{await guestClient.leaveRoom({requestId:id(),code:created.code});assert.equal((await main.db.ref('skylineV2/rooms/'+created.code+'/meta/status').once('value')).val(),'closed');await denied(()=>outsideClient.joinRoom({requestId:id(),code:created.code,invite:created.invite,name:'Other'}),403)});
@@ -49,5 +49,14 @@ async function serve(runtime,options={}){const allowedOrigins=new Set(['http://1
  await test('server budget renews after its time window',async()=>{now+=60001;assert.ok((await limitedClient.createRoom({requestId:id(),name:'Limit',settings})).code)});
  const disabled=await account(),disabledClient=api.client(disabled),d=await disabledClient.createRoom({requestId:id(),name:'Disabled',settings});
  await test('disabled account cannot reuse an old token',async()=>{await main.auth.updateUser(disabled.uid,{disabled:true});await denied(()=>disabledClient.room(d.code),401,'unauthenticated')});
+
+ const offlineUser=await account(),offlineApi=await serve(main,{readTimeoutMs:500}),offlineClient=offlineApi.client(offlineUser),offlineRoom=await offlineClient.createRoom({requestId:id(),name:'Offline',settings});
+ await offlineClient.room(offlineRoom.code);
+ await test('disconnected cached room cannot bypass a peer membership revocation',async()=>{
+  main.db.goOffline();
+  try{await apiPeer.client(offlineUser).leaveRoom({requestId:id(),code:offlineRoom.code});await denied(()=>offlineClient.room(offlineRoom.code),503,'temporarily-unavailable')}finally{main.db.goOnline()}
+  await denied(()=>offlineClient.room(offlineRoom.code),403,'not-authorized');
+ });
+
  console.log('ADMISSION SUMMARY',JSON.stringify({checks:report.checks.length,projectId:'demo-skyline-phase1',instances:2,liveDeployment:false}));
 })().catch(e=>{report.failure=String(e.stack||e);console.error(e);process.exitCode=1}).finally(async()=>{try{for(const s of servers){s.closeAllConnections();await new Promise(r=>s.close(r))}for(const r of runtimes)await r.close()}finally{fs.writeFileSync(path.join(__dirname,'../service-results.json'),JSON.stringify(report,null,2)+'\n')}});
