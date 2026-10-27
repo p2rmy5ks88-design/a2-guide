@@ -45,7 +45,7 @@ export function createGameClient({baseUrl,allowedOrigins,uid,getSession,storage,
   async read(action,body){active();if(!Object.hasOwn(reads,action))throw error('unsupported-read');return request(reads[action],copy(body))},
   async mutate(action,body,{track=false}={}){
    active();if(inFlight)throw error('operation-in-flight');return exclusive(async()=>{
-   active();if(!Object.hasOwn(routes,action)||!body||typeof body!=='object'||Array.isArray(body)||Object.hasOwn(body,'requestId')||!/^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{5}$/.test(body.code||'')||!Number.isSafeInteger(body.revision)||body.revision<0||!Number.isSafeInteger(body.revision+1))throw error('invalid-operation');
+   active();if(!Object.hasOwn(routes,action)||!body||typeof body!=='object'||Array.isArray(body)||Object.hasOwn(body,'requestId')||typeof body.code!=='string'||!/^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{5}$/.test(body.code||'')||!Number.isSafeInteger(body.revision)||body.revision<0||!Number.isSafeInteger(body.revision+1))throw error('invalid-operation');
    if(inFlight)throw error('operation-in-flight');if(record())throw error('operation-needs-recovery');
    const requestId=randomId();if(typeof requestId!=='string'||!/^[A-Za-z0-9_-]{16,64}$/.test(requestId))throw error('invalid-request-id');
    const saved={version:1,origin:base.origin,uid,action,body:copy({...body,requestId}),status:'pending'};

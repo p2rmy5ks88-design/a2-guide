@@ -11,7 +11,7 @@ function valid(view,code){
  if(houses!==36||hotels!==12)fail('invalid-game-view');return freeze(copy(view));
 }
 export function createGameController({client,code,onView=()=>{},onState=()=>{}}){
- if(!/^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{5}$/.test(code||'')||typeof client?.read!=='function'||typeof client?.mutate!=='function'||typeof onView!=='function'||typeof onState!=='function')fail('invalid-controller');
+ if(typeof code!=='string'||!/^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{5}$/.test(code||'')||typeof client?.read!=='function'||typeof client?.mutate!=='function'||typeof onView!=='function'||typeof onState!=='function')fail('invalid-controller');
  let view=null,closed=false,busy=false,epoch=0,applyQueue=Promise.resolve();
  function active(){if(closed)fail('session-closed')}
  function state(){return{busy,needsRecovery:!!client.pending(),view}}

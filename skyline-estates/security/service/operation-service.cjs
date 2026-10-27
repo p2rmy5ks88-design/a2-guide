@@ -10,7 +10,7 @@ const reserves=new Set(['reserveRoll','reserveJailRoll','reserveReroll']);
 function request(input){
  if(!input||typeof input!=='object'||Array.isArray(input)||Object.keys(input).sort().join(',')!=='action,body,code'||!reserves.has(input.action)&&!Object.hasOwn(turns,input.action))fail(400,'invalid-fields');
  const b=input.body;
- if(!b||typeof b!=='object'||Array.isArray(b)||!/^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{5}$/.test(input.code||'')||b.code!==input.code||typeof b.requestId!=='string'||!/^[A-Za-z0-9_-]{16,64}$/.test(b.requestId)||!Number.isSafeInteger(b.revision)||b.revision<0||!Number.isSafeInteger(b.revision+1)||Buffer.byteLength(JSON.stringify(input))>8192)fail(400,'invalid-fields');
+ if(!b||typeof b!=='object'||Array.isArray(b)||typeof input.code!=='string'||!/^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{5}$/.test(input.code||'')||b.code!==input.code||typeof b.requestId!=='string'||!/^[A-Za-z0-9_-]{16,64}$/.test(b.requestId)||!Number.isSafeInteger(b.revision)||b.revision<0||!Number.isSafeInteger(b.revision+1)||Buffer.byteLength(JSON.stringify(input))>8192)fail(400,'invalid-fields');
  let digest,invalid=false;
  try{const body=reserves.has(input.action)?validateRollPlanRequest(b,'reserve'):validateTurnCommand(b,turns[input.action]);digest=hash(JSON.stringify({action:reserves.has(input.action)?input.action:'turn-'+turns[input.action],body}))}
  catch(e){if(!(e instanceof ServiceError)||![400,409,501].includes(e.status))throw e;invalid=true;digest=hash(JSON.stringify({retiredInvalid:input.action,body:b}))}

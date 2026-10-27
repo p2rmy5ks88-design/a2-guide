@@ -13,7 +13,7 @@ async function test(name,fn){await fn();report.checks.push({name,passed:true});c
  browser=await chromium.launch({headless:true,...(process.env.CHROME_PATH?{executablePath:process.env.CHROME_PATH}:{})});
  const page=await browser.newPage({serviceWorkers:'block',viewport:{width:1280,height:850}});page.on('pageerror',e=>report.browserErrors.push(String(e.stack||e)));
  await page.addInitScript(()=>localStorage.setItem('skylinePrefs',JSON.stringify({nickSet:true,nick:'Tester',welcomed:1,rig:false})));
- async function boot(){await page.goto(base+'/skyline-estates/index.html');await page.waitForFunction(()=>typeof window.__sim==='function');await page.evaluate(async()=>{
+ async function boot(){await page.goto(base+'/skyline-estates/index.html');await page.waitForFunction(()=>typeof window.__sim==='function');await page.addStyleTag({content:'*,*::before,*::after{animation:none!important;transition:none!important}'});await page.evaluate(async()=>{
   const {createGameClient}=await import('./security/service/game-client.mjs'),{mountSkylineControls}=await import('./security/service/game-controls.mjs');window.controlErrors=[];window.beforeProgress=JSON.stringify({xp:PREF.xp,coins:PREF.coins,ach:PREF.ach,stats:PREF.stats});window.c=createGameClient({baseUrl:location.origin+'/',allowedOrigins:[location.origin],allowLoopback:true,uid:'host-uid',getSession:async()=>({uid:'host-uid',idToken:'host-uid'}),storage:localStorage});window.board=mountSkylineControls({client:c,code:'ABCDE',onError:e=>controlErrors.push(e.code||e.message)});await board.refresh();
  });}
  await boot();

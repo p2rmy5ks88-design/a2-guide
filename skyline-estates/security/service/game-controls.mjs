@@ -4,7 +4,7 @@ export function mountGameControls({client,code,document=globalThis.document,onVi
  const acts=document.querySelector('#acts'),prompt=document.querySelector('#prompt');if(!acts||!prompt)throw Error('Game controls are missing');
  let closed=false,interrupted=false,purchaseRevision=null,controller;
  const say=text=>setPromptText?setPromptText(text):prompt.textContent=text;
- const perform=async fn=>{try{const result=await fn();if(!closed){interrupted=false;render(controller.status())}return result}catch(e){if(!closed){interrupted=true;render(controller.status());onError(e)}return null}};
+ const perform=async fn=>{try{const result=await fn();if(!closed){interrupted=false;render(controller.status())}return result}catch(e){if(!closed){interrupted=true;purchaseRevision=null;render(controller.status());onError(e)}return null}};
  function button(label,fn,{primary=false,disabled=false,kind='pill'}={}){
   const b=document.createElement('button');b.type='button';b.className=kind==='roll'?'bigb':kind==='end'?'bigb end':'pill'+(primary?' pri':'');b.textContent=label;b.setAttribute('aria-label',label);b.disabled=disabled;
   if(kind==='roll'&&rollIcon){const icon=document.createElement('span');icon.innerHTML=rollIcon;b.prepend(icon)}
@@ -60,11 +60,11 @@ export function mountSkylineControls({client,code,onError=()=>{}}){
  function close(){
   if(closed)return;closed=true;controls.close();GEN++;document.querySelector('#modals').replaceChildren();openMenu=previous.menu;for(const [selector,key]of [['#bAssets','assets'],['#bTrade','trade'],['#bMenu','menuButton']])document.querySelector(selector).onclick=previous[key];G=previous.game;delete window.__skylineTrustedControls;showTitle();
  }
- controls=mountGameControls({client,code,onView:render,onError,formatMoney:n=>fmt(n),rollIcon:DIE_SVG,setPromptText:text=>setPrompt(esc(text)),openPurchase:async v=>{
+ controls=mountGameControls({client,code,onView:render,onError:e=>{document.querySelector('#modals').replaceChildren();onError(e)},formatMoney:n=>fmt(n),rollIcon:DIE_SVG,setPromptText:text=>setPrompt(esc(text)),openPurchase:async v=>{
   const d=v.decision,p=v.game.players[v.seat];
   return modal({html:'<div class="mh">For sale</div><div class="row2">'+deedHTML(d.square)+'<div class="slotbar sidecol"><div class="mtxt">You have <b>'+fmt(p.cash)+'</b>.</div></div></div>',cls:'wide',btns:[{k:'decline',label:v.game.set.auction===false?'Don’t buy':'Auction'},{k:'buy',label:'Buy for '+fmt(d.price),primary:true,disabled:!d.canBuy}]});
  }});
  openMenu=menu;document.querySelector('#bMenu').onclick=menu;document.querySelector('#bAssets').onclick=()=>{if(current&&!closed)void openAssets(G.players[current.seat],{readonly:true})};document.querySelector('#bTrade').onclick=()=>{};
- window.__skylineTrustedControls=controls;
- return{...controls,close};
+ const mountedControls={...controls,close};window.__skylineTrustedControls=mountedControls;
+ return mountedControls;
 }
