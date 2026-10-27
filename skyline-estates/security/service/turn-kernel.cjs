@@ -5,9 +5,9 @@ const {sampleDice,sampleJailDice}=require('./setup-kernel.cjs');
 class TurnError extends Error{constructor(code,status=409){super(code);this.code=code;this.status=status}}
 const fail=(code,status)=>{throw new TurnError(code,status)};
 // Only audited async UI waits are removed. Financial statements and later economic hooks are reused.
-const sync=s=>s.replaceAll('async function','function').replaceAll('await ','');
+const sync=s=>s.replaceAll('async function','function').replaceAll('async p=>','p=>').replaceAll('async(p,d)=>','(p,d)=>').replaceAll('await ','');
 const core=section('const W=1100','/* ================= SOUND ================= */');
-const rules=[core,line('function endCheck(){'),sync(section('async function jailTurn(p){','async function playTurn(p)')),section('function validateSave(g){','function decodeRemoteGame(code,d){'),section('const COUNTRIES=','/* ---- city looks ---- */'),section('const TOKEN_LV=[','const TL_MAX='),line('const TL_MAX='),line('const perksOn='),line('const perkOf='),line('function payday(p)'),line('const st=p=>'),line('const evNow='),section('const FEST_GROUP={};','const EV_UNIVERSAL='),line('const evDef='),line('const _rentFor='),line('function log(t)'),line('function speedLabel(s)'),sync(section('async function moveSteps(p,n){','/* ================= MONEY ================= */')),line('function onPassGo(p)'),sync(section('const _sendToJail=sendToJail;','const _executeTrade=')),sync(section('async function collect(p,a){','async function payEach(')),sync(line('const _pay=pay;')),sync(line('{const _p3=pay;')),sync(line('{const _ps=pay;')),sync(section('async function land(p,d,o2={}){','async function drawCard(')),sync(section('async function offerBuy(p,i){','/* ================= AUCTION ================= */')),line('const _buyProp=buyProp;'),sync(line('const _land=land;')),sync(section('async function offerReroll(p,d){','/* ---- game end: XP, coins, trophies, season ---- */')).replace('if(FAST||p.ai','if(p.ai')].join('\n');
+const rules=[sync(core),line('function endCheck(){'),sync(section('async function jailTurn(p){','async function playTurn(p)')),section('function validateSave(g){','function decodeRemoteGame(code,d){'),section('const COUNTRIES=','/* ---- city looks ---- */'),section('const TOKEN_LV=[','const TL_MAX='),line('const TL_MAX='),line('const perksOn='),line('const perkOf='),line('function payday(p)'),line('const st=p=>'),line('const evNow='),section('const FEST_GROUP={};','const EV_UNIVERSAL='),line('const evDef='),line('const _rentFor='),line('function log(t)'),line('function speedLabel(s)'),sync(section('async function moveSteps(p,n){','/* ================= MONEY ================= */')),line('function onPassGo(p)'),sync(section('const _sendToJail=sendToJail;','const _executeTrade=')),sync(section('async function collect(p,a){','function bankrupt(p,to){')),sync(line('const _pay=pay;')),sync(line('{const _p3=pay;')),sync(line('{const _ps=pay;')),sync(section('async function land(p,d,o2={}){','async function drawCard(')),sync(section('async function drawCard(p,deck,d){','async function offerBuy(p,i){')).replace('function drawCard(', 'function executeCard('),sync(section('async function offerBuy(p,i){','/* ================= AUCTION ================= */')),line('const _buyProp=buyProp;'),sync(line('const _land=land;')),sync(section('async function offerReroll(p,d){','/* ---- game end: XP, coins, trophies, season ---- */')).replace('if(FAST||p.ai','if(p.ai')].join('\n');
 const record=line('  G.lastDice='),rollLog=line('  log(`${P(G.turn).name} rolled ');
 const script=new vm.Script(rules+`
 function updateTools(){} function setPrompt(){} function pushState(){} function renderRoster(){} function updateCell(){} function float(){} function sfx(){} function toast(){} function flyCash(){} function hopTo(){} function settleToken(){} function highlight(){} function camFollow(){} function placeToken(){}
@@ -21,11 +21,13 @@ function modal(){if(!answerUsed&&mode==='buy'){if(p.cash<SQ[p.pos].p)throw Error
 function deedHTML(){return ''}
 function actions(){if(mode==='jail-pay')return 'pay';if(mode==='jail-card')return 'card';if(mode==='jail-roll')return 'roll';if(mode==='keep')return 'keep';throw new Stop('reroll',{remaining:perkOf(p).rr-(p.rrUsed||0),dice:flow.dice})}
 function auction(i){throw new Stop('auction',{square:i})}
-function drawCard(w,deck){throw new Stop('card',{deck,square:w.pos})}
+function drawCard(w,deck){flow.cardDeck=deck;throw new Stop('card',{deck,square:w.pos})}
+const sourceLand=land;land=function(w,d,o2={}){if(mode==='drawCard'||flow.cardEffect)flow.landingOptions={...o2};return sourceLand(w,d,o2)};
 function openAssets(){throw new Stop('raise-cash',{square:p.pos})}
-function humanRaise(w,amount,to){throw new Stop('debt',{amount,to:to?.id??null,paymentKind,restorePhase:'busy'})}
+function humanRaise(w,amount,to){throw new Stop('debt',{amount,to:to?.id??null,paymentKind,restorePhase:'busy',...(flow.cardEffect?{payer:w.id}:{})})}
 function aiRaise(w,amount){humanRaise(w,amount,paymentTo)}
-let paymentTo=null;const economicPay=pay;pay=function(w,amount,to,kind){paymentKind=kind||null;paymentTo=to;try{return economicPay(w,amount,to,kind)}finally{paymentKind=null;paymentTo=null}};
+let paymentTo=null;const economicPay=pay;pay=function(w,amount,to,kind){paymentKind=kind||null;paymentTo=to;if(flow.cardEffect)flow.cardEffect.payments=(flow.cardEffect.payments||0)+1;try{return economicPay(w,amount,to,kind)}finally{paymentKind=null;paymentTo=null}};
+function beginCard(){const deck=flow.cardDeck;if(!['chance','esusu'].includes(deck)||!G[deck].length)throw Error('Invalid card deck');flow.cardEffect={deck,idx:G[deck][0],payments:0};delete flow.cardDeck;executeCard(p,deck,d);delete flow.cardEffect;completeLanding()}
 function completeLanding(){
  if(p.inJail||p.bankrupt||G.over){G.phase='post';flow.afterLanding=null;return}
  if(flow.afterLanding==='star'){flow.afterLanding=null;drawCard(p,'chance')}
@@ -48,7 +50,7 @@ function begin(){
  if(d[0]===d[1]){G.doubles=(G.doubles||0)+1;if(G.doubles===3){st(p).dbl3=1;sendToJail(p);G.phase='post';flow.afterLanding=null;return}}
  moveSteps(p,d[0]+d[1]+(typeof d.s==='number'?d.s:0));land(p,d);completeLanding();
 }
-try{if(mode==='jail-view'){if(endCheck())throw Error('Game ended');boundary={kind:'jail',seat:p.id,bail:BAIL,canPay:p.cash>=BAIL,passes:p.goojf.length,attempt:p.jailTurns+1}}else if(mode.startsWith('jail-'))beginJail();else if(mode==='roll'||mode==='keep')begin();else{land(p,d);completeLanding()}}catch(e){if(!(e instanceof Stop))throw e;boundary=e.boundary}
+try{if(mode==='jail-view'){if(endCheck())throw Error('Game ended');boundary={kind:'jail',seat:p.id,bail:BAIL,canPay:p.cash>=BAIL,passes:p.goojf.length,attempt:p.jailTurns+1}}else if(mode==='drawCard')beginCard();else if(mode.startsWith('jail-'))beginJail();else if(mode==='roll'||mode==='keep')begin();else{land(p,d,flow.landingOptions||{});delete flow.cardEffect;completeLanding()}}catch(e){if(!(e instanceof Stop))throw e;boundary=e.boundary}
 if(!validateSave({...G,online:false})||!validIdentities(G.players)||G.players.some(w=>!Number.isSafeInteger(w.cash)||w.st&&Object.values(w.st).some(n=>!Number.isFinite(n)||n<0))||!Number.isSafeInteger(G.logN||0))throw Error('Invalid turn result');
 JSON.stringify({game:G,boundary,context:boundary?flow:null});`,{filename:'audited-skyline-turn-checkpoint'});
 function validGame(game,actor){
@@ -72,7 +74,7 @@ function chooseTurn(game,actor,pending,choice){
   if(!['buy','decline'].includes(choice))fail('unsupported-turn-choice',501);
   if(pending.boundary.square!==game.players[game.turn].pos||game.own?.[pending.boundary.square]?.o!==-1)fail('stale-turn-choice');
   if(choice==='buy'&&!pending.boundary.canBuy)fail('cannot-afford-property');
- }else if(pending.boundary?.kind==='reroll'){if(choice!=='keep')fail('unsupported-turn-choice',501)}else fail('unsupported-turn-choice',501);
+ }else if(pending.boundary?.kind==='card'){if(choice!=='drawCard')fail('unsupported-turn-choice',501);if(!['chance','esusu'].includes(pending.boundary.deck)||pending.boundary.square!==game.players[game.turn].pos||pending.context.cardDeck!==pending.boundary.deck)fail('stale-card-choice')}else if(pending.boundary?.kind==='reroll'){if(choice!=='keep')fail('unsupported-turn-choice',501)}else fail('unsupported-turn-choice',501);
  return run(game,actor,pending.context,choice);
 }
 function jailState(game,actor){validGame(game,actor);const p=game.players[game.turn];if(game.phase!=='jail'||!p.inJail||p.pos!==10||!Number.isInteger(p.jailTurns)||p.jailTurns<0||p.jailTurns>=3||(game.doubles||0)!==0)fail('unsupported-jail-phase')}

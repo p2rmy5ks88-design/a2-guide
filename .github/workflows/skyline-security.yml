@@ -42,6 +42,8 @@ jobs:
           path: |
             skyline-estates/security/security-results.json
             skyline-estates/security/service-results.json
+            skyline-estates/security/card-results.json
+            skyline-estates/security/card-service-results.json
             skyline-estates/security/jail-results.json
             skyline-estates/security/jail-service-results.json
             skyline-estates/security/end-results.json

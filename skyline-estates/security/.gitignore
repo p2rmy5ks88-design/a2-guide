@@ -18,3 +18,7 @@ end-browser-results.json
 jail-results.json
 jail-service-results.json
 jail-browser-results.json
+
+card-results.json
+card-service-results.json
+card-browser-results.json
