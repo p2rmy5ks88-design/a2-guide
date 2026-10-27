@@ -2141,7 +2141,7 @@ const unmCost=i=>G&&G.set&&G.set.interest===false?SQ[i].p/2:Math.ceil(SQ[i].p/2*
 const lvl=()=>LV[G.set.ai]||LV.normal;
 
 function newGame(cfg){
-  G={v:1,players:cfg.players.map((c,i)=>({id:i,uid:c.uid||null,name:c.name,tok:c.tok,col:c.col,ai:c.ai,cash:cfg.cash,pos:0,inJail:false,jailTurns:0,goojf:[],tl:c.tl||1,fin:c.fin||null,ch:c.ch||null,bankrupt:false,lastOffer:-9,declined:{}})),
+  G={v:1,tokenPowerVersion:2,players:cfg.players.map((c,i)=>({id:i,uid:c.uid||null,name:c.name,tok:c.tok,col:c.col,ai:c.ai,cash:cfg.cash,pos:0,inJail:false,jailTurns:0,goojf:[],tl:c.tl||1,fin:c.fin||null,ch:c.ch||null,bankrupt:false,lastOffer:-9,declined:{}})),
     own:SQ.map(()=>({o:-1,h:0,m:false})),turn:0,round:1,chance:shuffle([...Array(16).keys()]),esusu:shuffle([...Array(16).keys()]),
     pot:0,houses:36,hotels:12,set:cfg.set,log:[],logN:0,over:false,phase:'busy'};
   if(cfg.set.mode==='quick'){const pool=shuffle(SQ.map((_,i)=>i).filter(buyable));G.players.forEach(p=>{for(let k=0;k<2;k++){const i=pool.pop();G.own[i].o=p.id}})}
@@ -2994,6 +2994,7 @@ const SKEY='skylineSave',SAVE_VERSION=1,SAVE_BACKUP=SKEY+'.backup',SAVE_UNREADAB
 let saveWarning='';
 function saveNotice(message){if(saveWarning===message)return;saveWarning=message;console.warn('[Skyline save] '+message);if(!FAST)toast(message)}
 function validateSave(g){
+  if(g?.tokenPowerVersion!=null&&g.tokenPowerVersion!==2)return false;
   const obj=x=>x&&typeof x==='object'&&!Array.isArray(x),num=x=>Number.isFinite(x)&&x>=0,int=(x,a,b)=>Number.isInteger(x)&&x>=a&&x<=b;
   if(!obj(g)||g.v!==1||g.over!==false||g.sim||g.online||!Array.isArray(g.players)||!int(g.players.length,2,6))return false;
   const n=g.players.length;
@@ -3959,7 +3960,7 @@ function grantTokenMastery(g,w){if(!g||!g.over||g.sim||FAST)return null;
 /* ================= END TOKEN MASTERY ================= */
 
 const perksOn=()=>!G||G.set.perks!==false;
-const perkOf=p=>tokenPower(p?.tok,perksOn()&&p&&p.tl?p.tl:1);
+const perkOf=p=>{const lv=perksOn()&&p&&Number.isInteger(p.tl)?Math.max(1,Math.min(TL_MAX,p.tl)):1;return G&&G.tokenPowerVersion!==2?TOKEN_LV[lv]:tokenPower(p?.tok,lv)};
 function payday(p){return Math.round(PAYDAY*(1+perkOf(p).pay))}
 
 /* ---- premium cosmetics ---- */

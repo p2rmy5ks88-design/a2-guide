@@ -1,6 +1,6 @@
 const {fixture}=require('./asset-fixture.cjs'),{stock}=require('./asset-cases.cjs');
 const dice=(a,b,sv=0)=>({a,b,sv,face:sv?(sv<=4?sv:sv===5?'star':'taxi'):null});
-function game(){const g=fixture();Object.assign(g,{code:'ABCDE',seq:1});g.players[0].tok='🚌';g.players[1].tok='🛺';g.players.forEach(p=>p.tl=1);return g}
+function game(){const g=fixture();Object.assign(g,{code:'ABCDE',seq:1,tokenPowerVersion:2});g.players[0].tok='🚌';g.players[1].tok='🛺';g.players.forEach(p=>p.tl=1);return g}
 function cases(){const out=[],add=(name,roll,change=()=>{},choices=[])=>{const g=game();change(g);stock(g);out.push({name,game:g,dice:roll,choices})};
  add('owned street completes ordinary roll',dice(1,3));
  add('unowned purchase buy',dice(3,4),()=>{},['buy']);
