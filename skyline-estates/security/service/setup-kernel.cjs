@@ -25,7 +25,8 @@ function normalize(config,{minPlayers=2}={}){
  if(!Array.isArray(config.players)||config.players.length<minPlayers||config.players.length>6)fail('invalid-roster');
  const uids=new Set(),tokens=new Set(),colors=new Set();let humans=0;
  const players=config.players.map(p=>{
-  fields(p,['uid','name','tok','col','ai','tl','fin','ch']);
+  fields(p,['uid','name','tok','col','ai','tl','fin','ch','estate']);
+  if(p.estate!=null&&(!plain(p.estate)||Object.keys(p.estate).length>40||Object.entries(p.estate).some(([k,v])=>!/^([0-9]|[1-3][0-9])$/.test(k)||!Number.isInteger(v)||v<1||v>5)))fail('invalid-roster');
   if(typeof p.ai!=='boolean'||!registry.tokens.includes(p.tok)||!registry.colors.includes(p.col)||tokens.has(p.tok)||colors.has(p.col)||typeof p.name!=='string'||p.name.length>128||/[\x00-\x1f\x7f]/.test(p.name))fail('invalid-roster');
   tokens.add(p.tok);colors.add(p.col);
   if(p.uid===null){if(!p.ai)fail('invalid-roster')}else{if(typeof p.uid!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(p.uid)||['__proto__','constructor','prototype'].includes(p.uid)||uids.has(p.uid))fail('invalid-roster');uids.add(p.uid)}

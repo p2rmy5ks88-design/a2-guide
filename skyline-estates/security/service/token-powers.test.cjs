@@ -12,6 +12,6 @@ for(const token of c.tokens){fingerprints.add(JSON.stringify(Array.from({length:
   assert.ok(power.rr<=3&&power.pass<=3&&power.shield<=1&&power.surge<=1);
  }
 }
-{const legacy=game();delete legacy.tokenPowerVersion;legacy.players[0].tl=2;const old=applyRoll(legacy,'host-uid',dice(3,4));assert.equal(old.boundary.kind,'reroll','legacy saves keep their original shared perks');const fresh=game();fresh.players[0].tl=2;assert.equal(fresh.tokenPowerVersion,2);assert.equal(applyRoll(fresh,'host-uid',dice(3,4)).boundary.kind,'purchase','new Bus uses its own protection path');const future=game();future.tokenPowerVersion=3;assert.throws(()=>applyRoll(future,'host-uid',dice(3,4)));checks+=3}
+{const legacy=game();delete legacy.tokenPowerVersion;legacy.players[0].tl=2;const old=applyRoll(legacy,'host-uid',dice(3,4));assert.equal(old.boundary.kind,'reroll','legacy saves keep their original shared perks');const fresh=game();fresh.players[0].tl=2;assert.equal(fresh.tokenPowerVersion,2);assert.equal(applyRoll(fresh,'host-uid',dice(3,4)).boundary.kind,'purchase','new Bus uses its own protection path');const future=game();future.tokenPowerVersion=4;assert.throws(()=>applyRoll(future,'host-uid',dice(3,4)));checks+=3}
 assert.equal(fingerprints.size,16,'all sixteen complete power paths differ');
 console.log('TOKEN POWERS SUMMARY',JSON.stringify({tokens:c.tokens.length,tiers:6,gameplayChecks:checks,uniquePaths:fingerprints.size}));

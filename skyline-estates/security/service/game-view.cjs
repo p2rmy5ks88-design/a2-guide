@@ -9,7 +9,7 @@ const fail=(status,code)=>{throw new ServiceError(status,code)};
 function publicGame(game){
  if(!game||!Array.isArray(game.players)||!Array.isArray(game.own)||game.own.length!==40)fail(409,'invalid-game-state');
  const result=pick(game,['v','tokenPowerVersion','online','code','turn','round','pot','houses','hotels','over','phase','doubles','first','lateBonus','logN']);
- result.players=game.players.map(p=>({...pick(p,['id','name','tok','col','ai','cash','pos','inJail','jailTurns','bankrupt','tl','fin','ch','lapped','rrUsed','passUsed','shieldUsed','surgeUsed']),bailPasses:Array.isArray(p.goojf)?p.goojf.length:0}));
+ result.players=game.players.map(p=>({...pick(p,['id','name','tok','col','ai','cash','pos','inJail','jailTurns','bankrupt','tl','fin','ch','lapped','rrUsed','passUsed','shieldUsed','surgeUsed']),...(p.estate?{estate:Object.fromEntries(Object.entries(p.estate).filter(([k,v])=>/^([0-9]|[1-3][0-9])$/.test(k)&&Number.isInteger(v)&&v>=1&&v<=5))}:{}),bailPasses:Array.isArray(p.goojf)?p.goojf.length:0}));
  if(game.lastDice)result.lastDice=pick(game.lastDice,['a','b','sv','n']);
  result.own=game.own.map(o=>pick(o,['o','h','m']));
  result.set=pick(game.set,['mode','city','theme','cash','rounds','ai','speed','timer','minigames','perks','ffa','events','speedDie','pot','goDouble','jailRent','auction','even','interest']);
