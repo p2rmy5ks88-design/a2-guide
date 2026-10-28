@@ -47,7 +47,7 @@ permissions:
 jobs:
   ios:
     timeout-minutes: 20
-    runs-on: macos-15
+    runs-on: macos-26
     defaults:
       run:
         shell: bash
@@ -65,7 +65,15 @@ jobs:
         with: { python-version: '3.12' }
       - name: Check pipeline guardrails
         working-directory: .
-        run: python3 skyline-estates/tests/build-pipelines.py
+        run: |
+          python3 skyline-estates/tests/build-pipelines.py
+          python3 skyline-estates-app/scripts/verify-ios-sdk.test.py
+      - name: Require Xcode 26 and iOS 26 SDK
+        run: |
+          xcodebuild -version > "$RUNNER_TEMP/skyline-ios-toolchain.txt"
+          xcrun --sdk iphoneos --show-sdk-version >> "$RUNNER_TEMP/skyline-ios-toolchain.txt"
+          cat "$RUNNER_TEMP/skyline-ios-toolchain.txt"
+          python3 scripts/verify-ios-sdk.py toolchain "$RUNNER_TEMP/skyline-ios-toolchain.txt"
       - name: Install
         run: npm install --no-audit --no-fund
       - name: Build web game
@@ -100,6 +108,7 @@ jobs:
           lipo "$PRODUCT/App" -verify_arch arm64
           xcrun vtool -show-build "$PRODUCT/App" | tee "$RUNNER_TEMP/skyline-ios-device-platform.txt"
           grep -Eq 'platform +IOS$' "$RUNNER_TEMP/skyline-ios-device-platform.txt"
+          python3 "$GITHUB_WORKSPACE/skyline-estates-app/scripts/verify-ios-sdk.py" binary "$RUNNER_TEMP/skyline-ios-device-platform.txt"
           cmp "$GITHUB_WORKSPACE/skyline-estates/reference-redesign.js" "$PRODUCT/public/reference-redesign.js"
           mkdir -p "$RUNNER_TEMP/skyline-ipa/Payload"
           ditto "$PRODUCT" "$RUNNER_TEMP/skyline-ipa/Payload/App.app"
@@ -117,6 +126,7 @@ jobs:
             ${{ runner.temp }}/Skyline-Estates-Sideloadly-unsigned.ipa.sha256
             ${{ runner.temp }}/SIDELOAD-README.txt
             ${{ runner.temp }}/skyline-ios-device-platform.txt
+            ${{ runner.temp }}/skyline-ios-toolchain.txt
           if-no-files-found: error
       - name: Archive and upload to TestFlight
         if: github.event_name == 'workflow_dispatch' && inputs.publish && env.ASC_KEY_B64 != ''

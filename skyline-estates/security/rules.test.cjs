@@ -74,6 +74,8 @@ const requestPath=(base=room,uid='guest')=>`${base}/requests/${uid}/request_${++
  await test('future action timestamp denied',()=>assertFails(write(db.guest,requestPath(),request({at:Date.now()+60000}))));
  await test('closed-room requests denied',()=>assertFails(write(db.guest,requestPath(closedRoom),request())));
  await test('client cannot write trusted rankings',()=>assertFails(write(db.host,'skylineV2/rankings/season/host',{t:999999})));
+ await test('client cannot write central wallet balances',()=>assertFails(write(db.host,'skylineWalletV1/sandbox/accounts/host',{coins:500000})));
+ await test('client cannot read another player wallet or global receipt index',async()=>{await assertFails(read(db.outsider,'skylineWalletV1/sandbox/accounts/host'));await assertFails(read(db.host,'skylineWalletV1/sandbox/transactions'))});
  await test('client cannot grant purchase entitlements',()=>assertFails(write(db.host,'skylineV2/entitlements/host',{premium:true})));
  await test('legacy edition path is not accidentally granted by candidate',()=>assertFails(write(db.host,'games/AAAAA',{s:'legacy'})));
  await test('multi-path privilege escalation fails atomically',async()=>{await assertFails(db.guest.ref().update({[room+'/presence/guest']:{...presence(),left:true},[room+'/members/outsider']:true}));await env.withSecurityRulesDisabled(async c=>assert.equal((await read(c.database(),room+'/presence/guest')).val().left,false))});

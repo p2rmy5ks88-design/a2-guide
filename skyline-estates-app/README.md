@@ -23,7 +23,7 @@ iOS (App Store), from App Store Connect › Users and Access › Integrations �
 - `APP_STORE_CONNECT_KEY_ID`, `APP_STORE_CONNECT_ISSUER_ID`, `APPLE_TEAM_ID`
 
 ## Building on your own computer
-Needs Node 20+, plus Android Studio (Android) or a Mac with Xcode 16+ (iOS).
+Needs Node 20+, plus Android Studio (Android) or a Mac with Xcode 26+ and the iOS 26+ SDK (iOS).
 ```bash
 cd skyline-estates-app
 npm install
@@ -42,9 +42,12 @@ npm run sync            # after changing the game
 
 ## Skyline notes
 - The radio tracks and Firebase settings are copied from `../eko-estates/` when `npm run build:web` runs.
-- In-app purchases use `cordova-plugin-purchase` (works in Capacitor). Create the four consumable coin products listed in `STORE_LISTING.md` before testing purchases on a device.
+- Paid purchases are paused: the previous device-local fulfillment callback has been removed. Account linking, real store verification, a persistent wallet and fulfillment recovery must be connected and tested before ordering is enabled. See `../skyline-estates/security/ACCOUNT-WALLET-PLAN.md`. The installed Cordova purchase bridge is not the completed StoreKit 2 integration.
 - CI checks the packaged game, every required local asset and all five bundled fonts before native compilation. Pipeline guards cover trigger paths and publication boundaries.
 
 
 ### Sideloadly iPhone testing
 The `skyline-estates-ios-sideloadly-unsigned` artifact contains `Skyline-Estates-Sideloadly-unsigned.ipa`, SHA-256 and build metadata. It is an iPhone-device build, not a simulator app, and is not installable until Sideloadly signs it with your Apple ID. No signing secrets or store upload are used for build-only runs. Keep the same Apple ID/bundle identifier when updating an existing sideloaded copy to preserve its local data. Native and web local saves are separate. The existing native app remains landscape-only.
+
+### iOS SDK requirement
+CI uses the macOS 26 runner and rejects Xcode or iPhoneOS SDK versions below 26 before compilation. It also checks the linked SDK in every device binary slice. This does not raise the minimum supported iPhone OS version. No store upload occurs in pull request builds.
