@@ -15,4 +15,9 @@ Validation:
 - Reproduce: `SKYLINE_NO_WEBGL=1 SKYLINE_UI_ONLY=1 node skyline-estates/tests/reference-dashboard-browser.cjs results.json` (set environment variables in the local shell; see existing Playwright/Chrome setup).
 - Offline manifest rebuilt; 138 resources, no added downloads/services. Engine source and audited rules hash remain unchanged from PR #33. No paid service, live permissions or store release.
 
-Final CI evidence will be added after the run completes. Screenshots and per-game results are in the workflow artifact.
+Full CI passed; see verified run below. Screenshots and per-game results are in the workflow artifact.
+
+
+## Verified run
+
+Tested implementation `b2bd38b125a855eb48b7d915d9e51b5cb2aa1336`: [browser/stability CI](https://github.com/p2rmy5ks88-design/a2-guide/actions/runs/40647643442) passed. The reference suite ran with `SKYLINE_NO_WEBGL=1` and passed 20 checks with zero browser errors, including every stage illustration and 48 seeded rarity games. The same workflow passed 175 standard games, 56 stability regressions, 19 complete-match checks, 35 human-flow checks, 16 browser-smoke checks and all previous service/board/offline/online/save comparisons. Uploaded `skyline-stability-results` contains screenshots and per-game rounds/errors/cash/bank/outcome data. Subsequent report commit is documentation only.
