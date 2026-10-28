@@ -10,7 +10,7 @@ export function mountRoomEntryControls({client,uid,container,document=globalThis
  function button(label,fn){const b=text('button',label);b.type='button';b.className='btn';b.onclick=()=>{if(!busy&&!closed)void perform(fn)};root.append(b);return b}
  async function accepted(action,receipt,requestId){
   if(action==='leave'){await client.complete(requestId);ready=null;message='You left the room.';return}
-  const room=await client.room(receipt.code);if(closed)throw Error('session-closed');
+  let room;try{room=await client.room(receipt.code)}catch(e){if(e.status!==403||e.code!=='not-authorized')throw e;await client.complete(requestId);ready=null;message='You no longer have access to that room. Join again with a current invitation.';return}if(closed)throw Error('session-closed');
   const invitationUrl=receipt.invite&&room.status==='lobby'&&room.hostUid===uid?makeRoomInvitation({gameUrl,allowedOrigins,code:receipt.code,invite:receipt.invite}):null;
   await client.complete(requestId);ready={room,invitationUrl};message='';
  }
