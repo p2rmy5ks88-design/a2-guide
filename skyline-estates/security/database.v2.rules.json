@@ -62,6 +62,15 @@
           }
         }
       }
+    },
+    "skylineWalletV1": {
+      "$environment": {
+        "outbox": {
+          ".indexOn": [
+            "nextAt"
+          ]
+        }
+      }
     }
   }
 }

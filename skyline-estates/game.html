@@ -7195,6 +7195,9 @@ try{const h=window.claude?.hot;if(h&&h.ready)h.ready(boot);else boot(h?.data??{}
 setTimeout(()=>{try{const c=(new URLSearchParams(location.search).get('join')||'').toUpperCase();if(!/^[A-Z0-9]{5}$/.test(c)||!FIRE)return;history.replaceState(null,'',location.pathname);if(!G||G.over)openOnline(c)}catch(e){}},1200);
 </script>
 <script src="./reference-redesign.js"></script>
+<script src="./lib/account-controller.js"></script>
+<script src="./lib/account-firebase.js"></script>
+<script src="./lib/accounts.js"></script>
 <style>
 .pf3overview{flex:none;border:1px solid #365363;border-radius:12px;background:#102b37;padding:10px 12px;color:#e7f0f1}
 .pf3metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.pf3metrics span{display:flex;flex-direction:column;gap:3px}.pf3metrics b{color:#f0cf87;font-size:17px}.pf3metrics small{font-size:11px;color:#b9ccd4}

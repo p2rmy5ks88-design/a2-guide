@@ -32,6 +32,7 @@ jobs:
         run: |
           node skyline-estates/security/service/room-entry-browser.test.cjs "$RUNNER_TEMP/skyline-room-entry-browser.json"
           node skyline-estates/security/service/lobby-browser.test.cjs "$RUNNER_TEMP/skyline-lobby-browser.json"
+          node skyline-estates/tests/accounts-browser.cjs "$RUNNER_TEMP/skyline-accounts-browser.json"
           node skyline-estates/tests/promo-codes.cjs
           node skyline-estates/tests/promo-browser.cjs
           node skyline-estates/tests/token-mastery.cjs

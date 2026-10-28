@@ -40,6 +40,7 @@ jobs:
         with:
           name: skyline-security-emulator-results
           path: |
+            skyline-estates/security/wallet-load-results.json
             skyline-estates/security/security-results.json
             skyline-estates/security/service-results.json
             skyline-estates/security/web-connection-results.json

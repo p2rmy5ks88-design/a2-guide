@@ -21,41 +21,60 @@ function normalize(event,environment){
 }
 // Pure reducer invoked inside ONE privileged database transaction. Retried by
 // Firebase without additional external calls. The global key prevents account replay.
+function balance(account,delta){
+ account.debt||=0;
+ if(!Number.isSafeInteger(account.coins)||account.coins<0||!Number.isSafeInteger(account.debt)||account.debt<0||account.coins&&account.debt)fail('wallet-balance-conflict');
+ const net=account.coins-account.debt+delta;if(!Number.isSafeInteger(net))fail('wallet-balance-conflict');
+ account.coins=Math.max(0,net);account.debt=Math.max(0,-net);
+}
 function applyEvent(input,event,now){
  const root=copy(input||{});root.transactions||={};root.accounts||={};
  const key=event.transactionKey,old=root.transactions[key];
  if(old&&(old.ownerUid!==event.ownerUid||old.productId!==event.productId))fail('purchase-owner-conflict');
- if(old?.refunded||old&&event.type==='purchase')return {root,result:{duplicate:true,refunded:!!old.refunded}};
+ if(old?.refunded)return {root,result:{duplicate:true,refunded:true}};
+ if(old&&event.type==='purchase'){
+  if(event.store==='google'&&!root.outbox?.[key]){if(!event.sealedProof)fail('delivery-proof-required');root.outbox||={};root.outbox[key]={store:'google',state:'pending',sealedProof:event.sealedProof,attempts:0,nextAt:now,createdAt:now}}
+  return {root,result:{duplicate:true,refunded:false}};
+ }
+ if(event.type==='purchase'&&event.alreadyConsumed)fail('consumed-purchase-not-recorded');
  const userKey=hash(event.ownerUid),account=root.accounts[userKey]||{uid:event.ownerUid,coins:0,ledger:{}};
  let delta=0;
  if(event.type==='purchase')delta=event.coins;
  else if(old)delta=-old.coins;
- const next=account.coins+delta;if(!Number.isSafeInteger(next)||next<0)fail('wallet-balance-conflict');
- account.coins=next;
- account.ledger[key+'_'+event.type]={type:event.type,coins:delta,productId:event.productId,at:now};
+ balance(account,delta);
+ account.ledger[key+'_'+event.type]={type:event.type,coins:delta,balance:account.coins,debt:account.debt,productId:event.productId,at:now};
  root.accounts[userKey]=account;
  root.transactions[key]={ownerUid:event.ownerUid,productId:event.productId,coins:event.coins,store:event.store,
    environment:event.environment,refunded:event.type==='refund',fulfilled:event.type==='purchase',at:now};
+ root.outbox||={};
+ if(event.type==='refund'&&root.outbox[key]){const job=root.outbox[key];root.outbox[key]={store:job.store,state:'cancelled',attempts:job.attempts,nextAt:Number.MAX_SAFE_INTEGER}}
+ if(event.type==='purchase'&&event.store==='google'){
+  if(typeof event.sealedProof!=='string'||!event.sealedProof)fail('delivery-proof-required');
+  root.outbox[key]={store:'google',state:'pending',sealedProof:event.sealedProof,attempts:0,nextAt:now,createdAt:now};
+ }
  return {root,result:{duplicate:false,refunded:event.type==='refund'}};
 }
-function createWalletService({db,verifyIdToken,verifyPurchase,verifyNotification,environment,clock=Date.now}){
+function createWalletService({db,verifyIdToken,verifyPurchase,verifyNotification,environment,clock=Date.now,sealProof=null,spendCatalog=null}){
  if(!db||typeof verifyIdToken!=='function'||typeof verifyPurchase!=='function'||typeof verifyNotification!=='function'||!['sandbox','production'].includes(environment))throw Error('Trusted wallet dependencies and an explicit environment are required');
- const authenticate=identityVerifier(verifyIdToken);
- async function identity(token){
-  // Anonymous room identities cannot claim a persistent paid wallet.
-  const uid=await authenticate(token),user=await verifyIdToken(token,true);
-  if(user.uid!==uid||!['apple.com','google.com','password'].includes(user.firebase?.sign_in_provider)||user.firebase.sign_in_provider==='password'&&user.email_verified!==true)fail('persistent-account-required');
-  return uid;
- }
+ const identity=identityVerifier(async(token,checkRevoked)=>{
+  const user=await verifyIdToken(token,checkRevoked);
+  if(!['apple.com','google.com','password'].includes(user?.firebase?.sign_in_provider)||user.firebase.sign_in_provider==='password'&&user.email_verified!==true)fail('persistent-account-required');
+  return user;
+ });
  async function commit(event){
   let result;const at=clock();
   const tx=await db.ref('skylineWalletV1/'+environment).transaction(root=>{const applied=applyEvent(root,event,at);result=applied.result;return applied.root});
   if(!tx.committed)fail('wallet-unavailable');
-  return result;
+  return {...result,transactionKey:event.transactionKey,finishAllowed:!result.refunded&&event.type==='purchase'&&event.store==='apple'};
  }
  return {
   async purchase(token,proof){
-   const uid=await identity(token),event=normalize(await verifyPurchase(proof),environment);
+   const uid=await identity(token),verified=await verifyPurchase(proof),event=normalize(verified,environment);
+   if(verified.alreadyConsumed===true)event.alreadyConsumed=true;
+   if(event.store==='google'){
+    if(typeof sealProof!=='function')fail('delivery-not-configured');
+    event.sealedProof=await sealProof({purchaseToken:verified.transactionId,appId:APP,productId:verified.productId,ownerUid:verified.ownerUid,environment});
+   }
    if(event.type!=='purchase'||event.ownerUid!==uid)fail('purchase-owner-conflict');
    return commit(event);
   },
@@ -64,9 +83,32 @@ function createWalletService({db,verifyIdToken,verifyPurchase,verifyNotification
    if(event.type!=='refund')fail('unsupported-notification');
    return commit(event);
   },
+  async delivery(token,key){
+   const uid=await identity(token);if(!/^[a-f0-9]{64}$/.test(key||''))fail('invalid-delivery-reference');
+   const purchase=(await db.ref('skylineWalletV1/'+environment+'/transactions/'+key).get()).val();
+   if(!purchase||purchase.ownerUid!==uid)fail('purchase-not-found');
+   if(purchase.refunded)return{state:'refunded',finishAllowed:false};
+   if(purchase.store==='apple')return{state:'delivered',finishAllowed:true};
+   const job=(await db.ref('skylineWalletV1/'+environment+'/outbox/'+key).get()).val();
+   return{state:job?.state||'attention',finishAllowed:job?.state==='done'};
+  },
+  async spend(token,input){
+   const uid=await identity(token);
+   if(!spendCatalog)fail('wallet-spending-not-configured');
+   if(!input||Object.keys(input).some(k=>!['requestId','item'].includes(k))||!/^[A-Za-z0-9_-]{16,64}$/.test(input.requestId||'')||!Object.hasOwn(spendCatalog,input.item))fail('invalid-spend-request');
+   const offer={...spendCatalog[input.item]};if(!Number.isSafeInteger(offer.coins)||offer.coins<=0||!Number.isSafeInteger(offer.wins??0)||(offer.wins??0)<0)fail('invalid-server-catalog');
+   const key=hash(uid),op=hash(input.requestId),itemKey=hash(input.item);let outcome;
+   const tx=await db.ref('skylineWalletV1/'+environment).transaction(value=>{
+    const root=copy(value||{}),account=root.accounts?.[key];if(!account)fail('insufficient-coins');
+    account.operations||={};const prior=account.operations[op];if(prior){if(prior.item!==input.item)fail('idempotency-conflict');outcome=prior.result;return root}
+    account.owned||={};const owned=account.owned[itemKey]===true;
+    if(!owned){if(account.debt>0)fail('refund-deficit');if(account.coins<offer.coins)fail('insufficient-coins');if((account.wins||0)<(offer.wins||0))fail('wins-required');balance(account,-offer.coins);account.owned[itemKey]=true;account.ledger['spend_'+op]={type:'spend',coins:-offer.coins,balance:account.coins,debt:account.debt,item:input.item,at:clock()}}
+    outcome={owned:true,item:input.item,alreadyOwned:owned};account.operations[op]={item:input.item,result:outcome};return root;
+   });if(!tx.committed)fail('wallet-unavailable');return outcome;
+  },
   async history(token){
    const uid=await identity(token),snap=await db.ref('skylineWalletV1/'+environment+'/accounts/'+hash(uid)).get(),account=snap.val();
-   return {coins:account?.coins||0,entries:Object.values(account?.ledger||{}).sort((a,b)=>b.at-a.at).slice(0,50)};
+   return {coins:account?.coins||0,debt:account?.debt||0,entries:Object.values(account?.ledger||{}).sort((a,b)=>b.at-a.at).slice(0,50)};
   }
  };
 }
