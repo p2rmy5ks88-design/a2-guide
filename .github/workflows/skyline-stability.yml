@@ -32,7 +32,7 @@ jobs:
         run: |
           node skyline-estates/tests/token-mastery.cjs
           node skyline-estates/security/service/property-rarity.test.cjs
-          node skyline-estates/tests/reference-dashboard-browser.cjs "$RUNNER_TEMP/skyline-reference-dashboard.json"
+          SKYLINE_NO_WEBGL=1 node skyline-estates/tests/reference-dashboard-browser.cjs "$RUNNER_TEMP/skyline-reference-dashboard.json"
           node skyline-estates/security/service/management-browser.test.cjs "$RUNNER_TEMP/skyline-management-browser.json"
           node skyline-estates/security/service/game-controls-browser.test.cjs "$RUNNER_TEMP/skyline-controls-browser.json"
           node skyline-estates/security/service/web-connection-browser.test.cjs "$RUNNER_TEMP/skyline-web-connection-browser.json"
