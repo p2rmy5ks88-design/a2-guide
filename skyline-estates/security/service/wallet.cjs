@@ -56,11 +56,11 @@ function applyEvent(input,event,now){
 }
 function createWalletService({db,verifyIdToken,verifyPurchase,verifyNotification,environment,clock=Date.now,sealProof=null,spendCatalog=null}){
  if(!db||typeof verifyIdToken!=='function'||typeof verifyPurchase!=='function'||typeof verifyNotification!=='function'||!['sandbox','production'].includes(environment))throw Error('Trusted wallet dependencies and an explicit environment are required');
- const identity=identityVerifier(async(token,checkRevoked)=>{
-  const user=await verifyIdToken(token,checkRevoked);
+ async function identity(token){
+  let user;const uid=await identityVerifier(async(value,checkRevoked)=>{user=await verifyIdToken(value,checkRevoked);return user})(token);
   if(!['apple.com','google.com','password'].includes(user?.firebase?.sign_in_provider)||user.firebase.sign_in_provider==='password'&&user.email_verified!==true)fail('persistent-account-required');
-  return user;
- });
+  return uid;
+ }
  async function commit(event){
   let result;const at=clock();
   const tx=await db.ref('skylineWalletV1/'+environment).transaction(root=>{const applied=applyEvent(root,event,at);result=applied.result;return applied.root});
