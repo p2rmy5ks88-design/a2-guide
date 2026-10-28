@@ -33,3 +33,16 @@ Initial tested implementation: 92dd9899fdd2bb7712e6864b8c51a14df2c0ef3d (PR #43)
 The first HTTP browser run passed create/join/invitation recovery but checked the guest handoff counter before its asynchronous lobby read completed. The test now waits for both handoffs explicitly; no runtime change was made for that timing correction.
 
 The host-transfer waiting-room invitation controls and confirmed-membership-loss cleanup were added after reviewing the first corrected run. Their final HTTP/browser/gameplay evidence follows after completion.
+
+
+## Final validation
+
+Final tested implementation: bdf0ad048aa78f711701b79c780223008773d4a3. The final documentation-only commit does not change that runtime.
+
+- [Final security/Auth/Database run 40743241325](https://github.com/p2rmy5ks88-design/a2-guide/actions/runs/40743241325): 234 integration cases, 57 candidate permission checks, 21 room-entry/helper cases and all previous kernels/services passed. [Security artifact](https://github.com/p2rmy5ks88-design/a2-guide/actions/runs/40743241325/artifacts/12840337746).
+- [Final HTTP/browser/gameplay run 40743240793](https://github.com/p2rmy5ks88-design/a2-guide/actions/runs/40743240793): 11 room-entry cases and 13 waiting-room cases over real HTTP; 24 reference-dashboard checks including 48 evolved-token/property-rarity games; 175 standard seeded games plus 56 simulation regressions; prior control/source-parity/save/offline/smoke suites all passed. No captured page exceptions or failed cash/house/hotel assertions. Genuine WebGL was available; offline cold startup is verified separately from the worker-disabled view suite.
+- Normal-start Classic/Quick/timed matches ended in 51/56/11 rounds, Seat 0 winner each under the automated policy. These are automated human-seat matches, not new physical-device certification. [Per-game/browser artifact](https://github.com/p2rmy5ks88-design/a2-guide/actions/runs/40743240793/artifacts/12840433441) retains rounds, errors, bank/cash checks and outcomes.
+
+The intermediate corrected implementation also passed its full browser run before extending host-transfer UI coverage. The extra slice wires explicit invitation management into the waiting room for a new host and safely clears a confirmed, already-committed admission after a fresh authenticated membership denial. Transient/uncertain failures still preserve the journal. Both paths passed the final browser/helper coverage.
+
+Public title routing and native bundles are not switched to this preview, and no live Firebase rule/function/billing change or store release occurred. The next step is preparing a protected Firebase staging deployment and its production authentication/configuration boundary, not claiming the complete multiplayer rollout is done.
