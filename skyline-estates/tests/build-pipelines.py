@@ -48,4 +48,7 @@ for platform in ('android', 'ios', 'desktop'):
     if platform == 'ios':
         check('ios: device IPA is unsigned, ARM64 and includes latest UI', 'CODE_SIGNING_REQUIRED=NO' in text and 'lipo "$PRODUCT/App" -verify_arch arm64' in text and 'skyline-estates-ios-sideloadly-unsigned' in text and 'public/reference-redesign.js' in text and 'platform +IOS$' in text)
     check(f'{platform}: checks the complete packaged web bundle', 'verify-bundle.cjs' in text)
+ios = (ROOT / '.github/workflows/skyline-ios.yml').read_text()
+check('ios: requires macOS 26 runner and verifies toolchain before install', 'runs-on: macos-26' in ios and ios.index('verify-ios-sdk.py toolchain') < ios.index('- name: Install'))
+check('ios: verifies the linked device SDK and retains toolchain evidence', 'verify-ios-sdk.py" binary' in ios and 'skyline-ios-toolchain.txt' in ios)
 print(f'{checks} build pipeline checks passed')
