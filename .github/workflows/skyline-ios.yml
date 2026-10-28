@@ -10,6 +10,7 @@ on:
   pull_request:
     paths:
       - "skyline-estates/game.html"
+      - "skyline-estates/reference-redesign.js"
       - "skyline-estates/lib/**"
       - "skyline-estates/riders/**"
       - "skyline-estates/photos/**"
@@ -26,6 +27,7 @@ on:
     branches: [main]
     paths:
       - "skyline-estates/game.html"
+      - "skyline-estates/reference-redesign.js"
       - "skyline-estates/lib/**"
       - "skyline-estates/riders/**"
       - "skyline-estates/photos/**"
@@ -84,6 +86,38 @@ jobs:
             -destination 'generic/platform=iOS Simulator' -derivedDataPath "$RUNNER_TEMP/skyline-ios" CODE_SIGNING_ALLOWED=NO build 2>&1 | tee "$RUNNER_TEMP/skyline-ios-build.log" | tail -n 20
           test -d "$RUNNER_TEMP/skyline-ios/Build/Products/Release-iphonesimulator/App.app"
           tar -czf "$RUNNER_TEMP/skyline-ios-simulator.tar.gz" -C "$RUNNER_TEMP/skyline-ios/Build/Products/Release-iphonesimulator" App.app
+      - name: Build unsigned iPhone IPA for Sideloadly
+        working-directory: skyline-estates-app/ios/App
+        run: |
+          if [ -d App.xcworkspace ]; then T="-workspace App.xcworkspace"; else T="-project App.xcodeproj"; fi
+          xcodebuild $T -scheme App -configuration Release -sdk iphoneos \
+            -destination 'generic/platform=iOS' -derivedDataPath "$RUNNER_TEMP/skyline-ios-device" \
+            ARCHS=arm64 CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" build \
+            2>&1 | tee "$RUNNER_TEMP/skyline-ios-device-build.log" | tail -n 20
+          PRODUCT="$RUNNER_TEMP/skyline-ios-device/Build/Products/Release-iphoneos/App.app"
+          test -d "$PRODUCT"
+          test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$PRODUCT/Info.plist")" = 'com.kenstylez.skylineestates'
+          lipo -verify_arch arm64 "$PRODUCT/App"
+          xcrun vtool -show-build "$PRODUCT/App" | tee "$RUNNER_TEMP/skyline-ios-device-platform.txt"
+          grep -Eq 'platform +IOS$' "$RUNNER_TEMP/skyline-ios-device-platform.txt"
+          cmp "$GITHUB_WORKSPACE/skyline-estates/reference-redesign.js" "$PRODUCT/public/reference-redesign.js"
+          mkdir -p "$RUNNER_TEMP/skyline-ipa/Payload"
+          ditto "$PRODUCT" "$RUNNER_TEMP/skyline-ipa/Payload/App.app"
+          (cd "$RUNNER_TEMP/skyline-ipa" && zip -qry "$RUNNER_TEMP/Skyline-Estates-Sideloadly-unsigned.ipa" Payload)
+          unzip -t "$RUNNER_TEMP/Skyline-Estates-Sideloadly-unsigned.ipa" | tail -n 1
+          (cd "$RUNNER_TEMP" && shasum -a 256 Skyline-Estates-Sideloadly-unsigned.ipa > Skyline-Estates-Sideloadly-unsigned.ipa.sha256)
+          printf 'Skyline Estates — unsigned iPhone test build\nSource: %s\nVersion: %s (%s)\nBundle ID: com.kenstylez.skylineestates\nArchitecture/platform: arm64 iOS device\nRe-sign with Sideloadly before installation. No TestFlight/App Store upload.\nThe app uses separate local storage from the web version.\n' "$GITHUB_SHA" "$VERSION_NAME" "$VERSION_CODE" > "$RUNNER_TEMP/SIDELOAD-README.txt"
+      - name: Upload unsigned iPhone IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: skyline-estates-ios-sideloadly-unsigned
+          retention-days: 30
+          path: |
+            ${{ runner.temp }}/Skyline-Estates-Sideloadly-unsigned.ipa
+            ${{ runner.temp }}/Skyline-Estates-Sideloadly-unsigned.ipa.sha256
+            ${{ runner.temp }}/SIDELOAD-README.txt
+            ${{ runner.temp }}/skyline-ios-device-platform.txt
+          if-no-files-found: error
       - name: Archive and upload to TestFlight
         if: github.event_name == 'workflow_dispatch' && inputs.publish && env.ASC_KEY_B64 != ''
         working-directory: skyline-estates-app/ios/App
@@ -117,4 +151,5 @@ jobs:
           path: |
             ${{ runner.temp }}/skyline-ios-simulator.tar.gz
             ${{ runner.temp }}/skyline-ios-build.log
+            ${{ runner.temp }}/skyline-ios-device-build.log
           if-no-files-found: warn

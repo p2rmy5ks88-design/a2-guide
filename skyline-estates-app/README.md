@@ -8,7 +8,7 @@ Pull requests and pushes to `main` that change the game, bundled assets, shared 
 | Workflow | Build-only result |
 | --- | --- |
 | **Skyline Estates Android** | Debug APK as an Actions artifact. |
-| **Skyline Estates iOS** | Unsigned simulator app and build log as Actions artifacts. |
+| **Skyline Estates iOS** | Unsigned simulator app plus an ARM64 iPhone IPA for re-signing with Sideloadly, with logs/checksum as Actions artifacts. |
 
 To publish, run the appropriate workflow manually and explicitly enable **publish**. Android then updates the sideload test release and, if signing credentials are configured, builds signed release outputs. iOS archives and uploads to TestFlight only when publishing is enabled and App Store Connect credentials are configured. Build success does not establish device, purchase or store acceptance.
 
@@ -44,3 +44,7 @@ npm run sync            # after changing the game
 - The radio tracks and Firebase settings are copied from `../eko-estates/` when `npm run build:web` runs.
 - In-app purchases use `cordova-plugin-purchase` (works in Capacitor). Create the four consumable coin products listed in `STORE_LISTING.md` before testing purchases on a device.
 - CI checks the packaged game, every required local asset and all five bundled fonts before native compilation. Pipeline guards cover trigger paths and publication boundaries.
+
+
+### Sideloadly iPhone testing
+The `skyline-estates-ios-sideloadly-unsigned` artifact contains `Skyline-Estates-Sideloadly-unsigned.ipa`, SHA-256 and build metadata. It is an iPhone-device build, not a simulator app, and is not installable until Sideloadly signs it with your Apple ID. No signing secrets or store upload are used for build-only runs. Keep the same Apple ID/bundle identifier when updating an existing sideloaded copy to preserve its local data. Native and web local saves are separate. The existing native app remains landscape-only.

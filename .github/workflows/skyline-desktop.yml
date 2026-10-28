@@ -10,6 +10,7 @@ on:
   pull_request:
     paths:
       - "skyline-estates/game.html"
+      - "skyline-estates/reference-redesign.js"
       - "skyline-estates/lib/**"
       - "skyline-estates/riders/**"
       - "skyline-estates/photos/**"
@@ -26,6 +27,7 @@ on:
     branches: [main]
     paths:
       - "skyline-estates/game.html"
+      - "skyline-estates/reference-redesign.js"
       - "skyline-estates/lib/**"
       - "skyline-estates/riders/**"
       - "skyline-estates/photos/**"
