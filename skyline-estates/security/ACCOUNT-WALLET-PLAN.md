@@ -18,6 +18,8 @@ The owner selected Apple, Google and email sign-in. These providers must be expl
 - Explicit sandbox/production separation, revoked-token checks, supported persistent providers and verified password email are required. Anonymous/custom room identities cannot claim a paid wallet.
 - iOS CI now uses macOS 26, checks Xcode and iPhoneOS SDK >=26 before compilation and checks the actual device binary linked SDK after compilation. The minimum supported iPhone OS version is unchanged. This is a build requirement, not App Store acceptance.
 
+The foundation uses the existing Realtime Database emulator through a privileged server adapter. Its whole-wallet-namespace transaction is intentionally a correctness prototype: production needs contention/load validation, bounded history queries and a reviewed partitioning strategy (or a Firestore multi-document transaction adapter) before enabling purchases. It must not be presented as a ready-to-scale deployed wallet. Firebase Authentication supplies account identity; only server endpoints may change balances.
+
 ## Remaining implementation, in order
 
 1. Account UI and native Apple/Google/email authentication, safe provider linking and recovery; approximately 3–5 hours plus provider-console setup/testing. Keep the current local progress backup. Review migration rules before accepting any device-owned coins or XP into authoritative balances; unsigned local totals cannot be trusted as purchased currency. Offer a clear account/device save choice and protect existing collections.
