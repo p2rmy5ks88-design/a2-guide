@@ -3,7 +3,7 @@
 // Store verifiers MUST authenticate with Apple/Google and resolve ownership from
 // appAccountToken / obfuscatedAccountId mappings, never client-supplied uid/coins.
 const {createHash}=require('node:crypto');
-const {identityVerifier}=require('./admission.cjs');
+const {createWalletIdentity}=require('./wallet-auth.cjs');
 const APP='com.kenstylez.skylineestates';
 const CATALOG=Object.freeze(Object.fromEntries([
  ['coins_500',500],['coins_1200',1200],['coins_3000',3000],['coins_7000',7000]
@@ -54,13 +54,22 @@ function applyEvent(input,event,now){
  }
  return {root,result:{duplicate:false,refunded:event.type==='refund'}};
 }
+function validateSpend(input,catalog){
+ if(!catalog)fail('wallet-spending-not-configured');
+ if(!input||Object.keys(input).some(k=>!['requestId','item'].includes(k))||!/^[A-Za-z0-9_-]{16,64}$/.test(input.requestId||'')||!Object.hasOwn(catalog,input.item))fail('invalid-spend-request');
+ const offer={...catalog[input.item]};if(!Number.isSafeInteger(offer.coins)||offer.coins<=0||!Number.isSafeInteger(offer.wins??0)||(offer.wins??0)<0)fail('invalid-server-catalog');
+ return{requestId:input.requestId,item:input.item,offer};
+}
+function applySpend(value,{uid,requestId,item,offer},now){
+ const root=copy(value||{}),key=hash(uid),op=hash(requestId),itemKey=hash(item),account=root.accounts?.[key];if(!account)fail('insufficient-coins');
+ account.operations||={};const prior=account.operations[op];if(prior){if(prior.item!==item)fail('idempotency-conflict');return{root,result:prior.result}}
+ account.owned||={};const owned=account.owned[itemKey]===true;
+ if(!owned){if(account.debt>0)fail('refund-deficit');if(account.coins<offer.coins)fail('insufficient-coins');if((account.wins||0)<(offer.wins||0))fail('wins-required');balance(account,-offer.coins);account.owned[itemKey]=true;account.ledger['spend_'+op]={type:'spend',coins:-offer.coins,balance:account.coins,debt:account.debt,item,at:now}}
+ const result={owned:true,item,alreadyOwned:owned};account.operations[op]={item,result};return{root,result};
+}
 function createWalletService({db,verifyIdToken,verifyPurchase,verifyNotification,environment,clock=Date.now,sealProof=null,spendCatalog=null}){
  if(!db||typeof verifyIdToken!=='function'||typeof verifyPurchase!=='function'||typeof verifyNotification!=='function'||!['sandbox','production'].includes(environment))throw Error('Trusted wallet dependencies and an explicit environment are required');
- async function identity(token){
-  let user;const uid=await identityVerifier(async(value,checkRevoked)=>{user=await verifyIdToken(value,checkRevoked);return user})(token);
-  if(!['apple.com','google.com','password'].includes(user?.firebase?.sign_in_provider)||user.firebase.sign_in_provider==='password'&&user.email_verified!==true)fail('persistent-account-required');
-  return uid;
- }
+ const identity=createWalletIdentity(verifyIdToken);
  async function commit(event){
   let result,rejection;const at=clock();
   const tx=await db.ref('skylineWalletV1/'+environment).transaction(root=>{
@@ -97,19 +106,11 @@ function createWalletService({db,verifyIdToken,verifyPurchase,verifyNotification
    return{state:job?.state||'attention',finishAllowed:job?.state==='done'};
   },
   async spend(token,input){
-   const uid=await identity(token);
-   if(!spendCatalog)fail('wallet-spending-not-configured');
-   if(!input||Object.keys(input).some(k=>!['requestId','item'].includes(k))||!/^[A-Za-z0-9_-]{16,64}$/.test(input.requestId||'')||!Object.hasOwn(spendCatalog,input.item))fail('invalid-spend-request');
-   const offer={...spendCatalog[input.item]};if(!Number.isSafeInteger(offer.coins)||offer.coins<=0||!Number.isSafeInteger(offer.wins??0)||(offer.wins??0)<0)fail('invalid-server-catalog');
-   const key=hash(uid),op=hash(input.requestId),itemKey=hash(input.item);let outcome,rejection;
+   const uid=await identity(token),command={uid,...validateSpend(input,spendCatalog)},at=clock();let outcome,rejection;
    const tx=await db.ref('skylineWalletV1/'+environment).transaction(value=>{
-    outcome=null;rejection=null;try{
-    const root=copy(value||{}),account=root.accounts?.[key];if(!account)fail('insufficient-coins');
-    account.operations||={};const prior=account.operations[op];if(prior){if(prior.item!==input.item)fail('idempotency-conflict');outcome=prior.result;return root}
-    account.owned||={};const owned=account.owned[itemKey]===true;
-    if(!owned){if(account.debt>0)fail('refund-deficit');if(account.coins<offer.coins)fail('insufficient-coins');if((account.wins||0)<(offer.wins||0))fail('wins-required');balance(account,-offer.coins);account.owned[itemKey]=true;account.ledger['spend_'+op]={type:'spend',coins:-offer.coins,balance:account.coins,debt:account.debt,item:input.item,at:clock()}}
-    outcome={owned:true,item:input.item,alreadyOwned:owned};account.operations[op]={item:input.item,result:outcome};return root;
-    }catch(error){if(!error.code)throw error;rejection=error;return value}
+    outcome=null;rejection=null;
+    try{const applied=applySpend(value,command,at);outcome=applied.result;return applied.root}
+    catch(error){if(!error.code)throw error;rejection=error;return value}
    });if(!tx.committed)fail('wallet-unavailable');if(rejection)throw rejection;return outcome;
   },
   async history(token){
@@ -118,4 +119,4 @@ function createWalletService({db,verifyIdToken,verifyPurchase,verifyNotification
   }
  };
 }
-module.exports={createWalletService,applyEvent,normalize,CATALOG,APP};
+module.exports={createWalletService,applyEvent,applySpend,validateSpend,normalize,CATALOG,APP};

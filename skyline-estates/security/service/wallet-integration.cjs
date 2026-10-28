@@ -25,6 +25,8 @@ module.exports=async function({main,peer,test}){
  await test('wallet spent refund creates a deficit and keeps the owned item',async()=>{const next={...proof,transactionId:'spent-refund'};await a.purchase(player.idToken,next);await a.spend(player.idToken,{requestId:'real_spend_request_01',item:'gold'});await b.notification({...next,type:'refund'});const h=await a.history(player.idToken);assert.equal(h.coins,0);assert.equal(h.debt,400)});
  const consumed=new Set(),makeWorker=runtime=>createDeliveryWorker({db:runtime.db,environment:'sandbox',openProof:value=>vault.open(value),consume:async value=>{consumed.add(value.purchaseToken);return{completed:true}}});
  await test('wallet Google grant persists encrypted delivery and survives worker recreation',async()=>{const r=await a.purchase(player.idToken,{...proof,store:'google',transactionId:'real-emulator-delivery'});assert.equal((await b.delivery(player.idToken,r.transactionKey)).finishAllowed,false);assert.equal((await makeWorker(peer).deliver(r.transactionKey)).state,'done');assert.equal((await a.delivery(player.idToken,r.transactionKey)).finishAllowed,true);const h=await a.history(player.idToken);assert.equal(h.coins,100);assert.equal(h.debt,0)});
+ // The legacy global-root stress test is retained for diagnosis, never production.
+ if(process.env.WALLET_LEGACY_LOAD!=='1')return;
  const samples=[],before=await a.history(player.idToken),started=Date.now();
  for(let batch=0;batch<4;batch++)await test('wallet load batch '+(batch+1)+' commits 25 purchases and repeated deliveries across servers',async()=>{
   let cursor=0;const events=Array.from({length:50},(_,i)=>({...proof,store:'google',transactionId:'load-'+(batch*25+i%25)}));

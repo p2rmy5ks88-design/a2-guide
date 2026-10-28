@@ -2,7 +2,7 @@ const fs=require('node:fs'),path=require('node:path'),http=require('node:http'),
 const {createEmulatorRuntime}=require('./emulator-runtime.cjs'),{createAdmissionService}=require('./admission.cjs'),{createHttpHandler}=require('./http.cjs');
 const report={projectId:'demo-skyline-phase1',checks:[],failure:null},servers=[],runtimes=[];let clientModule;
 const id=()=>crypto.randomUUID(),settings={mode:'classic',city:'lagos',cash:1600,ffa:true,even:false,auction:true};
-async function test(name,fn){let timer;try{await Promise.race([fn(),new Promise((_,reject)=>timer=setTimeout(()=>reject(Error('Case timeout: '+name)),15000))]);report.checks.push({name,passed:true});console.log('PASS service',name)}finally{clearTimeout(timer)}}
+async function test(name,fn,timeoutMs=15000){let timer;try{await Promise.race([fn(),new Promise((_,reject)=>timer=setTimeout(()=>reject(Error('Case timeout: '+name)),timeoutMs))]);report.checks.push({name,passed:true});console.log('PASS service',name)}finally{clearTimeout(timer)}}
 const denied=(fn,status,code)=>assert.rejects(fn,e=>e.status===status&&(!code||e.code===code));
 async function account(){const r=await fetch(`http://${process.env.FIREBASE_AUTH_EMULATOR_HOST}/identitytoolkit.googleapis.com/v1/accounts:signUp?key=demo-key`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({returnSecureToken:true})});assert.equal(r.status,200,'local auth signup');const b=await r.json();return{uid:b.localId,token:b.idToken}}
 async function serve(runtime,options={}){const allowedOrigins=new Set(['http://127.0.0.1:7777']),service=createAdmissionService({db:runtime.db,verifyIdToken:runtime.auth.verifyIdToken.bind(runtime.auth),...options}),server=http.createServer(createHttpHandler(service,{allowedOrigins}));server.requestTimeout=5000;server.headersTimeout=3000;await new Promise(r=>server.listen(0,'127.0.0.1',r));servers.push(server);const baseUrl=`http://127.0.0.1:${server.address().port}/`;return{service,baseUrl,client:user=>clientModule.createAdmissionClient({baseUrl,getIdToken:async()=>user.token})}}
@@ -74,6 +74,7 @@ async function serve(runtime,options={}){const allowedOrigins=new Set(['http://1
  await require('./room-entry-integration.cjs')({main,peer,api,apiPeer,account,id,test,denied});
  await require('./start-integration.cjs')({main,peer,api,apiPeer,account,id,test,denied,servers});
  await require('./accounts-integration.cjs')({main,test});
+ await require('./firestore-wallet-integration.cjs')({main,peer,test});
  await require('./wallet-integration.cjs')({main,peer,test});
  await require('./management-integration.cjs')({main,peer,api,apiPeer,account,id,test,denied,servers});
  console.log('ADMISSION SUMMARY',JSON.stringify({checks:report.checks.length,projectId:'demo-skyline-phase1',instances:2,liveDeployment:false}));
