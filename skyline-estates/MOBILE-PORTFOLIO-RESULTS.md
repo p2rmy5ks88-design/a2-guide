@@ -13,6 +13,11 @@ Responsive mode uses widths up to 600 CSS pixels, or widths up to 1000 with heig
 
 Local focused GPU-disabled Chrome suite: 22 UI/reward checks, zero browser errors. New regressions cover profile menu access/keyboard/dismissal, 360×800 / 360×420 (keyboard-like short portrait) / 390×844 / 430×932 / 480×960 / 844×390 navigation, actual mobile views, upgrade cancellation and exact 4,000-coin Mythic purchase, expanded growth after purchase, identical active match state, desktop restoration of six metrics and Settings gear. Existing stage image/preview/reward/legacy checks remain. These are emulated browser viewports, not a physical iPhone test.
 
-No engine source, pinned rules hash, financial rules, unlock requirements, saved games, artwork, service permissions or paid services change. Offline manifest regenerated for the UI script (138 local resources). Full existing CI results will be appended after completion.
+No engine source, pinned rules hash, financial rules, unlock requirements, saved games, artwork, service permissions or paid services change. Offline manifest regenerated for the UI script (138 local resources). Full existing CI passed; evidence follows below.
 
 A final narrow/short-portrait check confirmed that the compact landscape header could shrink the profile target below 44px. The single-row header is now limited to widths above 600px; narrow phone headers retain two rows even with a short viewport. The extra regression checks the profile target remains reachable.
+
+
+## Final CI evidence
+
+Tested implementation `913a2bc94e0e07571d450e581a5b83642b3294b0`: [full browser/stability run](https://github.com/p2rmy5ks88-design/a2-guide/actions/runs/40663522058) passed. The reference suite passed 23 checks with WebGL disabled and zero browser errors, including the six mobile viewport cases and 48 seeded rarity games. The workflow also passed 175 standard games, 56 stability regressions, 19 complete-match checks, 35 human-flow checks, 16 browser-smoke checks and all earlier board/service/offline/save comparisons. Per-game errors, rounds, cash/bank invariants and outcomes plus screenshots are in `skyline-stability-results`. The final report commit changes documentation only.
