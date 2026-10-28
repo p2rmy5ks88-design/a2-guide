@@ -6,7 +6,7 @@ Play on the web: https://p2rmy5ks88-design.github.io/a2-guide/skyline-estates/
 
 ## Current development status
 
-See [Phase 1 closeout and acceptance checklist](PHASE1-CLOSEOUT.md). The web game and iOS 1.0.21 Sideloadly test build include the current Collection/Portfolio and illustrated setup tokens. Automated browser/native build checks passed. Physical-device acceptance, production authoritative multiplayer and store purchase validation remain open in issue #2.
+See [Phase 1 closeout and acceptance checklist](PHASE1-CLOSEOUT.md). The web game and iOS 1.0.21 Sideloadly test build include the current Collection/Portfolio and illustrated setup tokens. Automated browser/native build checks passed. The owner reports successful physical iOS testing with no issues. Android physical-device acceptance, production authoritative multiplayer and store purchase validation remain open in issue #2.
 
 Progress is device-local; browser and native saves are separate. Unsigned rewards/promo balances are not verified competitive or purchase entitlements.
 
