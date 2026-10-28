@@ -38,9 +38,21 @@ The free daily wheel still has eight equal outcomes, including XP/booster slots.
 - 10 source-kernel property checks covering all five rent tiers, ownership, mortgage/off/legacy compatibility, nonstacking shared protection, physical building costs/banks, trusted setup bounds/detachment and public projection.
 - 483 distinct-token gameplay/compatibility checks across sixteen tokens and six tiers.
 - Reference browser suite: desktop and phone layout, all real data views, stage preview side effects, win gate, cancel/reconfirm, manual future-game upgrades, completion/reload/replay and 48 seeded evolved-token/property-rarity games. Records rounds, errors, cash and both bank invariants and outcomes in uploaded JSON.
-- Full existing security/emulator and browser stability suites run in pull-request CI. Final run evidence follows after completion.
+- Full existing security/emulator and browser stability suites run in pull-request CI. The [full browser run](https://github.com/p2rmy5ks88-design/a2-guide/actions/runs/40640010981) passed on implementation commit `551f2115f4b7721c0660dfb1a3bdd93d8b52d7eb`.
 - Generated standalone/offline artifacts include the new local UI script. Board/scenery/art files unchanged.
 
 ## Remaining limits
 
 Progression remains a device profile, not a signed competitive wallet or multi-device account ledger. The browser lock covers upgrade writers, not all legacy profile writers; cross-tab gameplay/profile updates are not a transactional server system. Retained receipts are bounded. Production trusted roster policy must verify entitlement snapshots; this change does not deploy the optional authoritative service, change Firebase permissions, enable paid services, or release native/store apps. Broader Phase 1 work remains tracked in issue #2.
+
+
+## Final run evidence
+
+Tested implementation: `551f2115f4b7721c0660dfb1a3bdd93d8b52d7eb`; audited game-source SHA256 `188a50e042f252e7aff4f80300c3ae5e47da965bf4c5add50e91a26f1b7faa7e`. Subsequent report commit changes documentation only.
+
+- [Security/emulator run](https://github.com/p2rmy5ks88-design/a2-guide/actions/runs/40640010977): 22 economy, 10 property, 483 token, 217 account/database integration and 57 candidate permission checks passed, alongside all existing source-kernel/service suites. Demo emulator only.
+- [Browser/stability run](https://github.com/p2rmy5ks88-design/a2-guide/actions/runs/40640010981): 14 reference UI/reward checks (zero browser errors); 48 seeded token/property-rarity simulations; 175 standard simulations; 56 stability regressions; 19 complete-match, 35 human-flow and 16 browser smoke checks passed, alongside all previous board, service-comparison, offline, online and save suites. Per-game rounds, outcome, errors, cash and bank flags are preserved in the run artifact `skyline-stability-results` (`skyline-reference-dashboard.json` and `skyline-phase1.json`).
+- Local seeded rarity run: all 48 games reached last-player victory across 2,897 total rounds; zero errors, invalid cash or house/hotel conservation failures. No simulation awarded profile progress. AI simulation outcomes establish mechanical stability, not human win-rate or retention balance.
+- Complete source-driven UI matches in CI: classic 38 rounds, quick 35 rounds, timed 11 rounds; cash and banks held throughout.
+- Existing iOS and desktop packaging checks passed. Android packaging first attempt could not download Maven dependencies (HTTP 403), before application compilation; its single retry passed. The successful [Android retry](https://github.com/p2rmy5ks88-design/a2-guide/actions/runs/40640010960/attempts/2) is a test APK build, not a native/store release. No store release is published by this milestone.
+- Generated standalone/offline output check passed; 138 local resources include the reference UI script. No artwork/scenery files changed.
