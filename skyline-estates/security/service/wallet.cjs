@@ -68,6 +68,7 @@ function applySpend(value,{uid,requestId,item,offer},now){
  const result={owned:true,item,alreadyOwned:owned};account.operations[op]={item,result};return{root,result};
 }
 function createWalletService({db,verifyIdToken,verifyPurchase,verifyNotification,environment,clock=Date.now,sealProof=null,spendCatalog=null}){
+ if(environment==='production')throw Error('The shared-root wallet is a legacy sandbox prototype; use the scoped Firestore wallet');
  if(!db||typeof verifyIdToken!=='function'||typeof verifyPurchase!=='function'||typeof verifyNotification!=='function'||!['sandbox','production'].includes(environment))throw Error('Trusted wallet dependencies and an explicit environment are required');
  const identity=createWalletIdentity(verifyIdToken);
  async function commit(event){

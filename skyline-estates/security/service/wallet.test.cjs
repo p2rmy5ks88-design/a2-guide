@@ -14,7 +14,7 @@ function fixture(){
 const signed=event=>({signed:true,event});
 async function test(name,fn){await fn();count++;console.log('PASS wallet',name)}
 (async()=>{
- await test('all trusted dependencies and an explicit environment are mandatory',()=>{const f=fixture();for(const key of ['db','verifyIdToken','verifyPurchase','verifyNotification','environment'])assert.throws(()=>createWalletService({...f.dependencies,[key]:null}));assert.throws(()=>createWalletService({...f.dependencies,environment:'test'}))});
+ await test('all trusted dependencies and an explicit environment are mandatory',()=>{const f=fixture();for(const key of ['db','verifyIdToken','verifyPurchase','verifyNotification','environment'])assert.throws(()=>createWalletService({...f.dependencies,[key]:null}));assert.throws(()=>createWalletService({...f.dependencies,environment:'test'}));assert.throws(()=>createWalletService({...f.dependencies,environment:'production'}),/legacy sandbox prototype/)});
  await test('Apple Google and verified email share the same UID wallet',async()=>{const f=fixture();await f.service.purchase('alice',signed(proof));for(const token of ['alice','google','email'])assert.equal((await f.service.history(token)).coins,500)});
  await test('anonymous unverified email and invalid tokens cannot access paid wallets',async()=>{const f=fixture();for(const token of ['guest','unverified','bad']){await assert.rejects(()=>f.service.purchase(token,signed(proof)));await assert.rejects(()=>f.service.history(token))}assert.equal(f.root(),null)});
  await test('unsigned client amounts do not reach the database',async()=>{const f=fixture();await assert.rejects(()=>f.service.purchase('alice',{...proof,coins:500000,verified:true}),/invalid-store-proof/);assert.equal(f.root(),null)});

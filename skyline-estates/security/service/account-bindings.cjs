@@ -12,7 +12,7 @@ function createAccountBindings({db,verifyIdToken,environment,clock=Date.now}){
     const record={uid,apple,google,status:'active',createdAt:clock()};tx.create(ref,record);tx.create(db.doc(base+'/appleBindings/'+apple),{uid});tx.create(db.doc(base+'/googleBindings/'+google),{uid});return{appAccountToken:apple,obfuscatedAccountId:google};
    });
   },
-  async resolveApple(value){if(typeof value!=='string'||!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(value))return null;return(await db.doc(base+'/appleBindings/'+value).get()).data()?.uid||null},
+  async resolveApple(value){if(typeof value==='string')value=value.toLowerCase();if(typeof value!=='string'||!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(value))return null;return(await db.doc(base+'/appleBindings/'+value).get()).data()?.uid||null},
   async resolveGoogle(value){if(typeof value!=='string'||!/^[a-f0-9]{64}$/.test(value))return null;return(await db.doc(base+'/googleBindings/'+value).get()).data()?.uid||null}
  };
 }
