@@ -30,6 +30,8 @@ jobs:
         run: python3 skyline-estates/build.py --check
       - name: Test saved turns and seeded games
         run: |
+          node skyline-estates/tests/promo-codes.cjs
+          node skyline-estates/tests/promo-browser.cjs
           node skyline-estates/tests/token-mastery.cjs
           node skyline-estates/security/service/property-rarity.test.cjs
           SKYLINE_NO_WEBGL=1 node skyline-estates/tests/reference-dashboard-browser.cjs "$RUNNER_TEMP/skyline-reference-dashboard.json"
