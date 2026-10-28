@@ -2,8 +2,8 @@
 const {APP,CATALOG}=require('./wallet.cjs');
 const fail=code=>{throw Object.assign(new Error(code),{code,permanent:true})};
 const validOwner=uid=>typeof uid==='string'&&/^[A-Za-z0-9_-]{1,128}$/.test(uid);
-function createAppleStoreAdapter({verifier,resolveAccountToken,environment}){
- if(!verifier||typeof verifier.verifyAndDecodeTransaction!=='function'||typeof verifier.verifyAndDecodeNotification!=='function'||typeof resolveAccountToken!=='function'||!['sandbox','production'].includes(environment))throw Error('Apple signed-data verifier and server ownership map are required');
+function createAppleStoreAdapter({verifier,getTransactionInfo,resolveAccountToken,environment}){
+ if(!verifier||typeof verifier.verifyAndDecodeTransaction!=='function'||typeof verifier.verifyAndDecodeNotification!=='function'||typeof getTransactionInfo!=='function'||typeof resolveAccountToken!=='function'||!['sandbox','production'].includes(environment))throw Error('Apple signed-data verifier and server ownership map are required');
  const expected=environment==='sandbox'?'Sandbox':'Production';
  async function decode(signed,type){
   if(typeof signed!=='string'||signed.length<20||signed.length>40000)fail('invalid-apple-proof');
@@ -14,7 +14,11 @@ function createAppleStoreAdapter({verifier,resolveAccountToken,environment}){
   return{store:'apple',environment,appId:APP,type,transactionId:t.transactionId,productId:t.productId,quantity:1,state:'purchased',ownerUid};
  }
  return{
-  verifyPurchase:async proof=>{if(!proof||Object.keys(proof).some(k=>k!=='signedTransaction'))fail('invalid-apple-proof');return decode(proof.signedTransaction,'purchase')},
+  verifyPurchase:async proof=>{if(!proof||Object.keys(proof).some(k=>k!=='signedTransaction'))fail('invalid-apple-proof');const original=await decode(proof.signedTransaction,'purchase');
+   // A previously valid JWS may predate a refund; query current Apple status.
+   const info=await getTransactionInfo(original.transactionId),current=await decode(info?.signedTransactionInfo,'purchase');
+   if(current.transactionId!==original.transactionId||current.productId!==original.productId||current.ownerUid!==original.ownerUid)fail('apple-current-transaction-mismatch');
+   return current},
   async verifyNotification(signed){
    if(typeof signed!=='string'||signed.length>80000)fail('invalid-apple-notification');
    const n=await verifier.verifyAndDecodeNotification(signed);
@@ -28,7 +32,7 @@ function createGooglePlayAdapter({client,resolveAccountId,environment,clock=Date
  const base='https://androidpublisher.googleapis.com/androidpublisher/v3/applications/'+APP+'/purchases/';
  function input(value){if(!value||!Object.hasOwn(CATALOG,value.productId)||typeof value.purchaseToken!=='string'||!value.purchaseToken||value.purchaseToken.length>4096)fail('invalid-google-proof');return{productId:value.productId,purchaseToken:value.purchaseToken}}
  const endpoint=p=>base+'products/'+encodeURIComponent(p.productId)+'/tokens/'+encodeURIComponent(p.purchaseToken);
- async function state(proof){const p=input(proof),r=await client.request({url:endpoint(p),method:'GET'}),d=r.data;
+ async function state(proof){const p=input(proof);let r;try{r=await client.request({url:endpoint(p),method:'GET'})}catch(error){const status=error?.response?.status;throw Object.assign(Error('google-verification-unavailable'),{permanent:[400,401,403,404,410].includes(status)})}const d=r.data;
   if(!d||d.productId&&d.productId!==p.productId||d.purchaseToken&&d.purchaseToken!==p.purchaseToken||!['0','1'].includes(String(d.consumptionState))||(d.quantity??1)!==1||!Number.isSafeInteger(Number(d.purchaseTimeMillis))||Number(d.purchaseTimeMillis)<=0||Number(d.purchaseTimeMillis)>clock()+300000)fail('invalid-google-purchase');
   if(typeof d.obfuscatedExternalAccountId!=='string'||!/^[A-Za-z0-9_-]{16,64}$/.test(d.obfuscatedExternalAccountId))fail('unbound-google-account');
   if((d.purchaseType===0?'sandbox':'production')!==environment)fail('google-environment-mismatch');

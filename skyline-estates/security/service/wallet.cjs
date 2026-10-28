@@ -62,9 +62,13 @@ function createWalletService({db,verifyIdToken,verifyPurchase,verifyNotification
   return uid;
  }
  async function commit(event){
-  let result;const at=clock();
-  const tx=await db.ref('skylineWalletV1/'+environment).transaction(root=>{const applied=applyEvent(root,event,at);result=applied.result;return applied.root});
-  if(!tx.committed)fail('wallet-unavailable');
+  let result,rejection;const at=clock();
+  const tx=await db.ref('skylineWalletV1/'+environment).transaction(root=>{
+   result=null;rejection=null;
+   try{const applied=applyEvent(root,event,at);result=applied.result;return applied.root}
+   catch(error){if(!error.code)throw error;rejection=error;return root}
+  });
+  if(!tx.committed)fail('wallet-unavailable');if(rejection)throw rejection;
   return {...result,transactionKey:event.transactionKey,finishAllowed:!result.refunded&&event.type==='purchase'&&event.store==='apple'};
  }
  return {
@@ -97,14 +101,16 @@ function createWalletService({db,verifyIdToken,verifyPurchase,verifyNotification
    if(!spendCatalog)fail('wallet-spending-not-configured');
    if(!input||Object.keys(input).some(k=>!['requestId','item'].includes(k))||!/^[A-Za-z0-9_-]{16,64}$/.test(input.requestId||'')||!Object.hasOwn(spendCatalog,input.item))fail('invalid-spend-request');
    const offer={...spendCatalog[input.item]};if(!Number.isSafeInteger(offer.coins)||offer.coins<=0||!Number.isSafeInteger(offer.wins??0)||(offer.wins??0)<0)fail('invalid-server-catalog');
-   const key=hash(uid),op=hash(input.requestId),itemKey=hash(input.item);let outcome;
+   const key=hash(uid),op=hash(input.requestId),itemKey=hash(input.item);let outcome,rejection;
    const tx=await db.ref('skylineWalletV1/'+environment).transaction(value=>{
+    outcome=null;rejection=null;try{
     const root=copy(value||{}),account=root.accounts?.[key];if(!account)fail('insufficient-coins');
     account.operations||={};const prior=account.operations[op];if(prior){if(prior.item!==input.item)fail('idempotency-conflict');outcome=prior.result;return root}
     account.owned||={};const owned=account.owned[itemKey]===true;
     if(!owned){if(account.debt>0)fail('refund-deficit');if(account.coins<offer.coins)fail('insufficient-coins');if((account.wins||0)<(offer.wins||0))fail('wins-required');balance(account,-offer.coins);account.owned[itemKey]=true;account.ledger['spend_'+op]={type:'spend',coins:-offer.coins,balance:account.coins,debt:account.debt,item:input.item,at:clock()}}
     outcome={owned:true,item:input.item,alreadyOwned:owned};account.operations[op]={item:input.item,result:outcome};return root;
-   });if(!tx.committed)fail('wallet-unavailable');return outcome;
+    }catch(error){if(!error.code)throw error;rejection=error;return value}
+   });if(!tx.committed)fail('wallet-unavailable');if(rejection)throw rejection;return outcome;
   },
   async history(token){
    const uid=await identity(token),snap=await db.ref('skylineWalletV1/'+environment+'/accounts/'+hash(uid)).get(),account=snap.val();
