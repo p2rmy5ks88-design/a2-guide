@@ -1,0 +1,23 @@
+# Trusted waiting-room controls — 28 October 2026
+
+Connects the existing opt-in trusted start/seat endpoints to an acknowledged waiting-room controller and DOM controls. The public game still uses its existing lobby; no live service, paid plan, Firebase rule change, native release, board/art/economy or custom-rule change is included.
+
+Implemented: authenticated member/host/seat view validation; monotonic revision/focus retention; own token choice retaining server finish/character; host-only two-player Start; visible timer/minigame gates; durable lost-reply/reload reconciliation; duplicate-choice rejection; shared-client handoff to the existing acknowledged board; cancellation of detached screens. Game journals and foreign-room journals cannot be cleared as lobby operations. UI catalogue/role checks do not replace server-side entitlement/host validation.
+
+Local verification: 17 controller cases using actual start/operation services; 13 real Chrome two-context browser cases using the actual page and service implementations through a file-mode test bridge, zero page exceptions. Existing 20 start-service and 18 game-controller cases passed. Cosmetic animation is disabled only in the browser harness. It compares reward/ownership state rather than the expected changing startup timestamp. Real HTTP/CORS and real Auth/Database checks run separately in CI; seven new admitted-room integration cases cover lost selection/start replies, replacement clients, guest authority, game-controller handoff and membership revocation.
+
+The initial browser assertion exposed a changing lastOpen timestamp, not a reward mutation; the snapshot now specifically compares coins/XP/ownership/wins. A later click needed the standard test animation suppression used by existing board tests. Both harness corrections are recorded; no product gameplay change was made for them.
+
+Remaining: public create/join/invite handling and journaled admission, final product handoff initial-read/partial-mount recovery, source-styled opening announcement, production entitlement resolver/hosting/rules migration, AI workers, unsupported online timers/minigames, disconnect/forfeit policy and trusted rewards/receipts. The onStarted callback owns game-screen retry/cleanup and must not leave partially mounted screens on a failed attempt. This milestone does not claim a completed production multiplayer rollout.
+
+## CI evidence
+
+Tested implementation: 3728785a80c29fe9a76c458961544b74054d1d40 (PR #42).
+
+[Security/Auth/Database run 40731225167](https://github.com/p2rmy5ks88-design/a2-guide/actions/runs/40731225167) passed: 224 integration cases (217 existing plus seven new waiting-room cases), 57 candidate permission checks, the 17 waiting-room controller cases and all previous service/kernel suites. Two independent Admin connections and real HTTP were used by the integration suite. [Retained diagnostics/results](https://github.com/p2rmy5ks88-design/a2-guide/actions/runs/40731225167/artifacts/12835182352).
+
+Initial CI findings: the HTTP browser harness dropped only one reply; unlike the direct local bridge, that can allow transparent HTTP retry. It now holds the selected route unavailable until recovery is visible, then releases it before reconciliation. An existing Keep-versus-reroll integration race reported zero successful promises once before new lobby integration ran. The next complete security run passed its unchanged exactly-one assertion; a sanitized outcome diagnostic was added. No reroll runtime behavior was changed, and this intermittent observation is not claimed as a confirmed gameplay fix.
+
+[Full HTTP/browser/gameplay run 40731224915](https://github.com/p2rmy5ks88-design/a2-guide/actions/runs/40731224915) passed: 13 new waiting-room browser cases against real HTTP with zero captured page exceptions; 24 reference UI checks including 48 evolved-token/property-rarity games; 175 standard seeded simulations and 56 simulation regressions; all previous controls, source-parity, save/recovery/offline and browser smoke suites. Genuine WebGL was available. Normal-start Classic/Quick/timed matches completed in 47/30/11 rounds, Seat 0 winner each under the automated policy. No cash/house/hotel invariant assertion failed. [Per-game/browser results](https://github.com/p2rmy5ks88-design/a2-guide/actions/runs/40731224915/artifacts/12836032520) include rounds, errors, outcomes and cash/building-bank checks. Automated matches are not additional physical-device certification.
+
+Final report commit changes documentation only; the immutable tested implementation above remains the code evidence. No live service/rules activation or paid/native/store release was performed.
