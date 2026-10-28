@@ -46,6 +46,6 @@ for platform in ('android', 'ios', 'desktop'):
     if platform == 'ios':
         check('ios: validates unsigned simulator product and retains log', 'CODE_SIGNING_ALLOWED=NO build' in text and 'test -d "$RUNNER_TEMP/skyline-ios/Build/Products/Release-iphonesimulator/App.app"' in text and 'if: always()' in text)
     if platform == 'ios':
-        check('ios: device IPA is unsigned, ARM64 and includes latest UI', 'CODE_SIGNING_REQUIRED=NO' in text and 'lipo -verify_arch arm64' in text and 'skyline-estates-ios-sideloadly-unsigned' in text and 'public/reference-redesign.js' in text and 'platform +IOS$' in text)
+        check('ios: device IPA is unsigned, ARM64 and includes latest UI', 'CODE_SIGNING_REQUIRED=NO' in text and 'lipo "$PRODUCT/App" -verify_arch arm64' in text and 'skyline-estates-ios-sideloadly-unsigned' in text and 'public/reference-redesign.js' in text and 'platform +IOS$' in text)
     check(f'{platform}: checks the complete packaged web bundle', 'verify-bundle.cjs' in text)
 print(f'{checks} build pipeline checks passed')
