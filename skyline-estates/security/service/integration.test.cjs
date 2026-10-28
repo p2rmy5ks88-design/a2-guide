@@ -71,6 +71,7 @@ async function serve(runtime,options={}){const allowedOrigins=new Set(['http://1
  await require('./ai-integration.cjs')({main,peer,api,apiPeer,account,id,test,denied,runtimes,createEmulatorRuntime});
  await require('./web-connection-integration.cjs')({main,peer,api,apiPeer,account,id,test,denied,servers});
  await require('./control-integration.cjs')({main,peer,api,apiPeer,account,id,test,denied,servers});
+ await require('./room-entry-integration.cjs')({main,peer,api,apiPeer,account,id,test,denied});
  await require('./start-integration.cjs')({main,peer,api,apiPeer,account,id,test,denied,servers});
  await require('./management-integration.cjs')({main,peer,api,apiPeer,account,id,test,denied,servers});
  console.log('ADMISSION SUMMARY',JSON.stringify({checks:report.checks.length,projectId:'demo-skyline-phase1',instances:2,liveDeployment:false}));

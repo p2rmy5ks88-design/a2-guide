@@ -30,6 +30,7 @@ jobs:
         run: python3 skyline-estates/build.py --check
       - name: Test saved turns and seeded games
         run: |
+          node skyline-estates/security/service/room-entry-browser.test.cjs "$RUNNER_TEMP/skyline-room-entry-browser.json"
           node skyline-estates/security/service/lobby-browser.test.cjs "$RUNNER_TEMP/skyline-lobby-browser.json"
           node skyline-estates/tests/promo-codes.cjs
           node skyline-estates/tests/promo-browser.cjs
@@ -68,6 +69,7 @@ jobs:
         with:
           name: skyline-stability-results
           path: |
+            ${{ runner.temp }}/skyline-room-entry-browser.json
             ${{ runner.temp }}/skyline-lobby-browser.json
             ${{ runner.temp }}/skyline-reference-dashboard.json
             ${{ runner.temp }}/skyline-reference-dashboard.*.png
