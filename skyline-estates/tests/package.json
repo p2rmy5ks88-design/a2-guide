@@ -10,7 +10,7 @@
     "test:browser": "node browser-smoke.cjs",
     "test:human": "node human-flows.cjs",
     "test:offline": "node offline-worker.cjs && node offline-startup.cjs",
-    "test:mastery": "node token-mastery.cjs && node portfolio-mastery-browser.cjs"
+    "test:mastery": "node token-mastery.cjs && node ../security/service/property-rarity.test.cjs && node reference-dashboard-browser.cjs"
   },
   "devDependencies": {
     "playwright": "1.62.1"

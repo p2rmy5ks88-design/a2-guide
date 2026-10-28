@@ -2141,15 +2141,17 @@ const unmCost=i=>G&&G.set&&G.set.interest===false?SQ[i].p/2:Math.ceil(SQ[i].p/2*
 const lvl=()=>LV[G.set.ai]||LV.normal;
 
 function newGame(cfg){
-  G={v:1,tokenPowerVersion:2,players:cfg.players.map((c,i)=>({id:i,uid:c.uid||null,name:c.name,tok:c.tok,col:c.col,ai:c.ai,cash:cfg.cash,pos:0,inJail:false,jailTurns:0,goojf:[],tl:c.tl||1,fin:c.fin||null,ch:c.ch||null,bankrupt:false,lastOffer:-9,declined:{}})),
+  G={v:1,tokenPowerVersion:3,players:cfg.players.map((c,i)=>({id:i,uid:c.uid||null,name:c.name,tok:c.tok,col:c.col,ai:c.ai,cash:cfg.cash,pos:0,inJail:false,jailTurns:0,goojf:[],tl:c.tl||1,estate:{...(c.estate||{})},fin:c.fin||null,ch:c.ch||null,bankrupt:false,lastOffer:-9,declined:{}})),
     own:SQ.map(()=>({o:-1,h:0,m:false})),turn:0,round:1,chance:shuffle([...Array(16).keys()]),esusu:shuffle([...Array(16).keys()]),
     pot:0,houses:36,hotels:12,set:cfg.set,log:[],logN:0,over:false,phase:'busy'};
   if(cfg.set.mode==='quick'){const pool=shuffle(SQ.map((_,i)=>i).filter(buyable));G.players.forEach(p=>{for(let k=0;k<2;k++){const i=pool.pop();G.own[i].o=p.id}})}
 }
 
+function estateTier(p,i){return G&&G.tokenPowerVersion>=3&&G.set.perks!==false&&SQ[i]?.t==='prop'?Math.max(1,Math.min(5,p?.estate?.[i]||1)):1}
+function estateExtras(p){return !!(G&&G.tokenPowerVersion>=3&&G.set.perks!==false&&p&&G.own.some((o,i)=>o.o===p.id&&!o.m&&estateTier(p,i)===5))}
 function rentFor(i,dsum,o2={}){
   const s=SQ[i],o=G.own[i];if(o.o<0||o.m)return 0;
-  if(s.t==='prop')return o.h?s.r[o.h]:s.r[0]*(ownsAll(o.o,s.g)?2:1);
+  if(s.t==='prop'){const base=o.h?s.r[o.h]:s.r[0]*(ownsAll(o.o,s.g)?2:1),boost=[0,0,.05,.1,.15,.25][estateTier(P(o.o),i)];return Math.round(base*(1+boost))}
   if(s.t==='rail'){const n=RAILS.filter(j=>G.own[j].o===o.o).length;return RAIL_RENT[n-1]*(o2.railMult||1)}
   if(s.t==='util'){const n=UTILS.filter(j=>G.own[j].o===o.o).length;return dsum*(o2.utilX||UTIL_X[n-1])}
   return 0;
@@ -2994,7 +2996,8 @@ const SKEY='skylineSave',SAVE_VERSION=1,SAVE_BACKUP=SKEY+'.backup',SAVE_UNREADAB
 let saveWarning='';
 function saveNotice(message){if(saveWarning===message)return;saveWarning=message;console.warn('[Skyline save] '+message);if(!FAST)toast(message)}
 function validateSave(g){
-  if(g?.tokenPowerVersion!=null&&g.tokenPowerVersion!==2)return false;
+  if(g?.tokenPowerVersion!=null&&![2,3].includes(g.tokenPowerVersion))return false;
+  if(g?.tokenPowerVersion===3&&(!Array.isArray(g.players)||g.players.some(p=>p?.estate!=null&&(typeof p.estate!=='object'||Array.isArray(p.estate)||Object.keys(p.estate).length>40||Object.entries(p.estate).some(([k,v])=>!/^([0-9]|[1-3][0-9])$/.test(k)||!Number.isInteger(v)||v<1||v>5)))))return false;
   const obj=x=>x&&typeof x==='object'&&!Array.isArray(x),num=x=>Number.isFinite(x)&&x>=0,int=(x,a,b)=>Number.isInteger(x)&&x>=a&&x<=b;
   if(!obj(g)||g.v!==1||g.over!==false||g.sim||g.online||!Array.isArray(g.players)||!int(g.players.length,2,6))return false;
   const n=g.players.length;
@@ -3386,7 +3389,7 @@ async function joinOnline(code){unhideGame(code);
       const s2=(await ref.get()).data();const seats=s2.seats||[];if(seats.length>=6){toast('That game is full.');return}
       const usedT=seats.map(x=>x.tok),usedC=seats.map(x=>x.col);let tok=setup.slots[0].tok||PREF.tok||TOKENS[0];if(usedT.includes(tok))tok=unlockedTokens().find(t=>!usedT.includes(t))||TOKENS.find(t=>!usedT.includes(t));
       let nm=cleanName(myName()||PREF.nick||'Player');if(seats.some(x=>x.name===nm)){let k=2;while(seats.some(x=>x.name===nm.slice(0,10)+' '+k))k++;nm=nm.slice(0,10)+' '+k}
-      seats.push(Object.assign({uid:NET.me,name:nm,tok,col:SEATCOL.find(c=>!usedC.includes(c)),ai:false},seatExtras(tok)));
+      seats.push(Object.assign({uid:NET.me,name:nm,tok,col:SEATCOL.find(c=>!usedC.includes(c)),ai:false},seatExtras(tok,s2.set?.city)));
       await ref.update({seats,seatIds:seats.map(x=>x.uid).filter(Boolean)});ok=true}
     if(!ok){toast('The game is busy. Try joining again.');return}
   }
@@ -3429,7 +3432,7 @@ function startOnlineFromDoc(code,ref,d){
 const PKEY='skylinePrefs';
 const PREF=(()=>{try{return JSON.parse(localStorage.getItem(PKEY)||'{}')||{}}catch(e){return{}}})();
 function savePref(){try{localStorage.setItem(PKEY,JSON.stringify(PREF))}catch(e){}}
-const RULE_INFO=[['minigames','Mini-games','A quiz about the country you’re playing in, its board and the world on Lucky Break and City Hall squares, and Catch the Cash in the local currency when you land on Start or the Rest Stop.'],['perks','Token perks','Upgraded tokens get their payday bonus, re-rolls and Lucky Pass. Switch off for a level playing field.'],['ffa','Free-for-all building','Build houses and towers on any street you own. No full colour set needed.'],['events','City events','Every two rounds something happens in the city you’re playing: its own weather, local happenings like power cuts or rail strikes only where they really occur, building booms, lucky draws and the city’s own festival.'],['speedDie','Turbo die','After your first lap, roll a third die: add 1–4, the star draws a Lucky Break card, the taxi rides to the next transit hub.'],['pot','Rest Stop jackpot','Taxes and fees pile up at the Rest Stop. Land there to scoop them.'],['goDouble','Double payday','Land exactly on Start to collect a double payday.'],['jailRent','No rent from the Lockup','Owners sitting in the Lockup can’t collect rent.'],['auction','Auctions','Property nobody buys goes to auction.'],['even','Even building','Build and sell evenly across a colour set.'],['interest','Mortgage interest','Redeeming costs the mortgage plus 10%.']];
+const RULE_INFO=[['minigames','Mini-games','A quiz about the country you’re playing in, its board and the world on Lucky Break and City Hall squares, and Catch the Cash in the local currency when you land on Start or the Rest Stop.'],['perks','Collection perks','Earned token powers and property rarity bonuses. Mythic properties add one shared re-roll (maximum 3) and first-rent protection; only owned, unmortgaged streets count. Switch off for a level playing field.'],['ffa','Free-for-all building','Build houses and towers on any street you own. No full colour set needed.'],['events','City events','Every two rounds something happens in the city you’re playing: its own weather, local happenings like power cuts or rail strikes only where they really occur, building booms, lucky draws and the city’s own festival.'],['speedDie','Turbo die','After your first lap, roll a third die: add 1–4, the star draws a Lucky Break card, the taxi rides to the next transit hub.'],['pot','Rest Stop jackpot','Taxes and fees pile up at the Rest Stop. Land there to scoop them.'],['goDouble','Double payday','Land exactly on Start to collect a double payday.'],['jailRent','No rent from the Lockup','Owners sitting in the Lockup can’t collect rent.'],['auction','Auctions','Property nobody buys goes to auction.'],['even','Even building','Build and sell evenly across a colour set.'],['interest','Mortgage interest','Redeeming costs the mortgage plus 10%.']];
 const CASH_OPTS=[1200,1600,2000];
 const SUPPORT_EMAIL=(window.SKYLINE_CONFIG&&window.SKYLINE_CONFIG.supportEmail)||'';
 const PRIVACY_URL='https://p2rmy5ks88-design.github.io/a2-guide/skyline-estates/privacy.html';
@@ -3442,7 +3445,7 @@ const setup={slots:NAMES.slice(0,6).map((n,i)=>{const sv=(PREF.slots||[])[i]||{}
   rules:Object.assign({minigames:true,perks:true,ffa:false,events:false,speedDie:false,pot:false,goDouble:false,jailRent:false,auction:true,even:true,interest:true},PREF.rules||{})};
 function startWith(g){
   if(!g.online&&!g.sim&&!g.masteryId)g.masteryId=crypto.randomUUID();
-  GEN++;netStop();XPGAME=0;XPLOG=[];COINLOG=[];G=g;applyTheme(G.set.city||G.set.theme||setup.city);applyDiceSkin();$('#title').hidden=true;$('#ui').hidden=false;$('#modals').innerHTML='';buildBoard();renderRoster();$('#log').textContent='';
+  GEN++;netStop();XPGAME=0;XPLOG=[];COINLOG=[];G=g;const owner=G.players.find(p=>!p.ai&&(!G.online||p.uid===NET.me));if(owner)propsOf(owner.id).forEach(i=>collectEstate(owner,i));applyTheme(G.set.city||G.set.theme||setup.city);applyDiceSkin();$('#title').hidden=true;$('#ui').hidden=false;$('#modals').innerHTML='';buildBoard();renderRoster();$('#log').textContent='';
   log(G.round===1&&!G.log.length?(G.set.mode==='quick'?'Quick deal: everyone starts with 2 properties.':G.set.mode==='timed'?`Round limit: richest after ${G.set.rounds} rounds wins.`:'Welcome to Skyline Estates. First to bankrupt the rest wins.'):'Game resumed.');
   cam.rz=0;camOverview(P(G.turn).pos,0);checkRotate();(typeof keyReveal==='function'?keyReveal():Promise.resolve()).then(run);
 }
@@ -3938,10 +3941,9 @@ const rarityOf=l=>TOKEN_LV[Math.max(1,Math.min(TL_MAX,l||1))];
 const TOKEN_MASTERY=[null,{xp:0,wins:0},{xp:200,wins:1},{xp:600,wins:3},{xp:1400,wins:7},{xp:3000,wins:15},{xp:6000,wins:40}];
 const masteryCount=n=>Number.isSafeInteger(n)&&n>=0?Math.min(n,1000000000):0;
 function tokenMastery(t,profile=PREF){const r=profile.tokenMastery?.tokens?.[t]||{};return{xp:masteryCount(r.xp),games:masteryCount(r.games),wins:masteryCount(profile.tokWins?.[t])}}
-function earnedTokenStage(t,profile=PREF){const m=tokenMastery(t,profile);let stage=Math.max(1,Math.min(6,masteryCount(profile.tokLv?.[t])||1));for(let i=2;i<=6;i++)if(m.xp>=TOKEN_MASTERY[i].xp&&m.wins>=TOKEN_MASTERY[i].wins)stage=Math.max(stage,i);return stage}
-function tokenMasteryNeeds(t,lv){const q=TOKEN_MASTERY[lv],m=tokenMastery(t);return q?[{ok:m.xp>=q.xp,txt:'Token XP',sub:m.xp+' / '+q.xp},{ok:m.wins>=q.wins,txt:'Wins with this token',sub:m.wins+' / '+q.wins}]:[]}
+function earnedTokenStage(t,profile=PREF){return Math.max(1,Math.min(6,masteryCount(profile.tokLv?.[t])||1))}
 function tokenGameId(g){if(g.online){if(typeof g.code!=='string'||!Array.isArray(g.keys))return null;return 'online:'+g.code+':'+g.keys.join('-')+':'+NET.me}if(!g.masteryId)g.masteryId=crypto.randomUUID();return g.masteryId}
-function grantTokenMastery(g,w){if(!g||!g.over||g.sim||FAST)return null;
+function grantTokenMastery(g,w,coins=0){if(!g||!g.over||g.sim||FAST)return null;
  const me=g.players.find(p=>!p.ai&&(!g.online||p.uid===NET.me));if(!me||!Object.hasOwn(TOKEN_INFO,me.tok))return null;
  const id=tokenGameId(g);if(!id||PREF.tokenMastery?.receipts?.[id])return null;
  const next=JSON.parse(JSON.stringify(PREF)),m=tokenMastery(me.tok,next),won=w?.id===me.id,xp=100+(won?50:0),before=tokLv(me.tok);
@@ -3951,16 +3953,59 @@ function grantTokenMastery(g,w){if(!g||!g.over||g.sim||FAST)return null;
  const ids=Object.keys(next.tokenMastery.receipts);if(ids.length>=1024)delete next.tokenMastery.receipts[ids[0]];
  next.tokenMastery.tokens[me.tok]={xp:Math.min(1000000000,m.xp+xp),games:Math.min(1000000000,m.games+1)};
  next.tokWins=next.tokWins||{};next.tokWins[me.tok]=Math.min(1000000000,m.wins+(won?1:0));
- next.tokLv=next.tokLv||{};next.tokLv[me.tok]=earnedTokenStage(me.tok,next);
- next.tokenMastery.receipts[id]={token:me.tok,xp,won};
+ next.tokLv=next.tokLv||{};next.tokLv[me.tok]=Math.max(1,Math.min(6,next.tokLv[me.tok]||1));
+ next.tokenMastery.receipts[id]={token:me.tok,xp,won,coins};
+ next.coins=masteryCount(next.coins)+masteryCount(coins);
+ if(typeof captureEstate==='function'){const estate=captureEstate(g,me);next.estateJournal={last:estate,history:[{id,at:Date.now(),city:estate.city,token:me.tok,won,coins,rounds:g.round,netWorth:estate.netWorth,rent:estate.rent,properties:estate.rows.filter(r=>r.owner===me.id).length},...(next.estateJournal?.history||[])].slice(0,32)};next.estateOwned=next.estateOwned||{};next.estateOwned[estate.city]=Array.from(new Set([...(next.estateOwned[estate.city]||[]),...estate.rows.filter(r=>r.owner===me.id&&r.type==='prop').map(r=>r.i)]))}
  try{localStorage.setItem(PKEY,JSON.stringify(next))}catch{toast('Token progress could not be saved. Check device storage.');return null}
- PREF.tokenMastery=next.tokenMastery;PREF.tokWins=next.tokWins;PREF.tokLv=next.tokLv;
- return{token:me.tok,xp,stage:next.tokLv[me.tok],before,won};
+ PREF.tokenMastery=next.tokenMastery;PREF.tokWins=next.tokWins;PREF.tokLv=next.tokLv;PREF.coins=next.coins;if(next.estateJournal)PREF.estateJournal=next.estateJournal;if(next.estateOwned)PREF.estateOwned=next.estateOwned;
+ return{token:me.tok,xp,stage:next.tokLv[me.tok],before,won,coins};
 }
 /* ================= END TOKEN MASTERY ================= */
 
+/* ================= COLLECTION ECONOMY ================= */
+const TOKEN_UPGRADE=[null,{coins:0,wins:0},{coins:300,wins:1},{coins:900,wins:3},{coins:2400,wins:8},{coins:6000,wins:20},{coins:12000,wins:40}];
+const ESTATE_UPGRADE=[null,{coins:0,wins:0},{coins:200,wins:1},{coins:600,wins:3},{coins:1600,wins:6},{coins:4000,wins:12}];
+function gameCoinReward(won,rank,bonus=0){const base=won?400:rank===1?175:100;return Math.round(base*(1+Math.max(0,Math.min(.5,Number.isFinite(bonus)?bonus:0))))}
+function careerWins(profile=PREF){return Object.keys(TOKEN_INFO).reduce((n,t)=>n+masteryCount(profile.tokWins?.[t]),0)}
+function collectEstate(p,i){if(!trackable()||SQ[i]?.t!=='prop'||G.own[i]?.o!==p.id||G.players.find(q=>!q.ai&&(!G.online||q.uid===NET.me))?.id!==p.id)return;const city=G.set.city||'lagos';PREF.estateOwned=PREF.estateOwned||{};PREF.estateOwned[city]=Array.from(new Set([...(PREF.estateOwned[city]||[]),i]));savePref()}
+function estateForCity(city,profile=PREF){return Object.fromEntries(Object.entries(profile.estateRarity?.[city]||{}).filter(([k,v])=>/^([0-9]|[1-3][0-9])$/.test(k)&&Number.isInteger(v)&&v>=1&&v<=5))}
+function propertyRarity(city,i,profile=PREF){return estateForCity(city,profile)[i]||1}
+async function upgradeCollection(kind,key,expected,city){const run=()=>{
+ if(!['token','estate'].includes(kind)||!Number.isInteger(expected)||expected<1)throw Error('Invalid upgrade');
+ let fresh;try{const raw=localStorage.getItem(PKEY);fresh=raw?JSON.parse(raw):JSON.parse(JSON.stringify(PREF))}catch{throw Error('Saved profile could not be read')}
+ if(!fresh||typeof fresh!=='object'||Array.isArray(fresh)||!Number.isSafeInteger(fresh.coins)||fresh.coins<0)throw Error('Invalid saved coin balance');
+ Object.assign(PREF,fresh);
+ let level,cost,wins,next;
+ if(kind==='token'){if(!Object.hasOwn(TOKEN_INFO,key)||!tokenUnlocked(key))throw Error('Unlock this token first');level=tokLv(key);next=TOKEN_UPGRADE[level+1];wins=masteryCount(fresh.tokWins?.[key])}
+ else{if(!Object.hasOwn(CITY_DATA,city)||!Number.isInteger(key)||SQ[key]?.t!=='prop')throw Error('Invalid property');
+ const owner=G&&!G.sim&&G.set?.city===city&&G.players.find(p=>!p.ai&&(!G.online||p.uid===NET.me));if(!fresh.estateOwned?.[city]?.includes(key)&&!(owner&&G.own[key]?.o===owner.id))throw Error('Own this property in a game first');
+ level=propertyRarity(city,key,fresh);next=ESTATE_UPGRADE[level+1];wins=careerWins(fresh)}
+ if(level!==expected)throw Error('This upgrade changed. Review the current stage.');
+ if(!next)throw Error('Highest rarity reached');cost=next.coins;if(wins<next.wins)throw Error('More game wins needed');if(fresh.coins<cost)throw Error('Not enough coins');
+ const updated=JSON.parse(JSON.stringify(fresh));updated.coins-=cost;
+ if(kind==='token'){updated.tokLv=updated.tokLv||{};updated.tokLv[key]=level+1}
+ else{updated.estateRarity=updated.estateRarity||{};updated.estateRarity[city]=updated.estateRarity[city]||{};updated.estateRarity[city][key]=level+1;updated.estateOwned=updated.estateOwned||{};updated.estateOwned[city]=Array.from(new Set([...(updated.estateOwned[city]||[]),key]))}
+ const receipt={id:crypto.randomUUID(),kind,key,city:city||null,from:level,to:level+1,coins:cost,at:Date.now()};
+ updated.collectionUpgrades=[receipt,...(updated.collectionUpgrades||[])].slice(0,128);
+ try{localStorage.setItem(PKEY,JSON.stringify(updated))}catch{throw Error('Upgrade was not saved. Check device storage.')}
+ Object.assign(PREF,updated);return receipt};
+ return typeof navigator!=='undefined'&&navigator.locks?.request?navigator.locks.request('skyline-collection-upgrade',run):run()
+}
+/* ================= ESTATE READ MODEL ================= */
+function captureEstate(g,me){const city=CITY_DATA[g.set?.city]?g.set.city:'lagos',C=CITY_DATA[city];let prop=0,rail=0,util=0;
+ const rows=SQ.map((s,i)=>{const o=g.own[i],name=s.t==='prop'?C.props[prop++][0]:s.t==='rail'?C.rails[rail++][0]:s.t==='util'?C.utils[util++][0]:s.n;if(!['prop','rail','util'].includes(s.t))return null;
+ const all=s.g?GROUPS[s.g]:[],full=all.length&&all.every(j=>g.own[j].o===o.o),base=s.t==='prop'?(o.h?s.r[o.h]:s.r[0]*(full?2:1)):s.t==='rail'?RAIL_RENT[o.o<0?0:g.own.filter((q,j)=>SQ[j].t==='rail'&&q.o===o.o).length-1]:7*UTIL_X[o.o<0?0:Math.max(0,g.own.filter((q,j)=>SQ[j].t==='util'&&q.o===o.o).length-1)];
+ const rarity=g.tokenPowerVersion>=3?g.players[o.o]?.estate?.[i]||1:1,boost=g.set.perks!==false&&s.t==='prop'?[0,0,.05,.1,.15,.25][rarity]:0;
+ return{i,name,type:s.t,group:s.g||s.t,groupName:C.gname[s.g]||(s.t==='rail'?'Transit hubs':'Utilities'),colour:GC[s.g]||'#80a0b0',price:s.p,houseCost:s.h||0,owner:o.o,ownerName:o.o>=0?g.players[o.o].name:'Bank',h:o.h,m:o.m,baseRent:s.t==='prop'?s.r[0]:base,scheduledRent:o.o<0||o.m?0:Math.round(base*(1+boost)),rarity,owned:o.o===me.id}}).filter(Boolean);
+ const owned=rows.filter(r=>r.owned),netWorth=me.cash+owned.reduce((n,r)=>n+(r.m?r.price/2:r.price)+r.h*r.houseCost,0);
+ return{version:1,city,cityName:C.name,player:me.name,playerId:me.id,token:me.tok,cash:me.cash,netWorth,round:g.round,over:g.over,rent:me.st?.rent||0,rows,at:Date.now(),perks:g.set.perks!==false,powerVersion:g.tokenPowerVersion||1}
+}
+/* ================= END COLLECTION ECONOMY ================= */
+
+
 const perksOn=()=>!G||G.set.perks!==false;
-const perkOf=p=>{const lv=perksOn()&&p&&Number.isInteger(p.tl)?Math.max(1,Math.min(TL_MAX,p.tl)):1;return G&&G.tokenPowerVersion!==2?TOKEN_LV[lv]:tokenPower(p?.tok,lv)};
+const perkOf=p=>{const lv=perksOn()&&p&&Number.isInteger(p.tl)?Math.max(1,Math.min(TL_MAX,p.tl)):1;if(G&&G.tokenPowerVersion!==2&&G.tokenPowerVersion!==3)return TOKEN_LV[lv];const R=tokenPower(p?.tok,lv);return estateExtras(p)?{...R,rr:Math.min(3,R.rr+1),shield:1}:R};
 function payday(p){return Math.round(PAYDAY*(1+perkOf(p).pay))}
 
 /* ---- premium cosmetics ---- */
@@ -4668,7 +4713,7 @@ function streakMark(){const D=PREF.daily,t=today();if(D.streakDay===t)return;D.s
 function streakNow(){const D=PREF.daily;if(!D.streakDay)return 0;return dayNum(today())-dayNum(D.streakDay)<=1?D.streak||0:0}
 
 /* ---- Lucky Spin: one free spin a day. Every slice has the same 1 in 8 chance. Spins can't be bought. ---- */
-const WHEEL=[['25 '+COIN,{c:25},'#ffc61a'],['100 XP',{x:100},'#12884a'],['50 '+COIN,{c:50},'#c2185b'],['2× XP',{boost:1},'#2e6fd6'],['75 '+COIN,{c:75},'#f08a1c'],['250 XP',{x:250},'#7b1fa2'],['150 '+COIN,{c:150},'#1e9a53'],['500 '+COIN,{c:500},'#e23b2e']];
+const WHEEL=[['50 '+COIN,{c:50},'#ffc61a'],['100 XP',{x:100},'#12884a'],['100 '+COIN,{c:100},'#c2185b'],['2× XP',{boost:1},'#2e6fd6'],['150 '+COIN,{c:150},'#f08a1c'],['250 XP',{x:250},'#7b1fa2'],['300 '+COIN,{c:300},'#1e9a53'],['1000 '+COIN,{c:1000},'#e23b2e']];
 const wheelReady=()=>PREF.daily.spun!==today();
 async function openWheel(){initAudio();const ready=wheelReady();let spun=false;
   await modal({cls:'wide',html:`<div class="mh">Lucky Spin</div><div class="mtxt muted">One free spin every day. Every prize has the same 1 in 8 chance.</div>
@@ -4787,12 +4832,12 @@ function miniOK(p){return G.set.minigames&&!FAST&&isLocalHuman(p)&&!p.auto&&!G.o
 /* ---- gameplay hooks ---- */
 const _pay=pay;pay=async function(p,amt,to,kind){const ok=await _pay(p,amt,to,kind);if(ok&&to&&kind==='rent'){const s=st(to);s.rent+=amt;s.maxRent=Math.max(s.maxRent,amt);if(mine(to)){cityScan()}}return ok};
 const _bankrupt=bankrupt;bankrupt=function(p,to){_bankrupt(p,to);if(to){st(to).bankrupted++;if(mine(to)){addXP(100,`Bankrupted ${p.name}`);cityScan()}}};
-const _buyProp=buyProp;buyProp=function(p,i,price){_buyProp(p,i,price);st(p).buys++;if(mine(p))missionScan()};
+const _buyProp=buyProp;buyProp=function(p,i,price){_buyProp(p,i,price);st(p).buys++;if(mine(p)){collectEstate(p,i);missionScan()}};
 const _build=build;build=function(pid,i){_build(pid,i);const p=P(pid);if(evNow()==='boom'){const rf=SQ[i].h/2;p.cash+=rf;float(pid,rf)}const s=st(p);if(G.own[i].h===5){s.hotels++;if(mine(p)&&!FAST)fireworks()}else s.houses++;if(mine(p)){cityScan();ffaScan(p,i)}};
 function ffaScan(p,i){if(!FFA()||!trackable())return;const g=SQ[i].g,full=ownsAll(p.id,g);if(!full)achAward('ffa_house')}
 const _sendToJail=sendToJail;sendToJail=async function(p){const pk=perkOf(p);if(pk.pass&&(p.passUsed||0)<pk.pass){p.passUsed=(p.passUsed||0)+1;log(`${p.name} used a Lucky Pass and stays out of the Lockup`);if(!FAST)toast(`🍀 ${p.name}’s Lucky Pass! No Lockup this time.`);renderRoster();return}
   st(p).jail++;if(mine(p))bumpCity('jail');await _sendToJail(p);if(mine(p))cityScan()};
-const _executeTrade=executeTrade;executeTrade=function(t){if(!_executeTrade(t))return false;[P(t.from),P(t.to)].forEach(p=>{st(p).trades++;if(mine(p)){bumpCity('trades');PREF.stats.deals++;savePref()}});if(mine(P(t.from))||mine(P(t.to))){cityScan();achBump()}return true};
+const _executeTrade=executeTrade;executeTrade=function(t){if(!_executeTrade(t))return false;[P(t.from),P(t.to)].forEach(p=>{st(p).trades++;if(mine(p)){propsOf(p.id).forEach(i=>collectEstate(p,i));bumpCity('trades');PREF.stats.deals++;savePref()}});if(mine(P(t.from))||mine(P(t.to))){cityScan();achBump()}return true};
 function onPassGo(p){if(evNow()==='holiday'){const x=payday(p);p.cash+=x;float(p.id,x)}if(perkOf(p).surge&&!p.surgeUsed){p.surgeUsed=1;const x=payday(p)*2;p.cash+=x;float(p.id,x);log(`${p.name}’s Chaos Surge: triple payday!`);if(!FAST)toast(`🌀 Chaos Surge! ${p.name} collects a triple payday`)}st(p).go++;if(mine(p)){bumpCity('go');cityScan()}}
 function onAuctionWin(w,i,bid){const s=st(w);s.aucWins++;if(bid<SQ[i].p/2)s.aucCheap++;if(mine(w))cityScan()}
 const _land=land;land=async function(p,d,o2){if(SQ[p.pos].t==='tax'&&evNow()==='taxfree'){toast('Tax holiday! Nothing to pay.');return}await _land(p,d,o2);if(SQ[p.pos].t==='free')st(p).free++;if(mine(p)&&p.cash>=3000)cityScan()};
@@ -4809,7 +4854,7 @@ function progressGameEnd(w){if(!trackable()||G.progDone)return null;G.progDone=t
   if(PREF.boostGames>0){base*=2;PREF.boostGames--;XPLOG.push(['Double XP booster',0])}
   const myT=perkOf(hum[0]);if(myT.xpX){base=Math.round(base*(1+myT.xpX));XPLOG.push([myT.name+' token bonus',0])}
   addXP(base,won?'Win + game XP':'Game XP');
-  const coins=Math.round(((won?120:40)+(rank===1&&!won?30:0)+(G.online?40:0))*(1+(myT.coinX||0)));addCoins(coins,won?'Win':'Game');const mastery=grantTokenMastery(G,w);
+  const plannedCoins=gameCoinReward(w===hum[0],sts.indexOf(hum[0]),myT.coinX||0),mastery=grantTokenMastery(G,w,plannedCoins),coins=mastery?.coins||0;if(coins){COINLOG.push([w===hum[0]?'Win':'Game',coins]);if(!FAST)coinFloat(coins);refreshCoins()}
   const tr=trophyDelta(rank,n,won);const lc=tr?addTrophies(tr):0;
   const sx=hum.map(st);const sum=k=>sx.reduce((a,s)=>a+(s[k]||0),0);
   weeklyAdd('games',1);if(won)weeklyAdd('wins',1);if(G.online)weeklyAdd('online',1);weeklyAdd('houses',sum('houses'));weeklyAdd('towers',sum('hotels'));weeklyAdd('rent',sum('rent'));weeklyAdd('trades',sum('trades'));weeklyAdd('auctions',sum('aucWins'));
@@ -5112,14 +5157,15 @@ function tr(s){const d=LANGS[PREF.lang]||{};return d[s]||s}
 
 /* ================= HOME (TABBED) ================= */
 /* ---- navigation: five sections, settings behind a gear ---- */
-const ICO={play:'M7 4l13 8-13 8z',world:'M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18',collection:'M4 7h16v13H4zM8 7V4h8v3M4 12h16',progress:'M4 20V10M10 20V4M16 20v-7M22 20H2',shop:'M5 8h14l-1 12H6zM9 8V6a3 3 0 0 1 6 0v2',
+const ICO={portfolio:'M3 21h18M5 21V13h4v8M11 21V6h4v15M17 21V3h4v18',play:'M7 4l13 8-13 8z',world:'M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18',collection:'M4 7h16v13H4zM8 7V4h8v3M4 12h16',progress:'M4 20V10M10 20V4M16 20v-7M22 20H2',shop:'M5 8h14l-1 12H6zM9 8V6a3 3 0 0 1 6 0v2',
   gear:'M12 9a3 3 0 1 0 0 6a3 3 0 1 0 0-6M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z',
   bot:'M12 8V4M8 4h8M5 10h14v9H5zM9 14h.01M15 14h.01',people:'M9 11a3 3 0 1 0 0-6a3 3 0 1 0 0 6M3 20a6 6 0 0 1 12 0M17 11a3 3 0 1 0 0-6M21 20a6 6 0 0 0-4-5.6',globe:'M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18M3 12h18',sliders:'M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M14 4v4M8 10v4M16 16v4',resume:'M6 4v16M10 4l10 8-10 8z',trophy:'M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4zM17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3',plus:'M12 5v14M5 12h14',back:'M15 18l-6-6 6-6',city:'M3 21h18M5 21V10h4v11M10 21V4h5v17M16 21v-8h3v8'};
 const svgI=(k,s=20)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${ICO[k]}"/></svg>`;
-const SECTIONS=[['play','Play'],['world','World'],['collection','Collection'],['progress','Progress'],['shop','Shop']];
+const SECTIONS=[['play','Play'],['world','World'],['collection','Collection'],['portfolio','Portfolio'],['shop','Shop'],['progress','Progress']];
 const SUBS={collection:[['cast','Characters'],['tokens','Tokens']],progress:[['season','Season'],['leagues','Leagues'],['ach','Awards'],['daily','Daily']],settings:[['settings','Settings'],['learn','How to play']],play:[['play','Play'],['custom','Custom game']]};
-const SEC_OF={play:'play',custom:'play',world:'world',cast:'collection',tokens:'collection',season:'progress',leagues:'progress',ach:'progress',daily:'progress',shop:'shop',settings:'settings',learn:'settings',collection:'collection',progress:'progress'};
-const PANES=()=>({play:paneP,custom:paneCustom,world:paneWorld,cast:paneCast,tokens:paneTokens,season:paneSeason,leagues:paneLeagues,ach:paneAch,daily:paneDaily,shop:paneShop,learn:paneLearn,settings:paneSettings});
+const SEC_OF={portfolio:'portfolio',play:'play',custom:'play',world:'world',cast:'collection',tokens:'collection',season:'progress',leagues:'progress',ach:'progress',daily:'progress',shop:'shop',settings:'settings',learn:'settings',collection:'collection',progress:'progress'};
+function panePortfolio(T){T.textContent="Loading portfolio…"}
+const PANES=()=>({portfolio:panePortfolio,play:paneP,custom:paneCustom,world:paneWorld,cast:paneCast,tokens:paneTokens,season:paneSeason,leagues:paneLeagues,ach:paneAch,daily:paneDaily,shop:paneShop,learn:paneLearn,settings:paneSettings});
 const HOME_TABS=SECTIONS;
 const PCOIN=()=>`<span class="coinpill" role="status"><i aria-hidden="true"></i><b>${Math.round(PREF.coins).toLocaleString('en-US')}</b></span>`;
 function showTitle(){
@@ -5169,7 +5215,7 @@ function slotPlayers(slots){return slots.map((s,i)=>({...s,i})).filter(s=>s.type
 function startFromSetup(T,slots){const act=slotPlayers(slots||setup.slots);
   if(act.length<2){const m=T.querySelector('#tMsg');if(m)m.textContent='Pick at least two players.';return}
   const toks=new Set();act.forEach(s=>{if(toks.has(s.tok))s.tok=unlockedTokens().find(t=>!toks.has(t)&&!act.some(a=>a.tok===t))||s.tok;toks.add(s.tok)});
-  initAudio();newGame({cash:setup.cash,set:cfgSet(),players:act.map(s=>({name:(s.name||'').trim()||NAMES[s.i],tok:s.tok,col:PCOL[s.i],ai:s.type==='ai',tl:s.i===0&&s.type==='human'?tokLv(s.tok):1,fin:s.i===0&&s.type==='human'?myFinish():null,ch:pickChar(s,act)}))});
+  initAudio();newGame({cash:setup.cash,set:cfgSet(),players:act.map(s=>({name:(s.name||'').trim()||NAMES[s.i],tok:s.tok,col:PCOL[s.i],ai:s.type==='ai',tl:s.i===0&&s.type==='human'?tokLv(s.tok):1,estate:s.i===0&&s.type==='human'?estateForCity(setup.city):{},fin:s.i===0&&s.type==='human'?myFinish():null,ch:pickChar(s,act)}))});
   try{document.documentElement.requestFullscreen?.().then(()=>screen.orientation?.lock?.('landscape')).catch(()=>{})}catch(e){}
   startWith(G)}
 const myFinish=()=>PREF.eq.fin&&itemOwned('fin',PREF.eq.fin)?PREF.eq.fin:null;
@@ -5264,7 +5310,7 @@ function paneLearn(T){
     <h3>HOUSE RULES</h3><div class="learn">${RULE_INFO.map(r=>`<div class="lcard"><i>⚙️</i><div><b>${r[1]}</b><p>${esc(loc(r[2]))}</p></div></div>`).join('')}<div class="lcard"><i>⏱️</i><div><b>Turn timer</b><p>Optional 90 seconds per turn. When time runs out the game finishes the turn for that player.</p></div></div></div>
     <h3>PROGRESS</h3><div class="learn"><div class="lcard"><i>🌍</i><div><b>World</b><p>18 countries and 31 cities, each with its own board, landscape and 15 achievements. Level up to open new countries; play in a country to open its other cities.</p></div></div>
     <div class="lcard"><i>${COIN}</i><div><b>Coins</b><p>Earn coins from wins, level-ups, achievements, missions, the Lucky Spin, season tiers and league promotions. Spend them on tokens, upgrades, finishes, dice, board surrounds and early unlocks.</p></div></div>
-    <div class="lcard"><i>⬆️</i><div><b>Token upgrades</b><p>Upgrade a token from Common to Rare, Epic, Legendary, Mythic and Chaotic. Each tier repaints it (blue, purple, gold, crimson, then a shifting rainbow) and adds a bigger payday, re-rolls and Lucky Passes. Mythic and Chaotic also need wins with that token, a high level and (for Chaotic) the Diamond league, and add a Rent Shield, Chaos Surge and bonus coins and XP. Hosts can switch in-game perks off.</p></div></div>
+    <div class="lcard"><i>⬆️</i><div><b>Token upgrades</b><p>Upgrade a token from Common to Rare, Epic, Legendary, Mythic and Chaotic. Each tier repaints it (blue, purple, gold, crimson, then a shifting rainbow) and adds a bigger payday, re-rolls and Lucky Passes. Each token has a distinct power path. Rarity upgrades cost saved coins and require wins with that token. Token XP records play; upgrades are manual and apply to future games. Previously unlocked rarities are kept. Hosts can switch collection perks off.</p></div></div>
     <div class="lcard"><i>📅</i><div><b>Seasons</b><p>Every 45 days a new season starts with 40 tiers of rewards and weekly challenges. All XP counts toward the season.</p></div></div>
     <div class="lcard"><i>🏆</i><div><b>Leagues</b><p>Win trophies to climb from Bronze to Legend and earn promotion rewards. The global leaderboard shows the top players each season.</p></div></div>
     <div class="lcard"><i>🎯</i><div><b>Daily missions and Lucky Spin</b><p>Three new missions every day pay XP and coins, with a bonus for finishing all three. Missions on back-to-back days build a streak. The Lucky Spin is free once a day.</p></div></div>
@@ -6041,7 +6087,7 @@ const bind=(T,name,fn)=>{const b=T.querySelector(`[data-se="${name}"]`);if(b)b.o
 const notifySave=()=>{savePref();railProfile()};
 const art=k=>{const photo=cityPhoto(k);return photo?`<img class="se-art" src="${photo}" alt="${esc(CITY_DATA[k].name)}" loading="lazy">`:`<div class="se-art custom-city-fallback" style="background:${CITY_DATA[k].sw}" aria-hidden="true">${svgI('city',64)}</div>`};
 const toggleRow=(id,title,description,on)=>`<div class="se-rule"><div><b>${esc(title)}</b><small>${esc(description)}</small></div><button class="se-switch" data-toggle="${id}" aria-label="${esc(title)}" aria-pressed="${!!on}"></button></div>`;
-paneCustom=function(T){const oldStep=T.dataset.customStep,oldScroll=T.scrollTop,moreOpen=T.querySelector('details')?.open;T.dataset.customStep=String(SE.step);const acts=slotPlayers(setup.slots),mode=MODES.find(m=>m[0]===setup.mode),steps=['Players','Rules','Review'];T.innerHTML=`${head('Set up your game',steps[SE.step],`<div class="se-stepper">${steps.map((s,i)=>`<button class="${SE.step===i?'on':''}" data-step="${i}" aria-label="${s}" aria-disabled="${i>0&&acts.length<2}" aria-current="${SE.step===i?'step':'false'}">${i+1}</button>`).join('')}</div>`)}<div class="se-setup-grid"><div id="seSetupBody"></div><aside class="se-panel se-summary">${art(setup.city)}<div class="se-card-title">${esc(CITY_DATA[setup.city].name)}</div>${kv('Players',`${acts.length} / 6`)}${kv('Mode',mode[1])}${setup.mode==='timed'?kv('Rounds',setup.rounds):''}${kv('AI skill',setup.ai)}${kv('Starting cash',fmt(setup.cash))}${kv('Turn timer',setup.timer?'90 seconds':'Off')}${kv('Token perks',setup.rules.perks?'On':'Off')}<div class="se-actions" style="margin-top:20px">${button('Change city','city')}</div></aside></div><div class="se-setup-footer">${button(SE.step?'← Back':'← Play','back')}${button(SE.step===2?'Start game':'Continue →','next',true,acts.length<2)}</div><div class="se-sub" id="tMsg" role="status"></div>`;
+paneCustom=function(T){const oldStep=T.dataset.customStep,oldScroll=T.scrollTop,moreOpen=T.querySelector('details')?.open;T.dataset.customStep=String(SE.step);const acts=slotPlayers(setup.slots),mode=MODES.find(m=>m[0]===setup.mode),steps=['Players','Rules','Review'];T.innerHTML=`${head('Set up your game',steps[SE.step],`<div class="se-stepper">${steps.map((s,i)=>`<button class="${SE.step===i?'on':''}" data-step="${i}" aria-label="${s}" aria-disabled="${i>0&&acts.length<2}" aria-current="${SE.step===i?'step':'false'}">${i+1}</button>`).join('')}</div>`)}<div class="se-setup-grid"><div id="seSetupBody"></div><aside class="se-panel se-summary">${art(setup.city)}<div class="se-card-title">${esc(CITY_DATA[setup.city].name)}</div>${kv('Players',`${acts.length} / 6`)}${kv('Mode',mode[1])}${setup.mode==='timed'?kv('Rounds',setup.rounds):''}${kv('AI skill',setup.ai)}${kv('Starting cash',fmt(setup.cash))}${kv('Turn timer',setup.timer?'90 seconds':'Off')}${kv('Collection perks',setup.rules.perks?'On':'Off')}<div class="se-actions" style="margin-top:20px">${button('Change city','city')}</div></aside></div><div class="se-setup-footer">${button(SE.step?'← Back':'← Play','back')}${button(SE.step===2?'Start game':'Continue →','next',true,acts.length<2)}</div><div class="se-sub" id="tMsg" role="status"></div>`;
  const B=T.querySelector('#seSetupBody');if(SE.step===0){B.innerHTML=`<div class="se-panel"><div class="se-card-title">Who’s playing?</div><div class="se-sub">Human players share this device. Tap a token to change it.</div><div class="se-grid custom-slots" style="margin-top:20px">${setup.slots.map((s,i)=>`<div class="slot${s.type==='off'?' off':''}" style="--pc:${PCOL[i]}"><button class="tok" data-token="${i}" aria-label="Change player ${i+1} token">${s.tok}</button><input data-name="${i}" aria-label="Player ${i+1} name" value="${esc(s.name)}" maxlength="12"><div class="seg">${[['human','Human'],['ai','AI'],['off','Off']].map(([v,t])=>`<button class="${s.type===v?'on':''}" data-type="${i}:${v}" aria-pressed="${s.type===v}">${t}</button>`).join('')}</div></div>`).join('')}</div></div>`;B.querySelectorAll('[data-name]').forEach(x=>x.oninput=()=>{setup.slots[+x.dataset.name].name=x.value;saveSlot(+x.dataset.name,setup.slots[+x.dataset.name])});B.querySelectorAll('[data-type]').forEach(x=>x.onclick=()=>{const[i,v]=x.dataset.type.split(':');setup.slots[+i].type=v;paneCustom(T)});B.querySelectorAll('[data-token]').forEach(x=>x.onclick=()=>{const i=+x.dataset.token,s=setup.slots[i],used=setup.slots.filter((s,j)=>j!==i&&s.type!=='off').map(s=>s.tok),pool=unlockedTokens();let ix=pool.indexOf(s.tok);for(let n=0;n<pool.length;n++){ix=(ix+1)%pool.length;if(!used.includes(pool[ix]))break}s.tok=pool[ix];saveSlot(i,s);paneCustom(T)})}
  else if(SE.step===1){B.innerHTML=`<div class="se-setup-modes">${MODES.map(m=>`<button class="se-mode-card${setup.mode===m[0]?' on':''}" data-mode="${m[0]}" aria-pressed="${setup.mode===m[0]}"><b>${m[1]}</b><small>${esc(m[2])}</small></button>`).join('')}</div><div class="se-panel">${setup.mode==='timed'?`<div class="se-rule"><b>Rounds</b><div class="seg" id="seRounds"></div></div>`:''}${RULE_INFO.slice(0,5).map(([k,l,d])=>toggleRow(k,l,loc(d),setup.rules[k])).join('')}<details><summary class="se-sub" style="cursor:pointer;padding:15px 0">More house rules</summary>${RULE_INFO.slice(5).map(([k,l,d])=>toggleRow(k,l,loc(d),setup.rules[k])).join('')}<div class="se-rule"><b>Game speed</b><div class="seg" id="seSpeed"></div></div></details><div class="se-rule"><b>Starting cash</b><div class="seg" id="seCash"></div></div><div class="se-rule"><b>AI skill</b><div class="seg" id="seAI"></div></div><div class="se-rule"><b>Turn timer</b><div class="seg" id="seTimer"></div></div></div>`;B.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{setup.mode=b.dataset.mode;paneCustom(T)});B.querySelectorAll('[data-toggle]').forEach(b=>b.onclick=()=>{setup.rules[b.dataset.toggle]=!setup.rules[b.dataset.toggle];PREF.rules=setup.rules;notifySave();paneCustom(T)});segIn(B,'#seSpeed',[['normal','Normal'],['fast','Fast']],()=>setup.speed,v=>{setup.speed=v;PREF.speed=v;savePref();paneCustom(T)});if(setup.mode==='timed')segIn(B,'#seRounds',[10,20,30,45].map(v=>[v,''+v]),()=>setup.rounds,v=>{setup.rounds=v;paneCustom(T)});segIn(B,'#seCash',CASH_OPTS.map(v=>[v,fmt(v)]),()=>setup.cash,v=>{setup.cash=v;PREF.cash=v;savePref();paneCustom(T)});segIn(B,'#seAI',[['easy','Easy'],['normal','Normal'],['hard','Hard']],()=>setup.ai,v=>{setup.ai=v;PREF.ai=v;savePref();paneCustom(T)});segIn(B,'#seTimer',[[0,'Off'],[90,'90 sec']],()=>setup.timer,v=>{setup.timer=v;PREF.timer=v;savePref();paneCustom(T)})}
  else B.innerHTML=`<div class="se-panel"><div class="se-card-title">Ready to build</div><div class="se-sub">${esc(mode[2])}</div>${acts.map(s=>kv(`${s.tok} ${esc(s.name)}`,s.type==='human'?'Human':'AI · '+setup.ai)).join('')}<div class="se-divider"></div><div class="se-card-title">Active house rules</div><div class="se-actions">${RULE_INFO.filter(([k])=>setup.rules[k]).map(([,l])=>`<span class="se-chip good">✓ ${l}</span>`).join('')}</div></div>`;
@@ -6640,29 +6686,7 @@ paneCast=function(T){clearPreview();peekOver(null);const sel=setup.castSel||myCh
   const r=T.querySelector('#clRide');if(r)r.onclick=()=>{PREF.eq.char=c.id;savePref();railProfile();paneCast(T)};
   T.querySelector('#clSave').onclick=()=>{if(setUsername(T.querySelector('#clNm').value)){toast('Username saved');railProfile()}else toast('Use 2–12 letters or numbers')};
   T.querySelectorAll('.clgest [data-g]').forEach(b=>b.onclick=()=>{const h=T.querySelector('#clHint'),pv=T.querySelector('.clport');pv.classList.remove('wiggle','hop','spin','tilt');void pv.offsetWidth;pv.classList.add({wave:'wiggle',cheer:'hop',dance:'spin',think:'tilt'}[b.dataset.g]);h.textContent={wave:'Waves on their turn.',cheer:'Celebrates when buying, passing Start or collecting rent.',dance:'Dances when they win.',think:'Thinks while deciding.'}[b.dataset.g]})};
-paneTokens=function(T){clearPreview();peekOver(null);const all=TOKENS.concat(NEW_TOKENS);let sel=CL.tok&&all.includes(CL.tok)?CL.tok:setup.slots[0].tok;CL.tok=sel;
-  const lv=tokLv(sel),cur=tokenPower(sel,lv),next=lv<6?tokenPower(sel,lv+1):null,owned=tokenUnlocked(sel),info=TOKEN_INFO[sel],mine=setup.slots[0].tok===sel,col=owned?(mine?mdFinCol():mdTokCol(sel)):'#7d8a96';
-  const list=all.filter(t=>CL.filter==='all'||(CL.filter==='own')===tokenUnlocked(t));
-  const rows=WS_PERKS.map(([k,f,v])=>{const a=f(cur),b=next?f(next):null,up=next&&(v?v(next)>v(cur):a!==b);if(a==='None'&&(!next||b==='None'))return '';return `<tr${up?' class="up"':''}><td>${k}</td><td>${esc(a)}</td><td>${next?esc(b):'—'}</td></tr>`}).join('');
-  T.innerHTML=clHead('Token evolution','Each token has its own power. Play with it to earn XP, win and evolve.')+
-    `<div class="clws"><section class="cltl"><div class="clfil">${[['all','All'],['own','Owned'],['lock','Locked']].map(([k,l])=>`<button class="${CL.filter===k?'on':''}" data-f="${k}">${l}</button>`).join('')}</div>
-      <div class="cltgrid">${list.map(t=>{const u=tokenUnlocked(t);return `<button class="cltok${t===sel?' on':''}${u?'':' locked'}" data-t="${t}">${mdl({token:t,col:u?(setup.slots[0].tok===t?mdFinCol():mdTokCol(t)):'#7d8a96',label:TOKEN_INFO[t][0]},'cltm'+(u?'':' lockm'),160,128)}<b>${esc(TOKEN_INFO[t][0])}</b><small>${u?rarityOf(tokLv(t)).name:'Locked'}</small></button>`}).join('')}</div></section>
-    <div class="clmain"><section class="clshow"><div class="clstage">${mdl({token:sel,col,label:info[0]},'clbig',520,400)}</div>
-      <div class="clinfo"><div class="clnm"><h3>${esc(info[0])}</h3>${owned?`<span class="rar" style="background:${cur.ui}">${cur.name}</span>`:'<span class="rar lockp">Locked</span>'}</div><p>${esc(info[1])}</p>
-        <button class="clbtn gold" id="clEq"${!owned||mine?' disabled':''}>${mine?'✓ Equipped':owned?'Equip token':'Locked'}</button>
-        <div class="cldiv"></div><b>Cosmetic finish</b><div class="clfin">${[{id:null,name:'Player colour',col:PCOL[0]}].concat(FINISHES).map(f=>{const own=f.id===null||itemOwned('fin',f.id),on=(PREF.eq.fin||null)===f.id;return `<button class="${on?'on':''}${own?'':' locked'}" data-fin="${f.id||''}" title="${esc(f.name)}${own?'':' · '+(f.price?nfmt(f.price)+' coins':'reward')}" aria-label="${esc(f.name)} finish"><i style="background:${finPic(f.id)?`url(${finPic(f.id)}) 50% 29%/190% no-repeat`:`radial-gradient(circle at 35% 30%,#fff,${f.col} 55%,#000 140%)`}"></i></button>`}).join('')}</div>
-        <small class="clhint">A finish changes how it looks. Upgrade tiers give the perks.</small></div></section>
-    <section class="clup"><h3>${esc(cur.powerName)} · Evolution stages</h3><p class="clhint">Completed game +100 token XP · win +50 XP. Both XP and wins are required. Evolution is automatic and costs no coins. Progress is saved on this device.</p><div class="evo-totals"><b>${tokenMastery(sel).xp} token XP</b><b>${tokenMastery(sel).wins} wins</b><span>${tokenMastery(sel).games} completed games</span></div>
-      <nav class="evo-track" aria-label="Evolution stages">${TOKEN_MASTERY.slice(1).map((r,j)=>{const stage=j+1,L=TOKEN_LV[stage];return `<button data-stage="${stage}" aria-pressed="${stage===(CL.stage||lv)}" style="--stage:${L.col||'#8a96a3'}">${mdl({token:sel,col:L.col||PCOL[0],pal:1,label:info[0]+" "+L.name+" preview"},"evo-stage-model",72,72)}<b>${L.name}</b><small>${stage===lv?'Current':stage<lv?'Unlocked':'Preview'} · ${r.xp} XP / ${r.wins} wins</small></button>`}).join('')}</nav><section class="evo-peek" aria-live="polite"></section>
-      <p class="clhint">Future stages are previews. Perks apply only when the host enables Token perks. Existing owned stages are kept. No powers are equipped by previewing.</p>
-      ${owned?`<table class="clcmp"><thead><tr><th>Power</th><th>Now · ${cur.name}</th><th>${next?'Next · '+next.name:'Maximum'}</th></tr></thead><tbody>${rows}</tbody></table>`: `<p>${esc(tokenHowText(sel))}</p>${TOKEN_HOW[sel]?.coins?`<button class="clbtn gold" id="clUnl">Unlock · ${nfmt(TOKEN_HOW[sel].coins)} coins</button>`:''}`}</section></div></div>`;
-  const peek=stage=>{CL.stage=stage;const L=tokenPower(sel,stage),r=TOKEN_MASTERY[stage];T.querySelectorAll('[data-stage]').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.stage===stage)));T.querySelector('.evo-peek').innerHTML=`<div><small>${stage===lv?'CURRENT STAGE':stage<lv?'UNLOCKED STAGE':'PREVIEW ONLY — NOT EQUIPPED'}</small><h4>${L.name}</h4><p>${esc(L.txt)}</p><p>${r.xp} XP and ${r.wins} wins required</p></div>${mdl({token:sel,col:L.col||PCOL[0],pal:1,label:info[0]+' '+L.name+' preview'},'evo-model',180,140)}`};
-  T.querySelectorAll('[data-stage]').forEach(b=>b.onclick=()=>peek(+b.dataset.stage));peek(CL.stage||lv);
-  T.querySelectorAll('.clfil [data-f]').forEach(b=>b.onclick=()=>{CL.filter=b.dataset.f;paneTokens(T)});
-  T.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{CL.tok=b.dataset.t;CL.stage=null;paneTokens(T)});
-  const eq=T.querySelector('#clEq');if(eq)eq.onclick=()=>{const other=setup.slots.findIndex((s,i)=>i>0&&s.tok===sel);if(other>0)setup.slots[other].tok=setup.slots[0].tok;setup.slots[0].tok=sel;saveSlot(0,setup.slots[0]);toast(`${info[0]} is your token`);paneTokens(T)};
-  T.querySelectorAll('[data-fin]').forEach(b=>b.onclick=()=>{const id=b.dataset.fin||null,f=id&&FINISHES.find(x=>x.id===id);if(id&&!itemOwned('fin',id)){if(!f.price){toast(f.desc);return}openItem('fin',id,f.price,0,'tokens');return}PREF.eq.fin=id;savePref();railProfile();paneTokens(T)});
-  const un=T.querySelector('#clUnl');if(un)un.onclick=async()=>{if(await confirmBuy(`Unlock ${info[0]}`,TOKEN_HOW[sel].coins)){grantItem('tok',sel);railProfile();paneTokens(T)}}};
+paneTokens=function(T){T.textContent='Loading token collection…'};
 {const _ht=homeTab;homeTab=function(k){const r=_ht(k);try{const h=$('#title .home');if(h&&document.querySelector('.clhead'))h.classList.remove('peek-r','peek-t')}catch(e){}return r}}
 
 /* ================= PORTFOLIO (concept look) ================= */
@@ -7092,7 +7116,7 @@ window.__sim=async function(n=20,players=4,opts={}){
 document.addEventListener('focusout',e=>{if(e.target&&/^(INPUT|TEXTAREA)$/.test(e.target.tagName))setTimeout(()=>{if(!document.activeElement||!/^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName)){window.scrollTo(0,0);document.documentElement.scrollLeft=0;document.body.scrollTop=0}},80)});
 
 /* ================= ONLINE SAFETY ================= */
-function seatExtras(tok){return{tl:tokLv(tok),fin:myFinish(),ch:myChar()}}
+function seatExtras(tok,city=setup.city){return{tl:tokLv(tok),estate:estateForCity(city),fin:myFinish(),ch:myChar()}}
 const isBlocked=u=>!!u&&(PREF.blocked||[]).some(b=>b.u===u);
 async function reportPlayer(s,code){if(!s)return;const nm=cleanName(s.name);
   const k=await modal({html:`<div class="mh">${esc(nm)}</div><div class="mtxt">Report this player for an offensive name or behaviour, or block them. Blocked players’ games are hidden from your list and their name is hidden from you.</div>`,btns:[{k:'x',label:'Cancel'},{k:'block',label:isBlocked(s.uid)?'Unblock':'Block'},{k:'rep',label:'Report',primary:true}]});
@@ -7170,6 +7194,7 @@ function boot(data){
 try{const h=window.claude?.hot;if(h&&h.ready)h.ready(boot);else boot(h?.data??{})}catch(e){boot({})}
 setTimeout(()=>{try{const c=(new URLSearchParams(location.search).get('join')||'').toUpperCase();if(!/^[A-Z0-9]{5}$/.test(c)||!FIRE)return;history.replaceState(null,'',location.pathname);if(!G||G.over)openOnline(c)}catch(e){}},1200);
 </script>
+<script src="./reference-redesign.js"></script>
 <style>
 .pf3overview{flex:none;border:1px solid #365363;border-radius:12px;background:#102b37;padding:10px 12px;color:#e7f0f1}
 .pf3metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.pf3metrics span{display:flex;flex-direction:column;gap:3px}.pf3metrics b{color:#f0cf87;font-size:17px}.pf3metrics small{font-size:11px;color:#b9ccd4}
