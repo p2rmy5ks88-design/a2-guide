@@ -30,45 +30,47 @@ jobs:
         run: python3 skyline-estates/build.py --check
       - name: Test saved turns and seeded games
         run: |
-          node skyline-estates/security/service/room-entry-browser.test.cjs "$RUNNER_TEMP/skyline-room-entry-browser.json"
-          node skyline-estates/security/service/lobby-browser.test.cjs "$RUNNER_TEMP/skyline-lobby-browser.json"
-          node skyline-estates/tests/accounts-browser.cjs "$RUNNER_TEMP/skyline-accounts-browser.json"
-          node skyline-estates/tests/cloud-sync-browser.cjs
-          SKYLINE_SPOT_RUNS=20 node skyline-estates/tests/spotlight-browser.cjs "$RUNNER_TEMP/skyline-spotlight.json"
-          node skyline-estates/tests/native-fullscreen.cjs
-          node skyline-estates/tests/promo-codes.cjs
-          node skyline-estates/tests/promo-browser.cjs
-          node skyline-estates/tests/release-content.cjs
-          SKYLINE_CONTENT_RUNS=5 node skyline-estates/tests/release-content-browser.cjs
-          node skyline-estates/tests/token-mastery.cjs
-          node skyline-estates/security/service/property-rarity.test.cjs
-          SKYLINE_NO_WEBGL=1 node skyline-estates/tests/reference-dashboard-browser.cjs "$RUNNER_TEMP/skyline-reference-dashboard.json"
-          node skyline-estates/security/service/management-browser.test.cjs "$RUNNER_TEMP/skyline-management-browser.json"
-          node skyline-estates/security/service/game-controls-browser.test.cjs "$RUNNER_TEMP/skyline-controls-browser.json"
-          node skyline-estates/security/service/web-connection-browser.test.cjs "$RUNNER_TEMP/skyline-web-connection-browser.json"
-          node skyline-estates/security/service/ai-browser.test.cjs "$RUNNER_TEMP/skyline-ai-browser.json"
-          node skyline-estates/security/service/trade-browser.test.cjs "$RUNNER_TEMP/skyline-trade-browser.json"
-          node skyline-estates/security/service/reroll-browser.test.cjs "$RUNNER_TEMP/skyline-reroll-browser.json"
-          node skyline-estates/security/service/debt-browser.test.cjs "$RUNNER_TEMP/skyline-debt-browser.json"
-          node skyline-estates/security/service/auction-browser.test.cjs "$RUNNER_TEMP/skyline-auction-browser.json"
-          node skyline-estates/security/service/card-browser.test.cjs "$RUNNER_TEMP/skyline-card-browser.json"
-          node skyline-estates/security/service/jail-browser.test.cjs "$RUNNER_TEMP/skyline-jail-browser.json"
-          node skyline-estates/tests/timed-finish.cjs
-          node skyline-estates/security/service/end-browser.test.cjs "$RUNNER_TEMP/skyline-end-browser.json"
-          node skyline-estates/security/service/turn-browser.test.cjs "$RUNNER_TEMP/skyline-turn-browser.json"
-          node skyline-estates/security/service/setup-browser.test.cjs "$RUNNER_TEMP/skyline-setup-browser.json"
-          node skyline-estates/security/service/asset-browser.test.cjs "$RUNNER_TEMP/skyline-asset-browser.json"
-          node skyline-estates/tests/offline-worker.cjs
-          node skyline-estates/tests/offline-startup.cjs "$RUNNER_TEMP/skyline-offline-startup.json"
-          node skyline-estates/tests/session-lifecycle.cjs
-          node skyline-estates/tests/remote-state.cjs
-          node skyline-estates/tests/online-rooms.cjs
-          node skyline-estates/tests/turn-resume.cjs
-          node skyline-estates/tests/save-recovery.cjs
-          node skyline-estates/tests/complete-matches.cjs "$RUNNER_TEMP/skyline-complete-matches.json"
-          node skyline-estates/tests/human-flows.cjs "$RUNNER_TEMP/skyline-human-flows.json"
-          node skyline-estates/tests/stability.cjs "$RUNNER_TEMP/skyline-phase1.json"
-          node skyline-estates/tests/browser-smoke.cjs "$RUNNER_TEMP/skyline-browser-smoke.json"
+          # On failure, publish the test name and output tail as a check annotation (readable via the API).
+          t(){ local log="$RUNNER_TEMP/last-test.log"; if ! bash -c "$1" >"$log" 2>&1; then cat "$log"; msg=$(grep -v '^\s\{3,\}' "$log" | tail -c 3500 | sed -e 's/%/%25/g' -e 's/\r/%0D/g' | sed -e ':a;N;$!ba;s/\n/%0A/g'); ttl=$(printf %s "${1:0:120}" | sed "s/[:,]/ /g"); echo "::error title=Failed $ttl::$msg"; exit 1; fi; tail -n 3 "$log"; }
+          t 'node skyline-estates/security/service/room-entry-browser.test.cjs "$RUNNER_TEMP/skyline-room-entry-browser.json"'
+          t 'node skyline-estates/security/service/lobby-browser.test.cjs "$RUNNER_TEMP/skyline-lobby-browser.json"'
+          t 'node skyline-estates/tests/accounts-browser.cjs "$RUNNER_TEMP/skyline-accounts-browser.json"'
+          t 'node skyline-estates/tests/cloud-sync-browser.cjs'
+          t 'SKYLINE_SPOT_RUNS=20 node skyline-estates/tests/spotlight-browser.cjs "$RUNNER_TEMP/skyline-spotlight.json"'
+          t 'node skyline-estates/tests/native-fullscreen.cjs'
+          t 'node skyline-estates/tests/promo-codes.cjs'
+          t 'node skyline-estates/tests/promo-browser.cjs'
+          t 'node skyline-estates/tests/release-content.cjs'
+          t 'SKYLINE_CONTENT_RUNS=5 node skyline-estates/tests/release-content-browser.cjs'
+          t 'node skyline-estates/tests/token-mastery.cjs'
+          t 'node skyline-estates/security/service/property-rarity.test.cjs'
+          t 'SKYLINE_NO_WEBGL=1 node skyline-estates/tests/reference-dashboard-browser.cjs "$RUNNER_TEMP/skyline-reference-dashboard.json"'
+          t 'node skyline-estates/security/service/management-browser.test.cjs "$RUNNER_TEMP/skyline-management-browser.json"'
+          t 'node skyline-estates/security/service/game-controls-browser.test.cjs "$RUNNER_TEMP/skyline-controls-browser.json"'
+          t 'node skyline-estates/security/service/web-connection-browser.test.cjs "$RUNNER_TEMP/skyline-web-connection-browser.json"'
+          t 'node skyline-estates/security/service/ai-browser.test.cjs "$RUNNER_TEMP/skyline-ai-browser.json"'
+          t 'node skyline-estates/security/service/trade-browser.test.cjs "$RUNNER_TEMP/skyline-trade-browser.json"'
+          t 'node skyline-estates/security/service/reroll-browser.test.cjs "$RUNNER_TEMP/skyline-reroll-browser.json"'
+          t 'node skyline-estates/security/service/debt-browser.test.cjs "$RUNNER_TEMP/skyline-debt-browser.json"'
+          t 'node skyline-estates/security/service/auction-browser.test.cjs "$RUNNER_TEMP/skyline-auction-browser.json"'
+          t 'node skyline-estates/security/service/card-browser.test.cjs "$RUNNER_TEMP/skyline-card-browser.json"'
+          t 'node skyline-estates/security/service/jail-browser.test.cjs "$RUNNER_TEMP/skyline-jail-browser.json"'
+          t 'node skyline-estates/tests/timed-finish.cjs'
+          t 'node skyline-estates/security/service/end-browser.test.cjs "$RUNNER_TEMP/skyline-end-browser.json"'
+          t 'node skyline-estates/security/service/turn-browser.test.cjs "$RUNNER_TEMP/skyline-turn-browser.json"'
+          t 'node skyline-estates/security/service/setup-browser.test.cjs "$RUNNER_TEMP/skyline-setup-browser.json"'
+          t 'node skyline-estates/security/service/asset-browser.test.cjs "$RUNNER_TEMP/skyline-asset-browser.json"'
+          t 'node skyline-estates/tests/offline-worker.cjs'
+          t 'node skyline-estates/tests/offline-startup.cjs "$RUNNER_TEMP/skyline-offline-startup.json"'
+          t 'node skyline-estates/tests/session-lifecycle.cjs'
+          t 'node skyline-estates/tests/remote-state.cjs'
+          t 'node skyline-estates/tests/online-rooms.cjs'
+          t 'node skyline-estates/tests/turn-resume.cjs'
+          t 'node skyline-estates/tests/save-recovery.cjs'
+          t 'node skyline-estates/tests/complete-matches.cjs "$RUNNER_TEMP/skyline-complete-matches.json"'
+          t 'node skyline-estates/tests/human-flows.cjs "$RUNNER_TEMP/skyline-human-flows.json"'
+          t 'node skyline-estates/tests/stability.cjs "$RUNNER_TEMP/skyline-phase1.json"'
+          t 'node skyline-estates/tests/browser-smoke.cjs "$RUNNER_TEMP/skyline-browser-smoke.json"'
       - name: Upload per-game results
         if: always()
         uses: actions/upload-artifact@v4
