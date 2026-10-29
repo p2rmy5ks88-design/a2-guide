@@ -3,7 +3,7 @@
 'use strict';
 const LABEL={'apple.com':'Apple','google.com':'Google',password:'Email'};
 function friendly(e){const code=e?.code||'';return ({'account/sign-out-first':'Sign out before choosing a different player account.','account/busy':'Please wait for the current account action.','account/native-setup-required':'Apple and Google sign-in are being connected for this app. Email sign-in is available when accounts launch.','account/deletion-service-required':'Account removal is not ready yet. Accounts will launch when secure removal is available.','auth/account-exists-with-different-credential':'Sign in with your existing method first, then link this sign-in method.','auth/credential-already-in-use':'This sign-in belongs to another account. Sign into that account instead; your progress has not been merged.','auth/email-already-in-use':'That email already has an account. Sign in or use password recovery.','auth/invalid-credential':'Check your email and password and try again.','auth/wrong-password':'Check your email and password and try again.','auth/invalid-email':'Enter a valid email address.','auth/weak-password':'Choose a stronger password with at least six characters.','auth/popup-closed-by-user':'Sign-in cancelled. Your game has not changed.','auth/cancelled-popup-request':'Sign-in cancelled. Your game has not changed.','auth/popup-blocked':'Allow the sign-in window in your browser, then try again.','auth/network-request-failed':'You are offline. Your device progress is safe; try again when connected.','auth/too-many-requests':'Too many attempts. Please wait before trying again.','auth/operation-not-allowed':'This sign-in method is not enabled yet. Your device progress is safe.','auth/unauthorized-domain':'This game address is not enabled for sign-in yet.','auth/requires-recent-login':'Sign in again before changing your account.'})[code]||'The account action could not finish. Your local game progress has not changed.'}
-function createAccountPanel({getController,enabled=()=>false,doc=document}){
+function createAccountPanel({getController,enabled=()=>false,testApple=null,doc=document}){
  let panel=null,controller=null,unsubscribe=null,lastFocus=null,mode='signin',busy=false;
  function el(tag,text,props={}){const node=doc.createElement(tag);if(text!=null)node.textContent=text;Object.assign(node,props);return node}
  function close(){busy=false;unsubscribe?.();unsubscribe=null;panel?.close();panel?.remove();panel=null;lastFocus?.focus()}
@@ -13,7 +13,7 @@ function createAccountPanel({getController,enabled=()=>false,doc=document}){
  function controls(value){panel?.querySelectorAll('[data-account-body] button,[data-account-body] input').forEach(b=>{if(value){if(!Object.hasOwn(b.dataset,'wasDisabled'))b.dataset.wasDisabled=String(b.disabled);b.disabled=true}else if(Object.hasOwn(b.dataset,'wasDisabled')){b.disabled=b.dataset.wasDisabled==='true';delete b.dataset.wasDisabled}})}
 
  function render(){if(!panel)return;const body=panel.querySelector('[data-account-body]');body.replaceChildren();const user=controller?.current();
-  if(!enabled()){body.append(el('h3','Keep your player account safe'),el('p','Online accounts are being connected. Your coins, collection and saved game are still on this device. Paid purchases are paused.'));return}
+  if(!enabled()){body.append(el('h3','Keep your player account safe'),el('p','Online accounts are being connected. Your coins, collection and saved game are still on this device. Paid purchases are paused.'));if(testApple){body.append(el('p','Test the Apple sign-in sheet on this iPhone. This check does not create a Firebase player account or move your coins.'));button(body,'Test Apple sign-in',()=>act(testApple,'Apple returned a sign-in credential. Online player accounts are still paused.'))}return}
   if(!controller){body.append(el('p','Connecting to your account…'));return}
   body.append(el('h3',user&&!user.anonymous?'Your player account':'Sign in to Skyline Estates'));
   if(user&&!user.anonymous){body.append(el('p',user.email||'Signed in'),el('p','Linked methods: '+user.providers.map(p=>LABEL[p]||'Other').join(', ')));if(user.providers.includes('password')&&!user.verified){body.append(el('p','Verify your email before using a paid wallet.'));button(body,'Send verification email',()=>act(()=>controller.verify(),'Verification email sent.'));button(body,'I have verified my email',()=>act(()=>controller.refresh(),'Account status refreshed.'))}
@@ -34,17 +34,29 @@ function createAccountPanel({getController,enabled=()=>false,doc=document}){
  async function open(){if(panel)return;lastFocus=doc.querySelector('#tbWho')||doc.activeElement;mode='signin';panel=el('dialog',null,{className:'sky-accounts'});panel.setAttribute('aria-labelledby','sky-account-title');const header=el('header');header.append(el('h2','Account & recovery',{id:'sky-account-title'}));button(header,'Close',close);panel.append(header,el('p','Device progress stays on this device until cloud sync is ready. Sign-in never replaces your local save.',{className:'sky-account-note'}));const body=el('div');body.dataset.accountBody='';panel.append(body);const state=el('p','',{role:'status',className:'sky-account-status'});state.dataset.accountStatus='';state.setAttribute('aria-live','polite');panel.append(state);panel.addEventListener('cancel',e=>{e.preventDefault();close()});doc.body.append(panel);panel.showModal();render();if(!enabled())return;const owner=panel;busy=true;controls(true);try{const ready=await getController();if(panel!==owner)return;controller=ready;unsubscribe=controller.subscribe(()=>{if(panel&&!busy)render()});render()}catch(e){if(panel===owner)status(friendly(e))}finally{if(panel===owner){busy=false;controls(false)}}}
  return{open,close};
 }
+function nativeAccountOptions(cap){
+ const native=!!cap?.isNativePlatform?.(),ios=native&&cap.getPlatform?.()==='ios';
+ const plugin=ios&&cap.isPluginAvailable?.('FirebaseAuthentication')?cap.Plugins?.FirebaseAuthentication:null;
+ const nativeProviders=plugin?['apple.com']:[];
+ const nativeCredential=plugin?async p=>{
+  if(p!=='apple.com')throw Object.assign(Error('Native provider setup required'),{code:'account/native-setup-required'});
+  const result=await plugin.signInWithApple({skipNativeAuth:true});
+  const c=result?.credential;
+  if(typeof c?.idToken!=='string'||!c.idToken||typeof c?.nonce!=='string'||!c.nonce)throw Object.assign(Error('Apple credential incomplete'),{code:'auth/missing-or-invalid-nonce'});
+  return result;
+ }:null;
+ return {native,nativeProviders,nativeCredential};
+}
 scope.createSkylineAccountPanel=createAccountPanel;
-if(typeof module!=='undefined'&&module.exports){module.exports={createAccountPanel,friendly};return}
+if(typeof module!=='undefined'&&module.exports){module.exports={createAccountPanel,friendly,nativeAccountOptions};return}
 let pending;
 async function loadController(){if(!pending)pending=(async()=>{
  const [appSdk,authSdk]=await Promise.all([import('https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js'),import('https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js')]);
- const cap=scope.Capacitor,native=!!cap?.isNativePlatform?.(),plugin=cap?.isPluginAvailable?.('FirebaseAuthentication')?cap.Plugins.FirebaseAuthentication:null;
- const nativeCredential=plugin?async p=>p==='apple.com'?plugin.signInWithApple({skipNativeAuth:true}):plugin.signInWithGoogle({skipNativeAuth:true}):null;
- const adapter=await scope.createSkylineFirebaseAccountAdapter({appSdk,authSdk,config:scope.EKO_FIREBASE,native,nativeCredential});
+ const nativeOptions=nativeAccountOptions(scope.Capacitor);
+ const adapter=await scope.createSkylineFirebaseAccountAdapter({appSdk,authSdk,config:scope.EKO_FIREBASE,...nativeOptions});
  return scope.createSkylineAccountController(adapter);
  })().catch(e=>{pending=null;throw e});return pending}
-const panel=createAccountPanel({getController:loadController,enabled:()=>scope.EKO_ACCOUNTS?.enabled===true});
+const panel=createAccountPanel({getController:loadController,enabled:()=>scope.EKO_ACCOUNTS?.enabled===true,testApple:nativeAccountOptions(scope.Capacitor).nativeCredential?async()=>{await nativeAccountOptions(scope.Capacitor).nativeCredential('apple.com')}:null});
 scope.SkylineAccounts={open:panel.open,getIdToken:async force=>(await loadController()).getIdToken(force)};
 const style=document.createElement('style');style.textContent='.sky-accounts{box-sizing:border-box;width:min(540px,calc(100vw - 24px));max-height:calc(100vh - 24px);max-height:calc(100dvh - 24px);padding:22px;border:1px solid #b9a05b;border-radius:18px;background:#062334;color:#edf4f7;overflow:auto;font:15px system-ui}.sky-accounts::backdrop{background:#000b}.sky-accounts header{display:flex;align-items:center;justify-content:space-between;gap:12px}.sky-accounts h2{font-size:22px;margin:0;color:#edcd7d}.sky-accounts h3{font-size:19px;margin:18px 0 8px}.sky-accounts p{line-height:1.6}.sky-accounts button,.sky-accounts input{box-sizing:border-box;min-height:46px;font:inherit;border:1px solid #567584;border-radius:9px;padding:10px 12px}.sky-accounts button{cursor:pointer;background:#123b4d;color:#f7e1a1}.sky-accounts button:disabled{opacity:.55;cursor:wait}.sky-accounts button:focus-visible,.sky-accounts input:focus-visible{outline:3px solid #edcd7d;outline-offset:2px}.sky-accounts form{display:flex;flex-direction:column;gap:12px;margin:16px 0}.sky-accounts input{background:#021923;color:#f5f7f9;width:100%}.sky-accounts input[type=checkbox]{width:22px;min-height:22px;margin-right:8px;vertical-align:middle}.sky-account-actions{display:flex;flex-wrap:wrap;gap:10px}.sky-accounts form button{background:#e9c56c;color:#102334;font-weight:700}.sky-account-note{font-size:12px;color:#bcd0db;border-bottom:1px solid #33596b;padding-bottom:12px}.sky-account-status{min-height:24px;font-size:13px;color:#f0d99b}.sky-accounts>div>button{margin:6px 7px 6px 0}@media(max-height:450px){.sky-accounts{padding:14px}.sky-accounts h2{font-size:19px}.sky-accounts form{margin:10px 0}}';document.head.append(style);
 })(typeof window!=='undefined'?window:globalThis);

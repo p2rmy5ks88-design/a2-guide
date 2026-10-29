@@ -13,4 +13,5 @@ fi
 G=android/app/build.gradle
 VC="${VERSION_CODE:-1}"; VN="${VERSION_NAME:-1.0.0}"
 sed -i.bak -E "s/versionCode [0-9]+/versionCode ${VC}/; s/versionName \"[^\"]*\"/versionName \"${VN}\"/" "$G"; rm -f "$G.bak"
+node scripts/native-firebase-config.mjs android
 echo "Android patched: landscape, fullscreen, versionCode ${VC}, versionName ${VN}"
