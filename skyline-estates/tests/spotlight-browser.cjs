@@ -94,7 +94,13 @@ const check=(name,ok,detail)=>{assert.ok(ok,name+(detail?' '+JSON.stringify(deta
  for(const [label,vp] of [['phone',{width:956,height:440}],['portrait',{width:390,height:844}],['desktop',{width:1280,height:800}]]){
   const v=await open(url,vp,{inv:{roof:{'golden-garden':1}},eq:{roof:'golden-garden'}});
   await v.page.evaluate(()=>homeTab('spotlight'));await v.page.waitForSelector('.spot .spplay');
-  const ui=await v.page.evaluate(()=>{const r=e=>e&&e.getBoundingClientRect(),p=r(document.querySelector('.spplay')),pane=r(document.querySelector('#pane'));return{play:!!p&&p.width>40,inside:p.right<=pane.right+1&&p.left>=pane.left-1,overflowX:document.querySelector('#pane').scrollWidth<=document.querySelector('#pane').clientWidth+2}});
+  // Portrait phones rotate the whole UI 90° (html.rot), so screen-space width/height swap.
+  // Measure the touch target in layout pixels (>= 44, Apple's minimum), then prove it is visible
+  // and actually receives a tap at its on-screen centre.
+  const ui=await v.page.evaluate(()=>{const b=document.querySelector('.spplay'),r=b.getBoundingClientRect(),pane=document.querySelector('#pane'),pr=pane.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2,hit=document.elementFromPoint(cx,cy),cs=getComputedStyle(b);
+    return{rotated:document.documentElement.classList.contains('rot'),screen:[Math.round(r.width),Math.round(r.height)],layout:[b.offsetWidth,b.offsetHeight],visible:cs.visibility==='visible'&&cs.display!=='none'&&+cs.opacity>0,tappable:!!hit&&(hit===b||b.contains(hit)),
+      inside:r.left>=pr.left-1&&r.right<=pr.right+1&&r.top>=pr.top-1&&r.bottom<=pr.bottom+1,overflowX:pane.scrollWidth<=pane.clientWidth+2}});
+  ui.play=ui.layout[0]>=44&&ui.layout[1]>=44&&ui.visible&&ui.tappable;
   if(shots)await v.page.screenshot({path:path.join(shots,`spotlight-${label}.png`)});
   await v.page.evaluate(()=>homeTab('buildings'));await v.page.waitForSelector('.roofs .roofrow');
   const roof=await v.page.evaluate(()=>({rows:document.querySelectorAll('.roofs .roofrow').length,equipped:document.querySelector('.roofrow.sel b').textContent,stage:!!document.querySelector('.roofstage canvas[data-done]')}));
