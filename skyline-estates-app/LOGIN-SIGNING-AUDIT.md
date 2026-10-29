@@ -16,7 +16,7 @@ Status: not resolved end to end. Do not ask the player to install another unsign
 
 Added a macOS signed-app preflight using Apple's codesign verification and CMS profile decoder. It checks the actual signature and embedded profile, exact application/team IDs, Apple capability on both sides, profile expiration, signing certificate membership, development-device presence, debug permission agreement, and bundled Firebase identity. Raw profile contents and device identifiers are not logged. Source-only or unsigned apps cannot satisfy this check.
 
-The existing explicitly gated signed archive path now runs this preflight before exporting/uploading. Ordinary PR builds remain unsigned build tests and must not be described as Apple-login acceptance tests. This change does not activate the publishing path or supply signing credentials. The validator checks the archive app; Apple's final TestFlight processing and a phone acceptance test remain separate requirements.
+The existing explicitly gated signed archive path now runs this preflight before exporting/uploading. Signing secrets are scoped to that step instead of being exposed to dependency-install and ordinary build steps; missing signing configuration fails explicitly, and temporary API-key files are cleaned up. Ordinary PR builds remain unsigned build tests and must not be described as Apple-login acceptance tests. This change does not activate the publishing path or supply signing credentials. The validator checks the archive app; Apple's final TestFlight processing and a phone acceptance test remain separate requirements.
 
 ## Account path matrix
 

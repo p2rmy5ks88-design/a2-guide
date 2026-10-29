@@ -55,7 +55,6 @@ jobs:
     env:
       VERSION_NAME: '1.0.${{ github.run_number }}'
       VERSION_CODE: '${{ github.run_number }}'
-      ASC_KEY_B64: ${{ github.event_name == 'workflow_dispatch' && inputs.publish && secrets.APP_STORE_CONNECT_KEY_BASE64 || '' }}
     steps:
       - uses: actions/checkout@v4
         with: { persist-credentials: false }
@@ -138,14 +137,21 @@ jobs:
             ${{ runner.temp }}/skyline-ios-toolchain.txt
           if-no-files-found: error
       - name: Archive and upload to TestFlight
-        if: github.event_name == 'workflow_dispatch' && inputs.publish && env.ASC_KEY_B64 != ''
+        if: github.event_name == 'workflow_dispatch' && inputs.publish
         working-directory: skyline-estates-app/ios/App
         env:
+          ASC_KEY_B64: ${{ secrets.APP_STORE_CONNECT_KEY_BASE64 }}
           ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           ASC_ISSUER: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
           TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
-          echo "$ASC_KEY_B64" | base64 -d > "$RUNNER_TEMP/asc.p8"
+          # Credentials are scoped to this explicitly requested step, never npm/install/build.
+          for name in ASC_KEY_B64 ASC_KEY_ID ASC_ISSUER TEAM_ID; do
+            if [ -z "${!name}" ]; then echo 'Required Apple signing configuration is missing'; exit 1; fi
+          done
+          umask 077
+          trap 'rm -f "$RUNNER_TEMP/asc.p8" "$RUNNER_TEMP/export.plist"' EXIT
+          printf '%s' "$ASC_KEY_B64" | base64 -d > "$RUNNER_TEMP/asc.p8"
           if [ -d App.xcworkspace ]; then T="-workspace App.xcworkspace"; else T="-project App.xcodeproj"; fi
           AUTH="-allowProvisioningUpdates -authenticationKeyPath $RUNNER_TEMP/asc.p8 -authenticationKeyID $ASC_KEY_ID -authenticationKeyIssuerID $ASC_ISSUER"
           xcodebuild $T -scheme App -configuration Release -destination 'generic/platform=iOS' \
