@@ -3367,7 +3367,7 @@ async function createOnline(){
   const db=NET.db;
   const tok0=setup.slots[0].tok||PREF.tok||TOKENS[0];const seat=Object.assign({uid:NET.me,name:cleanName(myName()||PREF.nick||'Player'),tok:tok0,col:SEATCOL[0],ai:false},seatExtras(tok0));
   try{for(let attempt=0;attempt<8;attempt++){
-    const code=genCode(),ref=db.doc('games/'+code),room={code,ed:'sk',host:NET.me,status:'lobby-sk',seats:[seat],seatIds:[NET.me],set:cfgSetOnline(),at:Date.now(),seq:0};
+    const code=genCode(),ref=db.doc('games/'+code),room={code,ed:'sk',host:NET.me,status:'lobby-sk',seats:[seat],seatIds:[NET.me],set:(s=>{delete s.events2;return s})(cfgSet()),at:Date.now(),seq:0};
     // Firebase creation must be atomic: an existing room is never replaced on collision.
     if(NET.backend==='firebase'){if(!await ref.create(room))continue}else await ref.set(room);
     lobby(code,ref);return;
