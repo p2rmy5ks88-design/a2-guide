@@ -1,0 +1,7 @@
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
+const source=fs.readFileSync(require('node:path').join(__dirname,'../game.html'),'utf8');
+const start=source.indexOf('function requestGameFullscreen(){'),end=source.indexOf('function startFromSetup(',start);
+assert(start>=0&&end>start);const helper=source.slice(start,end);
+assert.match(source.slice(end,source.indexOf('const myFinish=',end)),/requestGameFullscreen\(\);/);
+async function run(native,request){let calls=0,locks=0;const context={IS_APP:native,document:{documentElement:{requestFullscreen:request===null?undefined:()=>{calls++;return request();}}},screen:{orientation:{lock:()=>{locks++;return Promise.resolve();}}}};vm.runInNewContext(helper+'requestGameFullscreen();',context);await new Promise(resolve=>setImmediate(resolve));return {calls,locks};}
+(async()=>{assert.deepEqual(await run(true,()=>{throw Error('Native must not request HTML fullscreen');}),{calls:0,locks:0});assert.deepEqual(await run(false,()=>Promise.resolve()),{calls:1,locks:1});assert.deepEqual(await run(false,()=>Promise.reject(Error('User denied'))),{calls:1,locks:0});assert.deepEqual(await run(false,null),{calls:0,locks:0});assert.deepEqual(await run(false,()=>{throw Error('Unsupported');}),{calls:1,locks:0});console.log('PASS 5 native/browser fullscreen cases');})().catch(e=>{console.error(e);process.exitCode=1;});
