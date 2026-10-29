@@ -34,6 +34,7 @@ jobs:
           node skyline-estates/security/service/lobby-browser.test.cjs "$RUNNER_TEMP/skyline-lobby-browser.json"
           node skyline-estates/tests/accounts-browser.cjs "$RUNNER_TEMP/skyline-accounts-browser.json"
           node skyline-estates/tests/cloud-sync-browser.cjs
+          SKYLINE_SPOT_RUNS=20 node skyline-estates/tests/spotlight-browser.cjs "$RUNNER_TEMP/skyline-spotlight.json"
           node skyline-estates/tests/native-fullscreen.cjs
           node skyline-estates/tests/promo-codes.cjs
           node skyline-estates/tests/promo-browser.cjs
