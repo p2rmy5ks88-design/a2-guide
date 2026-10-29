@@ -8,9 +8,9 @@ async function createFirebaseAccountAdapter({appSdk,authSdk:sdk,config,native=fa
  await sdk.setPersistence(auth,sdk.browserLocalPersistence);await auth.authStateReady();
  const provider=p=>{const value=p==='google.com'?new sdk.GoogleAuthProvider():new sdk.OAuthProvider('apple.com');if(p==='apple.com'){value.addScope('email');value.addScope('name')}return value};
  const emailCredential=values=>sdk.EmailAuthProvider.credential(String(values?.email||'').trim(),String(values?.password||''));
- async function credential(p){
+ async function credential(p,keep){
   if(!nativeCredential||!nativeProviders.includes(p))throw Object.assign(Error('Native sign-in setup is not complete'),{code:'account/native-setup-required'});
-  const r=await nativeCredential(p),idToken=r?.credential?.idToken||r?.idToken;
+  const r=await nativeCredential(p),idToken=r?.credential?.idToken||r?.idToken;if(keep)keep.authorizationCode=r?.credential?.authorizationCode||null;
   if(p==='google.com')return sdk.GoogleAuthProvider.credential(idToken,r?.credential?.accessToken||r?.accessToken);
   const rawNonce=r?.credential?.nonce||r?.nonce;if(typeof rawNonce!=='string'||!rawNonce||typeof idToken!=='string'||!idToken)throw Object.assign(Error('Apple nonce or identity token missing'),{code:'auth/missing-or-invalid-nonce'});
   return provider(p).credential({idToken,rawNonce});
@@ -30,13 +30,20 @@ async function createFirebaseAccountAdapter({appSdk,authSdk:sdk,config,native=fa
   getIdToken:force=>auth.currentUser.getIdToken(force),
   async remove(values){
    const user=auth.currentUser,providers=user.providerData.map(p=>p.providerId);
-   // Deletion remains blocked until server data removal and native Apple revocation
-   // are configured. Never delete Auth first and orphan a wallet or cloud save.
+   // Never delete Auth first and orphan a wallet or cloud save: the server removes
+   // data and then the Auth user. Apple-linked accounts revoke their Apple token
+   // first (TN3194) with the authorization code from a fresh Apple sign-in.
    if(typeof config.deletePlayer!=='function')throw Object.assign(Error('Account deletion requires the secure player service'),{code:'account/deletion-service-required'});
-   if(providers.includes('password'))await sdk.reauthenticateWithCredential(user,emailCredential({email:user.email,password:values?.password}));
-   else if(native)await sdk.reauthenticateWithCredential(user,await credential(providers.includes('apple.com')?'apple.com':'google.com'));
-   else await sdk.reauthenticateWithPopup(user,provider(providers.includes('apple.com')?'apple.com':'google.com'));
+   const apple=providers.includes('apple.com');let code=null;
+   if(apple){if(native){const keep={};await sdk.reauthenticateWithCredential(user,await credential('apple.com',keep));code=keep.authorizationCode}
+    else{const result=await sdk.reauthenticateWithPopup(user,provider('apple.com'));code=sdk.OAuthProvider.credentialFromResult(result)?.accessToken||null}
+    if(typeof code!=='string'||!code)throw Object.assign(Error('Apple did not return a revocation code'),{code:'account/apple-revoke-unavailable'});
+    await sdk.revokeAccessToken(auth,code)}
+   else if(providers.includes('password'))await sdk.reauthenticateWithCredential(user,emailCredential({email:user.email,password:values?.password}));
+   else if(native)await sdk.reauthenticateWithCredential(user,await credential('google.com'));
+   else await sdk.reauthenticateWithPopup(user,provider('google.com'));
    await config.deletePlayer(await user.getIdToken(true));
+   try{await sdk.signOut(auth)}catch{}
   }
  };
 }

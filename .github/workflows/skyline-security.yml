@@ -5,6 +5,9 @@ on:
       - 'skyline-estates/security/**'
       - 'skyline-estates/lib/purchase-delivery.js'
       - 'skyline-estates/lib/storekit-client.js'
+      - 'skyline-estates/lib/cloud-*.js'
+      - 'skyline-estates/lib/account*.js'
+      - 'skyline-estates/functions/**'
       - 'skyline-estates/database.rules.json'
       - '.github/workflows/skyline-security.yml'
   workflow_dispatch:
@@ -37,6 +40,8 @@ jobs:
         run: npm install --no-audit --no-fund
       - name: Test permission boundaries and trusted admission locally
         run: npm test
+      - name: Check the undeployed player function kit loads the tested modules
+        run: node ../functions/scripts/prepare.mjs && node ../functions/scripts/prepare.mjs --check && node ../functions/scripts/smoke.cjs
       - name: Retain permission results and emulator diagnostics
         if: always()
         uses: actions/upload-artifact@v4

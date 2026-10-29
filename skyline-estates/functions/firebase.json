@@ -1,0 +1,11 @@
+{
+  "functions": [
+    {
+      "source": ".",
+      "codebase": "skyline-player",
+      "runtime": "nodejs22",
+      "ignore": ["node_modules", "scripts", "*.md", "firebase.json", "apple-roots/README.md"],
+      "predeploy": ["npm --prefix \"$RESOURCE_DIR\" run prepare-service", "node \"$RESOURCE_DIR/scripts/check-roots.cjs\""]
+    }
+  ]
+}
