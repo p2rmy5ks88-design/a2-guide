@@ -10,7 +10,8 @@
     "setup:ios": "npm run build:web && npx cap add ios && npm run assets -- --ios && bash scripts/patch-ios.sh && npx cap sync ios",
     "sync": "npm run build:web && npx cap sync",
     "open:android": "npx cap open android",
-    "open:ios": "npx cap open ios"
+    "open:ios": "npx cap open ios",
+    "postinstall": "node scripts/patch-native-apple-errors.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^7.0.0",
