@@ -22,4 +22,6 @@ PBX=ios/App/App.xcodeproj/project.pbxproj
 if [ -f "$PBX" ]; then
   sed -i '' -E 's/(INFOPLIST_KEY_UISupportedInterfaceOrientations[^=]*= )"[^"]*"/\1"UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"/' "$PBX"
 fi
+node scripts/native-firebase-config.mjs ios
+ruby scripts/configure-apple-auth.rb
 echo "iOS patched: landscape only, status bar hidden, version ${VERSION_NAME:-1.0.0} (${VERSION_CODE:-1})"
