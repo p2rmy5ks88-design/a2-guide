@@ -28,3 +28,14 @@ Native Apple authorization was physically accepted in private TestFlight 1.0.39.
 App Store Connect read-only check today: Paid Apps Agreement, banking and tax form show Active. Digital Services Act trader verification shows In Review. The public version remains Prepare for Submission with no selected release build and incomplete listing/review details. No legal agreements, banking details or privacy settings were changed.
 
 Remaining implementation estimate: approximately 3–6 hours, plus store setup/verification and review. This is not a guaranteed launch date. No public submission was made by this content update.
+
+
+## SDK 27 compatibility result
+
+The isolated compatibility workflow passed on Xcode 27.1 (build 27A9275), with iPhoneOS SDK 27.1. Both unsigned simulator and ARM64 device builds succeeded; the actual device binary reports platform IOS and SDK 27.1. Run: https://github.com/p2rmy5ks88-design/a2-guide/actions/runs/40900515331 . No signing credentials, store upload or real purchase were used in this test. Physical authentication/payment acceptance remains separate.
+
+Apple’s current upload minimum is SDK 26+. From April 2027, SDK 27+ and minimum iOS 15 are required: https://developer.apple.com/app-store/submitting/ . The compatibility build targets iOS 15; the existing release pipeline remains unchanged pending the signed release candidate.
+
+Google Play account inspection: owner identity, real Android-device access and contact-phone verification remain required; app creation is disabled until completed. Owner handoff is required for these personal checks.
+
+The privacy page was corrected to describe the current paused purchases and diagnostic Apple check, instead of claiming active device-only purchases. It must be updated again to match the final deployed account/wallet service before activation.
