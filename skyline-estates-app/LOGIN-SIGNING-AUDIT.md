@@ -2,6 +2,12 @@
 
 Status: not resolved end to end. Do not ask the player to install another unsigned diagnostic-only IPA.
 
+## Approved setup completed after the initial audit
+
+The owner approved the exact Firebase domain, Apple API terms/access request, a Developer-role team API key, encrypted Actions storage and private internal TestFlight delivery. Firebase now lists p2rmy5ks88-design.github.io as an authorized custom domain. Apple approved API access; the new private-build key and required identifiers are saved as encrypted repository secrets. No private key is committed or printed. Necessary signing/profile creation and actual signed-build acceptance are still pending. The observations below describe the initial state, before those approved changes.
+
+All four final-code CI runs passed: [iOS/Xcode 26.6 + iOS SDK 26.5](https://github.com/p2rmy5ks88-design/a2-guide/actions/runs/40830388803), [Android](https://github.com/p2rmy5ks88-design/a2-guide/actions/runs/40830388743), [desktop](https://github.com/p2rmy5ks88-design/a2-guide/actions/runs/40830388759), and [browser/game stability](https://github.com/p2rmy5ks88-design/a2-guide/actions/runs/40830388761). The signed-upload step was not run by PR checks.
+
 ## Confirmed observations
 
 - The installed diagnostic reports APPLE-1000 after Apple's sheet. This is an Apple authorization failure before the Firebase credential exchange. The generic code alone does not identify its cause.
@@ -26,7 +32,7 @@ The existing explicitly gated signed archive path now runs this preflight before
 | Password recovery | Completed reset tested with independent emulator client, replay rejected in previous CI | Live email delivery and return to app |
 | Provider linking | UID preservation, collisions and concurrent mutation guards pass | Live provider linking on an Apple-signed app |
 | Native Apple | Credential-only bridge, raw nonce and safe failure paths pass automated tests | Properly signed app + successful Apple credential return + Firebase exchange |
-| Web Apple/Google | Adapter implemented; Firebase providers enabled | Authorize the game's exact domain, then live OAuth acceptance |
+| Web Apple/Google | Adapter implemented; Firebase providers enabled | Domain is now authorized; live OAuth acceptance remains |
 | Native Google | Intentionally unavailable | Correct native OAuth clients/URL schemes, Android signing fingerprints and native acceptance |
 | Account removal | Deliberately blocked without secure service | Server-owned data removal and Apple token revocation before activation |
 | Wallet/save recovery | Device progress protected by tests; cloud activation gated | Secure service deployment and explicit migration acceptance |
@@ -44,7 +50,7 @@ Public game accounts and paid purchases remain paused. Enabling providers in the
 
 ## One consolidated next acceptance build
 
-Preferred: privately test an Apple-team-signed build through TestFlight, avoiding Sideloadly re-signing. This needs explicit approval for private TestFlight delivery and the exact signing/API credential setup before creating or storing credentials. Do not publish to the public App Store. An alternative is a development-signed IPA for an already registered phone, with secure private delivery because its embedded profile contains registered device identifiers.
+Preferred: privately test an Apple-team-signed build through TestFlight, avoiding Sideloadly re-signing. The owner has approved private TestFlight delivery and the exact signing/API credential setup. Do not publish to the public App Store. An alternative is a development-signed IPA for an already registered phone, with secure private delivery because its embedded profile contains registered device identifiers.
 
 Before another phone test: verify the final signed archive, inspect the configured Apple App ID/capability, authorize the web domain with approval, complete native-provider configuration, and record the account/removal/migration gates explicitly. Ask for one structured acceptance session after those checks, not repeated error-label-only builds.
 
