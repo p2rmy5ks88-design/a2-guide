@@ -42,7 +42,12 @@ for platform in ('android', 'ios', 'desktop'):
         check(f'{platform}: build job cannot publish releases', 'gh release' not in build and 'contents: write' not in build)
     if platform in ('android', 'ios'):
         secret = 'ANDROID_KEYSTORE_BASE64' if platform == 'android' else 'APP_STORE_CONNECT_KEY_BASE64'
-        check(f'{platform}: signing material only on explicit publication', GATE + ' && secrets.' + secret in text and '        if: ' + GATE + ' && env.' in text)
+        if platform == 'ios':
+            signed_step = text.split('      - name: Archive and upload to TestFlight', 1)[1].split('      - name:', 1)[0]
+            before_signing = text.split('      - name: Archive and upload to TestFlight', 1)[0]
+            check('ios: signing credentials only reach explicit publication step', '        if: ' + GATE in signed_step and 'secrets.APP_STORE_CONNECT_KEY_BASE64' in signed_step and 'secrets.' not in before_signing and 'Required Apple signing configuration is missing' in signed_step and 'trap ' in signed_step)
+        else:
+            check(f'{platform}: signing material only on explicit publication', GATE + ' && secrets.' + secret in text and '        if: ' + GATE + ' && env.' in text)
     if platform == 'ios':
         check('ios: validates unsigned simulator product and retains log', 'CODE_SIGNING_ALLOWED=NO build' in text and 'test -d "$RUNNER_TEMP/skyline-ios/Build/Products/Release-iphonesimulator/App.app"' in text and 'if: always()' in text)
     if platform == 'ios':
@@ -51,4 +56,5 @@ for platform in ('android', 'ios', 'desktop'):
 ios = (ROOT / '.github/workflows/skyline-ios.yml').read_text()
 check('ios: requires macOS 26 runner and verifies toolchain before install', 'runs-on: macos-26' in ios and ios.index('verify-ios-sdk.py toolchain') < ios.index('- name: Install'))
 check('ios: verifies the linked device SDK and retains toolchain evidence', 'verify-ios-sdk.py" binary' in ios and 'skyline-ios-toolchain.txt' in ios)
+check('ios: signed Apple validation runs before any export or upload', 'verify-signed-apple.test.py' in ios and ios.index('verify-signed-apple.py"') < ios.index('xcodebuild -exportArchive'))
 print(f'{checks} build pipeline checks passed')
