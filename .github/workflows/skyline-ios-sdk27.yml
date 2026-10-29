@@ -3,6 +3,8 @@ on:
   pull_request:
     paths:
       - '.github/workflows/skyline-ios-sdk27.yml'
+      - 'skyline-estates-app/native/**'
+      - 'skyline-estates-app/scripts/configure-apple-auth.rb'
   workflow_dispatch:
 permissions:
   contents: read

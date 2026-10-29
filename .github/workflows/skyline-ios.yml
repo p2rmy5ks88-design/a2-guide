@@ -74,6 +74,8 @@ jobs:
           node skyline-estates-app/scripts/patch-native-apple-errors.test.mjs
           swiftc -parse-as-library skyline-estates-app/native/AppleAuthorizationErrors.swift skyline-estates-app/native/AppleAuthorizationErrors.test.swift -o "$RUNNER_TEMP/apple-error-tests"
           "$RUNNER_TEMP/apple-error-tests"
+          swiftc -parse-as-library skyline-estates-app/native/SkylineStoreProducts.swift skyline-estates-app/native/SkylineStoreProducts.test.swift -o "$RUNNER_TEMP/store-product-tests"
+          "$RUNNER_TEMP/store-product-tests"
       - name: Require Xcode 26 and iOS 26 SDK
         run: |
           xcodebuild -version > "$RUNNER_TEMP/skyline-ios-toolchain.txt"
