@@ -7,7 +7,7 @@ index = head + body + '</body></html>'
 core = ['index.html', 'reference-redesign.js', 'manifest.webmanifest', 'privacy.html', 'icon-180.png', 'icon-192.png', 'icon-512.png']
 assets = sorted(p.relative_to(here).as_posix() for folder in ['art','items','photos','lib','riders'] for p in (here/folder).rglob('*') if p.is_file())
 files = core + assets
-texts = {'.html','.js','.mjs','.json','.webmanifest','.txt'}
+texts = {'.html','.js','.mjs','.cjs','.json','.webmanifest','.txt'}
 def canonical(p, data):
     return data.replace(b'\r\n', b'\n') if p.suffix in texts else data
 hash = hashlib.sha256()

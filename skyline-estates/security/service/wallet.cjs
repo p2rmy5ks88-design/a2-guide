@@ -6,7 +6,9 @@ const {createHash}=require('node:crypto');
 const {createWalletIdentity}=require('./wallet-auth.cjs');
 const APP='com.kenstylez.skylineestates';
 const CATALOG=Object.freeze(Object.fromEntries([
- ['coins_500',500],['coins_1200',1200],['coins_3000',3000],['coins_7000',7000]
+ ['coins_500',500],['coins_1200',1200],['coins_3000',3000],['coins_7000',7000],
+ // New launch SKUs; legacy IDs retain their original credit/refund amount.
+ ['coins_600',600],['coins_1500',1500],['coins_4000',4000],['coins_10000',10000]
 ].map(([id,coins])=>[APP+'.'+id,coins])));
 const hash=x=>createHash('sha256').update(x).digest('hex');
 const copy=x=>JSON.parse(JSON.stringify(x));
