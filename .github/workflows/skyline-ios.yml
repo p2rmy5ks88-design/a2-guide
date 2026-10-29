@@ -68,6 +68,7 @@ jobs:
         run: |
           python3 skyline-estates/tests/build-pipelines.py
           python3 skyline-estates-app/scripts/verify-ios-sdk.test.py
+          python3 skyline-estates-app/scripts/verify-signed-apple.test.py
           node skyline-estates-app/scripts/native-firebase-config.test.mjs
           node skyline-estates-app/scripts/patch-native-apple-errors.test.mjs
           swiftc -parse-as-library skyline-estates-app/native/AppleAuthorizationErrors.swift skyline-estates-app/native/AppleAuthorizationErrors.test.swift -o "$RUNNER_TEMP/apple-error-tests"
@@ -149,6 +150,7 @@ jobs:
           AUTH="-allowProvisioningUpdates -authenticationKeyPath $RUNNER_TEMP/asc.p8 -authenticationKeyID $ASC_KEY_ID -authenticationKeyIssuerID $ASC_ISSUER"
           xcodebuild $T -scheme App -configuration Release -destination 'generic/platform=iOS' \
             -archivePath "$RUNNER_TEMP/SkylineEstates.xcarchive" DEVELOPMENT_TEAM="$TEAM_ID" CODE_SIGN_STYLE=Automatic $AUTH archive | tail -n 20
+          python3 "$GITHUB_WORKSPACE/skyline-estates-app/scripts/verify-signed-apple.py" "$RUNNER_TEMP/SkylineEstates.xcarchive/Products/Applications/App.app"
           cat > "$RUNNER_TEMP/export.plist" <<PL
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">

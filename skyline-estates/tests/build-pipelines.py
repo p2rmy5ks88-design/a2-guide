@@ -51,4 +51,5 @@ for platform in ('android', 'ios', 'desktop'):
 ios = (ROOT / '.github/workflows/skyline-ios.yml').read_text()
 check('ios: requires macOS 26 runner and verifies toolchain before install', 'runs-on: macos-26' in ios and ios.index('verify-ios-sdk.py toolchain') < ios.index('- name: Install'))
 check('ios: verifies the linked device SDK and retains toolchain evidence', 'verify-ios-sdk.py" binary' in ios and 'skyline-ios-toolchain.txt' in ios)
+check('ios: signed Apple validation runs before any export or upload', 'verify-signed-apple.test.py' in ios and ios.index('verify-signed-apple.py"') < ios.index('xcodebuild -exportArchive'))
 print(f'{checks} build pipeline checks passed')
