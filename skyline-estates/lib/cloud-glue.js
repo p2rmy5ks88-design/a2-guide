@@ -66,6 +66,7 @@ function notify(kind,detail){
  else if(kind==='account-removed')toast('This account was removed. Your progress stays on this device.');
  else if(kind==='dropped')toast('One change could not be saved to your account.');
  else if(kind==='error'&&detail==='persistent-account-required')toast('Verify your email address to use cloud saves.');
+ else if((kind==='error'||kind==='dropped')&&detail==='test-account-retired')toast('This is a closed test account. Its test coins can’t be used. Sign in with your own account.');
  status.last=kind+(detail?':'+(typeof detail==='string'?detail:''):'');
 }
 const status={last:''};

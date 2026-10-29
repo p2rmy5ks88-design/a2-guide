@@ -2,7 +2,7 @@
 // HTTPS routes for accounts, the unified profile and store delivery. Works as a
 // plain Node (req,res) handler and inside a Cloud Functions v2 onRequest wrapper.
 // Only error codes are returned to clients, never stack traces or messages.
-const STATUS={'unauthenticated':401,'recent-sign-in-required':401,'persistent-account-required':403,'unsupported-identity':403,'purchase-owner-conflict':409,'sandbox-purchase-not-allowed':403,'idempotency-conflict':409,'account-removed':410,'deletion-not-configured':503,'wallet-spending-not-configured':503,'delivery-not-configured':503,'rate-limited':429,'payload-too-large':413,'not-found':404};
+const STATUS={'unauthenticated':401,'recent-sign-in-required':401,'persistent-account-required':403,'unsupported-identity':403,'purchase-owner-conflict':409,'sandbox-purchase-not-allowed':403,'test-account-retired':403,'test-account-real-purchase-blocked':403,'idempotency-conflict':409,'account-removed':410,'deletion-not-configured':503,'wallet-spending-not-configured':503,'delivery-not-configured':503,'rate-limited':429,'payload-too-large':413,'not-found':404};
 const LIMIT=64*1024;
 function readBody(req){
  if(req.body!==undefined&&req.body!==null&&typeof req.body==='object'&&!Buffer.isBuffer(req.body))return Promise.resolve(req.body);

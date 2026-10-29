@@ -94,7 +94,7 @@ function createCloudProfile({storage,http,account,adapter,ask=async()=>null,noti
     if(RETRYABLE.has(code)||e?.status>=500||!e?.status){op.tries++;op.nextAt=clock()+Math.min(300000,2000*2**Math.min(op.tries,8));saveState(st);notify('offline',code);break}
     st.outbox=st.outbox.filter(o=>o.requestId!==op.requestId);notify('dropped',code);changed=true}
   }
-  if(!changed&&(refresh||clock()-lastFetch>60000)&&!st.outbox.length){
+  if(!changed&&(refresh||clock()-lastFetch>300000)&&!st.outbox.length){
    try{st.profile=await http.request('GET','/v1/profile',null,acct.token);lastFetch=clock();changed=true}
    catch(e){const code=failure(e);if(code==='account-removed'){detach(st);notify('account-removed');return}notify('offline',code)}
   }

@@ -161,6 +161,33 @@ async function test(name,fn){await fn();count++;console.log('ok - '+name)}
  await test('deterministic notification rejections are marked permanent so Apple stops retrying',async()=>{const f=fixture();
   await f.wallet.purchase('alice',buy('alice','own-1'));const e=await f.wallet.notification({...buy('bob','own-1'),type:'refund'}).catch(x=>x);assert.equal(e.code,'purchase-owner-conflict');assert.equal(e.permanent,true);
  });
+ await test('tester accounts: sandbox-only, locked when retired, wiped to a normal account on reset',async()=>{const db=createFakeFirestore(),now=DAY;
+  const prof=createProfileService({db,verifyIdToken,environment:'production',clock:()=>now});
+  const w=createFirestoreWallet({db,environment:'production',storeEnvironments:['production','sandbox'],verifyIdToken,verifyPurchase:async v=>v,verifyNotification:async v=>v,clock:()=>now});
+  const real=(uid,id)=>({...buy(uid,id),environment:'production'});
+  // reviewer account: listed, receives free sandbox coins, flagged permanently
+  await prof.markTester('rev','App Review demo');await w.purchase('rev',buy('rev','sb-r1'));let p=await prof.get('rev');assert.equal(p.coins,600);assert.equal(p.tester,true);
+  await prof.sync('rev',{requestId:rid(),changes:{coins:-100,items:{roof:['pool']}}});
+  // real money never mixes into a test account
+  await assert.rejects(()=>w.purchase('rev',real('rev','pr-r1')),/test-account-real-purchase-blocked/);
+  // retiring locks it: no reads, syncs, spending or purchases with the free coins
+  await prof.retireTester('rev');
+  await assert.rejects(()=>prof.get('rev'),/test-account-retired/);
+  await assert.rejects(()=>prof.sync('rev',{requestId:rid(),changes:{coins:-1}}),/test-account-retired/);
+  await assert.rejects(()=>w.purchase('rev',buy('rev','sb-r2')),/sandbox-purchase-not-allowed/);
+  // un-listing (instead of retiring) behaves the same: the flag on the account stays
+  await db.doc('skylineAccounts/production/testers/'+P.hash('rev')).delete();await assert.rejects(()=>prof.get('rev'),/test-account-retired/);
+  // recovery: owner reset wipes coins and items, clears the flag and leaves an empty normal account
+  await prof.resetTester('rev');p=await prof.get('rev');assert.equal(p.coins,0);assert.equal(p.xp,0);assert.deepEqual(p.inv,{});assert.equal(p.tester,false);
+  await prof.sync('rev',{requestId:rid(),changes:{coins:10}});
+  // the old sandbox transaction can never be credited again, and new sandbox purchases are refused
+  await assert.rejects(()=>w.purchase('rev',buy('rev','sb-r1')),/sandbox-purchase-not-allowed/);assert.equal((await prof.get('rev')).coins,10);
+  await assert.rejects(()=>w.purchase('rev',buy('rev','sb-r3')),/sandbox-purchase-not-allowed/);
+  await w.purchase('rev',real('rev','pr-r2'));assert.equal((await prof.get('rev')).coins,610);
+  // a normal player is unaffected by any of this
+  await w.purchase('pat',real('pat','pr-p1'));await assert.rejects(()=>w.purchase('pat',buy('pat','sb-p1')),/sandbox-purchase-not-allowed/);assert.equal((await prof.get('pat')).coins,600);
+  await assert.rejects(()=>prof.resetTester('pat'),/not-a-tester/);
+ });
  await test('ledger rows carry the Skyline-specific TTL field; balances and purchase records do not',async()=>{const f=fixture();
   await f.wallet.purchase('alice',buy('alice','ttl-1'));await f.svc.sync('alice',{requestId:rid(),changes:{coins:5}});const d=f.db.dump();
   const ledger=Object.entries(d).filter(([k])=>k.includes('/ledger/')),others=Object.entries(d).filter(([k])=>!k.includes('/ledger/'));

@@ -23,9 +23,11 @@ function createFirestoreWallet({db,verifyIdToken,verifyPurchase,verifyNotificati
   // owner has listed as testers, so test coins never land in a real player's balance.
   const crossEnv=event.environment!==environment,tester=db.doc('skylineAccounts/'+environment+'/testers/'+hash(event.ownerUid));
   return db.runTransaction(async tx=>{
-   const [ps,as,js,ts]=await tx.getAll(p,ref,j,...(crossEnv?[tester]:[])),account=as.exists?{...as.data(),ledger:{},operations:{}}:null;
+   const [ps,as,js,ts]=await tx.getAll(p,ref,j,tester),account=as.exists?{...as.data(),ledger:{},operations:{}}:null,testerOn=ts.exists&&ts.data().active===true;
    if(account?.status==='deleted'){if(event.type==='purchase')fail('account-removed');return{duplicate:true,refunded:event.type==='refund',ignored:'account-removed',transactionKey:event.transactionKey,finishAllowed:false}}
-   if(crossEnv&&event.type==='purchase'&&!(ts?.exists&&ts.data().active===true))fail('sandbox-purchase-not-allowed');
+   if(crossEnv&&event.type==='purchase'&&!testerOn)fail('sandbox-purchase-not-allowed');
+   // A test account stays a test account: no real-money credit, and once retired it is locked.
+   if(account?.tester===true&&event.type==='purchase'){if(!testerOn)fail('test-account-retired');if(!crossEnv)fail('test-account-real-purchase-blocked')}
    const value={transactions:ps.exists?{[event.transactionKey]:ps.data()}:{},accounts:account?{[hash(event.ownerUid)]:account}:{},outbox:js.exists?{[event.transactionKey]:js.data()}:{}};
    const applied=applyEvent(value,event,at),next=applied.root.accounts[hash(event.ownerUid)],purchase=applied.root.transactions[event.transactionKey],job=applied.root.outbox?.[event.transactionKey];
    if(next&&crossEnv)next.tester=true;
@@ -42,7 +44,7 @@ function createFirestoreWallet({db,verifyIdToken,verifyPurchase,verifyNotificati
    // Deterministic rejections are acknowledged (permanent) so Apple does not retry them forever.
    try{return await commit(event)}catch(e){if(['purchase-owner-conflict','account-removed','wallet-balance-conflict'].includes(e?.code))e.permanent=true;throw e}},
   async spend(token,input){const uid=await identity(token),command={uid,...validateSpend(input,spendCatalog)},ref=accountRef(uid),op=ref.collection('operations').doc(hash(command.requestId)),at=clock();
-   return db.runTransaction(async tx=>{const [as,os]=await tx.getAll(ref,op);if(as.data()?.status==='deleted')fail('account-removed');const account=as.exists?{...as.data(),ledger:{},operations:os.exists?{[hash(command.requestId)]:os.data()}:{}}:null;
+   return db.runTransaction(async tx=>{const [as,os,ts]=await tx.getAll(ref,op,db.doc('skylineAccounts/'+environment+'/testers/'+hash(uid)));if(as.data()?.status==='deleted')fail('account-removed');if(as.data()?.tester===true&&!(ts.exists&&ts.data().active===true))fail('test-account-retired');const account=as.exists?{...as.data(),ledger:{},operations:os.exists?{[hash(command.requestId)]:os.data()}:{}}:null;
     const applied=applySpend({accounts:account?{[hash(uid)]:account}:{}},command,at),next=applied.root.accounts[hash(uid)];
     if(!os.exists){tx.set(ref,{...clean(next),rev:(as.data()?.rev||0)+1,updatedAt:at});tx.create(op,next.operations[hash(command.requestId)]);ledger(tx,ref,next.ledger)}return applied.result;
    });
