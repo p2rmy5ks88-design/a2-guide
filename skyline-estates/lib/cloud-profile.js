@@ -121,8 +121,10 @@ function createCloudProfile({storage,http,account,adapter,ask=async()=>null,noti
   adapter.setOwner(acct.uid);saveState(st);write(MIGRATE_KEY,null);
   reconcile(st);notify('migrated',{mode:r.mode,coins:r.coins,notes:r.notes||[]});
  }
+ // A call made while a sync is running waits for it and then runs again, so changes made
+ // after the running sync captured its state are never reported as synced too early.
  async function sync(options={}){
-  if(running)return running;
+  if(running)return running.then(()=>sync(options));
   running=(async()=>{
    const acct=await account();if(!acct?.uid||!acct?.token)return{state:'signed-out'};
    if(adapter.owner()!==acct.uid||!stateOf(acct.uid)?.migrated){await onboard(acct);if(adapter.owner()!==acct.uid)return{state:'local'}}
