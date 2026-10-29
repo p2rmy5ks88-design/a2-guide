@@ -33,5 +33,5 @@ test('launch packs match server amounts while legacy receipt values remain intac
  const {CATALOG,APP}=require('../security/service/wallet.cjs');const packs=vm.runInNewContext(source.match(/const IAP_PACKS=([^;]+);/)[1]);assert.deepEqual(Array.from(packs,p=>p.coins),[600,1500,4000,10000]);for(const p of packs)assert.equal(CATALOG[APP+'.'+p.id],p.coins);for(const amount of [500,1200,3000,7000])assert.equal(CATALOG[APP+'.coins_'+amount],amount);
 });
 test('all playlist files exist, including the three new songs',()=>{
- const tracks=vm.runInNewContext(source.match(/const FM_LIST=([^;]+);/)[1]);assert.equal(new Set(tracks.map(t=>t[0])).size,tracks.length);for(const [id]of tracks){const file=path.join(__dirname,'../../eko-estates/audio/fm',id+'.mp3');assert.ok(fs.statSync(file).size>1000,id)}for(const id of ['bad','priority','skyline-estates'])assert.ok(tracks.some(t=>t[0]===id));
+ const tracks=vm.runInNewContext(source.match(/const FM_LIST=([^;]+);/)[1]);assert.equal(new Set(tracks.map(t=>t[0])).size,tracks.length);for(const [id]of tracks){const file=path.join(__dirname,'../../eko-estates/audio/fm',id+'.mp3');assert.ok(fs.statSync(file).size>1000,id)}for(const id of ['bad','priority','skyline-estates','dum-da-dum-answer-am'])assert.ok(tracks.some(t=>t[0]===id));
 });
