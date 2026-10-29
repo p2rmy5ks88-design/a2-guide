@@ -5208,11 +5208,16 @@ async function confirmBuy(title,cost,body){if(PREF.coins<cost){const k=await mod
   const k=await modal({html:`<div class="mh">${esc(title)}</div><div class="mtxt">${body?body+'<br>':''}Spend <b>${fmtC(cost)}</b>? You have ${fmtC(PREF.coins)}.</div>`,btns:[{k:'no',label:'Cancel'},{k:'yes',label:'Buy',primary:true}]});if(k!=='yes')return false;
   if(!spendCoins(cost))return false;sfx('win');achAward('shopper');return true}
 function slotPlayers(slots){return slots.map((s,i)=>({...s,i})).filter(s=>s.type!=='off')}
+function requestGameFullscreen(){
+  // Native WebViews already fill the screen; HTML fullscreen blocks keyboard input on iOS.
+  if(IS_APP)return;
+  try{document.documentElement.requestFullscreen?.().then(()=>screen.orientation?.lock?.('landscape')).catch(()=>{})}catch(e){}
+}
 function startFromSetup(T,slots){const act=slotPlayers(slots||setup.slots);
   if(act.length<2){const m=T.querySelector('#tMsg');if(m)m.textContent='Pick at least two players.';return}
   const toks=new Set();act.forEach(s=>{if(toks.has(s.tok))s.tok=unlockedTokens().find(t=>!toks.has(t)&&!act.some(a=>a.tok===t))||s.tok;toks.add(s.tok)});
   initAudio();newGame({cash:setup.cash,set:cfgSet(),players:act.map(s=>({name:(s.name||'').trim()||NAMES[s.i],tok:s.tok,col:PCOL[s.i],ai:s.type==='ai',tl:s.i===0&&s.type==='human'?tokLv(s.tok):1,estate:s.i===0&&s.type==='human'?estateForCity(setup.city):{},fin:s.i===0&&s.type==='human'?myFinish():null,ch:pickChar(s,act)}))});
-  try{document.documentElement.requestFullscreen?.().then(()=>screen.orientation?.lock?.('landscape')).catch(()=>{})}catch(e){}
+  requestGameFullscreen();
   startWith(G)}
 const myFinish=()=>PREF.eq.fin&&itemOwned('fin',PREF.eq.fin)?PREF.eq.fin:null;
 function paneCustom(T){const saved=loadSave(),c=CITY_DATA[setup.city],m=MODES.find(x=>x[0]===setup.mode);
