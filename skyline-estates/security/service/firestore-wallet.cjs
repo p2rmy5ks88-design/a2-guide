@@ -16,14 +16,19 @@ function createFirestoreWallet({db,verifyIdToken,verifyPurchase,verifyNotificati
  if(!Array.isArray(storeEnvironments)||!storeEnvironments.includes(environment)||storeEnvironments.some(e=>!['sandbox','production'].includes(e))||environment==='sandbox'&&storeEnvironments.includes('production'))throw Error('Invalid store environment policy');
  const storeEnv=v=>storeEnvironments.includes(v?.environment)?v.environment:environment;
  const accountRef=uid=>db.doc(base+'/accounts/'+hash(uid));
- function ledger(tx,ref,entries){for(const [key,value] of Object.entries(entries||{}))tx.create(ref.collection('ledger').doc(key),{...value,expireAt:new Date((value.at||clock())+730*864e5)})}
+ function ledger(tx,ref,entries){for(const [key,value] of Object.entries(entries||{}))tx.create(ref.collection('ledger').doc(key),{...value,skylineLedgerExpireAt:new Date((value.at||clock())+730*864e5)})}
  async function commit(event){
   const ref=accountRef(event.ownerUid),p=db.doc(base+'/purchases/'+event.transactionKey),j=db.doc(base+'/deliveries/'+event.transactionKey),at=clock();
+  // Sandbox purchases (TestFlight, App Review) reach a production service only for accounts the
+  // owner has listed as testers, so test coins never land in a real player's balance.
+  const crossEnv=event.environment!==environment,tester=db.doc('skylineAccounts/'+environment+'/testers/'+hash(event.ownerUid));
   return db.runTransaction(async tx=>{
-   const [ps,as,js]=await tx.getAll(p,ref,j),account=as.exists?{...as.data(),ledger:{},operations:{}}:null;
-   if(account?.status==='deleted'&&event.type==='purchase')fail('account-removed');
+   const [ps,as,js,ts]=await tx.getAll(p,ref,j,...(crossEnv?[tester]:[])),account=as.exists?{...as.data(),ledger:{},operations:{}}:null;
+   if(account?.status==='deleted'){if(event.type==='purchase')fail('account-removed');return{duplicate:true,refunded:event.type==='refund',ignored:'account-removed',transactionKey:event.transactionKey,finishAllowed:false}}
+   if(crossEnv&&event.type==='purchase'&&!(ts?.exists&&ts.data().active===true))fail('sandbox-purchase-not-allowed');
    const value={transactions:ps.exists?{[event.transactionKey]:ps.data()}:{},accounts:account?{[hash(event.ownerUid)]:account}:{},outbox:js.exists?{[event.transactionKey]:js.data()}:{}};
    const applied=applyEvent(value,event,at),next=applied.root.accounts[hash(event.ownerUid)],purchase=applied.root.transactions[event.transactionKey],job=applied.root.outbox?.[event.transactionKey];
+   if(next&&crossEnv)next.tester=true;
    if(next&&(!as.exists||!isDeepStrictEqual(clean(next),as.data())))tx.set(ref,{...clean(next),rev:(as.data()?.rev||0)+1,updatedAt:at});
    ledger(tx,ref,next?.ledger);
    if(purchase&&(!ps.exists||!isDeepStrictEqual(purchase,ps.data())))tx.set(p,purchase);
@@ -33,7 +38,9 @@ function createFirestoreWallet({db,verifyIdToken,verifyPurchase,verifyNotificati
  }
  return{
   async purchase(token,proof){const uid=await identity(token),verified=await verifyPurchase(proof),event=normalize(verified,storeEnv(verified));if(event.type!=='purchase'||event.ownerUid!==uid)fail('purchase-owner-conflict');if(verified.alreadyConsumed===true)event.alreadyConsumed=true;if(event.store==='google'){if(typeof sealProof!=='function')fail('delivery-not-configured');event.sealedProof=await sealProof({purchaseToken:verified.transactionId,appId:APP,productId:event.productId,ownerUid:uid,environment})}return commit(event)},
-  async notification(payload){const verified=await verifyNotification(payload),event=normalize(verified,storeEnv(verified));if(event.type!=='refund')fail('unsupported-notification');return commit(event)},
+  async notification(payload){const verified=await verifyNotification(payload);if(verified?.type==='ignored')return{ok:true,ignored:verified.notificationType,walletChanged:false};const event=normalize(verified,storeEnv(verified));if(!['refund','refund-reversed'].includes(event.type))fail('unsupported-notification');
+   // Deterministic rejections are acknowledged (permanent) so Apple does not retry them forever.
+   try{return await commit(event)}catch(e){if(['purchase-owner-conflict','account-removed','wallet-balance-conflict'].includes(e?.code))e.permanent=true;throw e}},
   async spend(token,input){const uid=await identity(token),command={uid,...validateSpend(input,spendCatalog)},ref=accountRef(uid),op=ref.collection('operations').doc(hash(command.requestId)),at=clock();
    return db.runTransaction(async tx=>{const [as,os]=await tx.getAll(ref,op);if(as.data()?.status==='deleted')fail('account-removed');const account=as.exists?{...as.data(),ledger:{},operations:os.exists?{[hash(command.requestId)]:os.data()}:{}}:null;
     const applied=applySpend({accounts:account?{[hash(uid)]:account}:{}},command,at),next=applied.root.accounts[hash(uid)];
@@ -42,7 +49,7 @@ function createFirestoreWallet({db,verifyIdToken,verifyPurchase,verifyNotificati
   },
   async history(token,{cursor=null,limit=50}={}){const uid=await identity(token);if(!Number.isSafeInteger(limit)||limit<1||limit>50)fail('invalid-history-limit');const ref=accountRef(uid),account=(await ref.get()).data();if(account?.status==='deleted')fail('account-removed');let query=ref.collection('ledger').orderBy('at','desc').orderBy('__name__','desc').limit(limit+1);
    if(cursor){if(typeof cursor!=='string'||cursor.length>300)fail('invalid-history-cursor');let value;try{value=JSON.parse(Buffer.from(cursor,'base64url').toString('utf8'))}catch{fail('invalid-history-cursor')}if(!Number.isSafeInteger(value.at)||typeof value.id!=='string'||!/^[a-z0-9_]{1,140}$/.test(value.id))fail('invalid-history-cursor');query=query.startAfter(value.at,value.id)}
-   const rows=(await query.get()).docs,shown=rows.slice(0,limit),last=shown.at(-1);return{coins:account?.coins||0,debt:account?.debt||0,entries:shown.map(d=>{const{expireAt,...row}=d.data();return{id:d.id,...row}}),cursor:rows.length>limit&&last?Buffer.from(JSON.stringify({at:last.data().at,id:last.id})).toString('base64url'):null};
+   const rows=(await query.get()).docs,shown=rows.slice(0,limit),last=shown.at(-1);return{coins:account?.coins||0,debt:account?.debt||0,entries:shown.map(d=>{const{skylineLedgerExpireAt,...row}=d.data();return{id:d.id,...row}}),cursor:rows.length>limit&&last?Buffer.from(JSON.stringify({at:last.data().at,id:last.id})).toString('base64url'):null};
   },
   async delivery(token,key){const uid=await identity(token);if(!/^[a-f0-9]{64}$/.test(key||''))fail('invalid-delivery-reference');const p=(await db.doc(base+'/purchases/'+key).get()).data();if(!p||p.ownerUid!==uid)fail('purchase-not-found');if(p.refunded)return{state:'refunded',finishAllowed:false};if(p.store==='apple')return{state:'delivered',finishAllowed:true};const j=(await db.doc(base+'/deliveries/'+key).get()).data();return{state:j?.state||'attention',finishAllowed:j?.state==='done'}}
  };

@@ -20,9 +20,9 @@ Never paste keys, passwords or verification codes into chat, GitHub or this repo
 
 ## 1. Firestore
 
-Firebase console → Firestore Database. If **no database exists**, create the default database in **production mode**. Production mode denies all client access, which is what we want: only the function, using the Admin SDK, reads or writes these documents. Choose location `eur3` (or `europe-west1`).
+Firebase console → Firestore Database. If **no database exists**, create the default database in **production mode**. Production mode denies all client access, which is what we want: only the function, using the Admin SDK, reads or writes these documents. Choose location **`europe-west1`** (same region as the function and the existing Realtime Database).
 
-Then add a **TTL policy**: Firestore → TTL → collection group `ledger`, timestamp field `expireAt`. Ledger rows then expire after 24 months, as the privacy text says.
+Then add a **TTL policy**: Firestore → TTL → collection group `ledger`, timestamp field **`skylineLedgerExpireAt`**. Only Skyline ledger (history) rows carry that field, so they expire after 24 months, as the privacy text says. Balances (account documents), owned items, idempotency records, store bindings and purchase anti-replay records have no TTL field and never expire. A TTL policy applies to every collection named `ledger` in the database, but documents without this exact field are untouched. Before enabling it, check in the console that no other app stores a field with this name (none should).
 
 If a database **already exists** with other data, **don't change its rules.** The function doesn't need rule changes. Check that no existing rule allows client access to `skylineWallets/**` or `skylineAccounts/**`; with the default deny they are closed.
 
@@ -44,11 +44,11 @@ Then delete the downloaded `.p8` from Downloads once it is stored. Apple lets yo
 Create `skyline-estates/functions/.env.eko-estates` (not secret, not committed):
 
 ```
-SKYLINE_ENVIRONMENT=sandbox
+SKYLINE_ENVIRONMENT=production
 SKYLINE_APP_APPLE_ID=6828220714
 ```
 
-Start with `sandbox`. Switch to `production` only for the App Review build (step 6). Production also accepts Apple Sandbox transactions, because App Review and TestFlight buy in Sandbox. Those are recorded with `environment: sandbox` in the ledger.
+Use **`production`**. The TestFlight build you test is the same binary Apple reviews and releases, so it must talk to the production service. TestFlight and App Review purchases still happen in Apple's Sandbox (no real money). The production service credits a Sandbox purchase **only to accounts you list as testers** (`node scripts/testers.cjs add <uid> "note"`). For any other account it refuses the purchase with `sandbox-purchase-not-allowed`, so test coins can never reach a real player's balance. Tester accounts are marked `tester:true` and their ledger rows record `environment: sandbox`. Use dedicated test accounts (one for you, one App Review demo account), never your real player account. `sandbox` stays available for a separate throwaway deployment, but it isn't needed.
 
 ## 3. Deploy (approval A)
 
@@ -82,6 +82,12 @@ You choose the price tiers. The game shows Apple's localized price, not the draf
 Notifications (approval D): App Store Server Notifications **Version 2**, the same URL for Production and Sandbox:
 `https://europe-west1-eko-estates.cloudfunctions.net/skylinePlayer/v1/store/apple-notifications`
 
+How notifications are handled (signature always verified first, then app and environment):
+- `REFUND` removes that purchase's coins once. If they were already spent, the account goes into debt that new coins pay off first.
+- `REFUND_REVERSED` gives the coins back once. A refund that arrived before delivery is cleared, so the normal delivery credits once.
+- `TEST`, `CONSUMPTION_REQUEST`, `REFUND_DECLINED` and other verified types are acknowledged with no wallet change.
+- Deterministic rejections (unknown or removed account, owner mismatch) are acknowledged so Apple stops retrying. Temporary errors return 5xx so Apple retries.
+
 ## 5. Turn on in a TestFlight build (reviewed commit)
 
 Edit `skyline-estates/lib/cloud-config.js` to `enabled:true, purchases:true`. Run `python3 skyline-estates/build.py`, open a PR, let CI pass, merge, then run the manual iOS publish workflow to TestFlight. Don't make this change on `main` before steps 1–4 are done.
@@ -105,7 +111,7 @@ Use a physical iPhone, a TestFlight build and sandbox testers. Record the date, 
 10. Kill the app right after paying: on relaunch the coins are delivered once and the transaction finishes.
 11. Buy on phone A: the balance appears on phone B after sync.
 12. Purchase while signed out: the app asks for sign-in first, and no transaction starts.
-13. Refund a sandbox purchase (sandbox tester settings → refund request / test notification). The balance goes down. If coins were already spent, debt is shown and new coins pay it back first.
+13. Refund a real sandbox purchase: on the iPhone, Settings → App Store → Sandbox Account → Manage → Refund (or reportaproblem.apple.com for the sandbox account). Then wait for Apple's REFUND notification and confirm the balance goes down. If the coins were already spent, debt is shown and new coins pay it back first. A TEST notification only proves the URL is reachable; it does **not** count as the refund test.
 14. Reinstall: sign in → balance restored from the account.
 15. Forged or edited request (curl a fake `signedTransaction`): rejected with a code, no coins.
 

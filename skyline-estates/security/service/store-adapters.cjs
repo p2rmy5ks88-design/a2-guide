@@ -22,8 +22,13 @@ function createAppleStoreAdapter({verifier,getTransactionInfo,resolveAccountToke
   async verifyNotification(signed){
    if(typeof signed!=='string'||signed.length>80000)fail('invalid-apple-notification');
    const n=await verifier.verifyAndDecodeNotification(signed);
-   if(n.notificationType!=='REFUND'||n.data?.bundleId!==APP||n.data.environment!==expected)fail('unsupported-apple-notification');
-   return decode(n.data.signedTransactionInfo,'refund');
+   // Signature is verified first. Then only this app and this environment are accepted.
+   if(n.data?.bundleId!==APP&&n.notificationType!=='TEST'||n.data&&n.data.environment!==expected)fail('unsupported-apple-notification');
+   // REFUND removes coins, REFUND_REVERSED gives them back. Every other verified type (TEST,
+   // CONSUMPTION_REQUEST, REFUND_DECLINED, ...) is acknowledged without touching any wallet.
+   if(n.notificationType==='REFUND')return decode(n.data.signedTransactionInfo,'refund');
+   if(n.notificationType==='REFUND_REVERSED')return{...(await decode(n.data.signedTransactionInfo,'purchase')),type:'refund-reversed'};
+   return{type:'ignored',notificationType:String(n.notificationType||'UNKNOWN').slice(0,40),environment};
   }
  };
 }

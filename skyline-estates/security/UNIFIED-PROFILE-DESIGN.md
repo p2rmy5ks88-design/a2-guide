@@ -48,6 +48,14 @@ After every response, the client rebuilds what it shows: **server value + still-
 
 Purchased coins can't be created by any client operation. Only `firestore-wallet.cjs` adds them, after StoreKit verification.
 
+## 3a. What the limits do and don't prove
+
+The game runs matches against AI on the phone, so the server **cannot verify that coins or XP were earned by playing**. The daily caps (50,000 coins, 150,000 XP), the one-time migration cap (1,000,000 coins, 5,000,000 XP) and later-device rules are **abuse controls**: they bound how much a modified app can claim per account per day and stop one balance being copied to many phones. They are not evidence of legitimate gameplay. What *is* verified: purchases (Apple-signed and re-checked with Apple's server), refunds, promo codes and account identity. Rankings stay device-reported and are labelled as such.
+
+## 3b. Test purchases stay out of real balances
+
+TestFlight and App Review buy in Apple's Sandbox. The production service credits a Sandbox transaction only to Firebase accounts listed in `skylineAccounts/production/testers` (owner tool `functions/scripts/testers.cjs`). Any other account gets `sandbox-purchase-not-allowed` and nothing is credited. Tester accounts are flagged `tester:true` and their ledger rows record `environment: sandbox`. The owner uses dedicated test accounts, not a real player account.
+
 ## 4. Moving existing device progress (one-time migration)
 
 Nothing is uploaded at sign-in. The player chooses.
@@ -81,7 +89,7 @@ The account panel explains first that unspent coins, including purchased coins, 
 1. The player signs in again (recent authentication).
 2. For Apple-linked accounts, the app revokes the Apple token with Firebase Auth's `revokeAccessToken` using the authorization code from that fresh Apple sign-in (TN3194).
 3. The app calls `DELETE /v1/account` with the fresh ID token. The server refuses tokens older than 5 minutes.
-4. In one transaction the server marks the account `deleted`. Later purchases are refused and can't be restored to that account. It then deletes progress, idempotency records, ledger history and store bindings, and finally deletes the Firebase Auth user.
+4. In one transaction the server marks the account `deleted`. Later purchases are refused and can't be restored to that account. It then deletes progress, idempotency records, ledger history, store bindings and any tester flag, and finally deletes the Firebase Auth user.
 5. Kept: `purchases/{transactionKey}` anti-replay and refund records, with the owner replaced by an irreversible hash. This prevents a refunded or replayed transaction from being re-credited. Documented in the privacy page.
 
 ## 7. What still needs the owner
