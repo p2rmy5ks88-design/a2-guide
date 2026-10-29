@@ -7206,15 +7206,6 @@ function nativeInit(){if(!IS_APP)return;document.documentElement.classList.add('
   document.addEventListener('contextmenu',e=>e.preventDefault())}
 nativeInit();
 
-/* Offline web copy; native wrappers already ship their own local assets. */
-function registerOffline(){
-  if(IS_APP||window.SKYLINE_DESKTOP||!window.isSecureContext||!('serviceWorker' in navigator))return;
-  const firstInstall=!navigator.serviceWorker.controller;
-  navigator.serviceWorker.register('./sw.js',{scope:'./',updateViaCache:'none'}).then(()=>firstInstall?navigator.serviceWorker.ready.then(()=>toast('Ready to play offline')):undefined).catch(()=>console.warn('Offline installation unavailable; online play still works'));
-}
-if(document.readyState==='complete')registerOffline();else addEventListener('load',registerOffline,{once:true});
-
-
 /* ================= CITY SPOTLIGHT ================= */
 /* Three optional, linked features (see SKYLINE-CITY-SPOTLIGHT-TODO.md):
    1. Strategic city events 2.0 - opt-in per match, snapshotted in G, exact targets and expiry. One rule
@@ -7444,6 +7435,15 @@ SUBS.progress.unshift(['spotlight','Spotlight']);SEC_OF.spotlight='progress';
 .spban{display:flex;align-items:center;gap:10px;margin-top:10px;padding:8px 12px;border-radius:12px;border:1px solid #c9a75a88;background:#0b2232d9;color:#f4ecd8;text-align:left;font:600 12.5px var(--body);max-width:420px}.spban i{font-style:normal;font-size:18px}.spban small{display:block;color:#f2cf78;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase}.spban em{margin-left:auto;font-style:normal}
 @media (max-width:720px),(max-height:460px){.sphero{grid-template-columns:minmax(0,1fr) 150px;min-height:170px}.sptxt{padding:12px 14px}.spreward{padding:8px}.spreward canvas{max-width:140px}}
 `;document.head.append(st)})();
+
+/* Offline web copy; native wrappers already ship their own local assets. */
+function registerOffline(){
+  if(IS_APP||window.SKYLINE_DESKTOP||!window.isSecureContext||!('serviceWorker' in navigator))return;
+  const firstInstall=!navigator.serviceWorker.controller;
+  navigator.serviceWorker.register('./sw.js',{scope:'./',updateViaCache:'none'}).then(()=>firstInstall?navigator.serviceWorker.ready.then(()=>toast('Ready to play offline')):undefined).catch(()=>console.warn('Offline installation unavailable; online play still works'));
+}
+if(document.readyState==='complete')registerOffline();else addEventListener('load',registerOffline,{once:true});
+
 
 /* ================= BOOT ================= */
 function boot(data){

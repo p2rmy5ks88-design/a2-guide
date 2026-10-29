@@ -158,5 +158,5 @@ Next Claude action: inspect the two handoff files and current PRs/CI; finish the
   - The Shop is wired to the StoreKit client.
   - `lib/cloud-config.js` keeps `enabled:false` and `purchases:false`.
   - CI on e4d55d3: all six workflows passed, including the emulator profile suite and the two-device browser sync test.
-- **City Spotlight** is in a new draft PR stacked on #52 (`skyline-city-spotlight`). Results are in `skyline-estates/CITY-SPOTLIGHT-RESULTS.md`. Game source pin: 415b5b4d9da19b8d2b9eac683cb99e9be614d0cf3dc29610b0c56d704425c8e2, reviewed with 41/41 property parity, 100 seeded games with events on and 40-game events-off parity.
+- **City Spotlight** is in a new draft PR stacked on #52 (`skyline-city-spotlight`). Results are in `skyline-estates/CITY-SPOTLIGHT-RESULTS.md`. Game source pin: 4761720e666738ac6f8f4d65fad66c9f6edf8ce2eb5af82dcb404e9990f7d782, reviewed with 41/41 property parity, 100 seeded games with events on and 40-game events-off parity.
 - **Still owner-gated:** deploy approval and secrets, Firestore TTL, App Store products and notification URL, sandbox acceptance list (`DEPLOY.md` §6), privacy text swap, signed TestFlight device checks. Native Google sign-in is still not configured on iOS. Android remains deferred.
