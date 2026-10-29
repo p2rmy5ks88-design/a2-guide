@@ -46,7 +46,7 @@ Four new Swift source files under skyline-estates-app/native:
 - SkylineStoreKitPlugin.swift: draft Capacitor StoreKit 2 methods products, purchase, unfinished, finish; passes server-generated appAccountToken, returns locally verified JWS, handles pending/cancelled, listens for updates and does not grant coins locally.
 - SkylineBridgeViewController.swift: draft custom Capacitor controller registration.
 
-**These are work in progress. Ruby project setup now adds the Swift sources, custom storyboard controller and iOS 15 App target minimum. They are not yet connected to the live account/wallet service or shop UI, not yet compiled and not release-ready.** Do not enable purchases based on their presence. Review Swift actor isolation and listener/recovery behavior; native finish's client Boolean is not independent proof of server fulfillment, so the server/JS coordinator contract remains essential. Verify the new registration using the Ruby project-generation step and actual generated storyboard, compile the standalone product tests, and run actual SDK 26/27 builds. Do not change the already-working Apple entitlements/team/profile accidentally.
+**These are work in progress. Ruby project setup adds the Swift sources, custom storyboard controller and iOS 15 App target minimum. macOS CI compilation now passes, including SDK 27 compatibility, but the bridge is not yet connected to the live account/wallet service or shop UI and is not release-ready.** Do not enable purchases based on their presence. Review Swift actor isolation and listener/recovery behavior; native finish's client Boolean is not independent proof of server fulfillment, so the server/JS coordinator contract remains essential. Verify the new registration using the Ruby project-generation step and actual generated storyboard, compile the standalone product tests, and run actual SDK 26/27 builds. Do not change the already-working Apple entitlements/team/profile accidentally.
 
 The active design calls for StoreKit 2 signed JWS -> authenticated server verification (including fresh Apple transaction query and owner binding) -> atomic grant -> durable delivery lookup -> native finish. Never use an unsigned receipt decoder as a verifier, never grant PREF.coins from an approved callback, and never finish a queued transaction before durable delivery.
 
@@ -127,3 +127,21 @@ Generated offline manifest is current (143 files after adding/renaming modules);
 No server deployment, production account enablement, legacy import, product activation, public store submission or financial transaction occurred. Continue from this draft, with the chosen unified-wallet design; do not regress to separate balances merely to ship faster.
 
 Final local verification: 27 JS purchase/delivery tests, 38 build pipeline guard checks, generated asset check, and the phone/desktop/leaderboard/audio browser pass with 5 seeded games all passed. The generated native Swift/Ruby integration still awaits macOS CI.
+
+
+## Latest owner expansion and fresh CI — 29 October 2026
+
+The owner requested all three concept features be added to Claude's to-do list before transfer. Read **SKYLINE-CITY-SPOTLIGHT-TODO.md** alongside this file: optional Dynamic City Events 2.0, appearance-only 3D rooftop/skyline customization, improved existing daily/weekly contracts, combined into City Spotlight. First example: Lagos, Development Boom, three-match Lagos Investor contract and a permanent Golden Rooftop Garden reward. These are requested future work, not implemented. Additional estimate: 6–10 engineering hours plus testing. Retain the unified cloud wallet and iOS-first/Android-deferred decisions.
+
+Fresh CI on StoreKit draft commit **9d4d9da1e06d83da8d08bb29015a91e114bcc8d1** now shows **all six workflows successful**, superseding earlier pending-compilation notes:
+
+- iOS: run 40906253537 — success.
+- SDK 27 compatibility: run 40906253574 — success.
+- Full stability: run 40906253814 — success.
+- Isolated security: run 40906253820 — success.
+- Android build: run 40906253818 — success (publication still deferred).
+- Desktop build: run 40906253549 — success.
+
+This verifies the generated native bridge builds; it does **not** verify configured App Store products, live Firebase accounts, unified migration or real payments. Accounts and purchases remain paused. Draft PR #52 is stacked on PR #51 and neither is a completed public release. Check fresh state again before continuing.
+
+Next Claude action: inspect the two handoff files and current PRs/CI; finish the release foundation and implement the requested City Spotlight feature in reviewable slices. Do not discard the extra song, larger pack drafts, existing daily event or the native work when rebasing. All three concept images are represented textually in the feature to-do; no mockup financial values or outside board artwork have been installed.
