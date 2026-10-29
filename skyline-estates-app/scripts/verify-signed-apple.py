@@ -45,26 +45,27 @@ def validate(info, ent, profile, certificate, now=None):
     # Firebase native options are checked by the caller against the bundled file.
     return 'development' if development else ('ad-hoc' if devices else 'distribution')
 
-def command(*args):
+def command(stage, *args):
     result = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if result.returncode:
         # Keep raw codesign/profile diagnostics out of public CI logs.
-        raise ValueError('Apple signature/profile command failed; inspect securely on macOS')
+        raise ValueError('Apple signing check failed at ' + stage + ' (exit ' + str(result.returncode) + ')')
     return result.stdout
 
 def inspect(app):
     app = Path(app).resolve(strict=True)
     if not app.is_dir() or app.suffix != '.app':
         raise ValueError('Expected a signed .app directory')
-    command('/usr/bin/codesign', '--verify', '--deep', '--strict', str(app))
-    ent = plistlib.loads(command('/usr/bin/codesign', '--display', '--entitlements', ':-', str(app)))
+    command('signature integrity', '/usr/bin/codesign', '--verify', '--deep', '--strict', str(app))
+    ent = plistlib.loads(command('signed entitlements', '/usr/bin/codesign', '--display', '--entitlements', ':-', str(app)))
     profile_path = app / 'embedded.mobileprovision'
     if not profile_path.is_file():
         raise ValueError('No embedded provisioning profile; unsigned builds cannot pass')
-    profile = plistlib.loads(command('/usr/bin/security', 'cms', '-D', '-i', str(profile_path)))
+    profile = plistlib.loads(command('embedded profile', '/usr/bin/security', 'cms', '-D', '-i', str(profile_path)))
     with tempfile.TemporaryDirectory(prefix='skyline-signature-') as tmp:
         prefix = str(Path(tmp) / 'cert')
-        command('/usr/bin/codesign', '--display', '--extract-certificates', prefix, str(app))
+        # Optional long-option arguments must use '='; a separate prefix is another input path.
+        command('certificate extraction', '/usr/bin/codesign', '--display', '--extract-certificates=' + prefix, str(app))
         certificate = Path(prefix + '0').read_bytes()
     info = plistlib.loads((app / 'Info.plist').read_bytes())
     mode = validate(info, ent, profile, certificate)
