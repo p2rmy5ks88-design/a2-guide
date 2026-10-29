@@ -1,35 +1,42 @@
-# Signed-build verification correction — 29 October 2026
+# Private iOS sign-in build results — 29 October 2026
 
-Private main run [40832935848](https://github.com/p2rmy5ks88-design/a2-guide/actions/runs/40832935848) built both native targets and successfully created an Apple-signed archive for com.kenstylez.skylineestates. The verification command failed before any TestFlight export/upload. No phone retry was requested.
+**Apple-signed candidate 1.0.39 (39) uploaded successfully to App Store Connect.** This verifies signing and delivery; successful Apple authorization on the physical phone and a live Firebase account exchange are not yet claimed. Public player accounts, cloud-save migration and paid purchases remain paused.
 
-A definite CLI bug was found in the new verifier: codesign's optional certificate-extraction prefix must be attached to its long option with an equals sign. Passing a separate path can make codesign treat that prefix as another app operand. The corrected command uses --extract-certificates=PREFIX. Safe fixed stage names and exit codes now distinguish integrity, entitlement, profile and certificate failures without exposing raw identity/profile output.
+## Delivered change
 
-Five new command-boundary cases exercise the full inspection sequence, correct certificate output, early unsigned rejection, private diagnostic redaction, missing profile Apple entitlement and wrong Firebase project. Together with the existing cases, all 22 tests pass. Reintroducing the old argument form makes the full-inspection regression fail at certificate extraction, reproducing the command error locally. Actual signed-archive acceptance remains pending the next manual run.
+- Use the dedicated Apple Distribution certificate and App Store profile for the exact primary app ID, com.kenstylez.skylineestates, on team HS85466T3Z. The certificate/profile expire 29 October 2027. The older Sideloadly app ID has Apple sign-in disabled; the primary ID has it enabled. The installed old IPA's final signature was not extracted, so its precise device-level failure cause is not asserted.
+- Apply manual signing only to the App target, leaving Pods free of app provisioning settings. Preserve Apple's profile UUID exactly, including lowercase characters; use the actual profile name plus original UUID in Xcode settings.
+- Verify the actual signed archive: signature integrity, exact app/team, Apple entitlement in both signature and profile, allowed certificate, profile expiry, distribution type and bundled Firebase identity.
+- Export with the explicit certificate/profile, internal-TestFlight-only delivery and the CI version/build number. The API key retains its approved Developer role; cloud-signing or Admin access was not expanded.
+- Scope credentials to the explicit signing/upload step. Temporary keychain, installed profile copies, PKCS12 and API-key files are cleaned afterward. Private materials are encrypted Actions secrets; none are committed. The local encrypted backup password is protected using Windows DPAPI.
 
-Portal audit also confirmed that Sideloadly's earlier provisioning log references the older suffixed App ID, which has Apple sign-in disabled. The exact primary App ID has Apple sign-in enabled. This is a concrete configuration mismatch in the observed signing path; the installed IPA's final signature/profile has not been extracted, so it is a strong lead rather than conclusive device-level root-cause proof.
+## Reproducible validation
 
-Validation plan: run the existing explicit manual iOS workflow on this PR branch with the already approved private TestFlight option. This runs the 22 tests on macOS, existing native guards and Xcode 26 compilation, then verifies the actual signed archive before upload. Duplicate automatic unsigned package builds are skipped for this verifier-only change; no game/native runtime source changed. Merge only after the candidate's manual validation result is known.
+Final candidate: 9626c8c520c6a2586893db26d16749d3320af201.
 
-Public game accounts, coins and saves remain unchanged; payments and public App Store release remain paused.
+[Successful manual iOS run 40860645859](https://github.com/p2rmy5ks88-design/a2-guide/actions/runs/40860645859), job 123402707667:
 
-## Actual signed candidate result
+- Xcode 26.6 and linked iOS SDK 26.5.
+- 22 signed-app/command-boundary regressions, 11 distribution-profile regressions and 38 pipeline guards passed. Ruby signing configuration syntax, pinned native error patch, native Firebase configuration and executed Swift error/privacy tests passed.
+- Simulator and unsigned ARM64 device compilation passed.
+- Dedicated identity import and profile/certificate matching passed.
+- Manual distribution archive succeeded. Actual archive signature/profile/Firebase verification passed in distribution mode.
+- Apple's upload analysis completed. The log explicitly reports “Upload succeeded”, “Uploaded App” and “EXPORT SUCCEEDED”; Apple then began processing the package. The overall job succeeded, including cleanup.
 
-[Candidate run 40854278781](https://github.com/p2rmy5ks88-design/a2-guide/actions/runs/40854278781) on 98f26fee19f81a74f21e1859f179841c8301c442 passed all 22 tests on macOS, both native builds, archive creation and the actual signed-app verifier. The log confirms the exact team/App ID, Apple entitlement, certificate membership, unexpired profile and Firebase options passed. This resolves the verifier's certificate-export bug.
+No game/native runtime source changed in this PR; the prior browser/account/stability baseline is retained. Duplicate automatic unsigned package runs were skipped for this build-tool correction; the explicit candidate workflow ran the relevant checks and native builds.
 
-TestFlight export then failed with Apple's cloud-signing permission error and missing distribution identity/profile. No binary reached TestFlight. The already approved Developer-role API key is retained; its access has not been broadened.
+## Failures caught before another phone test
 
-A dedicated local Apple Distribution identity and App Store provisioning profile are being prepared under the owner's existing approval. The private upload step now supports their encrypted repository secrets, imports them into a temporary keychain after archive verification, selects the exact profile and certificate for manual export, requests internal-TestFlight-only delivery and cleans temporary credentials/profile copies. Eight distribution-profile regressions pass locally, alongside the 22 signing cases and 38 pipeline guards. Actual manual distribution import/export still requires the certificate/profile and a further candidate run.
+The first verification implementation passed a separate prefix to codesign's optional certificate-extraction argument. The corrected command uses --extract-certificates=PREFIX; restoring the old form reproduces the full-inspection test failure.
 
-The public CSR and encrypted private key are prepared outside the repository. The local key password is protected using Windows DPAPI for the current user. Apple Developer's browser session expired; the accessible Developer login is still waiting for completion, independently of the signed-in App Store Connect session. No distribution certificate/profile has been issued or imported yet.
+The first manual profile installer uppercased Apple's lowercase UUID. Preserve the original identifier in filenames, Xcode settings, export options and cleanup. Added regressions cover lowercase round-trip preservation, safe profile names and cleanup using the original lowercase UUID. Apple supports a profile name or UUID; the issue was changing the supplied identifier, not an assertion that UUID specifiers are unsupported.
 
-## Dedicated distribution setup completed
+Cloud distribution signing was unavailable to the Developer-role API key. The approved dedicated certificate/profile removes that dependency. The owner separately completed the Developer login needed to issue them. No further unsigned diagnostic-only phone retry was requested.
 
-The owner completed the separate Developer login. A dedicated Apple Distribution certificate and primary-app App Store profile were issued, both expiring 29 October 2027. Local checks verified the certificate matches the encrypted private key and paid team; profile metadata matches the exact app, Apple capability, store distribution type and new certificate. The PKCS12 bundle, password and profile are now encrypted Actions secrets. Local password backup uses Windows DPAPI; its temporary plaintext copy was removed after encrypted-backup verification and secret storage.
+## Account readiness and phone handoff
 
-The new candidate uses manual signing for both archive and export, applying the profile only to the App target and importing the identity into an isolated temporary keychain. It no longer needs a new automatically generated development certificate for each signed run, or broader API/cloud-signing access. Export requests internal-only TestFlight delivery and preserves the CI version/build number. Temporary profiles, keychain and API-key files are cleaned up afterward. Actual Mac import, archive, export and upload still require the next candidate run; no upload success is claimed yet.
+Firebase's GitHub Pages domain is now authorized; Apple API access and the encrypted private-build setup were explicitly approved. See LOGIN-SIGNING-AUDIT.md for the tested email/link/recovery paths and remaining native Google, live provider, secure deletion/revocation, wallet and save-migration gates.
 
-## Exact profile identifier correction
+Apple's processing and private tester availability must be confirmed separately from upload success. The final phone check should use the directly signed private TestFlight build, not re-sign it with Sideloadly. Complete the Apple sign-in sheet once from Account & recovery and verify that local progress is unchanged. The current test button checks Apple credential return; it does not activate cloud saving or create a Firebase player account.
 
-Run [40858678683](https://github.com/p2rmy5ks88-design/a2-guide/actions/runs/40858678683) passed all 30 signing/profile tests, imported and matched the dedicated identity/profile, and configured only the App target. Archive then stopped at profile lookup. Inspection of Apple's downloaded profile showed its UUID contains lowercase letters, while the installer had uppercased it.
-
-Preserve the UUID exactly as issued, including spelling/case, in the installed filename, export options and cleanup manifest. Xcode settings now use the actual profile name plus the original UUID. Three added regressions cover lowercase round-trip preservation, required safe profile names and cleanup using Apple's original lowercase identifier. All 33 signing/profile tests pass locally; actual archive/export acceptance of this correction remains pending the next manual run. Apple's build-settings reference allows a profile name or UUID; this change avoids altering the UUID rather than asserting UUID specifiers are unsupported.
+Keep the existing app installed. If installation requires removing it first, stop; current saves/coins/collections are device-local and its existing backup is inside the same app container. A safe transfer is needed before uninstalling.
