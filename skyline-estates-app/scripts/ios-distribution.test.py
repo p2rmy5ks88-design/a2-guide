@@ -1,13 +1,16 @@
 import datetime as dt
 import importlib.util
 import unittest
+import unittest.mock as mock
+import tempfile
+import json
 from pathlib import Path
 spec=importlib.util.spec_from_file_location('distribution',Path(__file__).with_name('ios-distribution.py'))
 d=importlib.util.module_from_spec(spec)
 spec.loader.exec_module(d)
 class DistributionProfileTests(unittest.TestCase):
     def setUp(self):
-        self.p={'TeamIdentifier':[d.verifier.TEAM], 'Entitlements':{'application-identifier':d.verifier.TEAM+'.'+d.verifier.BUNDLE,'com.apple.developer.team-identifier':d.verifier.TEAM,d.verifier.APPLE:['Default'],'get-task-allow':False},'ExpirationDate':dt.datetime.now(dt.timezone.utc)+dt.timedelta(days=30),'DeveloperCertificates':[b'fixture certificate'],'UUID':'12345678-1234-1234-1234-123456789ABC'}
+        self.p={'Name':'Skyline TestFlight Fixture','TeamIdentifier':[d.verifier.TEAM], 'Entitlements':{'application-identifier':d.verifier.TEAM+'.'+d.verifier.BUNDLE,'com.apple.developer.team-identifier':d.verifier.TEAM,d.verifier.APPLE:['Default'],'get-task-allow':False},'ExpirationDate':dt.datetime.now(dt.timezone.utc)+dt.timedelta(days=30),'DeveloperCertificates':[b'fixture certificate'],'UUID':'12345678-1234-1234-1234-123456789ABC'}
     def test_store_profile_selects_exact_certificate_and_uuid(self):
         value,fingerprint=d.profile_config(self.p)
         self.assertEqual(value,self.p['UUID'])
@@ -38,4 +41,25 @@ class DistributionProfileTests(unittest.TestCase):
     def test_wrong_app_profile_rejected(self):
         self.p['Entitlements']['application-identifier'] += '.other'
         with self.assertRaises(ValueError): d.profile_config(self.p)
+    def test_lowercase_uuid_is_preserved_exactly(self):
+        self.p['UUID']=self.p['UUID'].lower()
+        value,_=d.profile_config(self.p)
+        self.assertEqual(value,self.p['UUID'])
+        self.assertNotEqual(value,value.upper())
+    def test_profile_name_is_required_and_cannot_expand_build_macros(self):
+        for name in (None,'','   ','Bad\nName','$(OTHER_SETTING)'):
+            self.p['Name']=name
+            with self.assertRaises(ValueError): d.profile_config(self.p)
+    def test_cleanup_accepts_original_lowercase_apple_uuid(self):
+        with tempfile.TemporaryDirectory() as temp:
+            folder=Path(temp)/'private'
+            folder.mkdir()
+            profiles=Path(temp)/'profiles'
+            profiles.mkdir()
+            value=self.p['UUID'].lower()
+            installed=profiles/(value+'.mobileprovision')
+            installed.write_bytes(b'fixture')
+            (folder/'cleanup.json').write_text(json.dumps({'installed':[value+'|'+str(profiles)],'keychains':[]}))
+            with mock.patch.object(d,'roots',return_value=[profiles]): d.cleanup(folder)
+            self.assertFalse(installed.exists())
 if __name__=='__main__': unittest.main()

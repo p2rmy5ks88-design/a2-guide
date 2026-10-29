@@ -4,7 +4,8 @@ require 'xcodeproj'
 config = JSON.parse(File.read(ARGV.fetch(1)))
 raise 'Unexpected signing team/app' unless config['team'] == 'HS85466T3Z' && config['bundle'] == 'com.kenstylez.skylineestates'
 raise 'Invalid signing identity' unless config['certificate'].match?(/\A[0-9A-F]{40}\z/)
-raise 'Invalid profile identifier' unless config['profile'].match?(/\A[0-9A-F]{8}-(?:[0-9A-F]{4}-){3}[0-9A-F]{12}\z/)
+raise 'Invalid profile identifier' unless config['profile'].match?(/\A[0-9A-Fa-f]{8}-(?:[0-9A-Fa-f]{4}-){3}[0-9A-Fa-f]{12}\z/)
+raise 'Invalid profile name' unless config['profile_name'].is_a?(String) && !config['profile_name'].strip.empty? && !config['profile_name'].include?('$(')
 project = Xcodeproj::Project.open(ARGV.fetch(0))
 target = project.targets.find { |t| t.name == 'App' }
 raise 'Missing App target' unless target
@@ -14,8 +15,8 @@ target.build_configurations.each do |c|
   c.build_settings['DEVELOPMENT_TEAM'] = config['team']
   c.build_settings['CODE_SIGN_IDENTITY'] = config['certificate']
   c.build_settings['CODE_SIGN_IDENTITY[sdk=iphoneos*]'] = config['certificate']
-  c.build_settings['PROVISIONING_PROFILE_SPECIFIER'] = config['profile']
-  c.build_settings.delete('PROVISIONING_PROFILE')
+  c.build_settings['PROVISIONING_PROFILE_SPECIFIER'] = config['profile_name']
+  c.build_settings['PROVISIONING_PROFILE'] = config['profile']
 end
 project.save
 puts 'Manual distribution signing configured for App target only'

@@ -27,9 +27,14 @@ def profile_config(profile):
     if kind != 'distribution' or 'ProvisionedDevices' in profile or profile.get('ProvisionsAllDevices'):
         raise ValueError('An App Store distribution profile is required')
     try:
-        profile_uuid = str(uuid.UUID(profile['UUID'])).upper()
+        profile_uuid = profile['UUID']
+        if not isinstance(profile_uuid, str) or profile_uuid.lower() != str(uuid.UUID(profile_uuid)):
+            raise ValueError('Non-canonical provisioning profile UUID')
     except (KeyError, TypeError, ValueError, AttributeError):
         raise ValueError('Invalid provisioning profile UUID') from None
+    name = profile.get('Name')
+    if not isinstance(name, str) or not name.strip() or any(c in name for c in ('\n', '\r', '$(')):
+        raise ValueError('Invalid provisioning profile name')
     return profile_uuid, hashlib.sha1(certs[0]).hexdigest().upper()
 
 def run(stage, *args):
@@ -90,7 +95,7 @@ def setup(folder):
             manifest_path.write_text(json.dumps(manifest))
     options = {'method':'app-store-connect', 'destination':'upload', 'teamID':verifier.TEAM, 'signingStyle':'manual', 'signingCertificate':fingerprint, 'provisioningProfiles':{verifier.BUNDLE:profile_uuid}, 'testFlightInternalTestingOnly':True, 'manageAppVersionAndBuildNumber':False}
     (folder/'export.plist').write_bytes(plistlib.dumps(options))
-    (folder/'signing-settings.json').write_text(json.dumps({'team':verifier.TEAM,'bundle':verifier.BUNDLE,'profile':profile_uuid,'certificate':fingerprint}))
+    (folder/'signing-settings.json').write_text(json.dumps({'team':verifier.TEAM,'bundle':verifier.BUNDLE,'profile':profile_uuid,'profile_name':profile['Name'],'certificate':fingerprint}))
     print('PASS: dedicated distribution identity/profile installed for private TestFlight export')
 
 def cleanup(folder):
@@ -104,7 +109,7 @@ def cleanup(folder):
     allowed_roots = {str(p) for p in roots()}
     for installed in manifest.get('installed', []):
         value, parent = installed.split('|', 1)
-        if parent not in allowed_roots or str(uuid.UUID(value)).upper() != value: raise ValueError('Invalid cleanup profile target')
+        if parent not in allowed_roots or str(uuid.UUID(value)) != value.lower(): raise ValueError('Invalid cleanup profile target')
         (Path(parent)/(value+'.mobileprovision')).unlink(missing_ok=True)
     for name in ('distribution.p12','distribution.mobileprovision','export.plist','signing-settings.json','cleanup.json'):
         (folder/name).unlink(missing_ok=True)
