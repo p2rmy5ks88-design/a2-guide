@@ -81,24 +81,29 @@ function createCloudProfile({storage,http,account,adapter,ask=async()=>null,noti
   adapter.apply(t,{debt:st.profile.debt||0});st.shadow=norm(adapter.extract());saveState(st);
  }
  function failure(e){return e?.code||(e?.status>=500?'unavailable':'network')}
- async function flush(acct,st,{refresh=false}={}){
-  let changed=false;
-  for(const op of [...st.outbox]){
-   if(op.nextAt>clock())break;
-   op.sent=true;saveState(st);
+ // Local changes may be captured while a request is in flight (capture runs on every save), so
+ // the stored state is re-read after every await and never overwritten from a stale copy.
+ async function flush(acct,_st,{refresh=false}={}){
+  const uid=acct.uid,fresh=()=>stateOf(uid);let changed=false;const done=new Set();
+  for(;;){
+   const st=fresh();if(!st)return;const op=st.outbox.find(o=>!done.has(o.requestId));if(!op||op.nextAt>clock())break;
+   done.add(op.requestId);op.sent=true;saveState(st);
    try{const r=await http.request('POST','/v1/profile/sync',{requestId:op.requestId,changes:op.changes},acct.token);
-    st.outbox=st.outbox.filter(o=>o.requestId!==op.requestId);st.profile=r.profile;changed=true;
+    const now=fresh();if(!now)return;now.outbox=now.outbox.filter(o=>o.requestId!==op.requestId);now.profile=r.profile;saveState(now);changed=true;
     for(const n of r.notes||[])notify('note',n);
-   }catch(e){const code=failure(e);
-    if(code==='account-removed'){detach(st);notify('account-removed');return}
-    if(RETRYABLE.has(code)||e?.status>=500||!e?.status){op.tries++;op.nextAt=clock()+Math.min(300000,2000*2**Math.min(op.tries,8));saveState(st);notify('offline',code);break}
-    st.outbox=st.outbox.filter(o=>o.requestId!==op.requestId);notify('dropped',code);changed=true}
+   }catch(e){const code=failure(e),now=fresh();if(!now)return;
+    if(code==='account-removed'){detach(now);notify('account-removed');return}
+    const o=now.outbox.find(x=>x.requestId===op.requestId);
+    if(RETRYABLE.has(code)||e?.status>=500||!e?.status){if(o){o.tries++;o.nextAt=clock()+Math.min(300000,2000*2**Math.min(o.tries,8))}saveState(now);notify('offline',code);break}
+    now.outbox=now.outbox.filter(x=>x.requestId!==op.requestId);saveState(now);notify('dropped',code);changed=true}
   }
-  if(!changed&&(refresh||clock()-lastFetch>300000)&&!st.outbox.length){
-   try{st.profile=await http.request('GET','/v1/profile',null,acct.token);lastFetch=clock();changed=true}
-   catch(e){const code=failure(e);if(code==='account-removed'){detach(st);notify('account-removed');return}notify('offline',code)}
+  if(!changed&&(refresh||clock()-lastFetch>300000)&&!(fresh()?.outbox.length)){
+   try{const p=await http.request('GET','/v1/profile',null,acct.token),now=fresh();if(!now)return;
+    // A capture during the read means the profile may be older than local changes; reconcile adds them back from the outbox.
+    now.profile=p;saveState(now);lastFetch=clock();changed=true}
+   catch(e){const code=failure(e);if(code==='account-removed'){const now=fresh();if(now)detach(now);notify('account-removed');return}notify('offline',code)}
   }
-  if(changed)reconcile(st);
+  if(changed){const now=fresh();if(now)reconcile(now)}
  }
  function detach(st){write(KEY+st.uid,null);if(adapter.owner()===st.uid)adapter.setOwner(null)}
  async function onboard(acct){

@@ -39,7 +39,10 @@ jobs:
       - name: Install pinned test tools
         run: npm install --no-audit --no-fund
       - name: Test permission boundaries and trusted admission locally
-        run: npm test
+        run: |
+          # On failure, publish the output tail as a check annotation (readable via the API).
+          if ! npm test > "$RUNNER_TEMP/security-test.log" 2>&1; then cat "$RUNNER_TEMP/security-test.log"; msg=$(grep -v '^\s\{3,\}' "$RUNNER_TEMP/security-test.log" | tail -c 3500 | sed -e 's/%/%25/g' -e 's/\r/%0D/g' | sed -e ':a;N;$!ba;s/\n/%0A/g'); echo "::error title=Security suite failed::$msg"; exit 1; fi
+          tail -n 40 "$RUNNER_TEMP/security-test.log"
       - name: Check the undeployed player function kit loads the tested modules
         run: node ../functions/scripts/prepare.mjs && node ../functions/scripts/prepare.mjs --check && node ../functions/scripts/smoke.cjs
       - name: Retain permission results and emulator diagnostics

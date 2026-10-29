@@ -83,5 +83,12 @@ async function test(name,fn){await fn();count++;console.log('ok - '+name)}
  await test('promo codes travel with the change and are checked by the server',async()=>{const s=server(),d=device(s);await d.cloud.sync();
   d.prefs.coins+=500000;d.prefs.xp+=100000;d.cloud.promo('WRONGCODE');await d.cloud.sync();assert.ok(d.notes.includes('note:promo-invalid'));assert.equal(d.prefs.coins,50000);
  });
+ await test('a change captured while a request is in flight is never lost',async()=>{const s=server(),d=device(s,{coins:100});await d.cloud.sync();
+  // Slow the next server call and save a new change while it is pending.
+  const orig=s.svc.sync;let release;s.svc.sync=async(...a)=>{await new Promise(r=>release=r);return orig(...a)};
+  d.prefs.coins+=10;const pending=d.cloud.sync();for(let i=0;i<200&&!release;i++)await new Promise(r=>setTimeout(r,5));assert.ok(release,'request reached the server');
+  d.prefs.coins+=5;d.cloud.capture();assert.equal(d.cloud.status().pending,2,'second change queued while the first is in flight');s.svc.sync=orig;release();await pending;await d.cloud.sync();assert.equal(d.cloud.status().pending,0);
+  assert.equal((await s.svc.get('alice')).coins,115);assert.equal(d.prefs.coins,115);
+ });
  console.log(count+' cloud sync engine checks passed (client engine against the real profile reducer)');
 })().catch(e=>{console.error(e);process.exitCode=1});
