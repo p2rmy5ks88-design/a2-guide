@@ -15,7 +15,7 @@ const copy=x=>JSON.parse(JSON.stringify(x));
 function fail(code){throw Object.assign(new Error(code),{code})}
 function normalize(event,environment){
  if(!event||!['apple','google'].includes(event.store)||event.environment!==environment||event.appId!==APP||
-    !['purchase','refund'].includes(event.type)||typeof event.transactionId!=='string'||!event.transactionId||event.transactionId.length>4096||
+    !['purchase','refund','refund-reversed'].includes(event.type)||typeof event.transactionId!=='string'||!event.transactionId||event.transactionId.length>4096||
     !/^[A-Za-z0-9_-]{1,128}$/.test(event.ownerUid||'')||!Object.hasOwn(CATALOG,event.productId)||
     event.quantity!==1||event.state!=='purchased')fail('invalid-verified-event');
  return {store:event.store,environment,transactionKey:hash(JSON.stringify([event.store,environment,event.transactionId])),
@@ -33,8 +33,21 @@ function applyEvent(input,event,now){
  const root=copy(input||{});root.transactions||={};root.accounts||={};
  const key=event.transactionKey,old=root.transactions[key];
  if(old&&(old.ownerUid!==event.ownerUid||old.productId!==event.productId))fail('purchase-owner-conflict');
+ // Apple reversed its refund: give the coins back once. Without a recorded purchase there is
+ // nothing to restore (normal delivery will credit it); if not refunded it is a duplicate.
+ if(event.type==='refund-reversed'){
+  if(!old||!old.refunded)return {root,result:{duplicate:true,refunded:false,ignored:!old}};
+  // A refund that arrived before delivery left a no-credit tombstone; reversing it lets the
+  // normal (verified) delivery credit the purchase once.
+  if(!old.fulfilled){root.transactions[key]={...old,refunded:false,reversedAt:now};return {root,result:{duplicate:false,refunded:false,reversed:true,credited:false}}}
+  const userKey=hash(event.ownerUid),account=root.accounts[userKey]||{uid:event.ownerUid,coins:0,ledger:{}};account.ledger||={};
+  const n=old.refunds||1;balance(account,old.coins);
+  account.ledger[key+'_reversed_'+n]={type:'refund-reversed',coins:old.coins,balance:account.coins,debt:account.debt,productId:event.productId,environment:event.environment,at:now};
+  root.accounts[userKey]=account;root.transactions[key]={...old,refunded:false,reversedAt:now};
+  return {root,result:{duplicate:false,refunded:false,reversed:true}};
+ }
  if(old?.refunded)return {root,result:{duplicate:true,refunded:true}};
- if(old&&event.type==='purchase'){
+ if(old&&event.type==='purchase'&&(old.fulfilled||old.refunded)){
   if(event.store==='google'&&!root.outbox?.[key]){if(!event.sealedProof)fail('delivery-proof-required');root.outbox||={};root.outbox[key]={store:'google',state:'pending',sealedProof:event.sealedProof,attempts:0,nextAt:now,createdAt:now}}
   return {root,result:{duplicate:true,refunded:false}};
  }
@@ -44,10 +57,11 @@ function applyEvent(input,event,now){
  if(event.type==='purchase')delta=event.coins;
  else if(old)delta=-old.coins;
  balance(account,delta);
- account.ledger[key+'_'+event.type]={type:event.type,coins:delta,balance:account.coins,debt:account.debt,productId:event.productId,at:now};
+ const refunds=(old?.refunds||0)+(event.type==='refund'?1:0);
+ account.ledger||={};account.ledger[key+'_'+event.type+(event.type==='refund'&&refunds>1?'_'+refunds:'')]={type:event.type,coins:delta,balance:account.coins,debt:account.debt,productId:event.productId,environment:event.environment,at:now};
  root.accounts[userKey]=account;
  root.transactions[key]={ownerUid:event.ownerUid,productId:event.productId,coins:event.coins,store:event.store,
-   environment:event.environment,refunded:event.type==='refund',fulfilled:event.type==='purchase',at:now};
+   environment:event.environment,refunded:event.type==='refund',fulfilled:event.type==='purchase'||!!old?.fulfilled,refunds,at:now};
  root.outbox||={};
  if(event.type==='refund'&&root.outbox[key]){const job=root.outbox[key];root.outbox[key]={store:job.store,state:'cancelled',attempts:job.attempts,nextAt:Number.MAX_SAFE_INTEGER}}
  if(event.type==='purchase'&&event.store==='google'){

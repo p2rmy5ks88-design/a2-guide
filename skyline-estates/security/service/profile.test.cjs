@@ -121,13 +121,78 @@ async function test(name,fn){await fn();count++;console.log('ok - '+name)}
   const many=Array.from({length:2001},(_,i)=>'t'+i),r=await f.svc.sync('alice',{requestId:rid(),changes:{items:{tok:many.slice(0,1999)}}});assert.equal(Object.keys(r.profile.inv.tok).length,1999);
   const s=await f.svc.sync('alice',{requestId:rid(),changes:{items:{dice:['a','b','c']}}});assert.ok(s.notes.includes('item-limit'));assert.equal(Object.keys(s.profile.inv.dice).length,1);
  });
- await test('production may explicitly accept Apple Sandbox purchases (App Review/TestFlight) into the same balance',async()=>{
+ await test('production accepts Apple Sandbox purchases (App Review/TestFlight) only for listed tester accounts',async()=>{
   const db=createFakeFirestore(),mk=envs=>createFirestoreWallet({db,environment:'production',storeEnvironments:envs,verifyIdToken,verifyPurchase:async v=>v,verifyNotification:async v=>v,clock:()=>DAY});
   await assert.rejects(()=>mk(undefined).purchase('alice',buy('alice','sb-1')),/invalid-verified-event/);
+  // Not a listed tester: sandbox coins can never reach a real production balance.
+  await assert.rejects(()=>mk(['production','sandbox']).purchase('alice',buy('alice','sb-1')),/sandbox-purchase-not-allowed/);
+  await db.doc('skylineAccounts/production/testers/'+P.hash('alice')).set({active:false});
+  await assert.rejects(()=>mk(['production','sandbox']).purchase('alice',buy('alice','sb-1')),/sandbox-purchase-not-allowed/);
+  await db.doc('skylineAccounts/production/testers/'+P.hash('alice')).set({active:true});
   await mk(['production','sandbox']).purchase('alice',buy('alice','sb-1'));
+  assert.equal(db.dump()['skylineWallets/production/accounts/'+P.hash('alice')].tester,true);
   const prof=createProfileService({db,verifyIdToken,environment:'production',clock:()=>DAY});assert.equal((await prof.get('alice')).coins,600);
   const key=Object.keys(db.dump()).find(k=>k.startsWith('skylineWallets/production/purchases/'));assert.equal(db.dump()[key].environment,'sandbox');
   assert.throws(()=>createFirestoreWallet({db,environment:'sandbox',storeEnvironments:['sandbox','production'],verifyIdToken,verifyPurchase:async v=>v,verifyNotification:async v=>v}),/store environment/);
+ });
+ await test('verified notifications that need no wallet change are acknowledged and change nothing',async()=>{const db=createFakeFirestore();
+  const w=createFirestoreWallet({db,environment:'sandbox',verifyIdToken,verifyPurchase:async v=>v,verifyNotification:async v=>v,clock:()=>DAY});
+  await w.purchase('alice',buy('alice','n-1'));const before=JSON.stringify(db.dump());
+  for(const t of ['TEST','CONSUMPTION_REQUEST','REFUND_DECLINED']){const r=await w.notification({type:'ignored',notificationType:t});assert.deepEqual(r,{ok:true,ignored:t,walletChanged:false})}
+  assert.equal(JSON.stringify(db.dump()),before);
+ });
+ await test('refund reversal restores coins once; a second refund removes them again',async()=>{const f=fixture();
+  await f.wallet.purchase('alice',buy('alice','rv-1'));await f.wallet.notification({...buy('alice','rv-1'),type:'refund'});assert.equal((await f.svc.get('alice')).coins,0);
+  const r=await f.wallet.notification({...buy('alice','rv-1'),type:'refund-reversed'});assert.equal(r.reversed,true);assert.equal((await f.svc.get('alice')).coins,600);
+  await f.wallet.notification({...buy('alice','rv-1'),type:'refund-reversed'});assert.equal((await f.svc.get('alice')).coins,600,'duplicate reversal is a no-op');
+  await f.wallet.purchase('alice',buy('alice','rv-1'));assert.equal((await f.svc.get('alice')).coins,600,'replayed purchase never credits');
+  await f.wallet.notification({...buy('alice','rv-1'),type:'refund'});assert.equal((await f.svc.get('alice')).coins,0);
+ });
+ await test('a reversed refund-before-delivery tombstone lets the verified delivery credit exactly once',async()=>{const f=fixture();
+  await f.wallet.notification({...buy('alice','tb-1'),type:'refund'});await f.wallet.purchase('alice',buy('alice','tb-1'));assert.equal((await f.svc.get('alice')).coins,0);
+  const r=await f.wallet.notification({...buy('alice','tb-1'),type:'refund-reversed'});assert.equal(r.credited,false);assert.equal((await f.svc.get('alice')).coins,0);
+  await f.wallet.purchase('alice',buy('alice','tb-1'));await f.wallet.purchase('alice',buy('alice','tb-1'));assert.equal((await f.svc.get('alice')).coins,600);
+ });
+ await test('refund for a removed account is acknowledged without recreating it',async()=>{const f=fixture();
+  await f.wallet.purchase('alice',buy('alice','del-1'));await f.svc.remove('alice|apple.com|'+Math.floor(DAY/1000));
+  const r=await f.wallet.notification({...buy('alice','del-1'),ownerUid:'alice',type:'refund'}).catch(e=>({code:e.code,permanent:e.permanent}));
+  assert.equal(f.db.dump()['skylineWallets/sandbox/accounts/'+P.hash('alice')].status,'deleted');assert.equal(r.ignored,'account-removed');assert.equal(r.finishAllowed,false);
+ });
+ await test('deterministic notification rejections are marked permanent so Apple stops retrying',async()=>{const f=fixture();
+  await f.wallet.purchase('alice',buy('alice','own-1'));const e=await f.wallet.notification({...buy('bob','own-1'),type:'refund'}).catch(x=>x);assert.equal(e.code,'purchase-owner-conflict');assert.equal(e.permanent,true);
+ });
+ await test('tester accounts: sandbox-only, locked when retired, wiped to a normal account on reset',async()=>{const db=createFakeFirestore(),now=DAY;
+  const prof=createProfileService({db,verifyIdToken,environment:'production',clock:()=>now});
+  const w=createFirestoreWallet({db,environment:'production',storeEnvironments:['production','sandbox'],verifyIdToken,verifyPurchase:async v=>v,verifyNotification:async v=>v,clock:()=>now});
+  const real=(uid,id)=>({...buy(uid,id),environment:'production'});
+  // reviewer account: listed, receives free sandbox coins, flagged permanently
+  await prof.markTester('rev','App Review demo');await w.purchase('rev',buy('rev','sb-r1'));let p=await prof.get('rev');assert.equal(p.coins,600);assert.equal(p.tester,true);
+  await prof.sync('rev',{requestId:rid(),changes:{coins:-100,items:{roof:['pool']}}});
+  // real money never mixes into a test account
+  await assert.rejects(()=>w.purchase('rev',real('rev','pr-r1')),/test-account-real-purchase-blocked/);
+  // retiring locks it: no reads, syncs, spending or purchases with the free coins
+  await prof.retireTester('rev');
+  await assert.rejects(()=>prof.get('rev'),/test-account-retired/);
+  await assert.rejects(()=>prof.sync('rev',{requestId:rid(),changes:{coins:-1}}),/test-account-retired/);
+  await assert.rejects(()=>w.purchase('rev',buy('rev','sb-r2')),/sandbox-purchase-not-allowed/);
+  // un-listing (instead of retiring) behaves the same: the flag on the account stays
+  await db.doc('skylineAccounts/production/testers/'+P.hash('rev')).delete();await assert.rejects(()=>prof.get('rev'),/test-account-retired/);
+  // recovery: owner reset wipes coins and items, clears the flag and leaves an empty normal account
+  await prof.resetTester('rev');p=await prof.get('rev');assert.equal(p.coins,0);assert.equal(p.xp,0);assert.deepEqual(p.inv,{});assert.equal(p.tester,false);
+  await prof.sync('rev',{requestId:rid(),changes:{coins:10}});
+  // the old sandbox transaction can never be credited again, and new sandbox purchases are refused
+  await assert.rejects(()=>w.purchase('rev',buy('rev','sb-r1')),/sandbox-purchase-not-allowed/);assert.equal((await prof.get('rev')).coins,10);
+  await assert.rejects(()=>w.purchase('rev',buy('rev','sb-r3')),/sandbox-purchase-not-allowed/);
+  await w.purchase('rev',real('rev','pr-r2'));assert.equal((await prof.get('rev')).coins,610);
+  // a normal player is unaffected by any of this
+  await w.purchase('pat',real('pat','pr-p1'));await assert.rejects(()=>w.purchase('pat',buy('pat','sb-p1')),/sandbox-purchase-not-allowed/);assert.equal((await prof.get('pat')).coins,600);
+  await assert.rejects(()=>prof.resetTester('pat'),/not-a-tester/);
+ });
+ await test('ledger rows carry the Skyline-specific TTL field; balances and purchase records do not',async()=>{const f=fixture();
+  await f.wallet.purchase('alice',buy('alice','ttl-1'));await f.svc.sync('alice',{requestId:rid(),changes:{coins:5}});const d=f.db.dump();
+  const ledger=Object.entries(d).filter(([k])=>k.includes('/ledger/')),others=Object.entries(d).filter(([k])=>!k.includes('/ledger/'));
+  assert.ok(ledger.length>=2&&ledger.every(([,v])=>v.skylineLedgerExpireAt instanceof Date&&!('expireAt' in v)));
+  assert.ok(others.every(([,v])=>!('skylineLedgerExpireAt' in v)&&!('expireAt' in v)),'accounts, purchases and ops never expire');
  });
  console.log(count+' unified profile checks passed (in-memory Firestore; emulator suite runs in CI)');
 })().catch(e=>{console.error(e);process.exitCode=1});

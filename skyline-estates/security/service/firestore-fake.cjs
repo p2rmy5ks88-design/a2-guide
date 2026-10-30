@@ -11,7 +11,7 @@ function createFakeFirestore(){
   const ref={path,id:parts.at(-1),
    collection:name=>collRef(path+'/'+name),
    async get(){return snap(ref)},
-   async set(v){docs.set(path,clone(v))},
+   async set(v,o){docs.set(path,o&&o.merge&&docs.has(path)?{...docs.get(path),...clone(v)}:clone(v))},
    async create(v){if(docs.has(path))fail('already-exists');docs.set(path,clone(v))},
    async update(v){if(!docs.has(path))fail('not-found');docs.set(path,{...docs.get(path),...clone(v)})},
    async delete(){docs.delete(path)}};
