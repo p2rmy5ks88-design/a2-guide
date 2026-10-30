@@ -1,11 +1,16 @@
 /* Firebase SDK adapter. SDK modules are loaded only when the player opens accounts. */
 (function(scope){
 'use strict';
+function within(promise,ms,code){let t;return Promise.race([promise,new Promise((_,reject)=>{t=setTimeout(()=>reject(Object.assign(Error(code),{code})),ms)})]).finally(()=>clearTimeout(t))}
 async function createFirebaseAccountAdapter({appSdk,authSdk:sdk,config,native=false,nativeCredential=null,nativeProviders=[],emulator=null,appName='skyline-player-account'}){
  const app=appSdk.getApps().find(a=>a.name===appName)||appSdk.initializeApp(config,appName);
- const auth=sdk.getAuth(app);
+ // In the iOS app's web view getAuth() never becomes ready (its default popup/iframe and
+ // IndexedDB setup hang under capacitor://). Native builds use initializeAuth with IndexedDB
+ // persistence and no popup resolver; sign-in there goes through the native Apple/Google bridge.
+ let auth;if(native&&sdk.initializeAuth&&sdk.indexedDBLocalPersistence){try{auth=sdk.initializeAuth(app,{persistence:sdk.indexedDBLocalPersistence})}catch{auth=sdk.getAuth(app)}}else auth=sdk.getAuth(app);
  if(emulator){const u=new URL(emulator);if(config.projectId!=='demo-skyline-phase1'||u.hostname!=='127.0.0.1'||u.protocol!=='http:')throw Error('Loopback demo Auth emulator only');sdk.connectAuthEmulator(auth,emulator,{disableWarnings:true})}
- await sdk.setPersistence(auth,sdk.browserLocalPersistence);await auth.authStateReady();
+ if(!native)await sdk.setPersistence(auth,sdk.browserLocalPersistence);
+ await within(auth.authStateReady(),20000,'account/auth-timeout');
  const provider=p=>{const value=p==='google.com'?new sdk.GoogleAuthProvider():new sdk.OAuthProvider('apple.com');if(p==='apple.com'){value.addScope('email');value.addScope('name')}return value};
  const emailCredential=values=>sdk.EmailAuthProvider.credential(String(values?.email||'').trim(),String(values?.password||''));
  async function credential(p,keep){

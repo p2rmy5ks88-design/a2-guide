@@ -93,10 +93,10 @@ def setup(folder):
             target.chmod(0o600)
             manifest['installed'].append(profile_uuid+'|'+str(parent))
             manifest_path.write_text(json.dumps(manifest))
-    options = {'method':'app-store-connect', 'destination':'upload', 'teamID':verifier.TEAM, 'signingStyle':'manual', 'signingCertificate':fingerprint, 'provisioningProfiles':{verifier.BUNDLE:profile_uuid}, 'testFlightInternalTestingOnly':True, 'manageAppVersionAndBuildNumber':False}
+    options = {'method':'app-store-connect', 'destination':'upload', 'teamID':verifier.TEAM, 'signingStyle':'manual', 'signingCertificate':fingerprint, 'provisioningProfiles':{verifier.BUNDLE:profile_uuid}, 'testFlightInternalTestingOnly':os.environ.get('SKYLINE_CLOUD_CHANNEL')!='ios-release', 'manageAppVersionAndBuildNumber':False}
     (folder/'export.plist').write_bytes(plistlib.dumps(options))
     (folder/'signing-settings.json').write_text(json.dumps({'team':verifier.TEAM,'bundle':verifier.BUNDLE,'profile':profile_uuid,'profile_name':profile['Name'],'certificate':fingerprint}))
-    print('PASS: dedicated distribution identity/profile installed for private TestFlight export')
+    print('PASS: dedicated distribution identity/profile installed for '+('App Store submission' if os.environ.get('SKYLINE_CLOUD_CHANNEL')=='ios-release' else 'internal TestFlight only'))
 
 def cleanup(folder):
     manifest_file = folder/'cleanup.json'

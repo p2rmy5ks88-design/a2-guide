@@ -1,162 +1,102 @@
 # Skyline Estates — iOS release handoff
 
-Updated 29 October 2026. Prepared for continuation in Claude Code or another coding environment. Verify repository state and current CI before making changes; this file is a handoff, not evidence that unfinished features work.
+Updated 30 October 2026, 12:00 CET. This repository is **public**: never add credentials, key files, passwords, personal emails or billing IDs here. Verify current repository and CI state before acting; this file is a handoff, not proof that anything works. Earlier history is in git (`git log -- SKYLINE-IOS-HANDOFF.md`).
 
-## Owner decisions and objective
+## Owner rules (still in force)
 
-Finish Skyline Estates for a public **iOS** release with real accounts, a unified cloud wallet/progress sync, verified StoreKit purchases, recovery and deletion. **Android publication is deferred.** The owner explicitly chose to **wait for one unified cloud wallet**, rather than launch with separate earned/purchased balances. Preserve existing coins, collections, token stages and saves. Paid purchases remain paused until integration and real sandbox tests pass. Most recent revised estimate: 8–16 engineering hours plus Apple processing/review; reassess after the backend and migration design is concrete.
+- **Decision 30 Oct 11:09: version 1.0 ships without in-app purchases.** Public build uses `cloud_channel=ios-release` (accounts and cloud save on, `purchases:false`, coin-pack buying hidden; coins are still earned and spent in play; balances, collections and saves are kept). The owner has authorized building and submitting it for App Review; legal declarations (privacy, age rating, export compliance, agreements) stay the owner's.
+- Deferred: payment testing and activation, optional polish, Android. Coin packs stay in App Store Connect (Prepare for Submission) and are **not** attached to 1.0.
+- `private-testing` builds go only to the TestFlight group and are never submitted.
+- **Spend cap (approval item 9) is pending.** A Cloud Functions spend cap is not a total-project limit and would also pause any future Functions in `eko-estates`. Don't set it without the owner's amount.
+- Never use the owner's existing player account as a tester. Never reset, delete or migrate a save automatically. Don't uninstall apps to test.
+- Don't recreate keys, accounts or backend services unless evidence shows they are the problem.
+- No new features or cosmetic changes during release work. No subagents unless asked. Leave Eko Estates / Svea Fastigheter config untouched.
 
-Preserve the approved 40-space board, 3D scenery, artwork, UI and custom game rules. Use narrowly scoped PRs. Owner authorized tested merges/web updates and wants eventual public release, but this does not bypass required confirmations for new credentials, live permissions, contracts or financial actions. Do not publish an untested build or silently enable billing. Keep resource use focused and give estimates for each task. Do not use subagents unless explicitly requested.
+## Deployed configuration (live, private use only)
 
-## Branches and PRs
+| Item | State |
+|---|---|
+| Firestore | `(default)`, Standard edition, Native, restrictive rules, `europe-west1`. Created 30 Oct. |
+| TTL | Collection group `ledger`, field `skylineLedgerExpireAt` (24 months). Balances, items, purchases and anti-replay records have no TTL. |
+| Function | `skylinePlayer` (codebase `skyline-player`), Gen 2, Node 22, `europe-west1`, max 10 instances, concurrency 40, 256 MiB, 30 s, min 0. URL `https://europe-west1-eko-estates.cloudfunctions.net/skylinePlayer`. Deployed from main `8a4399d` via Cloud Shell under the owner's account. `SKYLINE_ENVIRONMENT=production` (Sandbox purchases credited only to listed testers). |
+| Runtime identity | Default compute service account (has project Editor). **Pre-public-release item:** move to a dedicated least-privilege account — proposal in `skyline-estates/RELEASE-PREFLIGHT.md` §G (PR #57); needs owner approval before any IAM change. |
+| Secrets (Secret Manager) | `SKYLINE_APPLE_IAP_KEY` (owner-uploaded .p8, verified as a valid EC key without printing), `SKYLINE_APPLE_IAP_KEY_ID`, `SKYLINE_APPLE_IAP_ISSUER_ID`. Owner keeps the .p8 backup offline. |
+| Apple roots | AppleRootCA-G2/G3 downloaded at deploy from apple.com; G3 SHA-256 matched `63:34:3A:BF:…:3E:91:79`. Not committed. |
+| Artifact cleanup | Build images in `europe-west1` deleted after 1 day. |
+| Testers | Two dedicated email accounts marked with `scripts/testers.cjs` (owner test account; App Review demo). `node scripts/testers.cjs list` shows them. Owner's player account untouched. |
+| App Store Server Notifications | Production and Sandbox URLs → `…/skylinePlayer/v1/store/apple-notifications`. Apple Sandbox TEST notification: delivery **SUCCESS**, 200, no errors logged. |
+| Products | Consumables `com.kenstylez.skylineestates.coins_600/1500/4000/10000`. Base US $0.99/1.99/4.99/9.99 (approved). **Sweden set manually to 9/19/49/99 kr** (owner decision; Apple won't auto-adjust Sweden). Status: Prepare for Submission (first IAPs ship with an app version). |
+| Sandbox tester | "Skyline Sandbox", Sweden (App Store Connect → Sandbox). |
+| Budget | 500 SEK budget alerts at 250 / 450 / 500 / 1,000 SEK (email only, no cap). |
+| Owner actions pending | Accept the updated Apple Developer Program License Agreement (Account Holder). |
 
-Repository: p2rmy5ks88-design/a2-guide.
+Smoke tests on the live function: no token → 401 `unauthenticated`; foreign origin → 403; bad token → 401; junk notification → acknowledged, no wallet change.
 
-- Main last verified: 3ed9d3b575eca65eef2f2208226072db9ac62764.
-- Draft PR #51: https://github.com/p2rmy5ks88-design/a2-guide/pull/51
-- PR #51 branch: skyline-public-release-commerce. Latest source commit checked at handoff: **9eb5b70c80b2550804229ed44559415cddd89f79**. PR is not merged or deployed. Read fresh state before proceeding.
-- New working branch: **skyline-ios-accounts-storekit**, based on PR #51. A stacked draft PR holds this handoff and the initial native StoreKit source. Merge/rebase the dependency deliberately; do not drop #51 content or merge unfinished payment code merely because unrelated CI is green.
-- Tracking issue #2 remains open. Its body is close to GitHub's size limit; replace its current summary rather than append indefinitely. Do not close it on the basis of an isolated test.
+## Code state
 
-## Completed and tested
+- main includes PRs #51–#56 and #58. PR #55: store pause (`scripts/store-pause.cjs`), tester import block, refund replay (`scripts/replay-notifications.cjs`), save export, private-testing channel. PR #56: private config file `skyline-estates-app/cloud/private-testing.js`, accepted by `verify-bundle` only on that channel.
+- **PR #58 (sign-in fix, merged):** in the iOS web view `getAuth()` never became ready, so build 65 stayed on "Connecting to your account…". The iOS app now uses `initializeAuth(..., indexedDBLocalPersistence)` without a popup resolver; the web is unchanged. SDK load and auth readiness time out after 20 s with codes **ACCOUNT-SDK** / **ACCOUNT-INIT**.
+- PR #57: docs only (runtime service account proposal), awaiting owner review.
 
-Private TestFlight **1.0.39 (39)** was signed correctly and physically accepted by the owner: native Apple sign-in returned a credential. This diagnostic does **not** create a Firebase player or sync a wallet. The old Sideloadly copy had an Apple authorization failure; preserve old installations/saves rather than uninstalling to migrate.
+## Builds
 
-PR #51 adds:
+| Build | Content | Result on owner's iPhone |
+|---|---|---|
+| 1.0.39 (39) | Earlier diagnostic build | Native Apple credential OK |
+| 1.0.65 (65) | main `669e8af`, private-testing | Update kept the save (705 coins, Level 6, Bronze 19). Spotlight card visible. **Sign-in panel stuck on "Connecting…"** (no code). |
+| 1.0.68 (68) | main `d71c9fb` (includes #58 sign-in fix), private-testing | **Sign-in works** (owner, 06:57): email sign-in with the test account; save intact. |
+| 1.0.70 (70) | branch `skyline-ios-refund-and-debt` (PR #61), private-testing | Debt-repayment portfolio and in-app **Request a refund**. Owner device checklist pending. |
 
-- Purchase-delivery coordinator at skyline-estates/lib/purchase-delivery.js. It consults verified durable server delivery before native finish, suppresses concurrent duplicate callbacks, checks account switches and supports recovery. 14 unit tests pass. It is **not connected to native billing**.
-- Coin pack drafts: **600 / 1,500 / 4,000 / 10,000**. Ordinary gameplay earnings and rarity upgrade gates are unchanged. Server keeps legacy 500/1,200/3,000/7,000 SKU values for old receipts/refunds. Existing displayed USD prices are draft placeholders, not approved live store pricing. Use native localized prices when live. The starter bundle is not a supported server product and must stay disabled.
-- Rotating UTC daily event (Property Day, Rent Rally, Builders' Day), best progress within a completed game, once-per-day device reward (200/250/300), saved with the match receipt. Existing missions, free wheel and streaks remain. This is local progression, **not trusted online currency evidence**.
-- Read-only leaderboard refresh (no score write on opening rankings), season/update labels, row validation, stable ties, navigation/refresh guards. Existing scores are preserved and explicitly device-reported. Trusted competitive outcomes are not live.
-- Original owner songs Bad, Priority, Skyline Estates, Dum Da Dum Answer Am. Skyline FM has **17 tracks**. Shared assets are under eko-estates/audio/fm and are copied by native packaging. Chrome decodes the four new MP3s; uploaded Git blobs match originals. Existing shuffle/crossfade retained.
-- Refreshed generated index/offline assets and CJS text hash normalization. Privacy copy now accurately says purchases/accounts are paused; it needs another revision to match the final deployed service before activation.
+Builds are made with: Actions → `skyline-ios.yml` → Run workflow on `main`, `publish=true`, `cloud_channel=private-testing`. The build number equals the run number. Then add the build to the internal group **Skyline iOS QA**.
 
-Local checks on the content milestone: 9 new content regressions; phone 390px/desktop 1280px UI and ranking refresh; 100 seeded browser simulations (seed 20261029), rounds 18–301, 99 last-player outcomes, 1 simulation round-limit, 0 errors/cash/house-bank/hotel-bank failures; 41 browser property parity cases; 61 property kernel cases; 22 token economy cases; 14 wallet cases; 18 delivery/refund/spend cases; 9 store adapter fixture cases. New final song had another 41 browser property parity checks and decoding at 225.6 seconds. Game hash pin now **0b6c34771d492f754828c7b2c8dafe81989bca99e7c2b8f58cba00923bd96ff1**; source changes require review and browser parity before repinning.
+## Checkpoint 30 Oct (afternoon)
 
-Remote checks on content commit d9686496 passed Android/desktop/security/iOS and the isolated SDK 27 job. SDK 27 job 40900515331 built both simulator and ARM64 with **Xcode 27.1 / iOS SDK 27.1**, checking the actual device binary SDK. The latest final-song commit has fresh runs; at last check Android, desktop, security and SDK 27 pass, normal iOS and full stability are still running. **Read current results; do not assert all green.** New Swift WIP described below has not been compiled by those jobs.
+- Open PRs:
+  - **#60** public `ios-release` channel. Green; merge after device checks.
+  - **#61** iPhone debt-repayment portfolio and in-app refund request. Debt test 22/22, property parity 41/41, human flows 35, save recovery 41; repinned source hash. Merge after CI and the owner's debt check.
+  - **#62** privacy policy update, `skyline-estates/APP-STORE-SUBMISSION.md`, this handoff.
+  - **#57** service account proposal (docs).
+- Sandbox procedure (verified against Apple's docs):
+  - **TestFlight builds always use Sandbox, and purchases are free with the tester's normal Apple ID.** Don't sign out of Media & Purchases.
+  - Refunds are tested from the app's own refund sheet (Account & recovery → Purchases → Request a refund). Sandbox auto-approves any reason and sends a `REFUND` server notification. Typing `DECLINE` under *Other* tests a declined refund.
+- Keep the two tester accounts until purchase and refund verification finishes.
 
-Primary reports: skyline-estates/RELEASE-CONTENT-RESULTS.md and skyline-estates/security/PUBLIC-RELEASE-CHECKPOINT.md. Older reports are historical; newer owner decisions in this handoff take precedence.
+## Checkpoint 30 Oct (midday) — 1.0 without purchases
 
-## Unfinished native work saved in this branch
+- PR #61 (debt portfolio, refund sheet, purchase messages, `ios-release` channel, no-purchase gating; includes #60) merged with main; stability job limit raised to 30 min after a slow runner cancelled a fully passing run. Merge #61, close #60, then build `ios-release` from main.
+- Store pack: `skyline-estates/APP-STORE-SUBMISSION.md`. Version 1.0 text fields, support URL, copyright and review notes are saved in App Store Connect. Screenshots (6.9", 2868×1320) are in `skyline-estates-app/appstore/screenshots/`; the CI API key can't upload them (403), so they're uploaded in the web UI.
+- Builds: 70 (debt layout, owner-approved), 72 (purchase messages). Purchase fix diagnosed: unverified Firebase email on the test account (403 `persistent-account-required`), missing product metadata (fixed), hidden toast (now modals).
+- Owner device checks for 1.0: verify the test account's Firebase email (link from `eko-estates.firebaseapp.com`), sign in, sign out → device save returns, sign in again → cloud save returns, delete the test account.
+- Owner-only before Submit: license agreement, App Privacy, age rating, export compliance if asked, review contact and demo sign-in, release option.
 
-Four new Swift source files under skyline-estates-app/native:
+## Checkpoint 30 Oct 14:30 — release build attached
 
-- SkylineStoreProducts.swift: new sale SKU allowlist, legacy recovery SKU allowlist, opaque UUID validation.
-- SkylineStoreProducts.test.swift: standalone validation fixtures (not yet compiled).
-- SkylineStoreKitPlugin.swift: draft Capacitor StoreKit 2 methods products, purchase, unfinished, finish; passes server-generated appAccountToken, returns locally verified JWS, handles pending/cancelled, listens for updates and does not grant coins locally.
-- SkylineBridgeViewController.swift: draft custom Capacitor controller registration.
+- PR #63: `ios-release` uploads are App Store eligible (others stay TestFlight internal only) and use version `1.0`. Build 82 was internal-only and can't be submitted.
+- **Build 85** (`ios-release`, main `0eaa477`, version 1.0) is attached to App Store version 1.0 and in Skyline iOS QA. No coin packs attached.
+- Owner device results on build 82 (same game code): **cloud recovery PASS** (signed-in progress synced; signed out and earned locally; signing in restored the synced balance), **coin packs hidden PASS**, test-account email verified.
+- Still open: account deletion check on the test account (reviewer demo account stays), screenshots, App Review contact and demo sign-in, age rating, App Privacy, license agreement, then Submit for Review. Release type is set to automatic after approval; the owner can change it.
 
-**These are work in progress. Ruby project setup adds the Swift sources, custom storyboard controller and iOS 15 App target minimum. macOS CI compilation now passes, including SDK 27 compatibility, but the bridge is not yet connected to the live account/wallet service or shop UI and is not release-ready.** Do not enable purchases based on their presence. Review Swift actor isolation and listener/recovery behavior; native finish's client Boolean is not independent proof of server fulfillment, so the server/JS coordinator contract remains essential. Verify the new registration using the Ruby project-generation step and actual generated storyboard, compile the standalone product tests, and run actual SDK 26/27 builds. Do not change the already-working Apple entitlements/team/profile accidentally.
+## Checkpoint 30 Oct 15:30 — SUBMITTED for App Review
 
-The active design calls for StoreKit 2 signed JWS -> authenticated server verification (including fresh Apple transaction query and owner binding) -> atomic grant -> durable delivery lookup -> native finish. Never use an unsigned receipt decoder as a verifier, never grant PREF.coins from an approved callback, and never finish a queued transaction before durable delivery.
+- Version 1.0 with **build 85** submitted; state Waiting for Review. Release: automatically after approval (owner can switch to manual before approval).
+- Device checks passed on the owner's iPhone: sign-in, cloud recovery, hidden coin packs, account deletion (test account). Reviewer demo account kept; password reset by the owner in Cloud Shell and email marked verified (no inbox).
+- Listing: iPhone 6.9" and iPad 13" screenshots (`skyline-estates-app/appstore/`), price Free, category Games › Board, privacy URL, App Privacy published (email, name, user ID, gameplay content; linked, app functionality, no tracking), age rating 12+ (simulated gambling mild), content rights: third-party content with rights. Licences: `skyline-estates/ASSET-LICENSES.md`.
+- Coin packs not attached; payment testing, spend cap, service account (#57) and Android remain deferred.
 
-## Existing account/wallet code map
+## Remaining steps before public release (pre-decision plan, purchases now deferred)
 
-- skyline-estates/lib/accounts.js: account UI, Apple credential-only bridge, accounts disabled unless EKO_ACCOUNTS.enabled is explicitly true. Online configuration is absent today.
-- skyline-estates/lib/account-firebase.js: Firebase JS credential exchange/linking; removal is blocked until config.deletePlayer exists. Current code lacks end-to-end Apple revocation/data deletion wiring.
-- skyline-estates/lib/account-controller.js: serializes mutations, protects UID/link collisions and sign-out-first switching.
-- skyline-estates/security/service/wallet.cjs: pure idempotent credit/refund/spend reducers, canonical SKU values, spent-refund debt, ownership/transaction replay fences.
-- firestore-wallet.cjs: scoped Firestore transactions/history/delivery; wallet-auth.cjs: revoked-token checks and persistent verified identities.
-- account-bindings.cjs: stable server-issued Apple UUID/Google opaque binding per UID. Never trust caller ownership IDs.
-- store-adapters.cjs: Apple signed-data verification plus current Server API query, Google authenticated verification; Apple refund notifications must be signed.
-- purchase-vault.cjs and delivery-worker.cjs: encrypted Google proofs and leased/retryable outbox. Android rollout deferred; do not rip out existing tests.
-
-These are substantial **foundation prototypes**, not a deployed production account/wallet service. No production entrypoint/deployment has been activated. Do not deploy prototype deny-all Firestore rules over unrelated existing project data.
-
-## Next implementation sequence
-
-1. Inspect applicable repository instructions and current PR/CI. Finish the native StoreKit registration/JS bridge and fixture tests, while retaining the purchase pause.
-2. Design and implement the **single unified server-owned wallet/profile** with explicit revision/conflict handling, idempotent operations, durable inventory, account/provider linking and safe local backup/export/recovery. Do not create two visible balances. Do not simply upload arbitrary PREF.coins and call it trusted purchased currency. Define a reviewed one-time legacy migration policy, new earned-game receipt authority, offline queued outcomes and retry semantics. Do not sum the same balance across devices or overwrite a local save at sign-in.
-3. Implement a deployable authenticated service using the existing scoped wallet/verifiers, recent-auth account deletion, associated data removal and Apple token revocation. Native bridge exposes credential.authorizationCode; its revokeAccessToken helper delegates to Firebase Auth revokeToken(withAuthorizationCode:). Verify the correct native/web paths and failures with real accounts. Retain only justified financial anti-replay/refund records under a documented policy. Explain unspent coin consequences before deletion. No server private credentials in the client.
-4. Complete Apple/email/Google account setup as appropriate for iOS. Native Google is not configured/exposed today; the owner selected Apple, Google and email, so do not claim all work merely because Apple succeeds. Do not auto-merge accounts by email, including Apple private relay.
-5. Prepare exact scoped Firebase deployment, permissions, secrets, environment separation, quotas/cost limits and observability; obtain any required action-time approval before creating credentials/changing live security access. Reuse the already-approved signing credentials; do not regenerate keys unnecessarily. Verify all production adapters against real APIs, not fixture responses.
-6. Register/configure launch coin products with real storefront pricing, restore/reinstall via account ledger, delivery retries, duplicate callback prevention and refunds/debt. Verify pending/cancelled/declined/forged/wrong-owner/wrong-environment cases, crash recovery, purchases after sign-out/switch and cross-device recovery. Real App Store sandbox acceptance is still required.
-7. Update privacy/support/store listing, age rating/review details/screenshots, choose a proper signed release build and physically test the completed account/payment path. Public submission is the target, but is not yet done. Do not publish unfinished code or activate real charges to bypass testing.
-
-## Connected services and owner handoffs
-
-- Firebase project **eko-estates**, owner upgraded to Blaze. The 500 SEK budget alert is not a hard spending cap. Bundle/application ID **com.kenstylez.skylineestates**; public Firebase config in eko-estates/firebase-config.js. Apple/email/Google providers configured in console, but game feature remains disabled.
-- Apple Services ID com.kenstylez.skylineestates.web, Firebase domain eko-estates.firebaseapp.com and /__/auth/handler callback configured. GitHub Pages domain authorized. Native Firebase iOS public config already matches the bundle.
-- App Store Connect app **6828220714**. Paid/free agreements, banking and tax showed Active. EU Digital Services Act trader verification showed **In Review**. Public version 1.0 remains Prepare for Submission with incomplete listing/review details and no selected public build. Do not change legal/banking information or make compliance declarations from guesses.
-- Private TestFlight owner group Skyline iOS QA has one owner; no external/public tester link. Proper signing pipeline already accepted native Apple authorization.
-- Google Play requires owner identity, real Android-device access and contact-phone verification before app creation. **Defer Android** rather than block iOS. Owner does not own an Android phone. No need to repeat this question or demand Android work now.
-- Browser sessions may expire independently for Apple Developer and App Store Connect. Let the owner enter passwords/2FA; never request secrets in chat or try reading credential caches.
-
-## Credential handling
-
-Existing encrypted GitHub Actions secrets (names only): APP_STORE_CONNECT_KEY_BASE64, APP_STORE_CONNECT_KEY_ID, APP_STORE_CONNECT_ISSUER_ID, APPLE_TEAM_ID, IOS_DISTRIBUTION_P12_BASE64, IOS_DISTRIBUTION_P12_PASSWORD, IOS_DISTRIBUTION_PROFILE_BASE64.
-
-Do not expose/download secrets into the repository or paste them into Claude/chat. An existing Apple sign-in private key is configured in Firebase; the App Store Connect build key is a different key. A Store Server API verification key/configuration may require separate setup; check the exact authorized scope. Access in another tool is not automatically shared with Claude: the owner must connect GitHub and any needed consoles there.
-
-## Build/test habits and local workspace
-
-Repository checkout on this Windows machine: work/a2-guide under this chat's workspace. User-facing reports are in outputs/ outside the repo. Generated www/, test-results screenshots and __pycache__ are untracked; do not stage them. Intermediate private signing material is outside the repo and must stay there.
-
-Read game.html and run skyline-estates/build.py after changes; check build.py --check. index.html and offline-assets.js are generated. Keep text files LF when uploading Git objects, or diffs/hashes become noisy. Hash-pinned audited game sections feed many service kernels; do not repin blindly or claim parity from static string tests.
-
-On this host use the explicit bundled Python executable (bare python points at a broken WindowsApps alias). Playwright can run with PLAYWRIGHT_MODULE pointing to bundled node_modules/playwright and CHROME_PATH to Chrome. SKYLINE_FILE_TEST=1 supports file-mode browser tests because local HTTP may be blocked. Full service emulator/native builds run in GitHub CI. Missing local node_modules/fonts means a local native copy check is not a complete native build.
-
-Publish pipeline .github/workflows/skyline-ios.yml: default PR/push builds are unsigned, private TestFlight upload is an explicit manual publish=true action. Read its current export restrictions before attempting a public App Store candidate; the previous export is internal-only. The isolated skyline-ios-sdk27.yml only compiles unsigned compatibility variants, with no store upload or credentials.
-
-Current Apple minimum upload SDK is 26; from April 2027 SDK 27+ and minimum iOS 15 are required. Xcode 27.1 builds succeeded, but this does not prove real authentication/payment/device acceptance.
-
-## Primary technical references already consulted
-
-- https://developer.apple.com/app-store/submitting/
-- https://capacitorjs.com/docs/v7/ios/custom-code
-- https://developer.apple.com/documentation/storekit/transaction/unfinished
-- https://developer.apple.com/documentation/storekit/verificationresult/jwsrepresentation-21vgo
-- https://firebase.google.com/docs/auth/ios/apple
-- https://firebase.google.com/docs/auth/web/apple
-- https://developer.apple.com/documentation/technotes/tn3194-handling-account-deletions-and-revoking-tokens-for-sign-in-with-apple
-- https://github.com/capawesome-team/capacitor-firebase/tree/main/packages/authentication (check pinned plugin 7.5.0 behavior, not just main)
-
-No public release, paid-purchase activation, cloud-wallet migration or new live permission change has occurred during this handoff.
-
-
-## Final checkpoint before transfer
-
-The owner requested this handoff when credit reached 10%. Do not interpret this as completion of the iOS release.
-
-New branch also includes lib/storekit-client.js, an injectable, default-disabled JS wrapper around the native bridge and authenticated wallet service. It lists native localized prices, passes the server-issued UUID into purchases, refuses unknown SKUs, handles pending/cancelled outcomes, resumes unfinished transactions and checks account switches before publishing wallet data. It has **13 passing local tests**; the renamed/browser-exportable purchase-delivery.js has **14 passing tests** (27 total). A concurrent-purchase race and overly broad error-code forwarding were fixed and covered.
-
-The native plugin is now registered by configure-apple-auth.rb, but that Ruby/Xcode setup and new Swift source still need real macOS CI validation. Product unit-test compilation was added to the iOS workflow, and the SDK 27 workflow now responds to native/plugin-registration changes. Do not assume the earlier SDK 27 success covers this new native source. The wrapper still needs real bootstrap, authenticated backend and unified wallet integration; game billing remains paused.
-
-Generated offline manifest is current (143 files after adding/renaming modules); build.py --check passed locally. To avoid repeating a 100-game content simulation on top of the existing 175-game stability suite, the CI content-browser pass now uses 5 games via SKYLINE_CONTENT_RUNS; standalone default remains 100. This CI resource change has not yet been exercised remotely: check the new runs and rerun as needed.
-
-No server deployment, production account enablement, legacy import, product activation, public store submission or financial transaction occurred. Continue from this draft, with the chosen unified-wallet design; do not regress to separate balances merely to ship faster.
-
-Final local verification: 27 JS purchase/delivery tests, 38 build pipeline guard checks, generated asset check, and the phone/desktop/leaderboard/audio browser pass with 5 seeded games all passed. The generated native Swift/Ruby integration still awaits macOS CI.
-
-
-## Latest owner expansion and fresh CI — 29 October 2026
-
-The owner requested all three concept features be added to Claude's to-do list before transfer. Read **SKYLINE-CITY-SPOTLIGHT-TODO.md** alongside this file: optional Dynamic City Events 2.0, appearance-only 3D rooftop/skyline customization, improved existing daily/weekly contracts, combined into City Spotlight. First example: Lagos, Development Boom, three-match Lagos Investor contract and a permanent Golden Rooftop Garden reward. These are requested future work, not implemented. Additional estimate: 6–10 engineering hours plus testing. Retain the unified cloud wallet and iOS-first/Android-deferred decisions.
-
-Fresh CI on StoreKit draft commit **9d4d9da1e06d83da8d08bb29015a91e114bcc8d1** now shows **all six workflows successful**, superseding earlier pending-compilation notes:
-
-- iOS: run 40906253537 — success.
-- SDK 27 compatibility: run 40906253574 — success.
-- Full stability: run 40906253814 — success.
-- Isolated security: run 40906253820 — success.
-- Android build: run 40906253818 — success (publication still deferred).
-- Desktop build: run 40906253549 — success.
-
-This verifies the generated native bridge builds; it does **not** verify configured App Store products, live Firebase accounts, unified migration or real payments. Accounts and purchases remain paused. Draft PR #52 is stacked on PR #51 and neither is a completed public release. Check fresh state again before continuing.
-
-Next Claude action: inspect the two handoff files and current PRs/CI; finish the release foundation and implement the requested City Spotlight feature in reviewable slices. Do not discard the extra song, larger pack drafts, existing daily event or the native work when rebasing. All three concept images are represented textually in the feature to-do; no mockup financial values or outside board artwork have been installed.
-
-
-## Claude continuation — 29 October 2026
-
-- **PR #52** (`skyline-ios-accounts-storekit`) now contains the unified cloud wallet and progress sync:
-  - Design: `skyline-estates/security/UNIFIED-PROFILE-DESIGN.md`.
-  - Server: `profile.cjs` and `profile-service.cjs`, which share the scoped wallet account document.
-  - Client: `lib/cloud-profile.js` and `lib/cloud-glue.js`.
-  - Account removal with Sign in with Apple token revocation.
-  - HTTPS routes, plus an **undeployed** Cloud Functions kit and owner runbook in `skyline-estates/functions/DEPLOY.md`.
-  - The Shop is wired to the StoreKit client.
-  - `lib/cloud-config.js` keeps `enabled:false` and `purchases:false`.
-  - CI on e4d55d3: all six workflows passed, including the emulator profile suite and the two-device browser sync test.
-- **City Spotlight** is in a new draft PR stacked on #52 (`skyline-city-spotlight`). Results are in `skyline-estates/CITY-SPOTLIGHT-RESULTS.md`. Game source pin: 485b3d85c9ad715752e6e7507647296a72fef72553ab60db3b8d7ed082da531a, reviewed with 41/41 property parity, 100 seeded games with events on and 40-game events-off parity.
-- **Still owner-gated:** deploy approval and secrets, Firestore TTL, App Store products and notification URL, sandbox acceptance list (`DEPLOY.md` §6), privacy text swap, signed TestFlight device checks. Native Google sign-in is still not configured on iOS. Android remains deferred.
+1. Confirm sign-in works on iPhone with the dedicated test account. If it fails, capture the shown code (ACCOUNT-SDK / ACCOUNT-INIT / APPLE-*) and investigate that failure instead of rebuilding.
+2. Run `skyline-estates/IPHONE-ACCEPTANCE.md` in order:
+   - Accounts: test-account prompt, sign-out restores the device save, second device.
+   - Sandbox purchase: buy, cancel, pending, interrupt.
+   - **Real sandbox refund** (not a TEST notification).
+   - Store pause.
+   - Deletion of a test account.
+   - Spotlight.
+   - Then sign in with the owner's own account and move progress. Owner decides when.
+3. After acceptance:
+   - Owner decides the spend cap.
+   - Approve and apply the runtime service account (§G) and redeploy once.
+   - Privacy disclosures, screenshots, age rating, review notes (demo account details entered by the owner in App Store Connect), trader verification.
+   - Then a reviewed public release channel.
+4. Never submit a `private-testing` build for review.

@@ -13,7 +13,7 @@ permissions:
 jobs:
   stability:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -37,6 +37,9 @@ jobs:
           t 'node skyline-estates/tests/accounts-browser.cjs "$RUNNER_TEMP/skyline-accounts-browser.json"'
           t 'node skyline-estates/tests/cloud-sync-browser.cjs'
           t 'SKYLINE_SPOT_RUNS=20 node skyline-estates/tests/spotlight-browser.cjs "$RUNNER_TEMP/skyline-spotlight.json"'
+          t 'node skyline-estates/tests/debt-portfolio-browser.cjs'
+          t 'node skyline-estates/tests/purchase-start-browser.cjs'
+          t 'node skyline-estates/tests/no-purchases-browser.cjs'
           t 'node skyline-estates/tests/native-fullscreen.cjs'
           t 'node skyline-estates/tests/promo-codes.cjs'
           t 'node skyline-estates/tests/promo-browser.cjs'
