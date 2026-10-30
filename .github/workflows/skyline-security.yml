@@ -3,6 +3,7 @@ on:
   pull_request:
     paths:
       - 'skyline-estates/security/**'
+      - 'skyline-estates/lib/purchase-delivery.cjs'
       - 'skyline-estates/database.rules.json'
       - '.github/workflows/skyline-security.yml'
   workflow_dispatch:

@@ -3681,7 +3681,7 @@ function ambTheme(){if(AUD.ambOn)bedNoise()}
 /* radio: Skyline FM plays the owner's own tracks as a shuffled, crossfaded playlist */
 const FM_LIST=[['youre-my-home','You’re My Home','Kenstylez'],['red-room','Red Room','Kenstylez'],['chances-trap','Chances Trap','Kenstylez'],
   ['grinding-all-my-life','Grinding All My Life','Kenstylez'],['mans-not-hot','Man’s Not Hot','Kenstylez'],['area-don-lock','Area Don Lock','Kenstylez'],
-  ['papa-devine-bella','Papa Devine Bella','Kenstylez'],['bigstan-in-love','Bigstan in Love (Stan-tastic)','Kenstylez'],['dusty-shoes','Dusty Shoes','Kenstylez'],['sanctuary-and-battlefield','Sanctuary and Battlefield','Kenstylez'],['lifestyle','Lifestyle','Kenstylez'],['comfort','Comfort','Kenstylez'],['intro','Intro','Kenstylez']];
+  ['papa-devine-bella','Papa Devine Bella','Kenstylez'],['bigstan-in-love','Bigstan in Love (Stan-tastic)','Kenstylez'],['dusty-shoes','Dusty Shoes','Kenstylez'],['sanctuary-and-battlefield','Sanctuary and Battlefield','Kenstylez'],['lifestyle','Lifestyle','Kenstylez'],['comfort','Comfort','Kenstylez'],['intro','Intro','Kenstylez'],['bad','Bad','Kenstylez'],['priority','Priority','Kenstylez'],['skyline-estates','Skyline Estates','Kenstylez'],['dum-da-dum-answer-am','Dum Da Dum Answer Am','Kenstylez']];
 const FM_XF=6;
 const FMS={slots:[],cur:-1,order:[],idx:-1,xfading:false,routed:false};
 function fmSlot(){const a=new Audio();a.preload='auto';a.setAttribute('playsinline','');const s={a,g:null};
@@ -3955,11 +3955,12 @@ function grantTokenMastery(g,w,coins=0){if(!g||!g.over||g.sim||FAST)return null;
  next.tokWins=next.tokWins||{};next.tokWins[me.tok]=Math.min(1000000000,m.wins+(won?1:0));
  next.tokLv=next.tokLv||{};next.tokLv[me.tok]=Math.max(1,Math.min(6,next.tokLv[me.tok]||1));
  next.tokenMastery.receipts[id]={token:me.tok,xp,won,coins};
- next.coins=masteryCount(next.coins)+masteryCount(coins);
+ const eventCoins=typeof applyDailyEvent==='function'?applyDailyEvent(next,typeof st==='function'?st(me):{}):0;coins=masteryCount(coins)+eventCoins;
+ next.coins=masteryCount(next.coins)+coins;next.tokenMastery.receipts[id].coins=coins;
  if(typeof captureEstate==='function'){const estate=captureEstate(g,me);next.estateJournal={last:estate,history:[{id,at:Date.now(),city:estate.city,token:me.tok,won,coins,rounds:g.round,netWorth:estate.netWorth,rent:estate.rent,properties:estate.rows.filter(r=>r.owner===me.id).length},...(next.estateJournal?.history||[])].slice(0,32)};next.estateOwned=next.estateOwned||{};next.estateOwned[estate.city]=Array.from(new Set([...(next.estateOwned[estate.city]||[]),...estate.rows.filter(r=>r.owner===me.id&&r.type==='prop').map(r=>r.i)]))}
  try{localStorage.setItem(PKEY,JSON.stringify(next))}catch{toast('Token progress could not be saved. Check device storage.');return null}
- PREF.tokenMastery=next.tokenMastery;PREF.tokWins=next.tokWins;PREF.tokLv=next.tokLv;PREF.coins=next.coins;if(next.estateJournal)PREF.estateJournal=next.estateJournal;if(next.estateOwned)PREF.estateOwned=next.estateOwned;
- return{token:me.tok,xp,stage:next.tokLv[me.tok],before,won,coins};
+ PREF.tokenMastery=next.tokenMastery;PREF.tokWins=next.tokWins;PREF.tokLv=next.tokLv;PREF.coins=next.coins;if(next.dailyEvent)PREF.dailyEvent=next.dailyEvent;if(next.estateJournal)PREF.estateJournal=next.estateJournal;if(next.estateOwned)PREF.estateOwned=next.estateOwned;
+ return{token:me.tok,xp,stage:next.tokLv[me.tok],before,won,coins,eventCoins};
 }
 /* ================= END TOKEN MASTERY ================= */
 
@@ -4672,7 +4673,8 @@ function addTrophies(d){const before=leagueIdx();PREF.trophies=Math.max(0,PREF.t
   if(after>PREF.leagueBest){for(let i=PREF.leagueBest+1;i<=after;i++){const L=LEAGUES[i];achQ.push({name:`${L.name} league!`,icon:L.icon,kind:'Promoted',xpText:`+${L.coins} ${COIN}`});addCoins(L.coins,`${L.name} league`)}PREF.leagueBest=after;if(after>=2)achAward('league');achShow()}
   savePref();return after-before}
 async function lbSubmit(){if(!FIRE||!FIRE.raw)return;try{await FIRE.token();const S=season();const nm=cleanName(myName()||'Player');await FIRE.raw('PUT','lb/s'+S.n+'/'+FIRE.uid(),{n:nm,t:S.tr||0,l:lvlOf(PREF.xp),k:LEAGUES[leagueIdx()].id,at:Date.now()})}catch(e){}}
-async function lbFetch(){if(!FIRE||!FIRE.raw)return null;const S=season();const r=await FIRE.raw('GET','lb/s'+S.n,undefined,'&orderBy=%22t%22&limitToLast=50');const v=r&&r.val||{};return Object.entries(v).map(([u,x])=>Object.assign({u},x)).filter(x=>x&&typeof x.t==='number').sort((a,b)=>b.t-a.t)}
+function leaderboardRows(value){return Object.entries(value&&typeof value==='object'?value:{}).filter(([u,x])=>/^[A-Za-z0-9_-]{1,128}$/.test(u)&&x&&typeof x.n==='string'&&Number.isSafeInteger(x.t)&&x.t>=0&&x.t<=100000).map(([u,x])=>({u,n:cleanName(x.n),t:x.t,l:Number.isSafeInteger(x.l)&&x.l>0?Math.min(x.l,100000):1,c:typeof x.c==='string'?x.c.slice(0,20):'',at:Number.isSafeInteger(x.at)&&x.at>=0?x.at:0})).sort((a,b)=>b.t-a.t||a.u.localeCompare(b.u)).slice(0,50)}
+async function lbFetch(){if(!FIRE||!FIRE.raw)return null;const S=season();const r=await FIRE.raw('GET','lb/s'+S.n,undefined,'&orderBy=%22t%22&limitToLast=50');return leaderboardRows(r&&r.val)}
 
 /* ---- per-game stats (on each player, synced online) ---- */
 const st=p=>(p.st=p.st||{rent:0,maxRent:0,buys:0,houses:0,hotels:0,go:0,jail:0,free:0,trades:0,aucWins:0,aucCheap:0,bankrupted:0});
@@ -4687,6 +4689,27 @@ function cityScan(final){if(!trackable())return;const c=cityNow(),names=CNAMES[c
       const m=medalOf(n);if(m&&[5,10,15].includes(n)){const mc={5:100,10:200,15:400}[n];achQ.push({name:`${m[1]} ${CITY_DATA[c].name} medal`,medal:m[0],xp:300,coins:mc});addXP(300,`${m[1]} ${CITY_DATA[c].name} medal`);addCoins(mc,`${m[1]} medal`);achAward('medal');if(n===15)achAward('gold')}achShow()}});
   achScan();missionScan(final)}
 
+/* ---- daily event: device progression, never a trusted paid-wallet grant ---- */
+const DAILY_EVENTS=[
+ {id:'property-day',name:'Property Day',goal:'Buy 5 properties in a completed game',key:'buys',target:5,coins:200},
+ {id:'rent-rally',name:'Rent Rally',goal:'Collect {m300} rent in a completed game',key:'rent',target:300,coins:250},
+ {id:'builders-day',name:'Builders’ Day',goal:'Build 3 houses in a completed game',key:'houses',target:3,coins:300}];
+function dailyEventView(profile=PREF,now=Date.now()){
+ const day=Math.floor(now/86400000),event=DAILY_EVENTS[((day%DAILY_EVENTS.length)+DAILY_EVENTS.length)%DAILY_EVENTS.length],saved=profile.dailyEvent;
+ return {...event,day,best:saved?.day===day?Math.min(event.target,masteryCount(saved.best)):0,done:saved?.day===day&&saved.done===true};
+}
+function applyDailyEvent(profile,stats,now=Date.now()){
+ const event=dailyEventView(profile,now);
+ // A backwards clock must not reopen an already rewarded earlier date.
+ if(profile.dailyEvent?.day>event.day)return 0;
+ const best=Math.max(event.best,Math.min(event.target,masteryCount(stats?.[event.key]))),done=event.done||best>=event.target;
+ profile.dailyEvent={day:event.day,id:event.id,best,done};
+ return !event.done&&done?event.coins:0;
+}
+function dailyEventCard(){const e=dailyEventView(),left=86400000-Date.now()%86400000,h=Math.floor(left/3600000),m=Math.floor(left%3600000/60000);
+ return `<section class="card daily-event" aria-label="Daily event"><div class="ch">Daily event · ${esc(e.name)} <small>Resets in ${h}h ${m}m · 00:00 UTC</small></div><p>${esc(loc(e.goal))}</p><div class="xpbar"><i style="width:${e.best/e.target*100}%"></i></div><p>${e.best} / ${e.target} · <b>+${e.coins} coins</b> · ${e.done?'✓ Reward saved':'Awarded once when a game finishes'}</p></section>`;
+}
+/* ---- end daily event ---- */
 /* ---- daily missions ---- */
 const MISSIONS=[
   {id:'buy5',n:'Buy 5 properties in one game',g:5,f:p=>st(p).buys},
@@ -5135,7 +5158,7 @@ function rigToggle(){if(!PREF.rig){RIG.live.forEach(r=>{RIG.scene.remove(r.root)
 /* Coin packs are planned native purchases. Ordering and local fulfillment are paused
    until verified account-backed delivery is available. Coins never buy random rewards. */
 const IAP_PREFIX='com.kenstylez.skylineestates.';
-const IAP_PACKS=[{id:'coins_500',coins:500,price:'$0.99'},{id:'coins_1200',coins:1200,price:'$1.99',tag:'+20%'},{id:'coins_3000',coins:3000,price:'$4.99',tag:'Popular'},{id:'coins_7000',coins:7000,price:'$9.99',tag:'Best value'}];
+const IAP_PACKS=[{id:'coins_600',coins:600,price:'$0.99'},{id:'coins_1500',coins:1500,price:'$1.99',tag:'Popular'},{id:'coins_4000',coins:4000,price:'$4.99'},{id:'coins_10000',coins:10000,price:'$9.99',tag:'Best value'}];
 const IAP_BUNDLE={id:'starter_bundle',price:'$2.99',once:true};
 // Store approval alone is not proof of payment. Purchases stay paused until the
 // account-backed verifier and wallet are deployed; never finish queued receipts here.
@@ -5176,7 +5199,7 @@ function railProfile(){const E=$('#rprof');if(!E)return;const lv=lvlOf(PREF.xp),
     <span class="grow"></span><button class="tpill" id="tbCoins" aria-label="${Math.round(PREF.coins)} coins. Get more">${PCOIN()}<span class="plus" aria-hidden="true">${svgI('plus',14)}</span></button><button class="tpill" id="tbLeague" aria-label="${L.name} league, ${PREF.trophies} trophies">${svgI('trophy',16)}<b>${L.name} · ${PREF.trophies}</b></button>`;
   E.querySelector('#tbWho').onclick=()=>homeTab('cast');E.querySelector('#tbCoins').onclick=()=>{setup.shopTab='coins';homeTab('shop')};E.querySelector('#tbLeague').onclick=()=>homeTab('leagues')}
 function homeTab(k){const sec=SEC_OF[k]||'play';setup.sub=setup.sub||{};let sub=k;if(SUBS[sec]){if(!SUBS[sec].some(s=>s[0]===k))sub=setup.sub[sec]||SUBS[sec][0][0]}else sub=sec;setup.sub[sec]=sub;setup.tab=sub;
-  const nav=$('#title .tabs');if(!nav)return;nav.innerHTML='';const D=daily();const dots={progress:wheelReady()||D.list.some(id=>!D.done[id])||seasonClaimable()>0};
+  const nav=$('#title .tabs');if(!nav)return;nav.innerHTML='';const D=daily();const dots={progress:wheelReady()||!dailyEventView().done||D.list.some(id=>!D.done[id])||seasonClaimable()>0};
   SECTIONS.forEach(([id,label])=>{const b=el('button','tab'+(id===sec?' on':''),`${svgI(id,22)}<span>${label}</span>${dots[id]?'<em class="dot"></em>':''}`);b.setAttribute('role','tab');b.setAttribute('aria-selected',id===sec?'true':'false');b.onclick=()=>{sfx('tap');homeTab(id)};nav.append(b)});
   const g=$('#hGear');if(g)g.classList.toggle('on',sec==='settings');
   if(sub!=='cast')clearPreview();railProfile();const P=$('#pane');P.scrollTop=0;P.innerHTML='';P.className='pane tab-'+sub+' sec-'+sec;$('#title .home').classList.toggle('peek-r',sub==='cast');
@@ -5291,7 +5314,7 @@ function paneAch(T){let cur=setup.achTab||'main';const cities=CITY_ORDER.filter(
   T.querySelector('#aMain').onclick=()=>{setup.achTab='main';paneAch(T)};const sel=T.querySelector('#aCity');sel.onchange=()=>{setup.achTab=sel.value;paneAch(T)};if(cur==='main')sel.selectedIndex=-1}
 function paneDaily(T){const D=daily(),lv=lvlOf(PREF.xp);
   T.innerHTML=`<div class="phead"><h2>Daily</h2><span class="small">${streakNow()}-day streak</span></div><div class="prof" id="prof"></div>
-    <div class="dgrid"><div class="card"><div class="ch">Today’s missions <small>${MISSION_XP} XP + ${MISSION_COINS} ${COIN} each · bonus for all three</small></div><div class="achlist">${D.list.map(id=>{const m=MISSIONS.find(x=>x.id===id),d=!!D.done[id],v=Math.min(m.g,D.best[id]||0);return achRow(d,loc(m.n),m.end?'Counts when the game ends.':'Progress counts within one game.',v,m.g,`+${MISSION_XP} XP`).replace(`${v} / ${m.g}`,m.money?`${fmt(v)} / ${fmt(m.g)}`:`${v} / ${m.g}`)}).join('')}</div></div>
+    ${dailyEventCard()}<div class="dgrid"><div class="card"><div class="ch">Today’s missions <small>${MISSION_XP} XP + ${MISSION_COINS} ${COIN} each · bonus for all three</small></div><div class="achlist">${D.list.map(id=>{const m=MISSIONS.find(x=>x.id===id),d=!!D.done[id],v=Math.min(m.g,D.best[id]||0);return achRow(d,loc(m.n),m.end?'Counts when the game ends.':'Progress counts within one game.',v,m.g,`+${MISSION_XP} XP`).replace(`${v} / ${m.g}`,m.money?`${fmt(v)} / ${fmt(m.g)}`:`${v} / ${m.g}`)}).join('')}</div></div>
     <div class="card wheelcard"><div class="ch">Lucky Spin</div><div class="small">${wheelReady()?'Your free spin is ready!':'You’ve spun today. Come back tomorrow.'}</div><button class="btn ${wheelReady()?'pri':''}" id="dSpin">${wheelReady()?'Spin the wheel':'View the wheel'}</button></div></div>
     <div class="card"><div class="ch">Level rewards <small>Level ${lv} · ${rankOf(lv)} · every level-up pays coins</small></div><div class="achlist">${LVL_REWARDS.map(r=>achRow(lv>=r[0],`Level ${r[0]}: ${r[1]}`,r[2],Math.min(lv,r[0]),r[0],lv>=r[0]?'Unlocked':'')).join('')}${COUNTRIES.filter(C=>C.lvl>1).filter((C,i,a)=>a.findIndex(x=>x.lvl===C.lvl)===i).map(C=>achRow(lv>=C.lvl,`Level ${C.lvl}: ${COUNTRIES.filter(x=>x.lvl===C.lvl).map(x=>x.flag+' '+x.name).join(' and ')}`,'New countries to play in.',Math.min(lv,C.lvl),C.lvl,lv>=C.lvl?'Unlocked':'')).join('')}</div></div>
     <div class="card"><div class="ch">Ranks</div><div class="ranks">${RANKS.map(r=>`<span class="${lv>=r[0]?'got':''}"><b>Lv ${r[0]}</b>${r[1]}</span>`).join('')}</div></div>`;
@@ -6451,14 +6474,14 @@ paneLeagues=function(T){const i=leagueIdx(),L=LEAGUES[i],N=LEAGUES[i+1],S=season
         <span class="lg3t">🏆 <b>${nfmt(PREF.trophies)}</b>${N?` / ${nfmt(N.min)} · ${nfmt(N.min-PREF.trophies)} to ${esc(N.name)}`:' · top league'}</span></div>
       ${N?`<div class="lg3next"><small>Reward at ${esc(N.name)}</small><b>${COIN_I}${nfmt(N.coins)} coins</b>${LG_REWARD[N.id]?`<span>+ ${esc(LG_REWARD[N.id])}</span>`:''}</div>`:''}</section>
     <div class="lg3row">${LEAGUES.map((x,k)=>`<div class="lg3l${k<i?' past':k===i?' cur':''}">${lgGem(x.id,34)}<b>${x.name}</b><small>${nfmt(x.min)} 🏆</small></div>`).join('')}</div>
-    <section class="lg3rank card"><div class="lg3rh"><h3>Season rankings</h3><button class="sm" id="lbR">⟳ Refresh</button></div><div id="lb"><div class="small">${FIRE?'Loading…':'Rankings need an internet connection.'}</div></div></section>
+    <section class="lg3rank card"><div class="lg3rh"><h3>Season ${S.n} rankings</h3><small id="lbUpdated" aria-live="polite">Device-reported scores</small><button class="sm" id="lbR">⟳ Refresh</button></div><div id="lb"><div class="small">${FIRE?'Loading…':'Rankings need an internet connection.'}</div></div></section>
     <div class="lg3sc">Win <b class="up">+30</b> · Second of 3+ <b class="up">+12</b> · Last <b class="dn">−8</b> 🏆 <button class="lg3how" id="lgHow">How scoring works ›</button></div></div>`;
   const av=r=>{const c=r.c&&CHARS.find(x=>x.id===r.c);return c?charSVG(c.id,34):`<span class="lgini">${esc((cleanName(r.n)||'?').slice(0,1).toUpperCase())}</span>`};
   const row=(r,k,me)=>`<div class="lg3r${me?' me':''}${k<3?' top':''}"><em>${k<3?['🥇','🥈','🥉'][k]:k+1}</em><span class="lgav">${av(r)}</span><b>${esc(cleanName(r.n))}${me?' <small>(you)</small>':''}</b><small>Lv ${+r.l||1}</small><span>${nfmt(+r.t)} 🏆</span></div>`;
-  const load=async()=>{const E=T.querySelector('#lb');if(!FIRE){E.innerHTML=`<div class="small">Your season so far: ${nfmt(S.tr||0)} 🏆.</div>`;return}E.innerHTML='<div class="small">Loading…</div>';
-    try{await lbSubmit();const rows=await lbFetch()||[],u=FIRE.uid();if(!rows.length){E.innerHTML='<div class="small">No scores yet this season. Finish a game to be first.</div>';return}
+  let loading=false;const load=async()=>{if(loading)return;const E=T.querySelector('#lb'),button=T.querySelector('#lbR'),updated=T.querySelector('#lbUpdated');if(!FIRE){E.innerHTML=`<div class="small">Your season so far: ${nfmt(S.tr||0)} 🏆. Connect to load rankings.</div>`;return}loading=true;button.disabled=true;E.innerHTML='<div class="small">Loading…</div>';
+    try{const rows=await lbFetch()||[],u=FIRE.uid();if(!E.isConnected||seasonNo()!==S.n)return;updated.textContent='Device-reported · Updated '+new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});if(!rows.length){E.innerHTML='<div class="small">No scores yet this season. Finish a game to be first.</div>';return}
       const mi=rows.findIndex(r=>r.u===u);E.innerHTML=rows.map((r,k)=>row(r,k,r.u===u)).join('')+(mi<0?`<div class="lg3you">${row({n:myName()||'You',l:lvlOf(PREF.xp),t:S.tr||0,c:myChar()},-1,true).replace('<em>0</em>','<em>–</em>')}</div>`:'')}
-    catch(e){E.innerHTML='<div class="small">Couldn’t load the rankings. Check your connection and tap Refresh.</div>'}};
+    catch(e){if(E.isConnected){E.innerHTML='<div class="small">Couldn’t load the rankings. Check your connection and tap Refresh.</div>';updated.textContent='Refresh failed · try again'}}finally{loading=false;button.disabled=false}};
   T.querySelector('#lbR').onclick=load;
   T.querySelector('#lgHow').onclick=()=>modal({html:`<div class="mh">How scoring works</div><div class="mtxt">Win a game: <b>+30</b> trophies. Second in a game of 3 or more: <b>+12</b>. Last: <b>−8</b>.<br><br>Hard AI games count <b>1.5×</b>, easy AI games <b>0.5×</b> and online games <b>2×</b> (losses are never multiplied).<br><br>Each new season, trophies above 800 are cut in half. Reaching a new league pays its reward once.</div>`,btns:[{k:'x',label:'Got it',primary:true}]});
   load()};

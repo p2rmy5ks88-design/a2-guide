@@ -1,0 +1,55 @@
+name: Skyline iOS SDK 27 compatibility
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/skyline-ios-sdk27.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  sdk27:
+    runs-on: xcode-27
+    timeout-minutes: 25
+    defaults:
+      run:
+        shell: bash
+        working-directory: skyline-estates-app
+    steps:
+      - uses: actions/checkout@v4
+        with: { persist-credentials: false }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: Require SDK 27 on the compatibility runner
+        run: |
+          xcodebuild -version | tee "$RUNNER_TEMP/skyline-sdk27-toolchain.txt"
+          xcrun --sdk iphoneos --show-sdk-version | tee -a "$RUNNER_TEMP/skyline-sdk27-toolchain.txt"
+          python3 scripts/verify-ios-sdk.py toolchain "$RUNNER_TEMP/skyline-sdk27-toolchain.txt"
+          python3 -c 'import subprocess; assert int(subprocess.check_output(["xcrun", "--sdk", "iphoneos", "--show-sdk-version"], text=True).split(".")[0]) >= 27'
+      - name: Prepare the complete native app without signing credentials
+        run: |
+          npm install --no-audit --no-fund
+          npm run build:web
+          node ../skyline-estates/tests/verify-bundle.cjs .
+          npx cap add ios
+          npm run assets -- --ios
+          bash scripts/patch-ios.sh
+          npx cap sync ios
+      - name: Build SDK 27 simulator and ARM64 device variants
+        working-directory: skyline-estates-app/ios/App
+        run: |
+          if [ -d App.xcworkspace ]; then T="-workspace App.xcworkspace"; else T="-project App.xcodeproj"; fi
+          xcodebuild $T -scheme App -configuration Release -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath "$RUNNER_TEMP/sdk27-simulator" IPHONEOS_DEPLOYMENT_TARGET=15.0 CODE_SIGNING_ALLOWED=NO build 2>&1 | tee "$RUNNER_TEMP/skyline-sdk27-simulator.log" | tail -n 20
+          xcodebuild $T -scheme App -configuration Release -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath "$RUNNER_TEMP/sdk27-device" IPHONEOS_DEPLOYMENT_TARGET=15.0 ARCHS=arm64 CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" build 2>&1 | tee "$RUNNER_TEMP/skyline-sdk27-device.log" | tail -n 20
+          PRODUCT="$RUNNER_TEMP/sdk27-device/Build/Products/Release-iphoneos/App.app"
+          lipo "$PRODUCT/App" -verify_arch arm64
+          xcrun vtool -show-build "$PRODUCT/App" | tee "$RUNNER_TEMP/skyline-sdk27-binary.txt"
+          python3 "$GITHUB_WORKSPACE/skyline-estates-app/scripts/verify-ios-sdk.py" binary "$RUNNER_TEMP/skyline-sdk27-binary.txt"
+          python3 -c 'import pathlib,re,os; text=pathlib.Path(os.environ["RUNNER_TEMP"]+"/skyline-sdk27-binary.txt").read_text(); sdks=re.findall(r"^\s*sdk (\d+)",text,re.M); assert sdks and all(int(s)>=27 for s in sdks)'
+      - name: Retain compatibility evidence only
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: skyline-ios-sdk27-compatibility
+          path: |
+            ${{ runner.temp }}/skyline-sdk27-*.txt
+            ${{ runner.temp }}/skyline-sdk27-*.log
