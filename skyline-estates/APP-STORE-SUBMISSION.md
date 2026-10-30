@@ -65,3 +65,34 @@ The app uses only the operating system's standard HTTPS/TLS. Builds 65 and 68 we
 - Captured from the release build.
 - Planned shots: home with Lagos; 3D board mid-game; property card or building; portfolio; City Spotlight; collection and rooftops.
 - Generated in CI from the web game at the exact size, or taken by the owner on the iPhone (Side + Volume Up).
+
+---
+
+# Version 1.1 — coin packs (draft, not submitted)
+
+Submit only after 1.0 is approved **and** the sandbox device tests in `IPHONE-ACCEPTANCE.md` pass with the isolated tester.
+
+## Build
+`skyline-ios.yml` on `main`, `publish=true`, `cloud_channel=ios-release` (purchases now on inside the iOS app only). App Store version **1.1**; the release build's marketing version must match, so update `VERSION_NAME` for `ios-release` in `skyline-ios.yml` from `1.0` to `1.1` in the same PR.
+
+## In-app purchases to attach to 1.1
+| Product ID | Coins | US base | Sweden |
+|---|---|---|---|
+| `com.kenstylez.skylineestates.coins_600` | 600 | $0.99 | 9 kr |
+| `com.kenstylez.skylineestates.coins_1500` | 1,500 | $1.99 | 19 kr |
+| `com.kenstylez.skylineestates.coins_4000` | 4,000 | $4.99 | 49 kr |
+| `com.kenstylez.skylineestates.coins_10000` | 10,000 | $9.99 | 99 kr |
+
+Each product needs a **review screenshot** (the in-app Coins tab) and review note. All four are Consumable, available in all 175 countries, and already have display names and descriptions.
+
+## Review notes (replace 1.0's first paragraph)
+> Coin packs are consumable in-app purchases (600 / 1,500 / 4,000 / 10,000 coins) used for in-game cosmetic items. Coins have no cash value. Buying requires an account so coins are saved to it: sign in with the demo account in Sign-In Information, then Shop → Coins. Purchases in review use Apple's sandbox. Refunds: Account & recovery → Purchases → Request a refund.
+
+## App Privacy change (owner publishes)
+Add **Purchases → Purchase History**: collected, linked to the user, App Functionality, not used for tracking. Other answers unchanged.
+
+## Age rating
+Answer **In-App Purchases: Yes**. Other answers unchanged (12+ today).
+
+## Privacy policy
+Updated in this PR (In-app purchases section). It goes live on merge, so merge just before submitting 1.1.

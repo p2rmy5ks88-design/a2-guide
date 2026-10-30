@@ -14,7 +14,8 @@ const check=(name,ok,detail)=>{assert.ok(ok,name+(detail!==undefined?' '+JSON.st
  await page.addInitScript(()=>{if(!localStorage.getItem('skylinePrefs'))localStorage.setItem('skylinePrefs',JSON.stringify({nickSet:true,welcomed:1,tutDone:1,coach:{pre:1,post:1},flat2d:true,rig:false,riders:false,coins:705}));
   window.Capacitor={isNativePlatform:()=>true,getPlatform:()=>'ios',isPluginAvailable:n=>n==='SkylineStoreKit',Plugins:{SkylineStoreKit:{products:async()=>{window.__store=true;return{products:[]}},purchase:async()=>{window.__store=true},unfinished:async()=>({transactions:[]}),addListener:async()=>({remove:async()=>{}})}}}});
  await page.route('https://**/*',r=>r.abort());
- await page.route('**/lib/cloud-config.js',r=>r.fulfill({contentType:'text/javascript',body:fs.readFileSync(path.join(root,'skyline-estates-app/cloud/ios-release.js'),'utf8')}));
+ // A purchases-off native config (as shipped in iOS 1.0); the store must stay hidden whenever purchases is false.
+ await page.route('**/lib/cloud-config.js',r=>r.fulfill({contentType:'text/javascript',body:fs.readFileSync(path.join(root,'skyline-estates-app/cloud/ios-release.js'),'utf8').replace('purchases:ios','purchases:false')}));
  await page.goto(url);await page.waitForFunction(()=>typeof homeTab==='function'&&typeof COIN_SALES==='function');await page.waitForFunction(()=>!document.getElementById('boot'),null,{timeout:12000});
  const cfg=await page.evaluate(()=>window.SKYLINE_CLOUD);
  check('release config: accounts on, purchases off, only inside the iOS app',cfg.enabled===true&&cfg.purchases===false&&cfg.channel==='ios-release',cfg);
