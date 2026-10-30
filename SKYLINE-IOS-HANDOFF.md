@@ -69,6 +69,13 @@ Builds are made with: Actions → `skyline-ios.yml` → Run workflow on `main`, 
 - Owner device checks for 1.0: verify the test account's Firebase email (link from `eko-estates.firebaseapp.com`), sign in, sign out → device save returns, sign in again → cloud save returns, delete the test account.
 - Owner-only before Submit: license agreement, App Privacy, age rating, export compliance if asked, review contact and demo sign-in, release option.
 
+## Checkpoint 30 Oct 14:30 — release build attached
+
+- PR #63: `ios-release` uploads are App Store eligible (others stay TestFlight internal only) and use version `1.0`. Build 82 was internal-only and can't be submitted.
+- **Build 85** (`ios-release`, main `0eaa477`, version 1.0) is attached to App Store version 1.0 and in Skyline iOS QA. No coin packs attached.
+- Owner device results on build 82 (same game code): **cloud recovery PASS** (signed-in progress synced; signed out and earned locally; signing in restored the synced balance), **coin packs hidden PASS**, test-account email verified.
+- Still open: account deletion check on the test account (reviewer demo account stays), screenshots, App Review contact and demo sign-in, age rating, App Privacy, license agreement, then Submit for Review. Release type is set to automatic after approval; the owner can change it.
+
 ## Remaining steps before public release (pre-decision plan, purchases now deferred)
 
 1. Confirm sign-in works on iPhone with the dedicated test account. If it fails, capture the shown code (ACCOUNT-SDK / ACCOUNT-INIT / APPLE-*) and investigate that failure instead of rebuilding.
