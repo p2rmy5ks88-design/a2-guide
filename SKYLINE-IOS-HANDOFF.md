@@ -76,6 +76,14 @@ Builds are made with: Actions → `skyline-ios.yml` → Run workflow on `main`, 
 - Owner device results on build 82 (same game code): **cloud recovery PASS** (signed-in progress synced; signed out and earned locally; signing in restored the synced balance), **coin packs hidden PASS**, test-account email verified.
 - Still open: account deletion check on the test account (reviewer demo account stays), screenshots, App Review contact and demo sign-in, age rating, App Privacy, license agreement, then Submit for Review. Release type is set to automatic after approval; the owner can change it.
 
+## Phase 2 checkpoint (31 Oct, 00:15 CET)
+
+- **App Store:** 1.0 (build 85) last confirmed Waiting for Review, automatic release. The App Store Connect session in Claude's browser expired; the owner signs in again to let Claude watch it. Apple emails any review request.
+- **PR #57 (approval needed, not deployed):** `skylinePlayer` to run as keyless `skyline-player` SA; `functions/scripts/runtime-identity.sh`; RELEASE-PREFLIGHT §H usage and spend controls. Usage 30 Oct: October billed 0.00 kr (0.03 kr covered), ≤3 req/s, 1 instance, Firestore 210 reads/80 writes per day. Proposed: extra 100 kr forecast budget (alerts only). Waiting for "approve IAM".
+- **PR #66 (IAP fix + tests, not deployed):** Apple transactions refunded before delivery are now finished with no credit (previously replayed every launch with an error). New `iap-lifecycle.test.cjs` (9 checks). Purchases stay off in `ios-release`.
+- **PR #67:** Android readiness (docs).
+- **Next:** merge #66 after CI; deploy it together with #57 after approval (one redeploy); then the iOS payment update: `ios-release` purchases on, App Privacy adds Purchases (purchase history), attach the 4 IAPs to the next version, sandbox device tests with the isolated tester (buy, cancel, Ask-to-Buy pending, kill-before-finish, refund via in-app sheet, `DECLINE` refund).
+
 ## Checkpoint 30 Oct 15:30 — SUBMITTED for App Review
 
 - Version 1.0 with **build 85** submitted; state Waiting for Review. Release: automatically after approval (owner can switch to manual before approval).
