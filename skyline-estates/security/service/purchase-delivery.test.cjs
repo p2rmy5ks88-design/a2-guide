@@ -22,8 +22,14 @@ test('failed native finish can repeat server verification',async()=>{
  let attempts=0;const {api}=setup({finish:async()=>{if(!attempts++)throw Error('app interrupted')}});
  await assert.rejects(api.deliver(transaction),/interrupted/);assert.equal((await api.deliver(transaction)).finished,true);assert.equal(attempts,2);
 });
-for(const status of [{state:'pending',finishAllowed:true},{state:'attention',finishAllowed:false},{state:'delivered',finishAllowed:false},{state:'refunded',finishAllowed:true}])test('never finishes '+JSON.stringify(status),async()=>{
+for(const status of [{state:'pending',finishAllowed:true},{state:'attention',finishAllowed:false},{state:'delivered',finishAllowed:false},{state:'refunded',finishAllowed:false}])test('never finishes '+JSON.stringify(status),async()=>{
  const {api,calls}=setup({delivery:async()=>status});assert.equal((await api.deliver(transaction)).finished,false);assert.ok(!calls.includes('finish'));
+});
+test('Apple refunded transaction finishes without credit only when the server allows it',async()=>{
+ const {api,calls}=setup({delivery:async()=>({state:'refunded',finishAllowed:true})});assert.deepEqual(await api.deliver(transaction),{state:'refunded',finished:true});assert.deepEqual(calls,['verify','finish']);
+});
+test('Google refunded purchase is never finished by the device',async()=>{
+ const {api,calls}=setup({delivery:async()=>({state:'refunded',finishAllowed:true})});assert.equal((await api.deliver({...transaction,store:'google'})).finished,false);assert.ok(!calls.includes('finish'));
 });
 test('Google completed delivery can finish',async()=>{
  const {api}=setup({delivery:async()=>({state:'done',finishAllowed:true})});assert.equal((await api.deliver({...transaction,store:'google'})).finished,true);
