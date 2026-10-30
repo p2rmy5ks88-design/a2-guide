@@ -58,7 +58,8 @@ jobs:
         shell: bash
         working-directory: skyline-estates-app
     env:
-      VERSION_NAME: '1.0.${{ github.run_number }}'
+      # App Store releases use the store version (1.0); private TestFlight builds keep 1.0.<run>.
+      VERSION_NAME: ${{ github.event_name == 'workflow_dispatch' && inputs.cloud_channel == 'ios-release' && '1.0' || format('1.0.{0}', github.run_number) }}
       VERSION_CODE: '${{ github.run_number }}'
     steps:
       - uses: actions/checkout@v4
@@ -152,6 +153,7 @@ jobs:
         if: github.event_name == 'workflow_dispatch' && inputs.publish
         working-directory: skyline-estates-app/ios/App
         env:
+          SKYLINE_CLOUD_CHANNEL: ${{ inputs.cloud_channel }}
           ASC_KEY_B64: ${{ secrets.APP_STORE_CONNECT_KEY_BASE64 }}
           ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           ASC_ISSUER: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}

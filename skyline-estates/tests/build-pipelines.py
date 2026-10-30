@@ -64,6 +64,8 @@ check('cloud: only a manual iOS run can select private testing', "SKYLINE_CLOUD_
 pt=(ROOT/'skyline-estates-app'/'cloud'/'private-testing.js').read_text()
 rel=(ROOT/'skyline-estates-app'/'cloud'/'ios-release.js').read_text()
 check('cloud: private-testing and ios-release configs are limited to the native iOS app; release has no purchases', "'off','private-testing','ios-release'" in bw and "cloud',channel+'.js'" in bw and all("getPlatform()==='ios'" in c for c in (pt,rel)) and "enabled:ios,purchases:ios" in pt and "enabled:ios,purchases:false" in rel and "channel:'ios-release'" in rel)
+_dist=(ROOT/'skyline-estates-app/scripts/ios-distribution.py').read_text();_ios=(ROOT/'.github/workflows/skyline-ios.yml').read_text()
+check('ios: only ios-release uploads are App Store eligible (others stay TestFlight internal only) and use store version 1.0', "'testFlightInternalTestingOnly':os.environ.get('SKYLINE_CLOUD_CHANNEL')!='ios-release'" in _dist and "SKYLINE_CLOUD_CHANNEL: ${{ inputs.cloud_channel }}" in _ios and "inputs.cloud_channel == 'ios-release' && '1.0' || format('1.0.{0}', github.run_number)" in _ios)
 vb=(ROOT/'skyline-estates'/'tests'/'verify-bundle.cjs').read_text()
 check('cloud: bundle check accepts only the reviewed channel config', "channel!=='off'&&a===privateConfig" in vb and "'cloud',channel+'.js'" in vb)
 print(f'{checks} build pipeline checks passed')
