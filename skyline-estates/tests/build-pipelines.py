@@ -63,7 +63,7 @@ check('cloud: the shipped web config keeps accounts and purchases off', 'enabled
 check('cloud: only a manual iOS run can select private testing', "SKYLINE_CLOUD_CHANNEL: ${{ github.event_name == 'workflow_dispatch' && inputs.cloud_channel || 'off' }}" in ios and "default: 'off'" in ios)
 pt=(ROOT/'skyline-estates-app'/'cloud'/'private-testing.js').read_text()
 rel=(ROOT/'skyline-estates-app'/'cloud'/'ios-release.js').read_text()
-check('cloud: private-testing and ios-release configs are limited to the native iOS app', "'off','private-testing','ios-release'" in bw and "cloud',channel+'.js'" in bw and all("getPlatform()==='ios'" in c and "enabled:ios,purchases:ios" in c for c in (pt,rel)) and "channel:'ios-release'" in rel)
+check('cloud: private-testing and ios-release configs are limited to the native iOS app; release has no purchases', "'off','private-testing','ios-release'" in bw and "cloud',channel+'.js'" in bw and all("getPlatform()==='ios'" in c for c in (pt,rel)) and "enabled:ios,purchases:ios" in pt and "enabled:ios,purchases:false" in rel and "channel:'ios-release'" in rel)
 vb=(ROOT/'skyline-estates'/'tests'/'verify-bundle.cjs').read_text()
 check('cloud: bundle check accepts only the reviewed channel config', "channel!=='off'&&a===privateConfig" in vb and "'cloud',channel+'.js'" in vb)
 print(f'{checks} build pipeline checks passed')

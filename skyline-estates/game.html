@@ -5185,6 +5185,11 @@ const IAP={ready:false,store:null,
   price(p){return window.SkylineCloud?.price?.(IAP_PREFIX+p.id)||p.price},
   async buy(p){if(p&&!p.once&&window.SkylineCloud?.purchasesReady?.()&&await window.SkylineCloud.buyPack(IAP_PREFIX+p.id))return;await modal({html:`<div class="mh">${p&&p.once?'Starter bundle':COIN+' Coin packs'}</div><div class="mtxt">Purchases are not available yet. We are connecting secure player accounts so purchased coins can follow you between devices. You can still earn coins by playing.</div>`,btns:[{k:'x',label:'OK',primary:true}]})}};
 
+/* Coin packs are offered only when the App Store purchase path is live (never on web, and not in builds
+   released without in-app purchases). Earning and spending coins in play is unaffected. */
+const COIN_SALES=()=>!!window.SkylineCloud?.purchasesReady?.();
+const EARN_COINS='Earn coins by winning games, levelling up, daily missions, the free Lucky Spin, season tiers and league promotions.';
+function earnCoinsInfo(need){return modal({html:`<div class="mh">${COIN} Earn coins</div><div class="mtxt">${need?`You need ${nfmt(need)} more coins. `:''}${EARN_COINS}</div>`,btns:[{k:'x',label:'OK',primary:true}]})}
 /* ---- name filter for names shown to other people (online and leaderboards) ---- */
 const BAD_WORDS=['fuck','shit','cunt','bitch','nigg','fag','whore','slut','dick','cock','pussy','rape','nazi','hitler','retard','bastard','wank','twat','porn','sex'];
 function cleanName(s){s=String(s||'').replace(/[<>]/g,'').trim().slice(0,12);const flat=s.toLowerCase().replace(/[^a-z]/g,'').replace(/0/g,'o');return !s||BAD_WORDS.some(w=>flat.includes(w))?'Player':s}
@@ -5215,8 +5220,8 @@ function showTitle(){
 }
 function railProfile(){const E=$('#rprof');if(!E)return;const lv=lvlOf(PREF.xp),a=xpFor(lv),b=xpFor(lv+1),L=LEAGUES[leagueIdx()];const m=Math.max(1,...Object.values(PREF.tokLv));
   E.innerHTML=`<button class="who" id="tbWho" aria-label="Your profile and characters"><span class="rav">${charSVG(myChar(),40)}</span><span class="ri"><b>${esc(myName()||'Player')} <small>· Level ${lv} ${esc(rankOf(lv))}</small>${m>=5?` <span class="rar" style="background:${rarityOf(m).ui}">${rarityOf(m).name}</span>`:''}</b><span class="xpbar"><i style="width:${(PREF.xp-a)/(b-a)*100}%"></i></span></span></button>
-    <span class="grow"></span><button class="tpill" id="tbCoins" aria-label="${Math.round(PREF.coins)} coins. Get more">${PCOIN()}<span class="plus" aria-hidden="true">${svgI('plus',14)}</span></button><button class="tpill" id="tbLeague" aria-label="${L.name} league, ${PREF.trophies} trophies">${svgI('trophy',16)}<b>${L.name} · ${PREF.trophies}</b></button>`;
-  E.querySelector('#tbWho').onclick=()=>homeTab('cast');E.querySelector('#tbCoins').onclick=()=>{setup.shopTab='coins';homeTab('shop')};E.querySelector('#tbLeague').onclick=()=>homeTab('leagues')}
+    <span class="grow"></span><button class="tpill" id="tbCoins" aria-label="${Math.round(PREF.coins)} coins.${COIN_SALES()?' Get more':' How to earn more'}">${PCOIN()}${COIN_SALES()?`<span class="plus" aria-hidden="true">${svgI('plus',14)}</span>`:''}</button><button class="tpill" id="tbLeague" aria-label="${L.name} league, ${PREF.trophies} trophies">${svgI('trophy',16)}<b>${L.name} · ${PREF.trophies}</b></button>`;
+  E.querySelector('#tbWho').onclick=()=>homeTab('cast');E.querySelector('#tbCoins').onclick=()=>{if(COIN_SALES()){setup.shopTab='coins';homeTab('shop')}else earnCoinsInfo()};E.querySelector('#tbLeague').onclick=()=>homeTab('leagues')}
 function homeTab(k){const sec=SEC_OF[k]||'play';setup.sub=setup.sub||{};let sub=k;if(SUBS[sec]){if(!SUBS[sec].some(s=>s[0]===k))sub=setup.sub[sec]||SUBS[sec][0][0]}else sub=sec;setup.sub[sec]=sub;setup.tab=sub;
   const nav=$('#title .tabs');if(!nav)return;nav.innerHTML='';const D=daily();const dots={progress:wheelReady()||!dailyEventView().done||D.list.some(id=>!D.done[id])||seasonClaimable()>0};
   SECTIONS.forEach(([id,label])=>{const b=el('button','tab'+(id===sec?' on':''),`${svgI(id,22)}<span>${label}</span>${dots[id]?'<em class="dot"></em>':''}`);b.setAttribute('role','tab');b.setAttribute('aria-selected',id===sec?'true':'false');b.onclick=()=>{sfx('tap');homeTab(id)};nav.append(b)});
@@ -5246,7 +5251,7 @@ function paneP(T){const saved=loadSave(),c=CITY_DATA[setup.city],C=countryOf(set
   T.querySelector('#qPP').onclick=()=>{setup.slots.forEach((s,i)=>s.type=i<2?'human':s.type==='human'?'off':s.type);homeTab('custom');toast('Set each friend to Human, then tap Start game')};
   T.querySelector('#qCustom').onclick=()=>homeTab('custom');T.querySelector('#qSeason').onclick=()=>homeTab('season')}
 const segIn=(T,id,opts,get,set)=>{const E=T.querySelector(id);E.innerHTML='';opts.forEach(([v,l])=>{const b=el('button',get()===v?'on':'',l);b.onclick=()=>{set(v);segIn(T,id,opts,get,set)};E.append(b)})};
-async function confirmBuy(title,cost,body){if(PREF.coins<cost){const k=await modal({html:`<div class="mh">Not enough coins</div><div class="mtxt">${esc(title)} costs ${fmtC(cost)}. You have ${fmtC(PREF.coins)}.</div>`,btns:[{k:'x',label:'Close'},{k:'shop',label:'Get coins',primary:true}]});if(k==='shop'){setup.shopTab='coins';homeTab('shop')}return false}
+async function confirmBuy(title,cost,body){if(PREF.coins<cost){const k=await modal({html:`<div class="mh">Not enough coins</div><div class="mtxt">${esc(title)} costs ${fmtC(cost)}. You have ${fmtC(PREF.coins)}.</div>`,btns:[{k:'x',label:'Close'},{k:'shop',label:COIN_SALES()?'Get coins':'How to earn',primary:true}]});if(k==='shop'){if(COIN_SALES()){setup.shopTab='coins';homeTab('shop')}else earnCoinsInfo(cost-PREF.coins)}return false}
   const k=await modal({html:`<div class="mh">${esc(title)}</div><div class="mtxt">${body?body+'<br>':''}Spend <b>${fmtC(cost)}</b>? You have ${fmtC(PREF.coins)}.</div>`,btns:[{k:'no',label:'Cancel'},{k:'yes',label:'Buy',primary:true}]});if(k!=='yes')return false;
   if(!spendCoins(cost))return false;sfx('win');achAward('shopper');return true}
 function slotPlayers(slots){return slots.map((s,i)=>({...s,i})).filter(s=>s.type!=='off')}
@@ -5466,12 +5471,12 @@ async function itemDetail(k,id,price,was,redraw){const it=itemOf(k,id);if(!it)re
     :p?`<div class="idsum"><span>Your coins<b>${COIN_I}${nfmt(bal)}</b></span><span>Price<b>${COIN_I}${was?`<s>${nfmt(was)}</s>`:''}${nfmt(p)}</b></span><span class="${short?'neg':'pos'}">${short?'You need':'After buying'}<b>${COIN_I}${nfmt(short?-after:after)}${short?' more':''}</b></span></div>`
     :`<div class="idown">${esc(unlockTxt(it.unlock||it))}</div>`;
   const btns=[{k:'x',label:'Close'}];if(k==='surr')btns.push({k:'pv',label:'Preview'});
-  if(own){if(!on)btns.push({k:'eq',label:'Use',primary:true})}else if(p)btns.push(short?{k:'coins',label:'Get coins',primary:true}:{k:'buy',label:`Buy for ${nfmt(p)}`,primary:true});
+  if(own){if(!on)btns.push({k:'eq',label:'Use',primary:true})}else if(p)btns.push(short?{k:'coins',label:COIN_SALES()?'Get coins':'How to earn',primary:true}:{k:'buy',label:`Buy for ${nfmt(p)}`,primary:true});
   const a=await modal({cls:'idetm',html:`<div class="idet" style="--rc:${r[1]}"><div class="idstage">${itemArt(k,it,'xl')}</div><small class="idtier">${KIND_NAME[k]} · ${r[0]}</small><div class="mh">${esc(it.name)}</div>
     <div class="mtxt">${it.desc?esc(it.desc)+' ':''}${KIND_WHAT[k]}</div><div class="idnote">Cosmetic only. It never changes rents, dice or who wins.</div>${sum}</div>`,btns});
   if(a==='pv')previewSurround(id);
   else if(a==='eq'){equipItem(k,id);redraw()}
-  else if(a==='coins'){setup.shopTab='coins';setup.shopTabSet=1;homeTab('shop')}
+  else if(a==='coins'){if(COIN_SALES()){setup.shopTab='coins';setup.shopTabSet=1;homeTab('shop')}else earnCoinsInfo(p-PREF.coins)}
   else if(a==='buy'){if(!spendCoins(p))return;grantItem(k,id);equipItem(k,id);sfx('buy');try{achAward('shopper')}catch(e){}toast(`${it.name} is yours and now in use.`);redraw()}}
 /* daily picks: fixed for the whole local day, chosen from items the player didn't own that morning */
 function dailyKey(){const d=new Date();return d.getFullYear()*1e4+(d.getMonth()+1)*100+d.getDate()}
@@ -5492,12 +5497,12 @@ function bundleCard(){const f=itemOf('fin',STARTER.fin),d=itemOf('dice',STARTER.
     <button class="ibtn gold" id="bStarter">${esc(IAP_BUNDLE.price)}</button></article>`}
 let SHOP_TICK=null;
 function paneShop(T){let tab=setup.shopTab||'daily';if(tab==='surr'&&!setup.shopTabSet)tab='daily';
-  const tabs=[['daily','Daily'],['surr','Surrounds'],['fin','Finishes'],['dice','Dice'],['boost','Boosts'],['coins','Coins']];
+  const tabs=[['daily','Daily'],['surr','Surrounds'],['fin','Finishes'],['dice','Dice'],['boost','Boosts'],['coins','Coins']].filter(([k])=>k!=='coins'||COIN_SALES());if(tab==='coins'&&!COIN_SALES())tab='daily';
   T.innerHTML=`<div class="shophead"><h2>Shop</h2><div class="shoptabs" role="tablist">${tabs.map(([k,l])=>`<button class="stab${k===tab?' on':''}" role="tab" aria-selected="${k===tab}" data-k="${k}">${l}</button>`).join('')}</div></div><div class="shopbody"></div>
     <div class="small shopnote">Nothing in the shop is random: you always see exactly what you get.</div>`;
   T.querySelectorAll('.shoptabs button').forEach(b=>b.onclick=()=>{setup.shopTab=b.dataset.k;setup.shopTabSet=1;paneShop(T)});
   const B=T.querySelector('.shopbody'),redraw=()=>paneShop(T);clearInterval(SHOP_TICK);
-  if(tab==='daily'){const D=dailyPicks(),showB=!PREF.starterDone;
+  if(tab==='daily'){const D=dailyPicks(),showB=!PREF.starterDone&&COIN_SALES();
     B.innerHTML=`<div class="dshop${showB?'':' nob'}">${showB?bundleCard():''}<div class="dpicks"><div class="dhead"><h3>Daily picks</h3><span>New items in <b id="dTimer">${untilMidnight()}</b></span></div><div class="igrid g6">${D.list.map(([k,id],i)=>{const it=itemOf(k,id);if(!it)return '';const deal=i===D.deal&&!itemOwned(k,id);return itemCard(k,it,deal?{price:dealPrice(it.price),was:it.price,deal:'Save 20%'}:{})}).join('')}</div></div></div>`;
     const sb=B.querySelector('#bStarter');if(sb)sb.onclick=()=>IAP.buy(IAP_BUNDLE);
     SHOP_TICK=setInterval(()=>{const e=document.getElementById('dTimer');if(!e){clearInterval(SHOP_TICK);return}if(dailyKey()!==D.key){clearInterval(SHOP_TICK);redraw();return}e.textContent=untilMidnight()},1000)}
@@ -6391,7 +6396,7 @@ function shopItemPage(T){const S=setup.shopItem,k=S.k,it=itemOf(k,S.id);if(!it){
   if(on)act=`<button class="ibtn gold sibuy" disabled>✓ In use</button>`;
   else if(own)act=`<button class="ibtn gold sibuy" id="siUse">Use it</button>`;
   else if(!p)act=`<div class="sinote">${esc(unlockTxt(it.unlock||it))}</div>`;
-  else if(after<0)act=`<button class="ibtn gold sibuy" id="siCoins">Get ${nfmt(-after)} more coins</button>`;
+  else if(after<0)act=`<button class="ibtn gold sibuy" id="siCoins">${COIN_SALES()?'Get':'Earn'} ${nfmt(-after)} more coins</button>`;
   else act=`<button class="ibtn gold sibuy" id="siBuy">${COIN_I}<span>Buy for ${nfmt(p)}</span></button>`;
   T.innerHTML=`<div class="sipage" style="--rc:${r[1]}">
     <section class="sileft">
@@ -6415,7 +6420,7 @@ function shopItemPage(T){const S=setup.shopItem,k=S.k,it=itemOf(k,S.id);if(!it){
   T.querySelectorAll('.sisib').forEach(b=>b.onclick=()=>{const x=itemOf(k,b.dataset.id);setup.shopItem={...S,id:x.id,price:x.price||0,was:0};redraw()});
   const bb=T.querySelector('#siBuy');if(bb)bb.onclick=()=>{if(!spendCoins(p)){redraw();return}grantItem(k,it.id);equipItem(k,it.id);sfx('buy');try{achAward('shopper')}catch(e){}toast(`${it.name} is yours and now in use.`);try{confetti()}catch(e){}redraw()};
   const bu=T.querySelector('#siUse');if(bu)bu.onclick=()=>{equipItem(k,it.id);toast(`${it.name} is now in use.`);redraw()};
-  const bc=T.querySelector('#siCoins');if(bc)bc.onclick=()=>{setup.shopItem=null;leaveItemPreview();setup.shopTab='coins';homeTab('shop')};
+  const bc=T.querySelector('#siCoins');if(bc)bc.onclick=()=>{if(!COIN_SALES()){earnCoinsInfo(-after);return}setup.shopItem=null;leaveItemPreview();setup.shopTab='coins';homeTab('shop')};
   const pb=T.querySelector('#pvBoard');if(pb)pb.onclick=()=>previewSurround(it.id);
   if(k==='fin'){const pc=T.querySelector('#pvCity'),pt=T.querySelector('#pvTok');
     pc.onchange=()=>{PV.city=pc.value;applyTheme(PV.city);redraw()};pt.onchange=()=>{setup.pvTok=pt.value;redraw()};
