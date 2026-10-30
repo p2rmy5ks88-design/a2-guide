@@ -22,6 +22,6 @@ for(const d of ['lib','riders','photos','art','items'].filter(d=>fs.existsSync(p
 // only when running in the iOS app.
 const channel=process.env.SKYLINE_CLOUD_CHANNEL||'off';
 if(!['off','private-testing'].includes(channel))throw Error('Unknown SKYLINE_CLOUD_CHANNEL '+channel);
-if(channel==='private-testing')fs.writeFileSync(path.join(www,'lib','cloud-config.js'),"/* Generated for private TestFlight testing. Not used by the web game. */\n(function(){const ios=!!(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform()&&window.Capacitor.getPlatform&&window.Capacitor.getPlatform()==='ios');\nwindow.SKYLINE_CLOUD=Object.freeze({enabled:ios,purchases:ios,channel:'private-testing',service:'https://europe-west1-eko-estates.cloudfunctions.net/skylinePlayer'})})();\n");
+if(channel==='private-testing')fs.copyFileSync(path.join(app,'cloud','private-testing.js'),path.join(www,'lib','cloud-config.js'));
 console.log('cloud channel:',channel);
 console.log('www built:',fs.readdirSync(www).join(', '),'| fonts:',faces.length);
