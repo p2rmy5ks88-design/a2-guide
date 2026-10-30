@@ -1,11 +1,12 @@
 # Skyline Estates — iOS release handoff
 
-Updated 30 October 2026, 06:30 CET. This repository is **public**: never add credentials, key files, passwords, personal emails or billing IDs here. Verify current repository and CI state before acting; this file is a handoff, not proof that anything works. Earlier history is in git (`git log -- SKYLINE-IOS-HANDOFF.md`).
+Updated 30 October 2026, 12:00 CET. This repository is **public**: never add credentials, key files, passwords, personal emails or billing IDs here. Verify current repository and CI state before acting; this file is a handoff, not proof that anything works. Earlier history is in git (`git log -- SKYLINE-IOS-HANDOFF.md`).
 
 ## Owner rules (still in force)
 
-- Public iOS release is the goal; Android is deferred. **Public submission and release stay paused** until sign-in and the real purchase, refund and recovery tests pass on iPhone.
-- Don't publicly enable accounts or purchases. Builds with them on go only to the private TestFlight group (`cloud_channel=private-testing`).
+- **Decision 30 Oct 11:09: version 1.0 ships without in-app purchases.** Public build uses `cloud_channel=ios-release` (accounts and cloud save on, `purchases:false`, coin-pack buying hidden; coins are still earned and spent in play; balances, collections and saves are kept). The owner has authorized building and submitting it for App Review; legal declarations (privacy, age rating, export compliance, agreements) stay the owner's.
+- Deferred: payment testing and activation, optional polish, Android. Coin packs stay in App Store Connect (Prepare for Submission) and are **not** attached to 1.0.
+- `private-testing` builds go only to the TestFlight group and are never submitted.
 - **Spend cap (approval item 9) is pending.** A Cloud Functions spend cap is not a total-project limit and would also pause any future Functions in `eko-estates`. Don't set it without the owner's amount.
 - Never use the owner's existing player account as a tester. Never reset, delete or migrate a save automatically. Don't uninstall apps to test.
 - Don't recreate keys, accounts or backend services unless evidence shows they are the problem.
@@ -60,7 +61,15 @@ Builds are made with: Actions → `skyline-ios.yml` → Run workflow on `main`, 
   - Refunds are tested from the app's own refund sheet (Account & recovery → Purchases → Request a refund). Sandbox auto-approves any reason and sends a `REFUND` server notification. Typing `DECLINE` under *Other* tests a declined refund.
 - Keep the two tester accounts until purchase and refund verification finishes.
 
-## Remaining steps before public release
+## Checkpoint 30 Oct (midday) — 1.0 without purchases
+
+- PR #61 (debt portfolio, refund sheet, purchase messages, `ios-release` channel, no-purchase gating; includes #60) merged with main; stability job limit raised to 30 min after a slow runner cancelled a fully passing run. Merge #61, close #60, then build `ios-release` from main.
+- Store pack: `skyline-estates/APP-STORE-SUBMISSION.md`. Version 1.0 text fields, support URL, copyright and review notes are saved in App Store Connect. Screenshots (6.9", 2868×1320) are in `skyline-estates-app/appstore/screenshots/`; the CI API key can't upload them (403), so they're uploaded in the web UI.
+- Builds: 70 (debt layout, owner-approved), 72 (purchase messages). Purchase fix diagnosed: unverified Firebase email on the test account (403 `persistent-account-required`), missing product metadata (fixed), hidden toast (now modals).
+- Owner device checks for 1.0: verify the test account's Firebase email (link from `eko-estates.firebaseapp.com`), sign in, sign out → device save returns, sign in again → cloud save returns, delete the test account.
+- Owner-only before Submit: license agreement, App Privacy, age rating, export compliance if asked, review contact and demo sign-in, release option.
+
+## Remaining steps before public release (pre-decision plan, purchases now deferred)
 
 1. Confirm sign-in works on iPhone with the dedicated test account. If it fails, capture the shown code (ACCOUNT-SDK / ACCOUNT-INIT / APPLE-*) and investigate that failure instead of rebuilding.
 2. Run `skyline-estates/IPHONE-ACCEPTANCE.md` in order:
