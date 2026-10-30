@@ -15,5 +15,20 @@ attrs = project.root_object.attributes['TargetAttributes'] ||= {}
 attrs[target.uuid] ||= {}
 caps = attrs[target.uuid]['SystemCapabilities'] ||= {}
 caps['com.apple.SignInWithApple'] = {'enabled' => 1}
+# Local StoreKit 2 bridge. Keep these App-only sources out of dependency targets.
+%w[SkylineStoreProducts.swift SkylineStoreKitPlugin.swift SkylineBridgeViewController.swift].each do |name|
+  FileUtils.cp(File.join('native', name), File.join('ios/App/App', name))
+  source_ref = group.files.find { |f| f.path == name } || group.new_file(name)
+  target.source_build_phase.add_file_reference(source_ref, true)
+end
+target.build_configurations.each { |c| c.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0' }
+storyboard = 'ios/App/App/Base.lproj/Main.storyboard'
+text = File.read(storyboard)
+unless text.include?('customClass="SkylineBridgeViewController"')
+  raise 'Missing generated Capacitor controller' unless text.include?('customClass="CAPBridgeViewController"')
+  text = text.sub('customClass="CAPBridgeViewController" customModule="Capacitor"', 'customClass="SkylineBridgeViewController" customModule="App"')
+  raise 'Could not register local StoreKit bridge' unless text.include?('customClass="SkylineBridgeViewController"')
+  File.write(storyboard, text)
+end
 project.save
-puts 'Apple sign-in entitlement and public Firebase resource installed'
+puts 'Apple sign-in entitlement, Firebase resource and StoreKit 2 bridge installed'

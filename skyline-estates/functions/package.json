@@ -1,0 +1,16 @@
+{
+  "name": "skyline-player-service",
+  "private": true,
+  "description": "Skyline Estates accounts, unified profile and Apple purchase delivery (Cloud Functions v2). Not deployed until the owner approves; see DEPLOY.md.",
+  "main": "index.js",
+  "engines": { "node": "22" },
+  "scripts": {
+    "prepare-service": "node scripts/prepare.mjs",
+    "check": "node scripts/prepare.mjs --check && node scripts/smoke.cjs"
+  },
+  "dependencies": {
+    "@apple/app-store-server-library": "3.1.0",
+    "firebase-admin": "13.4.0",
+    "firebase-functions": "6.4.0"
+  }
+}

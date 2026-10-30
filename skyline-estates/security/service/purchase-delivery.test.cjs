@@ -1,7 +1,7 @@
 'use strict';
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
-const {createPurchaseDelivery}=require('../../lib/purchase-delivery.cjs');
+const {createPurchaseDelivery}=require('../../lib/purchase-delivery.js');
 const key='a'.repeat(64),transaction={store:'apple',id:'store-1',proof:{signedTransaction:'opaque'}};
 function setup(overrides={}) {
  const calls=[];

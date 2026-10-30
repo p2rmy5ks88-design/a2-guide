@@ -38,4 +38,5 @@ function createPurchaseDelivery({account,verify,delivery,finish}) {
   return Promise.allSettled(transactions.map(deliver));
  }};
 }
-module.exports={createPurchaseDelivery};
+if(typeof module!=='undefined'&&module.exports)module.exports={createPurchaseDelivery};
+else globalThis.createSkylinePurchaseDelivery=createPurchaseDelivery;

@@ -5164,7 +5164,9 @@ const IAP_BUNDLE={id:'starter_bundle',price:'$2.99',once:true};
 // account-backed verifier and wallet are deployed; never finish queued receipts here.
 const IAP={ready:false,store:null,
   init(){},
-  async buy(p){await modal({html:`<div class="mh">${p&&p.once?'Starter bundle':COIN+' Coin packs'}</div><div class="mtxt">Purchases are not available yet. We are connecting secure player accounts so purchased coins can follow you between devices. You can still earn coins by playing.</div>`,btns:[{k:'x',label:'OK',primary:true}]})}};
+  // Localized App Store price when the verified store is connected; draft label otherwise.
+  price(p){return window.SkylineCloud?.price?.(IAP_PREFIX+p.id)||p.price},
+  async buy(p){if(p&&!p.once&&window.SkylineCloud?.purchasesReady?.()&&await window.SkylineCloud.buyPack(IAP_PREFIX+p.id))return;await modal({html:`<div class="mh">${p&&p.once?'Starter bundle':COIN+' Coin packs'}</div><div class="mtxt">Purchases are not available yet. We are connecting secure player accounts so purchased coins can follow you between devices. You can still earn coins by playing.</div>`,btns:[{k:'x',label:'OK',primary:true}]})}};
 
 /* ---- name filter for names shown to other people (online and leaderboards) ---- */
 const BAD_WORDS=['fuck','shit','cunt','bitch','nigg','fag','whore','slut','dick','cock','pussy','rape','nazi','hitler','retard','bastard','wank','twat','porn','sex'];
@@ -5494,8 +5496,8 @@ function paneShop(T){let tab=setup.shopTab||'daily';if(tab==='surr'&&!setup.shop
       <article class="icard" style="--rc:#2F7FE0"><div class="iwrap"><span class="iart glyph bolt">${SVG_BOLT}</span></div><b>Double XP × 3</b><small class="itier">${PREF.boostGames?`${PREF.boostGames} game${PREF.boostGames===1?'':'s'} left`:'Your next 3 games'}</small><button class="ibuy" id="bXP">${COIN_I}<span>300</span></button></article></div>`;
     const bp=B.querySelector('#bPrem');if(bp)bp.onclick=async()=>{if(await confirmBuy(`Season ${S.n} premium pass`,PREM_PRICE,`Unlocks the premium reward on all ${TIERS} tiers this season, including tiers you’ve already reached.`)){S.prem=true;savePref();railProfile();redraw()}};
     B.querySelector('#bXP').onclick=async()=>{if(await confirmBuy('Double XP × 3',300)){PREF.boostGames+=3;savePref();railProfile();redraw()}}}
-  else if(tab==='coins'){B.innerHTML=`<div class="igrid">${IAP_PACKS.map((p,i)=>`<article class="icard" style="--rc:${['#2F7FE0','#2F7FE0','#8F3FD8','#E2B13C'][i]||'#2F7FE0'}">${p.tag?`<em class="ideal">${esc(p.tag)}</em>`:''}<div class="iwrap"><span class="iart coins n${i}"></span></div><b>${nfmt(p.coins)} coins</b><small class="itier">Coin pack</small><button class="ibuy cash" data-i="${i}">${esc(p.price)}</button></article>`).join('')}</div>
-      <div class="small shopnote">${IAP.ready?'Purchases are handled by the App Store or Google Play.':'Coin packs are sold in the Skyline Estates app for iPhone and Android.'} You also earn coins from wins, level-ups, missions, the Lucky Spin, season tiers and league promotions.</div>`;
+  else if(tab==='coins'){B.innerHTML=`<div class="igrid">${IAP_PACKS.map((p,i)=>`<article class="icard" style="--rc:${['#2F7FE0','#2F7FE0','#8F3FD8','#E2B13C'][i]||'#2F7FE0'}">${p.tag?`<em class="ideal">${esc(p.tag)}</em>`:''}<div class="iwrap"><span class="iart coins n${i}"></span></div><b>${nfmt(p.coins)} coins</b><small class="itier">Coin pack</small><button class="ibuy cash" data-i="${i}">${esc(IAP.price(p))}</button></article>`).join('')}</div>
+      <div class="small shopnote">${window.SkylineCloud?.purchasesReady?.()?'Purchases are handled by the App Store and saved to your Skyline account.':'Coin packs are sold in the Skyline Estates app for iPhone and Android.'} You also earn coins from wins, level-ups, missions, the Lucky Spin, season tiers and league promotions.</div>`;
     B.querySelectorAll('[data-i]').forEach(b=>b.onclick=()=>IAP.buy(IAP_PACKS[+b.dataset.i]))}
   bindCards(B,redraw)}
 
@@ -7223,9 +7225,14 @@ try{const h=window.claude?.hot;if(h&&h.ready)h.ready(boot);else boot(h?.data??{}
 setTimeout(()=>{try{const c=(new URLSearchParams(location.search).get('join')||'').toUpperCase();if(!/^[A-Z0-9]{5}$/.test(c)||!FIRE)return;history.replaceState(null,'',location.pathname);if(!G||G.over)openOnline(c)}catch(e){}},1200);
 </script>
 <script src="./reference-redesign.js"></script>
+<script src="./lib/cloud-config.js"></script>
 <script src="./lib/account-controller.js"></script>
 <script src="./lib/account-firebase.js"></script>
 <script src="./lib/accounts.js"></script>
+<script src="./lib/purchase-delivery.js"></script>
+<script src="./lib/storekit-client.js"></script>
+<script src="./lib/cloud-profile.js"></script>
+<script src="./lib/cloud-glue.js"></script>
 <style>
 .pf3overview{flex:none;border:1px solid #365363;border-radius:12px;background:#102b37;padding:10px 12px;color:#e7f0f1}
 .pf3metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.pf3metrics span{display:flex;flex-direction:column;gap:3px}.pf3metrics b{color:#f0cf87;font-size:17px}.pf3metrics small{font-size:11px;color:#b9ccd4}
