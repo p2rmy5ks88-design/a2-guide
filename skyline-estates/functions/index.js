@@ -24,7 +24,7 @@ function build(){
  const roots=fs.readdirSync(path.join(__dirname,'apple-roots')).filter(f=>f.endsWith('.cer')).map(f=>fs.readFileSync(path.join(__dirname,'apple-roots',f)));
  return compose({db:getFirestore(),auth:getAuth(),environment:ENVIRONMENT.value(),iapKey:IAP_KEY.value(),iapKeyId:IAP_KEY_ID.value(),iapIssuer:IAP_ISSUER.value(),appAppleId:APP_APPLE_ID.value(),library,roots}).handler;
 }
-exports.skylinePlayer=onRequest({region:'europe-west1',secrets:[IAP_KEY,IAP_KEY_ID,IAP_ISSUER],maxInstances:10,concurrency:40,memory:'256MiB',timeoutSeconds:30,cors:false,invoker:'public'},(req,res)=>{
+exports.skylinePlayer=onRequest({region:'europe-west1',serviceAccount:'skyline-player@eko-estates.iam.gserviceaccount.com',secrets:[IAP_KEY,IAP_KEY_ID,IAP_ISSUER],maxInstances:10,concurrency:40,memory:'256MiB',timeoutSeconds:30,cors:false,invoker:'public'},(req,res)=>{
  if(!handler)handler=build();
  return handler(req,res);
 });
