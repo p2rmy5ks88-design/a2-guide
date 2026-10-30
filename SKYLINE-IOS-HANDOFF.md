@@ -76,6 +76,13 @@ Builds are made with: Actions → `skyline-ios.yml` → Run workflow on `main`, 
 - Owner device results on build 82 (same game code): **cloud recovery PASS** (signed-in progress synced; signed out and earned locally; signing in restored the synced balance), **coin packs hidden PASS**, test-account email verified.
 - Still open: account deletion check on the test account (reviewer demo account stays), screenshots, App Review contact and demo sign-in, age rating, App Privacy, license agreement, then Submit for Review. Release type is set to automatic after approval; the owner can change it.
 
+## Phase 2 checkpoint (31 Oct, 00:10 CET) — LIVE CHANGES PAUSED
+
+- **Owner decision 31 Oct 00:04:** no live IAM or backend change until 1.0 is approved. Nothing has been applied: no service account, role, grant or budget created; `skylinePlayer` still runs the earlier deploy (main `8a4399d`) as the default account.
+- **`main` is ahead of the deployed function:** it contains #57 (`serviceAccount: skyline-player@…`) and #66 (refunded-transaction finish). **Do not deploy from main until `functions/scripts/runtime-identity.sh` has run** (otherwise Google rejects the deploy; the running function stays unchanged).
+- **Approved by the owner, to run after 1.0 approval:** (1) `runtime-identity.sh` in Cloud Shell, (2) deploy main, smoke tests, verify cloud save and account deletion with a throwaway account (reviewer account untouched), rollback = redeploy without `serviceAccount`, (3) an additional 100 kr/month email-only forecast budget at 50/90/100%, keeping the existing 500 kr alerts, (4) private TestFlight build (`private-testing`) and the sandbox checklist. #68 stays unmerged until acceptance passes.
+- Android rules verified against official Google docs (see `skyline-estates-app/ANDROID-READINESS.md`); Android is planned separately from the iOS payment milestone.
+
 ## Phase 2 checkpoint (31 Oct, 00:15 CET)
 
 - **App Store:** 1.0 (build 85) last confirmed Waiting for Review, automatic release. The App Store Connect session in Claude's browser expired; the owner signs in again to let Claude watch it. Apple emails any review request.
