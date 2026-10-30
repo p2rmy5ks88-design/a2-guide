@@ -133,6 +133,34 @@ The kronor amounts are approximate; App Store Connect shows the exact local pric
 
 Sources: [Firebase spend caps](https://firebase.google.com/docs/projects/billing/spend-caps?hl=en), [Firebase budget alerts](https://firebase.google.com/docs/projects/billing/budget-alerts), [Firestore pricing](https://cloud.google.com/firestore/pricing), [Cloud Run pricing](https://cloud.google.com/run/pricing), [Secret Manager, Logging and Artifact Registry no-cost limits](https://firebase.google.com/docs/app-hosting/costs).
 
+## G. Pre-public-release: dedicated runtime service account (not done; needs approval)
+
+**Today:** `skylinePlayer` runs as the project's default compute service account, `668368365590-compute@developer.gserviceaccount.com`. That account holds **Editor** on all of `eko-estates`, which is far more than the function needs. Other Google Cloud services in the project may also use it, so its roles stay as they are. We move only Skyline to its own account.
+
+**Proposed account:** `skyline-player@eko-estates.iam.gserviceaccount.com` ("Skyline player service runtime"), with no keys (the function runs as it; nobody downloads a key).
+
+| Need (from the deployed code) | Grant | Scope |
+|---|---|---|
+| Read and write Skyline wallets, profiles, bindings and testers in Firestore | `roles/datastore.user` | project (Firestore IAM can't be narrowed to collections; rules still deny clients) |
+| Check sign-in tokens, including revoked-session checks (`users.get`), and delete the player's sign-in on account removal (`users.delete`) | Custom role **Skyline Auth User Remover**: `firebaseauth.users.get`, `firebaseauth.users.delete` | project |
+| Read the three Apple secrets | `roles/secretmanager.secretAccessor` | **each secret only**: `SKYLINE_APPLE_IAP_KEY`, `SKYLINE_APPLE_IAP_KEY_ID`, `SKYLINE_APPLE_IAP_ISSUER_ID` |
+| Write its logs | `roles/logging.logWriter` | project |
+| Report metrics (optional, for error-rate alerts) | `roles/monitoring.metricWriter` | project |
+
+Not granted: Editor, Owner, Firebase Admin, Realtime Database, Storage, Hosting, IAM or billing roles. Verifying sign-in tokens uses Google's public keys and needs no role.
+
+**Deployer (you):** `roles/iam.serviceAccountUser` on this one service account, so your deploy can attach it. As Owner you already have this.
+
+**Code change (reviewed PR):** add `serviceAccount: 'skyline-player@eko-estates.iam.gserviceaccount.com'` to the `onRequest` options in `functions/index.js`, then one redeploy.
+
+**Rollout and check:**
+1. Create the account and the grants above. Nothing changes for the running function yet.
+2. Deploy the PR.
+3. Run the smoke tests plus one sandbox purchase, one refund notification and one test-account removal.
+4. Confirm that the default account's grant on the three secrets can be removed (added automatically by the first deploy), then remove only those three secret grants. Its project roles stay untouched.
+
+**Rollback:** redeploy without `serviceAccount`; the function returns to the default account.
+
 ## If a spend cap or outage pauses the backend
 
 Full procedure: `functions/DEPLOY.md` §9. In short:
