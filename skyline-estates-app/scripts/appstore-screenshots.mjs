@@ -19,7 +19,7 @@ console.log('version',version.attributes.versionString,version.attributes.appSto
 const locs=await api('GET',`/v1/appStoreVersions/${version.id}/appStoreVersionLocalizations`);const loc=locs.data.find(l=>l.attributes.locale==='en-US')||locs.data[0];console.log('locale',loc.attributes.locale);
 const sets=await api('GET',`/v1/appStoreVersionLocalizations/${loc.id}/appScreenshotSets`);
 let set=null;for(const type of ['APP_IPHONE_69','APP_IPHONE_67']){set=sets.data.find(s=>s.attributes.screenshotDisplayType===type);if(set)break;
- try{set=(await api('POST','/v1/appScreenshotSets',{data:{type:'appScreenshotSets',attributes:{screenshotDisplayType:type},relationships:{appStoreVersionLocalization:{data:{type:'appStoreVersionLocalizations',id:loc.id}}}}})).data;break}catch(e){console.log('display type',type,'not accepted:',e.status)}}
+ try{set=(await api('POST','/v1/appScreenshotSets',{data:{type:'appScreenshotSets',attributes:{screenshotDisplayType:type},relationships:{appStoreVersionLocalization:{data:{type:'appStoreVersionLocalizations',id:loc.id}}}}})).data;break}catch(e){console.log('display type',type,'not accepted:',e.message.slice(0,500))}}
 if(!set)throw Error('could not find or create an iPhone 6.9" screenshot set');console.log('set',set.attributes.screenshotDisplayType);
 const old=await api('GET',`/v1/appScreenshotSets/${set.id}/appScreenshots`);for(const s of old.data){await api('DELETE','/v1/appScreenshots/'+s.id);console.log('removed old',s.attributes.fileName)}
 for(const f of files){const buf=fs.readFileSync(path.join(dir,f));
