@@ -89,7 +89,7 @@ function notify(kind,detail){
 const status={last:''};
 // ---------- start
 if(!CFG.enabled||!Engine||typeof PREF==='undefined')return;
-if(CFG.channel==='private-testing'&&!(window.Capacitor?.isNativePlatform?.()&&window.Capacitor.getPlatform?.()==='ios'))return;
+if(['private-testing','ios-release'].includes(CFG.channel)&&!(window.Capacitor?.isNativePlatform?.()&&window.Capacitor.getPlatform?.()==='ios'))return;
 const engine=Engine.createCloudProfile({storage:localStorage,http:http(),account:()=>window.SkylineAccounts?.player?.()||null,
  adapter:{extract,apply,backup,owner:()=>PREF.cloudOwner||null,setOwner:v=>{PREF.cloudOwner=v||undefined;rawSave()},restoreDevice},ask,notify});
 let tick=null;const later=()=>{clearTimeout(tick);tick=setTimeout(()=>engine.capture(),0)};

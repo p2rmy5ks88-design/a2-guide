@@ -8,9 +8,9 @@ on:
         type: boolean
         default: false
       cloud_channel:
-        description: 'Accounts and purchases: off, or private-testing (TestFlight only; never for public release)'
+        description: 'Accounts and purchases: off, private-testing (TestFlight only), or ios-release (public App Store build)'
         type: choice
-        options: [off, private-testing]
+        options: [off, private-testing, ios-release]
         default: 'off'
   pull_request:
     paths:
