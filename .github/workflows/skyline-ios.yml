@@ -7,6 +7,11 @@ on:
         description: 'Publish the build (and use signing credentials if configured)'
         type: boolean
         default: false
+      cloud_channel:
+        description: 'Accounts and purchases: off, or private-testing (TestFlight only; never for public release)'
+        type: choice
+        options: [off, private-testing]
+        default: 'off'
   pull_request:
     paths:
       - "skyline-estates/game.html"
@@ -85,6 +90,9 @@ jobs:
       - name: Install
         run: npm install --no-audit --no-fund
       - name: Build web game
+        env:
+          # Only a manual run may opt into private testing; pushes and PRs always build with accounts and purchases off.
+          SKYLINE_CLOUD_CHANNEL: ${{ github.event_name == 'workflow_dispatch' && inputs.cloud_channel || 'off' }}
         run: |
           npm run build:web
           node ../skyline-estates/tests/verify-bundle.cjs .

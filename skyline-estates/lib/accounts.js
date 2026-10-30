@@ -14,6 +14,7 @@ function createAccountPanel({getController,enabled=()=>false,testApple=null,doc=
 
  function render(){if(!panel)return;const body=panel.querySelector('[data-account-body]');body.replaceChildren();const user=controller?.current();
   if(!enabled()){body.append(el('h3','Keep your player account safe'),el('p','Online accounts are being connected. Your coins, collection and saved game are still on this device. Paid purchases are paused.'));if(testApple){body.append(el('p','Test the Apple sign-in sheet on this iPhone. This check does not create a Firebase player account or move your coins.'));button(body,'Test Apple sign-in',()=>act(testApple,'Apple returned a sign-in credential. Online player accounts are still paused.'))}return}
+  scope.SkylineCloud?.deviceSection?.(body,{el,button});
   if(!controller){body.append(el('p','Connecting to your account…'));return}
   body.append(el('h3',user&&!user.anonymous?'Your player account':'Sign in to Skyline Estates'));
   if(user&&!user.anonymous){body.append(el('p',user.email||'Signed in'),el('p','Linked methods: '+user.providers.map(p=>LABEL[p]||'Other').join(', ')));if(user.providers.includes('password')&&!user.verified){body.append(el('p','Verify your email before using a paid wallet.'));button(body,'Send verification email',()=>act(()=>controller.verify(),'Verification email sent.'));button(body,'I have verified my email',()=>act(()=>controller.refresh(),'Account status refreshed.'))}

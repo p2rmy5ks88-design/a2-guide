@@ -8,7 +8,7 @@ const verifyIdToken=async t=>{const [uid,provider='apple.com',at]=String(t).spli
 (async()=>{
  const db=createFakeFirestore(),profile=createProfileService({db,verifyIdToken,environment:'sandbox'});
  const calls=[],wallet={purchase:async(t,p)=>{calls.push(['purchase',p]);return{transactionKey:'a'.repeat(64)}},delivery:async(t,k)=>({state:'delivered',key:k}),history:async()=>({coins:0,entries:[]}),notification:async p=>{if(p==='bad')throw Object.assign(Error('invalid-apple-notification'),{code:'invalid-apple-notification',permanent:true});calls.push(['note',p])}};
- const handler=createPlayerHandler({profile,wallet,bindings:{forPlayer:async()=>({appAccountToken:'x'})},allowedOrigins:new Set(['https://p2rmy5ks88-design.github.io','capacitor://localhost']),limiter:createRateLimiter({perMinute:1000})});
+ let paused=false;const handler=createPlayerHandler({profile,wallet,bindings:{forPlayer:async()=>({appAccountToken:'x'})},allowedOrigins:new Set(['https://p2rmy5ks88-design.github.io','capacitor://localhost']),limiter:createRateLimiter({perMinute:1000}),storePaused:async()=>paused});
  const server=http.createServer(handler);await new Promise(r=>server.listen(0,'127.0.0.1',r));const base='http://127.0.0.1:'+server.address().port;
  const call=(method,path,{token='alice',body,origin='capacitor://localhost'}={})=>fetch(base+path,{method,headers:{...(token?{Authorization:'Bearer '+token}:{}),...(origin?{Origin:origin}:{}),...(body?{'Content-Type':'application/json'}:{})},body:body?JSON.stringify(body):undefined});
  async function test(name,fn){await fn();count++;console.log('ok - '+name)}
@@ -25,6 +25,9 @@ const verifyIdToken=async t=>{const [uid,provider='apple.com',at]=String(t).spli
   await test('store routes forward only the proof and a validated delivery key',async()=>{let r=await call('POST','/v1/store/purchase',{body:{proof:{signedTransaction:'jws'},coins:999999,ownerUid:'mallory'}});assert.equal(r.status,200);assert.deepEqual(calls.at(-1),['purchase',{signedTransaction:'jws'}]);
    r=await call('GET','/v1/store/delivery/'+'b'.repeat(64));assert.equal((await r.json()).key,'b'.repeat(64));r=await call('GET','/v1/store/delivery/zzz');assert.equal(r.status,404)});
   await test('Apple notifications need no CORS and permanent failures are acknowledged',async()=>{let r=await call('POST','/v1/store/apple-notifications',{token:null,origin:null,body:{signedPayload:'ok'}});assert.equal(r.status,200);r=await call('POST','/v1/store/apple-notifications',{token:null,origin:null,body:{signedPayload:'bad'}});assert.equal(r.status,200);assert.equal((await r.json()).ok,false)});
+  await test('a store pause refuses new purchase bindings but keeps delivery working',async()=>{let r=await call('POST','/v1/store/binding',{body:{}});assert.equal(r.status,200);paused=true;
+   r=await call('POST','/v1/store/binding',{body:{}});assert.equal(r.status,503);assert.deepEqual(await r.json(),{error:'store-paused'});
+   r=await call('POST','/v1/store/purchase',{body:{proof:{signedTransaction:'jws2'}}});assert.equal(r.status,200,'already-paid purchases still deliver');paused=false});
   await test('rate limiter refuses bursts per caller',async()=>{const lim=createRateLimiter({perMinute:2,clock:()=>0});lim('a');lim('a');assert.throws(()=>lim('a'),/rate-limited/);lim('b')});
  }finally{server.close()}
  console.log(count+' player HTTP checks passed');

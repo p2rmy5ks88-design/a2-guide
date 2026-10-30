@@ -134,3 +134,22 @@ App Store Connect → App Privacy: declare **Identifiers (User ID)**, **Contact 
 ## 8. Rollback
 
 Set `enabled:false` / `purchases:false` in `lib/cloud-config.js` and ship. Players keep their device saves. Already-delivered purchases stay in their account, and the function can keep running for refund notifications. Don't delete Firestore data while purchases might still be refunded.
+
+## 9. Stopping purchases safely and recovering after a pause
+
+**Stop new purchases (no new build needed):** run `node scripts/store-pause.cjs on`. Within about 30 seconds the app's request for a store binding is refused with `store-paused`. The app asks for that binding **before** Apple's payment sheet opens, so nobody is charged. Purchases that are already paid are still delivered and refunds are still processed. Resume with `off`.
+
+**If a Cloud Functions spend cap (or an outage) pauses the whole service:**
+- **New purchases:** the binding request fails, so the payment sheet never opens and there's no charge.
+- **Purchases already paid on Apple's side:** these stay **unfinished in StoreKit**. The app only finishes a transaction after the server confirms durable delivery. When the service is back, the app replays unfinished transactions at launch and delivers each one exactly once (the global transaction key prevents doubles).
+- **Cloud saves:** queue on the device (offline outbox) and upload when the service returns. Nothing is lost.
+- **Refund and refund-reversal notifications from Apple:** Apple retries failed deliveries for a while. If the pause outlasted those retries, recover them from Apple's notification history (up to 180 days):
+  `SKYLINE_IAP_KEY_FILE=~/secure/SubscriptionKey_XXXX.p8 SKYLINE_IAP_KEY_ID=... SKYLINE_IAP_ISSUER_ID=... node scripts/replay-notifications.cjs 30 production`
+  Run it for `sandbox` too during testing. It's safe to repeat: every notification goes through the same verified, idempotent path, and ones already handled change nothing. The output counts applied, ignored, acknowledged and retry items. Re-run until `retry` is empty.
+- **Records:** purchases, deliveries and refunds live in Firestore (`skylineWallets/<env>/purchases|deliveries`) and are never removed by TTL. A spend cap never deletes data.
+
+## 10. Private TestFlight builds (cloud on) versus everything else (cloud off)
+
+- The web game, Android, desktop and every automatic iOS build ship with accounts and purchases **off**.
+- Only the manual iOS workflow run with `cloud_channel = private-testing` (and `publish = true` for TestFlight) bakes a config that turns them on. Even then they're only on inside the iOS app.
+- **Never submit a private-testing build for public review.** A public candidate needs its own reviewed release channel.

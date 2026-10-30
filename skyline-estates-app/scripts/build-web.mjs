@@ -17,4 +17,11 @@ fs.copyFileSync(path.join(shared,'firebase-config.js'),path.join(www,'firebase-c
 fs.copyFileSync(path.join(src,'reference-redesign.js'),path.join(www,'reference-redesign.js'));
 // realistic riders: three.js modules, character models, animations and portraits
 for(const d of ['lib','riders','photos','art','items'].filter(d=>fs.existsSync(path.join(src,d))))fs.cpSync(path.join(src,d),path.join(www,d),{recursive:true});
+// Cloud channel: the web game always ships with accounts and purchases off. Only a native build made
+// with SKYLINE_CLOUD_CHANNEL=private-testing (manual TestFlight workflow) switches them on, and then
+// only when running in the iOS app.
+const channel=process.env.SKYLINE_CLOUD_CHANNEL||'off';
+if(!['off','private-testing'].includes(channel))throw Error('Unknown SKYLINE_CLOUD_CHANNEL '+channel);
+if(channel==='private-testing')fs.writeFileSync(path.join(www,'lib','cloud-config.js'),"/* Generated for private TestFlight testing. Not used by the web game. */\n(function(){const ios=!!(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform()&&window.Capacitor.getPlatform&&window.Capacitor.getPlatform()==='ios');\nwindow.SKYLINE_CLOUD=Object.freeze({enabled:ios,purchases:ios,channel:'private-testing',service:'https://europe-west1-eko-estates.cloudfunctions.net/skylinePlayer'})})();\n");
+console.log('cloud channel:',channel);
 console.log('www built:',fs.readdirSync(www).join(', '),'| fonts:',faces.length);

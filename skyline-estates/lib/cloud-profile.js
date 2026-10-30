@@ -111,18 +111,20 @@ function createCloudProfile({storage,http,account,adapter,ask=async()=>null,noti
   let pending=read(MIGRATE_KEY);if(pending&&pending.uid!==acct.uid){pending=null;write(MIGRATE_KEY,null)}
   if(!pending){
    const profile=await http.request('GET','/v1/profile',null,acct.token),owner=adapter.owner();
-   const kind=owner&&owner!==acct.uid?'switch':profile.migrated?'merge':'first';
+   // Test accounts never take this device's progress: they only show their own cloud state, and the
+   // device save is backed up and restored automatically when the tester signs out.
+   const kind=profile.tester?'tester':owner&&owner!==acct.uid?'switch':profile.migrated?'merge':'first';
    const choice=await ask(kind,profile);
-   if(!['import','cloud-only'].includes(choice)||kind==='switch'&&choice!=='cloud-only'){declined.add(acct.uid);return}
+   if(!['import','cloud-only'].includes(choice)||(kind==='switch'||kind==='tester')&&choice!=='cloud-only'){declined.add(acct.uid);return}
    const snap=norm(adapter.extract());
-   pending={uid:acct.uid,requestId:rid(),mode:choice,snapshot:choice==='import'?{coins:Math.max(0,snap.coins),xp:Math.max(0,snap.xp),items:snap.items,max:snap.max,flags:snap.flags,eq:snap.eq,eqRev:Math.max(1,clock())}:undefined};
+   pending={uid:acct.uid,tester:kind==='tester',requestId:rid(),mode:choice,snapshot:choice==='import'?{coins:Math.max(0,snap.coins),xp:Math.max(0,snap.xp),items:snap.items,max:snap.max,flags:snap.flags,eq:snap.eq,eqRev:Math.max(1,clock())}:undefined};
    if(!write(MIGRATE_KEY,pending))throw Object.assign(Error('storage-unavailable'),{code:'storage-unavailable'});
   }
   const body={requestId:pending.requestId,mode:pending.mode};if(pending.snapshot)body.snapshot=pending.snapshot;
   const r=await http.request('POST','/v1/profile/migrate',body,acct.token);
   // Keep the whole device save before it is replaced by the account's state.
-  adapter.backup(pending.mode==='import'&&r.mode==='first'?'moved-to-account':'before-account');
-  const st={v:VERSION,uid:acct.uid,migrated:true,profile:r.profile,outbox:[],shadow:null};
+  adapter.backup(pending.tester?'before-tester':pending.mode==='import'&&r.mode==='first'?'moved-to-account':'before-account');
+  const st={v:VERSION,uid:acct.uid,migrated:true,tester:!!pending.tester,profile:r.profile,outbox:[],shadow:null};
   adapter.setOwner(acct.uid);saveState(st);write(MIGRATE_KEY,null);
   reconcile(st);notify('migrated',{mode:r.mode,coins:r.coins,notes:r.notes||[]});
  }
@@ -131,7 +133,11 @@ function createCloudProfile({storage,http,account,adapter,ask=async()=>null,noti
  async function sync(options={}){
   if(running)return running.then(()=>sync(options));
   running=(async()=>{
-   const acct=await account();if(!acct?.uid||!acct?.token)return{state:'signed-out'};
+   const acct=await account(),owner=adapter.owner(),ownerState=stateOf(owner);
+   // Leaving a test account (sign-out or another account): flush its last changes if possible, then put
+   // the player's own device save back. Test coins never stay on the device.
+   if(owner&&ownerState?.tester&&(!acct?.uid||acct.uid!==owner)){write(KEY+owner,null);adapter.restoreDevice('before-tester');return{state:'restored'}}
+   if(!acct?.uid||!acct?.token)return{state:'signed-out'};
    if(adapter.owner()!==acct.uid||!stateOf(acct.uid)?.migrated){await onboard(acct);if(adapter.owner()!==acct.uid)return{state:'local'}}
    capture();const st=stateOf(acct.uid);await flush(acct,st,options);return{state:'synced',pending:stateOf(acct.uid)?.outbox.length||0};
   })().catch(e=>{notify('error',failure(e));return{state:'error',code:failure(e)}}).finally(()=>{running=null});

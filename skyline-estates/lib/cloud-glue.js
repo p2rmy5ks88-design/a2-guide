@@ -44,6 +44,22 @@ const BACKUP='skylinePrefs.backup.';
 function backups(){const out=[];for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith(BACKUP))try{const v=JSON.parse(localStorage.getItem(k));out.push({key:k,at:v.at,reason:v.reason,coins:v.prefs?.coins||0,xp:v.prefs?.xp||0})}catch(e){}}return out.sort((a,b)=>b.at-a.at)}
 function backup(reason){try{const at=Date.now();localStorage.setItem(BACKUP+at,JSON.stringify({at,reason,prefs:PREF}));for(const old of backups().slice(3))localStorage.removeItem(old.key)}catch(e){toast('Could not save a device backup. Check device storage.');throw Object.assign(Error('storage-unavailable'),{code:'storage-unavailable'})}}
 let origSave=null;const rawSave=()=>(origSave||savePref)();
+// Put the player's own device save back after a test account (newest backup with that reason).
+// With no backup, synced values are cleared so test coins never stay on the device.
+function restoreDevice(reason){
+ const b=backups().find(x=>x.reason===reason);let prefs=null;
+ if(b)try{prefs=JSON.parse(localStorage.getItem(b.key)).prefs}catch(e){}
+ if(!prefs){prefs={...PREF,coins:0,xp:0,inv:{},tokLv:{},tokWins:{},tokenMastery:undefined,spot:{flags:{}}}}
+ delete prefs.cloudOwner;try{localStorage.setItem(PKEY,JSON.stringify(prefs))}catch(e){}
+ toast('Signed out of the test account. Your own progress is back.');setTimeout(()=>location.reload(),900);
+}
+function exportSave(){
+ const data=JSON.stringify({app:'skyline-estates',exportedAt:new Date().toISOString(),prefs:PREF},null,1),name='skyline-save-'+new Date().toISOString().slice(0,10)+'.json';
+ const done=m=>toast(m);
+ try{const f=new File([data],name,{type:'application/json'});if(navigator.canShare&&navigator.canShare({files:[f]}))return navigator.share({files:[f],title:'Skyline Estates save'}).then(()=>done('Save copy shared.')).catch(()=>{})}catch(e){}
+ if(navigator.clipboard?.writeText)return navigator.clipboard.writeText(data).then(()=>done('Save copied. Paste it into Notes or Files to keep it.')).catch(()=>done('Could not copy the save.'));
+ done('Sharing isn\u2019t available here.');
+}
 // ---------- HTTPS client (errors carry {status, code}; no secrets)
 function http(){const base=String(CFG.service||'').replace(/\/$/,'');return{async request(method,path,body,token){
  const ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),15000);
@@ -57,6 +73,7 @@ async function ask(kind,profile){
  const here=extract();
  if(kind==='first')return modal({html:`<div class="mh">Save your progress to your account?</div><div class="mtxt">Your coins (up to 1,000,000), XP and collection on this device move to your account, so they stay safe and follow you to your other devices. A full copy of this device's save is kept on this device.</div>`,btns:[{k:'import',label:'Move my progress',primary:true},{k:null,label:'Not now'}]});
  if(kind==='merge')return modal({html:`<div class="mh">Your account already has progress</div><div class="mtxt">Account: <b>${nf(profile.coins)}</b> coins, <b>${nf(profile.xp)}</b> XP.<br>This device: <b>${nf(here.coins)}</b> coins, <b>${nf(here.xp)}</b> XP.<br><br>You can add this device's collection to your account; the higher XP and token levels are kept. This device's coins are <b>not</b> added, because a balance can only live in one place. They stay in a saved backup on this device.</div>`,btns:[{k:'import',label:"Add this device's collection",primary:true},{k:'cloud-only',label:'Use my account progress only'},{k:null,label:'Not now'}]});
+ if(kind==='tester')return modal({html:`<div class="mh">Test account</div><div class="mtxt">This is a test account for checking purchases and cloud saves. Your own progress on this device is <b>not</b> added to it. It's saved on this device and comes back automatically when you sign out of the test account.</div>`,btns:[{k:'cloud-only',label:'Use test account',primary:true},{k:null,label:'Cancel'}]});
  return modal({html:`<div class="mh">This device is linked to another account</div><div class="mtxt">This device's progress belongs to the account you used before, so it can't be added to this one. Use this account's progress here? The current save is kept as a backup on this device, and your other account is not changed.</div>`,btns:[{k:'cloud-only',label:'Use this account',primary:true},{k:null,label:'Not now'}]});
 }
 const NOTES={'daily-coin-limit':'Daily cloud earning limit reached. Extra coins earned today were not added to your account.','daily-xp-limit':'Daily cloud XP limit reached.','promo-used':'That promo code was already used on your account.','promo-expired':'That promo code has expired.','promo-invalid':'That promo code could not be confirmed by the server.','insufficient-coins':'Your account balance was lower than this device showed. Your balance has been corrected.','refund-deficit':'A refunded purchase left your account below zero. New coins pay that back first.','device-coins-kept-locally':"This device's coins stay in its backup.",'device-coins-above-limit-kept-locally':'Coins above 1,000,000 stay in this device’s backup.','item-limit':'Your collection is full.'};
@@ -72,8 +89,9 @@ function notify(kind,detail){
 const status={last:''};
 // ---------- start
 if(!CFG.enabled||!Engine||typeof PREF==='undefined')return;
+if(CFG.channel==='private-testing'&&!(window.Capacitor?.isNativePlatform?.()&&window.Capacitor.getPlatform?.()==='ios'))return;
 const engine=Engine.createCloudProfile({storage:localStorage,http:http(),account:()=>window.SkylineAccounts?.player?.()||null,
- adapter:{extract,apply,backup,owner:()=>PREF.cloudOwner||null,setOwner:v=>{PREF.cloudOwner=v||undefined;rawSave()}},ask,notify});
+ adapter:{extract,apply,backup,owner:()=>PREF.cloudOwner||null,setOwner:v=>{PREF.cloudOwner=v||undefined;rawSave()},restoreDevice},ask,notify});
 let tick=null;const later=()=>{clearTimeout(tick);tick=setTimeout(()=>engine.capture(),0)};
 origSave=savePref;savePref=function(){origSave();later()};
 const origAdd=addCoins;addCoins=function(n,why){if(n&&why)engine.reason(String(why));return origAdd(n,why)};
@@ -96,7 +114,7 @@ if(CFG.purchases===true&&bridge&&window.createSkylineStoreKitClient){
  setTimeout(async()=>{if(await window.SkylineAccounts.player().catch(()=>null)){await load();store.recover().catch(()=>{})}},4000);
  window.SkylineStoreLoad=load;
 }
-const STORE_ERR={'store/sign-in-required':'Sign in to your Skyline account before buying coins.','store/payments-restricted':'Purchases are turned off on this device (Screen Time or device restrictions).','store/products-unavailable':'The App Store is not reachable right now. Try again when connected.','store/product-unavailable':'This coin pack is not available right now.','store/busy':'A purchase is already in progress.',default:'The purchase could not be completed yet. If you were charged, your coins are delivered automatically the next time the app connects.'};
+const STORE_ERR={'store-paused':'Coin purchases are paused for a moment. Nothing was charged. Please try again later.','store/sign-in-required':'Sign in to your Skyline account before buying coins.','store/payments-restricted':'Purchases are turned off on this device (Screen Time or device restrictions).','store/products-unavailable':'The App Store is not reachable right now. Try again when connected.','store/product-unavailable':'This coin pack is not available right now.','store/busy':'A purchase is already in progress.',default:'The purchase could not be completed yet. If you were charged, your coins are delivered automatically the next time the app connects.'};
 window.SkylineCloud={
  status:()=>({...engine.status(),last:status.last,state:status.state}),sync:()=>run({refresh:true}),
  purchasesReady:()=>!!store,price:id=>prices.get(id)||null,
@@ -108,6 +126,7 @@ window.SkylineCloud={
   return true;
  },
  async deletePlayer(token){const api=http();const r=await api.request('DELETE','/v1/account',null,token);const owner=PREF.cloudOwner;if(owner)engine.detach(owner);try{await store?.stop()}catch(e){}return r},
+ deviceSection(body,{el,button}){const box=el('div',null,{className:'sky-cloud'});box.append(el('h3','This device’s save'),el('p','Keep your own copy of this device’s progress (coins, collection and settings) before testing.'));button(box,'Save a copy of my progress',exportSave);body.prepend(box)},
  accountSection(body,user,{el,button,act}){
   const s=engine.status(),box=el('div',null,{className:'sky-cloud'});
   box.append(el('h3','Cloud save'));

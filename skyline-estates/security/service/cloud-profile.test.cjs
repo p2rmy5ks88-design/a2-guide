@@ -19,7 +19,8 @@ function device(srv,{uid='alice',coins=0,xp=0,toks=[],answer='import'}={}){
   extract:()=>({coins:prefs.coins,xp:prefs.xp,items:{tok:Object.keys(prefs.inv.tok)},max:{tokLv:{...prefs.tokLv}},flags:{},eq:{}}),
   apply(t){prefs.coins=t.coins;prefs.xp=t.xp;prefs.inv.tok=Object.fromEntries((t.items.tok||[]).map(id=>[id,prefs.inv.tok[id]||2]));prefs.tokLv={...prefs.tokLv,...(t.max.tokLv||{})}},
   backup(reason){backups.push({reason,prefs:structuredClone(prefs)})},
-  owner:()=>prefs.owner,setOwner(v){prefs.owner=v}};
+  owner:()=>prefs.owner,setOwner(v){prefs.owner=v},
+  restoreDevice(reason){const b=[...backups].reverse().find(x=>x.reason===reason);const keep=b?structuredClone(b.prefs):{coins:0,xp:0,inv:{tok:{}},tokLv:{}};Object.assign(prefs,keep,{owner:null});notes.push('restored:'+reason)}};
  const cloud=createCloudProfile({storage:{getItem:k=>storage.has(k)?storage.get(k):null,setItem:(k,v)=>storage.set(k,v),removeItem:k=>storage.delete(k)},http,adapter,
   account:async()=>net.signedIn?{uid:net.signedIn,token:net.signedIn}:null,ask:async kind=>{notes.push('ask:'+kind);return typeof answer==='function'?answer(kind):answer},notify:(k,v)=>notes.push(k+':'+(typeof v==='string'?v:JSON.stringify(v))),clock:()=>srv.clock.now,randomId:()=>'r'+String(++ids).padStart(20,'0')});
  return{prefs,cloud,net,notes,backups,storage};
@@ -89,6 +90,18 @@ async function test(name,fn){await fn();count++;console.log('ok - '+name)}
   d.prefs.coins+=10;const pending=d.cloud.sync();for(let i=0;i<200&&!release;i++)await new Promise(r=>setTimeout(r,5));assert.ok(release,'request reached the server');
   d.prefs.coins+=5;d.cloud.capture();assert.equal(d.cloud.status().pending,2,'second change queued while the first is in flight');s.svc.sync=orig;release();await pending;await d.cloud.sync();assert.equal(d.cloud.status().pending,0);
   assert.equal((await s.svc.get('alice')).coins,115);assert.equal(d.prefs.coins,115);
+ });
+ await test('a test account never takes the real save, and signing out restores it automatically',async()=>{const s=server(),d=device(s,{uid:'rev',coins:777,toks:['bus'],answer:k=>k==='tester'?'cloud-only':'import'});
+  await s.svc.markTester('rev','reviewer');await s.db.doc('skylineWallets/sandbox/accounts/'+require('./profile.cjs').hash('rev')).set({...(await s.db.doc('skylineWallets/sandbox/accounts/'+require('./profile.cjs').hash('rev')).get()).data(),coins:600});
+  await d.cloud.sync();assert.ok(d.notes.includes('ask:tester'));assert.equal(d.prefs.coins,600,'test account balance shown');assert.equal(d.backups.at(-1).reason,'before-tester');
+  const p=await s.svc.get('rev');assert.equal(p.coins,600,'real device coins were not imported');
+  d.prefs.coins-=100;await d.cloud.sync();assert.equal((await s.svc.get('rev')).coins,500);
+  d.net.signedIn=null;const r=await d.cloud.sync();assert.equal(r.state,'restored');assert.equal(d.prefs.coins,777);assert.deepEqual(Object.keys(d.prefs.inv.tok),['bus']);assert.equal(d.prefs.owner,null);
+  // signing into the real account next is a normal first-device migration of the real save
+  d.net.signedIn='realme';await d.cloud.sync();assert.equal((await s.svc.get('realme')).coins,777);
+ });
+ await test('a test account refuses an imported device save even from a modified client',async()=>{const s=server();await s.svc.markTester('rev2');
+  await assert.rejects(()=>s.svc.migrate('rev2',{requestId:'req_000000000000000x',mode:'import',snapshot:{coins:5}}),/tester-import-blocked/);
  });
  console.log(count+' cloud sync engine checks passed (client engine against the real profile reducer)');
 })().catch(e=>{console.error(e);process.exitCode=1});

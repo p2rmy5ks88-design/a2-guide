@@ -5,5 +5,6 @@
 window.SKYLINE_CLOUD=Object.freeze({
   enabled:false,      // accounts + unified cloud wallet/progress sync
   purchases:false,    // App Store coin packs (also requires enabled)
+  channel:'off',      // 'private-testing' only in TestFlight builds made with cloud_channel=private-testing
   service:'https://europe-west1-eko-estates.cloudfunctions.net/skylinePlayer'
 });
