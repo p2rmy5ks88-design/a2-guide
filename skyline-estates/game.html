@@ -2769,7 +2769,7 @@ function openAssets(p,opts={}){
         const ab=r.querySelector('.ab');
         if(!ro){
           const B=(lab,cls,ok,fn)=>{const b=el('button','sm '+cls,lab);b.disabled=!ok;b.onclick=()=>{fn();renderRoster();draw()};ab.append(b)};
-          if(s.t==='prop'&&(ownsAll(p.id,s.g)||FFA())&&!o.m){B(`${o.h===4?'+Tower':'+House'} ${fmt(s.h)}<small>${p.cash>=s.h?'leaves '+fmt(p.cash-s.h):'not enough cash'}</small>`,'go',!debt&&canBuild(p.id,i),()=>build(p.id,i));if(o.h)B(`Sell +${fmt(s.h/2)}`,'warn',canSell(p.id,i),()=>sell(p.id,i))}
+          if(s.t==='prop'&&(ownsAll(p.id,s.g)||FFA())&&!o.m){B(`${o.h===4?'+Tower':'+House'} ${fmt(devCost(p.id,i))}<small>${p.cash>=devCost(p.id,i)?'leaves '+fmt(p.cash-devCost(p.id,i)):'not enough cash'}</small>`,'go',!debt&&canBuild(p.id,i),()=>build(p.id,i));if(o.h)B(`Sell +${fmt(s.h/2)}`,'warn',canSell(p.id,i),()=>sell(p.id,i))}
           if(o.m)B(`Redeem ${fmt(unmCost(i))}`,'go',!debt&&canUnmort(p.id,i),()=>unmortgage(p.id,i));
           else B(`Mortgage +${fmt(s.p/2)}`,'warn',canMortgage(p.id,i),()=>mortgage(p.id,i));
         }
@@ -2885,7 +2885,7 @@ function aiProposeTrade(p){
 async function aiPostTurn(p){
   for(const i of propsOf(p.id))if(G.own[i].m&&p.cash-unmCost(i)>aiReserve(p)*1.6){unmortgage(p.id,i);renderRoster();await sleep(250)}
   let g=0;while(g++<60){
-    const c=propsOf(p.id).filter(i=>canBuild(p.id,i)&&p.cash-SQ[i].h>=aiReserve(p));if(!c.length)break;
+    const c=propsOf(p.id).filter(i=>canBuild(p.id,i)&&p.cash-devCost(p.id,i)>=aiReserve(p));if(!c.length)break;
     if(G.set.ai==='easy'&&Math.random()<.4)break;
     c.sort((a,b)=>G.own[a].h-G.own[b].h||SQ[b].p-SQ[a].p);
     build(p.id,c[0]);renderRoster();if(!FAST){toast(`${p.name} builds on ${SQ[c[0]].n}`);camFollow(c[0],500)}await sleep(450)}
@@ -3350,7 +3350,7 @@ async function openOnline(pre){
       const tb=pn.querySelector('#olTok'),ni=pn.querySelector('#olNick'),err=pn.querySelector('#olErr');tb.textContent=tok;tb.style.setProperty('--pc','#ffc61a');ni.value=nick;
       if(pre)pn.querySelector('#olCode').value=pre;
       tb.onclick=()=>{const TK=unlockedTokens();tok=TK[(TK.indexOf(tok)+1)%TK.length];tb.textContent=tok};ni.oninput=()=>nick=ni.value;
-      pn.querySelector('#olSet').innerHTML=onlineCfgSummary(cfgSet());
+      pn.querySelector('#olSet').innerHTML=onlineCfgSummary(cfgSetOnline());
       const row=(d,label,act,kind)=>{const v=d.data();if(kind!=='mine'&&isBlocked(v.host))return;const r=el('div','olitem');r.innerHTML=`<b>${esc(v.code)}</b><span>${esc((v.seats&&v.seats[0]&&v.seats[0].name)||'Host')} · ${(v.seats||[]).length}/6</span>`;const b=el('button','sm go',label);b.onclick=()=>{if(!needName())return;close('x');keepName(nick,tok);act(v.code)};r.append(b);const x=el('button','sm olx','✕');x.setAttribute('aria-label','Remove from list '+v.code);x.title='Remove from list';x.onclick=async()=>{r.remove();if(kind==='open'&&v.host===NET.me){try{if(NET.backend==='firebase'&&FIRE)await FIRE.purge(v.code);else await db.doc('games/'+v.code).delete()}catch(e){}toast('Game closed and removed')}else toast('Removed from your list');hideGame(v.code)};r.append(x);return r};
       unsubs.push(db.collection('games').where('status','==','lobby-sk').limit(20).onSnapshot(qs=>{const L=pn.querySelector('#olOpen');L.innerHTML='';const hg=hiddenGames();const docs=qs.docs.filter(d=>Date.now()-(d.data().at||0)<6*3600e3&&!hg[d.data().code]);if(!docs.length)L.innerHTML='<span class="muted">No open games right now. Create one, or ask a friend for their code.</span>';docs.forEach(d=>L.append(row(d,'Join',joinOnline,'open')))},()=>{}));
       unsubs.push(db.collection('games').where('seatIds','array-contains',NET.me).limit(20).onSnapshot(qs=>{const L=pn.querySelector('#olMine');L.innerHTML='';const hg=hiddenGames();const docs=qs.docs.filter(d=>d.data().status==='playing'&&!hg[d.data().code]);if(!docs.length)L.innerHTML='<span class="muted">None</span>';docs.forEach(d=>L.append(row(d,'Rejoin',joinOnline,'mine')))},()=>{}));
@@ -3362,11 +3362,12 @@ async function openOnline(pre){
   if(k==='new')createOnline();
 }
 function cfgSet(){return Object.assign({ai:setup.ai,speed:setup.speed,timer:setup.timer,mode:setup.mode,rounds:setup.rounds,city:setup.city,theme:setup.city,cash:setup.cash},setup.rules)}
+function cfgSetOnline(){const s=cfgSet();delete s.events2;return s}
 async function createOnline(){
   const db=NET.db;
   const tok0=setup.slots[0].tok||PREF.tok||TOKENS[0];const seat=Object.assign({uid:NET.me,name:cleanName(myName()||PREF.nick||'Player'),tok:tok0,col:SEATCOL[0],ai:false},seatExtras(tok0));
   try{for(let attempt=0;attempt<8;attempt++){
-    const code=genCode(),ref=db.doc('games/'+code),room={code,ed:'sk',host:NET.me,status:'lobby-sk',seats:[seat],seatIds:[NET.me],set:cfgSet(),at:Date.now(),seq:0};
+    const code=genCode(),ref=db.doc('games/'+code),room={code,ed:'sk',host:NET.me,status:'lobby-sk',seats:[seat],seatIds:[NET.me],set:(s=>{delete s.events2;return s})(cfgSet()),at:Date.now(),seq:0};
     // Firebase creation must be atomic: an existing room is never replaced on collision.
     if(NET.backend==='firebase'){if(!await ref.create(room))continue}else await ref.set(room);
     lobby(code,ref);return;
@@ -3418,7 +3419,7 @@ function lobby(code,ref){
     draw()},()=>{pn.innerHTML='<div class="mh">Connection lost</div>';}));
 }
 async function hostStart(ref,d){
-  const set=d.set||cfgSet();const players=d.seats.map((s,i)=>({name:cleanName(s.name),tok:s.tok,col:s.col,ai:s.ai,uid:s.uid,tl:Math.max(1,Math.min(TL_MAX,+s.tl||1)),fin:FINISHES.some(f=>f.id===s.fin)?s.fin:null,ch:CHARS.some(c=>c.id===s.ch)?s.ch:null}));
+  const set=d.set||cfgSetOnline();const players=d.seats.map((s,i)=>({name:cleanName(s.name),tok:s.tok,col:s.col,ai:s.ai,uid:s.uid,tl:Math.max(1,Math.min(TL_MAX,+s.tl||1)),fin:FINISHES.some(f=>f.id===s.fin)?s.fin:null,ch:CHARS.some(c=>c.id===s.ch)?s.ch:null}));
   newGame({cash:set.cash||1600,set:Object.assign({},set),players});G.online=true;G.code=d.code;G.seq=1;
   try{await ref.update({status:'playing',s:JSON.stringify(G),seq:1,at:Date.now()})}catch(e){toast('Couldn’t start the game. Try again.')}
 }
@@ -4127,7 +4128,7 @@ function achScan(){if(!trackable())return;for(const p of localHumans()){
   if(RAILS.every(i=>G.own[i].o===p.id))achAward('transport');if(UTILS.every(i=>G.own[i].o===p.id))achAward('utils');
   if(netWorth(p)>=3000)achAward('billion');if((p.jailCount||0)>=3)achAward('jail3');
   const s=p.st||{};if((s.maxRent||0)>=500)achAward('rent500');if(s.bankrupted)achAward('takeover');if((s.bankrupted||0)>=3)achAward('takeover3');if(s.aucCheap)achAward('auction');if(Object.keys(GROUPS).filter(g=>ownsAll(p.id,g)).length>=3)achAward('sets3');if(propsOf(p.id).length>=10)achAward('land10');if(propsOf(p.id).filter(i=>G.own[i].m).length>=5)achAward('paper');if(s.dbl3)achAward('speeding')}}
-function achGameEnd(winner){if(!trackable()||G.achDone)return;G.achDone=true;const hum=G.players.filter(p=>!p.ai&&(!G.online||p.uid===NET.me));if(!hum.length)return;const st=PREF.stats,c=G.set.city||'lagos',cc=countryOf(c).key;const won=winner&&hum.includes(winner);
+function achGameEnd(winner){if(!trackable()||G.achDone)return;G.achDone=true;const hum=ownerHumans();if(!hum.length)return;const st=PREF.stats,c=G.set.city||'lagos',cc=countryOf(c).key;const won=winner&&hum.includes(winner);
   st.games++;if(!st.playedCities.includes(c))st.playedCities.push(c);if(!st.playedCountries.includes(cc))st.playedCountries.push(cc);if(G.online){st.onlineGames++;if(won)st.onlineWins++}
   {const rk=['ffa','events','speedDie','pot','goDouble','jailRent'].filter(k=>G.set[k]).length+(G.set.minigames?1:0);if(rk>=4)achAward('rules4')}
   if(won){const me=winner,ms=me.st||{};if(!ms.houses&&!ms.hotels)achAward('nohouse');if(ms.minCash!=null&&ms.minCash<100)achAward('comeback');if(G.set.mode==='classic'&&G.round<25)achAward('blitz');st.wins++;if(!st.winCities.includes(c))st.winCities.push(c);if(!st.winCountries.includes(cc))st.winCountries.push(cc);if(FFA())achAward('ffa_win');if(G.set.mode==='quick')achAward('quick');if(G.set.mode==='timed')achAward('timed')}
@@ -4661,7 +4662,7 @@ const WEEKLY=[
   {id:'auctions3',n:'Win 3 auctions',g:3,k:'auctions'},{id:'towers3',n:'Build 3 towers',g:3,k:'towers'},{id:'online2',n:'Finish 2 online games',g:2,k:'online'}];
 const WEEK_SXP=400,WEEK_COINS=60;
 function weekNo(){return Math.floor((Date.now()-SEASON_EPOCH)/(7*864e5))}
-function weekly(){const S=season(),w=weekNo();if(!S.wk||S.wk.w!==w){const r=seeded(w*13+5),pick=[];while(pick.length<3){const m=WEEKLY[Math.floor(r()*WEEKLY.length)];if(!pick.includes(m.id))pick.push(m.id)}S.wk={w,list:pick,prog:{},done:{},cs:[]};savePref()}return S.wk}
+function weekly(){const S=season(),w=weekNo();if(!S.wk||S.wk.w<w){const r=seeded(w*13+5),pick=[];while(pick.length<3){const m=WEEKLY[Math.floor(r()*WEEKLY.length)];if(!pick.includes(m.id))pick.push(m.id)}S.wk={w,list:pick,prog:{},done:{},cs:[]};savePref()}return S.wk}
 function weeklyAdd(k,n){const W=weekly();W.list.forEach(id=>{const m=WEEKLY.find(x=>x.id===id);if(m.k!==k||W.done[id])return;W.prog[id]=(W.prog[id]||0)+n;if(W.prog[id]>=m.g){W.done[id]=1;achQ.push({name:'Weekly: '+loc(m.n),icon:'🗓️',kind:'Weekly challenge',xp:WEEK_SXP,coins:WEEK_COINS});season().sxp+=WEEK_SXP;addCoins(WEEK_COINS,'Weekly challenge');achShow()}});savePref()}
 
 /* ---- leagues ---- */
@@ -4678,12 +4679,12 @@ async function lbFetch(){if(!FIRE||!FIRE.raw)return null;const S=season();const 
 
 /* ---- per-game stats (on each player, synced online) ---- */
 const st=p=>(p.st=p.st||{rent:0,maxRent:0,buys:0,houses:0,hotels:0,go:0,jail:0,free:0,trades:0,aucWins:0,aucCheap:0,bankrupted:0});
-const mine=p=>p&&trackable()&&isLocalHuman(p);
+const mine=p=>p&&trackable()&&isLocalHuman(p)&&(G.online||G.owner==null||p.id===G.owner);
 function cityNow(){return (G&&G.set.city)||'lagos'}
 function bumpCity(k,n=1){const c=cityNow();cstat(c)[k]+=n;savePref()}
 
 /* ---- city achievement checks ---- */
-function cityScan(final){if(!trackable())return;const c=cityNow(),names=CNAMES[c];const hum=G.players.filter(p=>!p.ai&&(!G.online||p.uid===NET.me));
+function cityScan(final){if(!trackable())return;const c=cityNow(),names=CNAMES[c];const hum=ownerHumans();
   CT.forEach((t,k)=>{if(cach(c)[t.id])return;const ok=hum.some(p=>cityProg(t,c,p)>=t.g);
     if(ok){cach(c)[t.id]=Date.now();savePref();const n=cityDone(c);achQ.push({name:`${names[k]}`,city:c,xp:100,coins:20});addXP(100,`${CITY_DATA[c].name}: ${names[k]}`);addCoins(20);
       const m=medalOf(n);if(m&&[5,10,15].includes(n)){const mc={5:100,10:200,15:400}[n];achQ.push({name:`${m[1]} ${CITY_DATA[c].name} medal`,medal:m[0],xp:300,coins:mc});addXP(300,`${m[1]} ${CITY_DATA[c].name} medal`);addCoins(mc,`${m[1]} medal`);achAward('medal');if(n===15)achAward('gold')}achShow()}});
@@ -4723,11 +4724,11 @@ const MISSIONS=[
   {id:'city',n:'Finish a game in a different country from your last one',g:1,end:1,away:1},
   {id:'hotel',n:'Build a tower',g:1,f:p=>st(p).hotels}];
 const MISSION_XP=150,MISSION_COINS=30;
-const today=()=>{const d=new Date();return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate()};
+const today=()=>{const d=new Date();return d.getUTCFullYear()+'-'+(d.getUTCMonth()+1)+'-'+d.getUTCDate()};
 const dayNum=s=>{const[a,b,c]=s.split('-').map(Number);return Math.round(new Date(a,b-1,c).getTime()/864e5)};
-function daily(){const D=PREF.daily,t=today();if(D.date!==t){const r=seeded(dayNum(t)*7+3);const pool=MISSIONS;const pick=[];
+function daily(){const D=PREF.daily,t=today();if(D.date!==t&&!(D.date&&dayNum(D.date)>dayNum(t))){const r=seeded(dayNum(t)*7+3);const pool=MISSIONS;const pick=[];
     while(pick.length<3){const m=pool[Math.floor(r()*pool.length)];if(!pick.includes(m.id))pick.push(m.id)}D.date=t;D.list=pick;D.done={};D.best={};D.bonus=false;savePref()}return D}
-function missionScan(final,winner){if(!trackable())return;const D=daily();const hum=G.players.filter(p=>!p.ai&&(!G.online||p.uid===NET.me));if(!hum.length)return;
+function missionScan(final,winner){if(!trackable())return;const D=daily();const hum=ownerHumans();if(!hum.length)return;
   D.list.forEach(id=>{if(D.done[id])return;const m=MISSIONS.find(x=>x.id===id);let v=0;
     if(m.end){if(!final)return;v=m.win?(winner&&hum.includes(winner)?1:0):m.away?(PREF.lastCountry&&countryOf(cityNow()).key!==PREF.lastCountry?1:0):1}else v=Math.max(...hum.map(p=>m.f(p)||0));
     D.best[id]=Math.max(D.best[id]||0,v);if(v>=m.g){D.done[id]=1;streakMark();achQ.push({name:'Daily mission: '+loc(m.n),xp:MISSION_XP,coins:MISSION_COINS,daily:1});addXP(MISSION_XP,'Daily: '+loc(m.n));addCoins(MISSION_COINS);achShow()}});
@@ -4737,7 +4738,7 @@ function streakNow(){const D=PREF.daily;if(!D.streakDay)return 0;return dayNum(t
 
 /* ---- Lucky Spin: one free spin a day. Every slice has the same 1 in 8 chance. Spins can't be bought. ---- */
 const WHEEL=[['50 '+COIN,{c:50},'#ffc61a'],['100 XP',{x:100},'#12884a'],['100 '+COIN,{c:100},'#c2185b'],['2× XP',{boost:1},'#2e6fd6'],['150 '+COIN,{c:150},'#f08a1c'],['250 XP',{x:250},'#7b1fa2'],['300 '+COIN,{c:300},'#1e9a53'],['1000 '+COIN,{c:1000},'#e23b2e']];
-const wheelReady=()=>PREF.daily.spun!==today();
+const wheelReady=()=>PREF.daily.spun!==today()&&!(PREF.daily.spun&&dayNum(PREF.daily.spun)>dayNum(today()));
 async function openWheel(){initAudio();const ready=wheelReady();let spun=false;
   await modal({cls:'wide',html:`<div class="mh">Lucky Spin</div><div class="mtxt muted">One free spin every day. Every prize has the same 1 in 8 chance.</div>
     <div class="wheelwrap"><div class="wheel" id="wh">${WHEEL.map((w,i)=>`<span style="transform:rotate(${i*45+22.5}deg)"><b>${w[0]}</b></span>`).join('')}</div><div class="wpin"></div><button class="btn pri" id="wSpin"${ready?'':' disabled'}>${ready?'Spin':'Come back tomorrow'}</button><div class="mtxt" id="wRes"></div></div>`,
@@ -4870,7 +4871,7 @@ async function offerReroll(p,d){if(FAST||p.ai||!isLocalHuman(p)||p.auto)return;c
   if(k!=='rr')return;p.rrUsed=(p.rrUsed||0)+1;log(`${p.name} used a re-roll`);const n=await rollDice();d[0]=n[0];d[1]=n[1];d.sv=n.sv;d.s=n.s}
 
 /* ---- game end: XP, coins, trophies, season ---- */
-function progressGameEnd(w){if(!trackable()||G.progDone)return null;G.progDone=true;const hum=G.players.filter(p=>!p.ai&&(!G.online||p.uid===NET.me));if(!hum.length)return null;
+function progressGameEnd(w){if(!trackable()||G.progDone)return null;G.progDone=true;const hum=ownerHumans();if(!hum.length)return null;
   const c=cityNow(),cs=cstat(c);cs.plays++;const won=hum.includes(w);if(won)cs.wins++;savePref();
   const sts=standings(),me=hum.slice().sort((a,b)=>sts.indexOf(a)-sts.indexOf(b))[0],rank=sts.indexOf(me),n=sts.length;
   let base=50+(won?200:0)+Math.min(200,Math.round(Math.max(...hum.map(p=>st(p).rent))/10));
@@ -5186,7 +5187,7 @@ const SECTIONS=[['play','Play'],['world','World'],['collection','Collection'],['
 const SUBS={collection:[['cast','Characters'],['tokens','Tokens']],progress:[['season','Season'],['leagues','Leagues'],['ach','Awards'],['daily','Daily']],settings:[['settings','Settings'],['learn','How to play']],play:[['play','Play'],['custom','Custom game']]};
 const SEC_OF={portfolio:'portfolio',play:'play',custom:'play',world:'world',cast:'collection',tokens:'collection',season:'progress',leagues:'progress',ach:'progress',daily:'progress',shop:'shop',settings:'settings',learn:'settings',collection:'collection',progress:'progress'};
 function panePortfolio(T){T.textContent="Loading portfolio…"}
-const PANES=()=>({portfolio:panePortfolio,play:paneP,custom:paneCustom,world:paneWorld,cast:paneCast,tokens:paneTokens,season:paneSeason,leagues:paneLeagues,ach:paneAch,daily:paneDaily,shop:paneShop,learn:paneLearn,settings:paneSettings});
+const PANES=()=>({portfolio:panePortfolio,play:paneP,custom:paneCustom,world:paneWorld,cast:paneCast,tokens:paneTokens,season:paneSeason,leagues:paneLeagues,ach:paneAch,daily:paneDaily,spotlight:paneSpotlight,shop:paneShop,learn:paneLearn,settings:paneSettings});
 const HOME_TABS=SECTIONS;
 const PCOIN=()=>`<span class="coinpill" role="status"><i aria-hidden="true"></i><b>${Math.round(PREF.coins).toLocaleString('en-US')}</b></span>`;
 function showTitle(){
@@ -5241,7 +5242,7 @@ function requestGameFullscreen(){
 function startFromSetup(T,slots){const act=slotPlayers(slots||setup.slots);
   if(act.length<2){const m=T.querySelector('#tMsg');if(m)m.textContent='Pick at least two players.';return}
   const toks=new Set();act.forEach(s=>{if(toks.has(s.tok))s.tok=unlockedTokens().find(t=>!toks.has(t)&&!act.some(a=>a.tok===t))||s.tok;toks.add(s.tok)});
-  initAudio();newGame({cash:setup.cash,set:cfgSet(),players:act.map(s=>({name:(s.name||'').trim()||NAMES[s.i],tok:s.tok,col:PCOL[s.i],ai:s.type==='ai',tl:s.i===0&&s.type==='human'?tokLv(s.tok):1,estate:s.i===0&&s.type==='human'?estateForCity(setup.city):{},fin:s.i===0&&s.type==='human'?myFinish():null,ch:pickChar(s,act)}))});
+  initAudio();newGame({cash:setup.cash,set:cfgSet(),players:act.map(s=>({name:(s.name||'').trim()||NAMES[s.i],tok:s.tok,col:PCOL[s.i],ai:s.type==='ai',tl:s.i===0&&s.type==='human'?tokLv(s.tok):1,estate:s.i===0&&s.type==='human'?estateForCity(setup.city):{},fin:s.i===0&&s.type==='human'?myFinish():null,roof:s.i===0&&s.type==='human'?myRoof():null,owner:s.i===0&&s.type==='human',ch:pickChar(s,act)}))});
   requestGameFullscreen();
   startWith(G)}
 const myFinish=()=>PREF.eq.fin&&itemOwned('fin',PREF.eq.fin)?PREF.eq.fin:null;
@@ -5850,28 +5851,28 @@ const BY=.11;
 function famBase(p,col,mort){const F=FM();bBox(p,F.base,0,0,0,.64,.1,.64);bBox(p,F.brass,0,.1,0,.62,.006,.62);bBox(p,F.base,0,.106,0,.59,.004,.59);
   for(const z of[.321,-.321])bBox(p,F.brass,0,.084,z,.64,.006,.004);for(const x of[.321,-.321])bBox(p,F.brass,x,.084,0,.004,.006,.64);
   bBox(p,F.brass,0,.018,.322,.34,.058,.006);bBox(p,mort?F.mort:mat(col,{spec:.5,em:.14}),0,.023,.326,.31,.048,.008)}
-function famHome(p){const F=FM(),y=BY;bBox(p,F.stone,0,y,-.02,.44,.2,.36);bBox(p,F.stone2,0,y+.2,-.02,.46,.02,.38);bBox(p,F.grass,-.04,y+.22,-.04,.22,.025,.18);bTree(p,-.04,y+.24,-.04,.22);
+function famHome(p,roof){const F=FM(),y=BY;bBox(p,F.stone,0,y,-.02,.44,.2,.36);bBox(p,F.stone2,0,y+.2,-.02,.46,.02,.38);if(roof)decorateRoof(p,{x:0,y:y+.22,z:-.02,w:.42,d:.34,lv:1},roof);else{bBox(p,F.grass,-.04,y+.22,-.04,.22,.025,.18);bTree(p,-.04,y+.24,-.04,.22)}
   bBox(p,F.wood,.15,y,.161,.1,.18,.012);bBox(p,F.glass,-.08,y,.161,.1,.13,.01);bBox(p,F.terra,-.08,y+.13,.17,.14,.012,.04);bBox(p,F.win,-.2,y+.06,.05,.012,.08,.12);
   bBox(p,F.stone2,0,y,.2,.5,.02,.06);for(let k=0;k<3;k++)bBox(p,F.wood,-.17+k*.045,y+.2,.2,.012,.012,.1);bBox(p,F.wood,-.08,y+.2,.25,.16,.01,.012);
   for(let k=0;k<5;k++)bBox(p,F.wood,.231,y+.02,-.12+k*.04,.012,.16,.014);
   bTree(p,.24,y,.22,.32,'cypress');bTree(p,-.25,y,.22,.28,'cypress');return y+.25}
-function famTown(p){const F=FM(),y=BY;bBox(p,F.stone,.04,y,-.02,.34,.44,.36);bBox(p,F.terra,-.17,y,-.02,.12,.48,.36);
+function famTown(p,roof){const F=FM(),y=BY;bBox(p,F.stone,.04,y,-.02,.34,.44,.36);bBox(p,F.terra,-.17,y,-.02,.12,.48,.36);
   for(let k=0;k<4;k++)bBox(p,F.wood,.1+k*.03,y+.02,.163,.014,.4,.01);bBox(p,F.glass,-.04,y+.24,.18,.18,.07,.03);bBox(p,F.glass,-.04,y+.02,.163,.12,.16,.01);
-  bBox(p,F.win,-.04,y+.25,.163,.12,.14,.008);bBox(p,F.stone2,.04,y+.44,-.02,.36,.02,.38);bBox(p,F.grass,-.2,y,.22,.16,.04,.1);bTree(p,-.2,y+.04,.22,.22);return y+.48}
-function famApts(p){const F=FM(),y=BY,fl=.19;bBox(p,F.stone,0,y,-.02,.46,fl*3,.4);
+  bBox(p,F.win,-.04,y+.25,.163,.12,.14,.008);bBox(p,F.stone2,.04,y+.44,-.02,.36,.02,.38);bBox(p,F.grass,-.2,y,.22,.16,.04,.1);bTree(p,-.2,y+.04,.22,.22);if(roof)decorateRoof(p,{x:.055,y:y+.46,z:-.02,w:.3,d:.34,lv:2},roof);return y+.48}
+function famApts(p,roof){const F=FM(),y=BY,fl=.19;bBox(p,F.stone,0,y,-.02,.46,fl*3,.4);
   for(let k=0;k<3;k++){const yy=y+k*fl;for(const x of[-.12,.12]){bBox(p,F.win,x,yy+.04,.181,.12,.12,.008);if(k>0){bBox(p,F.glass,x,yy,.2,.15,.05,.05);bBox(p,F.leaf,x+.05,yy+.05,.2,.03,.03,.03)}}
     bBox(p,F.win,.231,yy+.05,-.02,.008,.1,.26);bBox(p,F.win,-.231,yy+.05,-.02,.008,.1,.26)}
-  bBox(p,F.stone2,0,y+fl*3,-.02,.48,.02,.42);bBox(p,F.solar,.06,y+fl*3+.02,-.06,.2,.02,.12);bBox(p,F.grass,-.15,y+fl*3+.02,.06,.1,.03,.1);bTree(p,-.15,y+fl*3+.05,.06,.16);
+  bBox(p,F.stone2,0,y+fl*3,-.02,.48,.02,.42);if(roof)decorateRoof(p,{x:0,y:y+fl*3+.02,z:-.02,w:.44,d:.38,lv:3},roof);else{bBox(p,F.solar,.06,y+fl*3+.02,-.06,.2,.02,.12);bBox(p,F.grass,-.15,y+fl*3+.02,.06,.1,.03,.1);bTree(p,-.15,y+fl*3+.05,.06,.16)}
   bBox(p,F.glass,0,y,.181,.12,.12,.01);bTree(p,.24,y,.24,.3);bTree(p,-.24,y,.24,.34,'cypress');return y+fl*3+.05}
-function famBoutique(p){const F=FM(),y=BY,fl=.18;bBox(p,F.stone,.03,y,-.02,.4,fl*4,.4);bBox(p,F.terra,-.19,y,-.02,.08,fl*4+.08,.42);bBox(p,F.terra,-.12,y,.2,.03,fl*4+.04,.02);
+function famBoutique(p,roof){const F=FM(),y=BY,fl=.18;bBox(p,F.stone,.03,y,-.02,.4,fl*4,.4);bBox(p,F.terra,-.19,y,-.02,.08,fl*4+.08,.42);bBox(p,F.terra,-.12,y,.2,.03,fl*4+.04,.02);
   for(let k=1;k<4;k++){const yy=y+k*fl;for(const x of[-.02,.13])bBox(p,(k+Math.round(x*10))%3?F.glass:F.lit,x,yy+.04,.181,.1,.11,.008);bBox(p,F.leaf,.05,yy,.2,.26,.03,.03)}
   bBox(p,F.glass,.05,y+.13,.23,.3,.02,.08);for(const x of[-.06,.21])bBox(p,F.terra,x,y,.2,.03,fl*4,.025);bBox(p,F.lit,.05,y,.181,.22,.12,.008);bBox(p,F.stone2,.03,y+fl*4,-.02,.42,.02,.42);
-  bBox(p,F.wood,.08,y+fl*4+.02,-.06,.18,.01,.14);for(const[x,z]of[[0,-.12],[.16,-.12],[0,0],[.16,0]])bBox(p,F.wood,x,y+fl*4+.02,z,.012,.1,.012);bBox(p,F.wood,.08,y+fl*4+.12,-.06,.2,.012,.16);
-  bTree(p,-.08,y+fl*4+.02,.1,.18);bTree(p,.24,y,.22,.34,'cypress');return y+fl*4+.14}
-function famSkyline(p){const F=FM(),y=BY,H=1.12;bBox(p,F.stone,0,y,-.02,.52,.2,.44);bBox(p,F.brass,0,y+.2,.2,.5,.02,.08);for(const x of[-.2,.2])bBox(p,F.brass,x,y,.23,.02,.2,.02);bBox(p,F.lit,0,y,.201,.34,.15,.008);
+  if(roof)decorateRoof(p,{x:.06,y:y+fl*4+.02,z:-.02,w:.34,d:.38,lv:4},roof);else{bBox(p,F.wood,.08,y+fl*4+.02,-.06,.18,.01,.14);for(const[x,z]of[[0,-.12],[.16,-.12],[0,0],[.16,0]])bBox(p,F.wood,x,y+fl*4+.02,z,.012,.1,.012);bBox(p,F.wood,.08,y+fl*4+.12,-.06,.2,.012,.16);
+  bTree(p,-.08,y+fl*4+.02,.1,.18)}bTree(p,.24,y,.22,.34,'cypress');return y+fl*4+.14}
+function famSkyline(p,roof){const F=FM(),y=BY,H=1.12;bBox(p,F.stone,0,y,-.02,.52,.2,.44);bBox(p,F.brass,0,y+.2,.2,.5,.02,.08);for(const x of[-.2,.2])bBox(p,F.brass,x,y,.23,.02,.2,.02);bBox(p,F.lit,0,y,.201,.34,.15,.008);
   bBox(p,F.glass,.03,y+.2,-.03,.3,H,.3);bBox(p,F.stone,-.15,y+.2,-.03,.07,H+.06,.32);bBox(p,F.stone,.2,y+.2,-.03,.05,H*.82,.32);
   for(let k=0;k<7;k++)bBox(p,F.stone2,.03,y+.32+k*.14,.121,.3,.012,.008);bBox(p,F.stone,.03,y+.2+H,-.03,.36,.03,.34);
-  bBox(p,F.brass,.03,y+.23+H,-.03,.26,.12,.012);bBox(p,F.brass,.03,y+.23+H,-.03,.012,.12,.26);bBox(p,F.brass,.03,y+.35+H,-.03,.3,.02,.3);
+  if(roof)decorateRoof(p,{x:.03,y:y+.23+H,z:-.03,w:.32,d:.3,lv:5},roof);else{bBox(p,F.brass,.03,y+.23+H,-.03,.26,.12,.012);bBox(p,F.brass,.03,y+.23+H,-.03,.012,.12,.26);bBox(p,F.brass,.03,y+.35+H,-.03,.3,.02,.3)}
   bPalm(p,-.25,y,.25,.36);bTree(p,.27,y,.25,.46,'cypress');bPalm(p,.27,y,-.2,.3);return y+.4+H}
 function famGarden(p){const F=FM(),y=BY;bBox(p,F.grass,0,y,0,.5,.02,.5);bTree(p,-.12,y+.02,-.08,.32);bTree(p,.14,y+.02,.06,.26);bTree(p,.12,y+.02,-.16,.3,'cypress');return y+.1}
 const FAM=[famGarden,famHome,famTown,famApts,famBoutique,famSkyline];
@@ -5882,7 +5883,7 @@ updateCell=function(i,anim){
   if(SQ[i].t==='prop'){const hn=S3.houses[i];hn.kids.slice().forEach(k=>hn.remove(k));
     const n=o.h===5?1:o.h;for(let k=0;k<n;k++){const h=sqMarker(null,o.h===5).at((k-(n-1)/2)*.12,0,0);hn.add(h);if(anim&&(k>=prev.h||o.h===5)){h.sc(.01);tween(400,t=>h.sc(Math.max(.01,t)),eBack)}}
     if(pl.sign)pl.sign.visible=o.o<0;pl.floors.forEach(f=>pl.node.remove(f));pl.floors=[];
-    if(o.o>=0){const b=new Node();famBase(b,P(o.o).col,o.m);const lv=o.m?0:o.h,top=FAM[lv](b);pl.node.add(b);pl.floors.push(b);pl.top=top;
+    if(o.o>=0){const b=new Node();famBase(b,P(o.o).col,o.m);const lv=o.m?0:o.h,top=FAM[lv](b,o.m?null:roofOf(o.o));pl.node.add(b);pl.floors.push(b);pl.top=top;
       if(anim&&!FAST&&(prev.h!==o.h||prev.o!==o.o)){b.sc(1,.01,1);tween(520,t=>b.sc(1,Math.max(.01,t),1),eBack)}}else pl.top=0;
     if(o.o>=0&&!pl.shadowN)pl.shadowN=S3.shadow(0,0,.5,pl.node,.013);if(pl.shadowN)pl.shadowN.visible=o.o>=0;
     if(pl.flag){pl.node.remove(pl.flag);pl.flag=null}}
@@ -5919,7 +5920,7 @@ openAssets=function(p,opts={}){const debt=opts.debt||0,ro=!!opts.readonly;let fi
           b.innerHTML=mine?`<span>${esc(SQ[i].n)}</span>${o.m?'<small>Mortgaged</small>':SQ[i].t==='prop'?`<small>${LADDER[o.h][0]}</small>`:''}<span class="chev" aria-hidden="true">›</span>`:`<span>${esc(SQ[i].n)}</span><small>${o.o>=0?'Owned by '+esc(P(o.o).name):'Not owned yet'}</small>`;
           if(mine){b.onclick=()=>{sel=i;draw()};b.ondblclick=()=>showSquare(i)}box.append(b)});L.append(box)});
       const D=pn.querySelector('.pfd');if(sel==null){D.innerHTML='';return}const i=sel,s=SQ[i],o=G.own[i],gr=s.g?GROUPS[s.g]:null,own=gr?gr.filter(j=>G.own[j].o===p.id).length:0;
-      const isP=s.t==='prop',why=ro?'':whyNoBuild(p,i,debt),can=!ro&&!debt&&canBuild(p.id,i),cost=isP?s.h:0;
+      const isP=s.t==='prop',why=ro?'':whyNoBuild(p,i,debt),can=!ro&&!debt&&canBuild(p.id,i),cost=isP?devCost(p.id,i):0;
       D.innerHTML=`<div class="pdh"><i style="background:${s.g?GC[s.g]:'#9aa3ad'}"></i><div><b>${esc(s.n)}</b><small>${esc(isP?GNAME[s.g]+(s.lm?' · '+s.lm:''):s.t==='rail'?'Transit hub':'Utility')}</small></div>${isP?`<em class="${own===gr.length?'full':''}">${own===gr.length?'Complete set':'Set'} (${own}/${gr.length})</em>`:''}</div>
         <div class="pdr"><span>Rent now <b>${o.m?'none (mortgaged)':fmt(rentFor(i,7))}${s.t==='util'&&!o.m?' at a roll of 7':''}</b></span><span>Bought for <b>${fmt(s.p)}</b></span></div>
         ${isP?`<div class="pdl"><small>Development</small><div class="pladder">${LADDER.map((_,k)=>`<span class="lstep${k===o.h?' cur':''}${k<o.h?' done':''}">${ladIco(k,k<=o.h)}<i>${LADDER[k][0]}</i></span>`).join('')}</div></div>`:''}
@@ -6119,8 +6120,8 @@ const art=k=>{const photo=cityPhoto(k);return photo?`<img class="se-art" src="${
 const toggleRow=(id,title,description,on)=>`<div class="se-rule"><div><b>${esc(title)}</b><small>${esc(description)}</small></div><button class="se-switch" data-toggle="${id}" aria-label="${esc(title)}" aria-pressed="${!!on}"></button></div>`;
 paneCustom=function(T){const oldStep=T.dataset.customStep,oldScroll=T.scrollTop,moreOpen=T.querySelector('details')?.open;T.dataset.customStep=String(SE.step);const acts=slotPlayers(setup.slots),mode=MODES.find(m=>m[0]===setup.mode),steps=['Players','Rules','Review'];T.innerHTML=`${head('Set up your game',steps[SE.step],`<div class="se-stepper">${steps.map((s,i)=>`<button class="${SE.step===i?'on':''}" data-step="${i}" aria-label="${s}" aria-disabled="${i>0&&acts.length<2}" aria-current="${SE.step===i?'step':'false'}">${i+1}</button>`).join('')}</div>`)}<div class="se-setup-grid"><div id="seSetupBody"></div><aside class="se-panel se-summary">${art(setup.city)}<div class="se-card-title">${esc(CITY_DATA[setup.city].name)}</div>${kv('Players',`${acts.length} / 6`)}${kv('Mode',mode[1])}${setup.mode==='timed'?kv('Rounds',setup.rounds):''}${kv('AI skill',setup.ai)}${kv('Starting cash',fmt(setup.cash))}${kv('Turn timer',setup.timer?'90 seconds':'Off')}${kv('Collection perks',setup.rules.perks?'On':'Off')}<div class="se-actions" style="margin-top:20px">${button('Change city','city')}</div></aside></div><div class="se-setup-footer">${button(SE.step?'← Back':'← Play','back')}${button(SE.step===2?'Start game':'Continue →','next',true,acts.length<2)}</div><div class="se-sub" id="tMsg" role="status"></div>`;
  const B=T.querySelector('#seSetupBody');if(SE.step===0){B.innerHTML=`<div class="se-panel"><div class="se-card-title">Who’s playing?</div><div class="se-sub">Human players share this device. Tap a token to change it.</div><div class="se-grid custom-slots" style="margin-top:20px">${setup.slots.map((s,i)=>`<div class="slot${s.type==='off'?' off':''}" style="--pc:${PCOL[i]}"><button class="tok" data-token="${i}" aria-label="Change player ${i+1} token">${s.tok}</button><input data-name="${i}" aria-label="Player ${i+1} name" value="${esc(s.name)}" maxlength="12"><div class="seg">${[['human','Human'],['ai','AI'],['off','Off']].map(([v,t])=>`<button class="${s.type===v?'on':''}" data-type="${i}:${v}" aria-pressed="${s.type===v}">${t}</button>`).join('')}</div></div>`).join('')}</div></div>`;B.querySelectorAll('[data-name]').forEach(x=>x.oninput=()=>{setup.slots[+x.dataset.name].name=x.value;saveSlot(+x.dataset.name,setup.slots[+x.dataset.name])});B.querySelectorAll('[data-type]').forEach(x=>x.onclick=()=>{const[i,v]=x.dataset.type.split(':');setup.slots[+i].type=v;paneCustom(T)});B.querySelectorAll('[data-token]').forEach(x=>x.onclick=()=>{const i=+x.dataset.token,s=setup.slots[i],used=setup.slots.filter((s,j)=>j!==i&&s.type!=='off').map(s=>s.tok),pool=unlockedTokens();let ix=pool.indexOf(s.tok);for(let n=0;n<pool.length;n++){ix=(ix+1)%pool.length;if(!used.includes(pool[ix]))break}s.tok=pool[ix];saveSlot(i,s);paneCustom(T)})}
- else if(SE.step===1){B.innerHTML=`<div class="se-setup-modes">${MODES.map(m=>`<button class="se-mode-card${setup.mode===m[0]?' on':''}" data-mode="${m[0]}" aria-pressed="${setup.mode===m[0]}"><b>${m[1]}</b><small>${esc(m[2])}</small></button>`).join('')}</div><div class="se-panel">${setup.mode==='timed'?`<div class="se-rule"><b>Rounds</b><div class="seg" id="seRounds"></div></div>`:''}${RULE_INFO.slice(0,5).map(([k,l,d])=>toggleRow(k,l,loc(d),setup.rules[k])).join('')}<details><summary class="se-sub" style="cursor:pointer;padding:15px 0">More house rules</summary>${RULE_INFO.slice(5).map(([k,l,d])=>toggleRow(k,l,loc(d),setup.rules[k])).join('')}<div class="se-rule"><b>Game speed</b><div class="seg" id="seSpeed"></div></div></details><div class="se-rule"><b>Starting cash</b><div class="seg" id="seCash"></div></div><div class="se-rule"><b>AI skill</b><div class="seg" id="seAI"></div></div><div class="se-rule"><b>Turn timer</b><div class="seg" id="seTimer"></div></div></div>`;B.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{setup.mode=b.dataset.mode;paneCustom(T)});B.querySelectorAll('[data-toggle]').forEach(b=>b.onclick=()=>{setup.rules[b.dataset.toggle]=!setup.rules[b.dataset.toggle];PREF.rules=setup.rules;notifySave();paneCustom(T)});segIn(B,'#seSpeed',[['normal','Normal'],['fast','Fast']],()=>setup.speed,v=>{setup.speed=v;PREF.speed=v;savePref();paneCustom(T)});if(setup.mode==='timed')segIn(B,'#seRounds',[10,20,30,45].map(v=>[v,''+v]),()=>setup.rounds,v=>{setup.rounds=v;paneCustom(T)});segIn(B,'#seCash',CASH_OPTS.map(v=>[v,fmt(v)]),()=>setup.cash,v=>{setup.cash=v;PREF.cash=v;savePref();paneCustom(T)});segIn(B,'#seAI',[['easy','Easy'],['normal','Normal'],['hard','Hard']],()=>setup.ai,v=>{setup.ai=v;PREF.ai=v;savePref();paneCustom(T)});segIn(B,'#seTimer',[[0,'Off'],[90,'90 sec']],()=>setup.timer,v=>{setup.timer=v;PREF.timer=v;savePref();paneCustom(T)})}
- else B.innerHTML=`<div class="se-panel"><div class="se-card-title">Ready to build</div><div class="se-sub">${esc(mode[2])}</div>${acts.map(s=>kv(`${s.tok} ${esc(s.name)}`,s.type==='human'?'Human':'AI · '+setup.ai)).join('')}<div class="se-divider"></div><div class="se-card-title">Active house rules</div><div class="se-actions">${RULE_INFO.filter(([k])=>setup.rules[k]).map(([,l])=>`<span class="se-chip good">✓ ${l}</span>`).join('')}</div></div>`;
+ else if(SE.step===1){B.innerHTML=`<div class="se-setup-modes">${MODES.map(m=>`<button class="se-mode-card${setup.mode===m[0]?' on':''}" data-mode="${m[0]}" aria-pressed="${setup.mode===m[0]}"><b>${m[1]}</b><small>${esc(m[2])}</small></button>`).join('')}</div><div class="se-panel">${setup.mode==='timed'?`<div class="se-rule"><b>Rounds</b><div class="seg" id="seRounds"></div></div>`:''}${RULE_INFO.slice(0,5).map(([k,l,d])=>toggleRow(k,l,loc(d),setup.rules[k])).join('')}${toggleRow('events2',EV2_RULE[0],loc(EV2_RULE[1]),setup.rules.events2)}<details><summary class="se-sub" style="cursor:pointer;padding:15px 0">More house rules</summary>${RULE_INFO.slice(5).map(([k,l,d])=>toggleRow(k,l,loc(d),setup.rules[k])).join('')}<div class="se-rule"><b>Game speed</b><div class="seg" id="seSpeed"></div></div></details><div class="se-rule"><b>Starting cash</b><div class="seg" id="seCash"></div></div><div class="se-rule"><b>AI skill</b><div class="seg" id="seAI"></div></div><div class="se-rule"><b>Turn timer</b><div class="seg" id="seTimer"></div></div></div>`;B.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{setup.mode=b.dataset.mode;paneCustom(T)});B.querySelectorAll('[data-toggle]').forEach(b=>b.onclick=()=>{const k=b.dataset.toggle;setup.rules[k]=!setup.rules[k];if(setup.rules[k]&&k==='events2')setup.rules.events=false;if(setup.rules[k]&&k==='events')setup.rules.events2=false;PREF.rules=setup.rules;notifySave();paneCustom(T)});segIn(B,'#seSpeed',[['normal','Normal'],['fast','Fast']],()=>setup.speed,v=>{setup.speed=v;PREF.speed=v;savePref();paneCustom(T)});if(setup.mode==='timed')segIn(B,'#seRounds',[10,20,30,45].map(v=>[v,''+v]),()=>setup.rounds,v=>{setup.rounds=v;paneCustom(T)});segIn(B,'#seCash',CASH_OPTS.map(v=>[v,fmt(v)]),()=>setup.cash,v=>{setup.cash=v;PREF.cash=v;savePref();paneCustom(T)});segIn(B,'#seAI',[['easy','Easy'],['normal','Normal'],['hard','Hard']],()=>setup.ai,v=>{setup.ai=v;PREF.ai=v;savePref();paneCustom(T)});segIn(B,'#seTimer',[[0,'Off'],[90,'90 sec']],()=>setup.timer,v=>{setup.timer=v;PREF.timer=v;savePref();paneCustom(T)})}
+ else B.innerHTML=`<div class="se-panel"><div class="se-card-title">Ready to build</div><div class="se-sub">${esc(mode[2])}</div>${acts.map(s=>kv(`${s.tok} ${esc(s.name)}`,s.type==='human'?'Human':'AI · '+setup.ai)).join('')}<div class="se-divider"></div><div class="se-card-title">Active house rules</div><div class="se-actions">${RULE_INFO.filter(([k])=>setup.rules[k]).map(([,l])=>`<span class="se-chip good">✓ ${l}</span>`).join('')}${setup.rules.events2?`<span class="se-chip good">✓ ${EV2_RULE[0]}</span>`:''}</div></div>`;
  T.querySelectorAll('[data-step]').forEach(b=>b.onclick=()=>{if(+b.dataset.step>0&&acts.length<2){toast('Pick at least two players');return}SE.step=+b.dataset.step;paneCustom(T)});bind(T,'back',()=>{if(SE.step){SE.step--;paneCustom(T)}else homeTab('play')});bind(T,'city',()=>{SE.cityDetail=null;homeTab('world')});bind(T,'next',()=>{if(SE.step<2){SE.step++;paneCustom(T)}else startFromSetup(T)});if(acts.length<2)T.querySelector('#tMsg').textContent='Pick at least two players to continue.';if(moreOpen&&oldStep===String(SE.step)&&T.querySelector('details'))T.querySelector('details').open=true;T.scrollTop=oldStep===String(SE.step)?oldScroll:0;
 };
 })();
@@ -6133,7 +6134,7 @@ paneCustom=function(T){const oldStep=T.dataset.customStep,oldScroll=T.scrollTop,
   const goals=D.list.map(id=>{const m=MISSIONS.find(x=>x.id===id),d=!!D.done[id],v=Math.min(m.g,D.best[id]||0),pct=d?100:v/m.g*100;
     return `<div class="goal${d?' done':''}"><div class="gi"><b>${esc(loc(m.n))}</b><small>${m.end?'Counts when the game ends.':'Progress counts within one game.'}</small><span class="gbar"><i style="width:${pct}%"></i></span><em>${m.money?`${fmt(v)} / ${fmt(m.g)}`:`${v} / ${m.g}`}</em></div>
       <div class="grw"><span>+${MISSION_XP} XP</span><span>+${MISSION_COINS} coins</span></div>${d?'<span class="gst ok">✓ Rewarded</span>':'<button class="gst go" data-play="1">▶ Play</button>'}</div>`}).join('');
-  mc.innerHTML=`<div class="gh"><h3>Today’s goals</h3><span>${done} of 3 complete</span></div>${goals}
+  mc.innerHTML=`<div class="gh"><h3>Today’s goals</h3><span>${done} of 3 complete · new goals at 00:00 UTC</span></div>${goals}
     <div class="goal bonus${D.bonus?' done':''}"><div class="gi"><b>Finish all three goals</b><small>Complete today’s goals to earn a bonus.</small></div><div class="grw"><span>+250 XP</span><span>+60 coins</span></div><span class="gdots">${D.list.map(id=>`<i class="${D.done[id]?'on':''}"></i>`).join('')}</span></div>`;
   mc.querySelectorAll('[data-play]').forEach(b=>b.onclick=()=>{homeTab('play');setTimeout(()=>{const q=$('#qAI');if(q)q.click()},50)});
   if(wc){const sk=el('div','card streak',`<div class="gh"><h3>${s}-day streak</h3><span>Finish a daily goal each day to keep it going</span></div><div class="sdots">${[1,2,3,4,5,6,7].map(d=>`<span class="${d<=s%7||(s>=7&&s%7===0)?'on':''}"><i>${d<=s%7||(s>=7&&s%7===0)?'✓':''}</i><small>Day ${d}</small></span>`).join('')}</div>`);wc.before(sk);
@@ -6499,7 +6500,7 @@ function mdWith(fn){const real=S3,old=S3;try{if(!MDcpu){MDcpu={};const g=real&&r
   S3=MDcpu;return fn()}finally{S3=old}}
 function mdTree(spec){const key=JSON.stringify(spec);if(MDmesh.has(key))return MDmesh.get(key);
   const n=mdWith(()=>{const g=MDcpu.geo;let m;
-    if(spec.kind==='building'){m=new Node();famBase(m,spec.owner||'#2ec4a6',false);FAM[Math.max(0,Math.min(5,spec.level||0))](m)}
+    if(spec.kind==='building'){m=new Node();if(!spec.bare)famBase(m,spec.owner||'#2ec4a6',false);FAM[Math.max(0,Math.min(5,spec.level||0))](m,ROOF_IDS.includes(spec.roof)?spec.roof:null)}
     else if(spec.kind==='dice'){m=new Node();m.add(N(g.box,mat(spec.col||'#172c42',{spec:.4}),0,.15,0).sc(.3));const pip=mat(spec.pip||'#f1e7d5'),one=mat(spec.one||spec.pip||'#d2361f');
       const dk=n=>{n.decal=1;return n};m.add(dk(N(g.cyl,one,0,.302,0).sc(.034,.006,.034)));for(const[x,y]of[[-.07,.08],[.07,.22],[-.07,.22],[.07,.08]])m.add(dk(N(g.cyl,pip,x,y,.152).sc(.026,.006,.026).rot(Math.PI/2,0,0)));for(const[y,z]of[[.08,-.07],[.15,0],[.22,.07]])m.add(dk(N(g.cyl,pip,.152,y,z).sc(.026,.006,.026).rot(0,0,Math.PI/2)))}
     else if(spec.kind==='surround'){m=new Node();const s=spec.s||{},ops=(s.ops||[]).map(x=>x[0]),add=(geo,col,x,y,z,w,h,d)=>m.add(N(geo,mat(col),x,y,z).sc(w,h,d));
@@ -6770,7 +6771,7 @@ openAssets=function(p,opts={}){const debt=opts.debt||0,ro=!!opts.readonly;let fi
       const x=pn.querySelector('.pf2x')||el('button','pf2x','✕');x.setAttribute('aria-label','Close');x.onclick=()=>close(debt?'auto':'done');if(!x.parentElement)pn.append(x);if(debt)x.hidden=true;
       const D=pn.querySelector('.pf2d');if(sel==null){D.innerHTML='<p class="pf2none">Pick a property to see it here.</p>';return}
       const i=sel,s=SQ[i],o=G.own[i],gr=s.g?GROUPS[s.g]:null,own=gr?gr.filter(j=>G.own[j].o===p.id).length:0,isP=s.t==='prop',full=gr&&own===gr.length;
-      const why=ro?'':whyNoBuild(p,i,debt),can=!ro&&!debt&&canBuild(p.id,i),cost=isP?s.h:0,photo=cityPhoto(setup.city);
+      const why=ro?'':whyNoBuild(p,i,debt),can=!ro&&!debt&&canBuild(p.id,i),cost=isP?devCost(p.id,i):0,photo=cityPhoto(setup.city);
       const nextLv=Math.min(5,o.h+1);
       D.innerHTML=`<div class="pf2dh"><div><h3>${esc(s.n)}</h3><span class="pf2dd">${isP?pfDistIc(s.g,GC[s.g]):''}${esc(isP?GNAME[s.g]:s.t==='rail'?'Transit hub':'Utility')}</span></div>${isP?`<em class="${full?'ok':''}">${full?'Complete set':'Set'} (${own} / ${gr.length})</em>`:''}</div>
         <div class="pf2pic"${photo?` style="background-image:linear-gradient(180deg,rgba(255,255,255,0) 40%,rgba(241,231,213,.55)),url(${photo})"`:''}>${isP?mdl({kind:'building',level:o.m?0:o.h,owner:P(o.o).col,label:s.n+' building'},'pf2bm',420,300):''}<span class="pf2rent">Rent now <b>${o.m?'none':fmt(rentFor(i,7))}</b></span></div>
@@ -7084,7 +7085,7 @@ async function openTutorial(fromWelcome){const S=tutSteps();let i=0,res='done';
 /* Collection and portfolio keep the illustrated building previews. The board uses the solid
    architectural family above, anchored to each plot and facing its street. */
 const BLD_N=6,bldPic=l=>`items/board/bld-${Math.max(0,Math.min(5,l|0))}.webp`;
-{const _m=mdl;mdl=function(spec,cls='',w,h){if(spec&&spec.kind==='building'&&!spec.pal)return `<img class="mdl bpic ${cls}" src="${bldPic(spec.level)}" alt="${esc(spec.label||'')}" loading="lazy" decoding="async">`;return _m(spec,cls,w,h)}}
+{const _m=mdl;mdl=function(spec,cls='',w,h){if(spec&&spec.kind==='building'&&!spec.pal&&!spec.real)return `<img class="mdl bpic ${cls}" src="${bldPic(spec.level)}" alt="${esc(spec.label||'')}" loading="lazy" decoding="async">`;return _m(spec,cls,w,h)}}
 BLD.splice(0,BLD.length,
   ['Garden plot','Owned, nothing built yet. A walled garden with lawns, a stone path and a bench.','0 houses'],
   ['Courtyard home','A limestone villa with a planted roof, a vine-covered pergola and a slatted screen.','1 house'],
@@ -7204,6 +7205,236 @@ function nativeInit(){if(!IS_APP)return;document.documentElement.classList.add('
   try{Pl.App&&Pl.App.addListener('appStateChange',s=>{if(!AC)return;try{s.isActive?AC.resume():AC.suspend()}catch(e){}if(!s.isActive)save()})}catch(e){}
   document.addEventListener('contextmenu',e=>e.preventDefault())}
 nativeInit();
+
+/* ================= CITY SPOTLIGHT ================= */
+/* Three optional, linked features (see SKYLINE-CITY-SPOTLIGHT-TODO.md):
+   1. Strategic city events 2.0 - opt-in per match, snapshotted in G, exact targets and expiry. One rule
+      (ev2Disc / ev2RentPct) feeds affordability, debits, previews, AI and rent. Local games only: online rooms
+      strip the setting because the trusted room service does not implement it. Off = no behaviour change.
+   2. Rooftops - appearance-only building styles drawn on the real 3D board buildings (decorateRoof). No rent,
+      cost, bank, dice or token effect. Each player's style is snapshotted into new matches.
+   3. City Spotlight - a weekly featured city (UTC weeks) whose contract unlocks a permanent rooftop. Progress is
+      a set of per-match receipts, so repeats, reloads and cloud merges never double count. */
+
+/* ---------- 2. rooftops ---------- */
+const ROOFS=[
+  {id:'garden',name:'Rooftop Garden',desc:'Planters, a lawn and a shade tree on every roof.',price:1800,rar:'Rare',rc:'#2F7FE0'},
+  {id:'solar',name:'Solar Roof',desc:'A tilted solar array on brass rails.',price:1500,rar:'Rare',rc:'#2F7FE0'},
+  {id:'pool',name:'Rooftop Pool',desc:'A turquoise pool with loungers and a parasol.',price:2600,rar:'Epic',rc:'#8F3FD8'},
+  {id:'crown',name:'Skyline Crown',desc:'A lit art deco crown with a spire.',price:3200,rar:'Epic',rc:'#8F3FD8'},
+  {id:'golden-garden',name:'Golden Rooftop Garden',desc:'Gold planters and gilded topiary. City Spotlight reward.',reward:1,rar:'Legendary',rc:'#E2B13C'}];
+const ROOF_IDS=ROOFS.map(r=>r.id),roofDef=id=>ROOFS.find(r=>r.id===id)||null;
+const roofOwned=id=>!!(PREF.inv&&PREF.inv.roof&&PREF.inv.roof[id]);
+const myRoof=()=>PREF.eq&&ROOF_IDS.includes(PREF.eq.roof)&&roofOwned(PREF.eq.roof)?PREF.eq.roof:null;
+function roofOf(pid){const p=G&&G.players&&G.players[pid];return p&&ROOF_IDS.includes(p.roof)?p.roof:null}
+function RM(){if(S3.RM)return S3.RM;const m=(c,o)=>mat(c,Object.assign({spec:.3},o||{}));
+  return S3.RM={gold:m('#e2b84c',{spec:.95,em:.22}),goldLeaf:m('#d9ab2e',{spec:.85,em:.32}),water:m('#3cc3da',{spec:.95,em:.14}),white:m('#f4efe4'),deck:m('#d3bb93'),panel:m('#1d3556',{spec:1,em:.04}),glow:m('#ffe2a0',{em:.65}),soil:m('#5b4632'),shrub:m('#4f8a3c')}}
+/* a = roof anchor {x,y,z,w,d,lv}: centre, top surface height and clear footprint of that level's roof. */
+function decorateRoof(p,a,roof){if(!ROOF_IDS.includes(roof))return a.y;const k0=p.kids.length;try{return roofParts(p,a,roof)}finally{for(let k=k0;k<p.kids.length;k++)p.kids[k].decal=1}}
+/* decal only orders the software preview painter (drawn after the building); the WebGL board uses depth testing */
+function roofParts(p,a,roof){const F=FM(),R=RM(),{x,y,z,w,d,lv}=a,hw=w/2,hd=d/2,t=Math.min(w,d);
+  const at=(geo,mt,px,py,pz,sx,sy,sz)=>p.add(N(S3.geo[geo],mt,px,py,pz).sc(sx,sy,sz));
+  const rim=(mt,h,k)=>{bBox(p,mt,x,y,z-hd+k/2,w,h,k);bBox(p,mt,x,y,z+hd-k/2,w,h,k);bBox(p,mt,x-hw+k/2,y,z,k,h,d-2*k);bBox(p,mt,x+hw-k/2,y,z,k,h,d-2*k)};
+  if(roof==='garden'||roof==='golden-garden'){const gold=roof==='golden-garden',edge=gold?R.gold:F.wood,leaf=gold?R.goldLeaf:R.shrub;
+    bBox(p,F.grass,x,y,z,w-.02,.02,d-.02);rim(edge,.045,.035);
+    for(let k=0;k<4;k++)bBox(p,leaf,x-hw+.06+k*(w-.12)/3,y+.045,z+hd-.0175,.05,.03,.03);
+    const tx=x+hw*.42,tz=z-hd*.34,th=.07+Math.min(lv,4)*.012;bBox(p,edge,tx,y+.02,tz,.1,.04,.1);at('cyl8',F.wood,tx,y+.06+th/2,tz,.012,th,.012);
+    at('sph',leaf,tx,y+.08+th,tz,.075,.068,.075);at('sph',leaf,tx+.03,y+.05+th,tz+.035,.045,.04,.045);
+    at('sph',leaf,x-hw*.45,y+.06,z-hd*.3,.05,.045,.05);bBox(p,R.deck,x-hw*.1,y+.02,z+hd*.12,w*.3,.008,d*.3);
+    if(gold){at('sph',R.glow,x-hw*.45,y+.13,z-hd*.3,.026,.026,.026);for(const sx of[-1,1])at('cone4',R.gold,x+sx*hw*.82,y+.06,z-hd*.82,.03,.05,.03)}
+    return y+.26}
+  if(roof==='solar'){const cols=lv>=3||w>.4?3:2,rows=2,gap=.012,pw=(w-.03-gap*(cols-1))/cols,pd=(d-.05-gap*(rows-1))/rows;
+    rim(F.brass,.014,.014);
+    for(let c=0;c<cols;c++)for(let r=0;r<rows;r++){const px=x-hw+.015+pw/2+c*(pw+gap),pz=z-hd+.025+pd/2+r*(pd+gap);
+      p.add(N(S3.geo.box,R.panel,px,y+.055,pz).sc(pw,.016,pd).rot(-.3,0,0));p.add(N(S3.geo.box,F.brass,px,y+.064,pz).sc(pw*.98,.004,.006).rot(-.3,0,0));bBox(p,F.brass,px,y,pz+pd*.3,.014,.04,.014)}
+    return y+.11}
+  if(roof==='pool'){bBox(p,R.deck,x,y,z,w,.022,d);rim(R.white,.04,.022);const pw=w*.66,pd=d*.52,px=x-hw*.1,pz=z+hd*.1;
+    bBox(p,R.white,px,y+.022,pz,pw+.035,.014,pd+.035);bBox(p,R.water,px,y+.03,pz,pw,.014,pd);
+    for(const k of[0,1])bBox(p,R.white,x+hw*.68,y+.022,z-hd*.55+k*.08,.1,.025,.05);
+    at('cyl8',R.white,x+hw*.66,y+.11,z+hd*.55,.008,.18,.008);at('cone',F.terra,x+hw*.66,y+.21,z+hd*.55,.1,.04,.1);
+    return y+.24}
+  if(roof==='crown'){
+    if(lv>=5){bBox(p,F.brass,x,y,z,t*.94,.03,t*.94);bBox(p,R.glow,x,y+.03,z,t*.8,.055,t*.8);bBox(p,F.brass,x,y+.085,z,t*.72,.03,t*.72);
+      bBox(p,F.stone,x,y+.115,z,t*.52,.15,t*.52);for(const sx of[-1,1])for(const sz of[-1,1])bBox(p,F.brass,x+sx*t*.23,y+.115,z+sz*t*.23,.024,.2,.024);
+      bBox(p,R.glow,x,y+.265,z,t*.36,.055,t*.36);at('cone4',F.brass,x,y+.42,z,t*.22,.25,t*.22);at('cyl8',F.brass,x,y+.62,z,.009,.18,.009);return y+.7}
+    bBox(p,F.brass,x,y,z,w,.024,d);bBox(p,R.glow,x,y+.024,z,w*.86,.04,d*.86);bBox(p,F.brass,x,y+.064,z,w*.72,.024,d*.72);
+    at('cone4',F.brass,x,y+.15,z,t*.24,.14,t*.24);at('cyl8',F.brass,x,y+.28,z,.008,.12,.008);return y+.34}
+  return y}
+/* ---------- 1. strategic city events 2.0 ---------- */
+const EV2_RULE=['Strategic city events','Every three rounds a named city event changes one district for a set time: a festival raises rent there for two rounds, an infrastructure upgrade halves building costs in one district during one named player’s turn, or a development boom makes all building 25% cheaper for one round. Local games only. Replaces City events.'];
+/* Targets are colour groups of the 40-space board. Lagos and Stockholm use reviewed, real districts:
+   Surulere/Yaba (pink) is the historic home of Nollywood; the Slussen rebuild sits on Södermalm (sky). */
+const EV2_DEFS={
+  film:{icon:'🎬',name:'Lagos Film Festival',kind:'rent',pct:50,rounds:2,city:'lagos',group:'pink',area:'Surulere & Yaba',why:'Premieres and film shoots fill Surulere, the historic home of Nollywood.'},
+  slussen:{icon:'🚧',name:'Slussen Infrastructure Upgrade',kind:'dev',pct:50,turn:1,city:'stockholm',group:'sky',area:'Södermalm',why:'The rebuilt Slussen junction opens up Södermalm for building.'},
+  boom:{icon:'🏗️',name:'Development Boom',kind:'dev',pct:25,rounds:1,group:null,area:'every street',why:'Fast permits and cheap credit across the whole city.'},
+  fest:{icon:'🥁',name:null,kind:'rent',pct:50,rounds:2,group:'fest',area:null,why:'Festival crowds fill one district.'},
+  infra:{icon:'🚧',name:'Infrastructure Upgrade',kind:'dev',pct:50,turn:1,group:'rot',area:null,why:'New roads and utilities speed up building in one district.'}};
+const EV2_GROUPS=['brown','sky','pink','orange','red','yellow','green','navy'],EV2_FIRST=3,EV2_EVERY=3;
+const ev2Pos=(g,pid)=>(pid-(g.first||0)+g.players.length)%g.players.length;
+function ev2State(e,g=G){if(!e)return null;
+  if(e.turnPid!=null){if(g.round!==e.from||!g.players[e.turnPid]||g.players[e.turnPid].bankrupt)return g.round<e.from?'upcoming':'ended';const a=ev2Pos(g,g.turn),b=ev2Pos(g,e.turnPid);return a<b?'upcoming':a===b?'active':'ended'}
+  return g.round<e.from?'upcoming':g.round<e.from+e.rounds?'active':'ended'}
+function ev2Active(g=G){const e=g&&g.set&&g.set.events2&&!g.over?g.ev2:null;return e&&ev2State(e,g)==='active'?e:null}
+function ev2Disc(pid,i){const e=ev2Active();if(!e||e.kind!=='dev'||SQ[i].t!=='prop'||!e.targets.includes(i)||e.turnPid!=null&&e.turnPid!==pid)return 0;return Math.round(SQ[i].h*e.pct/100)}
+function devCost(pid,i){return SQ[i].h-ev2Disc(pid,i)}
+function ev2RentPct(i){const e=ev2Active();return e&&e.kind==='rent'&&e.targets.includes(i)?e.pct:0}
+/* Affordability uses the discounted price; the debit is the discounted price; selling still refunds half of the
+   full price, so building and selling inside an event can never create money. No stacking: one event at a time. */
+{const _cb=canBuild;canBuild=function(pid,i){const d=ev2Disc(pid,i);if(!d)return _cb(pid,i);const p=P(pid);p.cash+=d;try{return _cb(pid,i)}finally{p.cash-=d}}}
+{const _b=build;build=function(pid,i){const d=ev2Disc(pid,i),e=d?ev2Active():null;if(d)P(pid).cash+=d;_b(pid,i);if(d){if(!FAST)float(pid,d);log(`${P(pid).name} saved ${fmt(d)} with the ${e.name}`)}}}
+{const _rf2=rentFor;rentFor=function(i,dsum,o2){const r=_rf2(i,dsum,o2),m=r?ev2RentPct(i):0;return m?Math.round(r*(100+m)/100):r}}
+function ev2Pick(){const c=G.set.city||'lagos',n=G.ev2n||0;
+  if(G.spot&&G.spot.event&&G.spot.city===c&&n===0&&EV2_DEFS[G.spot.event])return G.spot.event;
+  const pool=['boom','fest','infra'].concat(Object.keys(EV2_DEFS).filter(k=>EV2_DEFS[k].city===c));return pool[Math.floor(Math.random()*pool.length)]}
+function ev2Start(){const id=ev2Pick(),D=EV2_DEFS[id],n=G.ev2n||0;let group=D.group;
+  if(group==='fest')group=festGroup();else if(group==='rot')group=EV2_GROUPS[(n+G.round)%EV2_GROUPS.length];
+  const e={v:1,id,city:G.set.city||'lagos',kind:D.kind,pct:D.pct,from:G.round,targets:(group?GROUPS[group]:PROP_IDX).slice(),group:group||null,name:D.name||CITY.festival,area:D.area||(group?GNAME[group]:'every street')};
+  if(D.turn){const al=alive();e.turnPid=al[n%al.length].id}else e.rounds=D.rounds;
+  G.ev2=e;G.ev2n=n+1;const t=ev2Text(e);log(`${t.title}: ${t.eff}, ${t.dur}.`);if(!FAST)ev2Banner(e)}
+function ev2Text(e){const D=EV2_DEFS[e.id]||{icon:'🏙️'},eff=e.kind==='rent'?`rent on ${e.area} streets +${e.pct}%`:`houses and towers ${e.group?'in '+e.area:'on every street'} cost ${e.pct}% less`;
+  const who=e.turnPid!=null&&G&&G.players[e.turnPid]?G.players[e.turnPid].name:'';
+  const dur=e.turnPid!=null?`during ${who}’s turn in round ${e.from}`:e.rounds===1?`round ${e.from} only`:`rounds ${e.from}–${e.from+e.rounds-1}`;
+  return{title:`${D.icon} ${e.name}`,eff,dur,why:D.why||''}}
+function ev2Left(e){const s=ev2State(e);if(e.turnPid!=null)return s==='active'?'this turn only':s==='upcoming'?`on ${G.players[e.turnPid].name}’s turn`:'ended';const n=e.from+e.rounds-G.round;return n<=1?'last round':`${n} rounds left`}
+{const _adv2=advanceTurn;advanceTurn=function(){const on=!!(G&&G.set&&G.set.events2),before=on?G.ev2:null,was=before&&ev2State(before)!=='ended',r0=G.round;_adv2();
+  if(!on)return;
+  if(G.round!==r0&&G.round>=(G.ev2Next||EV2_FIRST)){G.ev2Next=G.round+EV2_EVERY;ev2Start()}
+  if(was&&G.ev2===before&&ev2State(before)==='ended')log(`${EV2_DEFS[before.id].icon} ${before.name} has ended.`);
+  if(!FAST)ev2Chip()}}
+function ev2Banner(e){const t=ev2Text(e),b=el('div','evban ev2ban',`<b>${esc(t.title)}</b><span>${esc(t.eff[0].toUpperCase()+t.eff.slice(1))} · ${esc(t.dur)}</span>`);document.body.append(b);setTimeout(()=>b.classList.add('bye'),4200);setTimeout(()=>b.remove(),4700)}
+function ev2Chip(){let c=$('#ev2chip');if(!G||!G.set||!G.set.events2||G.over||G.sim){if(c)c.remove();return}
+  if(!c){c=el('button','ev2chip');c.id='ev2chip';c.type='button';c.onclick=()=>{sfx('tap');ev2Info()};$('#ui').append(c)}
+  const e=G.ev2,s=ev2State(e);
+  if(e&&s!=='ended'){const t=ev2Text(e);c.className='ev2chip'+(s==='active'?' on':'');c.innerHTML=`<b>${esc(t.title)}</b><span>${esc(t.eff)} · ${esc(ev2Left(e))}</span>`}
+  else{c.className='ev2chip idle';c.innerHTML=`<b>🏙️ Strategic events</b><span>Next event in round ${G.ev2Next||EV2_FIRST}</span>`}}
+function ev2Info(){if(!G)return;const e=G.ev2,s=ev2State(e),live=e&&s!=='ended';
+  const rows=live?e.targets.map(i=>{const o=G.own[i],ow=o.o>=0?P(o.o):null,extra=e.kind==='rent'?`rent now ${o.o>=0&&!o.m?fmt(rentFor(i,7)):'—'}`:`build now ${fmt(SQ[i].h-Math.round(SQ[i].h*e.pct/100))} (was ${fmt(SQ[i].h)})`;
+    return `<tr><td><i class="ev2sw" style="background:${GC[SQ[i].g]}"></i>${esc(SQ[i].n)}</td><td>${ow?esc(ow.name):'Unowned'}${o.m?' · mortgaged':''}</td><td>${extra}</td></tr>`}).join(''):'';
+  const t=live?ev2Text(e):null;
+  modal({cls:'wide ev2modal',html:live?`<div class="mh">${esc(t.title)}</div><div class="mtxt"><p>${esc(t.why)}</p><p><b>Effect:</b> ${esc(t.eff)}.<br><b>When:</b> ${esc(t.dur)} · ${esc(ev2Left(e))}.<br><b>Rules:</b> normal building rules still apply (full colour set unless Free-for-all, even building, bank supply, no mortgages). ${e.kind==='dev'?'Selling still refunds half the full price.':''} Only one strategic event runs at a time; the next one starts in round ${G.ev2Next}.</p>
+    <table class="ev2t">${e.targets.length>12?'':rows}</table>${e.targets.length>12?`<p>Applies to all ${e.targets.length} streets on the board.</p>`:''}<p class="muted">Costs and rents shown in your portfolio and on property cards already include this event. AI players follow the same rule.</p></div>`
+    :`<div class="mh">🏙️ Strategic city events</div><div class="mtxt"><p>${esc(EV2_RULE[1])}</p><p>The next event starts in round ${G.ev2Next||EV2_FIRST}.</p></div>`,btns:[{k:'x',label:'OK',primary:true}]})}
+{const _dh=deedHTML;deedHTML=function(i){const h=_dh(i),e=G&&G.set&&G.set.events2?G.ev2:null,s=ev2State(e);if(!e||s==='ended'||!e.targets.includes(i)||SQ[i].t!=='prop')return h;const t=ev2Text(e);
+  const line=`<div class="ev2deed"><b>${esc(t.title)}</b> ${esc(t.eff)} · ${esc(s==='active'?ev2Left(e):'starts '+t.dur)}</div>`;return h.replace('<div class="own">',line+'<div class="own">')}}
+{const _vs=validateSave;validateSave=function(g){if(!_vs(g))return false;try{return ev2Valid(g)&&g.players.every(p=>p.roof==null||ROOF_IDS.includes(p.roof))&&(g.owner==null||Number.isInteger(g.owner)&&g.owner>=0&&g.owner<g.players.length)&&(g.spot==null||spotValid(g.spot))}catch(e){return false}}}
+function ev2Valid(g){const s=g.set;if(s.events2!=null&&typeof s.events2!=='boolean')return false;
+  if(g.ev2Next!=null&&!(Number.isInteger(g.ev2Next)&&g.ev2Next>=1)||g.ev2n!=null&&!(Number.isInteger(g.ev2n)&&g.ev2n>=0))return false;
+  const e=g.ev2;if(e==null)return true;const D=EV2_DEFS[e&&e.id];
+  return !!D&&e.v===1&&e.kind===D.kind&&e.pct===D.pct&&Number.isInteger(e.from)&&e.from>=1&&e.from<=g.round&&Array.isArray(e.targets)&&e.targets.length>=1&&e.targets.length<=PROP_IDX.length&&e.targets.every(i=>Number.isInteger(i)&&SQ[i]&&SQ[i].t==='prop')
+    &&(D.turn?Number.isInteger(e.turnPid)&&e.turnPid>=0&&e.turnPid<g.players.length&&e.rounds==null:e.rounds===D.rounds&&e.turnPid==null)&&typeof e.name==='string'&&e.name.length<=80&&typeof e.area==='string'&&e.area.length<=80}
+/* new matches: snapshot opt-in, rooftops and the active Spotlight; classic city events never run alongside */
+{const _ng=newGame;newGame=function(cfg){_ng(cfg);
+  if(G.set&&G.set.events2){G.set.events=false;G.ev2Next=EV2_FIRST;G.ev2n=0}
+  (cfg&&cfg.players||[]).forEach((c,i)=>{const p=G.players[i];if(!c||!p)return;if(c.roof&&ROOF_IDS.includes(c.roof))p.roof=c.roof;if(c.owner===true&&G.owner==null)G.owner=i});
+  if(!FAST){const sp=spotNow();if(sp&&G.set.city===sp.city)G.spot={id:sp.id,city:sp.city,event:G.set.events2?sp.event:null,ends:sp.ends}}}}
+{const _sw=startWith;startWith=function(...a){const r=_sw.apply(this,a);try{ev2Chip()}catch(e){}return r}}
+/* the account owner (player 1 on this device) earns personal contracts and awards, not friends or AI.
+   Matches saved before this change have no G.owner and keep the old behaviour. */
+function ownerHumans(){return G.players.filter(p=>!p.ai&&(!G.online||p.uid===NET.me)&&(G.online||G.owner==null||p.id===G.owner))}
+
+/* ---------- 3. City Spotlight ---------- */
+const SPOT_EPOCH=Date.UTC(2026,9,25),SPOT_WEEK=7*864e5,SPOT_GOAL=3,SPOT_GRACE=864e5,SPOT_DUP_COINS=1500;
+/* Rotates through real boards only; each city keeps its own unlock rule. */
+const SPOTLIGHTS=[
+  {city:'lagos',event:'boom',reward:'golden-garden'},
+  {city:'stockholm',event:'slussen',reward:'solar'},
+  {city:'tokyo',event:'boom',reward:'garden'},
+  {city:'dubai',event:'boom',reward:'pool'},
+  {city:'london',event:'boom',reward:'crown'}].filter(s=>CITY_DATA[s.city]);
+function spotAt(now){const w=Math.floor((now-SPOT_EPOCH)/SPOT_WEEK);if(w<0||!SPOTLIGHTS.length)return null;const S=SPOTLIGHTS[w%SPOTLIGHTS.length],C=CITY_DATA[S.city];
+  return{...S,w,id:'s'+w+'-'+S.city,name:C.name+' Investor',cityName:C.name,starts:SPOT_EPOCH+w*SPOT_WEEK,ends:SPOT_EPOCH+(w+1)*SPOT_WEEK,goal:SPOT_GOAL}}
+const spotNow=()=>spotAt(Date.now());
+function spotValid(s){return s&&typeof s.id==='string'&&/^s\d{1,6}-[a-z0-9_]{1,24}$/.test(s.id)&&Object.prototype.hasOwnProperty.call(CITY_DATA,s.city)&&(s.event==null||!!EV2_DEFS[s.event])&&Number.isSafeInteger(s.ends)}
+function spotFlags(){PREF.spot=PREF.spot&&typeof PREF.spot==='object'?PREF.spot:{};PREF.spot.flags=PREF.spot.flags&&typeof PREF.spot.flags==='object'?PREF.spot.flags:{};return PREF.spot.flags}
+const spotCount=id=>Object.keys(spotFlags()).filter(k=>k.startsWith(id+'.m.')).length;
+const spotClaimed=id=>!!spotFlags()[id+'.claimed'];
+/* Called once per finished match (progressGameEnd is single-shot per match). The receipt key makes a repeat a no-op. */
+function spotRecord(){if(!G||!G.spot||G.sim||FAST||!G.over||G.online||!trackable())return null;
+  const me=G.owner!=null?G.players[G.owner]:null;if(!me||me.ai)return null;
+  if(!spotValid(G.spot)||G.spot.city!==(G.set.city||'lagos'))return null;
+  if(Date.now()>G.spot.ends+SPOT_GRACE){toast('This match finished after the City Spotlight closed, so it doesn’t count.');return null}
+  const mid=String(tokenGameId(G)||'').toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,16);if(!mid)return null;
+  const F=spotFlags(),key=G.spot.id+'.m.'+mid;if(F[key])return null;const before=spotCount(G.spot.id);if(before>=SPOT_GOAL)return null;
+  F[key]=Date.now();savePref();const n=before+1,S=spotAt(G.spot.ends-1);
+  achQ.push({name:`City Spotlight: ${n} / ${SPOT_GOAL} ${CITY_DATA[G.spot.city].name} matches`,icon:'🌆',kind:n>=SPOT_GOAL?'Reward ready to claim':'Contract progress'});achShow();
+  return n}
+{const _pge=progressGameEnd;progressGameEnd=function(w){const r=_pge(w);try{spotRecord()}catch(e){}return r}}
+function spotClaim(id){const S=SPOTLIGHTS.length?[spotNow(),spotAt(Date.now()-SPOT_WEEK)].find(s=>s&&s.id===id):null;if(!S||spotCount(id)<SPOT_GOAL||spotClaimed(id))return null;
+  const F=spotFlags(),R=roofDef(S.reward),had=roofOwned(S.reward);F[id+'.claimed']=Date.now();
+  if(had)addCoins(SPOT_DUP_COINS,`${R.name} (already owned)`);else grantItem('roof',S.reward);savePref();return{had,roof:R}}
+function spotClaimable(){const S=spotNow();return !!S&&spotCount(S.id)>=SPOT_GOAL&&!spotClaimed(S.id)}
+async function spotPlay(S){if(!cityUnlocked(S.city)){toast(cityLockText(S.city));homeTab('world');return}
+  const D=EV2_DEFS[S.event],k=await modal({html:`<div class="mh">City Spotlight · ${esc(S.cityName)}</div><div class="mtxt">Every finished ${esc(S.cityName)} match counts, whichever rules you pick.<br><br><b>${esc(D.icon+' '+D.name)}</b> is a <b>Strategic city event</b>: ${esc(D.kind==='rent'?`rent in one district +${D.pct}%`:`building costs ${D.pct}% less`)}. It’s optional and only applies to this match. Your saved game settings don’t change.</div>`,
+    btns:[{k:'ev',label:'Play with strategic events',primary:true},{k:'std',label:'Play standard rules'},{k:null,label:'Cancel'}]});
+  if(!k)return;const keepCity=setup.city,keepRules=setup.rules;
+  try{setup.city=S.city;setup.rules=Object.assign({},keepRules,k==='ev'?{events2:true,events:false}:{events2:false});
+    const me=setup.slots[0];startFromSetup($('#pane')||document.body,setup.slots.map((s,i)=>({...s,type:i===0?'human':i<4?'ai':'off',tok:i===0?me.tok:s.tok})))}
+  finally{setup.city=keepCity;setup.rules=keepRules}}
+const spotLeft=S=>{const ms=Math.max(0,S.ends-Date.now()),d=Math.floor(ms/864e5),h=Math.floor(ms%864e5/36e5);return d?`${d}d ${h}h`:`${h}h ${Math.floor(ms%36e5/6e4)}m`};
+function paneSpotlight(T){const S=spotNow();if(!S){T.innerHTML='<div class="small">No City Spotlight right now.</div>';return}
+  const n=Math.min(SPOT_GOAL,spotCount(S.id)),claimed=spotClaimed(S.id),ready=n>=SPOT_GOAL&&!claimed,R=roofDef(S.reward),D=EV2_DEFS[S.event],C=CITY_DATA[S.city],un=cityUnlocked(S.city),owned=roofOwned(S.reward);
+  const prev=spotAt(Date.now()-SPOT_WEEK),prevReady=prev&&Date.now()<prev.ends+SPOT_GRACE&&spotCount(prev.id)>=SPOT_GOAL&&!spotClaimed(prev.id);
+  const W=weekly(),wk=W.list.map(id=>{const m=WEEKLY.find(x=>x.id===id),v=Math.min(m.g,W.prog[id]||0),d=!!W.done[id];return `<div class="spstep${d?' done':''}"><b>${esc(loc(m.n))}</b><small>Across all games this week</small><span class="gbar"><i style="width:${d?100:v/m.g*100}%"></i></span><em>${m.money?`${fmt(v)} / ${fmt(m.g)}`:`${v} / ${m.g}`}</em><span class="sprw">${d?'✓ Rewarded':`+${WEEK_SXP} season XP · +${WEEK_COINS} coins`}</span></div>`}).join('');
+  T.innerHTML=`<section class="spot" style="--sp:${C.sw||'#1d5e58'}">
+    <div class="sphero"><div class="spimg" style="background-image:url('${cityPhoto(S.city)}')"></div><div class="spshade"></div>
+      <div class="sptxt"><small>CITY SPOTLIGHT · THIS WEEK</small><h2>${esc(C.name)}</h2><p>Ends in <b>${spotLeft(S)}</b> · resets ${new Date(S.ends).toUTCString().slice(0,11)} 00:00 UTC</p>
+        <button class="spplay" id="spPlay">${un?'▶ Play '+esc(C.name):'🔒 '+esc(cityLockText(S.city))}</button></div>
+      <div class="spreward">${mdl({kind:'building',level:3,owner:PCOL[0],roof:R.id,real:1,bare:1,pitch:.6,label:R.name},'spm',220,200)}<b>${esc(R.name)}</b><small>${owned&&!claimed?`Already owned · claim gives ${nfmt(SPOT_DUP_COINS)} coins`:'Permanent rooftop · appearance only'}</small></div></div>
+    <div class="spgrid">
+      <div class="card spcard"><div class="gh"><h3>Contract · ${esc(S.name)}</h3><span>${n} / ${SPOT_GOAL}</span></div>
+        <p class="small">Finish <b>three ${esc(C.name)} matches</b> this week (you don’t have to win). A match counts once, when it ends, for player 1 on this device. Solo and pass-and-play matches count; online matches and unfinished games don’t (yet).</p>
+        <div class="spdots">${[1,2,3].map(i=>`<span class="${i<=n?'on':''}"><i>${i<=n?'✓':i}</i><small>Match ${i}</small></span>`).join('')}</div>
+        ${claimed?`<span class="gst ok">✓ ${esc(R.name)} claimed</span>`:ready?`<button class="gst go spclaim" id="spClaim">Claim ${esc(R.name)}</button>`:`<span class="small">Reward: <b>${esc(R.name)}</b></span>`}
+        ${prevReady?`<button class="gst go" id="spClaimPrev">Claim last week’s ${esc(roofDef(prev.reward).name)}</button>`:''}</div>
+      <div class="card spcard"><div class="gh"><h3>City event · ${esc(D.icon+' '+D.name)}</h3><span>Optional</span></div>
+        <p class="small">${esc(D.why)} In ${esc(C.name)} matches with <b>Strategic city events</b> on, it is the first event (round ${EV2_FIRST}): ${esc(D.kind==='rent'?`rent in ${D.area||'one district'} +${D.pct}% for ${D.rounds} rounds`:D.turn?`building in ${D.area||'one district'} costs ${D.pct}% less during one player’s turn`:`building costs ${D.pct}% less for one round`)}. Standard matches are unchanged.</p></div>
+    </div>
+    <div class="card spcard spweek"><div class="gh"><h3>Weekly contracts</h3><span>Reset ${new Date(SPOT_EPOCH+(weekNo()+1)*SPOT_WEEK).toUTCString().slice(0,11)} 00:00 UTC</span></div>${wk}</div></section>`;
+  const pb=T.querySelector('#spPlay');if(pb)pb.onclick=()=>spotPlay(S);
+  const doClaim=async id=>{const r=spotClaim(id);if(!r)return;sfx('win');const k=await modal({html:`<div class="mh">${esc(r.roof.name)}</div><div class="mtxt">${r.had?`You already own it, so you get ${fmtC(SPOT_DUP_COINS)} instead.`:'It’s yours to keep. It appears on your buildings in new matches.'}</div>`,btns:r.had?[{k:'x',label:'OK',primary:true}]:[{k:'eq',label:'Equip now',primary:true},{k:'x',label:'Later'}]});if(k==='eq'){PREF.eq.roof=r.roof.id;savePref()}paneSpotlight(T)};
+  const cb=T.querySelector('#spClaim');if(cb)cb.onclick=()=>doClaim(S.id);const cp=T.querySelector('#spClaimPrev');if(cp)cp.onclick=()=>doClaim(prev.id);}
+SUBS.progress.unshift(['spotlight','Spotlight']);SEC_OF.spotlight='progress';
+{const _ht=homeTab;homeTab=function(k){if(k==='progress'&&setup.sub&&!setup.sub.progress)setup.sub.progress='spotlight';return _ht(k)}}
+
+/* ---------- Collection → Buildings: rooftop picker with the same 3D definition as the board ---------- */
+{const _pb=paneBuildings;paneBuildings=function(T){_pb(T);const lv=Math.max(1,Math.min(5,setup.roofLv||3)),col=PCOL[0],eq=myRoof();
+  const sel=setup.roofSel===undefined?eq:setup.roofSel,R=roofDef(sel);
+  const act=r=>{const own=r?roofOwned(r.id):true,on=(r?r.id:null)===eq;return on?'<span class="iown">Equipped</span>':own?`<button class="ibuy use" data-roof="${r?r.id:''}">Use</button>`:r.reward?'<span class="ilock">🔒 City Spotlight reward</span>':`<button class="ibuy" data-buyroof="${r.id}">${COIN_I}<span>${nfmt(r.price)}</span></button>`};
+  const row=r=>`<div class="roofrow${(r?r.id:null)===sel?' sel':''}" data-pick="${r?r.id:''}" role="button" tabindex="0" style="--rc:${r?r.rc:'#8A96A3'}"><i></i><span><b>${esc(r?r.name:'Standard roof')}</b><small>${esc(r?r.rar+' · '+r.desc:'The original roof of each building.')}</small></span>${act(r)}</div>`;
+  const sec=el('section','roofs');sec.innerHTML=`<div class="phead roofh"><h2>Rooftops</h2><span class="small">Appearance only: no effect on rent, prices or dice. Shows on your buildings in new matches.</span></div>
+    <div class="roofsplit"><div class="roofstage">${mdl({kind:'building',level:lv,owner:col,roof:sel||null,real:1,bare:1,pitch:.62,label:(R?R.name:'Standard roof')+' preview'},'roofbig',360,300)}
+      <div class="rooflv" role="group" aria-label="Preview building">${[[1,'Home'],[2,'Townhouse'],[3,'Apartments'],[4,'Boutique'],[5,'Tower']].map(([v,l])=>`<button class="${v===lv?'on':''}" data-lv="${v}" aria-pressed="${v===lv}">${l}</button>`).join('')}</div></div>
+    <div class="rooflist">${[null,...ROOFS].map(row).join('')}</div></div>`;
+  T.prepend(sec);
+  sec.querySelectorAll('[data-lv]').forEach(b=>b.onclick=()=>{setup.roofLv=+b.dataset.lv;paneBuildings(T)});
+  sec.querySelectorAll('[data-pick]').forEach(b=>{const pick=()=>{setup.roofSel=b.dataset.pick||null;paneBuildings(T)};b.onclick=e=>{if(e.target.closest('button'))return;pick()};b.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();pick()}}});
+  sec.querySelectorAll('[data-roof]').forEach(b=>b.onclick=()=>{PREF.eq.roof=b.dataset.roof||null;setup.roofSel=PREF.eq.roof;savePref();sfx('tap');paneBuildings(T)});
+  sec.querySelectorAll('[data-buyroof]').forEach(b=>b.onclick=async()=>{const r=roofDef(b.dataset.buyroof);if(!r||r.reward||roofOwned(r.id))return;if(await confirmBuy(r.name,r.price,'Appearance only. It shows on your buildings in new matches.')){grantItem('roof',r.id);PREF.eq.roof=r.id;setup.roofSel=r.id;savePref();paneBuildings(T)}})}}
+/* Play home: a slim Spotlight banner under the hero */
+{const _pp=paneP;paneP=function(T){const r=_pp.apply(this,arguments);try{const S=spotNow();if(S&&!T.querySelector('.spban')){const n=Math.min(SPOT_GOAL,spotCount(S.id)),R=roofDef(S.reward),b=el('button','spban',`<i>🌆</i><span><small>City Spotlight · ${esc(S.cityName)}</small><b>${spotClaimable()?'Reward ready: '+esc(R.name):`${n} / ${SPOT_GOAL} matches → ${esc(R.name)}`}</b></span><em>→</em>`);b.type='button';b.onclick=()=>homeTab('spotlight');const host=T.querySelector('.hero, .herotxt')||T.firstElementChild;if(host)host.append(b);else T.prepend(b)}}catch(e){}return r}}
+(function(){const st=document.createElement('style');st.textContent=`
+#ui .ev2chip{position:absolute;top:max(10px,env(safe-area-inset-top,0px));right:calc(max(16px,env(safe-area-inset-right,0px)) + 62px);max-width:clamp(170px,24vw,320px);display:flex;flex-direction:column;align-items:flex-start;gap:1px;padding:6px 14px;border-radius:14px;border:1px solid #c9a75a88;background:#0d2433e6;color:#f4ecd8;font:600 12px/1.25 var(--body);text-align:left;box-shadow:0 4px 14px #0006;cursor:pointer}
+#ui .ev2chip b{font-size:12.5px;color:#f2cf78;max-width:100%}#ui .ev2chip span{opacity:.92;max-width:100%;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+#ui .ev2chip.on{border-color:#f2cf78;box-shadow:0 0 0 2px #f2cf7855,0 4px 14px #0006}#ui .ev2chip.idle b{color:#cfe0ea}
+.ev2ban{background:#10283a!important;border:2px solid #f2cf78}.ev2deed{margin:8px 10px 0;padding:7px 9px;border-radius:9px;background:#fff4d6;color:#3b2a06;font-size:12px;line-height:1.35}.ev2deed b{color:#7a4b00}
+.ev2modal table.ev2t{width:100%;border-collapse:collapse;font-size:13px;margin:8px 0}.ev2modal .ev2t td{padding:5px 6px;border-bottom:1px solid #ffffff1a}.ev2sw{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.roofs{margin-bottom:18px}.roofs .roofh{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px}.roofs .rooflv{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 12px}.roofs .rooflv button{padding:7px 12px;border-radius:999px;border:1px solid #33586b;background:#0d2939;color:#d8e6ee;font:600 12.5px var(--body)}.roofs .rooflv button.on{background:#e1bc66;color:#13243a;border-color:#e1bc66}
+.roofsplit{display:grid;grid-template-columns:minmax(220px,.9fr) minmax(0,1.1fr);gap:14px;align-items:start}.roofstage{border-radius:16px;border:1px solid #2e536c;background:radial-gradient(ellipse at 50% 35%,#1d4a5c,#0b2232 70%);padding:8px 10px 12px;display:flex;flex-direction:column;align-items:center}
+.roofstage canvas.mdl{width:100%!important;max-width:250px!important;height:auto!important;max-height:none!important;aspect-ratio:360/300;display:block}.rooflist{display:flex;flex-direction:column;gap:8px}
+.roofrow{display:grid;grid-template-columns:10px minmax(0,1fr) auto;gap:10px;align-items:center;padding:9px 12px;border-radius:12px;border:1px solid #2e536c;background:#0d2939;cursor:pointer}.roofrow.sel{border-color:#e1bc66;box-shadow:0 0 0 1px #e1bc66 inset}
+.roofrow>i{width:10px;height:10px;border-radius:50%;background:var(--rc)}.roofrow b{display:block;font-size:14px;color:#f5f1e7}.roofrow small{display:block;font-size:11.5px;color:#acc4d8;line-height:1.35}.roofrow .ibuy,.roofrow .iown{margin:0;white-space:nowrap}.roofrow .ilock{font-size:11.5px;color:#e1bc66;white-space:nowrap}
+.spot{display:flex;flex-direction:column;gap:14px;padding-bottom:18px}.sphero{position:relative;display:grid;grid-template-columns:minmax(0,1fr) minmax(170px,240px);gap:12px;align-items:center;min-height:200px;border-radius:18px;overflow:hidden;border:1px solid #c9a75a66;background:#0b2232}
+.spimg{position:absolute;inset:0;background-size:cover;background-position:center}.spshade{position:absolute;inset:0;background:linear-gradient(90deg,#071a28f2 0%,#071a28c4 55%,#071a2899)}
+.sptxt,.spreward{position:relative;padding:16px 18px}.sptxt small{color:#f2cf78;font-weight:800;letter-spacing:.08em;font-size:11px}.sptxt h2{margin:4px 0 6px;font:750 clamp(26px,3.4vw,40px)/1.05 var(--display);color:#fff}.sptxt p{margin:0 0 12px;color:#cfe0ea;font-size:13px}
+.spplay{min-height:44px;min-width:44px;padding:11px 18px;border-radius:12px;border:0;background:linear-gradient(#f3d27e,#d9ae4c);color:#1a2433;font:800 15px var(--body);box-shadow:0 3px 0 #9a7a2c}
+.spreward{display:flex;flex-direction:column;align-items:center;text-align:center;gap:2px}.spreward canvas.mdl{width:100%!important;max-width:200px!important;height:auto!important;max-height:none!important;aspect-ratio:220/200}.spreward b{color:#f2cf78}.spreward small{color:#cfe0ea;font-size:11.5px}
+.spgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}.spcard p{line-height:1.5}.spdots{display:flex;gap:10px;margin:10px 0 12px}.spdots span{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;color:#9fb6c6}.spdots i{display:grid;place-items:center;width:34px;height:34px;border-radius:50%;border:2px solid #3a5f72;font-style:normal;font-weight:800;color:#cfe0ea}.spdots .on i{background:#e1bc66;border-color:#e1bc66;color:#13243a}
+.spstep{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;align-items:center;padding:9px 0;border-top:1px solid #ffffff12}.spstep small{grid-column:1;color:#9fb6c6;font-size:11.5px}.spstep .gbar{grid-column:1}.spstep em{grid-column:2;grid-row:1;font-style:normal;font-weight:700}.spstep .sprw{grid-column:2;grid-row:2/4;font-size:11.5px;color:#cfe0ea;text-align:right}.spstep.done b{color:#9fd3a9}
+.hero>.spban{position:absolute;top:12px;right:12px;margin:0!important;max-width:min(58%,300px);z-index:3;backdrop-filter:blur(6px)}
+.spban{display:flex;align-items:center;gap:10px;margin-top:10px;padding:8px 12px;border-radius:12px;border:1px solid #c9a75a88;background:#0b2232d9;color:#f4ecd8;text-align:left;font:600 12.5px var(--body);max-width:420px}.spban i{font-style:normal;font-size:18px}.spban small{display:block;color:#f2cf78;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase}.spban em{margin-left:auto;font-style:normal}
+@media (max-width:720px),(max-height:460px){.sphero{grid-template-columns:minmax(0,1fr) 150px;min-height:170px}.sptxt{padding:12px 14px}.spreward{padding:8px}.spreward canvas{max-width:140px}}
+`;document.head.append(st)})();
 
 /* Offline web copy; native wrappers already ship their own local assets. */
 function registerOffline(){

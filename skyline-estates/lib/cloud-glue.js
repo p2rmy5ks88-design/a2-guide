@@ -18,7 +18,7 @@ function extract(){
  max.league={best:n(P.leagueBest)};
  if(S&&Number.isSafeInteger(S.n)){max.sxp={[String(S.n)]:n(S.sxp)};flags.sf=keys(S.cf).map(t=>S.n+'.'+t);flags.sp=keys(S.cp).map(t=>S.n+'.'+t);flags.pass=S.prem?[String(S.n)]:[]}
  flags.ach=keys(P.ach);flags.champ=keys(P.champ);flags.cach=[];for(const [c,b] of Object.entries(P.cach||{}))if(ID.test(c))for(const id of keys(b))flags.cach.push(c+'.'+id);
- max.contract=bag(P.spot?.progress);flags.camp=keys(P.spot?.claimed);
+ flags.camp=keys(P.spot?.flags); // City Spotlight receipts and claims: a union never double counts
  eq.tok=ID.test(P.tok||'')?P.tok:null;for(const s of ['fin','dice','surr','frame','char','roof'])eq[s]=ID.test(P.eq?.[s]||'')?P.eq[s]:null;
  return{coins:Math.max(0,Math.round(P.coins||0)),xp:Math.max(0,Math.round(P.xp||0)),items,max,flags,eq};
 }
@@ -36,7 +36,7 @@ function apply(t,{debt=0}={}){
   for(const f of t.flags.sf||[]){const [a,b]=f.split('.');if(a===sn&&!S.cf[b])S.cf[b]=now}for(const f of t.flags.sp||[]){const [a,b]=f.split('.');if(a===sn&&!S.cp[b])S.cp[b]=now}if((t.flags.pass||[]).includes(sn))S.prem=true}
  P.ach=P.ach||{};for(const id of t.flags.ach||[])P.ach[id]=P.ach[id]||now;P.champ=P.champ||{};for(const id of t.flags.champ||[])P.champ[id]=P.champ[id]||now;
  P.cach=P.cach||{};for(const f of t.flags.cach||[]){const i=f.indexOf('.'),c=f.slice(0,i),id=f.slice(i+1);(P.cach[c]=P.cach[c]||{})[id]=P.cach[c][id]||now}
- P.spot=P.spot||{};P.spot.progress=P.spot.progress||{};raise(P.spot.progress,t.max.contract);P.spot.claimed=P.spot.claimed||{};for(const id of t.flags.camp||[])P.spot.claimed[id]=P.spot.claimed[id]||now;
+ P.spot=P.spot&&typeof P.spot==='object'?P.spot:{};P.spot.flags=P.spot.flags||{};for(const id of t.flags.camp||[])P.spot.flags[id]=P.spot.flags[id]||now;
  if('tok' in t.eq&&t.eq.tok)P.tok=t.eq.tok;P.eq=P.eq||{};for(const s of ['fin','dice','surr','frame','char','roof'])if(s in t.eq)P.eq[s]=t.eq[s];
  rawSave();try{refreshCoins();railProfile();if(typeof applyDiceSkin==='function')applyDiceSkin()}catch(e){}
 }

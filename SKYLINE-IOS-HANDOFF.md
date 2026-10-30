@@ -145,3 +145,18 @@ Fresh CI on StoreKit draft commit **9d4d9da1e06d83da8d08bb29015a91e114bcc8d1** n
 This verifies the generated native bridge builds; it does **not** verify configured App Store products, live Firebase accounts, unified migration or real payments. Accounts and purchases remain paused. Draft PR #52 is stacked on PR #51 and neither is a completed public release. Check fresh state again before continuing.
 
 Next Claude action: inspect the two handoff files and current PRs/CI; finish the release foundation and implement the requested City Spotlight feature in reviewable slices. Do not discard the extra song, larger pack drafts, existing daily event or the native work when rebasing. All three concept images are represented textually in the feature to-do; no mockup financial values or outside board artwork have been installed.
+
+
+## Claude continuation — 29 October 2026
+
+- **PR #52** (`skyline-ios-accounts-storekit`) now contains the unified cloud wallet and progress sync:
+  - Design: `skyline-estates/security/UNIFIED-PROFILE-DESIGN.md`.
+  - Server: `profile.cjs` and `profile-service.cjs`, which share the scoped wallet account document.
+  - Client: `lib/cloud-profile.js` and `lib/cloud-glue.js`.
+  - Account removal with Sign in with Apple token revocation.
+  - HTTPS routes, plus an **undeployed** Cloud Functions kit and owner runbook in `skyline-estates/functions/DEPLOY.md`.
+  - The Shop is wired to the StoreKit client.
+  - `lib/cloud-config.js` keeps `enabled:false` and `purchases:false`.
+  - CI on e4d55d3: all six workflows passed, including the emulator profile suite and the two-device browser sync test.
+- **City Spotlight** is in a new draft PR stacked on #52 (`skyline-city-spotlight`). Results are in `skyline-estates/CITY-SPOTLIGHT-RESULTS.md`. Game source pin: 485b3d85c9ad715752e6e7507647296a72fef72553ab60db3b8d7ed082da531a, reviewed with 41/41 property parity, 100 seeded games with events on and 40-game events-off parity.
+- **Still owner-gated:** deploy approval and secrets, Firestore TTL, App Store products and notification URL, sandbox acceptance list (`DEPLOY.md` §6), privacy text swap, signed TestFlight device checks. Native Google sign-in is still not configured on iOS. Android remains deferred.

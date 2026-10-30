@@ -90,3 +90,7 @@ Implement one weekly/seasonal featured-city experience:
 - Refresh privacy/store metadata to match live behavior. Public release only after the account/wallet/purchase and feature acceptance gates are complete. Android remains deferred.
 
 Do not claim any item in this file is implemented merely because this to-do has been committed.
+
+## Status — 29 October 2026 (Claude)
+
+Implemented on branch `skyline-city-spotlight` (draft PR stacked on #52). Details and test numbers are in `skyline-estates/CITY-SPOTLIGHT-RESULTS.md`. Open items: a real iPhone check, server-owned reward eligibility, online support for strategic events and Spotlight counting, and owner sign-off on the proposed balance numbers.
