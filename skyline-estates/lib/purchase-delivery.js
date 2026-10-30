@@ -20,7 +20,12 @@ function createPurchaseDelivery({account,verify,delivery,finish}) {
   const token=await sameOwner();
   const status=await delivery(token,result.transactionKey);
   await sameOwner();
-  if(status?.state==='refunded')return {state:'refunded',finished:false};
+  // Apple refunded it: no coins were or will be credited. Finish only when the server says so
+  // (Apple only), so a revoked transaction stops replaying at every launch.
+  if(status?.state==='refunded'){
+   if(transaction.store!=='apple'||status.finishAllowed!==true)return {state:'refunded',finished:false};
+   await finish(transaction);return {state:'refunded',finished:true};
+  }
   if(status?.state!=='delivered'&&status?.state!=='done')return {state:'pending',finished:false};
   if(status.finishAllowed!==true)return {state:'pending',finished:false};
   await finish(transaction);

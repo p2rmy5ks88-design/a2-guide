@@ -9,14 +9,18 @@ function createAppleStoreAdapter({verifier,getTransactionInfo,resolveAccountToke
   if(typeof signed!=='string'||signed.length<20||signed.length>40000)fail('invalid-apple-proof');
   const t=await verifier.verifyAndDecodeTransaction(signed);
   if(t.bundleId!==APP||t.environment!==expected||!Object.hasOwn(CATALOG,t.productId)||t.quantity!==1||typeof t.transactionId!=='string'||!t.transactionId||typeof t.appAccountToken!=='string'||!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(t.appAccountToken)||t.type!=='Consumable')fail('invalid-apple-transaction');
-  if(type==='purchase'&&t.revocationDate!=null||type==='refund'&&t.revocationDate==null)fail('invalid-apple-purchase-state');
+  // 'current' = whatever Apple reports now: a revoked transaction becomes a no-credit refund event.
+  if(type==='current')type=t.revocationDate!=null?'refund':'purchase';
+  else if(type==='purchase'&&t.revocationDate!=null||type==='refund'&&t.revocationDate==null)fail('invalid-apple-purchase-state');
   const ownerUid=await resolveAccountToken(t.appAccountToken);if(!validOwner(ownerUid))fail('unbound-apple-account');
   return{store:'apple',environment,appId:APP,type,transactionId:t.transactionId,productId:t.productId,quantity:1,state:'purchased',ownerUid};
  }
  return{
-  verifyPurchase:async proof=>{if(!proof||Object.keys(proof).some(k=>k!=='signedTransaction'))fail('invalid-apple-proof');const original=await decode(proof.signedTransaction,'purchase');
+  verifyPurchase:async proof=>{if(!proof||Object.keys(proof).some(k=>k!=='signedTransaction'))fail('invalid-apple-proof');const original=await decode(proof.signedTransaction,'current');
    // A previously valid JWS may predate a refund; query current Apple status.
-   const info=await getTransactionInfo(original.transactionId),current=await decode(info?.signedTransactionInfo,'purchase');
+   // Revoked (refunded) transactions come back as type 'refund': they never grant, and the wallet
+   // lets the device finish them so they stop replaying at every launch.
+   const info=await getTransactionInfo(original.transactionId),current=await decode(info?.signedTransactionInfo,'current');
    if(current.transactionId!==original.transactionId||current.productId!==original.productId||current.ownerUid!==original.ownerUid)fail('apple-current-transaction-mismatch');
    return current},
   async verifyNotification(signed){
