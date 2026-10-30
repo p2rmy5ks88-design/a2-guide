@@ -76,6 +76,13 @@ Builds are made with: Actions → `skyline-ios.yml` → Run workflow on `main`, 
 - Owner device results on build 82 (same game code): **cloud recovery PASS** (signed-in progress synced; signed out and earned locally; signing in restored the synced balance), **coin packs hidden PASS**, test-account email verified.
 - Still open: account deletion check on the test account (reviewer demo account stays), screenshots, App Review contact and demo sign-in, age rating, App Privacy, license agreement, then Submit for Review. Release type is set to automatic after approval; the owner can change it.
 
+## Checkpoint 30 Oct 15:30 — SUBMITTED for App Review
+
+- Version 1.0 with **build 85** submitted; state Waiting for Review. Release: automatically after approval (owner can switch to manual before approval).
+- Device checks passed on the owner's iPhone: sign-in, cloud recovery, hidden coin packs, account deletion (test account). Reviewer demo account kept; password reset by the owner in Cloud Shell and email marked verified (no inbox).
+- Listing: iPhone 6.9" and iPad 13" screenshots (`skyline-estates-app/appstore/`), price Free, category Games › Board, privacy URL, App Privacy published (email, name, user ID, gameplay content; linked, app functionality, no tracking), age rating 12+ (simulated gambling mild), content rights: third-party content with rights. Licences: `skyline-estates/ASSET-LICENSES.md`.
+- Coin packs not attached; payment testing, spend cap, service account (#57) and Android remain deferred.
+
 ## Remaining steps before public release (pre-decision plan, purchases now deferred)
 
 1. Confirm sign-in works on iPhone with the dedicated test account. If it fails, capture the shown code (ACCOUNT-SDK / ACCOUNT-INIT / APPLE-*) and investigate that failure instead of rebuilding.
