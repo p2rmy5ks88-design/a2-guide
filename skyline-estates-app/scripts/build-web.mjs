@@ -19,9 +19,9 @@ fs.copyFileSync(path.join(src,'reference-redesign.js'),path.join(www,'reference-
 for(const d of ['lib','riders','photos','art','items'].filter(d=>fs.existsSync(path.join(src,d))))fs.cpSync(path.join(src,d),path.join(www,d),{recursive:true});
 // Cloud channel: the web game always ships with accounts and purchases off. Only a native build made
 // with SKYLINE_CLOUD_CHANNEL=private-testing (manual TestFlight workflow) switches them on, and then
-// only when running in the iOS app.
+// only when running in the iOS app. ios-release is the reviewed public App Store channel.
 const channel=process.env.SKYLINE_CLOUD_CHANNEL||'off';
-if(!['off','private-testing'].includes(channel))throw Error('Unknown SKYLINE_CLOUD_CHANNEL '+channel);
-if(channel==='private-testing')fs.copyFileSync(path.join(app,'cloud','private-testing.js'),path.join(www,'lib','cloud-config.js'));
+if(!['off','private-testing','ios-release'].includes(channel))throw Error('Unknown SKYLINE_CLOUD_CHANNEL '+channel);
+if(channel!=='off')fs.copyFileSync(path.join(app,'cloud',channel+'.js'),path.join(www,'lib','cloud-config.js'));
 console.log('cloud channel:',channel);
 console.log('www built:',fs.readdirSync(www).join(', '),'| fonts:',faces.length);
