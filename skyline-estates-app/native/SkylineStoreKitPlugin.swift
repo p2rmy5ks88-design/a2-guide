@@ -1,6 +1,7 @@
 import Foundation
 import Capacitor
 import StoreKit
+import UIKit
 
 @available(iOS 15.0, *)
 @objc(SkylineStoreKitPlugin)
@@ -11,8 +12,22 @@ public class SkylineStoreKitPlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "products", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "purchase", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "unfinished", returnType: CAPPluginReturnPromise),
-        CAPPluginMethod(name: "finish", returnType: CAPPluginReturnPromise)
+        CAPPluginMethod(name: "finish", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "recentPurchases", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "requestRefund", returnType: CAPPluginReturnPromise)
     ]
+    // The last delivered coin purchases on this device (ID, product, date only), so the player can
+    // open Apple's refund sheet from the app. Apple decides every refund; coins only change when
+    // Apple's REFUND notification reaches the server.
+    private static let recentKey = "skyline.recentPurchases"
+    private func remember(_ transaction: StoreKit.Transaction) {
+        var rows = UserDefaults.standard.array(forKey: Self.recentKey) as? [[String: String]] ?? []
+        let id = String(transaction.id)
+        rows.removeAll { $0["id"] == id }
+        rows.insert(["id": id, "productId": transaction.productID,
+                     "at": String(Int(transaction.purchaseDate.timeIntervalSince1970 * 1000))], at: 0)
+        UserDefaults.standard.set(Array(rows.prefix(10)), forKey: Self.recentKey)
+    }
     private var updates: Task<Void, Never>?
     @MainActor private var purchaseInProgress = false
     @MainActor private var transactions: [String: StoreKit.Transaction] = [:]
@@ -112,8 +127,34 @@ public class SkylineStoreKitPlugin: CAPPlugin, CAPBridgedPlugin {
                 call.reject("This unfinished transaction could not be found. Refresh purchases to check its status.", "store/transaction-not-found"); return
             }
             await transaction.finish()
+            remember(transaction)
             transactions.removeValue(forKey: id)
             call.resolve(["finished": true])
+        }
+    }
+
+    @objc func recentPurchases(_ call: CAPPluginCall) {
+        let rows = UserDefaults.standard.array(forKey: Self.recentKey) as? [[String: String]] ?? []
+        call.resolve(["purchases": rows])
+    }
+
+    @objc func requestRefund(_ call: CAPPluginCall) {
+        Task { @MainActor in
+            guard let raw = call.getString("transactionId"), raw.range(of: "^[0-9]{1,30}$", options: .regularExpression) != nil,
+                  let id = UInt64(raw) else {
+                call.reject("Choose a purchase to request a refund for.", "store/invalid-refund"); return
+            }
+            guard let scene = UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene })
+                    .first(where: { $0.activationState == .foregroundActive }) else {
+                call.reject("Open the game and try again.", "store/refund-unavailable"); return
+            }
+            do {
+                switch try await StoreKit.Transaction.beginRefundRequest(for: id, in: scene) {
+                case .success: call.resolve(["state": "requested"])
+                case .userCancelled: call.resolve(["state": "cancelled"])
+                @unknown default: call.resolve(["state": "unknown"])
+                }
+            } catch { call.reject("The App Store could not open the refund request. Try again later.", "store/refund-unavailable") }
         }
     }
 }

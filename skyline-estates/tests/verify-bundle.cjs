@@ -8,9 +8,9 @@ assert.ok(!/fonts\.(googleapis|gstatic)\.com/.test(html),'fonts must be local');
 let files=0,bytes=0;
 function identical(source,target){const expected=fs.readFileSync(source),actual=fs.readFileSync(target);assert.ok(actual.equals(expected),'packaged bytes: '+target);files++;bytes+=actual.length}
 // The manual private TestFlight build replaces only lib/cloud-config.js, with the reviewed file in the app's cloud/ folder.
-const channel=process.env.SKYLINE_CLOUD_CHANNEL||'off';assert.ok(['off','private-testing'].includes(channel),'unknown cloud channel');
+const channel=process.env.SKYLINE_CLOUD_CHANNEL||'off';assert.ok(['off','private-testing','ios-release'].includes(channel),'unknown cloud channel');
 const privateConfig=path.join(src,'lib','cloud-config.js');
-function tree(source,target){assert.ok(fs.statSync(source).isDirectory());for(const e of fs.readdirSync(source,{withFileTypes:true})){const a=path.join(source,e.name),b=path.join(target,e.name);if(e.isDirectory())tree(a,b);else if(channel==='private-testing'&&a===privateConfig)identical(path.join(app,'cloud','private-testing.js'),b);else identical(a,b)}}
+function tree(source,target){assert.ok(fs.statSync(source).isDirectory());for(const e of fs.readdirSync(source,{withFileTypes:true})){const a=path.join(source,e.name),b=path.join(target,e.name);if(e.isDirectory())tree(a,b);else if(channel!=='off'&&a===privateConfig)identical(path.join(app,'cloud',channel+'.js'),b);else identical(a,b)}}
 identical(path.join(src,'reference-redesign.js'),path.join(www,'reference-redesign.js'));
 for(const dir of ['lib','riders','photos','art','items'])tree(path.join(src,dir),path.join(www,dir));
 tree(path.join(shared,'audio'),path.join(www,'audio'));identical(path.join(shared,'firebase-config.js'),path.join(www,'firebase-config.js'));

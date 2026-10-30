@@ -1801,6 +1801,22 @@ html.rot .clstage{min-height:150px}html.rot .clstage canvas.mdl.clbig{max-width:
 .pf2btn.small{min-height:40px;font-size:12.5px;background:#0f2433;border:1px solid #0f2433;color:#fff}.pf2btn.small svg{width:18px;height:18px}
 .pf2btn[disabled]{opacity:.5;cursor:default}
 .pf2f:empty{display:none}.pf2f{display:flex;gap:8px;justify-content:flex-end}
+.pf2debt .debt{color:#ffe1dc}.pf2debt .debt b{color:#fff}
+.mp.pf2{padding-left:max(18px,env(safe-area-inset-left));padding-right:max(18px,env(safe-area-inset-right));padding-bottom:max(14px,env(safe-area-inset-bottom))}
+.pf2dm .pf3overview,.pf2dm .pf2t,.pf2dm .pf2d{display:none}
+.pf2dm .pf2b{grid-template-columns:1fr}
+.pf2dm .pf2s span{display:flex;flex-direction:column;justify-content:center;padding:8px 14px}
+.pf2dm .pf2s .pfdo b{color:#ffb4a8}.pf2dm .pf2s .pfdn{background:rgba(255,122,107,.16)}.pf2dm .pf2s .pfdn b{color:#ffd0c8}.pf2dm .pf2s .pfdy b{color:#6fe0a8}
+.pf2debt .pfdhint{margin:0;padding:8px 12px;border-radius:12px;background:#3a1714;border:1px solid #ff7a6b;color:#fff;font-size:14px;line-height:1.35}.pf2debt .pfdhint b{color:#ffd27a}
+.pfdrow{flex:none;display:flex;align-items:center;gap:12px;min-height:56px;padding:6px 10px;border-radius:12px;background:#132c3d;border:1px solid #2a4658}
+.pfdrow.done{opacity:.7}
+.pfdc{flex:none;width:12px;align-self:stretch;border-radius:6px}
+.pfdt{flex:1;min-width:0;display:flex;flex-direction:column}.pfdt b{font:700 16px var(--display,inherit);color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.pfdt small{font-size:12.5px;color:#c9d3dc}.pfdt small.pfdwhy{color:#ffd27a;font-weight:600}
+.pfdb{flex:none;display:flex;gap:8px}
+.pfdbtn{min-height:46px;min-width:44px;padding:0 14px;border-radius:12px;border:1.5px solid #b98a2f;background:linear-gradient(180deg,#f6d987,#d9a842);color:#1a1406;font:800 14px var(--display,inherit);white-space:nowrap;cursor:pointer}
+.pfdbtn[disabled]{background:#22394a;border-color:#3a5568;color:#9fb0bd;cursor:default}
+.pf2dm .pf2f{flex:none;padding-top:4px}.pf2dm .pf2f .btn{min-height:46px}
+@media (max-height:520px){.pf2dm .pf2h h2{font-size:19px}.pf2dm .pf2s span{padding:5px 12px}.pf2dm .pf2s b{font-size:17px}.pf2debt .pfdhint{font-size:13px;padding:6px 10px}.pfdrow{min-height:50px}.pf2dm .pf2f .btn{min-height:44px}}
 @media (max-height:520px){.mp.pf2{padding:10px 12px;gap:7px;height:100%}.pf2h h2{font-size:22px}.pf2x{width:36px;height:36px;top:8px;right:10px}.pf2s span{padding:6px 12px}.pf2s i{width:26px;height:26px}.pf2s b{font-size:16px}.pf2pic{height:120px}.pf2btn{min-height:44px;font-size:13px}.pfdi{width:32px;height:32px}.pf2t button{height:32px}}
 html.rot .mp.pf2{width:min(860px,78vw);padding:10px 12px;gap:7px;height:100%}html.rot .pf2h h2{font-size:22px}html.rot .pf2pic{height:110px}html.rot .pf2s b{font-size:16px}html.rot .pf2btn{min-height:42px;font-size:12.5px}
 @media (max-width:700px){html:not(.rot) .mp.pf2{width:100%;height:100%}html:not(.rot) .pf2b{grid-template-columns:1fr;overflow:auto}html:not(.rot) .pf2s b{font-size:15px}html:not(.rot) .pf2s i{display:none}}
@@ -5169,6 +5185,11 @@ const IAP={ready:false,store:null,
   price(p){return window.SkylineCloud?.price?.(IAP_PREFIX+p.id)||p.price},
   async buy(p){if(p&&!p.once&&window.SkylineCloud?.purchasesReady?.()&&await window.SkylineCloud.buyPack(IAP_PREFIX+p.id))return;await modal({html:`<div class="mh">${p&&p.once?'Starter bundle':COIN+' Coin packs'}</div><div class="mtxt">Purchases are not available yet. We are connecting secure player accounts so purchased coins can follow you between devices. You can still earn coins by playing.</div>`,btns:[{k:'x',label:'OK',primary:true}]})}};
 
+/* Coin packs are offered only when the App Store purchase path is live (never on web, and not in builds
+   released without in-app purchases). Earning and spending coins in play is unaffected. */
+const COIN_SALES=()=>!!window.SkylineCloud?.purchasesReady?.();
+const EARN_COINS='Earn coins by winning games, levelling up, daily missions, the free Lucky Spin, season tiers and league promotions.';
+function earnCoinsInfo(need){return modal({html:`<div class="mh">${COIN} Earn coins</div><div class="mtxt">${need?`You need ${nfmt(need)} more coins. `:''}${EARN_COINS}</div>`,btns:[{k:'x',label:'OK',primary:true}]})}
 /* ---- name filter for names shown to other people (online and leaderboards) ---- */
 const BAD_WORDS=['fuck','shit','cunt','bitch','nigg','fag','whore','slut','dick','cock','pussy','rape','nazi','hitler','retard','bastard','wank','twat','porn','sex'];
 function cleanName(s){s=String(s||'').replace(/[<>]/g,'').trim().slice(0,12);const flat=s.toLowerCase().replace(/[^a-z]/g,'').replace(/0/g,'o');return !s||BAD_WORDS.some(w=>flat.includes(w))?'Player':s}
@@ -5199,8 +5220,8 @@ function showTitle(){
 }
 function railProfile(){const E=$('#rprof');if(!E)return;const lv=lvlOf(PREF.xp),a=xpFor(lv),b=xpFor(lv+1),L=LEAGUES[leagueIdx()];const m=Math.max(1,...Object.values(PREF.tokLv));
   E.innerHTML=`<button class="who" id="tbWho" aria-label="Your profile and characters"><span class="rav">${charSVG(myChar(),40)}</span><span class="ri"><b>${esc(myName()||'Player')} <small>· Level ${lv} ${esc(rankOf(lv))}</small>${m>=5?` <span class="rar" style="background:${rarityOf(m).ui}">${rarityOf(m).name}</span>`:''}</b><span class="xpbar"><i style="width:${(PREF.xp-a)/(b-a)*100}%"></i></span></span></button>
-    <span class="grow"></span><button class="tpill" id="tbCoins" aria-label="${Math.round(PREF.coins)} coins. Get more">${PCOIN()}<span class="plus" aria-hidden="true">${svgI('plus',14)}</span></button><button class="tpill" id="tbLeague" aria-label="${L.name} league, ${PREF.trophies} trophies">${svgI('trophy',16)}<b>${L.name} · ${PREF.trophies}</b></button>`;
-  E.querySelector('#tbWho').onclick=()=>homeTab('cast');E.querySelector('#tbCoins').onclick=()=>{setup.shopTab='coins';homeTab('shop')};E.querySelector('#tbLeague').onclick=()=>homeTab('leagues')}
+    <span class="grow"></span><button class="tpill" id="tbCoins" aria-label="${Math.round(PREF.coins)} coins.${COIN_SALES()?' Get more':' How to earn more'}">${PCOIN()}${COIN_SALES()?`<span class="plus" aria-hidden="true">${svgI('plus',14)}</span>`:''}</button><button class="tpill" id="tbLeague" aria-label="${L.name} league, ${PREF.trophies} trophies">${svgI('trophy',16)}<b>${L.name} · ${PREF.trophies}</b></button>`;
+  E.querySelector('#tbWho').onclick=()=>homeTab('cast');E.querySelector('#tbCoins').onclick=()=>{if(COIN_SALES()){setup.shopTab='coins';homeTab('shop')}else earnCoinsInfo()};E.querySelector('#tbLeague').onclick=()=>homeTab('leagues')}
 function homeTab(k){const sec=SEC_OF[k]||'play';setup.sub=setup.sub||{};let sub=k;if(SUBS[sec]){if(!SUBS[sec].some(s=>s[0]===k))sub=setup.sub[sec]||SUBS[sec][0][0]}else sub=sec;setup.sub[sec]=sub;setup.tab=sub;
   const nav=$('#title .tabs');if(!nav)return;nav.innerHTML='';const D=daily();const dots={progress:wheelReady()||!dailyEventView().done||D.list.some(id=>!D.done[id])||seasonClaimable()>0};
   SECTIONS.forEach(([id,label])=>{const b=el('button','tab'+(id===sec?' on':''),`${svgI(id,22)}<span>${label}</span>${dots[id]?'<em class="dot"></em>':''}`);b.setAttribute('role','tab');b.setAttribute('aria-selected',id===sec?'true':'false');b.onclick=()=>{sfx('tap');homeTab(id)};nav.append(b)});
@@ -5230,7 +5251,7 @@ function paneP(T){const saved=loadSave(),c=CITY_DATA[setup.city],C=countryOf(set
   T.querySelector('#qPP').onclick=()=>{setup.slots.forEach((s,i)=>s.type=i<2?'human':s.type==='human'?'off':s.type);homeTab('custom');toast('Set each friend to Human, then tap Start game')};
   T.querySelector('#qCustom').onclick=()=>homeTab('custom');T.querySelector('#qSeason').onclick=()=>homeTab('season')}
 const segIn=(T,id,opts,get,set)=>{const E=T.querySelector(id);E.innerHTML='';opts.forEach(([v,l])=>{const b=el('button',get()===v?'on':'',l);b.onclick=()=>{set(v);segIn(T,id,opts,get,set)};E.append(b)})};
-async function confirmBuy(title,cost,body){if(PREF.coins<cost){const k=await modal({html:`<div class="mh">Not enough coins</div><div class="mtxt">${esc(title)} costs ${fmtC(cost)}. You have ${fmtC(PREF.coins)}.</div>`,btns:[{k:'x',label:'Close'},{k:'shop',label:'Get coins',primary:true}]});if(k==='shop'){setup.shopTab='coins';homeTab('shop')}return false}
+async function confirmBuy(title,cost,body){if(PREF.coins<cost){const k=await modal({html:`<div class="mh">Not enough coins</div><div class="mtxt">${esc(title)} costs ${fmtC(cost)}. You have ${fmtC(PREF.coins)}.</div>`,btns:[{k:'x',label:'Close'},{k:'shop',label:COIN_SALES()?'Get coins':'How to earn',primary:true}]});if(k==='shop'){if(COIN_SALES()){setup.shopTab='coins';homeTab('shop')}else earnCoinsInfo(cost-PREF.coins)}return false}
   const k=await modal({html:`<div class="mh">${esc(title)}</div><div class="mtxt">${body?body+'<br>':''}Spend <b>${fmtC(cost)}</b>? You have ${fmtC(PREF.coins)}.</div>`,btns:[{k:'no',label:'Cancel'},{k:'yes',label:'Buy',primary:true}]});if(k!=='yes')return false;
   if(!spendCoins(cost))return false;sfx('win');achAward('shopper');return true}
 function slotPlayers(slots){return slots.map((s,i)=>({...s,i})).filter(s=>s.type!=='off')}
@@ -5450,12 +5471,12 @@ async function itemDetail(k,id,price,was,redraw){const it=itemOf(k,id);if(!it)re
     :p?`<div class="idsum"><span>Your coins<b>${COIN_I}${nfmt(bal)}</b></span><span>Price<b>${COIN_I}${was?`<s>${nfmt(was)}</s>`:''}${nfmt(p)}</b></span><span class="${short?'neg':'pos'}">${short?'You need':'After buying'}<b>${COIN_I}${nfmt(short?-after:after)}${short?' more':''}</b></span></div>`
     :`<div class="idown">${esc(unlockTxt(it.unlock||it))}</div>`;
   const btns=[{k:'x',label:'Close'}];if(k==='surr')btns.push({k:'pv',label:'Preview'});
-  if(own){if(!on)btns.push({k:'eq',label:'Use',primary:true})}else if(p)btns.push(short?{k:'coins',label:'Get coins',primary:true}:{k:'buy',label:`Buy for ${nfmt(p)}`,primary:true});
+  if(own){if(!on)btns.push({k:'eq',label:'Use',primary:true})}else if(p)btns.push(short?{k:'coins',label:COIN_SALES()?'Get coins':'How to earn',primary:true}:{k:'buy',label:`Buy for ${nfmt(p)}`,primary:true});
   const a=await modal({cls:'idetm',html:`<div class="idet" style="--rc:${r[1]}"><div class="idstage">${itemArt(k,it,'xl')}</div><small class="idtier">${KIND_NAME[k]} · ${r[0]}</small><div class="mh">${esc(it.name)}</div>
     <div class="mtxt">${it.desc?esc(it.desc)+' ':''}${KIND_WHAT[k]}</div><div class="idnote">Cosmetic only. It never changes rents, dice or who wins.</div>${sum}</div>`,btns});
   if(a==='pv')previewSurround(id);
   else if(a==='eq'){equipItem(k,id);redraw()}
-  else if(a==='coins'){setup.shopTab='coins';setup.shopTabSet=1;homeTab('shop')}
+  else if(a==='coins'){if(COIN_SALES()){setup.shopTab='coins';setup.shopTabSet=1;homeTab('shop')}else earnCoinsInfo(p-PREF.coins)}
   else if(a==='buy'){if(!spendCoins(p))return;grantItem(k,id);equipItem(k,id);sfx('buy');try{achAward('shopper')}catch(e){}toast(`${it.name} is yours and now in use.`);redraw()}}
 /* daily picks: fixed for the whole local day, chosen from items the player didn't own that morning */
 function dailyKey(){const d=new Date();return d.getFullYear()*1e4+(d.getMonth()+1)*100+d.getDate()}
@@ -5476,12 +5497,12 @@ function bundleCard(){const f=itemOf('fin',STARTER.fin),d=itemOf('dice',STARTER.
     <button class="ibtn gold" id="bStarter">${esc(IAP_BUNDLE.price)}</button></article>`}
 let SHOP_TICK=null;
 function paneShop(T){let tab=setup.shopTab||'daily';if(tab==='surr'&&!setup.shopTabSet)tab='daily';
-  const tabs=[['daily','Daily'],['surr','Surrounds'],['fin','Finishes'],['dice','Dice'],['boost','Boosts'],['coins','Coins']];
+  const tabs=[['daily','Daily'],['surr','Surrounds'],['fin','Finishes'],['dice','Dice'],['boost','Boosts'],['coins','Coins']].filter(([k])=>k!=='coins'||COIN_SALES());if(tab==='coins'&&!COIN_SALES())tab='daily';
   T.innerHTML=`<div class="shophead"><h2>Shop</h2><div class="shoptabs" role="tablist">${tabs.map(([k,l])=>`<button class="stab${k===tab?' on':''}" role="tab" aria-selected="${k===tab}" data-k="${k}">${l}</button>`).join('')}</div></div><div class="shopbody"></div>
     <div class="small shopnote">Nothing in the shop is random: you always see exactly what you get.</div>`;
   T.querySelectorAll('.shoptabs button').forEach(b=>b.onclick=()=>{setup.shopTab=b.dataset.k;setup.shopTabSet=1;paneShop(T)});
   const B=T.querySelector('.shopbody'),redraw=()=>paneShop(T);clearInterval(SHOP_TICK);
-  if(tab==='daily'){const D=dailyPicks(),showB=!PREF.starterDone;
+  if(tab==='daily'){const D=dailyPicks(),showB=!PREF.starterDone&&COIN_SALES();
     B.innerHTML=`<div class="dshop${showB?'':' nob'}">${showB?bundleCard():''}<div class="dpicks"><div class="dhead"><h3>Daily picks</h3><span>New items in <b id="dTimer">${untilMidnight()}</b></span></div><div class="igrid g6">${D.list.map(([k,id],i)=>{const it=itemOf(k,id);if(!it)return '';const deal=i===D.deal&&!itemOwned(k,id);return itemCard(k,it,deal?{price:dealPrice(it.price),was:it.price,deal:'Save 20%'}:{})}).join('')}</div></div></div>`;
     const sb=B.querySelector('#bStarter');if(sb)sb.onclick=()=>IAP.buy(IAP_BUNDLE);
     SHOP_TICK=setInterval(()=>{const e=document.getElementById('dTimer');if(!e){clearInterval(SHOP_TICK);return}if(dailyKey()!==D.key){clearInterval(SHOP_TICK);redraw();return}e.textContent=untilMidnight()},1000)}
@@ -6375,7 +6396,7 @@ function shopItemPage(T){const S=setup.shopItem,k=S.k,it=itemOf(k,S.id);if(!it){
   if(on)act=`<button class="ibtn gold sibuy" disabled>✓ In use</button>`;
   else if(own)act=`<button class="ibtn gold sibuy" id="siUse">Use it</button>`;
   else if(!p)act=`<div class="sinote">${esc(unlockTxt(it.unlock||it))}</div>`;
-  else if(after<0)act=`<button class="ibtn gold sibuy" id="siCoins">Get ${nfmt(-after)} more coins</button>`;
+  else if(after<0)act=`<button class="ibtn gold sibuy" id="siCoins">${COIN_SALES()?'Get':'Earn'} ${nfmt(-after)} more coins</button>`;
   else act=`<button class="ibtn gold sibuy" id="siBuy">${COIN_I}<span>Buy for ${nfmt(p)}</span></button>`;
   T.innerHTML=`<div class="sipage" style="--rc:${r[1]}">
     <section class="sileft">
@@ -6399,7 +6420,7 @@ function shopItemPage(T){const S=setup.shopItem,k=S.k,it=itemOf(k,S.id);if(!it){
   T.querySelectorAll('.sisib').forEach(b=>b.onclick=()=>{const x=itemOf(k,b.dataset.id);setup.shopItem={...S,id:x.id,price:x.price||0,was:0};redraw()});
   const bb=T.querySelector('#siBuy');if(bb)bb.onclick=()=>{if(!spendCoins(p)){redraw();return}grantItem(k,it.id);equipItem(k,it.id);sfx('buy');try{achAward('shopper')}catch(e){}toast(`${it.name} is yours and now in use.`);try{confetti()}catch(e){}redraw()};
   const bu=T.querySelector('#siUse');if(bu)bu.onclick=()=>{equipItem(k,it.id);toast(`${it.name} is now in use.`);redraw()};
-  const bc=T.querySelector('#siCoins');if(bc)bc.onclick=()=>{setup.shopItem=null;leaveItemPreview();setup.shopTab='coins';homeTab('shop')};
+  const bc=T.querySelector('#siCoins');if(bc)bc.onclick=()=>{if(!COIN_SALES()){earnCoinsInfo(-after);return}setup.shopItem=null;leaveItemPreview();setup.shopTab='coins';homeTab('shop')};
   const pb=T.querySelector('#pvBoard');if(pb)pb.onclick=()=>previewSurround(it.id);
   if(k==='fin'){const pc=T.querySelector('#pvCity'),pt=T.querySelector('#pvTok');
     pc.onchange=()=>{PV.city=pc.value;applyTheme(PV.city);redraw()};pt.onchange=()=>{setup.pvTok=pt.value;redraw()};
@@ -6746,7 +6767,31 @@ openAssets=function(p,opts={}){const debt=opts.debt||0,ro=!!opts.readonly;let fi
     const groupsOf=()=>{const out=[];Object.keys(GROUPS).forEach(g=>{const all=GROUPS[g],mine=all.filter(j=>G.own[j].o===p.id);out.push({k:g,name:GNAME[g],col:GC[g],all,mine})});
       const rails=RAILS.filter(j=>G.own[j].o===p.id),utils=UTILS.filter(j=>G.own[j].o===p.id);out.push({k:'rail',name:'Transit hubs',col:'#7f8a96',all:RAILS,mine:rails});out.push({k:'util',name:'Utilities',col:'#9aa3ad',all:UTILS,mine:utils});return out};
     const pass=i=>filter==='all'||(filter==='build'?(!ro&&canBuild(p.id,i)):G.own[i].m);
+    /* Debt repayment on a small landscape screen: owed / cash / shortfall first, then one scrollable list of
+       every owned property with its cash action. Uses the same mortgage/sell rules as the full view. */
+    const drawDebt=list=>{pn.classList.add('pf2dm');const short=Math.max(0,debt-p.cash),can=liquidity(p);
+      pn.querySelector('.pf2h').innerHTML=`<h2>Raise cash to pay${opts.to?' '+esc(opts.to.name):''}</h2>`;
+      pn.querySelector('.pf2s').innerHTML=`<span class="pfdo"><small>You owe</small><b>${fmt(debt)}</b></span><span><small>Cash available</small><b>${fmt(p.cash)}</b></span><span class="${short?'pfdn':'pfdy'}"><small>${short?'Still needed':'Ready to pay'}</small><b>${short?fmt(short):'✓'}</b></span>`;
+      pn.querySelector('.pf3overview').innerHTML='';
+      pn.querySelector('.pf2debt').innerHTML=`<p class="debt pfdhint" role="status">${opts.who?'<b>'+esc(p.name)+'</b>: ':''}${short?(can>=debt?`Mortgage properties or sell buildings below. You can raise up to <b>${fmt(can-p.cash)}</b>.`:`Even after mortgaging and selling everything you would have <b>${fmt(can)}</b>, short of <b>${fmt(debt)}</b>.`):'You have enough cash. Tap <b>Pay</b> below.'}</p>`;
+      pn.querySelector('.pf2t').innerHTML='';pn.querySelector('.pf2d').innerHTML='';
+      const L=pn.querySelector('.pf2g');L.innerHTML='';
+      const value=i=>{const o=G.own[i];return o.m?0:(canMortgage(p.id,i)?SQ[i].p/2:o.h?SQ[i].h/2:0)};
+      const rows=list.slice().sort((a,b)=>(G.own[a].m-G.own[b].m)||value(b)-value(a));
+      if(!rows.length)L.innerHTML='<p class="pf2none">You own no properties to mortgage.</p>';
+      rows.forEach(i=>{const s=SQ[i],o=G.own[i],isP=s.t==='prop',r=el('div','pfdrow'+(o.m?' done':''));r.dataset.square=String(i);
+        const col=isP?GC[s.g]:s.t==='rail'?'#7f8a96':'#9aa3ad',where=isP?GNAME[s.g]:s.t==='rail'?'Transit hub':'Utility';
+        const blocked=!o.m&&!canMortgage(p.id,i);
+        r.innerHTML=`<i class="pfdc" style="background:${col}"></i><span class="pfdt"><b>${esc(s.n)}</b><small>${esc(where)}${isP&&o.h?' · '+(o.h===5?'Skyline Tower':o.h+' house'+(o.h>1?'s':'')):''}</small>${o.m?'<small class="pfdwhy">Already mortgaged</small>':isP&&o.h&&!canSell(p.id,i)?'<small class="pfdwhy">Sell evenly: start on the most built street</small>':blocked?'<small class="pfdwhy">Sell this district’s buildings first</small>':''}</span><span class="pfdb"></span>`;
+        const B=r.querySelector('.pfdb');
+        const act=(lab,ok,fn,why)=>{const b=el('button','pfdbtn',lab);b.disabled=!ok;if(why)b.title=why;b.onclick=()=>{fn();renderRoster();draw()};B.append(b)};
+        if(isP&&o.h)act(`Sell building +${fmt(s.h/2)}`,canSell(p.id,i),()=>sell(p.id,i),'Buildings must be sold evenly across the district.');
+        if(!o.m)act(`Mortgage +${fmt(s.p/2)}`,canMortgage(p.id,i),()=>mortgage(p.id,i),blocked?'Sell the buildings in this district first.':'');
+        L.append(r)});
+      const F=pn.querySelector('.pf2f');F.innerHTML='';const bk=el('button','btn danger','Declare bankruptcy');bk.onclick=()=>close('bankrupt');const pb=el('button','btn pri','Pay '+fmt(debt));pb.disabled=p.cash<debt;pb.onclick=()=>close('pay');F.append(bk,pb);
+      const x=pn.querySelector('.pf2x');if(x)x.hidden=true};
     const draw=()=>{const list=propsOf(p.id);if(sel==null||G.own[sel].o!==p.id)sel=list.find(i=>!ro&&canBuild(p.id,i))??list[0]??null;
+      if(debt&&!ro){drawDebt(list);return}pn.classList.remove('pf2dm');
       pn.querySelector('.pf2h').innerHTML=`<h2>${ro?esc(p.name)+'’s portfolio':'Your portfolio'}</h2>`;
       pn.querySelector('.pf2s').innerHTML=`<span><i>${PF_IC.cash}</i><small>Cash</small><b>${fmt(p.cash)}</b></span><span><i>${PF_IC.assets}</i><small>Assets</small><b>${list.length} propert${list.length===1?'y':'ies'}</b></span><span><i>${PF_IC.worth}</i><small>Net worth</small><b>${fmt(netWorth(p))}</b></span>`;
       const districts=Object.keys(GROUPS).map(g=>({g,owned:GROUPS[g].filter(i=>G.own[i].o===p.id),all:GROUPS[g]})),complete=districts.filter(g=>g.owned.length===g.all.length).length;
