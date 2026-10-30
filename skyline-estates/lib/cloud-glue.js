@@ -133,9 +133,24 @@ window.SkylineCloud={
   if(s.owner===user.uid&&s.migrated){box.append(el('p',s.pending?`${s.pending} change${s.pending===1?'':'s'} waiting to sync. Your progress is safe on this device meanwhile.`:'Your coins, XP and collection are saved to this account.'));if(s.profile?.debt)box.append(el('p',`A refunded purchase left ${nf(s.profile.debt)} coins to pay back. New coins pay this first.`));button(box,'Sync now',()=>act(()=>run({refresh:true}),'Synced.'))}
   else{box.append(el('p','This device is not saving to your account yet.'));button(box,'Set up cloud save',()=>act(async()=>{engine.forgetDecline(user.uid);await run({refresh:true})},'Cloud save updated.'))}
   const list=backups();if(list.length){box.append(el('p','Device backups (kept on this device only):'));for(const b of list){const row=el('div',null,{className:'sky-account-actions'});row.append(el('span',`${new Date(b.at).toLocaleString()} · ${nf(b.coins)} coins`));button(row,'Restore',()=>restore(b.key));box.append(row)}}
+  if(store&&bridge?.recentPurchases)box.append(purchaseHelp(el,button,act));
   body.append(box);
  }
 };
+// Apple's refund sheet for recent coin purchases on this device. Apple decides; coins change only
+// when Apple's refund notice reaches the server (then any spent coins become a debt to repay).
+function purchaseHelp(el,button,act){
+ const wrap=el('div');wrap.append(el('h3','Purchases'));const list=el('div');wrap.append(list);
+ const coins={coins_600:600,coins_1500:1500,coins_4000:4000,coins_10000:10000};
+ bridge.recentPurchases().then(r=>{const rows=(r?.purchases||[]).filter(p=>/^[0-9]{1,30}$/.test(p.id)).slice(0,10);
+  if(!rows.length){list.append(el('p','No App Store purchases on this device yet.'));return}
+  list.append(el('p','Problem with a purchase? Apple reviews refund requests. If a refund is approved, those coins are removed from your account.'));
+  for(const p of rows){const row=el('div',null,{className:'sky-account-actions'});const n=coins[String(p.productId).split('.').pop()];
+   row.append(el('span',`${n?nf(n)+' coins':'Coins'} · ${new Date(Number(p.at)).toLocaleDateString()}`));
+   button(row,'Request a refund',()=>act(async()=>{const r=await bridge.requestRefund({transactionId:p.id});if(r?.state!=='requested')throw Object.assign(Error('cancelled'),{code:'refund-cancelled'})},'Refund request sent to Apple. Coins change only if Apple approves it.'));list.append(row)}
+ }).catch(()=>list.append(el('p','Purchase history is not available right now.')));
+ return wrap;
+}
 async function restore(key){
  const ok=await modal({html:`<div class="mh">Restore this backup?</div><div class="mtxt">This device goes back to the saved copy and stops saving to your account until you set up cloud save again. Your account itself is not changed.</div>`,btns:[{k:true,label:'Restore backup',primary:true,danger:true},{k:false,label:'Cancel'}]});
  if(!ok)return;try{const v=JSON.parse(localStorage.getItem(key));const prefs={...v.prefs};delete prefs.cloudOwner;localStorage.setItem(PKEY,JSON.stringify(prefs));location.reload()}catch(e){toast('That backup could not be restored.')}
