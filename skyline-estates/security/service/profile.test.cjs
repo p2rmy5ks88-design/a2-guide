@@ -166,7 +166,9 @@ async function test(name,fn){await fn();count++;console.log('ok - '+name)}
   const w=createFirestoreWallet({db,environment:'production',storeEnvironments:['production','sandbox'],verifyIdToken,verifyPurchase:async v=>v,verifyNotification:async v=>v,clock:()=>now});
   const real=(uid,id)=>({...buy(uid,id),environment:'production'});
   // reviewer account: listed, receives free sandbox coins, flagged permanently
-  await prof.markTester('rev','App Review demo');await w.purchase('rev',buy('rev','sb-r1'));let p=await prof.get('rev');assert.equal(p.coins,600);assert.equal(p.tester,true);
+  await prof.markTester('rev','App Review demo');
+  // a real player's device progress can never be imported into a test account
+  await assert.rejects(()=>prof.migrate('rev',{requestId:rid(),mode:'import',snapshot:{coins:999}}),/tester-import-blocked/);await prof.migrate('rev',{requestId:rid(),mode:'cloud-only'});await w.purchase('rev',buy('rev','sb-r1'));let p=await prof.get('rev');assert.equal(p.coins,600);assert.equal(p.tester,true);
   await prof.sync('rev',{requestId:rid(),changes:{coins:-100,items:{roof:['pool']}}});
   // real money never mixes into a test account
   await assert.rejects(()=>w.purchase('rev',real('rev','pr-r1')),/test-account-real-purchase-blocked/);

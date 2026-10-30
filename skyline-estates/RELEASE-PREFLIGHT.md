@@ -132,3 +132,13 @@ The kronor amounts are approximate; App Store Connect shows the exact local pric
 | Privacy, screenshots, age rating, review notes, trader check, submit | Both | 1–2 h, then Apple review (usually 1–3 days) | Not started |
 
 Sources: [Firebase spend caps](https://firebase.google.com/docs/projects/billing/spend-caps?hl=en), [Firebase budget alerts](https://firebase.google.com/docs/projects/billing/budget-alerts), [Firestore pricing](https://cloud.google.com/firestore/pricing), [Cloud Run pricing](https://cloud.google.com/run/pricing), [Secret Manager, Logging and Artifact Registry no-cost limits](https://firebase.google.com/docs/app-hosting/costs).
+
+## If a spend cap or outage pauses the backend
+
+Full procedure: `functions/DEPLOY.md` §9. In short:
+- New purchases are refused **before** Apple's payment sheet opens, so nobody is charged.
+- Paid but undelivered transactions stay unfinished in StoreKit. They are delivered exactly once at the next launch after the service returns.
+- Cloud saves wait in the device outbox and upload later.
+- Missed refund notifications are recovered with `scripts/replay-notifications.cjs` from Apple's 180-day notification history. The replay is idempotent.
+- An owner pause without a spend cap: `scripts/store-pause.cjs on|off|status`.
+- No delivery or refund record is deleted by a pause or by TTL.

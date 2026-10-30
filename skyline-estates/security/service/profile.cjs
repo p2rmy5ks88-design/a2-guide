@@ -86,6 +86,8 @@ function applyChanges(account,c,now,ledger,promos=PROMOS){
 }
 function applyMigration(account,cmd,now,ledger){
  const note=[];sane(account);
+ // A test account never receives a real player's device progress; only 'use cloud' is allowed.
+ if(account.tester===true&&cmd.mode==='import')fail('tester-import-blocked');
  if(account.migration){
   // Later device: never add coins. Items/flags union; XP and maxima take the higher value.
   if(cmd.mode==='import'){const c=cmd.snapshot;if(c.xp>account.xp){note.push('xp-raised')}account.xp=Math.max(account.xp,Math.min(c.xp,POLICY.migrateXp));mergeSets(account,{...c,eq:null},note);if(c.coins>0)note.push('device-coins-kept-locally')}
