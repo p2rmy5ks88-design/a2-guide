@@ -43,9 +43,22 @@ Smoke tests on the live function: no token → 401 `unauthenticated`; foreign or
 |---|---|---|
 | 1.0.39 (39) | Earlier diagnostic build | Native Apple credential OK |
 | 1.0.65 (65) | main `669e8af`, private-testing | Update kept the save (705 coins, Level 6, Bronze 19). Spotlight card visible. **Sign-in panel stuck on "Connecting…"** (no code). |
-| 1.0.68 (68) | main `d71c9fb` (includes #58 sign-in fix), private-testing | Pending owner test: sign in with the dedicated test account. |
+| 1.0.68 (68) | main `d71c9fb` (includes #58 sign-in fix), private-testing | **Sign-in works** (owner, 06:57): email sign-in with the test account; save intact. |
+| 1.0.70 (70) | branch `skyline-ios-refund-and-debt` (PR #61), private-testing | Debt-repayment portfolio and in-app **Request a refund**. Owner device checklist pending. |
 
 Builds are made with: Actions → `skyline-ios.yml` → Run workflow on `main`, `publish=true`, `cloud_channel=private-testing`. The build number equals the run number. Then add the build to the internal group **Skyline iOS QA**.
+
+## Checkpoint 30 Oct (afternoon)
+
+- Open PRs:
+  - **#60** public `ios-release` channel. Green; merge after device checks.
+  - **#61** iPhone debt-repayment portfolio and in-app refund request. Debt test 22/22, property parity 41/41, human flows 35, save recovery 41; repinned source hash. Merge after CI and the owner's debt check.
+  - **#62** privacy policy update, `skyline-estates/APP-STORE-SUBMISSION.md`, this handoff.
+  - **#57** service account proposal (docs).
+- Sandbox procedure (verified against Apple's docs):
+  - **TestFlight builds always use Sandbox, and purchases are free with the tester's normal Apple ID.** Don't sign out of Media & Purchases.
+  - Refunds are tested from the app's own refund sheet (Account & recovery → Purchases → Request a refund). Sandbox auto-approves any reason and sends a `REFUND` server notification. Typing `DECLINE` under *Other* tests a declined refund.
+- Keep the two tester accounts until purchase and refund verification finishes.
 
 ## Remaining steps before public release
 
