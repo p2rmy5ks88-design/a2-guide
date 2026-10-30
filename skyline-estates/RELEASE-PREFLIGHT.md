@@ -151,7 +151,11 @@ Not granted: Editor, Owner, Firebase Admin, Realtime Database, Storage, Hosting,
 
 **Deployer (you):** `roles/iam.serviceAccountUser` on this one service account, so your deploy can attach it. As Owner you already have this.
 
-**Code change (reviewed PR):** add `serviceAccount: 'skyline-player@eko-estates.iam.gserviceaccount.com'` to the `onRequest` options in `functions/index.js`, then one redeploy.
+**Code change (in this PR):** `functions/index.js` sets `serviceAccount: 'skyline-player@eko-estates.iam.gserviceaccount.com'`; `functions/scripts/smoke.cjs` checks it. Deploying this before step 1 fails safely (the deploy is rejected and the running function is unchanged).
+
+**Commands:** `functions/scripts/runtime-identity.sh` (re-runnable, keyless, leaves the default account alone). Checked 30 Oct against the deployed code: tokens are verified with revocation checks (`users.get`), account removal calls `deleteUser` (`users.delete`), wallets/profiles use Firestore, and the function reads exactly the three secrets.
+
+**Approvals needed from the owner:** (a) the grants in the table, (b) running the script in Cloud Shell (Authorize prompt), (c) one redeploy, (d) later, removing the default account's grants on the three secrets.
 
 **Rollout and check:**
 1. Create the account and the grants above. Nothing changes for the running function yet.
@@ -160,6 +164,25 @@ Not granted: Editor, Owner, Firebase Admin, Realtime Database, Storage, Hosting,
 4. Confirm that the default account's grant on the three secrets can be removed (added automatically by the first deploy), then remove only those three secret grants. Its project roles stay untouched.
 
 **Rollback:** redeploy without `serviceAccount`; the function returns to the default account.
+
+## H. Usage and spending controls (checked 30 Oct 2026, 23:30 CET)
+
+**Actual usage:** October cost 0.03 kr, fully covered by free tiers (billed 0.00 kr). `skylinePlayer`: short bursts up to about 3 requests/s, at most 1 instance. Firestore last 24 h: 210 reads, 80 writes, 6 deletes (under 1% of the free daily quota).
+
+**Alerts (notify only; nothing stops):** existing 500 kr budget with emails at 250 / 450 / 500 / 1,000 kr. Proposal: add a second, early-warning budget of **100 kr/month** with emails at 50%, 90% and 100% of **forecast** spend, so a runaway trend shows within days.
+
+**Limits already in force (these do stop usage):**
+- `skylinePlayer`: max 10 instances × 40 concurrent requests, 256 MiB, 30 s timeout. Worst case is bounded at roughly 10 instances running continuously.
+- Per-client rate limit: 90 requests/minute in the function.
+- Store pause switch (`scripts/store-pause.cjs`): stops new purchases before Apple's payment sheet.
+- Build images deleted after 1 day.
+
+**Caps (hard stops), not recommended yet:**
+- A Firebase/Cloud Functions spend cap stops only Functions, including any future Eko Estates functions. It is not a project-wide limit.
+- Automatic billing disable (budget → Pub/Sub → function) is the only project-wide cap. It would also stop Firestore, Auth sign-in for online play and Eko Estates, and can delete resources that need billing. Only worth it if spend ever grows unexpectedly.
+- Firestore has no per-database spending cap; abuse is limited by the function (clients cannot write wallets directly) and later by App Check.
+
+**Recommendation:** keep alerts, add the 100 kr forecast budget, keep the instance limit at 10, revisit after the payment update ships.
 
 ## If a spend cap or outage pauses the backend
 
