@@ -81,7 +81,8 @@ Builds are made with: Actions → `skyline-ios.yml` → Run workflow on `main`, 
 - **App Store:** 1.0 (build 85) last confirmed Waiting for Review, automatic release. The App Store Connect session in Claude's browser expired; the owner signs in again to let Claude watch it. Apple emails any review request.
 - **PR #57 (approval needed, not deployed):** `skylinePlayer` to run as keyless `skyline-player` SA; `functions/scripts/runtime-identity.sh`; RELEASE-PREFLIGHT §H usage and spend controls. Usage 30 Oct: October billed 0.00 kr (0.03 kr covered), ≤3 req/s, 1 instance, Firestore 210 reads/80 writes per day. Proposed: extra 100 kr forecast budget (alerts only). Waiting for "approve IAM".
 - **PR #66 (IAP fix + tests, not deployed):** Apple transactions refunded before delivery are now finished with no credit (previously replayed every launch with an error). New `iap-lifecycle.test.cjs` (9 checks). Purchases stay off in `ios-release`.
-- **PR #67:** Android readiness (docs).
+- **#66 merged** (CI green incl. emulator rules suite). **#67 merged:** `skyline-estates-app/ANDROID-READINESS.md` (recommend Android 1.0 without purchases; 12-tester/14-day closed test if personal account; target API 36).
+- **PR #68 (draft, do not merge yet):** iOS 1.1 coin packs: `ios-release` purchases on, privacy policy IAP section, 1.1 store notes. Merge only after 1.0 approval, deploy of #57+#66 and sandbox device tests.
 - **Next:** merge #66 after CI; deploy it together with #57 after approval (one redeploy); then the iOS payment update: `ios-release` purchases on, App Privacy adds Purchases (purchase history), attach the 4 IAPs to the next version, sandbox device tests with the isolated tester (buy, cancel, Ask-to-Buy pending, kill-before-finish, refund via in-app sheet, `DECLINE` refund).
 
 ## Checkpoint 30 Oct 15:30 — SUBMITTED for App Review
