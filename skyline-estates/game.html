@@ -1807,7 +1807,7 @@ html.rot .clstage{min-height:150px}html.rot .clstage canvas.mdl.clbig{max-width:
 .pf2dm .pf2b{grid-template-columns:1fr}
 .pf2dm .pf2s span{display:flex;flex-direction:column;justify-content:center;padding:8px 14px}
 .pf2dm .pf2s .pfdo b{color:#ffb4a8}.pf2dm .pf2s .pfdn{background:rgba(255,122,107,.16)}.pf2dm .pf2s .pfdn b{color:#ffd0c8}.pf2dm .pf2s .pfdy b{color:#6fe0a8}
-.pfdhint{margin:0;padding:8px 12px;border-radius:12px;background:#3a1714;border:1px solid #ff7a6b;color:#fff;font-size:14px;line-height:1.35}.pfdhint b{color:#ffd27a}
+.pf2debt .pfdhint{margin:0;padding:8px 12px;border-radius:12px;background:#3a1714;border:1px solid #ff7a6b;color:#fff;font-size:14px;line-height:1.35}.pf2debt .pfdhint b{color:#ffd27a}
 .pfdrow{flex:none;display:flex;align-items:center;gap:12px;min-height:56px;padding:6px 10px;border-radius:12px;background:#132c3d;border:1px solid #2a4658}
 .pfdrow.done{opacity:.7}
 .pfdc{flex:none;width:12px;align-self:stretch;border-radius:6px}
@@ -1816,7 +1816,7 @@ html.rot .clstage{min-height:150px}html.rot .clstage canvas.mdl.clbig{max-width:
 .pfdbtn{min-height:46px;min-width:44px;padding:0 14px;border-radius:12px;border:1.5px solid #b98a2f;background:linear-gradient(180deg,#f6d987,#d9a842);color:#1a1406;font:800 14px var(--display,inherit);white-space:nowrap;cursor:pointer}
 .pfdbtn[disabled]{background:#22394a;border-color:#3a5568;color:#9fb0bd;cursor:default}
 .pf2dm .pf2f{flex:none;padding-top:4px}.pf2dm .pf2f .btn{min-height:46px}
-@media (max-height:520px){.pf2dm .pf2h h2{font-size:19px}.pf2dm .pf2s span{padding:5px 12px}.pf2dm .pf2s b{font-size:17px}.pfdhint{font-size:13px;padding:6px 10px}.pfdrow{min-height:50px}.pf2dm .pf2f .btn{min-height:44px}}
+@media (max-height:520px){.pf2dm .pf2h h2{font-size:19px}.pf2dm .pf2s span{padding:5px 12px}.pf2dm .pf2s b{font-size:17px}.pf2debt .pfdhint{font-size:13px;padding:6px 10px}.pfdrow{min-height:50px}.pf2dm .pf2f .btn{min-height:44px}}
 @media (max-height:520px){.mp.pf2{padding:10px 12px;gap:7px;height:100%}.pf2h h2{font-size:22px}.pf2x{width:36px;height:36px;top:8px;right:10px}.pf2s span{padding:6px 12px}.pf2s i{width:26px;height:26px}.pf2s b{font-size:16px}.pf2pic{height:120px}.pf2btn{min-height:44px;font-size:13px}.pfdi{width:32px;height:32px}.pf2t button{height:32px}}
 html.rot .mp.pf2{width:min(860px,78vw);padding:10px 12px;gap:7px;height:100%}html.rot .pf2h h2{font-size:22px}html.rot .pf2pic{height:110px}html.rot .pf2s b{font-size:16px}html.rot .pf2btn{min-height:42px;font-size:12.5px}
 @media (max-width:700px){html:not(.rot) .mp.pf2{width:100%;height:100%}html:not(.rot) .pf2b{grid-template-columns:1fr;overflow:auto}html:not(.rot) .pf2s b{font-size:15px}html:not(.rot) .pf2s i{display:none}}
@@ -6773,7 +6773,7 @@ openAssets=function(p,opts={}){const debt=opts.debt||0,ro=!!opts.readonly;let fi
       pn.querySelector('.pf2h').innerHTML=`<h2>Raise cash to pay${opts.to?' '+esc(opts.to.name):''}</h2>`;
       pn.querySelector('.pf2s').innerHTML=`<span class="pfdo"><small>You owe</small><b>${fmt(debt)}</b></span><span><small>Cash available</small><b>${fmt(p.cash)}</b></span><span class="${short?'pfdn':'pfdy'}"><small>${short?'Still needed':'Ready to pay'}</small><b>${short?fmt(short):'✓'}</b></span>`;
       pn.querySelector('.pf3overview').innerHTML='';
-      pn.querySelector('.pf2debt').innerHTML=`<p class="pfdhint" role="status">${opts.who?'<b>'+esc(p.name)+'</b>: ':''}${short?(can>=debt?`Mortgage properties or sell buildings below. You can raise up to <b>${fmt(can-p.cash)}</b>.`:`Even after mortgaging and selling everything you would have <b>${fmt(can)}</b>, short of <b>${fmt(debt)}</b>.`):'You have enough cash. Tap <b>Pay</b> below.'}</p>`;
+      pn.querySelector('.pf2debt').innerHTML=`<p class="debt pfdhint" role="status">${opts.who?'<b>'+esc(p.name)+'</b>: ':''}${short?(can>=debt?`Mortgage properties or sell buildings below. You can raise up to <b>${fmt(can-p.cash)}</b>.`:`Even after mortgaging and selling everything you would have <b>${fmt(can)}</b>, short of <b>${fmt(debt)}</b>.`):'You have enough cash. Tap <b>Pay</b> below.'}</p>`;
       pn.querySelector('.pf2t').innerHTML='';pn.querySelector('.pf2d').innerHTML='';
       const L=pn.querySelector('.pf2g');L.innerHTML='';
       const value=i=>{const o=G.own[i];return o.m?0:(canMortgage(p.id,i)?SQ[i].p/2:o.h?SQ[i].h/2:0)};
