@@ -1,32 +1,24 @@
 # Skyline Estates 1.0 — App Store submission pack (drafts)
 
+**Decision 30 Oct 11:09: version 1.0 ships without in-app purchases.** Coin packs stay in App Store Connect but are **not** attached to version 1.0. Payment testing and activation are deferred to a later version.
+
 Prepared 30 October 2026. Drafts only. The owner reviews and enters every **declaration** in App Store Connect (privacy, age rating, export compliance, agreements) and presses **Submit for Review**. No passwords or personal data belong in this repository.
 
 ## 1. Build to submit
 
-- Workflow `skyline-ios.yml` on `main` with `publish=true` and `cloud_channel=ios-release` (PR #60). **Never submit a `private-testing` build.**
-- Prerequisites: device checklist passed; PR #60 and #61 merged; build appears as "Ready to Submit" in App Store Connect.
-- Attach to version 1.0 together with the four coin packs (first in-app purchases must ship with an app version):
-  - `com.kenstylez.skylineestates.coins_600`
-  - `com.kenstylez.skylineestates.coins_1500`
-  - `com.kenstylez.skylineestates.coins_4000`
-  - `com.kenstylez.skylineestates.coins_10000`
-
-  Each needs a display name, a description and a review screenshot of Shop → Coins.
+- Workflow `skyline-ios.yml` on `main` with `publish=true` and `cloud_channel=ios-release`. This build has accounts and cloud save on and purchases off.
+- **Never submit a `private-testing` build.**
+- Do **not** add the coin packs to version 1.0.
 
 ## 2. App Review notes (paste into "Notes"; owner adds the demo password)
 
-> Skyline Estates is a property trading board game. Everything can be played offline without an account.
+> Skyline Estates is a property trading board game. Everything can be played offline without an account. There are no in-app purchases in this version; coins are earned in play and have no cash value. The daily Lucky Spin is free.
 >
-> **Demo account (email sign-in):** use the App Review demo account entered in Sign-In Information. It's a dedicated test account. Purchases made by it in the review sandbox add coins to it.
+> **Optional accounts and cloud save:** tap the profile name (top left) → **Account & recovery**. Sign in with the demo account in Sign-In Information (email sign-in), or use Sign in with Apple. Progress is then saved to the account.
 >
-> **To review accounts and purchases:**
-> 1. Tap the profile name (top left) → **Account & recovery** → **Sign in with email** using the demo account.
-> 2. Go to **Shop → Coins** and buy any pack with the sandbox Apple account. Coins are verified by our server and added once.
-> 3. **Account & recovery → Purchases → Request a refund** opens Apple's refund sheet.
-> 4. **Account & recovery → Remove account** deletes the account and its cloud data (Guideline 5.1.1(v)).
+> **Account deletion (5.1.1(v)):** Account & recovery → **Remove account** → confirm. This deletes the account and its cloud data; the device save stays.
 >
-> Sign in with Apple is available alongside email sign-in. Coins are a consumable in-game currency with no cash value; the daily Lucky Spin is free and can't be bought. There are no ads, no analytics and no tracking.
+> No ads, no analytics, no tracking.
 
 ## 3. App Privacy (nutrition label) — draft answers for the owner to confirm
 
@@ -37,7 +29,6 @@ Data is **not used for tracking**. No third-party advertising or analytics SDKs.
 | Contact Info → Email Address | Yes (only with an account) | Yes | App Functionality |
 | Contact Info → Name | Only if Sign in with Apple shares it | Yes | App Functionality |
 | Identifiers → User ID | Yes (account ID; random player ID for online games) | Yes | App Functionality |
-| Purchases → Purchase History | Yes (App Store transaction details for delivery/refunds) | Yes | App Functionality |
 | User Content → Gameplay Content | Yes (online game moves, username, leaderboard level/trophies; cloud progress with an account) | Yes | App Functionality |
 | Other categories (location, contacts, health, financial info, browsing, search, diagnostics, usage data, sensitive info) | No | — | — |
 
@@ -46,7 +37,7 @@ Privacy policy URL (after merge to main): `https://p2rmy5ks88-design.github.io/a
 ## 4. Age rating — questions to answer yourself
 
 These are the owner's declarations. Points to consider:
-- **In-app purchases:** Yes.
+- **In-app purchases:** No (not in this version).
 - **Simulated gambling:** this is a dice board game with property trading and a free daily Lucky Spin (no purchase, no cash value). Decide whether you consider the free spin to be simulated gambling.
 - **User-generated content / social features:**
   - Usernames are visible in online games and leaderboards.
