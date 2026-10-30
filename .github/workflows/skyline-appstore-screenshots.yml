@@ -1,0 +1,19 @@
+name: Skyline App Store screenshots
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Upload iPhone 6.9" screenshots to the version being prepared
+        env:
+          ASC_KEY_B64: ${{ secrets.APP_STORE_CONNECT_KEY_BASE64 }}
+          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ASC_ISSUER: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        run: node skyline-estates-app/scripts/appstore-screenshots.mjs
