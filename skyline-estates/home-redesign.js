@@ -271,7 +271,7 @@ const LAUREL=`<svg viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient 
 function hdCityPane(T){const saved=loadSave(),c=CITY_DATA[setup.city],C=countryOf(setup.city),idx=CITY_ORDER.indexOf(setup.city)+1,n=cityDone(setup.city),S=season(),t=seasonTierNow(),cl=seasonClaimable(),sp=spotNow();
  const showOnline=!(IS_APP&&!FIRE);
  const sv=saved?`<button class="hd-cont" id="tCont" type="button">${PLAY.replace('<svg','<svg width="14" height="14"')}<span>Continue</span><small>Round ${saved.round} · ${esc((CITY_DATA[saved.set&&saved.set.city]||CITY_DATA.lagos).name)}</small></button>`:'';
- let spot='';if(sp){const k=Math.min(SPOT_GOAL,spotCount(sp.id)),R=roofDef(sp.reward),lag=sp.city==='lagos'&&hdLagosArt,ph=lag?hdLagosArt:cityPhoto(sp.city),ready=spotClaimable();
+ let spot='';if(sp){const k=Math.min(SPOT_GOAL,spotCount(sp.id)),R=roofDef(sp.reward),gardenReward=R?.id==='garden',lag=sp.city==='lagos'&&hdLagosArt&&!gardenReward,ph=gardenReward?'art/rooftop-garden.svg':lag?hdLagosArt:cityPhoto(sp.city),ready=spotClaimable();
   spot=`<button class="hd-spot" id="hdSpot" type="button" aria-label="City Spotlight: ${esc(sp.cityName)}, ${k} of ${SPOT_GOAL} matches${R?', reward '+esc(R.name):''}"><span class="th" style="${ph?`background-image:url(${ph})${lag?';background-size:430% auto;background-position:3% 86%':''}`:'background:#22325e'}"></span><span class="tx"><span class="tag">CITY SPOTLIGHT</span><b>${esc(sp.cityName)}</b><small>${ready?'Reward ready to claim':`${k} / ${SPOT_GOAL} matches →`}</small>${R?`<small class="rw">🎁 ${esc(R.name)}</small>`:''}</span><span class="go" aria-hidden="true">→</span></button>`}
  T.innerHTML=`<div class="hd-stage">
   <div class="hd-city"><small>${esc(C.name)} · City ${idx} of ${CITY_ORDER.length}</small><h1>${esc(c.name)}</h1><p>${esc(c.blurb)}</p><i></i></div>${sv}${spot}
@@ -283,7 +283,7 @@ function hdCityPane(T){const saved=loadSave(),c=CITY_DATA[setup.city],C=countryO
   </div>
   <button class="hd-panel hd-aw" id="hdAwards" type="button" aria-label="City awards ${n} of ${CT.length}">${LAUREL}<span class="tx"><small>City Awards</small><b>${n} / ${CT.length}</b><span class="bar"><i style="width:${n/CT.length*100}%"></i></span></span></button>
   <button class="hd-panel hd-chg" id="pCity" type="button">${PIN}<span>Change City</span></button><span class="hd-sep" aria-hidden="true"></span>
-  <button class="hd-panel hd-season" id="qSeason" type="button" style="--sart:url(art/shop.jpg)" aria-label="Season ${S.n}, ${esc(seasonName(S.n))}, tier ${t} of ${TIERS}${cl?', '+cl+' rewards ready':''}"><span class="tx"><small>SEASON ${S.n}</small><b>${esc(seasonName(S.n))}</b></span>${cl?`<span class="rdy">${cl} ready</span>`:''}<span class="go" aria-hidden="true">→</span></button>
+  <button class="hd-panel hd-season" id="qSeason" type="button" style="--sart:url(art/skyline-gala.svg)" aria-label="Season ${S.n}, ${esc(seasonName(S.n))}, tier ${t} of ${TIERS}${cl?', '+cl+' rewards ready':''}"><span class="tx"><small>SEASON ${S.n}</small><b>${esc(seasonName(S.n))}</b></span>${cl?`<span class="rdy">${cl} ready</span>`:''}<span class="go" aria-hidden="true">→</span></button>
  </div>`;
  const q=s=>T.querySelector(s);
  q('#pCity').onclick=()=>{sfx('tap');homeTab('world')};
@@ -412,4 +412,82 @@ homeTab=function(k){
 };
 window.SkylineCollectionVault={tabs:VAULT_TABS.map(x=>x[0])};
 try{if(document.querySelector('#title .home')&&!document.querySelector('#title').hidden&&['collection','tokens','frames','buildings'].includes(SEC_OF[setup.tab]||setup.tab))homeTab(setup.tab)}catch(e){console.error(e)}
+})();
+
+
+/* Estate Album: a read-only visual layer over the existing saved-match Portfolio model. */
+(()=>{
+'use strict';
+const style=document.createElement('style');style.id='skyline-estate-album';
+style.textContent=[
+'#title .home.hd-on .hd-bg.art .hd-photo{filter:brightness(1.15) saturate(1.13) contrast(1.035)!important}',
+'#title .home.hd-on .hd-bg.art .hd-grade{background:linear-gradient(180deg,rgba(13,18,51,.12) 0%,rgba(15,26,58,.02) 22%,rgba(12,27,59,.04) 57%,rgba(5,13,35,.22) 83%,rgba(5,10,27,.58) 100%)!important}',
+'#title .home.hd-on .hd-bg.art .hd-glow{background:radial-gradient(54% 38% at 57% 45%,rgba(255,202,135,.10),transparent 80%),radial-gradient(120% 90% at 50% 40%,transparent 58%,rgba(5,10,25,.35) 100%)!important}',
+'#title .hd-season{background:linear-gradient(90deg,rgba(10,20,47,.98) 0%,rgba(17,26,58,.9) 38%,rgba(17,26,58,.2) 76%),var(--sart) center 53%/cover no-repeat,#141a38!important}',
+'#title .hd-season .tx{text-shadow:0 2px 4px #060e22,0 3px 7px #061024}',
+'#title .hd-spot .th[style*="rooftop-garden.svg"]{background-position:center 47%!important;background-size:cover!important}',
+'#title .home.hd-dock #pane.sec-portfolio{background:linear-gradient(180deg,#0b2838,#081b2e)!important}',
+'#title .em-hero{position:relative;isolation:isolate;display:flex;align-items:flex-end;justify-content:space-between;gap:16px;overflow:hidden;min-height:112px;padding:20px 24px;margin:0 0 12px;border:1px solid #dcb971;border-radius:20px;box-shadow:0 13px 32px #0006;color:#ffefd4;background:#123246}',
+'#title .em-hero:before{content:"";position:absolute;inset:0;z-index:-2;background:var(--em-bg) center 54%/cover no-repeat;filter:saturate(1.1)}',
+'#title .em-hero:after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,#071b2ded 0%,#0c2439d9 44%,#0c243953 75%),linear-gradient(0deg,#07152280,transparent 65%)}',
+'#title .em-eyebrow{color:#efd095;font-weight:800;letter-spacing:.19em;font-size:11px;text-transform:uppercase}',
+'#title .em-hero h2{font-size:clamp(24px,2.5vw,37px);margin:5px 0;color:#fff9ea;line-height:1.1}',
+'#title .em-hero p{margin:4px 0;color:#c9e1dd;font-size:13px;max-width:510px;line-height:1.35}',
+'#title .em-totals{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;align-items:center}',
+'#title .em-total{background:#071927e6;min-width:100px;padding:10px 13px;border:1px solid #bb965c;border-radius:13px;text-align:center}',
+'#title .em-total strong{display:block;color:#f6d38c;font-size:23px;line-height:1}',
+'#title .em-total span{display:block;color:#bed5d5;font-size:11px;margin-top:5px}',
+'#title .em-album{background:linear-gradient(155deg,#112f40,#092335);border:1px solid #36586b;border-radius:19px;margin-bottom:12px;padding:14px;box-shadow:0 10px 24px #0005}',
+'#title .em-album-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}',
+'#title .em-album-head h3{font-size:18px;color:#f7e0aa;margin:0 0 3px}',
+'#title .em-album-head p{font-size:12px;color:#a9c8cf;margin:0}',
+'#title .em-album-head small{font-size:11px;color:#eac27c;text-align:right}',
+'#title .em-album-row{display:flex;gap:11px;overflow-x:auto;scroll-snap-type:x proximity;padding:3px 3px 11px;scrollbar-color:#c7a25f #183244;scrollbar-width:thin}',
+'#title .em-district{min-width:185px;flex:0 0 185px;display:flex;gap:9px;align-items:center;border:1px solid #43697b;border-radius:14px;padding:10px;text-align:left;background:linear-gradient(145deg,#1b4353,#0b2536);color:#e7f3f2;cursor:pointer;scroll-snap-align:start}',
+'#title .em-district:hover{border-color:#ffe1a0;box-shadow:0 0 12px #f3cf7750}',
+'#title .em-district:focus-visible{outline:3px solid #ffdf91;outline-offset:2px}',
+'#title .em-district.is-current{border-color:#ebc678;box-shadow:inset 0 0 0 1px #e5c17880,0 0 13px #e2bb6245;background:linear-gradient(145deg,#285258,#142c39)}',
+'#title .em-district img{width:66px;height:76px;object-fit:contain;flex:none;filter:drop-shadow(0 4px 7px #000b)}',
+'#title .em-district .em-info{min-width:0;display:block;flex:1}',
+'#title .em-district b{font-size:12px;display:block;margin-bottom:5px;line-height:1.25;overflow-wrap:anywhere}',
+'#title .em-district .em-count{font-size:12px;color:#f2d28e;font-weight:800;white-space:nowrap}',
+'#title .em-district .em-count em{font-style:normal;color:#b2cad1;font-weight:500;font-size:10px}',
+'#title .em-pips{display:flex;gap:4px;margin:6px 0 2px}',
+'#title .em-pips i{display:block;flex:1;max-width:16px;height:6px;border-radius:6px;background:#354b59;border:1px solid #638293}',
+'#title .em-pips i.owned{background:linear-gradient(90deg,#c89b46,#ffe6a0);border-color:#e7bd68;box-shadow:0 0 5px #dfb06180}',
+'#title .em-district .em-state{font-size:10px;color:#a9c8cd;display:block;margin-top:4px}',
+'#title .em-district .em-state.ready{color:#f3d58e}',
+'@media(max-width:850px){#title .em-hero{min-height:67px;padding:9px 12px;border-radius:13px;gap:8px;margin-bottom:8px}#title .em-hero h2{font-size:17px;margin:3px 0}#title .em-hero p{font-size:10px}#title .em-eyebrow{font-size:9px}#title .em-total{min-width:60px;padding:7px 8px;border-radius:9px}#title .em-total strong{font-size:15px}#title .em-total span{font-size:9px}#title .em-album{padding:8px;border-radius:12px}#title .em-album-head{margin-bottom:6px}#title .em-album-head h3{font-size:13px}#title .em-album-head p{font-size:10px}#title .em-album-row{gap:7px;padding-bottom:6px}#title .em-district{min-width:137px;flex-basis:137px;padding:5px;gap:5px;border-radius:9px}#title .em-district img{width:42px;height:48px}#title .em-district b{font-size:10px}#title .em-district .em-state{font-size:9px}}',
+'@media(max-width:580px){#title .em-hero p{display:none}#title .em-album-head p{display:none}#title .em-hero .em-totals{gap:4px}#title .em-total{min-width:48px;padding:6px}#title .em-total span{font-size:8px}}'
+].join('\n');
+document.head.appendChild(style);
+const priorPane=panePortfolio;
+panePortfolio=function(T){
+ const result=priorPane.apply(this,arguments);
+ try{
+  const e=estateSource()||blankEstate();
+  const districts=Object.entries(GROUPS).map(([id])=>({id,rows:e.rows.filter(r=>r.group===id),name:CITY_DATA[e.city]?.gname?.[id]||id})).filter(x=>x.rows.length);
+  const owned=e.rows.filter(r=>r.owned),complete=districts.filter(d=>d.rows.every(r=>r.owned)).length,mobile=phoneMedia.matches;
+  if(RP.tab!=='portfolio'||(mobile&&RP.mobilePage!=='districts'))return result;
+  const photo=cityPhoto(e.city)||'photos/lagos.jpg',hero=document.createElement('section');hero.className='em-hero';hero.style.setProperty('--em-bg',"url('"+photo+"')");
+  hero.setAttribute('aria-label','Estate overview');
+  hero.innerHTML='<div><span class="em-eyebrow">Your Property Empire · '+esc(e.cityName||CITY_DATA[e.city]?.name||'')+'</span><h2>My Estate</h2><p>Explore your districts, inspect every property and grow your collection.</p></div>'+
+   '<div class="em-totals"><div class="em-total"><strong>'+owned.length+'</strong><span>Owned this game</span></div><div class="em-total"><strong>'+complete+' / '+districts.length+'</strong><span>Complete sets</span></div></div>';
+  const album=document.createElement('section');album.className='em-album';album.setAttribute('aria-label','District property album');
+  const cards=districts.map(d=>{
+   const have=d.rows.filter(r=>r.owned),show=have[0]||d.rows[0],level=Math.min(5,Math.max(0,show?.h||0)),completeSet=have.length===d.rows.length;
+   return '<button class="em-district'+(RP.group===d.id?' is-current':'')+'" type="button" data-em-district="'+esc(d.id)+'" aria-label="'+esc(d.name)+', '+have.length+' of '+d.rows.length+' properties owned">'+
+    '<img src="'+bldPic(level)+'" alt="" loading="lazy" decoding="async"><span class="em-info"><b>'+esc(d.name)+'</b><span class="em-count">'+have.length+' / '+d.rows.length+' <em>owned</em></span>'+
+    '<span class="em-pips">'+d.rows.map(r=>'<i class="'+(r.owned?'owned':'missing')+'" aria-hidden="true"></i>').join('')+'</span><span class="em-state'+(completeSet?' ready':'')+'">'+(completeSet?'Set complete ✓':have.length?'Keep building':'Properties to discover')+'</span></span></button>';
+  }).join('');
+  album.innerHTML='<header class="em-album-head"><div><h3>District Property Album</h3><p>Gold slots are owned properties; dark slots are still missing.</p></div><small>'+complete+' of '+districts.length+' sets complete</small></header><div class="em-album-row">'+cards+'</div>';
+  T.prepend(album);T.prepend(hero);
+  album.querySelectorAll('[data-em-district]').forEach(b=>b.onclick=()=>{
+   RP.group=b.dataset.emDistrict;RP.square=null;RP.tab='portfolio';RP.filter='all';RP.mobilePage=mobile?'properties':'districts';panePortfolio(T);
+   if(mobile){const p=document.querySelector('#pane');if(p)p.scrollTop=0}
+  });
+ }catch(e){console.error('Estate Album view:',e)}
+ return result;
+};
+window.SkylineEstateAlbum={version:1,readOnly:true};
 })();
