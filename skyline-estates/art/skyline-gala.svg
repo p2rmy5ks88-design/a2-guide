@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 400" role="img" aria-label="Luxury rooftop gala entrance with golden lights and red carpet">
+<defs>
+ <linearGradient id="sky" x1="0" y1="0" x2="0.82" y2="1"><stop stop-color="#090f34"/><stop offset=".52" stop-color="#35214f"/><stop offset="1" stop-color="#b45d58"/></linearGradient>
+ <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff2be"/><stop offset=".39" stop-color="#c99542"/><stop offset=".78" stop-color="#f4ce71"/><stop offset="1" stop-color="#805126"/></linearGradient>
+ <linearGradient id="carpet" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#4a101e"/><stop offset=".3" stop-color="#b3233d"/><stop offset=".6" stop-color="#c12c47"/><stop offset="1" stop-color="#570d21"/></linearGradient>
+ <linearGradient id="palace" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#42374e"/><stop offset=".54" stop-color="#685561"/><stop offset="1" stop-color="#221d3b"/></linearGradient>
+ <radialGradient id="gleam"><stop stop-color="#fff6c5" stop-opacity=".95"/><stop offset=".2" stop-color="#f6cb6f" stop-opacity=".7"/><stop offset="1" stop-color="#ffc961" stop-opacity="0"/></radialGradient>
+ <pattern id="windows" width="34" height="28" patternUnits="userSpaceOnUse"><rect x="3" y="4" width="16" height="17" rx="2" fill="#f5c372" opacity=".82"/><path d="M11 4v17M3 11h16" stroke="#674456" stroke-width="2" opacity=".65"/></pattern>
+ <filter id="blur"><feGaussianBlur stdDeviation="14"/></filter>
+ <filter id="glow"><feGaussianBlur stdDeviation="3"/></filter>
+</defs>
+<rect width="960" height="400" fill="url(#sky)"/>
+<circle cx="738" cy="108" r="210" fill="#f6a95c" opacity=".2" filter="url(#blur)"/>
+<path d="M0 274L95 235l40 20 55-60 32 37 40-18 45 35 35-27 55 34 55-29 62 35 60-40 48 22 54-30 62 28 72-27 80 41v160H0z" fill="#121832" opacity=".87"/>
+<path d="M0 290h960v110H0z" fill="#16182c"/>
+<g opacity=".65" fill="#f5cc78"><circle cx="150" cy="255" r="2"/><circle cx="184" cy="247" r="2"/><circle cx="240" cy="254" r="2"/><circle cx="338" cy="251" r="2"/><circle cx="397" cy="248" r="2"/><circle cx="472" cy="250" r="2"/><circle cx="565" cy="246" r="2"/><circle cx="905" cy="248" r="2"/></g>
+<g transform="translate(465 0)">
+ <path d="M30 161l10-12h384l11 12v126H30z" fill="url(#palace)" stroke="#bd9556" stroke-width="4"/>
+ <path d="M4 145L45 124h373l44 21v20H4z" fill="#251d39" stroke="url(#gold)" stroke-width="6"/>
+ <path d="M33 116l10-33h376l11 33" fill="#49405a" stroke="url(#gold)" stroke-width="4"/>
+ <path d="M20 171h429v11H20z" fill="#c39449"/>
+ <path d="M58 185h345v94H58z" fill="url(#windows)" opacity=".87"/>
+ <path d="M175 134V93h14V80h20V45h10v34h20v15h14v41" fill="#d4a75f" stroke="#fce29c" stroke-width="3"/>
+ <path d="M132 125v-32h36v32M280 125v-32h36v32" fill="#3c3957" stroke="#d8aa5e" stroke-width="3"/>
+ <path d="M170 286V176q57-76 115 0v110z" fill="#130f30" stroke="url(#gold)" stroke-width="8"/>
+ <path d="M185 281V182q44-56 86 0v99" fill="#ebad50" opacity=".45"/>
+ <path d="M215 281v-87h29v87" fill="#3c2840" stroke="#ffe49b" stroke-width="3"/>
+ <path d="M224 203h12v18h-12z" fill="#f7c96a"/>
+ <path d="M32 286h399v17H32z" fill="#a67848"/>
+ <path d="M12 305h438v16H12z" fill="#ebba69"/>
+</g>
+<g stroke="#f4d38e" stroke-width="3" fill="none" opacity=".9">
+ <path d="M505 153q88 25 174-1t171 2" stroke-dasharray="3 11"/><path d="M516 117q140 24 292-4" stroke-dasharray="3 13"/>
+</g>
+<g fill="#fff2c3"><circle cx="538" cy="146" r="4"/><circle cx="580" cy="155" r="4"/><circle cx="624" cy="157" r="4"/><circle cx="666" cy="154" r="4"/><circle cx="705" cy="150" r="4"/><circle cx="749" cy="150" r="4"/><circle cx="792" cy="153" r="4"/><circle cx="831" cy="150" r="4"/></g>
+<path d="M686 308h118l150 92H524z" fill="url(#carpet)" stroke="#f8ce7a" stroke-width="5"/>
+<path d="M715 309h60l76 91H641z" fill="#e44e57" opacity=".27"/>
+<path d="M677 309h130" stroke="#fbe3a3" stroke-width="4"/>
+<g fill="none" stroke="#d8b270" stroke-width="4"><path d="M576 389q40-20 62-50"/><path d="M631 338q18-11 31-26"/><path d="M870 389q-40-20-63-50"/><path d="M814 338q-19-11-32-26"/></g>
+<g fill="url(#gold)" stroke="#ffe8a0" stroke-width="1.5"><circle cx="576" cy="387" r="7"/><circle cx="638" cy="337" r="6"/><circle cx="663" cy="311" r="5"/><circle cx="869" cy="387" r="7"/><circle cx="808" cy="337" r="6"/><circle cx="781" cy="311" r="5"/></g>
+<g stroke="#c89a55" stroke-width="4"><path d="M576 388v-24m62-27v-20m25-6v-16m206 93v-24m-61-27v-20m-27-6v-16"/></g>
+<g fill="#1b462f"><path d="M515 313q-27-50 0-113 29 55 6 110" /><path d="M512 305q-50-38-35-93 38 31 43 85"/><path d="M525 302q41-33 31-86-34 34-35 86"/><path d="M900 322q-35-59-10-119 36 59 16 114"/><path d="M900 314q-55-32-46-88 44 28 51 82"/><path d="M906 315q40-28 37-77-34 27-39 72"/></g>
+<g fill="#ffd77d" opacity=".85"><circle cx="485" cy="180" r="45" fill="url(#gleam)"/><circle cx="913" cy="174" r="50" fill="url(#gleam)"/><circle cx="752" cy="120" r="60" fill="url(#gleam)"/></g>
+<path d="M0 0h490v400H0z" fill="url(#sky)" opacity=".16"/>
+<rect width="960" height="400" fill="none" stroke="#b78c57" stroke-opacity=".16" stroke-width="8"/>
+</svg>
