@@ -109,6 +109,13 @@ window.SkylineEstateSnapshot=()=>{
   photo:cityPhoto(e.city)||'photos/lagos.jpg',groups,
   ownedCount:e.rows.filter(r=>r.owned).length,
   complete:groups.filter(g=>g.rows.every(r=>r.owned)).length,
+  /* These are earned/persisted property collectibles, not just buildings held in the current match. */
+  upgradeChoices:e.rows.filter(r=>r.type==='prop'&&(r.owned||PREF.estateOwned?.[e.city]?.includes(r.i))).map(r=>{
+   const rarity=propertyRarity(e.city,r.i),next=ESTATE_UPGRADE[rarity+1],wins=careerWins();
+   return{square:r.i,group:r.group,name:r.name,rarity,rarityName:refStage(rarity).name,
+    builtInMatch:r.h||0,ready:!!next&&wins>=next.wins&&PREF.coins>=next.coins,
+    nextName:next?refStage(rarity+1).name:null,needCoins:next?next.coins:0,needWins:next?next.wins:0};
+  }),
   current:RP.group,tab:RP.tab,mobilePage:RP.mobilePage,mobile:phoneMedia.matches};
 };
 window.SkylinePortfolioNavigateDistrict=id=>{
@@ -118,6 +125,18 @@ window.SkylinePortfolioNavigateDistrict=id=>{
  RP.mobilePage=phoneMedia.matches?'properties':'districts';
  const target=document.querySelector('#pane');
  if(target){panePortfolio(target);if(phoneMedia.matches)target.scrollTop=0}
+ return true;
+};
+/* Fast path to the EXISTING persistent rarity upgrade interface.
+   This never creates buildings, changes levels, charges coins, or skips match rules. */
+window.SkylinePortfolioOpenUpgrade=square=>{
+ const snapshot=window.SkylineEstateSnapshot(),choice=snapshot.upgradeChoices.find(x=>x.square===+square);
+ if(!choice)return false;
+ RP.group=choice.group;RP.square=choice.square;RP.tab='growth';RP.mobilePage='detail';
+ RP.mobileGrowth=true;
+ const target=document.querySelector('#pane');
+ if(!target)return false;
+ panePortfolio(target);target.scrollTop=0;
  return true;
 };
 if(document.querySelector('#title .home')&&!document.querySelector('#title').hidden)homeTab(setup.tab||'play');
