@@ -59,9 +59,11 @@ const root=path.resolve(__dirname,'../..'),types={'.html':'text/html','.js':'tex
         {name:'Rival',tok:TOKENS[1],col:PCOL[1],ai:true}
       ]});
       G.phase='pre';G.turn=0;save();showTitle();homeTab('portfolio');
-      return {hasSaved:window.SkylineEstateSnapshot().hasSavedMatch,cash:G.players[0].cash};
+      /* The previous test is on Growth. Switch to Portfolio overview to display its quick actions. */
+      document.querySelector('[data-estate-tab="portfolio"]')?.click();
+      return {hasSaved:window.SkylineEstateSnapshot().hasSavedMatch,hasButton:!!document.querySelector('.em-match-open'),cash:G.players[0].cash};
     });
-    verify('Saved active match exposes direct building manager',state.hasSaved&&await page.locator('.em-match-open').count()===1,state);
+    verify('Saved active match exposes direct building manager',state.hasSaved&&state.hasButton&&await page.locator('.em-match-open').count()===1,state);
     await page.locator('.em-match-open').click();
     await page.waitForFunction(()=>document.querySelector('#title').hidden&& !document.querySelector('#ui').hidden,{timeout:15000});
     await page.waitForTimeout(350);
