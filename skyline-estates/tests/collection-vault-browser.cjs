@@ -19,6 +19,7 @@ const types={'.html':'text/html','.js':'text/javascript','.jpg':'image/jpeg','.p
   await page.goto('http://127.0.0.1:'+server.address().port+'/skyline-estates/index.html');
   await page.waitForFunction(()=>!!document.querySelector('#title .hd-stage'),null,{timeout:20000});
   await page.evaluate(()=>homeTab('collection'));
+  await page.screenshot({path:path.join(process.env.RUNNER_TEMP||'/tmp','skyline-vault-'+vp.width+'.png')});
   const info=await page.evaluate(()=>({
    labels:[...document.querySelectorAll('.cv-category b')].map(x=>x.textContent),
    active:document.querySelector('.cv-category[aria-selected=true] b')?.textContent,
