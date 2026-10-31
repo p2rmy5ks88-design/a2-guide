@@ -24,6 +24,12 @@ const types={'.html':'text/html','.js':'text/javascript','.jpg':'image/jpeg','.p
  check('City Spotlight panel matches the live spotlight',st.spot===st.spotWant,st);
  check('bottom dock replaces the side rail, six items in the approved order, City selected',st.rail==='absolute'&&JSON.stringify(st.dock)===JSON.stringify(['City','Portfolio','Collection','Shop','Awards','Progress'])&&st.on==='City',st);
 
+ // Live game state: change the real values and confirm the home screen follows them (nothing is hardcoded).
+ const live=await page.evaluate(()=>{const sp=spotNow();PREF.coins+=777;PREF.trophies+=5;PREF.xp=xpFor(lvlOf(PREF.xp)+2);cach(setup.city)[CT[0].id||CT[0][0]||'t0']=1;if(sp)spotFlags()[sp.id+'.m.test']=1;savePref();homeTab('play');
+  const lv=lvlOf(PREF.xp);return{coins:document.querySelector('#tbCoins').textContent.replace(/\D/g,'')===String(Math.round(PREF.coins)),league:document.querySelector('#tbLeague').textContent.includes(String(PREF.trophies)),
+   level:document.querySelector('#tbWho .ri b small').textContent===`Level ${lv} ${rankOf(lv)}`,awards:document.querySelector('#hdAwards b').textContent===`${cityDone(setup.city)} / ${CT.length}`&&cityDone(setup.city)>=1,
+   spot:!sp||document.querySelector('#hdSpot').textContent.includes(`${Math.min(SPOT_GOAL,spotCount(sp.id))} / ${SPOT_GOAL}`)}});
+ check('header, awards and Spotlight follow live game state after it changes',Object.values(live).every(Boolean),live);
  for(const [label,want] of [['Portfolio','portfolio'],['Collection','collection'],['Shop','shop'],['Awards','ach'],['Progress','progress'],['City','play']]){
   await page.locator('.hd-di',{hasText:label}).click();await page.waitForTimeout(150);const t=await tab(page),sec=await page.evaluate(()=>SEC_OF[setup.tab]||setup.tab),on=await page.evaluate(()=>document.querySelector('.hd-di.on')?.textContent.trim());
   const ok=want==='ach'?t==='ach':want==='progress'?sec==='progress'&&t!=='ach':sec===want;

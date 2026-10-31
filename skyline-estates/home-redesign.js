@@ -6,8 +6,8 @@
 (()=>{
 'use strict';
 const HD_BG_LAGOS='art/home-lagos.jpg';
-let hdLagosArt=null;{const i=new Image();i.onload=()=>{hdLagosArt=HD_BG_LAGOS;const b=document.querySelector('#title .hd-bg');if(b&&hdCityKey()==='lagos')hdPaintBg(b)};i.src=HD_BG_LAGOS}
-const hdCityKey=()=>{const c=setup.city;return CITY_DATA[c]&&countryOf(c)&&countryOf(c).key==='ng'&&/^(lagos|beach|night)$/.test(c)?'lagos':c};
+let hdLagosArt=null;{const i=new Image();i.onload=()=>{hdLagosArt=HD_BG_LAGOS;try{const t=document.getElementById('title');if(t&&!t.hidden&&setup.tab==='play'&&document.querySelector('#title .hd-stage'))homeTab('play')}catch(e){}};i.src=HD_BG_LAGOS}
+const hdCityKey=()=>setup.city;
 const DOCK=[['play','City','M3 11l9-7 9 7M5 10v10h5v-6h4v6h5V10'],['portfolio','Portfolio','M4 20V5M8 20V5M12 20V5M16 20V5M20 20V5M3 5h18M3 20h18'],
  ['collection','Collection','M12 3l8 9-8 9-8-9z'],['shop','Shop','M3 4h2l2.4 11h11l2-8H6.2M9 20a1 1 0 1 0 0-.1M17 20a1 1 0 1 0 0-.1'],
  ['ach','Awards','M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4zM17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3M12 7l.8 1.7 1.8.2-1.3 1.2.4 1.8-1.7-.9-1.7.9.4-1.8-1.3-1.2 1.8-.2z'],
@@ -85,7 +85,7 @@ const css=`
 #title .home.hd-on #pane>.subtabs{display:none}
 #title .hd-stage{position:absolute;left:var(--hd-ox);top:var(--hd-oy);width:calc(100*var(--hd-u));height:calc(56.25*var(--hd-u));pointer-events:none;color:#fff}
 #title .hd-stage>*{pointer-events:auto;position:absolute}
-#title .hd-city{left:calc(9.3*var(--hd-u));top:calc(13.9*var(--hd-u));width:max-content;max-width:calc(21*var(--hd-u));pointer-events:none}
+#title .hd-city{left:calc(9.3*var(--hd-u));top:calc(13.2*var(--hd-u));width:max-content;max-width:calc(21*var(--hd-u));pointer-events:none}
 #title .hd-city small{display:block;font:700 calc(1.4*var(--hd-u))/1 var(--display,'Outfit',system-ui,sans-serif);color:#f6cf63;text-shadow:0 2px 6px rgba(0,0,0,.7);white-space:nowrap}
 #title .hd-city h1{margin:calc(.55*var(--hd-u)) 0 0;font:700 calc(4.25*var(--hd-u))/1 'Cinzel','Trajan Pro',Georgia,'Times New Roman',serif;letter-spacing:.02em;text-transform:uppercase;color:#fff;
  text-shadow:0 2px 0 #9aa6bf,0 4px 14px rgba(0,0,0,.75);white-space:nowrap}
@@ -152,6 +152,47 @@ const css=`
 #title .hd-chg{font-size:max(13px,calc(1.45*var(--hd-u)))!important}
 #title .home.hd-on #rprof .tpill,#title .home.hd-on #rprof .hd-gear,#title .hd-spot .go,#title .hd-season .go{position:relative}
 #title .home.hd-on #rprof .tpill:after,#title .home.hd-on #rprof .hd-gear:after{content:'';position:absolute;inset:-8px -4px}
+/* ---- refinement 2: physical 3D tiles, Canva Lagos art, panel polish ---- */
+#title .hd-modes{gap:calc(.6*var(--hd-u));perspective:calc(90*var(--hd-u))}
+#title .hd-mode{border:calc(.38*var(--hd-u)) solid transparent!important;border-radius:calc(2.1*var(--hd-u));
+ background:radial-gradient(120% 60% at 50% 0%,rgba(255,255,255,.30),transparent 58%) padding-box,var(--mb) padding-box,
+  linear-gradient(165deg,#fff4c8 0%,#f2c457 16%,#a8721f 40%,#ffe08a 60%,#b57b22 80%,#fff0b0 100%) border-box!important;
+ box-shadow:0 calc(.45*var(--hd-u)) 0 #8a5a14,0 calc(.75*var(--hd-u)) 0 #3a2506,0 calc(1.5*var(--hd-u)) calc(2.6*var(--hd-u)) rgba(0,0,0,.62),0 0 calc(2.2*var(--hd-u)) var(--mg),
+  inset 0 calc(.35*var(--hd-u)) calc(.5*var(--hd-u)) rgba(255,255,255,.35),inset 0 calc(-1.6*var(--hd-u)) calc(2.4*var(--hd-u)) rgba(0,0,0,.42)!important;
+ transform:rotateX(4deg);transform-origin:50% 100%}
+#title .hd-mode:hover{transform:rotateX(4deg) translateY(calc(-.45*var(--hd-u)));filter:brightness(1.07)}
+#title .hd-mode:active{transform:rotateX(4deg) translateY(calc(.1*var(--hd-u))) scale(.985)}
+#title .hd-mode:before{content:'';position:absolute;inset:calc(.3*var(--hd-u));border-radius:calc(1.75*var(--hd-u));box-shadow:inset 0 0 0 1px rgba(255,240,190,.5),inset 0 calc(4*var(--hd-u)) calc(3*var(--hd-u)) calc(-2*var(--hd-u)) rgba(255,255,255,.18);pointer-events:none}
+#title .hd-mode:after{content:'';position:absolute;left:6%;right:6%;bottom:calc(-1.9*var(--hd-u));height:calc(1.5*var(--hd-u));border-radius:50%;background:radial-gradient(closest-side,rgba(0,0,0,.6),transparent);z-index:-1;pointer-events:none}
+#title .hd-mode .art{top:calc(-2.5*var(--hd-u))!important;width:calc(14*var(--hd-u));height:calc(8.7*var(--hd-u))!important;filter:drop-shadow(0 calc(.6*var(--hd-u)) calc(.7*var(--hd-u)) rgba(0,0,0,.5))}
+#title .hd-mode .art:after{display:none}
+#title .hd-mode.m1 .art{top:calc(-1.5*var(--hd-u))!important;height:calc(7.8*var(--hd-u))!important}
+#title .hd-mode small{white-space:nowrap;font-size:max(10px,calc(1.08*var(--hd-u)))!important;letter-spacing:-.005em}
+#title .hd-mode{padding:0 calc(.5*var(--hd-u)) calc(1.1*var(--hd-u))!important}
+#title .hd-mode b{text-shadow:0 calc(.14*var(--hd-u)) 0 rgba(60,30,0,.55),0 calc(.3*var(--hd-u)) calc(.8*var(--hd-u)) rgba(0,0,0,.5)}
+#title .hd-mode .pb{width:calc(5.3*var(--hd-u));height:calc(2.65*var(--hd-u));border:calc(.14*var(--hd-u)) solid #8a5a14;background:linear-gradient(180deg,#fff7c4 0%,#ffd75a 38%,#f0b52c 62%,#b97e1b 100%);
+ box-shadow:0 calc(.22*var(--hd-u)) 0 #5e3d0b,0 calc(.45*var(--hd-u)) calc(.8*var(--hd-u)) rgba(0,0,0,.45),inset 0 calc(.12*var(--hd-u)) 0 rgba(255,255,255,.85),inset 0 calc(-.2*var(--hd-u)) calc(.3*var(--hd-u)) rgba(120,70,0,.4)}
+#title .home.hd-on .hd-logo b{-webkit-text-stroke:calc(.07*var(--hd-u)) #6b4510;font-size:calc(3.4*var(--hd-u))}
+#title .home.hd-on .hd-logo svg{width:calc(11*var(--hd-u));height:calc(4*var(--hd-u))}
+#title .home.hd-on .hd-logo span{border-top:0!important;padding-top:calc(.7*var(--hd-u));margin-top:calc(.35*var(--hd-u));font-size:calc(1.05*var(--hd-u))!important;letter-spacing:.42em;
+ background:linear-gradient(90deg,transparent,rgba(242,196,87,.9) 20%,rgba(242,196,87,.9) 80%,transparent) top center/88% 2px no-repeat}
+#title .hd-spot{gap:calc(.9*var(--hd-u))}
+#title .hd-spot .th{width:calc(7.9*var(--hd-u))}
+#title .hd-spot{padding-right:calc(.3*var(--hd-u))!important}
+#title .hd-spot .go{margin-right:calc(.3*var(--hd-u))!important}
+#title .hd-spot small{font-size:max(10px,calc(.98*var(--hd-u)))!important}
+#title .hd-spot small.rw{color:#fff3c4}
+#title .hd-spot .tx{overflow:hidden}
+#title .hd-spot small{white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis}
+#title .hd-spot b{font-size:calc(1.9*var(--hd-u))}
+#title .hd-aw small{font-size:max(11px,calc(1.35*var(--hd-u)))!important}
+#title .hd-aw b{font-size:max(15px,calc(2*var(--hd-u)))}
+#title .hd-aw svg{width:calc(5.2*var(--hd-u))!important;height:calc(5.2*var(--hd-u))!important}
+#title .hd-chg{font-size:max(13px,calc(1.6*var(--hd-u)))!important}
+#title .hd-panel{box-shadow:0 0 0 1px rgba(0,0,0,.5),0 calc(.5*var(--hd-u)) 0 rgba(0,0,0,.35),0 calc(.9*var(--hd-u)) calc(1.8*var(--hd-u)) rgba(0,0,0,.55),inset 0 1px 0 rgba(255,231,160,.25)}
+#title .home.hd-on .hd-bg.art .hd-photo{background-position:center center}
+#title .home.hd-on .hd-bg.art .hd-grade{background:linear-gradient(180deg,rgba(10,10,40,.25) 0%,rgba(0,0,0,0) 18%,rgba(0,0,0,0) 58%,rgba(5,9,26,.35) 82%,rgba(5,9,26,.7) 100%)!important;mix-blend-mode:normal}
+#title .home.hd-on .hd-bg.art .hd-lights{display:none}
 @media (max-height:540px){
  #title .home.hd-on #rprof .tpill{height:max(28px,calc(2.9*var(--hd-u)))!important;font-size:max(11px,calc(1.3*var(--hd-u)))!important}
  #title .home.hd-on #rprof .hd-gear{width:30px;height:30px}
@@ -164,7 +205,16 @@ const css=`
  #title .hd-spot small{white-space:nowrap!important;overflow:hidden!important}
  #title .hd-spot b,#title .hd-aw b{font-size:max(11px,calc(1.75*var(--hd-u)))}
  #title .hd-spot .tag{font-size:max(7.5px,calc(.95*var(--hd-u)))}
- #title .hd-mode .art{height:calc(7.2*var(--hd-u));top:calc(-1.6*var(--hd-u))}
+ #title .hd-mode .art{height:calc(7.2*var(--hd-u))!important;top:calc(-1.8*var(--hd-u))!important}
+ #title .hd-mode.m1 .art{height:calc(6.6*var(--hd-u))!important;top:calc(-1.2*var(--hd-u))!important}
+ #title .hd-mode small{white-space:normal!important;overflow:visible!important;text-overflow:clip!important;line-height:1.1!important;margin-top:2px!important}
+ #title .hd-mode .pb{margin-top:4px!important}
+ #title .hd-mode small{min-height:2.2em;display:flex!important;align-items:flex-start;justify-content:center}
+ #title .hd-spot .th{width:calc(6.2*var(--hd-u))}
+ #title .hd-spot small.rw{white-space:normal!important;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.1;font-size:max(8.5px,calc(.98*var(--hd-u)))!important}
+ #title .hd-spot b{font-size:max(11px,calc(1.6*var(--hd-u)))!important}
+ #title .hd-spot .tx{gap:1px}
+ #title .hd-spot{min-height:64px!important;height:auto!important}
  #title .hd-mode b{font-size:max(12px,calc(2.2*var(--hd-u)))!important}
  #title .hd-mode small{font-size:max(9px,calc(1.15*var(--hd-u)))!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
  #title .hd-mode .pb{min-height:18px}
@@ -221,15 +271,15 @@ const LAUREL=`<svg viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient 
 function hdCityPane(T){const saved=loadSave(),c=CITY_DATA[setup.city],C=countryOf(setup.city),idx=CITY_ORDER.indexOf(setup.city)+1,n=cityDone(setup.city),S=season(),t=seasonTierNow(),cl=seasonClaimable(),sp=spotNow();
  const showOnline=!(IS_APP&&!FIRE);
  const sv=saved?`<button class="hd-cont" id="tCont" type="button">${PLAY.replace('<svg','<svg width="14" height="14"')}<span>Continue</span><small>Round ${saved.round} · ${esc((CITY_DATA[saved.set&&saved.set.city]||CITY_DATA.lagos).name)}</small></button>`:'';
- let spot='';if(sp){const k=Math.min(SPOT_GOAL,spotCount(sp.id)),R=roofDef(sp.reward),ph=cityPhoto(sp.city),ready=spotClaimable();
-  spot=`<button class="hd-spot" id="hdSpot" type="button" aria-label="City Spotlight: ${esc(sp.cityName)}, ${k} of ${SPOT_GOAL} matches${R?', reward '+esc(R.name):''}"><span class="th" style="${ph?`background-image:url(${ph})`:'background:#22325e'}"></span><span class="tx"><span class="tag">CITY SPOTLIGHT</span><b>${esc(sp.cityName)}</b><small>${ready?'Reward ready to claim':`${k} / ${SPOT_GOAL} matches →`}</small>${R?`<small>🎁 ${esc(R.name)}</small>`:''}</span><span class="go" aria-hidden="true">→</span></button>`}
+ let spot='';if(sp){const k=Math.min(SPOT_GOAL,spotCount(sp.id)),R=roofDef(sp.reward),lag=sp.city==='lagos'&&hdLagosArt,ph=lag?hdLagosArt:cityPhoto(sp.city),ready=spotClaimable();
+  spot=`<button class="hd-spot" id="hdSpot" type="button" aria-label="City Spotlight: ${esc(sp.cityName)}, ${k} of ${SPOT_GOAL} matches${R?', reward '+esc(R.name):''}"><span class="th" style="${ph?`background-image:url(${ph})${lag?';background-size:430% auto;background-position:3% 86%':''}`:'background:#22325e'}"></span><span class="tx"><span class="tag">CITY SPOTLIGHT</span><b>${esc(sp.cityName)}</b><small>${ready?'Reward ready to claim':`${k} / ${SPOT_GOAL} matches →`}</small>${R?`<small class="rw">🎁 ${esc(R.name)}</small>`:''}</span><span class="go" aria-hidden="true">→</span></button>`}
  T.innerHTML=`<div class="hd-stage">
   <div class="hd-city"><small>${esc(C.name)} · City ${idx} of ${CITY_ORDER.length}</small><h1>${esc(c.name)}</h1><p>${esc(c.blurb)}</p><i></i></div>${sv}${spot}
   <div class="hd-modes" role="group" aria-label="Game modes">
    <button class="hd-mode m1" id="qAI" type="button"><span class="art" style="background-image:url(art/hd-dice.png)"></span><b>Play Solo</b><small>Take on the city at your pace</small><span class="pb">${PLAY}</span></button>
    <button class="hd-mode m2" id="qPP" type="button"><span class="art" style="background-image:url(art/hd-pawns.png)"></span><b>Pass &amp; Play</b><small>2 – 6 friends on this device</small><span class="pb">${PLAY}</span></button>
    ${showOnline?`<button class="hd-mode m3" id="tOnline" type="button"><span class="art" style="background-image:url(art/hd-globe.png)"></span><b>Play Online</b><small>Friends on their own devices</small><span class="pb">${PLAY}</span></button>`:''}
-   <button class="hd-mode m4" id="qCustom" type="button"><span class="art" style="background-image:url(art/hd-sliders.png)"></span><b>Custom Game</b><small>Players, rules, modes</small><span class="pb">${PLAY}</span></button>
+   <button class="hd-mode m4" id="qCustom" type="button"><span class="art" style="background-image:url(art/hd-checklist.png)"></span><b>Custom Game</b><small>Players, rules, modes</small><span class="pb">${PLAY}</span></button>
   </div>
   <button class="hd-panel hd-aw" id="hdAwards" type="button" aria-label="City awards ${n} of ${CT.length}">${LAUREL}<span class="tx"><small>City Awards</small><b>${n} / ${CT.length}</b><span class="bar"><i style="width:${n/CT.length*100}%"></i></span></span></button>
   <button class="hd-panel hd-chg" id="pCity" type="button">${PIN}<span>Change City</span></button><span class="hd-sep" aria-hidden="true"></span>
