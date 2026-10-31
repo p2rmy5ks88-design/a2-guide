@@ -1,0 +1,50 @@
+name: Collection Vault temporary verification
+
+on:
+  push:
+    branches: [skyline-collection-vault]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Syntax and generated asset validation
+        run: |
+          node --check skyline-estates/home-redesign.js
+          node --check skyline-estates/tests/reference-dashboard-browser.cjs
+          python3 skyline-estates/build.py
+          python3 skyline-estates/build.py --check
+      - name: Install browser dependencies
+        run: npm install --prefix skyline-estates/tests --no-audit --no-fund
+      - name: Check Collection Vault
+        run: CHROME_PATH="$(command -v google-chrome)" node skyline-estates/tests/collection-vault-browser.cjs
+      - name: Check trusted online room controls
+        run: CHROME_PATH="$(command -v google-chrome)" node skyline-estates/security/service/room-entry-browser.test.cjs "$RUNNER_TEMP/skyline-room-entry-browser.json"
+      - name: Check complete reference dashboard
+        run: CHROME_PATH="$(command -v google-chrome)" SKYLINE_NO_WEBGL=1 node skyline-estates/tests/reference-dashboard-browser.cjs "$RUNNER_TEMP/skyline-reference-dashboard.json"
+      - name: Upload visual review screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: skyline-vault-review
+          path: |
+            ${{ runner.temp }}/skyline-vault-*.png
+            ${{ runner.temp }}/skyline-reference-dashboard.*.png
+      - name: Commit synchronized offline manifest
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add skyline-estates/index.html skyline-estates/offline-assets.js
+          if ! git diff --cached --quiet; then
+            git commit -m "build: refresh Collection Vault offline cache"
+            git push origin HEAD:skyline-collection-vault
+          fi
