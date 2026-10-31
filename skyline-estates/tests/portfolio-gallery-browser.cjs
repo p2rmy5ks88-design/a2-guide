@@ -24,6 +24,23 @@ const root=path.resolve(__dirname,'../..'),types={'.html':'text/html','.js':'tex
    const moved=await page.evaluate(()=>({chosen:window.SkylineEstateSnapshot().current,select:document.querySelector('.rf-district.selected')?.dataset.district||null,mp:window.SkylineEstateSnapshot().mobilePage,canBack:!!document.querySelector('[data-estate-back="districts"]')}));
    verify('District album navigates to actual district at '+vp.width,moved.chosen===second&&(initial.mobile?(moved.mp==='properties'&&moved.canBack):moved.select===second),{moved,second});
   }
+  // Short path: a previously collected property opens its existing persistent-rarity upgrade page.
+  const beforeUpgrade=await page.evaluate(()=>{
+    const sq=PROP_IDX[0],coins=PREF.coins,game=JSON.stringify(G);
+    PREF.estateOwned=PREF.estateOwned||{};
+    PREF.estateOwned[setup.city]=[sq];savePref();
+    homeTab('play');homeTab('portfolio');
+    return {sq,coins,game};
+  });
+  const quick=await page.evaluate(()=>({options:[...document.querySelectorAll('.em-up-form select option')].map(o=>Number(o.value)),count:window.SkylineEstateSnapshot().upgradeChoices.length}));
+  verify('Direct upgrade picker uses collected property records at '+vp.width,quick.options.includes(beforeUpgrade.sq)&&quick.options.length===quick.count,quick);
+  await page.getByLabel('Choose property for upgrade').selectOption(String(beforeUpgrade.sq));
+  await page.locator('.em-up-form button').click();
+  const afterUpgrade=await page.evaluate(()=>({snap:window.SkylineEstateSnapshot(),up:document.querySelectorAll('[data-estate-upgrade]').length,coins:PREF.coins,game:JSON.stringify(G),open:document.querySelector('.rf-mobile-growth')?.open}));
+  verify('Upgrade shortcut reaches existing growth controls without spending at '+vp.width,
+    afterUpgrade.snap.tab==='growth'&&afterUpgrade.up===1&&afterUpgrade.coins===beforeUpgrade.coins&&afterUpgrade.game===beforeUpgrade.game&&(!initial.mobile||afterUpgrade.open),{
+      tab:afterUpgrade.snap.tab,up:afterUpgrade.up,coins:afterUpgrade.coins,open:afterUpgrade.open
+    });
   await page.evaluate(()=>homeTab('play'));
   const art=await page.evaluate(async()=>{const urls=['art/skyline-gala.svg','art/rooftop-garden.svg'];const results=await Promise.all(urls.map(u=>fetch(u).then(r=>({ok:r.ok,type:r.headers.get('content-type')}))));const seasonN=season().n,css=document.querySelector('#qSeason')?.getAttribute('style'),S=spotNow(),R=S?roofDef(S.reward):null,thumb=document.querySelector('#hdSpot .th')?.getAttribute('style')||'';
     return{seasonN,css,results,garden:!!R&&R.id==='garden',thumb,bg:!!document.querySelector('.hd-bg.art'),styles:!!document.querySelector('#skyline-estate-album')}});
