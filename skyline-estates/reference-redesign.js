@@ -147,10 +147,20 @@ window.SkylinePortfolioManageMatchBuildings=()=>{
  const saved=loadSave();
  if(!saved||saved.over)return false;
  initAudio();startWith(saved);
- requestAnimationFrame(()=>{
-  const button=document.querySelector('#bAssets');
-  if(button&&!document.querySelector('#ui').hidden)button.click();
- });
+ /* Game startup and the saved turn are asynchronous. Wait for required entry
+    overlays to finish; never dismiss them or attempt to build directly. */
+ let attempts=0;
+ const openWhenReady=()=>{
+  if(document.querySelector('#title')?.hidden&&
+     !document.querySelector('#ui')?.hidden&&
+     !document.querySelector('#modals')?.children.length){
+    const button=document.querySelector('#bAssets');
+    if(button){button.click();return}
+  }
+  if(++attempts<20)setTimeout(openWhenReady,140);
+  else toast('Open Properties on the board to manage buildings.');
+ };
+ setTimeout(openWhenReady,180);
  return true;
 };
 if(document.querySelector('#title .home')&&!document.querySelector('#title').hidden)homeTab(setup.tab||'play');
