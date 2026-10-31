@@ -157,7 +157,7 @@ window.SkylinePortfolioManageMatchBuildings=()=>{
     const button=document.querySelector('#bAssets');
     if(button){button.click();return}
   }
-  if(++attempts<20)setTimeout(openWhenReady,140);
+  if(++attempts<215)setTimeout(openWhenReady,140);
   else toast('Open Properties on the board to manage buildings.');
  };
  setTimeout(openWhenReady,180);
