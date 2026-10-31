@@ -480,7 +480,7 @@ panePortfolio=function(T){
   const cards=districts.map(d=>{
    const have=d.rows.filter(r=>r.owned),show=have[0]||d.rows[0],level=Math.min(5,Math.max(0,show?.h||0)),completeSet=have.length===d.rows.length;
    return '<button class="em-district'+(snap.current===d.id?' is-current':'')+'" type="button" data-em-district="'+esc(d.id)+'" aria-label="'+esc(d.name)+', '+have.length+' of '+d.rows.length+' properties owned">'+
-    '<img src="'+bldPic(level)+'" alt="" loading="lazy" decoding="async"><span class="em-info"><b>'+esc(d.name)+'</b><span class="em-count">'+have.length+' / '+d.rows.length+' <em>owned</em></span>'+
+    '<img src="'+bldPic(level)+'" alt="" loading="eager" decoding="async"><span class="em-info"><b>'+esc(d.name)+'</b><span class="em-count">'+have.length+' / '+d.rows.length+' <em>owned</em></span>'+
     '<span class="em-pips">'+d.rows.map(r=>'<i class="'+(r.owned?'owned':'missing')+'" aria-hidden="true"></i>').join('')+'</span><span class="em-state'+(completeSet?' ready':'')+'">'+(completeSet?'Set complete ✓':have.length?'Keep building':'Properties to discover')+'</span></span></button>';
   }).join('');
   album.innerHTML='<header class="em-album-head"><div><h3>District Property Album</h3><p>Gold slots are owned properties; dark slots are still missing.</p></div><small>'+complete+' of '+districts.length+' sets complete</small></header><div class="em-album-row">'+cards+'</div>';
