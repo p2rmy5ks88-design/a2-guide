@@ -12,13 +12,16 @@ const root=path.resolve(__dirname,'../..'),types={'.html':'text/html','.js':'tex
   await page.addInitScript(()=>{if(!localStorage.getItem('skylinePrefs'))localStorage.setItem('skylinePrefs',JSON.stringify({nick:'EstateTester',nickSet:true,welcomed:1,tutDone:1,flat2d:true,rig:false,riders:false,coins:3000,trophies:5}))});
   await page.route('https://**/*',r=>r.abort());await page.goto(base+'index.html');await page.waitForFunction(()=>!!document.querySelector('#title .hd-stage'),null,{timeout:20000});
   await page.evaluate(()=>homeTab('portfolio'));
-  const initial=await page.evaluate(()=>{const e=estateSource()||blankEstate(),groups=Object.entries(GROUPS).map(([id])=>({id,rows:e.rows.filter(r=>r.group===id)})).filter(x=>x.rows.length),owned=e.rows.filter(r=>r.owned);
-   return{cards:document.querySelectorAll('[data-em-district]').length,groups:groups.length,count:document.querySelector('.em-total strong')?.textContent,real:owned.length,progress:document.querySelector('.em-district .em-count')?.textContent.trim(),first:groups[0]?.rows.filter(r=>r.owned).length+' / '+groups[0]?.rows.length,
-    pips:[...document.querySelectorAll('.em-district')].map(x=>x.querySelectorAll('.em-pips i').length),sizes:groups.map(x=>x.rows.length),dock:document.querySelector('.hd-di.on')?.textContent.trim(),mobile:phoneMedia.matches}});
+  const initial=await page.evaluate(()=>{const snap=window.SkylineEstateSnapshot(),groups=snap.groups;
+   return{cards:document.querySelectorAll('[data-em-district]').length,groups:groups.length,count:document.querySelector('.em-total strong')?.textContent,real:snap.ownedCount,progress:document.querySelector('.em-district .em-count')?.textContent.trim(),
+    first:groups[0]?.rows.filter(r=>r.owned).length+' / '+groups[0]?.rows.length,
+    pips:[...document.querySelectorAll('.em-district')].map(x=>x.querySelectorAll('.em-pips i').length),sizes:groups.map(x=>x.rows.length),dock:document.querySelector('.hd-di.on')?.textContent.trim(),mobile:snap.mobile}});
   verify('Portfolio album reads real owned properties at '+vp.width,initial.cards===initial.groups&&initial.count===String(initial.real)&&initial.progress.startsWith(initial.first)&&JSON.stringify(initial.pips)===JSON.stringify(initial.sizes)&&initial.dock==='Portfolio',initial);
   await page.screenshot({path:path.join(process.env.RUNNER_TEMP||'/tmp','skyline-portfolio-'+vp.width+'.png')});
-  if(initial.cards>1){await page.locator('[data-em-district]').nth(1).click();const moved=await page.evaluate(()=>({chosen:RP.group,expected:document.querySelectorAll('[data-em-district]')[1]?.dataset.emDistrict||null,select:document.querySelector('.rf-district.selected')?.dataset.district||null,mp:RP.mobilePage,canBack:!!document.querySelector('[data-estate-back="districts"]')}));
-   const second=await page.evaluate(()=>Object.entries(GROUPS).map(([id])=>id).filter(id=>(estateSource()||blankEstate()).rows.some(r=>r.group===id))[1]);
+  if(initial.cards>1){
+   const second=await page.evaluate(()=>window.SkylineEstateSnapshot().groups[1].id);
+   await page.locator('[data-em-district]').nth(1).click();
+   const moved=await page.evaluate(()=>({chosen:window.SkylineEstateSnapshot().current,select:document.querySelector('.rf-district.selected')?.dataset.district||null,mp:window.SkylineEstateSnapshot().mobilePage,canBack:!!document.querySelector('[data-estate-back="districts"]')}));
    verify('District album navigates to actual district at '+vp.width,moved.chosen===second&&(initial.mobile?(moved.mp==='properties'&&moved.canBack):moved.select===second),{moved,second});
   }
   await page.evaluate(()=>homeTab('play'));
