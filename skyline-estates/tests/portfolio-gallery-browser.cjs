@@ -1,0 +1,33 @@
+// Estate Album and event artwork: real portfolio data, navigation and mobile layouts.
+const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
+const assert=require('node:assert/strict'),http=require('node:http'),path=require('node:path'),fs=require('node:fs');
+const root=path.resolve(__dirname,'../..'),types={'.html':'text/html','.js':'text/javascript','.jpg':'image/jpeg','.png':'image/png','.svg':'image/svg+xml','.webp':'image/webp','.json':'application/json','.webmanifest':'application/manifest+json'};
+(async()=>{
+ const server=http.createServer((req,res)=>{const f=path.resolve(root,'.'+decodeURIComponent(req.url.split('?')[0]));if(!f.startsWith(root+path.sep)){res.writeHead(403);return res.end()}fs.readFile(f,(e,b)=>{res.writeHead(e?404:200,{'content-type':types[path.extname(f)]||'application/octet-stream'});res.end(e?'missing':b)})});
+ await new Promise(done=>server.listen(0,'127.0.0.1',done));const browser=await chromium.launch({headless:true,args:['--disable-webgl'],...(process.env.CHROME_PATH?{executablePath:process.env.CHROME_PATH}:{})});let checks=0;const errors=[];
+ const verify=(label,ok,obj)=>{assert.ok(ok,label+': '+JSON.stringify(obj||{}));checks++;console.log('PASS',label)};
+ const base='http://127.0.0.1:'+server.address().port+'/skyline-estates/';
+ for(const vp of [{width:1920,height:1080},{width:844,height:390}]){
+  const ctx=await browser.newContext({viewport:vp,serviceWorkers:'block'}),page=await ctx.newPage();page.on('pageerror',e=>errors.push(String(e)));
+  await page.addInitScript(()=>{if(!localStorage.getItem('skylinePrefs'))localStorage.setItem('skylinePrefs',JSON.stringify({nick:'EstateTester',nickSet:true,welcomed:1,tutDone:1,flat2d:true,rig:false,riders:false,coins:3000,trophies:5}))});
+  await page.route('https://**/*',r=>r.abort());await page.goto(base+'index.html');await page.waitForFunction(()=>!!document.querySelector('#title .hd-stage'),null,{timeout:20000});
+  await page.evaluate(()=>homeTab('portfolio'));
+  const initial=await page.evaluate(()=>{const e=estateSource()||blankEstate(),groups=Object.entries(GROUPS).map(([id])=>({id,rows:e.rows.filter(r=>r.group===id)})).filter(x=>x.rows.length),owned=e.rows.filter(r=>r.owned);
+   return{cards:document.querySelectorAll('[data-em-district]').length,groups:groups.length,count:document.querySelector('.em-total strong')?.textContent,real:owned.length,progress:document.querySelector('.em-district .em-count')?.textContent.trim(),first:groups[0]?.rows.filter(r=>r.owned).length+' / '+groups[0]?.rows.length,
+    pips:[...document.querySelectorAll('.em-district')].map(x=>x.querySelectorAll('.em-pips i').length),sizes:groups.map(x=>x.rows.length),dock:document.querySelector('.hd-di.on')?.textContent.trim(),mobile:phoneMedia.matches}});
+  verify('Portfolio album reads real owned properties at '+vp.width,initial.cards===initial.groups&&initial.count===String(initial.real)&&initial.progress.startsWith(initial.first)&&JSON.stringify(initial.pips)===JSON.stringify(initial.sizes)&&initial.dock==='Portfolio',initial);
+  await page.screenshot({path:path.join(process.env.RUNNER_TEMP||'/tmp','skyline-portfolio-'+vp.width+'.png')});
+  if(initial.cards>1){await page.locator('[data-em-district]').nth(1).click();const moved=await page.evaluate(()=>({chosen:RP.group,expected:document.querySelectorAll('[data-em-district]')[1]?.dataset.emDistrict||null,select:document.querySelector('.rf-district.selected')?.dataset.district||null,mp:RP.mobilePage,canBack:!!document.querySelector('[data-estate-back="districts"]')}));
+   const second=await page.evaluate(()=>Object.entries(GROUPS).map(([id])=>id).filter(id=>(estateSource()||blankEstate()).rows.some(r=>r.group===id))[1]);
+   verify('District album navigates to actual district at '+vp.width,moved.chosen===second&&(initial.mobile?(moved.mp==='properties'&&moved.canBack):moved.select===second),{moved,second});
+  }
+  await page.evaluate(()=>homeTab('play'));
+  const art=await page.evaluate(async()=>{const urls=['art/skyline-gala.svg','art/rooftop-garden.svg'];const results=await Promise.all(urls.map(u=>fetch(u).then(r=>({ok:r.ok,type:r.headers.get('content-type')}))));const seasonN=season().n,css=document.querySelector('#qSeason')?.getAttribute('style'),S=spotNow(),R=S?roofDef(S.reward):null,thumb=document.querySelector('#hdSpot .th')?.getAttribute('style')||'';
+    return{seasonN,css,results,garden:!!R&&R.id==='garden',thumb,bg:!!document.querySelector('.hd-bg.art'),styles:!!document.querySelector('#skyline-estate-album')}});
+  verify('Both original event illustrations are available',art.results.every(r=>r.ok&&r.type.includes('image/svg+xml')),art);
+  verify('Season and garden art use the appropriate existing reward data',(art.seasonN===2?art.css.includes('skyline-gala.svg'):!art.css.includes('skyline-gala.svg'))&&(!art.garden||art.thumb.includes('rooftop-garden.svg'))&&art.styles,art);
+  verify('No page errors or horizontal overflow at '+vp.width,await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)&&errors.length===0,errors);
+  await ctx.close();
+ }
+ verify('No browser page errors',errors.length===0,errors);console.log('ESTATE ALBUM SUMMARY',checks);await browser.close();server.close();
+})().catch(e=>{console.error(e);process.exit(1)});
