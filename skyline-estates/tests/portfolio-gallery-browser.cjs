@@ -18,6 +18,11 @@ const root=path.resolve(__dirname,'../..'),types={'.html':'text/html','.js':'tex
     first:groups[0]?.rows.filter(r=>r.owned).length+' / '+groups[0]?.rows.length,
     pips:[...document.querySelectorAll('.em-district')].map(x=>x.querySelectorAll('.em-pips i').length),sizes:groups.map(x=>x.rows.length),dock:document.querySelector('.hd-di.on')?.textContent.trim(),mobile:snap.mobile}});
   verify('Portfolio album reads real owned properties at '+vp.width,initial.cards===initial.groups&&initial.count===String(initial.real)&&initial.progress.startsWith(initial.first)&&JSON.stringify(initial.pips)===JSON.stringify(initial.sizes)&&initial.dock==='Portfolio',initial);
+  const artStatus=await page.locator('.em-district img').evaluateAll(async imgs=>{
+    await Promise.all(imgs.map(img=>img.decode().catch(()=>null)));
+    return imgs.map(img=>({src:img.getAttribute('src'),width:img.naturalWidth,height:img.naturalHeight}));
+  });
+  verify('District building artwork is loaded at '+vp.width,artStatus.length===initial.groups&&artStatus.every(a=>a.width>70&&a.height>70),artStatus);
   await page.screenshot({path:path.join(process.env.RUNNER_TEMP||'/tmp','skyline-portfolio-'+vp.width+'.png')});
   if(initial.cards>1){
    const second=await page.evaluate(()=>window.SkylineEstateSnapshot().groups[1].id);
