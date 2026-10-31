@@ -36,7 +36,9 @@ const types={'.html':'text/html','.js':'text/javascript','.jpg':'image/jpeg','.p
    return {files,spotlight,filter,seasonArt,seasonNumber};
   });
   test('Lagos artwork is brighter and reward thumbnail uses the matching rooftop',artwork.files.every(Boolean)&&artwork.filter.includes('brightness(1.14)')&&artwork.spotlight.includes('art/golden-rooftop-garden.svg')&&(artwork.seasonNumber===2?artwork.seasonArt.includes('art/skyline-gala.svg'):artwork.seasonArt.includes('art/shop.jpg')),artwork);
-  await page.evaluate(()=>homeTab('collection'));
+  await page.evaluate(()=>{window.__artClock=Date.now;Date.now=()=>Date.UTC(2026,9,26,12);setup.city='lagos';homeTab('play')});
+  await page.screenshot({path:path.join(process.env.RUNNER_TEMP||'/tmp','skyline-home-art-'+vp.width+'.png')});
+  await page.evaluate(()=>{Date.now=window.__artClock;delete window.__artClock;homeTab('collection')});
   await page.screenshot({path:path.join(process.env.RUNNER_TEMP||'/tmp','skyline-vault-'+vp.width+'.png')});
   const info=await page.evaluate(()=>({
    labels:[...document.querySelectorAll('.cv-category b')].map(x=>x.textContent),
