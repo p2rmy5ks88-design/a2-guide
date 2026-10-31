@@ -443,6 +443,7 @@ style.textContent=[
 '#title .em-upgrade-shortcut .em-up-info{min-width:195px;flex:1}#title .em-upgrade-shortcut h3{margin:0 0 3px;font-size:16px;color:#f5d18a}#title .em-upgrade-shortcut p{margin:0;font-size:11px;line-height:1.4;color:#bad1d5}',
 '#title .em-up-form{display:flex;align-items:center;gap:8px;flex:1;justify-content:flex-end;min-width:245px}#title .em-up-form select{background:#0b2032;color:#fff3d6;border:1px solid #7b886f;border-radius:10px;min-height:44px;padding:7px 10px;min-width:135px;max-width:360px;width:100%;font:600 12px system-ui;flex:1}#title .em-up-form button{min-height:44px;padding:8px 15px;border:1px solid #f7d28b;border-radius:12px;background:linear-gradient(#ffdb88,#cf9c3d);color:#152333;font-weight:900;white-space:nowrap;cursor:pointer}#title .em-up-form button:focus-visible,#title .em-up-form select:focus-visible{outline:3px solid #fff4be;outline-offset:2px}',
 '#title .em-upgrade-shortcut .em-no-collection{color:#e1bd8d;font-size:12px;font-weight:700}',
+'#title .em-match-open{min-height:44px;padding:8px 14px;border:1px solid #bfa36f;border-radius:12px;background:#18354a;color:#f7d28d;font-size:12px;font-weight:800;white-space:nowrap;cursor:pointer}#title .em-match-open:hover{background:#295167}#title .em-match-open:focus-visible{outline:3px solid #ffe2ab;outline-offset:2px}',
 '#title .em-album-head h3{font-size:18px;color:#f7e0aa;margin:0 0 3px}',
 '#title .em-album-head p{font-size:12px;color:#a9c8cf;margin:0}',
 '#title .em-album-head small{font-size:11px;color:#eac27c;text-align:right}',
@@ -489,10 +490,13 @@ panePortfolio=function(T){
   const eligible=snap.upgradeChoices;
   shortcut.innerHTML='<div class="em-up-info"><h3>Property Upgrades</h3><p>Upgrade persistent property rarity here. Houses and towers are built only during a legal turn in a match.</p></div>'+
    (eligible.length?'<div class="em-up-form"><select aria-label="Choose property for upgrade">'+eligible.map(it=>'<option value="'+it.square+'">'+esc(it.name)+' · '+esc(it.rarityName)+(it.ready?' · Ready':'')+'</option>').join('')+'</select><button type="button">View upgrades ↗</button></div>':
-   '<span class="em-no-collection">Play to collect your first property</span>');
+   '<span class="em-no-collection">Play to collect your first property</span>')+
+   (snap.hasSavedMatch?'<button type="button" class="em-match-open" aria-label="Resume saved match and open property building manager">Manage match buildings ↗</button>':'');
   T.prepend(album);T.prepend(shortcut);T.prepend(hero);
-  const upSelect=shortcut.querySelector('select'),upButton=shortcut.querySelector('button');
+  const upSelect=shortcut.querySelector('select'),upButton=shortcut.querySelector('.em-up-form button');
   if(upButton&&upSelect)upButton.onclick=()=>window.SkylinePortfolioOpenUpgrade(Number(upSelect.value));
+  const resume=shortcut.querySelector('.em-match-open');
+  if(resume)resume.onclick=()=>window.SkylinePortfolioManageMatchBuildings();
   album.querySelectorAll('[data-em-district]').forEach(b=>b.onclick=()=>{
    window.SkylinePortfolioNavigateDistrict(b.dataset.emDistrict);
   });
