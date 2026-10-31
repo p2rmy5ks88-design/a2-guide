@@ -52,6 +52,23 @@ const root=path.resolve(__dirname,'../..'),types={'.html':'text/html','.js':'tex
     return{seasonN,css,results,garden:!!R&&R.id==='garden',thumb,bg:!!document.querySelector('.hd-bg.art'),styles:!!document.querySelector('#skyline-estate-album')}});
   verify('Both original event illustrations are available',art.results.every(r=>r.ok&&r.type.includes('image/svg+xml')),art);
   verify('Season and garden art use the appropriate existing reward data',(art.seasonN===2?art.css.includes('skyline-gala.svg'):!art.css.includes('skyline-gala.svg'))&&(!art.garden||art.thumb.includes('rooftop-garden.svg'))&&art.styles,art);
+  if(vp.width===1920){
+    const state=await page.evaluate(()=>{
+      newGame({cash:1600,set:{city:setup.city,mode:'classic',minigames:false,perks:true},players:[
+        {name:'EstateTester',tok:TOKENS[0],col:PCOL[0],ai:false},
+        {name:'Rival',tok:TOKENS[1],col:PCOL[1],ai:true}
+      ]});
+      G.phase='pre';G.turn=0;save();showTitle();homeTab('portfolio');
+      return {hasSaved:window.SkylineEstateSnapshot().hasSavedMatch,cash:G.players[0].cash};
+    });
+    verify('Saved active match exposes direct building manager',state.hasSaved&&await page.locator('.em-match-open').count()===1,state);
+    await page.locator('.em-match-open').click();
+    await page.waitForFunction(()=>document.querySelector('#title').hidden&& !document.querySelector('#ui').hidden,{timeout:15000});
+    await page.waitForTimeout(350);
+    const opened=await page.evaluate(()=>({active:!document.querySelector('#ui').hidden,modal:!!document.querySelector('#modals .pf2h'),cash:G.players[0].cash}));
+    verify('Manage match buildings resumes existing game and opens legal property manager',opened.active&&opened.modal&&opened.cash===state.cash,opened);
+    await page.evaluate(()=>{document.querySelector('#modals').innerHTML='';showTitle();homeTab('portfolio')});
+  }
   verify('No page errors or horizontal overflow at '+vp.width,await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)&&errors.length===0,errors);
   await ctx.close();
  }
