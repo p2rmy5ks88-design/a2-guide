@@ -109,6 +109,7 @@ window.SkylineEstateSnapshot=()=>{
   photo:cityPhoto(e.city)||'photos/lagos.jpg',groups,
   ownedCount:e.rows.filter(r=>r.owned).length,
   complete:groups.filter(g=>g.rows.every(r=>r.owned)).length,
+  hasSavedMatch:!!(loadSave()&&!loadSave().over),
   /* These are earned/persisted property collectibles, not just buildings held in the current match. */
   upgradeChoices:e.rows.filter(r=>r.type==='prop'&&(r.owned||PREF.estateOwned?.[e.city]?.includes(r.i))).map(r=>{
    const rarity=propertyRarity(e.city,r.i),next=ESTATE_UPGRADE[rarity+1],wins=careerWins();
@@ -137,6 +138,19 @@ window.SkylinePortfolioOpenUpgrade=square=>{
  const target=document.querySelector('#pane');
  if(!target)return false;
  panePortfolio(target);target.scrollTop=0;
+ return true;
+};
+/* Resume via the same path as the existing Continue button, then open
+   the original properties manager. It still enforces turn, cash, even-building
+   and ownership rules, and becomes read-only when building isn't allowed. */
+window.SkylinePortfolioManageMatchBuildings=()=>{
+ const saved=loadSave();
+ if(!saved||saved.over)return false;
+ initAudio();startWith(saved);
+ requestAnimationFrame(()=>{
+  const button=document.querySelector('#bAssets');
+  if(button&&!document.querySelector('#ui').hidden)button.click();
+ });
  return true;
 };
 if(document.querySelector('#title .home')&&!document.querySelector('#title').hidden)homeTab(setup.tab||'play');
