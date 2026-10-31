@@ -4,7 +4,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
 const assert=require('node:assert/strict');
 const http=require('node:http'),fs=require('node:fs'),path=require('node:path');
 const root=path.resolve(__dirname,'../..');
-const types={'.html':'text/html','.js':'text/javascript','.jpg':'image/jpeg','.png':'image/png','.json':'application/json','.webmanifest':'application/manifest+json'};
+const types={'.html':'text/html','.js':'text/javascript','.jpg':'image/jpeg','.png':'image/png','.json':'application/json','.webmanifest':'application/manifest+json','.svg':'image/svg+xml'};
 (async()=>{
  const server=http.createServer((q,r)=>{const f=path.join(root,decodeURIComponent(q.url.split('?')[0]));if(!f.startsWith(root)){r.writeHead(403);return r.end()}fs.readFile(f,(e,b)=>{if(e){r.writeHead(404);return r.end()}r.writeHead(200,{'content-type':types[path.extname(f)]||'application/octet-stream'});r.end(b)})});
  await new Promise(done=>server.listen(0,'127.0.0.1',done));
@@ -18,6 +18,24 @@ const types={'.html':'text/html','.js':'text/javascript','.jpg':'image/jpeg','.p
   await page.route('https://**/*',r=>r.abort());
   await page.goto('http://127.0.0.1:'+server.address().port+'/skyline-estates/index.html');
   await page.waitForFunction(()=>!!document.querySelector('#title .hd-stage'),null,{timeout:20000});
+  await page.locator('#boot').waitFor({state:'detached',timeout:20000});
+  // Check the new illustration assets and conditional reward selection without altering saved data.
+  const artwork=await page.evaluate(async()=>{
+   const load=src=>new Promise(resolve=>{const i=new Image();i.onload=()=>resolve(i.naturalWidth>0);i.onerror=()=>resolve(false);i.src=src});
+   const files=await Promise.all(['art/golden-rooftop-garden.svg','art/skyline-gala.svg'].map(load));
+   const origNow=Date.now;
+   let spotlight='',filter='',seasonArt='',seasonNumber=0;
+   try {
+    Date.now=()=>Date.UTC(2026,9,26,12);
+    setup.city='lagos';homeTab('play');
+    spotlight=document.querySelector('#hdSpot .th')?.getAttribute('style')||'';
+    filter=getComputedStyle(document.querySelector('.hd-bg.art .hd-photo')).filter;
+    seasonArt=document.querySelector('#qSeason')?.getAttribute('style')||'';
+    seasonNumber=season().n;
+   }finally{Date.now=origNow;homeTab('play')}
+   return {files,spotlight,filter,seasonArt,seasonNumber};
+  });
+  test('Lagos artwork is brighter and reward thumbnail uses the matching rooftop',artwork.files.every(Boolean)&&artwork.filter.includes('brightness(1.14)')&&artwork.spotlight.includes('art/golden-rooftop-garden.svg')&&(artwork.seasonNumber===2?artwork.seasonArt.includes('art/skyline-gala.svg'):artwork.seasonArt.includes('art/shop.jpg')),artwork);
   await page.evaluate(()=>homeTab('collection'));
   await page.screenshot({path:path.join(process.env.RUNNER_TEMP||'/tmp','skyline-vault-'+vp.width+'.png')});
   const info=await page.evaluate(()=>({
