@@ -66,7 +66,10 @@ const root=path.resolve(__dirname,'../..'),types={'.html':'text/html','.js':'tex
     verify('Saved active match exposes direct building manager',state.hasSaved&&state.hasButton&&await page.locator('.em-match-open').count()===1,state);
     await page.locator('.em-match-open').click();
     await page.waitForFunction(()=>document.querySelector('#title').hidden&& !document.querySelector('#ui').hidden,{timeout:15000});
-    await page.waitForTimeout(3000);
+    /* Respect the real new-game Skyline Keys reveal instead of bypassing it. */
+    const reveal=page.locator('#modals .keysm');
+    if(await reveal.count())await page.getByRole('button',{name:'Let’s go',exact:true}).click();
+    await page.waitForFunction(()=>!!document.querySelector('#modals .pf2h'),null,{timeout:12000});
     const opened=await page.evaluate(()=>({active:!document.querySelector('#ui').hidden,modal:!!document.querySelector('#modals .pf2h'),cash:G.players[0].cash,
       phase:G.phase,modals:document.querySelector('#modals').children.length,modalText:document.querySelector('#modals').textContent.trim().slice(0,250),
       assets:document.querySelector('#bAssets')?.className,hasHandler:!!document.querySelector('#bAssets')?.onclick}));
