@@ -61,14 +61,16 @@ const root=path.resolve(__dirname,'../..'),types={'.html':'text/html','.js':'tex
       G.phase='pre';G.turn=0;save();showTitle();homeTab('portfolio');
       /* The previous test is on Growth. Switch to Portfolio overview to display its quick actions. */
       document.querySelector('[data-estate-tab="portfolio"]')?.click();
-      return {hasSaved:window.SkylineEstateSnapshot().hasSavedMatch,hasButton:!!document.querySelector('.em-match-open'),cash:G.players[0].cash};
+      return {hasSaved:window.SkylineEstateSnapshot().hasSavedMatch,hasButton:!!document.querySelector('.em-match-open'),savedCash:loadSave()?.players[0]?.cash};
     });
     verify('Saved active match exposes direct building manager',state.hasSaved&&state.hasButton&&await page.locator('.em-match-open').count()===1,state);
     await page.locator('.em-match-open').click();
     await page.waitForFunction(()=>document.querySelector('#title').hidden&& !document.querySelector('#ui').hidden,{timeout:15000});
-    await page.waitForTimeout(350);
-    const opened=await page.evaluate(()=>({active:!document.querySelector('#ui').hidden,modal:!!document.querySelector('#modals .pf2h'),cash:G.players[0].cash}));
-    verify('Manage match buildings resumes existing game and opens legal property manager',opened.active&&opened.modal&&opened.cash===state.cash,opened);
+    await page.waitForTimeout(3000);
+    const opened=await page.evaluate(()=>({active:!document.querySelector('#ui').hidden,modal:!!document.querySelector('#modals .pf2h'),cash:G.players[0].cash,
+      phase:G.phase,modals:document.querySelector('#modals').children.length,modalText:document.querySelector('#modals').textContent.trim().slice(0,250),
+      assets:document.querySelector('#bAssets')?.className,hasHandler:!!document.querySelector('#bAssets')?.onclick}));
+    verify('Manage match buildings resumes existing game and opens legal property manager',opened.active&&opened.modal&&opened.cash===state.savedCash,opened);
     await page.evaluate(()=>{document.querySelector('#modals').innerHTML='';showTitle();homeTab('portfolio')});
   }
   verify('No page errors or horizontal overflow at '+vp.width,await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)&&errors.length===0,errors);
