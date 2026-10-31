@@ -46,6 +46,9 @@ These are the owner's declarations. Points to consider:
   Answer Apple's social-media and user-generated content questions accordingly.
 - Violence, sexual content, profanity, horror, medical, alcohol/tobacco/drugs: none.
 
+### Correction 31 Oct (after automated rejection 2.3.6)
+Apple blocked build 85 because "Simulated Gambling: Infrequent/Mild" is not allowed from an individual developer account. Audit of build 85 (`0eaa477`) against Apple's definition ("betting or wagering"): Lucky Spin is free once a day, cannot be bought or repeated, has no stake, equal 1-in-8 prizes; all coin spending buys fixed items (no random paid outcomes, no loot boxes); dice, auctions, chance cards and the Rest Stop jackpot use in-match play money; no casino games; no IAP in 1.0. Owner-approved answers: **Simulated Gambling: None**, **Contests: Frequent** (online season leaderboard, top 50 by trophies; league promotions). Apple's calculated rating: **13+** in 172 countries or regions (Frequent contests map to 13+), 12+ Vietnam and Brazil. Explanation sent to App Review; build 85 resubmitted unchanged (Waiting for Review). Keep these answers accurate if features change: any paid or repeatable spin, stakes or wagers would change the classification.
+
 ## 5. Export compliance
 
 The app uses only the operating system's standard HTTPS/TLS. Builds 65 and 68 were accepted without a compliance question, so the build already declares exempt encryption. Confirm if App Store Connect asks.

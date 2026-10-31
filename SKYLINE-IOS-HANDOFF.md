@@ -76,6 +76,9 @@ Builds are made with: Actions → `skyline-ios.yml` → Run workflow on `main`, 
 - Owner device results on build 82 (same game code): **cloud recovery PASS** (signed-in progress synced; signed out and earned locally; signing in restored the synced balance), **coin packs hidden PASS**, test-account email verified.
 - Still open: account deletion check on the test account (reviewer demo account stays), screenshots, App Review contact and demo sign-in, age rating, App Privacy, license agreement, then Submit for Review. Release type is set to automatic after approval; the owner can change it.
 
+## 31 Oct 10:00 — build 85 resubmitted after age-rating correction
+- Automated rejection (2.3.6): simulated gambling declared from an individual account. Audit found no betting or wagering in build 85. Corrected with owner approval: Simulated Gambling None, Contests Frequent → Apple rating 13+. Reply sent to App Review; build 85 resubmitted unchanged, **Waiting for Review**. No code, purchase or backend change. Details: `skyline-estates/APP-STORE-SUBMISSION.md`.
+
 ## Phase 2 checkpoint (31 Oct, 00:10 CET) — LIVE CHANGES PAUSED
 
 - **Owner decision 31 Oct 00:04:** no live IAM or backend change until 1.0 is approved. Nothing has been applied: no service account, role, grant or budget created; `skylinePlayer` still runs the earlier deploy (main `8a4399d`) as the default account.
