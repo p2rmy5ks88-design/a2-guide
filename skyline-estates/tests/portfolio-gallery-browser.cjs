@@ -11,6 +11,7 @@ const root=path.resolve(__dirname,'../..'),types={'.html':'text/html','.js':'tex
   const ctx=await browser.newContext({viewport:vp,serviceWorkers:'block'}),page=await ctx.newPage();page.on('pageerror',e=>errors.push(String(e)));
   await page.addInitScript(()=>{if(!localStorage.getItem('skylinePrefs'))localStorage.setItem('skylinePrefs',JSON.stringify({nick:'EstateTester',nickSet:true,welcomed:1,tutDone:1,flat2d:true,rig:false,riders:false,coins:3000,trophies:5}))});
   await page.route('https://**/*',r=>r.abort());await page.goto(base+'index.html');await page.waitForFunction(()=>!!document.querySelector('#title .hd-stage'),null,{timeout:20000});
+  await page.locator('#boot').waitFor({state:'detached',timeout:25000});
   await page.evaluate(()=>homeTab('portfolio'));
   const initial=await page.evaluate(()=>{const snap=window.SkylineEstateSnapshot(),groups=snap.groups;
    return{cards:document.querySelectorAll('[data-em-district]').length,groups:groups.length,count:document.querySelector('.em-total strong')?.textContent,real:snap.ownedCount,progress:document.querySelector('.em-district .em-count')?.textContent.trim(),
