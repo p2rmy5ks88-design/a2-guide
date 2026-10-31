@@ -11,6 +11,7 @@ await test('last millisecond before expiry remains valid',async()=>{const f=fixt
 await test('storage failure grants neither balance nor receipt and permits retry',async()=>{const f=fixture();f.fail();assert.equal((await f.c.redeemPromo('TESTREWARD')).ok,false);assert.equal(f.PREF.coins,17);assert.equal(f.PREF.xp,29);assert.equal(f.PREF.promos,undefined);assert.equal(f.writes(),0)});
 await test('stored balances override stale screen values',async()=>{const f=fixture();f.stale();await f.c.redeemPromo('TESTREWARD');assert.equal(f.PREF.coins,500017);assert.equal(f.PREF.xp,100029)});
 await test('unknown or empty code does not write',async()=>{const f=fixture();for(const s of ['','NOEXIST'])assert.equal((await f.c.redeemPromo(s)).ok,false);assert.equal(f.writes(),0)});
+await test('owner promo grants exactly 1,000,000 coins and 500,000 profile XP until 7 Nov 12:15 Stockholm',()=>{const f=fixture(),p=vm.runInContext('PROMOS.find(p=>p.coins===1000000)',f.c);assert.equal(p.xp,500000);assert.equal(p.until,Date.UTC(2026,10,7,11,15));assert.equal(p.h,'380742f9e4f5d16b8b2915a5d58640fbc57da83e35fd4b5f82b52e2a8906c019')});
 await test('legacy coin-only code remains supported',async()=>{const f=fixture();vm.runInContext('PROMOS.push('+JSON.stringify({h:hash('OLDTEST'),coins:20,until:2000,label:'coins'})+')',f.c);await f.c.redeemPromo('OLDTEST');assert.equal(f.PREF.coins,37);assert.equal(f.PREF.xp,29)});
 console.log('PROMO SUMMARY',JSON.stringify({checks}));
 })().catch(e=>{console.error(e);process.exitCode=1});
