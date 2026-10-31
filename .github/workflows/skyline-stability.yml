@@ -40,6 +40,7 @@ jobs:
           t 'node skyline-estates/tests/debt-portfolio-browser.cjs'
           t 'node skyline-estates/tests/purchase-start-browser.cjs'
           t 'node skyline-estates/tests/no-purchases-browser.cjs'
+          t 'node skyline-estates/tests/home-redesign-browser.cjs'
           t 'node skyline-estates/tests/native-fullscreen.cjs'
           t 'node skyline-estates/tests/promo-codes.cjs'
           t 'node skyline-estates/tests/promo-browser.cjs'
