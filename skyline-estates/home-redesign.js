@@ -305,3 +305,109 @@ window.SkylineHome={dock:DOCK.map(d=>d[0])};
 // The game shows its first screen before this file loads; redraw it once with the new layout.
 try{const t=document.getElementById('title');if(t&&!t.hidden&&t.querySelector('.home'))homeTab(setup.tab||'play')}catch(e){console.error(e)}
 })();
+
+
+/* Collection Vault — visual navigation over the existing inventory, upgrade and avatar systems.
+   The four displays use existing game records. This layer does not change entitlements or rules. */
+(()=>{
+'use strict';
+const originalVaultTab=homeTab;
+const VAULT_TABS=[['tokens','Token Vault','items/tok-crown.jpg','Inspect token rarity, powers and evolution'],
+ ['buildings','Buildings','items/bld-5.jpg','Explore the six real development stages'],
+ ['vault-worlds','Board Worlds','items/surr-garden.jpg','Discover cosmetic board environments'],
+ ['frames','Prestige','items/surr-marble.jpg','Showcase earned avatar frames']];
+const vaultStyle=document.createElement('style');
+vaultStyle.id='skyline-collection-vault-style';
+vaultStyle.textContent=[
+'#title .home.hd-dock #pane.sec-collection{background:radial-gradient(circle at 50% 0%,rgba(24,80,87,.5),transparent 62%),linear-gradient(180deg,#071b2a,#0b1e32)!important}',
+'#title .home.hd-dock #pane.sec-collection>.subtabs{display:none!important}',
+'#title .home.hd-dock #pane.sec-collection>.subpane{width:100%!important;min-height:0!important;max-width:none!important;margin:0!important;padding:0 1px 24px!important;overflow:visible!important}',
+'#title .home.hd-dock #pane.sec-collection>.subpane>.refdash{max-width:none}',
+'#title .home.hd-dock .cv-shell{padding:clamp(12px,1.4vw,22px) clamp(10px,1.6vw,24px) 16px;background:linear-gradient(150deg,rgba(19,53,68,.96),rgba(9,29,47,.97));border:1px solid rgba(225,187,105,.55);border-radius:22px;margin:6px 0 18px;box-shadow:0 18px 40px #0005,inset 0 1px #ffffff22;color:#f7f2e6}',
+'#title .cv-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}',
+'#title .cv-top .cv-eyebrow{color:#e5bd71;font-weight:800;letter-spacing:.2em;font-size:11px;text-transform:uppercase}',
+'#title .cv-top h2{font-size:clamp(23px,2.4vw,36px);line-height:1.14;margin:3px 0 4px;color:#fff9e8}',
+'#title .cv-top p{color:#b8d0d2;margin:0;font-size:13px;line-height:1.4}',
+'#title .cv-profile-link{min-height:44px;border:1px solid #d5ad68;border-radius:24px;padding:8px 17px;background:#152f40;color:#f5da9d;font-weight:800;cursor:pointer}',
+'#title .cv-profile-link:hover,#title .cv-profile-link:focus-visible{background:#234958;outline:2px solid #f6d691;outline-offset:2px}',
+'#title .cv-categories{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(7px,1vw,16px)}',
+'#title .cv-category{position:relative;isolation:isolate;overflow:hidden;min-width:0;min-height:125px;padding:0;display:flex;align-items:flex-end;text-align:left;border:2px solid #5b6574;border-radius:17px;background:#102a38;box-shadow:0 8px 17px #0006;cursor:pointer;color:white;transition:transform .16s,box-shadow .16s,border-color .16s}',
+'#title .cv-category img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.72;z-index:-2}',
+'#title .cv-category:after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,#061423 1%,#091e30cc 49%,transparent 100%);z-index:-1}',
+'#title .cv-category:hover{transform:translateY(-3px);border-color:#ffe09d;box-shadow:0 12px 23px #0009}',
+'#title .cv-category:focus-visible{outline:3px solid #fff2bc;outline-offset:2px}',
+'#title .cv-category[aria-selected="true"]{border-color:#f6ca70;box-shadow:0 0 0 1px #c38e3d,0 0 18px #d49b4773,inset 0 0 15px #fff2ba1c}',
+'#title .cv-category .cv-copy{display:block;width:100%;padding:36px 12px 12px}',
+'#title .cv-category b{display:block;font-size:clamp(14px,1.35vw,19px);line-height:1.12;color:#fff9ef}',
+'#title .cv-category small{display:block;margin-top:5px;color:#e2c68d;font-size:clamp(10px,.82vw,12px);font-weight:700}',
+'#title .cv-world-intro{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin:7px 2px 18px}',
+'#title .cv-world-intro h3{margin:0 0 5px;font-size:23px;color:#f8e4b8}',
+'#title .cv-world-intro p{font-size:13px;color:#bcd2d4;max-width:650px;margin:0;line-height:1.5}',
+'#title .cv-world-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}',
+'#title .cv-world-card{background:linear-gradient(180deg,#153747,#0d2434);border:1px solid #396374;border-radius:17px;overflow:hidden;box-shadow:0 12px 22px #0004;min-width:0}',
+'#title .cv-world-card.cv-equipped{border-color:#e6c16f}',
+'#title .cv-world-art{position:relative;aspect-ratio:1.45;overflow:hidden;background:#102b38}',
+'#title .cv-world-art img{display:block;width:100%;height:100%;object-fit:cover}',
+'#title .cv-world-tag{position:absolute;left:10px;top:10px;border-radius:15px;background:#071927e8;border:1px solid #dfbd72;padding:5px 9px;color:#ffebbd;font-size:11px;font-weight:800}',
+'#title .cv-world-body{padding:12px}',
+'#title .cv-world-body h4{font-size:17px;margin:0 0 5px;color:#f8efd7}',
+'#title .cv-world-body p{font-size:12px;line-height:1.4;color:#b9d1d4;margin:0 0 10px;min-height:34px}',
+'#title .cv-world-foot{display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap}',
+'#title .cv-world-foot b{font-size:11px;color:#f0cb80}',
+'#title .cv-open-shop{min-height:40px;border-radius:17px;border:1px solid #dfb86b;background:#ddad55;color:#182638;font-size:12px;font-weight:800;padding:5px 12px;cursor:pointer}',
+'#title .cv-world-note{font-size:12px;color:#a9c1c5;margin:14px 3px 3px}',
+'#title .cv-profile-back{margin:6px 8px 15px;min-height:42px;background:linear-gradient(90deg,#193749,#102a39);color:#e9c987;border:1px solid #d1ac69;border-radius:19px;padding:8px 17px;font-weight:800;cursor:pointer}',
+'@media(max-width:850px){#title .cv-category{min-height:86px;border-radius:13px}#title .cv-category .cv-copy{padding:22px 7px 7px}#title .cv-category small{font-size:10px}#title .cv-categories{gap:6px}#title .cv-world-grid{grid-template-columns:repeat(2,minmax(0,1fr))}#title .cv-world-card{font-size:12px}#title .cv-top p{display:none}}',
+'@media(max-width:530px){#title .cv-shell{padding:7px 8px;border-radius:13px;margin:2px 0 7px}#title .cv-top{margin-bottom:5px}#title .cv-top h2{font-size:17px;margin:1px 0}#title .cv-top .cv-eyebrow{font-size:9px}#title .cv-profile-link{min-height:40px;padding:5px 10px;font-size:11px}#title .cv-category{min-height:64px}#title .cv-category b{font-size:11px}#title .cv-category small{font-size:9px;margin-top:1px}#title .cv-category img{opacity:.5}#title .cv-world-intro h3{font-size:17px}#title .cv-world-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}}'
+].join('\n');
+document.head.appendChild(vaultStyle);
+
+function vaultCount(id){
+ if(id==='tokens'){const all=TOKENS.concat(NEW_TOKENS);return all.filter(tokenUnlocked).length+' / '+all.length+' owned';}
+ if(id==='buildings')return BLD.length+' development stages';
+ if(id==='vault-worlds')return SURROUND_PREMIUM.filter(it=>itemOwned('surr',it.id)).length+' / '+SURROUND_PREMIUM.length+' owned';
+ if(id==='frames'){const all=frameIds().map(frameDef).filter(Boolean);return all.filter(f=>f.own).length+' / '+all.length+' unlocked';}
+ return '';
+}
+function vaultWorlds(){
+ const owned=SURROUND_PREMIUM.filter(it=>itemOwned('surr',it.id)).length;
+ return '<section class="cv-worlds"><div class="cv-world-intro"><div><h3>Board Worlds</h3><p>Explore the actual cosmetic surrounds available in Skyline Estates. Ownership and unlock conditions come from your saved progress; scenery never changes the rules.</p></div><strong>'+owned+' / '+SURROUND_PREMIUM.length+' collected</strong></div><div class="cv-world-grid">'+
+ SURROUND_PREMIUM.map(it=>{
+  const own=itemOwned('surr',it.id),eq=equippedSurround()===it.id;
+  const status=eq?'Equipped':own?'Owned':'Not owned';
+  return '<article class="cv-world-card'+(eq?' cv-equipped':'')+'"><div class="cv-world-art"><img loading="lazy" decoding="async" src="items/surr-'+it.id+'.jpg" alt="'+esc(it.name)+' surround preview"><span class="cv-world-tag">'+status+'</span></div><div class="cv-world-body"><h4>'+esc(it.name)+'</h4><p>'+esc(it.desc)+'</p><div class="cv-world-foot"><b>'+esc(ITEM_RAR.surr[it.id]||'R')+' · '+(own?'In your collection':nfmt(it.price)+' coins')+'</b><button class="cv-open-shop" data-vault-shop="'+it.id+'" type="button">View in Shop</button></div></div></article>';
+ }).join('')+'</div><p class="cv-world-note">Only existing premium surrounds appear here. Equip, preview or purchase them in the Shop.</p></section>';
+}
+function decorateVault(request,actual){
+ const pane=document.querySelector('#title #pane'),home=document.querySelector('#title .home');
+ if(!pane||!home)return;
+ if(actual==='cast'){
+  const back=document.createElement('button');back.type='button';back.className='cv-profile-back';back.textContent='← Back to Collection Vault';
+  back.onclick=()=>homeTab('collection');pane.prepend(back);
+  return;
+ }
+ if((SEC_OF[setup.tab]||setup.tab)!=='collection')return;
+ const key=request==='vault-worlds'?'vault-worlds':actual;
+ if(!['tokens','buildings','frames','vault-worlds'].includes(key))return;
+ const host=pane.querySelector('.subpane')||pane;
+ if(key==='vault-worlds'){
+  clearPreview();peekOver(null);
+  host.innerHTML=vaultWorlds();pane.classList.remove('tab-frames');pane.classList.add('tab-vault-worlds');
+  host.querySelectorAll('[data-vault-shop]').forEach(btn=>btn.onclick=()=>{setup.shopTab='surr';setup.shopTabSet=1;homeTab('shop')});
+ }
+ const nav=document.createElement('section');nav.className='cv-shell';nav.setAttribute('aria-label','Collection Vault');
+ nav.innerHTML='<div class="cv-top"><div><span class="cv-eyebrow">Your Collection</span><h2>Collection Vault</h2><p>Collect, unlock and showcase your Skyline Estates treasures.</p></div><button type="button" class="cv-profile-link">Customize Avatar ↗</button></div><nav class="cv-categories" aria-label="Collection categories" role="tablist">'+
+ VAULT_TABS.map(([id,name,art])=>'<button class="cv-category" data-vault-tab="'+id+'" role="tab" aria-selected="'+(id===key)+'" type="button"><img src="'+art+'" alt="" loading="lazy"><span class="cv-copy"><b>'+name+'</b><small>'+vaultCount(id)+'</small></span></button>').join('')+'</nav>';
+ pane.prepend(nav);
+ nav.querySelector('.cv-profile-link').onclick=()=>homeTab('cast');
+ nav.querySelectorAll('[data-vault-tab]').forEach(btn=>btn.onclick=()=>{sfx('tap');homeTab(btn.dataset.vaultTab)});
+}
+homeTab=function(k){
+ const actual=k==='collection'?'tokens':k==='vault-worlds'?'frames':k;
+ const result=originalVaultTab.call(this,actual);
+ try{decorateVault(k,actual)}catch(e){console.error('Collection Vault view:',e)}
+ return result;
+};
+window.SkylineCollectionVault={tabs:VAULT_TABS.map(x=>x[0])};
+try{if(document.querySelector('#title .home')&&!document.querySelector('#title').hidden&&['collection','tokens','frames','buildings'].includes(SEC_OF[setup.tab]||setup.tab))homeTab(setup.tab)}catch(e){console.error(e)}
+})();
