@@ -356,6 +356,8 @@ vaultStyle.textContent=[
 '#title .cv-world-foot b{font-size:11px;color:#f0cb80}',
 '#title .cv-open-shop{min-height:40px;border-radius:17px;border:1px solid #dfb86b;background:#ddad55;color:#182638;font-size:12px;font-weight:800;padding:5px 12px;cursor:pointer}',
 '#title .cv-world-note{font-size:12px;color:#a9c1c5;margin:14px 3px 3px}',
+'#title .home.hd-dock:has(.trusted-lobby)>.rail,#title .home.hd-dock:has(.trusted-room-entry)>.rail{display:none!important}',
+'#title .home.hd-dock:has(.trusted-lobby),#title .home.hd-dock:has(.trusted-room-entry){padding-bottom:0!important}',
 '#title .cv-profile-back{margin:6px 8px 15px;min-height:42px;background:linear-gradient(90deg,#193749,#102a39);color:#e9c987;border:1px solid #d1ac69;border-radius:19px;padding:8px 17px;font-weight:800;cursor:pointer}',
 '@media(max-width:850px){#title .cv-category{min-height:86px;border-radius:13px}#title .cv-category .cv-copy{padding:22px 7px 7px}#title .cv-category small{font-size:10px}#title .cv-categories{gap:6px}#title .cv-world-grid{grid-template-columns:repeat(2,minmax(0,1fr))}#title .cv-world-card{font-size:12px}#title .cv-top p{display:none}}',
 '@media(max-width:530px){#title .cv-shell{padding:7px 8px;border-radius:13px;margin:2px 0 7px}#title .cv-top{margin-bottom:5px}#title .cv-top h2{font-size:17px;margin:1px 0}#title .cv-top .cv-eyebrow{font-size:9px}#title .cv-profile-link{min-height:40px;padding:5px 10px;font-size:11px}#title .cv-category{min-height:64px}#title .cv-category b{font-size:11px}#title .cv-category small{font-size:9px;margin-top:1px}#title .cv-category img{opacity:.5}#title .cv-world-intro h3{font-size:17px}#title .cv-world-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}}'
