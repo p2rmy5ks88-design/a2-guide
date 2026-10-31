@@ -48,7 +48,7 @@ const css=`
 #title .home.hd-on .hd-bg .hd-lights{background:radial-gradient(2px 2px at 20% 30%,#ffd98a,transparent),radial-gradient(2px 2px at 34% 26%,#ffe7b0,transparent),radial-gradient(2px 2px at 46% 34%,#ffd98a,transparent),radial-gradient(2px 2px at 58% 28%,#fff1c8,transparent);opacity:.7}
 #title .home.hd-on .hd-bg .hd-glow{background:radial-gradient(60% 40% at 55% 45%,rgba(255,190,110,.18),transparent 70%),radial-gradient(120% 90% at 50% 40%,transparent 55%,rgba(3,6,20,.65) 100%)}
 #title .home.hd-on .hd-bg.art .hd-grade{background:linear-gradient(180deg,rgba(0,0,0,0) 0%,rgba(0,0,0,0) 55%,rgba(5,9,26,.45) 85%,rgba(5,9,26,.75) 100%);mix-blend-mode:normal}
-#title .home.hd-on .hd-bg.art .hd-photo{filter:none}
+#title .home.hd-on .hd-bg.art .hd-photo{filter:brightness(1.14) saturate(1.22) contrast(1.045)}
 #title .home.hd-on .hd-deco{position:absolute;pointer-events:none;mix-blend-mode:lighten;background-size:cover;-webkit-mask-image:radial-gradient(closest-side,#000 62%,transparent);mask-image:radial-gradient(closest-side,#000 62%,transparent)}
 #title .home.hd-on .hd-bg.art .hd-deco{display:none}
 #title .home.hd-on .hd-deco.d1{left:calc(var(--hd-ox) + 4*var(--hd-u));top:calc(var(--hd-oy) + 33*var(--hd-u));width:calc(11*var(--hd-u));height:calc(11*var(--hd-u));background-image:url(items/dice-classic.jpg)}
@@ -133,7 +133,7 @@ const css=`
 #title .hd-chg svg{width:calc(1.9*var(--hd-u));height:calc(1.9*var(--hd-u));min-width:18px;min-height:18px}
 #title .hd-sep{left:calc(57.9*var(--hd-u));top:calc(42.6*var(--hd-u));width:1px;height:calc(3.3*var(--hd-u));background:rgba(255,255,255,.25);pointer-events:none}
 #title .hd-season{left:calc(59.5*var(--hd-u));top:calc(41.3*var(--hd-u));width:calc(30.2*var(--hd-u));height:calc(6*var(--hd-u));min-height:48px;overflow:hidden;padding:0 calc(1.2*var(--hd-u)) 0 calc(3*var(--hd-u));
- background:linear-gradient(90deg,rgba(14,20,56,.97) 0%,rgba(30,22,74,.9) 45%,rgba(30,22,74,.2) 75%),var(--sart) right center/60% auto no-repeat,#140f36}
+ background:linear-gradient(90deg,rgba(14,20,56,.98) 0%,rgba(30,22,74,.92) 43%,rgba(30,22,74,.1) 82%),var(--sart) right center/73% auto no-repeat,#140f36}
 #title .hd-season .tx{flex:1;display:flex;flex-direction:column;gap:calc(.35*var(--hd-u));text-shadow:0 2px 6px rgba(0,0,0,.7)}
 #title .hd-season small{font:800 max(10px,calc(1.15*var(--hd-u)))/1 var(--body,'Manrope',system-ui,sans-serif);letter-spacing:.3em;color:#f2c457}
 #title .hd-season b{font:800 max(17px,calc(2.6*var(--hd-u)))/1 var(--display,'Outfit',system-ui,sans-serif)}
@@ -191,7 +191,7 @@ const css=`
 #title .hd-chg{font-size:max(13px,calc(1.6*var(--hd-u)))!important}
 #title .hd-panel{box-shadow:0 0 0 1px rgba(0,0,0,.5),0 calc(.5*var(--hd-u)) 0 rgba(0,0,0,.35),0 calc(.9*var(--hd-u)) calc(1.8*var(--hd-u)) rgba(0,0,0,.55),inset 0 1px 0 rgba(255,231,160,.25)}
 #title .home.hd-on .hd-bg.art .hd-photo{background-position:center center}
-#title .home.hd-on .hd-bg.art .hd-grade{background:linear-gradient(180deg,rgba(10,10,40,.25) 0%,rgba(0,0,0,0) 18%,rgba(0,0,0,0) 58%,rgba(5,9,26,.35) 82%,rgba(5,9,26,.7) 100%)!important;mix-blend-mode:normal}
+#title .home.hd-on .hd-bg.art .hd-grade{background:linear-gradient(180deg,rgba(10,10,40,.12) 0%,rgba(255,156,100,.035) 23%,rgba(0,0,0,0) 58%,rgba(5,9,26,.25) 82%,rgba(5,9,26,.64) 100%)!important;mix-blend-mode:normal}
 #title .home.hd-on .hd-bg.art .hd-lights{display:none}
 @media (max-height:540px){
  #title .home.hd-on #rprof .tpill{height:max(28px,calc(2.9*var(--hd-u)))!important;font-size:max(11px,calc(1.3*var(--hd-u)))!important}
@@ -271,8 +271,8 @@ const LAUREL=`<svg viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient 
 function hdCityPane(T){const saved=loadSave(),c=CITY_DATA[setup.city],C=countryOf(setup.city),idx=CITY_ORDER.indexOf(setup.city)+1,n=cityDone(setup.city),S=season(),t=seasonTierNow(),cl=seasonClaimable(),sp=spotNow();
  const showOnline=!(IS_APP&&!FIRE);
  const sv=saved?`<button class="hd-cont" id="tCont" type="button">${PLAY.replace('<svg','<svg width="14" height="14"')}<span>Continue</span><small>Round ${saved.round} · ${esc((CITY_DATA[saved.set&&saved.set.city]||CITY_DATA.lagos).name)}</small></button>`:'';
- let spot='';if(sp){const k=Math.min(SPOT_GOAL,spotCount(sp.id)),R=roofDef(sp.reward),lag=sp.city==='lagos'&&hdLagosArt,ph=lag?hdLagosArt:cityPhoto(sp.city),ready=spotClaimable();
-  spot=`<button class="hd-spot" id="hdSpot" type="button" aria-label="City Spotlight: ${esc(sp.cityName)}, ${k} of ${SPOT_GOAL} matches${R?', reward '+esc(R.name):''}"><span class="th" style="${ph?`background-image:url(${ph})${lag?';background-size:430% auto;background-position:3% 86%':''}`:'background:#22325e'}"></span><span class="tx"><span class="tag">CITY SPOTLIGHT</span><b>${esc(sp.cityName)}</b><small>${ready?'Reward ready to claim':`${k} / ${SPOT_GOAL} matches →`}</small>${R?`<small class="rw">🎁 ${esc(R.name)}</small>`:''}</span><span class="go" aria-hidden="true">→</span></button>`}
+ let spot='';if(sp){const k=Math.min(SPOT_GOAL,spotCount(sp.id)),R=roofDef(sp.reward),lag=sp.city==='lagos'&&hdLagosArt,rewardArt=sp.reward==='golden-garden'?'art/golden-rooftop-garden.svg':null,ph=rewardArt||(lag?hdLagosArt:cityPhoto(sp.city)),ready=spotClaimable();
+  spot=`<button class="hd-spot" id="hdSpot" type="button" aria-label="City Spotlight: ${esc(sp.cityName)}, ${k} of ${SPOT_GOAL} matches${R?', reward '+esc(R.name):''}"><span class="th" style="${ph?`background-image:url(${ph})${lag&&!rewardArt?';background-size:430% auto;background-position:3% 86%':''}`:'background:#22325e'}"></span><span class="tx"><span class="tag">CITY SPOTLIGHT</span><b>${esc(sp.cityName)}</b><small>${ready?'Reward ready to claim':`${k} / ${SPOT_GOAL} matches →`}</small>${R?`<small class="rw">🎁 ${esc(R.name)}</small>`:''}</span><span class="go" aria-hidden="true">→</span></button>`}
  T.innerHTML=`<div class="hd-stage">
   <div class="hd-city"><small>${esc(C.name)} · City ${idx} of ${CITY_ORDER.length}</small><h1>${esc(c.name)}</h1><p>${esc(c.blurb)}</p><i></i></div>${sv}${spot}
   <div class="hd-modes" role="group" aria-label="Game modes">
@@ -283,7 +283,7 @@ function hdCityPane(T){const saved=loadSave(),c=CITY_DATA[setup.city],C=countryO
   </div>
   <button class="hd-panel hd-aw" id="hdAwards" type="button" aria-label="City awards ${n} of ${CT.length}">${LAUREL}<span class="tx"><small>City Awards</small><b>${n} / ${CT.length}</b><span class="bar"><i style="width:${n/CT.length*100}%"></i></span></span></button>
   <button class="hd-panel hd-chg" id="pCity" type="button">${PIN}<span>Change City</span></button><span class="hd-sep" aria-hidden="true"></span>
-  <button class="hd-panel hd-season" id="qSeason" type="button" style="--sart:url(art/shop.jpg)" aria-label="Season ${S.n}, ${esc(seasonName(S.n))}, tier ${t} of ${TIERS}${cl?', '+cl+' rewards ready':''}"><span class="tx"><small>SEASON ${S.n}</small><b>${esc(seasonName(S.n))}</b></span>${cl?`<span class="rdy">${cl} ready</span>`:''}<span class="go" aria-hidden="true">→</span></button>
+  <button class="hd-panel hd-season" id="qSeason" type="button" style="--sart:url(${S.n===2?'art/skyline-gala.svg':'art/shop.jpg'})" aria-label="Season ${S.n}, ${esc(seasonName(S.n))}, tier ${t} of ${TIERS}${cl?', '+cl+' rewards ready':''}"><span class="tx"><small>SEASON ${S.n}</small><b>${esc(seasonName(S.n))}</b></span>${cl?`<span class="rdy">${cl} ready</span>`:''}<span class="go" aria-hidden="true">→</span></button>
  </div>`;
  const q=s=>T.querySelector(s);
  q('#pCity').onclick=()=>{sfx('tap');homeTab('world')};
