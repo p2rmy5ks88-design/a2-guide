@@ -415,3 +415,96 @@ homeTab=function(k){
 window.SkylineCollectionVault={tabs:VAULT_TABS.map(x=>x[0])};
 try{if(document.querySelector('#title .home')&&!document.querySelector('#title').hidden&&['collection','tokens','frames','buildings'].includes(SEC_OF[setup.tab]||setup.tab))homeTab(setup.tab)}catch(e){console.error(e)}
 })();
+
+
+/* Estate Album: integrates with existing Property Upgrade Center, never replaces it. */
+(()=>{
+'use strict';
+const style=document.createElement('style');style.id='skyline-estate-album';
+style.textContent=[
+'#title .home.hd-dock #pane.sec-portfolio{background:linear-gradient(180deg,#0b2838,#081b2e)!important}',
+'#title .em-hero{position:relative;isolation:isolate;display:flex;align-items:flex-end;justify-content:space-between;gap:16px;overflow:hidden;min-height:112px;padding:20px 24px;margin:0 0 12px;border:1px solid #dcb971;border-radius:20px;box-shadow:0 13px 32px #0006;color:#ffefd4;background:#123246}',
+'#title .em-hero:before{content:"";position:absolute;inset:0;z-index:-2;background:var(--em-bg) center 54%/cover no-repeat;filter:saturate(1.1)}',
+'#title .em-hero:after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,#071b2ded 0%,#0c2439d9 44%,#0c243953 75%),linear-gradient(0deg,#07152280,transparent 65%)}',
+'#title .em-eyebrow{color:#efd095;font-weight:800;letter-spacing:.19em;font-size:11px;text-transform:uppercase}',
+'#title .em-hero h2{font-size:clamp(24px,2.5vw,37px);margin:5px 0;color:#fff9ea;line-height:1.1}',
+'#title .em-hero p{margin:4px 0;color:#c9e1dd;font-size:13px;max-width:510px;line-height:1.35}',
+'#title .em-totals{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;align-items:center}',
+'#title .em-total{background:#071927e6;min-width:100px;padding:10px 13px;border:1px solid #bb965c;border-radius:13px;text-align:center}',
+'#title .em-total strong{display:block;color:#f6d38c;font-size:23px;line-height:1}',
+'#title .em-total span{display:block;color:#bed5d5;font-size:11px;margin-top:5px}',
+'#title .em-album{background:linear-gradient(155deg,#112f40,#092335);border:1px solid #36586b;border-radius:19px;margin-bottom:12px;padding:14px;box-shadow:0 10px 24px #0005}',
+'#title .em-album-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}',
+'#title .em-match-open{min-height:44px;padding:8px 14px;border:1px solid #bfa36f;border-radius:12px;background:#18354a;color:#f7d28d;font-size:12px;font-weight:800;white-space:nowrap;cursor:pointer}#title .em-match-open:hover{background:#295167}#title .em-match-open:focus-visible{outline:3px solid #ffe2ab;outline-offset:2px}',
+'#title .em-album-head h3{font-size:18px;color:#f7e0aa;margin:0 0 3px}',
+'#title .em-album-head p{font-size:12px;color:#a9c8cf;margin:0}',
+'#title .em-album-head small{font-size:11px;color:#eac27c;text-align:right}',
+'#title .em-album-row{display:flex;gap:11px;overflow-x:auto;scroll-snap-type:x proximity;padding:3px 3px 11px;scrollbar-color:#c7a25f #183244;scrollbar-width:thin}',
+'#title .em-district{min-width:185px;flex:0 0 185px;display:flex;gap:9px;align-items:center;border:1px solid #43697b;border-radius:14px;padding:10px;text-align:left;background:linear-gradient(145deg,#1b4353,#0b2536);color:#e7f3f2;cursor:pointer;scroll-snap-align:start}',
+'#title .em-district:hover{border-color:#ffe1a0;box-shadow:0 0 12px #f3cf7750}',
+'#title .em-district:focus-visible{outline:3px solid #ffdf91;outline-offset:2px}',
+'#title .em-district.is-current{border-color:#ebc678;box-shadow:inset 0 0 0 1px #e5c17880,0 0 13px #e2bb6245;background:linear-gradient(145deg,#285258,#142c39)}',
+'#title .em-district img{width:66px;height:76px;object-fit:contain;flex:none;filter:drop-shadow(0 4px 7px #000b)}',
+'#title .em-district .em-info{min-width:0;display:block;flex:1}',
+'#title .em-district b{font-size:12px;display:block;margin-bottom:5px;line-height:1.25;overflow-wrap:anywhere}',
+'#title .em-district .em-count{font-size:12px;color:#f2d28e;font-weight:800;white-space:nowrap}',
+'#title .em-district .em-count em{font-style:normal;color:#b2cad1;font-weight:500;font-size:10px}',
+'#title .em-pips{display:flex;gap:4px;margin:6px 0 2px}',
+'#title .em-pips i{display:block;flex:1;max-width:16px;height:6px;border-radius:6px;background:#354b59;border:1px solid #638293}',
+'#title .em-pips i.owned{background:linear-gradient(90deg,#c89b46,#ffe6a0);border-color:#e7bd68;box-shadow:0 0 5px #dfb06180}',
+'#title .em-district .em-state{font-size:10px;color:#a9c8cd;display:block;margin-top:4px}',
+'#title .em-district .em-state.ready{color:#f3d58e}',
+'@media(max-width:850px){#title .em-hero{min-height:67px;padding:9px 12px;border-radius:13px;gap:8px;margin-bottom:8px}#title .em-hero h2{font-size:17px;margin:3px 0}#title .em-hero p{font-size:10px}#title .em-eyebrow{font-size:9px}#title .em-total{min-width:60px;padding:7px 8px;border-radius:9px}#title .em-total strong{font-size:15px}#title .em-total span{font-size:9px}#title .em-album{padding:8px;border-radius:12px}#title .em-album-head{margin-bottom:6px}#title .em-album-head h3{font-size:13px}#title .em-album-head p{font-size:10px}#title .em-album-row{gap:7px;padding-bottom:6px}#title .em-district{min-width:137px;flex-basis:137px;padding:5px;gap:5px;border-radius:9px}#title .em-district img{width:42px;height:48px}#title .em-district b{font-size:10px}#title .em-district .em-state{font-size:9px}}',
+'@media(max-width:580px){#title .em-hero p{display:none}#title .em-album-head p{display:none}#title .em-hero .em-totals{gap:4px}#title .em-total{min-width:48px;padding:6px}#title .em-total span{font-size:8px}}',
+'#title .em-match-open{min-height:44px;padding:8px 12px;border:1px solid #f1d08c;border-radius:12px;background:linear-gradient(#21495b,#133146);color:#ffe2a3;font:800 12px system-ui;white-space:normal;cursor:pointer;max-width:240px}',
+'#title .em-match-open:hover{background:#2a596a}#title .em-match-open:focus-visible{outline:3px solid #fff3bf;outline-offset:2px}',
+'@media(max-width:850px){#title .em-match-open{min-height:40px;font-size:10px;padding:6px 9px;max-width:unset}}'
+].join('\n');
+document.head.appendChild(style);
+const previous=panePortfolio;
+panePortfolio=function(T){
+ const result=previous.apply(this,arguments);
+ try{
+  const snap=window.SkylineEstateSnapshot();
+  const fastbar=T.querySelector('.rf-fastbar'),upgradeHub=!!T.querySelector('.rf-fast-hub');
+  if(fastbar){
+   if(snap.hasSavedMatch){
+    const link=document.createElement('button');
+    link.type='button';link.className='em-match-open';
+    link.setAttribute('aria-label','Resume saved match and open property building manager');
+    link.textContent='Manage match buildings ↗';
+    link.onclick=()=>window.SkylinePortfolioManageMatchBuildings();
+    (fastbar.querySelector('.rf-fast-controls')||fastbar).append(link);
+   }
+   T.prepend(fastbar);
+  }
+  /* The Gallery is an overview, not a competing Upgrade Center screen.
+     Keep the latter one click away at the top of every Portfolio view. */
+  if(snap.tab!=='portfolio'||(snap.mobile&&snap.mobilePage!=='districts')||upgradeHub)return result;
+  const districts=snap.groups,complete=snap.complete;
+  const hero=document.createElement('section');hero.className='em-hero';
+  hero.style.setProperty('--em-bg',"url('"+snap.photo+"')");
+  hero.setAttribute('aria-label','Estate overview');
+  hero.innerHTML='<div><span class="em-eyebrow">Your Property Empire · '+esc(snap.cityName)+'</span><h2>My Estate</h2><p>Explore your districts, inspect every property and grow your collection.</p></div>'+
+   '<div class="em-totals"><div class="em-total"><strong>'+snap.ownedCount+'</strong><span>Owned this game</span></div><div class="em-total"><strong>'+complete+' / '+districts.length+'</strong><span>Complete sets</span></div></div>';
+  const album=document.createElement('section');album.className='em-album';
+  album.setAttribute('aria-label','District property album');
+  const cards=districts.map(d=>{
+   const have=d.rows.filter(r=>r.owned),show=have[0]||d.rows[0],
+    level=Math.min(5,Math.max(0,show?.h||0)),completeSet=have.length===d.rows.length;
+   return '<button class="em-district'+(snap.current===d.id?' is-current':'')+'" type="button" data-em-district="'+esc(d.id)+'" aria-label="'+esc(d.name)+', '+have.length+' of '+d.rows.length+' properties owned">'+
+    '<img src="'+bldPic(level)+'" alt="" loading="eager" decoding="async"><span class="em-info"><b>'+esc(d.name)+'</b><span class="em-count">'+have.length+' / '+d.rows.length+' <em>owned</em></span>'+
+    '<span class="em-pips">'+d.rows.map(r=>'<i class="'+(r.owned?'owned':'missing')+'" aria-hidden="true"></i>').join('')+'</span><span class="em-state'+(completeSet?' ready':'')+'">'+(completeSet?'Set complete ✓':have.length?'Keep building':'Properties to discover')+'</span></span></button>';
+  }).join('');
+  album.innerHTML='<header class="em-album-head"><div><h3>District Property Album</h3><p>Gold slots are owned properties; dark slots are still missing.</p></div><small>'+complete+' of '+districts.length+' sets complete</small></header><div class="em-album-row">'+cards+'</div>';
+  T.prepend(album);
+  if(fastbar)T.prepend(fastbar);
+  T.prepend(hero);
+  album.querySelectorAll('[data-em-district]').forEach(btn=>btn.onclick=()=>{
+   window.SkylinePortfolioNavigateDistrict(btn.dataset.emDistrict);
+  });
+ }catch(e){console.error('Estate Album integration:',e)}
+ return result;
+};
+window.SkylineEstateAlbum={version:2,integrated:true};
+})();
