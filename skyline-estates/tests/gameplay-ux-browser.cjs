@@ -21,6 +21,8 @@ const root=path.resolve(__dirname,'../..'),mime={'.html':'text/html','.js':'text
     {name:'Tester',tok:TOKENS[0],col:PCOL[0],ai:false},{name:'Lucas',tok:TOKENS[1],col:PCOL[1],ai:true}
    ]});
    G.phase='post';G.turn=0;P(0).cash=4500;
+   // Display the modal over the game board, not the title screen, in visual tests.
+   document.querySelector('#title').hidden=true;document.querySelector('#ui').hidden=false;
    GROUPS.pink.forEach(i=>G.own[i]={o:0,h:0,m:false});
    G.own[GROUPS.orange[0]]={o:0,h:0,m:false};
    const owned=GROUPS.pink[0],cost=devCost(0,owned),cash=P(0).cash,houses=G.houses;
