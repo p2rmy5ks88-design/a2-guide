@@ -82,3 +82,9 @@ Rollback reference: `0f57688` (merge of #87).
   - Player cards stay on the left. Skyline FM, the statistics and the legal Roll/End action form the bottom row.
 - **Dice.** Their landing spot moves to the board interior ahead of the roller's street. Values and timing are unchanged.
 - **Cache.** The assets are versioned `presentation-v4.*`, with a fresh `web-board.html` entry. The v3 files are retained for cached shells.
+- **Camera flow (owner, 1 Nov).**
+  - The game opens on the whole board, and the whole board stays while players decide.
+  - A roll starts a zoom toward the active token, and the camera then follows it hop by hop, turning smoothly at corners.
+  - About 1.1 s after landing it eases back to the whole board, rotated to the nearest quarter turn so it never spins.
+  - The camera button pins the whole board (no zoom on moves). Reduced motion keeps the whole board still.
+  - This replaces the "Follow at rest" behaviour described in the v3 sections above.
