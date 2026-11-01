@@ -3,7 +3,11 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
 const root=path.resolve(__dirname,'../..'),app=path.resolve(process.argv[2]||''),www=path.join(app,'www'),src=path.join(root,'skyline-estates'),shared=path.join(root,'eko-estates');
 assert.ok(['skyline-estates-app','skyline-estates-desktop'].includes(path.basename(app)),'expected wrapper directory');
 const html=fs.readFileSync(path.join(www,'index.html'),'utf8'),body=fs.readFileSync(path.join(src,'game.html'),'utf8').replace(/<link[^>]*fonts\.googleapis\.com[^>]*>\s*/g,'').replace(/<link rel="preconnect"[^>]*>\s*/g,'');
-assert.ok(html.includes(body),'packaged game must preserve the approved source');
+const localTest=process.env.SKYLINE_LOCAL_TEST_REWARDS==='1';
+const packagedBody=localTest?body.replace('<script src="./lib/cloud-glue.js"></script>','<script src="local-test-promo.js"></script><script src="./lib/cloud-glue.js"></script>'):body;
+assert.ok(html.includes(packagedBody),'packaged game must preserve the approved source');
+if(localTest){assert.equal(path.basename(app),'skyline-estates-app');assert.ok(html.includes('window.SKYLINE_LOCAL_TEST_BUILD=true;')&&html.includes('SkylineLocalTestRewards.install();'));assert.ok(fs.readFileSync(path.join(www,'local-test-promo.js')).equals(fs.readFileSync(path.join(app,'test-promos/local-test-promo.js'))));}
+else {assert.ok(!html.includes('SKYLINE_LOCAL_TEST_BUILD'));assert.ok(!fs.existsSync(path.join(www,'local-test-promo.js')));}
 if(path.basename(app)==='skyline-estates-app'){assert.ok(html.includes('lib/menu-presentation.css')&&html.includes('lib/menu-presentation.js'),'native bundle includes shared menu-only layer');assert.ok(!html.includes('web/presentation-'),'native bundle excludes browser board redesign');}
 assert.ok(!/fonts\.(googleapis|gstatic)\.com/.test(html),'fonts must be local');
 let files=0,bytes=0;

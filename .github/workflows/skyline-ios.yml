@@ -7,6 +7,10 @@ on:
         description: 'Publish the build (and use signing credentials if configured)'
         type: boolean
         default: false
+      local_test_rewards:
+        description: 'Internal TestFlight only: enable the local phone test reward (purchases remain channel-controlled)'
+        type: boolean
+        default: false
       store_version:
         description: 'Exact App Store version currently in App Store Connect (ios-release uploads only)'
         type: string
@@ -64,6 +68,7 @@ jobs:
     env:
       # App Store releases use the store version (1.0); private TestFlight builds keep 1.0.<run>.
       VERSION_NAME: ${{ github.event_name == 'workflow_dispatch' && inputs.cloud_channel == 'ios-release' && inputs.store_version || format('1.0.{0}', github.run_number) }}
+      SKYLINE_LOCAL_TEST_REWARDS: ${{ github.event_name == 'workflow_dispatch' && inputs.local_test_rewards && '1' || '0' }}
       VERSION_CODE: '${{ github.run_number }}'
     steps:
       - uses: actions/checkout@v4
@@ -75,6 +80,7 @@ jobs:
       - name: Check pipeline guardrails
         working-directory: .
         run: |
+          node skyline-estates-app/test-promos/local-test-promo.test.cjs
           python3 skyline-estates/tests/build-pipelines.py
           python3 skyline-estates-app/scripts/verify-ios-sdk.test.py
           python3 skyline-estates-app/scripts/verify-signed-apple.test.py
