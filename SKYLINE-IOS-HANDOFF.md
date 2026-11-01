@@ -120,3 +120,15 @@ Builds are made with: Actions → `skyline-ios.yml` → Run workflow on `main`, 
    - Privacy disclosures, screenshots, age rating, review notes (demo account details entered by the owner in App Store Connect), trader verification.
    - Then a reviewed public release channel.
 4. Never submit a `private-testing` build for review.
+
+
+
+## 1 November — integrated redesign verified and web deployed
+
+- PR #80 merged as `78f5bea5d8bf8842e0fdb2b66074b773027d3473`; #75/#76/#78/#79 closed as superseded, #77 already closed. Do not merge their old branches separately.
+- All six candidate workflows passed, including security emulators, authoritative management, full five-job stability matrix, Android, iOS simulator/device, and desktop. Independent local verification: 56 regressions, 175 simulated games, 17 gameplay UX checks, 19 integrated Portfolio checks, 22 Upgrade Center checks, 43 pipeline checks; no simulation invariant failures.
+- Pages deployment 41260004908 succeeded. Live file hashes match the candidate; ten smoke checks pass, including WebGL solo launch. Read `SKYLINE-REDESIGN-RELEASE-RESULTS.md` for evidence and limits.
+- App Store Connect checked directly: **1.0 / build 85 / Waiting for Review**. Keep its review active. No withdrawal, public replacement submission, metadata or screenshot changes are authorized by the current task without explicit approval.
+- Signed TestFlight upload run **41260160323**, build **149**, version **1.0**, exact source above, `ios-release` channel (purchases false) **passed**. Signature/profile/entitlement and bundled-source checks passed. Apple processed build 149 and it is assigned to the existing **Skyline iOS QA** internal group. Focused What to Test notes saved. Physical installation/launch and device acceptance remain pending; the owner was asked to update without deleting the app and test progress, menus, saved matches, building controls, trade previews and Daylight.
+- Final App Store Connect check after beta assignment: **version 1.0 still Waiting for Review**. Build 85 remains the submitted build; no public replacement or withdrawal was performed. Retain its review and consider the redesign as a later update after beta acceptance.
+- Existing bundle/signing identity unchanged. No live IAM/backend deploy, budget change or payment activation performed. Do not select the private-testing channel merely for this redesign: it enables purchases against the paused backend.
