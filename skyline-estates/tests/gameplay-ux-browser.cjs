@@ -45,6 +45,20 @@ const root=path.resolve(__dirname,'../..'),mime={'.html':'text/html','.js':'text
   }),before.owned);
   ok('Quick House uses canonical build cost, housing supply and even-building restrictions at '+vp.width,
    state.level===1&&state.cash===before.cash-before.cost&&state.houses===before.houses-1&&state.blocked&&!state.buildNow.includes(before.owned),{before,state});
+  const towerBefore=await page.evaluate(()=>{
+   document.querySelector('#modals').innerHTML='';
+   GROUPS.pink.forEach(i=>G.own[i].h=4);
+   P(0).cash=4500;G.houses=36-4*GROUPS.pink.length;G.hotels=12;
+   const sq=GROUPS.pink[0],cash=P(0).cash,cost=devCost(0,sq),houses=G.houses,hotels=G.hotels;
+   window.__uxTowerModal=openAssets(P(0));
+   return {sq,cash,cost,houses,hotels};
+  });
+  await page.locator('[data-quick-build="'+towerBefore.sq+'"]').click();
+  const towerAfter=await page.evaluate(i=>({level:G.own[i].h,cash:P(0).cash,houses:G.houses,hotels:G.hotels,saved:loadSave()?.own?.[i]?.h}),towerBefore.sq);
+  ok('Quick Tower obeys existing bank supply, costs and saved-game state at '+vp.width,
+   towerAfter.level===5&&towerAfter.cash===towerBefore.cash-towerBefore.cost&&
+   towerAfter.houses===towerBefore.houses+4&&towerAfter.hotels===towerBefore.hotels-1&&towerAfter.saved===5,
+   {towerBefore,towerAfter});
   const trade=await page.evaluate(()=>{
    document.querySelector('#modals').innerHTML='';
    const g=GROUPS.pink,other=GROUPS.orange;
@@ -59,10 +73,15 @@ const root=path.resolve(__dirname,'../..'),mime={'.html':'text/html','.js':'text
    const t2={from:1,to:0,give:[other[1]],get:[g[0]],gc:0,rc:0,gcard:0,rcard:0};
    G.own[other[1]]={o:1,h:0,m:false};
    const broken=tradeSummary(t2);
-   return {html,broken,ownersUnchanged:ownersBefore===ownersAfter,n:g.length};
+   // Opponent can complete an entire street set with the property we hand over.
+   other.forEach((i,j)=>G.own[i]={o:j===other.length-1?0:1,h:0,m:false});
+   const t3={from:1,to:0,give:[],get:[other[other.length-1]],gc:0,rc:0,gcard:0,rcard:0};
+   const opponent=tradeSummary(t3);
+   return {html,broken,opponent,ownersUnchanged:ownersBefore===ownersAfter,n:g.length};
   });
   ok('Trade shows recipient ownership before and after and completed set',trade.html.includes('You currently own '+(trade.n-1)+' of '+trade.n+' streets → '+trade.n+' of '+trade.n)&&trade.html.includes('Completes your set')&&trade.ownersUnchanged,trade);
   ok('Trade warns if outgoing requested property breaks an owned set',trade.broken.includes('Breaks your set')&&trade.broken.includes('Already yours: you own '+trade.n+' of '+trade.n+' streets → '+(trade.n-1)+' of '+trade.n),trade);
+  ok('Trade warns when the other player completes a set',trade.opponent.includes('Completes Lucas’s set'),trade.opponent);
   await page.evaluate(()=>{
    document.querySelector('#ui').hidden=false;document.querySelector('#title').hidden=true;
    PREF.ui='light';applyUI();FAST=false;
