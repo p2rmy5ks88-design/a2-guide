@@ -22,6 +22,13 @@ const root=path.resolve(__dirname,'../..'),types={'.html':'text/html','.js':'tex
   });
   verify('Album, fast upgrade bar, and real estate ownership at '+vp.width,
    overview.districts===overview.source&&String(overview.owns)===overview.shownOwned&&JSON.stringify(overview.pips)===JSON.stringify(overview.rows)&&overview.quick&&overview.upgradeCenter&&overview.hero&&overview.dock==='Portfolio',overview);
+  if(vp.width===390){
+    const dock=await page.locator('#title .home.hd-dock .hd-di').evaluateAll(els=>els.map(e=>{
+      const b=e.getBoundingClientRect();return{label:e.textContent.trim(),left:b.left,right:b.right,width:b.width,height:b.height,scrollWidth:e.scrollWidth}
+    }));
+    verify('Portrait dock shows six nonoverlapping accessible destinations',dock.length===6&&
+      dock.every((x,i)=>x.left>=-1&&x.right<=innerWidth+1&&x.width>=44&&x.height>=44&&x.scrollWidth<=x.width+2&&(!i||x.left>=dock[i-1].right-2)),dock);
+  }
   const assets=await page.locator('.em-district img').evaluateAll(async imgs=>{
     await Promise.all(imgs.map(img=>img.decode().catch(()=>null)));
     return imgs.map(img=>({src:img.getAttribute('src'),width:img.naturalWidth}));
