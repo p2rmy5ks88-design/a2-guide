@@ -506,5 +506,17 @@ panePortfolio=function(T){
  }catch(e){console.error('Estate Album integration:',e)}
  return result;
 };
+/* Keep all six dock destinations readable and touch-accessible on narrow portrait phones. */
+const portraitDock=document.createElement('style');
+portraitDock.id='skyline-portrait-dock';
+portraitDock.textContent='@media(max-width:480px) and (orientation:portrait){'+
+'#title .home.hd-dock>.rail{width:calc(100vw - 8px)!important;min-width:0!important;max-width:none!important;height:58px!important;min-height:58px!important;padding:2px 4px!important;gap:0!important;border-radius:29px!important}'+
+'#title .home.hd-dock .hd-di{flex:1 1 0!important;max-width:none!important;min-width:0!important;width:auto!important;margin:0!important;padding:3px 0!important;height:calc(100% - 4px)!important;min-height:44px!important;font-size:8px!important;letter-spacing:0!important;line-height:1.05!important;gap:3px!important;white-space:nowrap!important;border-radius:22px!important}'+
+'#title .home.hd-dock .hd-di svg{width:18px!important;height:18px!important;flex:none!important}'+
+'#title .home.hd-dock .hd-di+.hd-di:before{left:-1px!important}'+
+'#title .home.hd-dock .hd-di .dot{right:7px!important;top:5px!important}'+
+'#title .home.hd-dock #pane{padding-bottom:72px!important}'+
+'}';
+document.head.appendChild(portraitDock);
 window.SkylineEstateAlbum={version:2,integrated:true};
 })();
