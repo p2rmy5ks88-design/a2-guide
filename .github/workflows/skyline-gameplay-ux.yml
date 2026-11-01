@@ -20,7 +20,6 @@ jobs:
       - name: Audit game source hash for rule parity
         run: |
           sha256sum skyline-estates/game.html
-          git diff --stat origin/main...HEAD -- skyline-estates/game.html
       - name: Generate updated web game
         run: |
           python3 skyline-estates/build.py
