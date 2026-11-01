@@ -1,0 +1,51 @@
+name: Skyline Focus HUD validation
+on:
+  push:
+    branches: [skyline-focus-hud]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  focus-hud:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Validate source and offline asset build
+        run: |
+          node --check skyline-estates/home-redesign.js
+          node --check skyline-estates/tests/focus-hud-browser.cjs
+          python3 skyline-estates/build.py
+          python3 skyline-estates/build.py --check
+      - name: Install browser dependencies
+        run: npm install --prefix skyline-estates/tests --no-audit --no-fund
+      - name: Test Focus HUD and desktop/phone-landscape layouts
+        run: CHROME_PATH="$(command -v google-chrome)" node skyline-estates/tests/focus-hud-browser.cjs
+      - name: Test game menus and gameplay regressions
+        run: |
+          CHROME_PATH="$(command -v google-chrome)" node skyline-estates/tests/home-redesign-browser.cjs
+          CHROME_PATH="$(command -v google-chrome)" node skyline-estates/tests/gameplay-ux-browser.cjs
+      - name: Attach HUD screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: skyline-focus-hud-review
+          path: |
+            ${{ runner.temp }}/skyline-focus-hud-*.png
+      - name: Sync generated offline assets
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          for retry in 1 2 3; do
+            git fetch origin skyline-focus-hud
+            git reset --hard origin/skyline-focus-hud
+            python3 skyline-estates/build.py
+            git add skyline-estates/index.html skyline-estates/offline-assets.js
+            if git diff --cached --quiet; then exit 0; fi
+            git commit -m "build: refresh Skyline Focus HUD offline assets"
+            if git push origin HEAD:skyline-focus-hud; then exit 0; fi
+          done
+          exit 1

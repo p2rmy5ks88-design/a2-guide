@@ -524,3 +524,120 @@ portraitDock.textContent='@media(max-width:480px) and (orientation:portrait){'+
 document.head.appendChild(portraitDock);
 window.SkylineEstateAlbum={version:2,integrated:true};
 })();
+
+
+/* Skyline Focus HUD v1 — game-overlay presentation, without gameplay logic changes. */
+(function(){
+'use strict';
+const ui=document.getElementById('ui'),tools=document.getElementById('tools');
+if(!ui||!tools||document.getElementById('hudMore'))return;
+const st=document.createElement('style');st.id='skyline-focus-hud-css';
+st.textContent=[
+'#ui.focus-hud #roster{top:calc(max(8px,env(safe-area-inset-top,0px)) + 57px)!important;gap:5px!important;max-width:min(32vw,180px);max-height:calc(100% - 182px)!important;padding:2px 8px 3px 2px}',
+'#ui.focus-hud #roster .pcard{box-sizing:border-box;min-height:44px;width:min(28vw,158px);border:1px solid #5774817a;border-radius:14px!important;padding:5px 7px!important;gap:7px!important;background:linear-gradient(120deg,#10283cf5,#0c1d30f1);transform:none!important;box-shadow:0 4px 12px #01091677!important}',
+'#ui.focus-hud #roster .pcard.cur{border:1px solid #f4cb75!important;box-shadow:inset 0 0 0 1px #ebbd59a1,0 0 14px #dbab4b70!important;background:linear-gradient(110deg,#17394dee,#10253cee)!important}',
+'#ui.focus-hud #roster .pcard .pt{width:32px!important;height:32px!important;font-size:17px!important;border-width:2px!important}',
+'#ui.focus-hud #roster .pcard .pinfo{flex:1;min-width:0}',
+'#ui.focus-hud #roster .pcard .pn{font-size:11px!important;color:#d7e3e9!important;max-width:122px}',
+'#ui.focus-hud #roster .pcard .pc{font-size:14px!important;color:#fff4d6!important;margin-top:3px}',
+'#ui.focus-hud #roster .pcard .pg{display:none!important}',
+'#ui.focus-hud #roster .pcard .nowtag{left:45px;top:-7px;font-size:8px;line-height:13px;padding:0 5px}',
+'#ui.focus-hud #prompt,html.rot #ui.focus-hud #prompt{box-sizing:border-box;left:max(14px,env(safe-area-inset-left,0px))!important;right:auto!important;transform:none!important;top:max(8px,env(safe-area-inset-top,0px))!important;max-width:min(312px,max(124px,calc(50vw - 50vh - 8px)))!important;min-height:35px;border-radius:12px!important;padding:6px 10px!important;background:#0b2135f2!important;color:#f5eedf!important;border:1px solid #ad925c!important;box-shadow:0 4px 12px #02081780!important;cursor:pointer;text-align:left!important;line-height:1.24!important;font-size:11.5px!important}',
+'#ui.focus-hud #prompt .pav{display:none!important}',
+'#ui.focus-hud #prompt .ptx{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+'#ui.focus-hud #prompt .sub{display:block;font-size:10px!important;line-height:1.25!important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#bcd1d7!important}',
+'#ui.focus-hud #prompt.hud-prompt-open{max-width:min(57vw,490px)!important}',
+'#ui.focus-hud #prompt.hud-prompt-open .ptx,#ui.focus-hud #prompt.hud-prompt-open .sub{overflow:visible;white-space:normal;max-width:none}',
+'#ui.focus-hud #tools{top:calc(max(8px,env(safe-area-inset-top,0px)) + 62px)!important;right:max(13px,env(safe-area-inset-right,0px))!important;gap:7px!important}',
+'#ui.focus-hud #tools .tb{min-width:44px!important;width:44px!important;height:44px!important;border-radius:14px!important}',
+'#ui.focus-hud #tools #bMap{display:none!important}',
+'#ui.focus-hud #tools #bAssets.off,#ui.focus-hud #tools #bTrade.off{opacity:.38!important}',
+'#ui #tools #hudMore{display:grid!important;place-items:center;font-size:21px;font-weight:800;border-color:#b99957;color:#f1d493}',
+'#ui #tools #hudMore[aria-expanded=true]{background:#d4af62!important;color:#122438!important}',
+'#ui.focus-hud #ev2chip{max-width:clamp(135px,18vw,185px)!important;top:max(7px,env(safe-area-inset-top,0px))!important;right:max(13px,env(safe-area-inset-right,0px))!important;min-height:43px;box-sizing:border-box;padding:5px 9px!important;border-radius:12px!important;font-size:10px!important;line-height:1.22!important}',
+'#ui.focus-hud #ev2chip b{font-size:10.5px!important;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
+'#ui.focus-hud #ev2chip span{font-size:10px!important;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;-webkit-line-clamp:unset}',
+'#ui.focus-hud #timer{width:49px!important;height:49px!important;right:calc(max(13px,env(safe-area-inset-right,0px)) + 55px)!important;top:calc(max(8px,env(safe-area-inset-top,0px)) + 64px)!important}',
+'#ui.focus-hud #timer svg{width:43px!important;height:43px!important;inset:3px!important}',
+'#ui.focus-hud #timer b{font-size:18px!important}',
+'#ui.focus-hud #acts .bigb.end{min-width:128px!important;width:128px!important;height:66px!important;border:2px solid #f3dfac!important;border-radius:19px!important;font-size:14px!important;line-height:1.15!important;letter-spacing:.04em!important;box-shadow:0 6px 16px #0209178a,0 0 0 2px #f4ca6b6e!important}',
+'#ui.focus-hud #acts .bigb:not(.end){width:70px!important;height:70px!important}',
+'#ui.focus-hud #round{max-width:min(29vw,195px)!important;border-radius:13px!important;padding:7px 10px!important;white-space:nowrap!important;overflow:hidden;text-overflow:ellipsis;font-size:11.5px!important;font-weight:750;cursor:pointer}',
+'#ui.focus-hud #radio{bottom:calc(max(12px,env(safe-area-inset-bottom,0px)) + 43px)!important;max-width:min(30vw,185px);box-sizing:border-box;overflow:hidden;padding:6px 9px!important;white-space:nowrap;line-height:1.1;font-size:10.5px}',
+'#ui.focus-hud #radio .rl{min-width:0;max-width:140px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
+'#ui.focus-hud #radio .rl b{font-size:10px;display:block;overflow:hidden;text-overflow:ellipsis}',
+'#ui.focus-hud #log{max-width:min(30vw,270px)!important;font-size:11px!important;padding:7px 10px!important;opacity:.8}',
+'#ui.focus-hud #log:hover,#ui.focus-hud #log:focus-visible{opacity:1}',
+'#ui.focus-hud #toast{max-width:min(46vw,360px);font-size:12px}',
+'#ui #hudPanel,#ui #hudRoundPopup{position:absolute;z-index:12;box-sizing:border-box;background:#0b2234fa;color:#f7f2e7;border:1px solid #cfaa6a;border-radius:15px;box-shadow:0 12px 28px #010915ad;padding:9px;display:flex;flex-direction:column;gap:7px}',
+'#ui #hudPanel[hidden],#ui #hudRoundPopup[hidden]{display:none!important}',
+'#ui #hudPanel{right:calc(max(13px,env(safe-area-inset-right,0px)) + 55px);top:calc(max(8px,env(safe-area-inset-top,0px)) + 152px);width:175px}',
+'#ui #hudPanel button,#ui #hudRoundPopup button{min-height:44px;display:flex;align-items:center;justify-content:flex-start;gap:8px;background:#193548;color:#f3dab0;border:1px solid #526c73;border-radius:10px;font-size:12px;font-weight:750;padding:8px 10px;cursor:pointer;text-align:left}',
+'#ui #hudPanel button:hover,#ui #hudRoundPopup button:hover{background:#294a59}',
+'#ui #hudPanel button:focus-visible,#ui #hudRoundPopup button:focus-visible,#ui.focus-hud #prompt:focus-visible,#ui.focus-hud #round:focus-visible{outline:3px solid #ffe4a5;outline-offset:2px}',
+'#ui #hudRoundPopup{bottom:calc(max(12px,env(safe-area-inset-bottom,0px)) + 47px);left:max(13px,env(safe-area-inset-left,0px));width:min(80vw,370px);gap:5px}',
+'#ui #hudRoundPopup strong{color:#f0cc7f;font-size:12px}',
+'#ui #hudRoundPopup p{font-size:12px;line-height:1.5;margin:0;overflow-wrap:anywhere}',
+'#ui #hudRoundPopup button{align-self:flex-end;min-width:76px;justify-content:center}',
+'html.light #ui.focus-hud #prompt,html.light #ui.focus-hud #round,html.light #ui.focus-hud #radio,html.light #ui.focus-hud #ev2chip{background:#0b2234!important;color:#fff4dc!important;border:1px solid #e6c47d!important}',
+'@media(max-height:440px){#ui.focus-hud #roster{top:calc(max(8px,env(safe-area-inset-top,0px)) + 55px)!important;max-height:calc(100% - 140px)!important;gap:3px!important}#ui.focus-hud #roster .pcard{min-height:41px;width:min(25vw,142px);padding:3px 6px!important}#ui.focus-hud #roster .pcard .pt{width:29px!important;height:29px!important}#ui.focus-hud #roster .pcard .pn{font-size:10px!important}#ui.focus-hud #roster .pcard .pc{font-size:12.5px!important}#ui.focus-hud #prompt{min-height:32px;padding:4px 8px!important}#ui.focus-hud #tools{top:calc(max(7px,env(safe-area-inset-top,0px)) + 54px)!important}#ui.focus-hud #ev2chip{max-width:145px!important}#ui.focus-hud #acts .bigb.end{height:58px!important;width:115px!important;min-width:115px!important}}',
+'@media(max-width:700px){#ui.focus-hud #prompt .ptx > b{display:none!important}#ui.focus-hud #prompt.hud-prompt-open .ptx > b{display:inline!important}#ui.focus-hud #prompt .sub{font-size:10px!important}#ui.focus-hud #roster .tag.lv{display:none!important}}',
+'@media(max-width:700px){#ui.focus-hud #roster .pcard{width:min(25vw,132px);gap:5px!important}#ui.focus-hud #roster .pcard .tag{font-size:8px}#ui.focus-hud #radio{max-width:142px}#ui.focus-hud #round{max-width:max(118px,calc(50vw - 50vh - 17px))!important}#ui.focus-hud #log{max-width:min(29vw,190px)!important}#ui.focus-hud #ev2chip{max-width:135px!important}}'
+].join('\n');
+document.head.appendChild(st);
+let focus=true;
+try{focus=localStorage.getItem('skyline:focusHud')!=='detailed'}catch(_){}
+ui.classList.toggle('focus-hud',focus);
+const more=document.createElement('button');more.type='button';more.id='hudMore';more.className='tb';
+more.setAttribute('aria-label','More game controls');more.setAttribute('title','More game controls');
+more.setAttribute('aria-expanded','false');more.setAttribute('aria-controls','hudPanel');more.textContent='⋯';
+tools.insertBefore(more,document.getElementById('bMenu')||null);
+const panel=document.createElement('div');panel.id='hudPanel';panel.hidden=true;
+panel.setAttribute('aria-label','Additional board controls');
+panel.innerHTML='<button type="button" id="hudQuickMap">▱ Board map</button><button type="button" id="hudViewMode">☷ Detailed HUD</button>';
+ui.appendChild(panel);
+const map=panel.querySelector('#hudQuickMap'),mode=panel.querySelector('#hudViewMode');
+const setOpen=(open)=>{panel.hidden=!open;more.setAttribute('aria-expanded',String(open))};
+const setFocus=(next)=>{
+ focus=next;ui.classList.toggle('focus-hud',focus);
+ mode.textContent=focus?'☷ Detailed HUD':'✦ Focus HUD';
+ mode.setAttribute('aria-label',focus?'Switch to detailed HUD':'Switch to Focus HUD');
+ try{localStorage.setItem('skyline:focusHud',focus?'focus':'detailed')}catch(_){}
+};
+setFocus(focus);
+more.onclick=()=>setOpen(panel.hidden);
+map.onclick=()=>{setOpen(false);const mapButton=document.getElementById('bMap');if(mapButton)mapButton.click()};
+mode.onclick=()=>{setFocus(!focus);setOpen(false)};
+const round=document.getElementById('round');
+const popup=document.createElement('div');popup.id='hudRoundPopup';popup.hidden=true;
+popup.innerHTML='<strong>Round & supplies</strong><p id="hudRoundText"></p><button type="button">Close</button>';
+ui.appendChild(popup);
+const setRoundOpen=(open)=>{
+ popup.hidden=!open;round.setAttribute('aria-expanded',String(open));
+ if(open)popup.querySelector('#hudRoundText').textContent=round.textContent.trim();
+};
+popup.querySelector('button').onclick=()=>setRoundOpen(false);
+round.setAttribute('role','button');round.setAttribute('tabindex','0');
+round.setAttribute('aria-label','Round and building supply details');round.setAttribute('aria-expanded','false');
+round.onclick=()=>setRoundOpen(popup.hidden);
+round.onkeydown=(event)=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();setRoundOpen(popup.hidden)}};
+const prompt=document.getElementById('prompt');
+prompt.setAttribute('role','button');prompt.setAttribute('tabindex','0');
+prompt.setAttribute('title','Show full turn guidance');prompt.setAttribute('aria-label','Turn guidance (select to expand)');
+const expandPrompt=()=>prompt.classList.toggle('hud-prompt-open');
+prompt.onclick=expandPrompt;
+prompt.onkeydown=(event)=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();expandPrompt()}};
+const observer=new MutationObserver(()=>{
+ round.title=round.textContent.trim();
+ if(!popup.hidden)popup.querySelector('#hudRoundText').textContent=round.textContent.trim();
+});
+observer.observe(round,{subtree:true,childList:true,characterData:true});
+document.addEventListener('pointerdown',(event)=>{
+ if(!panel.hidden&&!panel.contains(event.target)&&!more.contains(event.target))setOpen(false);
+ if(!popup.hidden&&!popup.contains(event.target)&&!round.contains(event.target))setRoundOpen(false);
+});
+document.addEventListener('keydown',(event)=>{
+ if(event.key==='Escape'){setOpen(false);setRoundOpen(false);prompt.classList.remove('hud-prompt-open')}
+});
+window.SkylineFocusHUD={get mode(){return focus?'focus':'detailed'},setMode(v){setFocus(v==='focus')}};
+})();
