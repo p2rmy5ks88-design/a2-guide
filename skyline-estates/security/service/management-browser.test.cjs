@@ -12,7 +12,21 @@ async function test(name,fn){await fn();report.checks.push({name,passed:true});c
  for(const p of [host,guest]){p.on('pageerror',e=>report.browserErrors.push(String(e.stack||e)));await p.addInitScript(()=>localStorage.setItem('skylinePrefs',JSON.stringify({nickSet:true,nick:'Tester',welcomed:1,rig:false})))}
  async function load(page){await page.goto(base+'/skyline-estates/index.html');await page.waitForFunction(()=>typeof window.__sim==='function');await page.addStyleTag({content:'*,*::before,*::after{animation:none!important;transition:none!important}'})}
  async function boot(page,uid){await load(page);await page.evaluate(async uid=>{const {createGameClient}=await import('./security/service/game-client.mjs'),{mountSkylineControls}=await import('./security/service/game-controls.mjs');window.managementErrors=[];window.c=createGameClient({baseUrl:location.origin+'/',allowedOrigins:[location.origin],allowLoopback:true,uid,getSession:async()=>({uid,idToken:uid}),storage:localStorage});window.board=mountSkylineControls({client:c,code:'ABCDE',pollMs:1000,onError:e=>managementErrors.push(e.code||e.message)});window.beforeProfile=JSON.stringify({xp:PREF.xp,coins:PREF.coins,ach:PREF.ach,stats:PREF.stats});await board.refresh()},uid)}
- const snapshot=()=>JSON.parse(state.root.rooms.ABCDE.state.gameJson),waitRevision=(p,r)=>p.waitForFunction(r=>board.controller.snapshot()?.revision===r&&!board.controller.status().busy,r);
+ const snapshot=()=>JSON.parse(state.root.rooms.ABCDE.state.gameJson);
+ async function waitRevision(page,expected){
+  try{
+   await page.waitForFunction(r=>window.board?.controller.snapshot()?.revision===r&&!window.board.controller.status().busy,expected,{timeout:15000});
+  }catch(error){
+   const diagnostic=await page.evaluate(()=>({
+    revision:window.board?.controller.snapshot()?.revision,
+    busy:window.board?.controller.status()?.busy,
+    stage:window.board?.controller.snapshot()?.stage,
+    actions:document.querySelector('#acts')?.innerText?.slice(0,500),
+    uiErrors:window.managementErrors,
+   })).catch(()=>({pageClosed:true}));
+   throw new Error('Revision '+expected+' not reached: '+JSON.stringify(diagnostic)+'; '+error.message);
+  }
+ }
  await load(host);
  const cases=assetCases().filter(c=>c.legal).map(c=>{const g=copy(c.game);g.code='ABCDE';g.phase='busy';g.players[0].pos=7;const pending={boundary:{kind:'purchase',square:7,price:90,canBuy:g.players[0].cash>=90},context:{version:1,dice:{a:3,b:4,sv:0,face:null},extraRoll:false,afterLanding:null}};return{name:c.name,game:g,command:c.command,pending,expected:applyPurchaseAsset(g,'host-uid',pending,c.command)}});
  const actual=await host.evaluate(inputs=>{FAST=true;NET.on=false;trackable=()=>false;figG=()=>{};updateCell=()=>{};float=()=>{};sfx=()=>{};return inputs.map(c=>{G=JSON.parse(JSON.stringify(c.game));applyCity(G.set.city||'lagos');const f={build,sell,mortgage,redeem:unmortgage};f[c.command.kind](0,c.command.square);return{game:JSON.parse(JSON.stringify(G)),boundary:{kind:'purchase',square:7,price:SQ[7].p,canBuy:P(0).cash>=SQ[7].p}}})},cases);
