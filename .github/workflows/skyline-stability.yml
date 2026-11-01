@@ -1,6 +1,8 @@
 name: Skyline stability tests
 
 on:
+  push:
+    branches: [skyline-gameplay-ux]
   pull_request:
     paths:
       - 'skyline-estates/**'
