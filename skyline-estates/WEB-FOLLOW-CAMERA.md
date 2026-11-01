@@ -1,5 +1,7 @@
 # Web follow camera, board art and HUD placement (web only)
 
+> v4 (board polish) supersedes the v3 art and HUD details below where they differ; see “v4 board polish”.
+
 Rollback reference: `964c88e` (merge of #86). Native packaging still reads the unchanged `game.html`; this change is limited to the browser presentation layer, the offline manifest and the worker's navigation aliases.
 
 ## What changed
@@ -59,3 +61,24 @@ A closer match would need new 3D building models and a re-textured board centre.
   - Save, refresh and Continue.
 - **Desktop WebKit:** the visual suite runs in CI (`skyline-stability`).
 - **Physical iPhone Safari:** still to be done by the owner. Desktop engines cannot establish touch feel, GPU frame rate or toolbar behaviour.
+
+## v4 board polish (after owner iPhone review)
+
+Rollback reference: `0f57688` (merge of #87).
+
+- **Plots attached to their streets.**
+  - Each plot is derived from its own tile with `plotGeometry(i)`. It shares the tile's inner edge across a 1 px seam, spans the tile width less a 3 px kerb, and is 64 px deep, which fits the largest model footprint of about 58 px.
+  - The node keeps the existing per-side rotation, so the same rule applies on all four sides. The old fixed 28/80 px insets are gone.
+  - Plot paving is light, with a street-side band in the district colour that continues the tile's colour bar.
+  - Building fronts face their street.
+  - A geometry test checks every model footprint against its tile's inner edge.
+- **Waterfront.**
+  - The CSS header band and the photographic palm overlay are removed.
+  - The Canva skyline is cropped at its waterline (no reflection) and fades out at the sky and sides. It stands as an unlit backdrop on the far shore of the existing 3D lagoon, opposite the camera, and turns with it. It appears wherever the horizon is in view (Overview, wide turns) and is hidden by the board otherwise.
+  - At Follow's readable 47° pitch the horizon is outside the frame, so it is deliberately not faked as a header.
+- **Composition.** The token is centred left-right in the free area and sits about three-quarters down it. The offsets use the camera's own axes, so corner turns never slide the board against one edge.
+- **HUD.**
+  - One top row: Home and the guidance banner on the left; one gold-edged tool capsule (Portfolio, Trade, Camera, Map, Menu, each 44 px) and Strategic events on the right.
+  - Player cards stay on the left. Skyline FM, the statistics and the legal Roll/End action form the bottom row.
+- **Dice.** Their landing spot moves to the board interior ahead of the roller's street. Values and timing are unchanged.
+- **Cache.** The assets are versioned `presentation-v4.*`, with a fresh `web-board.html` entry. The v3 files are retained for cached shells.
