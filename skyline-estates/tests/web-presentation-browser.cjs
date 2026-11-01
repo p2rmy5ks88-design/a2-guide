@@ -88,12 +88,17 @@ async function perf(page,kind){const sample=await page.evaluate(async()=>{
   check('Season shows actual total XP and accessible next-tier progress '+viewport.width,await page.evaluate(()=>document.querySelector('.web-season-total').textContent.includes(nfmt(season().sxp))&&document.querySelector('.sbar').getAttribute('aria-valuenow')==='123'));
   check('Both reward tracks and current tier are intact '+viewport.width,await page.evaluate(()=>document.querySelectorAll('#track .scell').length===TIERS*2&&document.querySelectorAll('#track .web-current-tier').length===2));
   await snap(page,'season-'+viewport.width);
+  check('Daylight season headings, XP and reward labels have readable contrast '+viewport.width,await page.evaluate(()=>{
+   document.documentElement.classList.add('light');
+   const luminance=s=>{const rgb=s.match(/[\d.]+/g).slice(0,3).map(Number).map(v=>{v/=255;return v<=.04045?v/12.92:((v+.055)/1.055)**2.4});return rgb[0]*.2126+rgb[1]*.7152+rgb[2]*.0722};
+   const ok=['.sbt h2','.sbl','#track .scell small'].every(sel=>{const n=document.querySelector(sel),surface=n.closest('.sban,.scell'),a=luminance(getComputedStyle(n).color),b=luminance(getComputedStyle(surface).backgroundColor);return(Math.max(a,b)+.05)/(Math.min(a,b)+.05)>=4.5});document.documentElement.classList.remove('light');return ok;
+  }));
   await page.locator('#pane').evaluate(e=>e.scrollTop=e.scrollHeight);check('Premium rewards remain reachable above the navigation '+viewport.width,await page.locator('#track .scell.prem').first().evaluate(e=>{const r=e.getBoundingClientRect(),p=document.querySelector('#pane').getBoundingClientRect();return r.bottom<=p.bottom&&r.top>=p.top}));await page.locator('#pane').evaluate(e=>e.scrollTop=0);
   const claim=await page.evaluate(()=>{const first=claimTier(1,false),coins=PREF.coins,xp=PREF.xp,inv=JSON.stringify(PREF.inv);const again=claimTier(1,false);return{first,again,stable:coins===PREF.coins&&xp===PREF.xp&&inv===JSON.stringify(PREF.inv)}});
   check('Season claims cannot be awarded twice '+viewport.width,claim.first&&!claim.again&&claim.stable,claim);
   await page.evaluate(()=>{homeTab('season')});const claimed=await page.locator('#sAll').count();if(claimed){await page.locator('#sAll').click();check('Claim All remains idempotent '+viewport.width,await page.evaluate(()=>{const c=PREF.coins;for(let i=1;i<=seasonTierNow();i++)claimTier(i,false);return c===PREF.coins}))}
   // The existing renderer restores the current tier after 30 ms; wait for that before a new input.
-  await page.waitForTimeout(200);const position=await page.evaluate(()=>document.querySelector('#track').scrollLeft);await page.locator('#track').press('ArrowRight');await page.waitForTimeout(450);check('Season tier navigation works '+viewport.width,await page.evaluate(x=>document.querySelector('#track').scrollLeft>x,position));
+  await page.waitForTimeout(200);const position=await page.evaluate(()=>document.querySelector('#track').scrollLeft);await page.locator('#track').press('ArrowRight');await page.waitForFunction(x=>document.querySelector('#track').scrollLeft>x,position,{timeout:5000});check('Season tier navigation works '+viewport.width,await page.evaluate(x=>document.querySelector('#track').scrollLeft>x,position));
   for(const id of ['play','portfolio','collection','shop','ach','progress']){await page.locator('[data-dock="'+id+'"]').click();check('Navigation '+id+' '+viewport.width,await page.locator('[data-dock="'+id+'"].on').count()===1)}
   check('No horizontal document overflow '+viewport.width,await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
   await ctx.close();

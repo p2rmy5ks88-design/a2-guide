@@ -87,5 +87,15 @@ html.web-refined:not(.rot) #title,html.web-refined:not(.rot) #ui,html.web-refine
  .web-refined #track{grid-auto-columns:104px;grid-template-rows:20px 92px 92px;gap:6px}.web-refined #track .scell .ipic{max-height:34px!important}.web-refined #track .scell .iart{transform:scale(.82)}
 }
 .web-refined #ui:has(#timer:not([hidden])) #ev2chip{right:72px}
+/* Daylight keeps light surfaces and dark labels; never mix navy panels with inherited dark text. */
+.web-refined.light .sban{background:#f6f8fa;border-color:#aebfc9;color:#13284a}
+.web-refined.light .sbt h2,.web-refined.light .sbl{color:#13284a}
+.web-refined.light .sbt span,.web-refined.light .web-season-total,.web-refined.light .shopnote,.web-refined.light .dhead>span{color:#486177!important}
+.web-refined.light #track .slab{background:#edf2f5;box-shadow:6px 0 #f6f8fa;color:#13284a}
+.web-refined.light #track .slab.prem{background:#fff0c9}
+.web-refined.light #track .scell.prem{background:#fff4d5!important}
+.web-refined.light #track .scell.can{background:#e4f3e8!important}
+.web-refined.light #track .scell small,.web-refined.light #track .scell em{color:#304a60}
+.web-refined.light #track .scell.can em{color:#1a1406}
 @media(max-width:650px){.web-refined .sban{grid-template-columns:1fr 1fr}.web-refined .sbb{grid-column:1/-1;justify-content:flex-start}.web-refined .igrid.g6{grid-template-columns:repeat(2,minmax(0,1fr))}.web-refined .igrid{grid-template-columns:repeat(auto-fill,minmax(138px,1fr))}}
 @media(prefers-reduced-motion:reduce){.web-refined *, .web-refined *::before,.web-refined *::after{scroll-behavior:auto!important;transition-duration:.01ms!important}}
