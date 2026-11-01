@@ -15,7 +15,7 @@ self.addEventListener('activate',event=>event.waitUntil((async()=>{
 self.addEventListener('fetch',event=>{
   const request=event.request,url=new URL(request.url);
   if(request.method!=='GET'||url.origin!==ROOT.origin||!url.pathname.startsWith(ROOT.pathname))return;
-  const home=request.mode==='navigate'&&(url.pathname===ROOT.pathname||url.pathname===new URL('index.html',ROOT).pathname);
+  const home=request.mode==='navigate'&&(url.pathname===ROOT.pathname||url.pathname===new URL('index.html',ROOT).pathname||url.pathname===new URL('web-play.html',ROOT).pathname);
   // Ignore room/API traffic, writes, neighbouring apps and arbitrary query responses.
   if(!home&&(url.search||!ALLOWED.has(url.href)))return;
   event.respondWith((async()=>{
