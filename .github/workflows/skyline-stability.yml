@@ -38,7 +38,7 @@ jobs:
       - name: Test saved turns and seeded games
         run: |
           # On failure, publish the test name and output tail as a check annotation (readable via the API).
-          t(){ local log="$RUNNER_TEMP/last-test.log"; if ! bash -c "$1" >"$log" 2>&1; then cat "$log"; msg=$(grep -v '^\s\{3,\}' "$log" | tail -c 3500 | sed -e 's/%/%25/g' -e 's/\r/%0D/g' | sed -e ':a;N;$!ba;s/\n/%0A/g'); ttl=$(printf %s "${1:0:120}" | sed "s/[:,]/ /g"); echo "::error title=Failed $ttl::$msg"; exit 1; fi; tail -n 3 "$log"; }
+          t(){ local log="$RUNNER_TEMP/last-test.log"; echo "RUNNING: $1"; if ! timeout --signal=TERM --kill-after=10s 300s bash -c "$1" >"$log" 2>&1; then cat "$log"; msg=$(grep -v '^\s\{3,\}' "$log" | tail -c 3500 | sed -e 's/%/%25/g' -e 's/\r/%0D/g' | sed -e ':a;N;$!ba;s/\n/%0A/g'); ttl=$(printf %s "${1:0:120}" | sed "s/[:,]/ /g"); echo "::error title=Failed $ttl::$msg"; exit 1; fi; tail -n 3 "$log"; }
           t 'node skyline-estates/security/service/room-entry-browser.test.cjs "$RUNNER_TEMP/skyline-room-entry-browser.json"'
           t 'node skyline-estates/security/service/lobby-browser.test.cjs "$RUNNER_TEMP/skyline-lobby-browser.json"'
           t 'node skyline-estates/tests/accounts-browser.cjs "$RUNNER_TEMP/skyline-accounts-browser.json"'
