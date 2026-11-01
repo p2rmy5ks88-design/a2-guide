@@ -248,7 +248,9 @@ function hdBackground(on){const home=document.querySelector('#title .home');if(!
 function hdDock(){const home=document.querySelector('#title .home'),nav=home&&home.querySelector('.rail .tabs');if(!nav)return;home.classList.add('hd-dock');
  const D=daily(),dot=wheelReady()||!dailyEventView().done||D.list.some(id=>!D.done[id])||seasonClaimable()>0,on=activeDock();nav.innerHTML='';nav.setAttribute('aria-label','Main sections');
  DOCK.forEach(([id,label,p])=>{const b=document.createElement('button');b.type='button';b.className='hd-di'+(id===on?' on':'');b.setAttribute('role','tab');b.setAttribute('aria-selected',id===on?'true':'false');b.dataset.dock=id;
-  b.innerHTML=`${dockI(p)}<span>${label}</span>${id==='progress'&&dot?'<em class="dot" aria-hidden="true"></em>':''}`;if(id==='progress'&&dot)b.setAttribute('aria-label','Progress, new items');
+  const shortLabel={portfolio:'PORTF.',collection:'COLLECT.'}[id]||label;
+  b.innerHTML=`${dockI(p)}<span data-short="${shortLabel}">${label}</span>${id==='progress'&&dot?'<em class="dot" aria-hidden="true"></em>':''}`;
+  b.setAttribute('aria-label',id==='progress'&&dot?'Progress, new items':label);
   b.onclick=()=>{sfx('tap');homeTab(id)};nav.append(b)})}
 
 /* ---------- header additions (all sections): settings gear; City: logo and level badge ---------- */
@@ -513,6 +515,8 @@ portraitDock.textContent='@media(max-width:480px) and (orientation:portrait){'+
 '#title .home.hd-dock>.rail{width:calc(100vw - 8px)!important;min-width:0!important;max-width:none!important;height:58px!important;min-height:58px!important;padding:2px 4px!important;gap:0!important;border-radius:29px!important}'+
 '#title .home.hd-dock .hd-di{flex:1 1 0!important;max-width:none!important;min-width:0!important;width:auto!important;margin:0!important;padding:3px 0!important;height:calc(100% - 4px)!important;min-height:44px!important;font-size:8px!important;letter-spacing:0!important;line-height:1.05!important;gap:3px!important;white-space:nowrap!important;border-radius:22px!important}'+
 '#title .home.hd-dock .hd-di svg{width:18px!important;height:18px!important;flex:none!important}'+
+'#title .home.hd-dock .hd-di span{font-size:0!important;display:block;line-height:1!important}'+
+'#title .home.hd-dock .hd-di span::after{content:attr(data-short);display:block;font-size:10px!important;letter-spacing:0!important;font-weight:800!important;white-space:nowrap!important}'+
 '#title .home.hd-dock .hd-di+.hd-di:before{left:-1px!important}'+
 '#title .home.hd-dock .hd-di .dot{right:7px!important;top:5px!important}'+
 '#title .home.hd-dock #pane{padding-bottom:72px!important}'+
