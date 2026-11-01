@@ -1,5 +1,7 @@
 # Visual regression correction — web only
 
+> Superseded camera behaviour: see `WEB-FOLLOW-CAMERA.md` for the current Follow/Overview camera, HUD and v3 assets.
+
 Branch: `skyline-web-visual-correction`. Rollback: `bce4a0b125fdee3638186755ebda67ba2c0c4f8f` (the regressed PR #85 release). The pre-refinement implementation at `a5a3964d3350247c4d8f0c6905c866e64adb18f2` was also reviewed. No game-rule, save-format, price, reward or native-release change is included.
 
 ## Causes and corrections

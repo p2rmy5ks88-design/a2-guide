@@ -30,7 +30,7 @@ async function perf(page,kind){const sample=await page.evaluate(async()=>{
   page.setDefaultTimeout(12000);page.on('pageerror',e=>report.errors.push(String(e.stack||e)));
   await page.addInitScript(({fallback})=>localStorage.setItem('skylinePrefs',JSON.stringify({nick:'Safari tester',nickSet:true,welcomed:1,tutDone:1,coins:10000,xp:3000,flat2d:fallback,rig:false,riders:false,coach:{pre:1,post:1}})),{fallback});
   await page.route('https://**/*',r=>r.abort());
-  if(baseline)await page.route('**/web/presentation-v2.js',r=>r.fulfill({body:'',contentType:'text/javascript'}));
+  if(baseline)await page.route('**/web/presentation-v3.js',r=>r.fulfill({body:'',contentType:'text/javascript'}));
   await page.goto(origin+'/skyline-estates/index.html');await page.locator('#boot').waitFor({state:'detached',timeout:30000});return{ctx,page};
  };
  const source=fs.readFileSync(path.join(root,'skyline-estates/game.html'),'utf8').replace(/\r\n/g,'\n');
@@ -50,11 +50,48 @@ async function perf(page,kind){const sample=await page.evaluate(async()=>{
   await snap(page,'board-'+viewport.width);
   check('Lagos presentation restores the Daylight palette without changing state '+viewport.width,await page.evaluate(()=>{const data=JSON.stringify(G);drawScene(0);const night=S3.waterMat.c.join();document.documentElement.classList.add('light');drawScene(0);const day=S3.waterMat.c.join();document.documentElement.classList.remove('light');drawScene(0);return night!==day&&night===S3.waterMat.c.join()&&data===JSON.stringify(G)}));
   if(viewport.width===844){
-   const movement=await page.evaluate(async()=>{const tw=tween;tween=(ms,fn,ease)=>tw(Math.min(ms,65),fn,ease);const angles=[],distances=[],targets=[];
-    try{for(let i=1;i<=40;i++){P(0).pos=i%40;await hopTo(P(0));angles.push(camT.yaw);distances.push(camT.L);targets.push(Math.hypot(...SkylineWebPresentation.diagnostics().target))}}
-    finally{tween=tw}return{angles,distances,targets,pos:P(0).pos};});
-   check('Token traverses every side and all four corners without camera rotation or excess zoom',movement.pos===0&&movement.angles.every(x=>Math.abs(x)<.001)&&Math.max(...movement.distances)-Math.min(...movement.distances)<.01&&movement.targets.every(x=>x<=.9),movement);
-   await page.waitForTimeout(1100);check('Camera returns to normal board framing',await page.evaluate(()=>SkylineWebPresentation.diagnostics().target.every(x=>Math.abs(x)<.001)));
+   // FOLLOW is the default: real hops (shortened tweens) around every side and corner, sampled every frame.
+   await page.evaluate(()=>{window.__cam=[];const tick=()=>{const pl=P(G.turn),t=tok3[pl.id],m=CAMM.vp,d=SkylineWebPresentation.diagnostics().camera,cv=document.getElementById('gl');
+    if(m&&t){const[x,y,z]=[t.p[0],t.p[1]+.3,t.p[2]],w=m[3]*x+m[7]*y+m[11]*z+m[15];__cam.push({turn:G.turn,pos:pl.pos,sx:((m[0]*x+m[4]*y+m[8]*z+m[12])/w+1)/2*cv.clientWidth,sy:(1-(m[1]*x+m[5]*y+m[9]*z+m[13])/w)/2*cv.clientHeight,yaw:camS.yaw,L:camS.L,mode:d.mode,u:d.usable})}
+    window.__camRaf=requestAnimationFrame(tick)};tick()});
+   // Software WebGL renders few frames per second and the game caps each step at 50 ms, so wait for convergence.
+   const settle=()=>page.waitForFunction(()=>Math.abs(camS.yaw-camT.yaw)<.004&&Math.hypot(camS.look[0]-camT.look[0],camS.look[2]-camT.look[2])<.01&&Math.abs(camS.L-camT.L)<.01,null,{timeout:30000});
+   const inside=f=>f.u&&f.sx>=f.u.left&&f.sx<=f.u.right&&f.sy>=f.u.top&&f.sy<=f.u.bottom;
+   const deg=r=>((r*180/Math.PI)%360+540)%360-180;
+   const stops=[];
+   for(const n of [5,5,5,5,5,5,5,5]){
+    await page.evaluate(async n=>{const tw=tween;tween=(ms,fn,ease)=>tw(Math.min(ms,140),fn,ease);try{await moveSteps(P(0),n)}finally{tween=tw}},n);await settle();
+    stops.push(await page.evaluate(()=>__cam[__cam.length-1]));
+   }
+   const frames=await page.evaluate(()=>__cam.splice(0));
+   const overviewL=await page.evaluate(()=>{const cv=document.getElementById('gl');return Math.max(18,7.65/(Math.tan(19*Math.PI/180)*(cv.clientWidth/cv.clientHeight))*1.02)});
+   check('Follow is the default mode and frames the token substantially closer than the old overview',stops.every(f=>f.mode==='follow'&&f.L<overviewL*.6),{L:stops.map(f=>f.L),overviewL});
+   check('Token traverses every side and all four corners and stays inside the free viewport after each landing',stops.map(f=>f.pos).join()==='5,10,15,20,25,30,35,0'&&stops.every(inside),stops);
+   const side={5:0,15:-90,25:180,35:90},corner={10:[0,-90],20:[-90,180],30:[180,90],0:[90,0]},gap=(a,b)=>Math.abs(deg((a-b)*Math.PI/180));
+   check('View squares to each board side and turns part-way at each corner',stops.every(f=>{const y=deg(f.yaw);return f.pos in side?gap(y,side[f.pos])<3:gap(y,corner[f.pos][0])>12&&gap(y,corner[f.pos][1])>12&&gap(y,corner[f.pos][0])+gap(y,corner[f.pos][1])<91}),stops.map(f=>[f.pos,Math.round(deg(f.yaw))]));
+   let maxStep=0,maxL=0;for(let i=1;i<frames.length;i++){maxStep=Math.max(maxStep,Math.abs(frames[i].yaw-frames[i-1].yaw));maxL=Math.max(maxL,Math.abs(frames[i].L-frames[i-1].L))}
+   const total=Math.abs(frames[frames.length-1].yaw-frames[0].yaw);
+   check('Rotation is continuous: no 90-degree jumps, no spin, no zoom pumping during movement',frames.length>20&&maxStep<.35&&total>Math.PI*1.6&&total<Math.PI*2.4&&maxL<.05,{frames:frames.length,maxStepDeg:maxStep*180/Math.PI,totalDeg:total*180/Math.PI,maxL});
+   check('Token stays inside the free viewport throughout every move',frames.filter(f=>f.mode==='follow'&&!inside(f)).length<=Math.ceil(frames.length*.03),frames.filter(f=>!inside(f)).slice(0,5));
+   // AI turns use the same follow framing after the normal turn-start camera call.
+   await page.evaluate(async()=>{G.turn=1;renderRoster();camOverview(P(1).pos,700);const tw=tween;tween=(ms,fn,ease)=>tw(Math.min(ms,140),fn,ease);try{await moveSteps(P(1),12)}finally{tween=tw}});await settle();
+   const ai=await page.evaluate(()=>__cam[__cam.length-1]);check('AI turn is followed with the same close framing',ai.turn===1&&ai.mode==='follow'&&inside(ai)&&ai.L<overviewL*.6,ai);
+   // Manual drag is respected until the next move.
+   const manual=await page.evaluate(async()=>{userCam=1;camT.yaw=camS.yaw+.6;const want=camT.yaw;await new Promise(r=>setTimeout(r,500));const kept=Math.abs(camT.yaw-want)<1e-6;const tw=tween;tween=(ms,fn,ease)=>tw(Math.min(ms,140),fn,ease);try{await moveSteps(P(1),1)}finally{tween=tw}return{kept,resumed:!userCam}});
+   check('Manual camera gestures are kept until the next move resumes following',manual.kept&&manual.resumed,manual);
+   // OVERVIEW through the camera control, then back to FOLLOW.
+   await page.locator('#camBtn').click();await page.waitForFunction(()=>__cam.length&&__cam[__cam.length-1].mode==='board');await settle();
+   const ov=await page.evaluate(()=>{const m=CAMM.vp,cv=document.getElementById('gl'),F=6.32,b=document.getElementById('camBtn').getBoundingClientRect();return{mode:SkylineWebPresentation.diagnostics().camera.mode,pressed:document.getElementById('camBtn').getAttribute('aria-pressed'),btn:[b.width,b.height],w:cv.clientWidth,h:cv.clientHeight,c:[[-F,0,-F],[F,0,-F],[F,0,F],[-F,0,F]].map(([x,y,z])=>{const w=m[3]*x+m[7]*y+m[11]*z+m[15];return[((m[0]*x+m[4]*y+m[8]*z+m[12])/w+1)/2*cv.clientWidth,(1-(m[1]*x+m[5]*y+m[9]*z+m[13])/w)/2*cv.clientHeight]})}});
+   const ovBox={l:Math.min(...ov.c.map(c=>c[0])),r:Math.max(...ov.c.map(c=>c[0])),t:Math.min(...ov.c.map(c=>c[1])),b:Math.max(...ov.c.map(c=>c[1]))};
+   check('Camera control switches to Overview showing all four frame corners and filling the screen',ov.mode==='board'&&ov.pressed==='true'&&ov.btn.every(x=>x>=44)&&ov.c.every(([x,y])=>x>=0&&x<=ov.w&&y>=0&&y<=ov.h)&&(ovBox.r-ovBox.l)>ov.w*.6,ov);
+   await snap(page,'overview-844');
+   await page.locator('#camBtn').click();await page.waitForFunction(()=>__cam.length&&__cam[__cam.length-1].mode==='follow');await settle();
+   const back=await page.evaluate(()=>__cam[__cam.length-1]);check('Camera control returns to Follow on the active token',back.mode==='follow'&&inside(back)&&back.L<overviewL*.6,back);
+   await snap(page,'follow-844');
+   await page.setViewportSize({width:956,height:440});await page.waitForFunction(()=>{const f=__cam[__cam.length-1];return f&&f.u&&f.u.right>900});await settle();await page.waitForTimeout(300);const resized=await page.evaluate(()=>__cam[__cam.length-1]);
+   check('Follow framing adapts to resize / Safari toolbar changes',resized.u&&resized.u.right>900&&inside(resized),resized);
+   await page.setViewportSize({width:844,height:390});await page.waitForTimeout(600);
+   await page.evaluate(()=>{cancelAnimationFrame(__camRaf);G.turn=0;renderRoster()});
    const fade=await page.evaluate(()=>{
     const token=tok3[G.turn],oldPos=token.p.slice(),cp=CAMV.pos.slice(),plot=S3.plots[1],oldPlot=plot.node.p.slice(),top=plot.webTop;
     const mats=[];(function walk(n){if(n.mat)mats.push([n,n.mat,n.mat.a]);n.kids.forEach(walk)})(token);
@@ -103,7 +140,13 @@ async function perf(page,kind){const sample=await page.evaluate(async()=>{
   check('No horizontal document overflow '+viewport.width,await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
   await ctx.close();
  }
- const motion=await open({width:844,height:390},false,'reduce');await fixture(motion.page);await motion.page.evaluate(()=>camFollow(29));check('Reduced motion disables automatic follow translation',await motion.page.evaluate(()=>SkylineWebPresentation.diagnostics().reducedMotion&&SkylineWebPresentation.diagnostics().target.every(v=>v===0)));await motion.ctx.close();
+ const motion=await open({width:844,height:390},false,'reduce');await fixture(motion.page);await motion.page.waitForTimeout(800);
+ await motion.page.waitForFunction(()=>Math.hypot(camS.look[0]-camT.look[0],camS.look[2]-camT.look[2])<.01);
+ const still=await motion.page.evaluate(async()=>{const before={yaw:camS.yaw,look:camS.look.slice()},seen=[];let on=true;const tick=()=>{seen.push(camS.look.slice());if(on)requestAnimationFrame(tick)};tick();
+  const tw=tween;tween=(ms,fn,ease)=>tw(Math.min(ms,140),fn,ease);try{await moveSteps(P(0),6)}finally{tween=tw}const during=seen.length;await new Promise(r=>setTimeout(r,900));on=false;
+  const moved=seen.slice(0,during).filter(l=>Math.hypot(l[0]-before.look[0],l[2]-before.look[2])>.01).length;
+  return{reduced:SkylineWebPresentation.diagnostics().reducedMotion,moved,during,yaw:camS.yaw,snapped:Math.abs(camS.yaw/(Math.PI/2)-Math.round(camS.yaw/(Math.PI/2)))<.02,after:Math.hypot(camS.look[0]-before.look[0],camS.look[2]-before.look[2])}});
+ check('Reduced motion: no camera travel or rotation during hops, one cut to the landing, square view',still.reduced&&still.moved<=Math.ceil(still.during*.15)&&still.snapped&&still.after>.5,still);await motion.ctx.close();
  const fallback=await open({width:844,height:390},false,'no-preference',true);check('Existing flat-board fallback and menus remain available',await fallback.page.evaluate(()=>PREF.flat2d&&typeof drawMap==='function'&&document.querySelectorAll('.hd-mode').length===4));
  // The normal delayed welcome callback writes lastOpen after boot. Snapshot once startup finishes.
  await fallback.page.waitForFunction(()=>PREF.lastOpen>0);
