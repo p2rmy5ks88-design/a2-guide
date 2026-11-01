@@ -43,8 +43,19 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add skyline-estates/index.html skyline-estates/offline-assets.js
-          if ! git diff --cached --quiet; then
+          for attempt in 1 2 3; do
+            git fetch origin skyline-portfolio-gallery
+            git reset --hard origin/skyline-portfolio-gallery
+            python3 skyline-estates/build.py
+            git add skyline-estates/index.html skyline-estates/offline-assets.js
+            if git diff --cached --quiet; then
+              echo "Offline assets already current."
+              exit 0
+            fi
             git commit -m "build: refresh Skyline portfolio image manifest"
-            git push origin HEAD:skyline-portfolio-gallery
-          fi
+            if git push origin HEAD:skyline-portfolio-gallery; then
+              exit 0
+            fi
+          done
+          echo "Unable to synchronize generated files after retries."
+          exit 1
