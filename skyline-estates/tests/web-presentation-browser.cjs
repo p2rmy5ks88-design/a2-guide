@@ -105,8 +105,8 @@ async function perf(page,kind){const sample=await page.evaluate(async()=>{
  }
  const motion=await open({width:844,height:390},false,'reduce');await fixture(motion.page);await motion.page.evaluate(()=>camFollow(29));check('Reduced motion disables automatic follow translation',await motion.page.evaluate(()=>SkylineWebPresentation.diagnostics().reducedMotion&&SkylineWebPresentation.diagnostics().target.every(v=>v===0)));await motion.ctx.close();
  const fallback=await open({width:844,height:390},false,'no-preference',true);check('Existing flat-board fallback and menus remain available',await fallback.page.evaluate(()=>PREF.flat2d&&typeof drawMap==='function'&&document.querySelectorAll('.hd-mode').length===4));
- // The normal delayed welcome callback writes lastOpen/seenSeason after boot. Snapshot once startup finishes.
- await fallback.page.waitForFunction(()=>PREF.lastOpen>0&&PREF.seenSeason===PREF.season?.n);
+ // The normal delayed welcome callback writes lastOpen after boot. Snapshot once startup finishes.
+ await fallback.page.waitForFunction(()=>PREF.lastOpen>0);
  await fallback.page.evaluate(()=>homeTab('shop'));const saved=await fallback.page.evaluate(()=>localStorage.getItem('skylinePrefs'));
  for(const size of [{width:844,height:320},{width:390,height:844},{width:844,height:390}]){
   await fallback.page.setViewportSize(size);
