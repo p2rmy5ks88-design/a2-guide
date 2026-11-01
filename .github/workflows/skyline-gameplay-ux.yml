@@ -24,7 +24,7 @@ jobs:
           node --check skyline-estates/tests/gameplay-ux-browser.cjs
       - name: Install Playwright
         run: npm install --prefix skyline-estates/tests --no-audit --no-fund
-      - name: Gameplay UX: build, trade, Daylight HUD
+      - name: 'Gameplay UX: build, trade, Daylight HUD'
         run: CHROME_PATH="$(command -v google-chrome)" node skyline-estates/tests/gameplay-ux-browser.cjs
       - name: Existing debt and in-game portfolio behavior
         run: CHROME_PATH="$(command -v google-chrome)" node skyline-estates/tests/debt-portfolio-browser.cjs
