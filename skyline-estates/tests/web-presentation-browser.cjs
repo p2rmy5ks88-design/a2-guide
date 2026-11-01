@@ -15,7 +15,7 @@ async function fixture(page){return page.evaluate(()=>{
  FAST=false;document.querySelector('#title').hidden=true;document.querySelector('#ui').hidden=false;document.querySelector('#modals').innerHTML='';
  buildBoard();renderRoster();setPrompt('<b>Safari tester</b>, your turn. Roll or manage your properties.');updateTools();camOverview(0,0);return JSON.stringify(G);
 });}
-async function snap(page,name){await page.waitForTimeout(450);const file=path.join(out,'skyline-web-'+name+'.png');await page.screenshot({path:file});report.screenshots.push(path.basename(file));}
+async function snap(page,name){await page.waitForTimeout(450);const file=path.join(out,'skyline-web-'+name+'.png');const style=await page.addStyleTag({content:'.achpop{display:none!important}'});try{await page.screenshot({path:file});report.screenshots.push(path.basename(file))}finally{await style.evaluate(n=>n.remove())}}
 async function perf(page,kind){const sample=await page.evaluate(async()=>{
  const times=[];let last=performance.now();for(let i=0;i<35;i++){await new Promise(requestAnimationFrame);const now=performance.now();if(i>4)times.push(now-last);last=now}
  let meshes=0;(function walk(n){if(!n.visible)return;if(n.geo&&n.mat)meshes++;n.kids.forEach(walk)})(ROOT);
