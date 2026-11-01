@@ -1,0 +1,36 @@
+name: Temporary Portfolio offline sync
+
+on:
+  push:
+    branches: [skyline-portfolio-integrated]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Refresh generated offline entry and asset manifest
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          for attempt in 1 2 3; do
+            git fetch origin skyline-portfolio-integrated
+            git reset --hard origin/skyline-portfolio-integrated
+            python3 skyline-estates/build.py
+            git add skyline-estates/index.html skyline-estates/offline-assets.js
+            if git diff --cached --quiet; then
+              python3 skyline-estates/build.py --check
+              exit 0
+            fi
+            git commit -m "build: sync final portrait dock and Portfolio assets"
+            if git push origin HEAD:skyline-portfolio-integrated; then exit 0; fi
+          done
+          exit 1
