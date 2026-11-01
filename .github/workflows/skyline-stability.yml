@@ -2,7 +2,7 @@ name: Skyline stability tests
 
 on:
   push:
-    branches: [skyline-gameplay-ux]
+    branches: [skyline-gameplay-ux, skyline-focus-hud]
   pull_request:
     paths:
       - 'skyline-estates/**'
@@ -51,6 +51,7 @@ jobs:
           t 'node skyline-estates/tests/portfolio-fast-upgrades-browser.cjs'
           t 'node skyline-estates/tests/portfolio-integrated-browser.cjs'
           t 'node skyline-estates/tests/gameplay-ux-browser.cjs'
+          t 'node skyline-estates/tests/focus-hud-browser.cjs'
           t 'node skyline-estates/tests/native-fullscreen.cjs'
           t 'node skyline-estates/tests/promo-codes.cjs'
           t 'node skyline-estates/tests/promo-browser.cjs'
