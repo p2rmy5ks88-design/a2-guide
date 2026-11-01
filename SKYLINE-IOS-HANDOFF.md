@@ -132,3 +132,11 @@ Builds are made with: Actions → `skyline-ios.yml` → Run workflow on `main`, 
 - Signed TestFlight upload run **41260160323**, build **149**, version **1.0**, exact source above, `ios-release` channel (purchases false) **passed**. Signature/profile/entitlement and bundled-source checks passed. Apple processed build 149 and it is assigned to the existing **Skyline iOS QA** internal group. Focused What to Test notes saved. Physical installation/launch and device acceptance remain pending; the owner was asked to update without deleting the app and test progress, menus, saved matches, building controls, trade previews and Daylight.
 - Final App Store Connect check after beta assignment: **version 1.0 still Waiting for Review**. Build 85 remains the submitted build; no public replacement or withdrawal was performed. Retain its review and consider the redesign as a later update after beta acceptance.
 - Existing bundle/signing identity unchanged. No live IAM/backend deploy, budget change or payment activation performed. Do not select the private-testing channel merely for this redesign: it enables purchases against the paused backend.
+
+
+## 1 November — owner accepts redesign on web and iPhone
+
+- Owner confirmed TestFlight **1.0 (149)** installed and launched successfully, then reported **all remaining checks passed**: saved progress/matches, redesigned menus, building controls, trade previews and Daylight readability.
+- Owner also confirmed the deployed web game works as intended. Record these as owner-reported device/web acceptance, not automated device measurements.
+- Development, verified web deployment and TestFlight delivery/acceptance milestone complete. Public App Store replacement remains separately gated: do not withdraw build 85's submission or submit build 149 without explicit owner approval. Last directly verified status of version 1.0/build 85: Waiting for Review; refresh before any later store decision.
+- Purchases remain disabled; paused live IAM/backend deployments remain paused.
