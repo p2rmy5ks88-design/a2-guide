@@ -70,7 +70,7 @@ async function perf(page,kind){const sample=await page.evaluate(async()=>{
    check('Building still debits the real cost and saves',cash.after===cash.before-cash.cost);
    await page.reload();await page.locator('#boot').waitFor({state:'detached',timeout:30000});check('Refresh preserves saved match exactly',await page.evaluate(saved=>JSON.stringify(loadSave())===saved,cash.saved));
    // Continue uses the original saved-game flow; no custom load or migration.
-   await page.locator('#tCont').click();await page.waitForFunction(()=>document.querySelector('#title').hidden);if(await page.locator('.keysm').count())await page.getByRole('button',{name:'Let’s go',exact:true}).click();
+   await page.locator('#tCont').click();await page.waitForFunction(()=>document.querySelector('#title').hidden);if(await page.locator('.keysm').count())await page.getByRole('button',{name:/^Let.s go$/,exact:true}).click();
    check('Existing Continue opens the saved game',await page.evaluate(i=>G.own[i].h===1,cash.i));
   }
   await page.evaluate(()=>{showTitle();setup.shopTab='daily';homeTab('shop')});
@@ -101,7 +101,12 @@ async function perf(page,kind){const sample=await page.evaluate(async()=>{
  const motion=await open({width:844,height:390},false,'reduce');await fixture(motion.page);await motion.page.evaluate(()=>camFollow(29));check('Reduced motion disables automatic follow translation',await motion.page.evaluate(()=>SkylineWebPresentation.diagnostics().reducedMotion&&SkylineWebPresentation.diagnostics().target.every(v=>v===0)));await motion.ctx.close();
  const fallback=await open({width:844,height:390},false,'no-preference',true);check('Existing flat-board fallback and menus remain available',await fallback.page.evaluate(()=>PREF.flat2d&&typeof drawMap==='function'&&document.querySelectorAll('.hd-mode').length===4));
  await fallback.page.evaluate(()=>homeTab('shop'));const saved=await fallback.page.evaluate(()=>localStorage.getItem('skylinePrefs'));
- for(const size of [{width:844,height:320},{width:390,height:844},{width:844,height:390}]){await fallback.page.setViewportSize(size);await fallback.page.waitForTimeout(100);check('Resize/orientation preserves save and accessible navigation '+size.width+'x'+size.height,await fallback.page.evaluate(s=>localStorage.getItem('skylinePrefs')===s&&document.documentElement.scrollWidth<=innerWidth+1&&[...document.querySelectorAll('[data-dock]')].filter(n=>n.getBoundingClientRect().width).every(n=>n.getBoundingClientRect().height>=44),saved))}
+ for(const size of [{width:844,height:320},{width:390,height:844},{width:844,height:390}]){
+  await fallback.page.setViewportSize(size);
+  await fallback.page.waitForFunction(()=>document.documentElement.scrollWidth<=innerWidth+1&&[...document.querySelectorAll('[data-dock]')].filter(n=>n.getBoundingClientRect().width).every(n=>n.getBoundingClientRect().height>=44),null,{timeout:8000});
+  const result=await fallback.page.evaluate(s=>({savePreserved:localStorage.getItem('skylinePrefs')===s,overflow:document.documentElement.scrollWidth>innerWidth+1,heights:[...document.querySelectorAll('[data-dock]')].map(n=>n.getBoundingClientRect().height)}),saved);
+  check('Resize/orientation preserves save and accessible navigation '+size.width+'x'+size.height,result.savePreserved&&!result.overflow&&result.heights.every(h=>h>=44),result);
+ }
  await fallback.ctx.close();
  check('No browser exceptions',report.errors.length===0,report.errors);
  console.log('WEB PRESENTATION SUMMARY',JSON.stringify({checks:report.checks.length,errors:report.errors.length,performance:report.performance}));

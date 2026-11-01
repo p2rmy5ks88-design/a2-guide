@@ -22,7 +22,7 @@ Automatic push/PR Actions are suppressed with `[skip actions]` because the exist
 
 ## Verification evidence
 
-Local focused browser run: 97 checks passed, zero browser exceptions, using desktop Chromium software WebGL at 844×390, 956×440 and 1280×589. Additional palette/orientation checks and the complete candidate CI are recorded in the PR before merge. The new regression is included in the existing stability workflow.
+Local focused browser run: 103 checks passed, zero browser exceptions, using desktop Chromium software WebGL at 844×390, 956×440 and 1280×589. Palette restoration and resize/orientation checks are included. Complete candidate CI is recorded in the PR before merge. The new regression is included in the existing stability workflow.
 
 Coverage includes all 40 movement steps/corners, stable camera targets, plot spacing, material restoration/token opacity, unchanged gameplay function implementations, real construction cost, save/reload/Continue, all five Shop categories, genuine preview cancellation without inventory changes, actual season XP, both reward tracks, and idempotent claim/Claim All.
 
@@ -30,7 +30,7 @@ Offline worker: **16/16**; daily-event/content regression: **9/9**; generated br
 
 Screenshots and JSON diagnostics are retained in the stability artifact (`skyline-web-board-*`, `skyline-web-shop-*`, `skyline-web-season-*`, `skyline-web-presentation.json`). Equivalent 1280×589 views were compared with the owner references. The concept's explanatory A/B/C panels, invented tile names and simultaneous Roll/End controls are not copied into gameplay.
 
-Performance is measured with software rendering, not an iPhone GPU: the latest complete local comparison had 1,293 versus 1,250 visible meshes, median frame intervals 87.3 versus 77.5 ms and p95 94.1 versus 87.0 ms. These figures demonstrate the test environment only and are not a Safari frame-rate promise. No new heavyweight model assets, animation loop or unbounded texture allocation is introduced.
+Performance is measured with software rendering, not an iPhone GPU: the latest complete local comparison had 1,293 versus 1,253 visible meshes, median frame intervals 89.6 versus 78.5 ms and p95 102.7 versus 85.8 ms. These figures demonstrate the test environment only and are not a Safari frame-rate promise. No new heavyweight model assets, animation loop or unbounded texture allocation is introduced.
 
 ## Physical iPhone Safari acceptance (owner)
 
