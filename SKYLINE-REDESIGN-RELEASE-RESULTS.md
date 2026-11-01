@@ -27,6 +27,7 @@ Representative executed suites:
 | Coverage | Result |
 |---|---|
 | Home redesign | 34 checks, CI |
+| Collection Vault / ownership / avatar access | 17 checks, CI |
 | Integrated Portfolio | 19 checks, CI and independent local rerun |
 | Upgrade Center / atomic purchase/cancel | 22 checks, CI and local rerun |
 | Quick House/Tower, trade hints, Daylight | 17 checks, CI and local rerun |
@@ -75,5 +76,9 @@ Recommendation: retain build 85's review. Validate the redesign through TestFlig
 
 Signed manual workflow: https://github.com/p2rmy5ks88-design/a2-guide/actions/runs/41260160323 (build 149, version 1.0, exact merged source, `cloud_channel=ios-release`, `publish=true`). This channel retains accounts/cloud save and keeps purchases off. Unlike `private-testing`, it does not activate payment testing against the paused backend.
 
-At this checkpoint the signed workflow is running. Upload/processing/tester assignment must be recorded only after confirmation. Physical installation, device performance, native sign-in, saved-game continuation, menu interaction, building/trading and Daylight acceptance remain pending on the owner's iPhone. Automated browser/compile results do not establish those device outcomes.
+The signed workflow completed successfully. Simulator and device compiles, archive, signature verification and export/upload passed. Logs confirm final Apple signature, exact App ID/team, Apple entitlement, allowed certificate, unexpired provisioning profile and Firebase options. Xcode reported `Uploaded App` and `EXPORT SUCCEEDED` at 01:22 UTC. Toolchain: Xcode 26.6 / iOS 26 SDK requirement passed. Packaged bundle: 171 verified files, 79,172,179 bytes, five bundled fonts, approved source preserved, `ios-release` channel. Both landscape orientations remain configured on iPhone and iPad.
+
+App Store Connect independently confirmed upload and completed processing. **Version 1.0 (149)** is assigned to the existing **Skyline iOS QA** internal group. The build detail page confirms `Group (1): Skyline iOS QA — Internal`; proof is saved as `release80-testflight149.png`. No external group, public testing link, new tester invitation or App Store build replacement was created.
+
+Physical installation, device performance, native sign-in, saved-game continuation, menu interaction, building/trading and Daylight acceptance remain pending on the owner's iPhone. Automated browser/compile results do not establish those device outcomes.
 
