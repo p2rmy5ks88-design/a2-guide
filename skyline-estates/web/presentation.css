@@ -31,7 +31,7 @@ html.web-refined:not(.rot) #title,html.web-refined:not(.rot) #ui,html.web-refine
 /* Menu surfaces use the same restrained palette; the cinematic City pane is unchanged. */
 .web-refined.web-shop #title .home.hd-dock,.web-refined.web-progress #title .home.hd-dock{--hd-dockh:48px}
 .web-refined.web-shop #title .home.hd-dock>.rail,.web-refined.web-progress #title .home.hd-dock>.rail{max-width:920px}
-.web-refined.web-shop #title .hd-di,.web-refined.web-progress #title .hd-di{margin:0 8px!important;letter-spacing:.035em!important}
+.web-refined.web-shop #title .hd-di,.web-refined.web-progress #title .hd-di{height:44px!important;min-height:44px!important;margin:0 8px!important;letter-spacing:.035em!important}
 .web-refined.web-shop #rprof.topbar,.web-refined.web-progress #rprof.topbar{min-height:44px;margin-bottom:4px;padding-top:2px;padding-bottom:2px}
 .web-refined.web-shop #rprof .rav,.web-refined.web-progress #rprof .rav{width:36px;height:36px}
 .web-refined.web-shop #rprof .tpill,.web-refined.web-progress #rprof .tpill{padding:7px 12px;font-size:12px}
