@@ -27,7 +27,7 @@ const root=path.resolve(__dirname,'../..'),types={'.html':'text/html','.js':'tex
       const b=e.getBoundingClientRect();return{label:e.textContent.trim(),left:b.left,right:b.right,width:b.width,height:b.height,scrollWidth:e.scrollWidth}
     }));
     verify('Portrait dock shows six nonoverlapping accessible destinations',dock.length===6&&
-      dock.every((x,i)=>x.left>=-1&&x.right<=innerWidth+1&&x.width>=44&&x.height>=44&&x.scrollWidth<=x.width+2&&(!i||x.left>=dock[i-1].right-2)),dock);
+      dock.every((x,i)=>x.left>=-1&&x.right<=vp.width+1&&x.width>=44&&x.height>=44&&x.scrollWidth<=x.width+2&&(!i||x.left>=dock[i-1].right-2)),dock);
   }
   const assets=await page.locator('.em-district img').evaluateAll(async imgs=>{
     await Promise.all(imgs.map(img=>img.decode().catch(()=>null)));
