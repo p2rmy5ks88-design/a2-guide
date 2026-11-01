@@ -43,6 +43,7 @@ jobs:
           t 'node skyline-estates/tests/home-redesign-browser.cjs'
           t 'node skyline-estates/tests/collection-vault-browser.cjs'
           t 'node skyline-estates/tests/portfolio-fast-upgrades-browser.cjs'
+          t 'node skyline-estates/tests/portfolio-integrated-browser.cjs'
           t 'node skyline-estates/tests/native-fullscreen.cjs'
           t 'node skyline-estates/tests/promo-codes.cjs'
           t 'node skyline-estates/tests/promo-browser.cjs'
@@ -91,6 +92,7 @@ jobs:
             ${{ runner.temp }}/skyline-home-art-*.png
             ${{ runner.temp }}/skyline-portfolio-fast-*.png
             ${{ runner.temp }}/skyline-portfolio-center-*.png
+            ${{ runner.temp }}/skyline-integrated-*.png
             ${{ runner.temp }}/skyline-management-browser.json
             ${{ runner.temp }}/skyline-controls-browser.json
             ${{ runner.temp }}/skyline-web-connection-browser.json
