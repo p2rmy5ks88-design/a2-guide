@@ -2006,6 +2006,29 @@ html.light .tbtn.ghost{background:rgba(19,40,74,.06);border-color:rgba(19,40,74,
 .tbuild{font-size:16px;justify-content:center}.tbuild .tow{font-size:30px}
 </style>
 
+<style id="skyline-gameplay-ux-styles">
+.pf3quick{margin-top:9px;border-top:1px solid #3f6471;padding-top:8px;min-width:0}
+.pf3quickhead{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:7px}
+.pf3quickhead b{font-size:13px;color:#f7d58a}.pf3quickhead small{font-size:11px;color:#b9d2d7}
+.pf3quicklist{display:flex;gap:7px;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:thin;scrollbar-color:#b89457 #142d3a;padding-bottom:4px}
+.pf3quickcard{display:flex;gap:9px;align-items:center;justify-content:space-between;min-width:229px;flex:0 0 229px;background:#0a1d2c;border:1px solid #527181;border-left:4px solid var(--pc,#d3b56c);border-radius:11px;padding:7px 8px}
+.pf3quickdesc{min-width:0;display:flex;flex-direction:column;gap:3px}.pf3quickdesc b{font-size:12px;color:#fff9e6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pf3quickdesc small{font-size:9.5px;color:#c0d2d7;line-height:1.3}
+.pf3quickcard button,.pf3more{min-height:40px;border-radius:10px;border:1px solid #ffe0a0;background:linear-gradient(#ffe39b,#d3a248);color:#172538;font-size:11px;font-weight:900;white-space:nowrap;cursor:pointer;padding:7px 10px}
+.pf3quickcard button:hover,.pf3more:hover{filter:brightness(1.08)}.pf3quickcard button:focus-visible,.pf3more:focus-visible{outline:3px solid #fff2bf;outline-offset:2px}
+.pf3more{flex:none;align-self:stretch;padding:10px;background:#172d3e;color:#f4d58a;border-color:#aa8b54}
+.tchip .hint{font-style:normal;line-height:1.35;white-space:normal;overflow-wrap:anywhere}
+.tchip .hint.bad{color:#ffe1d9;background:#672b29;border:1px solid #ce7566}.tchip .hint.good{color:#d9ffea;background:#1d5b42;border:1px solid #55b88a}
+/* Opaque, high contrast Daylight notices over bright board scenery */
+html.light #ui #prompt,html.light #ui #log,html.light #ui #round,html.light #ui #radio,html.light #ui #ev2chip{background:#10283b!important;color:#f9f6ee!important;border:1px solid #e5c47d!important;box-shadow:0 5px 16px #07152380!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+html.light #ui #prompt .sub,html.light #ui #prompt small,html.light #ui #log small{color:#d1e1e8!important}
+html.light #ui #prompt b,html.light #ui #round b{color:#fff1bf!important}
+html.light #ui #radio .rl b,html.light #ui #ev2chip b{color:#f4d28b!important}
+html.light #ui #ev2chip span{color:#f3f6f8!important;opacity:1!important}
+html.light #ui #toast{background:#f6cf77!important;color:#1b2430!important;border:1px solid #9b6a2e!important;box-shadow:0 7px 19px #07152380!important}
+html.light #ui .evban,html.light .ev2ban{background:#10283b!important;color:#fbf6eb!important;border:2px solid #efcc7d!important;text-shadow:none!important;box-shadow:0 10px 25px #07152399!important}
+html.light #ui .pill:not(.pri){background:#10283b!important;color:#fff5dc!important;border:1px solid #e5c47d!important}
+@media(max-height:420px){.pf3quick{margin-top:4px;padding-top:4px}.pf3quickhead{margin-bottom:4px}.pf3quickcard{min-width:215px;flex-basis:215px;padding:4px 6px}}
+</style>
 <canvas id="gl" aria-label="3D game board"></canvas>
 <div id="fx"></div>
 <div id="ui" hidden>
@@ -3108,13 +3131,25 @@ function showDiceHud(d){if(FAST)return;const h=$('#diceHud');const sp=d.s!=null?
 
 /* ================= PROPERTY CHIPS ================= */
 function houseLabel(i){const h=G.own[i].h;return h===5?'Tower':h?h+' house'+(h>1?'s':''):''}
-function ownHint(i,viewer,incoming,t){if(viewer==null)return '';const s=SQ[i];
-  if(s.g){const gr=GROUPS[s.g],have=gr.filter(j=>G.own[j].o===viewer).length;
-    if(incoming){const after=gr.filter(j=>G.own[j].o===viewer||t.give.includes(j)||(t.from===viewer&&t.get.includes(j))).length;
-      if(after===gr.length)return `<em class="hint good">Completes your ${GNAME[s.g]} set!</em>`;if(have)return `<em class="hint">You own ${have} of ${gr.length} in this set</em>`;return ''}
-    if(have===gr.length)return `<em class="hint bad">Breaks your full ${GNAME[s.g]} set</em>`;return ''}
-  const arr=s.t==='rail'?RAILS:UTILS,have=arr.filter(j=>G.own[j].o===viewer).length;
-  if(incoming&&have)return `<em class="hint">You own ${have} ${s.t==='rail'?'transport hub'+(have>1?'s':''):'utility'}</em>`;return ''}
+/* Show the actual set ownership before AND after a proposed exchange, without
+   changing match state or assuming every incoming card completes a set. */
+function tradeOwnerProjection(t){const after=G.own.map(o=>o.o);
+  (t.give||[]).forEach(i=>after[i]=t.to);(t.get||[]).forEach(i=>after[i]=t.from);return after}
+function ownHint(i,viewer,incoming,t){if(viewer==null)return '';
+  const s=SQ[i],set=s.g?GROUPS[s.g]:s.t==='rail'?RAILS:s.t==='util'?UTILS:null;if(!set)return '';
+  const after=tradeOwnerProjection(t),before=set.filter(j=>G.own[j].o===viewer).length,
+    projected=set.filter(j=>after[j]===viewer).length,other=viewer===t.to?t.from:t.to,
+    otherBefore=set.filter(j=>G.own[j].o===other).length,otherAfter=set.filter(j=>after[j]===other).length;
+  const type=s.g?'streets':s.t==='rail'?'hubs':'utilities',notes=[
+    (incoming?'You currently own ':'Already yours: you own ')+before+' of '+set.length+' '+type+' → '+projected+' of '+set.length
+  ];
+  const win=before<set.length&&projected===set.length,breakSet=before===set.length&&projected<set.length,
+    opponentWins=otherBefore<set.length&&otherAfter===set.length;
+  if(win)notes.push('Completes your set');
+  if(breakSet)notes.push('Breaks your set');
+  if(opponentWins)notes.push('Completes '+P(other).name+'\\'s set');
+  return '<em class="hint '+(breakSet||opponentWins?'bad':win?'good':'')+'">'+esc(notes.join(' · '))+'</em>';
+}
 function propChip(i,viewer,incoming,t){const s=SQ[i],o=G.own[i],gc=s.g?GC[s.g]:'#9aa6b4';const set=s.g?GNAME[s.g]:s.t==='rail'?'Transport':'Utility';
   return `<span class="tchip" style="--g:${gc}"><i></i><span><b>${s.n}</b><small>${set}${o.h?' · '+houseLabel(i):''}${o.m?' · mortgaged':''}</small>${ownHint(i,viewer,incoming,t)}</span></span>`}
 function tradeSide(props,cash,card,viewer,incoming,t){const parts=props.map(i=>propChip(i,viewer,incoming,t));if(cash)parts.push(`<span class="tchip cash"><i></i><span><b>${fmt(cash)}</b><small>Cash</small></span></span>`);if(card)parts.push(`<span class="tchip card"><i></i><span><b>Get out of the Lockup</b><small>Card</small></span></span>`);return parts.join('')||'<span class="muted">Nothing</span>'}
@@ -6798,6 +6833,32 @@ openAssets=function(p,opts={}){const debt=opts.debt||0,ro=!!opts.readonly;let fi
       const ready=list.filter(i=>!ro&&!debt&&canBuild(p.id,i)),near=districts.filter(g=>g.owned.length&&g.owned.length<g.all.length).sort((a,b)=>(a.all.length-a.owned.length)-(b.all.length-b.owned.length))[0];
       const next=debt?'Raise cash using the property actions below.':ready.length?ready.length+' properties can be developed now.':near?'Complete '+GNAME[near.g]+': missing '+near.all.filter(i=>G.own[i].o!==p.id).map(i=>SQ[i].n).join(', ')+'.':list.length?'Review districts to plan your next purchase or trade.':'Buy an unowned property or win an auction to begin your estate.';
       pn.querySelector('.pf3overview').innerHTML=`<div class="pf3metrics"><span><b>${complete} / ${districts.length}</b><small>Complete districts</small></span><span><b>${list.reduce((n,i)=>n+(G.own[i].h<5?G.own[i].h:0),0)} / ${list.filter(i=>G.own[i].h===5).length}</b><small>Houses / towers</small></span><span><b>${list.filter(i=>G.own[i].m).length}</b><small>Mortgaged</small></span></div><p><b>${ro?'Estate overview':'Next move'}</b> ${esc(next)}</p>`;
+
+      /* Action-first build tray. Each action uses the game's existing canBuild/
+         build path and is rechecked on click; no new building permissions. */
+      if(!ro&&!debt){
+        const hub=el('section','pf3quick'),overview=pn.querySelector('.pf3overview');
+        hub.setAttribute('aria-label','Quick house and tower construction');
+        const cards=ready.slice(0,4).map(i=>{
+          const o=G.own[i],sq=SQ[i],cost=devCost(p.id,i),label=o.h===4?'Build tower':'Build house';
+          return '<div class="pf3quickcard" style="--pc:'+GC[sq.g]+'"><span class="pf3quickdesc"><b>'+
+            esc(sq.n)+'</b><small>'+(o.h===4?'4 houses → tower':o.h+' / 4 houses')+
+            ' · '+fmt(cost)+' · next rent '+fmt(sq.r[o.h+1])+'</small></span>'+
+            '<button type="button" data-quick-build="'+i+'" aria-label="'+label+' on '+esc(sq.n)+' for '+fmt(cost)+'">'+
+            (o.h===4?'+ Tower':'+ House')+'</button></div>';
+        }).join('');
+        hub.innerHTML='<div class="pf3quickhead"><b>🏗 Build now ('+ready.length+')</b><small>'+
+          (ready.length?'Develop owned streets immediately':'Own a complete set and meet building conditions')+
+          '</small></div>'+(ready.length?'<div class="pf3quicklist">'+cards+
+          (ready.length>4?'<button class="pf3more" type="button">View all →</button>':'')+'</div>':'');
+        overview.append(hub);
+        hub.querySelectorAll('[data-quick-build]').forEach(btn=>btn.onclick=()=>{
+          const i=Number(btn.dataset.quickBuild);
+          if(!canBuild(p.id,i)){toast(whyNoBuild(p,i,0)||'Not buildable now');draw();return}
+          sel=i;build(p.id,i);sfx('buy');renderRoster();save();draw();
+        });
+        const more=hub.querySelector('.pf3more');if(more)more.onclick=()=>{filter='build';draw()};
+      }
       pn.querySelector('.pf2debt').innerHTML=debt?`<div class="debt">${opts.who?'<b>'+esc(p.name)+'</b>: ':''}You owe <b>${fmt(debt)}</b>${opts.to?' to '+esc(opts.to.name):''}. ${p.cash>=debt?'You can pay now.':`Raise <b>${fmt(debt-p.cash)}</b> more by selling buildings or mortgaging (up to ${fmt(liquidity(p))} in total).`}</div>`:'';
       const T=pn.querySelector('.pf2t');T.innerHTML=[['all','All'],['build','Can build'],['mort','Mortgaged'],['missing','Missing']].filter(([k])=>!(ro&&k==='build')).map(([k,l])=>`<button class="${filter===k?'on':''}" role="tab" aria-selected="${filter===k}" data-f="${k}">${l}</button>`).join('');
       T.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{filter=b.dataset.f;draw()});
