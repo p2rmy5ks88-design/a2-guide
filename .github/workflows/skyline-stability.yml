@@ -9,6 +9,11 @@ on:
       - '.github/workflows/skyline-stability.yml'
   workflow_dispatch:
 
+# Superseded commits should not compete with the release candidate's full browser suite.
+concurrency:
+  group: skyline-stability-${{ github.event.pull_request.head.ref || github.ref_name }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
