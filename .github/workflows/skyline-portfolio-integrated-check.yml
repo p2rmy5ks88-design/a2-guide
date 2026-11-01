@@ -1,0 +1,60 @@
+name: Integrated Portfolio review
+
+on:
+  push:
+    branches: [skyline-portfolio-integrated]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  integrated:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check code and offline build
+        run: |
+          node --check skyline-estates/home-redesign.js
+          node --check skyline-estates/reference-redesign.js
+          node --check skyline-estates/tests/portfolio-integrated-browser.cjs
+          python3 skyline-estates/build.py
+          python3 skyline-estates/build.py --check
+      - name: Install browser dependencies
+        run: npm install --prefix skyline-estates/tests --no-audit --no-fund
+      - name: Check merged Portfolio, existing Upgrade Center and mobile
+        run: CHROME_PATH="$(command -v google-chrome)" node skyline-estates/tests/portfolio-integrated-browser.cjs
+      - name: Check existing fast property upgrades
+        run: CHROME_PATH="$(command -v google-chrome)" node skyline-estates/tests/portfolio-fast-upgrades-browser.cjs
+      - name: Check Collection Vault
+        run: CHROME_PATH="$(command -v google-chrome)" node skyline-estates/tests/collection-vault-browser.cjs
+      - name: Check home redesign
+        run: CHROME_PATH="$(command -v google-chrome)" node skyline-estates/tests/home-redesign-browser.cjs
+      - name: Upload review images
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: skyline-integrated-review
+          path: |
+            ${{ runner.temp }}/skyline-integrated-*.png
+            ${{ runner.temp }}/skyline-vault-*.png
+            ${{ runner.temp }}/skyline-portfolio-fast-*.png
+            ${{ runner.temp }}/skyline-portfolio-center-*.png
+      - name: Synchronize generated offline assets
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          for attempt in 1 2 3; do
+            git fetch origin skyline-portfolio-integrated
+            git reset --hard origin/skyline-portfolio-integrated
+            python3 skyline-estates/build.py
+            git add skyline-estates/index.html skyline-estates/offline-assets.js
+            if git diff --cached --quiet; then exit 0; fi
+            git commit -m "build: sync integrated Skyline assets"
+            if git push origin HEAD:skyline-portfolio-integrated; then exit 0; fi
+          done
+          exit 1
