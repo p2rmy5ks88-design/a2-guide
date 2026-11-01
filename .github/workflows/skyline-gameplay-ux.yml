@@ -1,0 +1,55 @@
+name: Skyline Gameplay UX validation
+
+on:
+  push:
+    branches: [skyline-gameplay-ux]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Generate updated web game
+        run: |
+          python3 skyline-estates/build.py
+          python3 skyline-estates/build.py --check
+          node --check skyline-estates/tests/gameplay-ux-browser.cjs
+      - name: Install Playwright
+        run: npm install --prefix skyline-estates/tests --no-audit --no-fund
+      - name: Gameplay UX: build, trade, Daylight HUD
+        run: CHROME_PATH="$(command -v google-chrome)" node skyline-estates/tests/gameplay-ux-browser.cjs
+      - name: Existing debt and in-game portfolio behavior
+        run: CHROME_PATH="$(command -v google-chrome)" node skyline-estates/tests/debt-portfolio-browser.cjs
+      - name: Integrated Portfolio and Upgrade Center
+        run: CHROME_PATH="$(command -v google-chrome)" node skyline-estates/tests/portfolio-integrated-browser.cjs
+      - name: Upload review screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: skyline-gameplay-ux-shots
+          path: |
+            ${{ runner.temp }}/skyline-quick-build-*.png
+            ${{ runner.temp }}/skyline-daylight-notifications-*.png
+            ${{ runner.temp }}/skyline-integrated-*.png
+      - name: Sync rebuilt web and offline manifest
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          for attempt in 1 2 3; do
+            git fetch origin skyline-gameplay-ux
+            git reset --hard origin/skyline-gameplay-ux
+            python3 skyline-estates/build.py
+            git add skyline-estates/index.html skyline-estates/offline-assets.js
+            if git diff --cached --quiet; then exit 0; fi
+            git commit -m "build: sync Gameplay UX with offline manifest"
+            if git push origin HEAD:skyline-gameplay-ux; then exit 0; fi
+          done
+          exit 1
