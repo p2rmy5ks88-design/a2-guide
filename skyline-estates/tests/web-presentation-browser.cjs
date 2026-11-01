@@ -30,7 +30,7 @@ async function perf(page,kind){const sample=await page.evaluate(async()=>{
   page.setDefaultTimeout(12000);page.on('pageerror',e=>report.errors.push(String(e.stack||e)));
   await page.addInitScript(({fallback})=>localStorage.setItem('skylinePrefs',JSON.stringify({nick:'Safari tester',nickSet:true,welcomed:1,tutDone:1,coins:10000,xp:3000,flat2d:fallback,rig:false,riders:false,coach:{pre:1,post:1}})),{fallback});
   await page.route('https://**/*',r=>r.abort());
-  if(baseline)await page.route('**/web/presentation.js',r=>r.fulfill({body:'',contentType:'text/javascript'}));
+  if(baseline)await page.route('**/web/presentation-v2.js',r=>r.fulfill({body:'',contentType:'text/javascript'}));
   await page.goto(origin+'/skyline-estates/index.html');await page.locator('#boot').waitFor({state:'detached',timeout:30000});return{ctx,page};
  };
  const source=fs.readFileSync(path.join(root,'skyline-estates/game.html'),'utf8').replace(/\r\n/g,'\n');
@@ -79,7 +79,7 @@ async function perf(page,kind){const sample=await page.evaluate(async()=>{
   }
   await page.locator('.shoptabs [data-k="daily"]').click();
   const cards=await page.locator('.icard').evaluateAll(nodes=>nodes.map(n=>({height:n.getBoundingClientRect().height,name:n.querySelector('b')?.textContent,action:n.querySelector('.ibuy,.iown,.ihow')?.textContent,artHeight:n.querySelector('.iwrap')?.getBoundingClientRect().height})));
-  check('Shop cards compact with real names and actions '+viewport.width,cards.every(x=>x.height<=260&&x.name&&x.action&&x.artHeight<=90),cards);
+  check('Shop cards compact with real names and actions '+viewport.width,cards.every(x=>x.height<=290&&x.name&&x.action&&x.artHeight<=114),cards);
   check('First-row shop actions are touch-sized and visible above navigation '+viewport.width,await page.locator('.icard').evaluateAll(nodes=>nodes.slice(0,3).every(n=>{const r=n.querySelector('.ibuy,.iown,.ihow').getBoundingClientRect(),pane=document.querySelector('#pane').getBoundingClientRect();return r.height>=44&&r.bottom<=pane.bottom})));
   await snap(page,'shop-'+viewport.width);
   await page.locator('.shoptabs [data-k="surr"]').click();

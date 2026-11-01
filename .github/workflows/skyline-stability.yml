@@ -197,3 +197,42 @@ jobs:
           name: skyline-stability-offline_matches
           path: ${{ runner.temp }}/skyline-*
           if-no-files-found: ignore
+
+  visual_correction:
+    name: Visual geometry (${{ matrix.engine }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        engine: [chromium, webkit]
+    env:
+      VISUAL_ENGINE: ${{ matrix.engine }}
+      VISUAL_SAFE: '1'
+      LIBGL_ALWAYS_SOFTWARE: '1'
+      WEBKIT_DISABLE_DMABUF_RENDERER: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install browser test dependencies
+        run: npm install --prefix skyline-estates/tests --no-audit --no-fund
+      - name: Configure preinstalled Chrome
+        run: echo "CHROME_PATH=$(command -v google-chrome)" >> "$GITHUB_ENV"
+      - name: Install Safari-engine test browser
+        if: matrix.engine == 'webkit'
+        run: npx --prefix skyline-estates/tests playwright install --with-deps webkit
+      - name: Check generated assets and visual geometry
+        run: |
+          python3 skyline-estates/build.py --check
+          node skyline-estates/tests/visual-correction-browser.cjs
+      - name: Upload before-release visual evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: skyline-visual-${{ matrix.engine }}
+          path: |
+            ${{ runner.temp }}/after-*.png
+            ${{ runner.temp }}/after-*.json
+          if-no-files-found: ignore
