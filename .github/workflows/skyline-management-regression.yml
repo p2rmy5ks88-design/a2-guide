@@ -1,0 +1,32 @@
+name: Skyline management regression
+on:
+  pull_request:
+    paths:
+      - 'skyline-estates/game.html'
+      - 'skyline-estates/security/service/**'
+      - '.github/workflows/skyline-management-regression.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  management:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install browser test dependencies
+        run: npm install --prefix skyline-estates/tests --no-audit --no-fund
+      - name: Run authoritative multiplayer property management tests
+        env:
+          CHROME_PATH: /usr/bin/google-chrome
+        run: node skyline-estates/security/service/management-browser.test.cjs "${{ runner.temp }}/skyline-management-browser.json"
+      - name: Upload full diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: skyline-management-diagnostics
+          if-no-files-found: warn
+          path: ${{ runner.temp }}/skyline-management-browser.json

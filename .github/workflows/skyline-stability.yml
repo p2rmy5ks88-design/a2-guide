@@ -1,19 +1,28 @@
 name: Skyline stability tests
 
 on:
+  push:
+    branches: [skyline-gameplay-ux]
   pull_request:
     paths:
       - 'skyline-estates/**'
       - '.github/workflows/skyline-stability.yml'
   workflow_dispatch:
 
+# Superseded commits should not compete with the release candidate's full browser suite.
+concurrency:
+  group: skyline-stability-${{ github.event.pull_request.head.ref || github.ref_name }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
+
 jobs:
   stability:
+    name: Core gameplay and menus
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -21,17 +30,14 @@ jobs:
           node-version: 22
       - name: Install browser test dependencies
         run: npm install --prefix skyline-estates/tests --no-audit --no-fund
-      - name: Use preinstalled Chrome
-        run: |
-          CHROME_BIN="$(command -v google-chrome)"
-          "$CHROME_BIN" --version
-          echo "CHROME_PATH=$CHROME_BIN" >> "$GITHUB_ENV"
+      - name: Configure preinstalled Chrome
+        run: echo "CHROME_PATH=$(command -v google-chrome)" >> "$GITHUB_ENV"
       - name: Check generated offline assets
         run: python3 skyline-estates/build.py --check
-      - name: Test saved turns and seeded games
+      - name: Core gameplay and menus
         run: |
-          # On failure, publish the test name and output tail as a check annotation (readable via the API).
-          t(){ local log="$RUNNER_TEMP/last-test.log"; if ! bash -c "$1" >"$log" 2>&1; then cat "$log"; msg=$(grep -v '^\s\{3,\}' "$log" | tail -c 3500 | sed -e 's/%/%25/g' -e 's/\r/%0D/g' | sed -e ':a;N;$!ba;s/\n/%0A/g'); ttl=$(printf %s "${1:0:120}" | sed "s/[:,]/ /g"); echo "::error title=Failed $ttl::$msg"; exit 1; fi; tail -n 3 "$log"; }
+          # Keep the previously audited test commands, but identify failing checks.
+          t(){ local log="$RUNNER_TEMP/last-test.log"; local cap=300; case "$1" in *complete-matches.cjs*|*security/service/*-browser.test.cjs*) cap=900;; esac; echo "RUNNING: $1"; if ! timeout --signal=TERM --kill-after=10s "${cap}s" bash -c "$1" >"$log" 2>&1; then cat "$log"; msg=$(grep -v '^\s\{3,\}' "$log" | tail -c 3500 | sed -e 's/%/%25/g' -e 's/\r/%0D/g' -e ':a;N;$!ba;s/\n/%0A/g'); ttl=$(printf %s "${1:0:120}" | sed "s/[:,]/ /g"); echo "::error title=Failed $ttl::$msg"; exit 1; fi; tail -n 3 "$log"; }
           t 'node skyline-estates/security/service/room-entry-browser.test.cjs "$RUNNER_TEMP/skyline-room-entry-browser.json"'
           t 'node skyline-estates/security/service/lobby-browser.test.cjs "$RUNNER_TEMP/skyline-lobby-browser.json"'
           t 'node skyline-estates/tests/accounts-browser.cjs "$RUNNER_TEMP/skyline-accounts-browser.json"'
@@ -40,6 +46,11 @@ jobs:
           t 'node skyline-estates/tests/debt-portfolio-browser.cjs'
           t 'node skyline-estates/tests/purchase-start-browser.cjs'
           t 'node skyline-estates/tests/no-purchases-browser.cjs'
+          t 'node skyline-estates/tests/home-redesign-browser.cjs'
+          t 'node skyline-estates/tests/collection-vault-browser.cjs'
+          t 'node skyline-estates/tests/portfolio-fast-upgrades-browser.cjs'
+          t 'node skyline-estates/tests/portfolio-integrated-browser.cjs'
+          t 'node skyline-estates/tests/gameplay-ux-browser.cjs'
           t 'node skyline-estates/tests/native-fullscreen.cjs'
           t 'node skyline-estates/tests/promo-codes.cjs'
           t 'node skyline-estates/tests/promo-browser.cjs'
@@ -48,7 +59,59 @@ jobs:
           t 'node skyline-estates/tests/token-mastery.cjs'
           t 'node skyline-estates/security/service/property-rarity.test.cjs'
           t 'SKYLINE_NO_WEBGL=1 node skyline-estates/tests/reference-dashboard-browser.cjs "$RUNNER_TEMP/skyline-reference-dashboard.json"'
+      - name: Upload test diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: skyline-stability-stability
+          path: ${{ runner.temp }}/skyline-*
+          if-no-files-found: ignore
+  management:
+    name: Persistent management and trade browser
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install browser test dependencies
+        run: npm install --prefix skyline-estates/tests --no-audit --no-fund
+      - name: Configure preinstalled Chrome
+        run: echo "CHROME_PATH=$(command -v google-chrome)" >> "$GITHUB_ENV"
+      - name: Check generated offline assets
+        run: python3 skyline-estates/build.py --check
+      - name: Persistent management and trade browser
+        run: |
+          # Keep the previously audited test commands, but identify failing checks.
+          t(){ local log="$RUNNER_TEMP/last-test.log"; local cap=300; case "$1" in *complete-matches.cjs*|*security/service/*-browser.test.cjs*) cap=900;; esac; echo "RUNNING: $1"; if ! timeout --signal=TERM --kill-after=10s "${cap}s" bash -c "$1" >"$log" 2>&1; then cat "$log"; msg=$(grep -v '^\s\{3,\}' "$log" | tail -c 3500 | sed -e 's/%/%25/g' -e 's/\r/%0D/g' -e ':a;N;$!ba;s/\n/%0A/g'); ttl=$(printf %s "${1:0:120}" | sed "s/[:,]/ /g"); echo "::error title=Failed $ttl::$msg"; exit 1; fi; tail -n 3 "$log"; }
           t 'node skyline-estates/security/service/management-browser.test.cjs "$RUNNER_TEMP/skyline-management-browser.json"'
+      - name: Upload test diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: skyline-stability-management
+          path: ${{ runner.temp }}/skyline-*
+          if-no-files-found: ignore
+  rules_a:
+    name: Online game-control and trade parity
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install browser test dependencies
+        run: npm install --prefix skyline-estates/tests --no-audit --no-fund
+      - name: Configure preinstalled Chrome
+        run: echo "CHROME_PATH=$(command -v google-chrome)" >> "$GITHUB_ENV"
+      - name: Check generated offline assets
+        run: python3 skyline-estates/build.py --check
+      - name: Online game-control and trade parity
+        run: |
+          # Keep the previously audited test commands, but identify failing checks.
+          t(){ local log="$RUNNER_TEMP/last-test.log"; local cap=300; case "$1" in *complete-matches.cjs*|*security/service/*-browser.test.cjs*) cap=900;; esac; echo "RUNNING: $1"; if ! timeout --signal=TERM --kill-after=10s "${cap}s" bash -c "$1" >"$log" 2>&1; then cat "$log"; msg=$(grep -v '^\s\{3,\}' "$log" | tail -c 3500 | sed -e 's/%/%25/g' -e 's/\r/%0D/g' -e ':a;N;$!ba;s/\n/%0A/g'); ttl=$(printf %s "${1:0:120}" | sed "s/[:,]/ /g"); echo "::error title=Failed $ttl::$msg"; exit 1; fi; tail -n 3 "$log"; }
           t 'node skyline-estates/security/service/game-controls-browser.test.cjs "$RUNNER_TEMP/skyline-controls-browser.json"'
           t 'node skyline-estates/security/service/web-connection-browser.test.cjs "$RUNNER_TEMP/skyline-web-connection-browser.json"'
           t 'node skyline-estates/security/service/ai-browser.test.cjs "$RUNNER_TEMP/skyline-ai-browser.json"'
@@ -56,6 +119,32 @@ jobs:
           t 'node skyline-estates/security/service/reroll-browser.test.cjs "$RUNNER_TEMP/skyline-reroll-browser.json"'
           t 'node skyline-estates/security/service/debt-browser.test.cjs "$RUNNER_TEMP/skyline-debt-browser.json"'
           t 'node skyline-estates/security/service/auction-browser.test.cjs "$RUNNER_TEMP/skyline-auction-browser.json"'
+      - name: Upload test diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: skyline-stability-rules_a
+          path: ${{ runner.temp }}/skyline-*
+          if-no-files-found: ignore
+  rules_b:
+    name: Card, turn and asset parity
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install browser test dependencies
+        run: npm install --prefix skyline-estates/tests --no-audit --no-fund
+      - name: Configure preinstalled Chrome
+        run: echo "CHROME_PATH=$(command -v google-chrome)" >> "$GITHUB_ENV"
+      - name: Check generated offline assets
+        run: python3 skyline-estates/build.py --check
+      - name: Card, turn and asset parity
+        run: |
+          # Keep the previously audited test commands, but identify failing checks.
+          t(){ local log="$RUNNER_TEMP/last-test.log"; local cap=300; case "$1" in *complete-matches.cjs*|*security/service/*-browser.test.cjs*) cap=900;; esac; echo "RUNNING: $1"; if ! timeout --signal=TERM --kill-after=10s "${cap}s" bash -c "$1" >"$log" 2>&1; then cat "$log"; msg=$(grep -v '^\s\{3,\}' "$log" | tail -c 3500 | sed -e 's/%/%25/g' -e 's/\r/%0D/g' -e ':a;N;$!ba;s/\n/%0A/g'); ttl=$(printf %s "${1:0:120}" | sed "s/[:,]/ /g"); echo "::error title=Failed $ttl::$msg"; exit 1; fi; tail -n 3 "$log"; }
           t 'node skyline-estates/security/service/card-browser.test.cjs "$RUNNER_TEMP/skyline-card-browser.json"'
           t 'node skyline-estates/security/service/jail-browser.test.cjs "$RUNNER_TEMP/skyline-jail-browser.json"'
           t 'node skyline-estates/tests/timed-finish.cjs'
@@ -63,6 +152,32 @@ jobs:
           t 'node skyline-estates/security/service/turn-browser.test.cjs "$RUNNER_TEMP/skyline-turn-browser.json"'
           t 'node skyline-estates/security/service/setup-browser.test.cjs "$RUNNER_TEMP/skyline-setup-browser.json"'
           t 'node skyline-estates/security/service/asset-browser.test.cjs "$RUNNER_TEMP/skyline-asset-browser.json"'
+      - name: Upload test diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: skyline-stability-rules_b
+          path: ${{ runner.temp }}/skyline-*
+          if-no-files-found: ignore
+  offline_matches:
+    name: Offline recovery and complete matches
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install browser test dependencies
+        run: npm install --prefix skyline-estates/tests --no-audit --no-fund
+      - name: Configure preinstalled Chrome
+        run: echo "CHROME_PATH=$(command -v google-chrome)" >> "$GITHUB_ENV"
+      - name: Check generated offline assets
+        run: python3 skyline-estates/build.py --check
+      - name: Offline recovery and complete matches
+        run: |
+          # Keep the previously audited test commands, but identify failing checks.
+          t(){ local log="$RUNNER_TEMP/last-test.log"; local cap=300; case "$1" in *complete-matches.cjs*|*security/service/*-browser.test.cjs*) cap=900;; esac; echo "RUNNING: $1"; if ! timeout --signal=TERM --kill-after=10s "${cap}s" bash -c "$1" >"$log" 2>&1; then cat "$log"; msg=$(grep -v '^\s\{3,\}' "$log" | tail -c 3500 | sed -e 's/%/%25/g' -e 's/\r/%0D/g' -e ':a;N;$!ba;s/\n/%0A/g'); ttl=$(printf %s "${1:0:120}" | sed "s/[:,]/ /g"); echo "::error title=Failed $ttl::$msg"; exit 1; fi; tail -n 3 "$log"; }
           t 'node skyline-estates/tests/offline-worker.cjs'
           t 'node skyline-estates/tests/offline-startup.cjs "$RUNNER_TEMP/skyline-offline-startup.json"'
           t 'node skyline-estates/tests/session-lifecycle.cjs'
@@ -74,32 +189,10 @@ jobs:
           t 'node skyline-estates/tests/human-flows.cjs "$RUNNER_TEMP/skyline-human-flows.json"'
           t 'node skyline-estates/tests/stability.cjs "$RUNNER_TEMP/skyline-phase1.json"'
           t 'node skyline-estates/tests/browser-smoke.cjs "$RUNNER_TEMP/skyline-browser-smoke.json"'
-      - name: Upload per-game results
+      - name: Upload test diagnostics
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: skyline-stability-results
-          path: |
-            ${{ runner.temp }}/skyline-room-entry-browser.json
-            ${{ runner.temp }}/skyline-lobby-browser.json
-            ${{ runner.temp }}/skyline-reference-dashboard.json
-            ${{ runner.temp }}/skyline-reference-dashboard.*.png
-            ${{ runner.temp }}/skyline-management-browser.json
-            ${{ runner.temp }}/skyline-controls-browser.json
-            ${{ runner.temp }}/skyline-web-connection-browser.json
-            ${{ runner.temp }}/skyline-ai-browser.json
-            ${{ runner.temp }}/skyline-trade-browser.json
-            ${{ runner.temp }}/skyline-reroll-browser.json
-            ${{ runner.temp }}/skyline-debt-browser.json
-            ${{ runner.temp }}/skyline-auction-browser.json
-            ${{ runner.temp }}/skyline-card-browser.json
-            ${{ runner.temp }}/skyline-jail-browser.json
-            ${{ runner.temp }}/skyline-end-browser.json
-            ${{ runner.temp }}/skyline-turn-browser.json
-            ${{ runner.temp }}/skyline-setup-browser.json
-            ${{ runner.temp }}/skyline-asset-browser.json
-            ${{ runner.temp }}/skyline-phase1.json
-            ${{ runner.temp }}/skyline-browser-smoke.json
-            ${{ runner.temp }}/skyline-human-flows.json
-            ${{ runner.temp }}/skyline-offline-startup.json
-            ${{ runner.temp }}/skyline-complete-matches.json
+          name: skyline-stability-offline_matches
+          path: ${{ runner.temp }}/skyline-*
+          if-no-files-found: ignore

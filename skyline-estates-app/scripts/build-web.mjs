@@ -15,6 +15,7 @@ fs.cpSync(path.join(shared,'audio'),path.join(www,'audio'),{recursive:true});
 fs.copyFileSync(path.join(shared,'firebase-config.js'),path.join(www,'firebase-config.js'));
 // The Collection/Portfolio UI is a required local runtime module.
 fs.copyFileSync(path.join(src,'reference-redesign.js'),path.join(www,'reference-redesign.js'));
+fs.copyFileSync(path.join(src,'home-redesign.js'),path.join(www,'home-redesign.js'));
 // realistic riders: three.js modules, character models, animations and portraits
 for(const d of ['lib','riders','photos','art','items'].filter(d=>fs.existsSync(path.join(src,d))))fs.cpSync(path.join(src,d),path.join(www,d),{recursive:true});
 // Cloud channel: the web game always ships with accounts and purchases off. Only a native build made

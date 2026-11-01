@@ -58,10 +58,10 @@ const check=(name,condition)=>{assert.ok(condition,name);report.checks.push(name
       await startPostTurn(normal.page);const state3d=await snapshot(normal.page);await normal.page.locator('#bMap').click();await normal.page.locator('#modals .mapbd').waitFor({state:'visible'});
       check('3D game opens a complete 40-space map',await normal.page.locator('#modals .mapbd .mc').count()===40);await normal.page.locator('#mapX').click();await normal.page.locator('#modals .ov').waitFor({state:'detached'});
       check('closing the map preserves game state',await snapshot(normal.page)===state3d);
-      await exit(normal.page);await normal.page.locator('#hGear').click();await normal.page.locator('#sView [data-v="2d"]').click();
+      await exit(normal.page);await normal.page.locator('#hdGear').click();await normal.page.locator('#sView [data-v="2d"]').click();
       await normal.page.waitForFunction(()=>document.documentElement.classList.contains('flat'),null,{timeout:20000});await normal.page.locator('#tCont').click();await normal.page.getByRole('button',{name:/END.*TURN/i}).waitFor({state:'visible',timeout:20000});
       check('switching 3D to 2D retains saved game state',await snapshot(normal.page)===state3d);
-      await exit(normal.page);await normal.page.locator('#hGear').click();await normal.page.locator('#sView [data-v="3d"]').click();
+      await exit(normal.page);await normal.page.locator('#hdGear').click();await normal.page.locator('#sView [data-v="3d"]').click();
       await normal.page.waitForFunction(()=>!!GL&&!!S3&&!FLAT,null,{timeout:20000});await normal.page.locator('#tCont').click();await normal.page.getByRole('button',{name:/END.*TURN/i}).waitFor({state:'visible',timeout:20000});
       check('switching 2D back to 3D retains saved game state',await snapshot(normal.page)===state3d)
     }else{report.limits.push('Runner WebGL unavailable; genuine 3D/map switching could not be verified.');await normal.page.locator('#re2d').waitFor({state:'visible'})}

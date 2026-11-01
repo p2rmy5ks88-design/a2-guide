@@ -1,7 +1,7 @@
 const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'../../tests/node_modules/playwright'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),http=require('node:http');
 const {createHttpHandler}=require('./http.cjs'),{createAdmissionService}=require('./admission.cjs'),{createGameViewService}=require('./game-view.cjs'),{createOperationService}=require('./operation-service.cjs'),{createTurnService}=require('./turn-service.cjs'),{createRollPlanService}=require('./roll-plans.cjs'),{game}=require('./turn-cases.cjs'),{cases:assetCases}=require('./asset-cases.cjs'),{applyPurchaseAsset}=require('./asset-kernel.cjs'),{sourceHash}=require('./audited-rules.cjs');
 const copy=x=>JSON.parse(JSON.stringify(x)),report={sourceHash,checks:[],oracleChecks:[],browserErrors:[],failure:null};
-async function test(name,fn){await fn();report.checks.push({name,passed:true});console.log('PASS management browser',name)}
+async function test(name,fn){console.log('START management browser',name);await fn();report.checks.push({name,passed:true});console.log('PASS management browser',name)}
 (async()=>{let browser,server;try{
  const state={root:null};function reset(kind){const g=game();if(kind==='purchase')g.players[0].cash=70;if(kind==='debt'||kind==='bankrupt'){g.players[0].cash=0;g.own[7].o=1;if(kind==='bankrupt')g.own.forEach(o=>{if(o.o===0)o.o=-1})}state.root={rooms:{ABCDE:{meta:{code:'ABCDE',status:'playing'},members:{'host-uid':true,'guest-uid':true},seats:{'host-uid':{seat:0},'guest-uid':{seat:1}},state:{revision:2,phase:'pre',gameJson:JSON.stringify(g)}}},service:{}}}
  reset();const db={ref:()=>({transaction:async fn=>{let v;for(let i=0;i<3;i++)v=fn(copy(state.root));state.root=copy(v);return{committed:true,snapshot:{val:()=>copy(v)}}}})},verifyIdToken=async token=>{if(!['host-uid','guest-uid'].includes(token))throw Error();return{uid:token}},opts={db,verifyIdToken,operationLimit:150};let n=0,drop=null,base;
@@ -10,9 +10,23 @@ async function test(name,fn){await fn();report.checks.push({name,passed:true});c
  await new Promise(r=>server.listen(0,'127.0.0.1',r));base='http://127.0.0.1:'+server.address().port;origins.add(base);
  browser=await chromium.launch({headless:true,...(process.env.CHROME_PATH?{executablePath:process.env.CHROME_PATH}:{})});const host=await browser.newPage({serviceWorkers:'block',viewport:{width:1280,height:850}}),guest=await browser.newPage({serviceWorkers:'block',viewport:{width:1280,height:850}});
  for(const p of [host,guest]){p.on('pageerror',e=>report.browserErrors.push(String(e.stack||e)));await p.addInitScript(()=>localStorage.setItem('skylinePrefs',JSON.stringify({nickSet:true,nick:'Tester',welcomed:1,rig:false})))}
- async function load(page){await page.goto(base+'/skyline-estates/index.html');await page.waitForFunction(()=>typeof window.__sim==='function');await page.addStyleTag({content:'*,*::before,*::after{animation:none!important;transition:none!important}'})}
- async function boot(page,uid){await load(page);await page.evaluate(async uid=>{const {createGameClient}=await import('./security/service/game-client.mjs'),{mountSkylineControls}=await import('./security/service/game-controls.mjs');window.managementErrors=[];window.c=createGameClient({baseUrl:location.origin+'/',allowedOrigins:[location.origin],allowLoopback:true,uid,getSession:async()=>({uid,idToken:uid}),storage:localStorage});window.board=mountSkylineControls({client:c,code:'ABCDE',pollMs:1000,onError:e=>managementErrors.push(e.code||e.message)});window.beforeProfile=JSON.stringify({xp:PREF.xp,coins:PREF.coins,ach:PREF.ach,stats:PREF.stats});await board.refresh()},uid)}
- const snapshot=()=>JSON.parse(state.root.rooms.ABCDE.state.gameJson),waitRevision=(p,r)=>p.waitForFunction(r=>board.controller.snapshot()?.revision===r&&!board.controller.status().busy,r);
+ async function load(page){await page.goto(base+'/skyline-estates/index.html',{timeout:25000});await page.waitForFunction(()=>typeof window.__sim==='function',null,{timeout:25000});await page.addStyleTag({content:'*,*::before,*::after{animation:none!important;transition:none!important}'})}
+ async function boot(page,uid){console.log('START board boot',uid);await load(page);await Promise.race([page.evaluate(async uid=>{const {createGameClient}=await import('./security/service/game-client.mjs'),{mountSkylineControls}=await import('./security/service/game-controls.mjs');window.managementErrors=[];window.c=createGameClient({baseUrl:location.origin+'/',allowedOrigins:[location.origin],allowLoopback:true,uid,getSession:async()=>({uid,idToken:uid}),storage:localStorage});window.board=mountSkylineControls({client:c,code:'ABCDE',pollMs:1000,onError:e=>managementErrors.push(e.code||e.message)});window.beforeProfile=JSON.stringify({xp:PREF.xp,coins:PREF.coins,ach:PREF.ach,stats:PREF.stats});await board.refresh()},uid),new Promise((_,reject)=>setTimeout(()=>reject(Error('Board boot refresh exceeded 25 seconds')),25000))]);console.log('PASS board boot',uid)}
+ const snapshot=()=>JSON.parse(state.root.rooms.ABCDE.state.gameJson);
+ async function waitRevision(page,expected){
+  try{
+   await page.waitForFunction(r=>window.board?.controller.snapshot()?.revision===r&&!window.board.controller.status().busy,expected,{timeout:15000});
+  }catch(error){
+   const diagnostic=await page.evaluate(()=>({
+    revision:window.board?.controller.snapshot()?.revision,
+    busy:window.board?.controller.status()?.busy,
+    stage:window.board?.controller.snapshot()?.stage,
+    actions:document.querySelector('#acts')?.innerText?.slice(0,500),
+    uiErrors:window.managementErrors,
+   })).catch(()=>({pageClosed:true}));
+   throw new Error('Revision '+expected+' not reached: '+JSON.stringify(diagnostic)+'; '+error.message);
+  }
+ }
  await load(host);
  const cases=assetCases().filter(c=>c.legal).map(c=>{const g=copy(c.game);g.code='ABCDE';g.phase='busy';g.players[0].pos=7;const pending={boundary:{kind:'purchase',square:7,price:90,canBuy:g.players[0].cash>=90},context:{version:1,dice:{a:3,b:4,sv:0,face:null},extraRoll:false,afterLanding:null}};return{name:c.name,game:g,command:c.command,pending,expected:applyPurchaseAsset(g,'host-uid',pending,c.command)}});
  const actual=await host.evaluate(inputs=>{FAST=true;NET.on=false;trackable=()=>false;figG=()=>{};updateCell=()=>{};float=()=>{};sfx=()=>{};return inputs.map(c=>{G=JSON.parse(JSON.stringify(c.game));applyCity(G.set.city||'lagos');const f={build,sell,mortgage,redeem:unmortgage};f[c.command.kind](0,c.command.square);return{game:JSON.parse(JSON.stringify(G)),boundary:{kind:'purchase',square:7,price:SQ[7].p,canBuy:P(0).cash>=SQ[7].p}}})},cases);

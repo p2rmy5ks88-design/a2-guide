@@ -7,6 +7,10 @@ on:
         description: 'Publish the build (and use signing credentials if configured)'
         type: boolean
         default: false
+      store_version:
+        description: 'Exact App Store version currently in App Store Connect (ios-release uploads only)'
+        type: string
+        default: '1.0'
       cloud_channel:
         description: 'Accounts and purchases: off, private-testing (TestFlight only), or ios-release (public App Store build)'
         type: choice
@@ -59,7 +63,7 @@ jobs:
         working-directory: skyline-estates-app
     env:
       # App Store releases use the store version (1.0); private TestFlight builds keep 1.0.<run>.
-      VERSION_NAME: ${{ github.event_name == 'workflow_dispatch' && inputs.cloud_channel == 'ios-release' && '1.0' || format('1.0.{0}', github.run_number) }}
+      VERSION_NAME: ${{ github.event_name == 'workflow_dispatch' && inputs.cloud_channel == 'ios-release' && inputs.store_version || format('1.0.{0}', github.run_number) }}
       VERSION_CODE: '${{ github.run_number }}'
     steps:
       - uses: actions/checkout@v4
@@ -88,6 +92,14 @@ jobs:
           xcrun --sdk iphoneos --show-sdk-version >> "$RUNNER_TEMP/skyline-ios-toolchain.txt"
           cat "$RUNNER_TEMP/skyline-ios-toolchain.txt"
           python3 scripts/verify-ios-sdk.py toolchain "$RUNNER_TEMP/skyline-ios-toolchain.txt"
+      - name: Validate App Store version selected for publishing
+        if: github.event_name == 'workflow_dispatch' && inputs.publish && inputs.cloud_channel == 'ios-release'
+        run: |
+          if [[ ! "$VERSION_NAME" =~ ^[0-9]+\.[0-9]+(\.[0-9]+)?$ ]]; then
+            echo 'Invalid App Store version. Match the version shown in App Store Connect, such as 1.0 or 1.1.'
+            exit 1
+          fi
+          echo "App Store marketing version: $VERSION_NAME; build number: $VERSION_CODE"
       - name: Install
         run: npm install --no-audit --no-fund
       - name: Build web game
