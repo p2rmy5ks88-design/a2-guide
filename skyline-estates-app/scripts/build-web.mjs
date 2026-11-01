@@ -10,7 +10,7 @@ const addFont=(pkg,file,family,weight)=>{const f=nm(`${pkg}/files/${file}`);if(!
 addFont('@fontsource/outfit','outfit-latin-700-normal.woff2','Outfit',700);
 for(const w of [500,600,700,800])addFont('@fontsource/manrope',`manrope-latin-${w}-normal.woff2`,'Manrope',w);
 const head=`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><meta name="format-detection" content="telephone=no"><meta name="color-scheme" content="light"><script src="firebase-config.js"></script><style>${faces.join('')}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui}img{max-width:100%}[hidden]{display:none!important}</style></head><body>`;
-fs.writeFileSync(path.join(www,'index.html'),head+body+'</body></html>');
+fs.writeFileSync(path.join(www,'index.html'),head.replace('</head>','<link rel="stylesheet" href="lib/menu-presentation.css"></head>')+body+'<script src="lib/menu-presentation.js"></script></body></html>');
 fs.cpSync(path.join(shared,'audio'),path.join(www,'audio'),{recursive:true});
 fs.copyFileSync(path.join(shared,'firebase-config.js'),path.join(www,'firebase-config.js'));
 // The Collection/Portfolio UI is a required local runtime module.
