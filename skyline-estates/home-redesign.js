@@ -551,7 +551,7 @@ st.textContent=[
 '#ui.focus-hud #tools{top:calc(max(8px,env(safe-area-inset-top,0px)) + 62px)!important;right:max(13px,env(safe-area-inset-right,0px))!important;gap:7px!important}',
 '#ui.focus-hud #tools .tb{min-width:44px!important;width:44px!important;height:44px!important;border-radius:14px!important}',
 '#ui.focus-hud #tools #bMap{display:none!important}',
-'#ui.focus-hud #tools #bAssets.off,#ui.focus-hud #tools #bTrade.off{display:none!important}',
+'#ui.focus-hud #tools #bAssets.off,#ui.focus-hud #tools #bTrade.off{opacity:.38!important}',
 '#ui #tools #hudMore{display:grid!important;place-items:center;font-size:21px;font-weight:800;border-color:#b99957;color:#f1d493}',
 '#ui #tools #hudMore[aria-expanded=true]{background:#d4af62!important;color:#122438!important}',
 '#ui.focus-hud #ev2chip{max-width:clamp(135px,18vw,185px)!important;top:max(7px,env(safe-area-inset-top,0px))!important;right:max(13px,env(safe-area-inset-right,0px))!important;min-height:43px;box-sizing:border-box;padding:5px 9px!important;border-radius:12px!important;font-size:10px!important;line-height:1.22!important}',
