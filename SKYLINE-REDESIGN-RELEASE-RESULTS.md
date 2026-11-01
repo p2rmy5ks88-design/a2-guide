@@ -80,5 +80,9 @@ The signed workflow completed successfully. Simulator and device compiles, archi
 
 App Store Connect independently confirmed upload and completed processing. **Version 1.0 (149)** is assigned to the existing **Skyline iOS QA** internal group. The build detail page confirms `Group (1): Skyline iOS QA — Internal`; proof is saved as `release80-testflight149.png`. No external group, public testing link, new tester invitation or App Store build replacement was created.
 
-Physical installation, device performance, native sign-in, saved-game continuation, menu interaction, building/trading and Daylight acceptance remain pending on the owner's iPhone. Automated browser/compile results do not establish those device outcomes.
+## Owner device acceptance — 1 November 2026
+
+The owner confirmed build 149 installed and launched successfully, then explicitly reported **all remaining checks passed**: saved progress and match continuation, redesigned menus, building controls, trade previews and Daylight readability. The owner also reported the deployed web version working as intended. These are owner-reported physical-device results, separate from automated browser and compile results; no independent device performance measurements were taken.
+
+The authorized development/web/TestFlight milestone is accepted. No approval to withdraw, replace or submit a public App Store build is implied by device acceptance. The existing build 85 submission remains untouched; its last directly verified status was Waiting for Review.
 
