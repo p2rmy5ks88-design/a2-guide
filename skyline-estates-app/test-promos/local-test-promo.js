@@ -16,10 +16,11 @@
    redeemPromo=async function(raw){
      const normalized=String(raw||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
      if(sha256hex('skyline:'+normalized)!==HASH)return previous(raw);
-     const grant=()=>{
+     const grant=async()=>{
+       let player;try{player=await window.SkylineAccounts?.player?.()}catch{return{ok:false,msg:'Could not confirm sign-out. Open Account & recovery, sign out, then try again.'}};
        let fresh;try{const saved=localStorage.getItem(PKEY);fresh=saved?JSON.parse(saved):JSON.parse(JSON.stringify(PREF));if(!fresh||typeof fresh!=='object'||Array.isArray(fresh))throw Error('profile')}catch{return{ok:false,msg:'Your saved profile could not be read.'}};
        if(fresh.promos?.[HASH])return{ok:false,msg:'This device has already used this code.'};
-       if(window.SkylineAccounts?.player?.()||fresh.cloudOwner||PREF.cloudOwner)return{ok:false,msg:'Sign out first. This reward is for your local phone save only.'};
+       if(player||fresh.cloudOwner||PREF.cloudOwner)return{ok:false,msg:'Sign out first. This reward is for your local phone save only.'};
        if(Date.now()>=UNTIL)return{ok:false,msg:'This code has expired.'};
        const coins=fresh.coins??0,xp=fresh.xp??0;
        if(!Number.isSafeInteger(coins)||coins<0||!Number.isSafeInteger(xp)||xp<0||!Number.isSafeInteger(coins+1000000)||!Number.isSafeInteger(xp+500000))return{ok:false,msg:'Your saved balances need checking. No reward was added.'};
