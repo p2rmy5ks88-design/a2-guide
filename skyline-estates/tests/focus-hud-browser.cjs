@@ -49,6 +49,10 @@ const root=path.resolve(__dirname,'../..'),types={'.html':'text/html','.js':'tex
     });
     test('Game HUD is compact and usable at '+vp.width,
       layout.cards===3&&layout.card.width<=170&&layout.card.height>=40&&layout.mapHidden&&layout.acts.height>=55&&layout.tools.every(x=>x.height>=40)&&!layout.overflow,layout);
+    await page.evaluate(()=>{document.querySelector('#bAssets').classList.add('off');document.querySelector('#bTrade').classList.add('off')});
+    const retained=await page.evaluate(()=>['bAssets','bTrade'].every(id=>{const el=document.getElementById(id);return getComputedStyle(el).display!=='none'&&el.getBoundingClientRect().width>=40}));
+    test('Unavailable actions remain visible for online control parity at '+vp.width,retained);
+    await page.evaluate(()=>{document.querySelector('#bAssets').classList.remove('off');document.querySelector('#bTrade').classList.remove('off')});
     await page.screenshot({path:path.join(process.env.RUNNER_TEMP||'/tmp','skyline-focus-hud-'+vp.width+'.png')});
     await page.click('#round');
     test('Round details are accessible by tap',await page.locator('#hudRoundPopup').isVisible()&&await page.locator('#hudRoundText').textContent().then(s=>s.includes('Round')),null);
