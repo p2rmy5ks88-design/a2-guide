@@ -4,6 +4,7 @@ const root=path.resolve(__dirname,'../..'),app=path.resolve(process.argv[2]||'')
 assert.ok(['skyline-estates-app','skyline-estates-desktop'].includes(path.basename(app)),'expected wrapper directory');
 const html=fs.readFileSync(path.join(www,'index.html'),'utf8'),body=fs.readFileSync(path.join(src,'game.html'),'utf8').replace(/<link[^>]*fonts\.googleapis\.com[^>]*>\s*/g,'').replace(/<link rel="preconnect"[^>]*>\s*/g,'');
 assert.ok(html.includes(body),'packaged game must preserve the approved source');
+if(path.basename(app)==='skyline-estates-app'){assert.ok(html.includes('lib/menu-presentation.css')&&html.includes('lib/menu-presentation.js'),'native bundle includes shared menu-only layer');assert.ok(!html.includes('web/presentation-'),'native bundle excludes browser board redesign');}
 assert.ok(!/fonts\.(googleapis|gstatic)\.com/.test(html),'fonts must be local');
 let files=0,bytes=0;
 function identical(source,target){const expected=fs.readFileSync(source),actual=fs.readFileSync(target);assert.ok(actual.equals(expected),'packaged bytes: '+target);files++;bytes+=actual.length}
