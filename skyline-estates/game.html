@@ -3147,7 +3147,7 @@ function ownHint(i,viewer,incoming,t){if(viewer==null)return '';
     opponentWins=otherBefore<set.length&&otherAfter===set.length;
   if(win)notes.push('Completes your set');
   if(breakSet)notes.push('Breaks your set');
-  if(opponentWins)notes.push('Completes '+P(other).name+'\\'s set');
+  if(opponentWins)notes.push('Completes '+P(other).name+'’s set');
   return '<em class="hint '+(breakSet||opponentWins?'bad':win?'good':'')+'">'+esc(notes.join(' · '))+'</em>';
 }
 function propChip(i,viewer,incoming,t){const s=SQ[i],o=G.own[i],gc=s.g?GC[s.g]:'#9aa6b4';const set=s.g?GNAME[s.g]:s.t==='rail'?'Transport':'Utility';
