@@ -46,3 +46,5 @@ Web-only file: `skyline-estates/lib/skyline-currency.js`. Loaded after the exist
 ## Notes on future expansion
 
 The current SC reserve is intentionally limited to opt-in solo practice to keep ranked and social competition fair. Do not route earned SC into online/ranked starting money. Future Market Pulse, Skyline Showcase and social competition are separate work items.
+
+Online compatibility: authoritative online matches retain the existing city-currency formatter and log text, matching the unchanged server. Offline match cash uses SC. A later coordinated backend release is required to rename online currency safely; this web-only release does not deploy the server. The existing full-snapshot parity assertions remain unchanged.

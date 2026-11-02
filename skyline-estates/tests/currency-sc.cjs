@@ -75,6 +75,7 @@ sandbox.newGame(online);
 sandbox.startWith(online);
 assert.equal(online.players[0].cash, 1600, 'online matches must never receive reserve cash');
 assert.equal(PREF.scReserve, 40, 'online match must not spend reserve');
+assert.equal(sandbox.fmt(30), '$30', 'online log formatting must retain the authoritative server format');
 for (const [name, g, fresh] of [
   ['legacy resume', {players:[{ai:false,cash:1600},{ai:true,cash:1600}]}, false],
   ['current resume', {masteryId:'old',players:[{ai:false,cash:1600},{ai:true,cash:1600}]}, false],

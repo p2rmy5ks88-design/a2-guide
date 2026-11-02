@@ -15,7 +15,12 @@
     const a = Math.abs(n);
     return (n < 0 ? '−' : '') + 'SC ' + (a >= 1000 ? compact(a / 1000) + 'B' : compact(a) + 'M');
   }
-  fmt = formatSC;
+  // Online snapshots/logs must retain the audited server's city currency.
+  // A web-only release cannot change that wire format without a backend release.
+  const previousFormat = fmt;
+  fmt = function (value) {
+    return G && G.online ? previousFormat(value) : formatSC(value);
+  };
 
   /* Saved reserve is for optional solo practice boosts ONLY.
      It is not paid currency, does not buy Shop items, and never joins online matches. */
