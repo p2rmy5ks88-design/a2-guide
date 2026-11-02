@@ -1,0 +1,75 @@
+'use strict';
+const {chromium,webkit}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
+const fs=require('fs'),http=require('http'),path=require('path'),assert=require('assert/strict'),{pathToFileURL}=require('url');
+const root=path.resolve(__dirname,'../..'),out=process.env.RUNNER_TEMP||path.join(root,'skyline-estates/test-results/showcase'),engine=process.env.VISUAL_ENGINE||'chromium';
+fs.mkdirSync(out,{recursive:true});const report={engine,physicalIPhone:false,checks:[],errors:[],images:[]};let browser,server;
+const check=(n,v)=>{assert.ok(v,n);report.checks.push(n);console.log('PASS',n)};
+(async()=>{
+ let url=process.env.SHOWCASE_LIVE_URL;
+ if(!url&&process.env.SHOWCASE_FILE)url=pathToFileURL(path.join(root,'skyline-estates/index.html')).href;
+ if(!url){server=http.createServer((q,r)=>{const f=path.resolve(root,'.'+decodeURIComponent(q.url.split('?')[0]));if(!f.startsWith(root+path.sep))return r.writeHead(403).end();fs.readFile(f,(e,b)=>{r.writeHead(e?404:200,{'Content-Type':({'.html':'text/html','.js':'text/javascript','.css':'text/css','.png':'image/png','.jpg':'image/jpeg','.webp':'image/webp','.svg':'image/svg+xml'})[path.extname(f)]||'application/octet-stream'});r.end(e?'missing':b)})});await new Promise(r=>server.listen(0,'127.0.0.1',r));url=`http://127.0.0.1:${server.address().port}/skyline-estates/index.html`}
+ report.url=url;
+ browser=await({chromium,webkit}[engine]).launch({headless:true,...(engine==='chromium'?{executablePath:process.env.CHROME_PATH||undefined,args:['--disable-webgl',...(process.env.SHOWCASE_FILE?['--allow-file-access-from-files']:[])]}:{})});
+ const context=await browser.newContext({viewport:{width:844,height:390},hasTouch:true,serviceWorkers:'block'}),p=await context.newPage();p.on('pageerror',e=>report.errors.push(String(e)));
+ p.on('console',m=>{if(m.text().startsWith('SHOWCASE'))console.log(m.text())});
+ await context.route('https://**/*',r=>process.env.SHOWCASE_LIVE_URL&&r.request().url().startsWith(new URL(url).origin)?r.continue():r.abort());
+ await p.addInitScript(()=>{if(!localStorage.getItem('skylinePrefs'))localStorage.setItem('skylinePrefs',JSON.stringify({nick:'Showcase QA',nickSet:true,welcomed:1,tutDone:1,coach:{pre:1,post:1},flat2d:true,rig:false,riders:false,scReserve:145,coins:1740}))});
+ async function ready(){await p.waitForFunction(()=>!!window.SkylineShowcase&&!document.querySelector('#boot'));await p.waitForTimeout(500);await p.addStyleTag({content:'*,*::before,*::after{animation:none!important;transition:none!important}.ov.bye{display:none!important}'})}
+ await p.goto(url);await ready();
+ await p.evaluate(()=>{
+  window.showFixture=(kind='win')=>{GEN++;FAST=true;applyCity('lagos');newGame({cash:1600,set:{city:'lagos',mode:kind==='timed'||kind==='draw'?'timed':'classic',rounds:10,ai:'normal',speed:'fast',perks:false,minigames:false,events2:false},players:[0,1,2].map(i=>({name:i===0?'Ava <&> "雪" 🏗️':'Private opponent '+i,tok:TOKENS[i],col:PCOL[i],ai:kind==='pass'?false:i!==0,uid:kind==='online'?'private-uid-'+i:null,owner:i===0}))});
+   G.first=0;G.turn=0;G.round=kind==='timed'||kind==='draw'?11:23;G.phase='post';G.masteryId='showcase-fixture-'+kind;G.players.forEach(q=>q.cash=500);G.players[0].cash=2450;
+   if(kind!=='loss')GROUPS.brown.forEach((i,n)=>{G.own[i]={o:0,h:n?2:5,m:false}});
+   G.houses=36-G.own.reduce((s,o)=>s+(o.h===5?0:o.h),0);G.hotels=12-G.own.filter(o=>o.h===5).length;
+   G.players[0].st={rent:300,maxRent:140,houses:6,hotels:1,trades:1};
+   if(kind==='loss'){G.players[0].cash=0;G.players[0].bankrupt=true;G.players[1].cash=1800}
+   if(kind==='draw')G.players[1].cash=netWorth(P(0));
+   if(kind==='online'){G.online=true;G.code='PRIV8';G.seq=9;NET.me='private-uid-0'}
+   G.over=true;FAST=false;return SkylineShowcase.capture(0);
+  };
+ });
+ const scenarios=await p.evaluate(()=>{
+  const results={};for(const kind of ['win','loss','timed','draw','pass','online']){const r=showFixture(kind),before=JSON.stringify({G,PREF}),again=SkylineShowcase.capture(0);results[kind]={record:r,pure:before===JSON.stringify({G,PREF}),stable:JSON.stringify(r)===JSON.stringify(again),privacy:!JSON.stringify(r).includes('private-uid')&&!JSON.stringify(r).includes('Private opponent')&&!JSON.stringify(r).includes('PRIV8')};}
+  showFixture('online');results.remoteDenied=SkylineShowcase.capture(1)===null;
+  showFixture('pass');results.friendLeague=SkylineShowcase.capture(1).league===null;
+  showFixture('win');G.over=false;results.activeDenied=SkylineShowcase.capture(0)===null;G.over=true;G.sim=true;results.simDenied=SkylineShowcase.capture(0)===null;delete G.sim;FAST=true;results.fastDenied=SkylineShowcase.capture(0)===null;FAST=false;
+  return results;
+ });
+ for(const kind of ['win','loss','timed','draw','pass','online']){const s=scenarios[kind];check(kind+': truthful snapshot is pure and repeatable',s.record&&s.pure&&s.stable);check(kind+': no room, UID or opponent details enter record',s.privacy)}
+ check('winner uses champion title only for actual first place',scenarios.win.record.outcome==='win'&&scenarios.win.record.title==='City Champion');
+ check('loss is never labelled champion and zero assets are truthful',scenarios.loss.record.outcome==='loss'&&scenarios.loss.record.properties===0&&scenarios.loss.record.netWorth===0);
+ check('timed tie is accurately labelled without changing game rewards',scenarios.draw.record.outcome==='draw'&&scenarios.draw.record.tied&&scenarios.draw.record.title==='Shared Skyline Lead');
+ check('properties, houses and towers match final ownership',scenarios.win.record.properties>=2&&scenarios.win.record.developed===scenarios.win.record.properties&&scenarios.win.record.houses===(scenarios.win.record.properties-1)*2&&scenarios.win.record.towers===1);
+ check('online cannot inspect other players and pass-and-play does not invent friends leagues',scenarios.remoteDenied&&scenarios.friendLeague);
+ check('active matches and simulations cannot become saved results',scenarios.activeDenied&&scenarios.simDenied&&scenarios.fastDenied);
+ const purity=await p.evaluate(async()=>{const r=showFixture('win');G.over=false;save();G.over=true;G.sim=true;localStorage.setItem('showcase-save-sentinel','keep');const oldSave=localStorage.getItem(SKEY);if(!oldSave)throw Error('Missing real saved-game fixture');const game=JSON.stringify(G),prefs=JSON.stringify(PREF),wallet=SkylineEarnedCash.balance(),coins=PREF.coins,s3=S3,camera=JSON.stringify({camS,camT});window.exportRecord=r;
+  for(const f of Object.keys(SkylineShowcase.FORMATS))await SkylineShowcase.generate(r,f,true);
+  return{game:JSON.stringify(G)===game,prefs:JSON.stringify(PREF)===prefs,wallet:SkylineEarnedCash.balance()===wallet,coins:PREF.coins===coins,save:localStorage.getItem(SKEY)===oldSave,renderer:S3===s3,camera:JSON.stringify({camS,camT})===camera};});
+ Object.entries(purity).forEach(([n,v])=>check('generating all formats preserves '+n,v));
+ for(const format of ['portrait','story','landscape']){const data=await p.evaluate(async format=>{const a=await SkylineShowcase.generate(window.exportRecord,format,true),bytes=new Uint8Array(await a.blob.arrayBuffer());let binary='';for(let n=0;n<bytes.length;n+=8192)binary+=String.fromCharCode(...bytes.subarray(n,n+8192));return{width:a.width,height:a.height,b64:btoa(binary),scene:a.scene,size:a.blob.size}},format);const file=`showcase-${engine}-${format}.png`;fs.writeFileSync(path.join(out,file),Buffer.from(data.b64,'base64'));report.images.push({file,width:data.width,height:data.height,size:data.size,scene:data.scene});check(format+': exported PNG has requested dimensions and real artwork',data.width===({portrait:1080,story:1080,landscape:1920}[format])&&data.height===({portrait:1350,story:1920,landscape:1080}[format])&&data.size>20000)}
+ const history=await p.evaluate(()=>{localStorage.removeItem('skyline-showcases-v1');const r=window.exportRecord,before=JSON.stringify(PREF);for(let i=0;i<14;i++)SkylineShowcase.save({...r,id:'history-'+i,ended:r.ended+i});SkylineShowcase.save({...r,id:'history-13'});const h=SkylineShowcase.history();localStorage.setItem('showcase-expected',JSON.stringify(h.items[0]));return{count:h.items.length,first:h.items[0].id,last:h.items.at(-1).id,prefs:before===JSON.stringify(PREF),large:JSON.stringify(h).length<131072,noImages:!JSON.stringify(h).includes('data:image')}});
+ check('history retains ten compact unique records without images or progression writes',history.count===10&&history.first==='history-13'&&history.last==='history-4'&&history.prefs&&history.large&&history.noImages);
+ await p.reload();await ready();check('saved Showcase survives reload',await p.evaluate(()=>JSON.stringify(SkylineShowcase.history().items[0])===localStorage.getItem('showcase-expected')));
+ await p.evaluate(()=>homeTab('portfolio'));await p.locator('.showcase-history button').first().click();await p.locator('#skyline-showcase [data-share]:not(:disabled)').waitFor();check('Portfolio opens saved result without a finished game in memory',await p.locator('#skyline-showcase').count()===1);await p.screenshot({path:path.join(out,`showcase-${engine}-history-preview.png`)});
+ const share=await p.evaluate(()=>{window.shareCalls=[];Object.defineProperty(navigator,'canShare',{configurable:true,value:()=>true});Object.defineProperty(navigator,'share',{configurable:true,value:data=>{window.shareCalls.push({files:data.files.map(f=>({type:f.type,size:f.size})),text:data.text,active:navigator.userActivation?.isActive});return Promise.resolve()}});return true});
+ await p.locator('#skyline-showcase [data-share]').click();check('native file share receives pre-generated PNG directly in user activation',await p.evaluate(()=>shareCalls.length===1&&shareCalls[0].files[0].type==='image/png'&&shareCalls[0].files[0].size>20000&&shareCalls[0].active!==false&&!shareCalls[0].text.includes('Private opponent')));
+ await p.evaluate(()=>Object.defineProperty(navigator,'canShare',{configurable:true,value:()=>false}));await p.locator('#skyline-showcase [data-share]').click();check('unsupported sharing explains a save/preview fallback',/Save Image or Open Image/.test(await p.locator('#skyline-showcase .sh-status').innerText()));
+ await p.evaluate(()=>{Object.defineProperty(navigator,'canShare',{configurable:true,value:()=>true});Object.defineProperty(navigator,'share',{configurable:true,value:()=>Promise.reject(Object.assign(Error('cancel'),{name:'AbortError'}))})});await p.locator('#skyline-showcase [data-share]').click();await p.waitForFunction(()=>document.querySelector('#skyline-showcase .sh-status').textContent.includes('cancelled'));check('cancelled share retains the image and enabled save control',await p.locator('#skyline-showcase [data-save-image]').isEnabled());
+ check('image-preview fallback is a usable separate blob URL',await p.locator('#skyline-showcase [data-open-image]').evaluate(a=>a.href.startsWith('blob:')&&a.target==='_blank'&&a.rel.includes('noopener')));
+ for(const size of [{width:956,height:440},{width:844,height:390},{width:844,height:320},{width:667,height:375}]){await p.setViewportSize(size);const label=`${size.width}x${size.height}`;const boxes=await p.locator('#skyline-showcase .sh-footer>*').evaluateAll(ns=>ns.map(n=>{const r=n.getBoundingClientRect(),hit=document.elementFromPoint(r.left+r.width/2,r.top+r.height/2);return{w:r.width,h:r.height,inside:r.left>=0&&r.right<=innerWidth+1&&r.top>=0&&r.bottom<=innerHeight+1,hit:hit===n||n.contains(hit)}}));check(label+': every export and history action fits and receives touches',boxes.every(x=>x.w>=44&&x.h>=44&&x.inside&&x.hit));await p.screenshot({path:path.join(out,`showcase-${engine}-${label}.png`)})}
+ await p.locator('#skyline-showcase [data-close]').click();check('closing restores Portfolio with collection controls intact',await p.locator('.showcase-history').count()===1&&await p.locator('#skyline-showcase').count()===0);await p.screenshot({path:path.join(out,`showcase-${engine}-portfolio.png`)});
+ const corrupt=await p.evaluate(()=>{const k='skyline-showcases-v1',old=localStorage.getItem(k);localStorage.setItem(k,'{broken');const r=JSON.parse(localStorage.getItem('showcase-expected')),result=SkylineShowcase.save(r),kept=localStorage.getItem(k)==='{broken';localStorage.setItem(k,old);return{rejected:!result.ok,kept}});check('corrupt history is preserved without overwriting other storage',corrupt.rejected&&corrupt.kept);
+ // Exercise the real finish/reward/results flow, not a replacement results UI.
+ await p.evaluate(()=>{
+  GEN++;FAST=true;applyCity('lagos');newGame({cash:1600,set:{city:'lagos',mode:'classic',ai:'normal',speed:'fast',perks:false,minigames:false},players:[{name:'Result <&> QA',tok:TOKENS[0],col:PCOL[0],ai:false,owner:true},{name:'AI rival',tok:TOKENS[1],col:PCOL[1],ai:true}]});G.first=G.turn=0;G.round=25;G.phase='post';G.players[0].cash=2450;G.players[1].cash=0;G.players[1].bankrupt=true;G.keysShown=true;save();FAST=false;
+  document.querySelector('#title').hidden=true;document.querySelector('#ui').hidden=false;window.showCompletionCalls=0;const old=progressGameEnd;progressGameEnd=function(...a){showCompletionCalls++;return old.apply(this,a)};window.realFinish=finish();
+ });
+ await p.locator('.endgrid').waitFor();await p.getByRole('button',{name:'View My Skyline',exact:true}).waitFor();
+ const hiddenAction=await p.addStyleTag({content:'.sh-results-button{display:none!important}'});await p.screenshot({path:path.join(out,`showcase-${engine}-results-before.png`)});await hiddenAction.evaluate(n=>n.remove());await p.screenshot({path:path.join(out,`showcase-${engine}-results-after.png`)});
+ const resultBefore=await p.evaluate(()=>JSON.stringify({coins:PREF.coins,xp:PREF.xp,trophies:PREF.trophies,stats:PREF.stats,sc:SkylineEarnedCash.balance(),calls:showCompletionCalls,game:G,save:localStorage.getItem(SKEY)}));
+ for(let n=0;n<2;n++){await p.getByRole('button',{name:'View My Skyline',exact:true}).click();await p.locator('#skyline-showcase [data-share]:not(:disabled)').waitFor();await p.locator('#skyline-showcase [data-save-record]').click();await p.locator('#skyline-showcase [data-close]').click();}
+ check('real results stay open and reward processing runs exactly once',await p.evaluate(()=>showCompletionCalls===1)&&await p.locator('.endgrid').count()===1);
+ check('repeat opening and saving cannot change rewards, final game or cleared saves',resultBefore===await p.evaluate(()=>JSON.stringify({coins:PREF.coins,xp:PREF.xp,trophies:PREF.trophies,stats:PREF.stats,sc:SkylineEarnedCash.balance(),calls:showCompletionCalls,game:G,save:localStorage.getItem(SKEY)})));
+ await p.getByRole('button',{name:'New game',exact:true}).click();await p.evaluate(()=>window.realFinish);
+ check('no browser exceptions',report.errors.length===0);await context.close();
+})().catch(e=>{report.failure=String(e.stack||e);console.error(e);process.exitCode=1}).finally(async()=>{fs.writeFileSync(path.join(out,`showcase-${engine}.json`),JSON.stringify(report,null,2));if(browser)await browser.close();if(server)await new Promise(r=>server.close(r));console.log('SHOWCASE',engine,report.checks.length,'checks')});
