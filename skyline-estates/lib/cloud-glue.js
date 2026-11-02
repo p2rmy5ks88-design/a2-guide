@@ -50,8 +50,18 @@ function restoreDevice(reason){
  const b=backups().find(x=>x.reason===reason);let prefs=null;
  if(b)try{prefs=JSON.parse(localStorage.getItem(b.key)).prefs}catch(e){}
  if(!prefs){prefs={...PREF,coins:0,xp:0,inv:{},tokLv:{},tokWins:{},tokenMastery:undefined,spot:{flags:{}}}}
- delete prefs.cloudOwner;try{localStorage.setItem(PKEY,JSON.stringify(prefs))}catch(e){}
+ try{activateLocalPrefs(prefs)}catch(e){toast('Your device save could not be restored. No progress was replaced.');throw e}
  toast('Signed out of the test account. Your own progress is back.');setTimeout(()=>location.reload(),900);
+}
+// Keep memory and disk identical before a reload: the game's visibility handler
+// saves PREF as iOS backgrounds the old page. Persist the sync pause in that same
+// write, so account persistence cannot immediately replace the restored save.
+function activateLocalPrefs(prefs){
+ const next={...prefs,cloudOwner:'local-device-backup',cloudLocalOnly:true},wasPaused=engine.status().localOnly;
+ engine.pause();
+ try{localStorage.setItem(PKEY,JSON.stringify(next))}catch(e){if(!wasPaused)engine.resume();throw e}
+ for(const k of Object.keys(PREF))if(!(k in next))delete PREF[k];
+ Object.assign(PREF,next);
 }
 function exportSave(){
  const data=JSON.stringify({app:'skyline-estates',exportedAt:new Date().toISOString(),prefs:PREF},null,1),name='skyline-save-'+new Date().toISOString().slice(0,10)+'.json';
@@ -91,7 +101,7 @@ const status={last:''};
 if(!CFG.enabled||!Engine||typeof PREF==='undefined')return;
 if(['private-testing','ios-release'].includes(CFG.channel)&&!(window.Capacitor?.isNativePlatform?.()&&window.Capacitor.getPlatform?.()==='ios'))return;
 const engine=Engine.createCloudProfile({storage:localStorage,http:http(),account:()=>window.SkylineAccounts?.player?.()||null,
- adapter:{extract,apply,backup,owner:()=>PREF.cloudOwner||null,setOwner:v=>{PREF.cloudOwner=v||undefined;rawSave()},restoreDevice},ask,notify});
+ adapter:{extract,apply,backup,owner:()=>PREF.cloudOwner||null,localOnly:()=>PREF.cloudLocalOnly===true,setOwner:v=>{PREF.cloudOwner=v||undefined;rawSave()},restoreDevice},ask,notify});
 let tick=null;const later=()=>{clearTimeout(tick);tick=setTimeout(()=>engine.capture(),0)};
 origSave=savePref;savePref=function(){origSave();later()};
 const origAdd=addCoins;addCoins=function(n,why){if(n&&why)engine.reason(String(why));return origAdd(n,why)};
@@ -145,9 +155,14 @@ window.SkylineCloud={
  accountSection(body,user,{el,button,act}){
   const s=engine.status(),box=el('div',null,{className:'sky-cloud'});
   box.append(el('h3','Cloud save'));
-  if(s.owner===user.uid&&s.migrated){box.append(el('p',s.pending?`${s.pending} change${s.pending===1?'':'s'} waiting to sync. Your progress is safe on this device meanwhile.`:'Your coins, XP and collection are saved to this account.'));if(s.profile?.debt)box.append(el('p',`A refunded purchase left ${nf(s.profile.debt)} coins to pay back. New coins pay this first.`));button(box,'Sync now',()=>act(()=>run({refresh:true}),'Synced.'))}
+  if(s.localOnly){box.append(el('p','Local backup active. Your coins, XP and collection stay on this device. Automatic cloud sync is paused; your account progress is unchanged.'));button(box,'Use account progress',()=>act(async()=>{
+    engine.resume({discardMigration:true});PREF.cloudLocalOnly=false;rawSave();engine.forgetDecline(user.uid);
+    const r=await run({refresh:true}),after=engine.status();
+    if(after.owner!==user.uid||!after.migrated){PREF.cloudLocalOnly=true;rawSave();engine.pause();if(r.state==='error')throw Object.assign(Error(r.code),{code:r.code})}
+   },'Progress choice saved.'))}
+  else if(s.owner===user.uid&&s.migrated){box.append(el('p',s.pending?`${s.pending} change${s.pending===1?'':'s'} waiting to sync. Your progress is safe on this device meanwhile.`:'Your coins, XP and collection are saved to this account.'));if(s.profile?.debt)box.append(el('p',`A refunded purchase left ${nf(s.profile.debt)} coins to pay back. New coins pay this first.`));button(box,'Sync now',()=>act(()=>run({refresh:true}),'Synced.'))}
   else{box.append(el('p','This device is not saving to your account yet.'));button(box,'Set up cloud save',()=>act(async()=>{engine.forgetDecline(user.uid);await run({refresh:true})},'Cloud save updated.'))}
-  const list=backups();if(list.length){box.append(el('p','Device backups (kept on this device only):'));for(const b of list){const row=el('div',null,{className:'sky-account-actions'});row.append(el('span',`${new Date(b.at).toLocaleString()} · ${nf(b.coins)} coins`));button(row,'Restore',()=>restore(b.key));box.append(row)}}
+  const list=backups();if(list.length){box.append(el('p','Device backups (kept on this device only):'));for(const b of list){const row=el('div',null,{className:'sky-account-actions'});row.append(el('span',`${new Date(b.at).toLocaleString()} · ${nf(b.coins)} coins`));const active=s.localOnly&&PREF.cloudRestoredBackup===b.key;button(row,active?'Restored':'Restore',()=>restore(b.key),active);box.append(row)}}
   if(store&&bridge?.recentPurchases)box.append(purchaseHelp(el,button,act));
   body.append(box);
  }
@@ -167,7 +182,16 @@ function purchaseHelp(el,button,act){
  return wrap;
 }
 async function restore(key){
+ try{window.SkylineAccounts?.close?.()}catch(e){}
  const ok=await modal({html:`<div class="mh">Restore this backup?</div><div class="mtxt">This device goes back to the saved copy and stops saving to your account until you set up cloud save again. Your account itself is not changed.</div>`,btns:[{k:true,label:'Restore backup',primary:true,danger:true},{k:false,label:'Cancel'}]});
- if(!ok)return;try{const v=JSON.parse(localStorage.getItem(key));const prefs={...v.prefs};delete prefs.cloudOwner;localStorage.setItem(PKEY,JSON.stringify(prefs));location.reload()}catch(e){toast('That backup could not be restored.')}
+ if(!ok)return;try{
+  if(typeof key!=='string'||!key.startsWith(BACKUP))throw Error('backup');
+  const v=JSON.parse(localStorage.getItem(key)),p=v?.prefs;
+  if(!p||typeof p!=='object'||Array.isArray(p)||!Number.isSafeInteger(p.coins)||p.coins<0||!Number.isSafeInteger(p.xp===undefined?0:p.xp)||(p.xp??0)<0)throw Error('backup');
+  // Preserve both the selected backup and the current profile, without pruning.
+  let at=Date.now();while(localStorage.getItem(BACKUP+at))at++;
+  localStorage.setItem(BACKUP+at,JSON.stringify({at,reason:'before-restore',prefs:PREF}));
+  activateLocalPrefs({...p,cloudRestoredBackup:key});location.reload();
+ }catch(e){toast('That backup could not be restored. Your current progress and backup are unchanged.')}
 }
 })();
