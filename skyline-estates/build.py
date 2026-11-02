@@ -5,7 +5,7 @@ body = (here/'game.html').read_text(encoding='utf-8')
 head = '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-180.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Skyline Estates"><meta name="theme-color" content="#10223f"><script src="../eko-estates/firebase-config.js"></script><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui}img{max-width:100%}[hidden]{display:none!important}</style></head><body>'
 head = head.replace('</head>', '<link rel="stylesheet" href="./lib/menu-presentation.css"></head>')
 # Shared menu-only layer; original game.html retains all board/camera behavior.
-index = head + body + '<script src="./lib/menu-presentation.js"></script></body></html>'
+index = head + body + '<script src="./lib/menu-presentation.js"></script><script src="./lib/skyline-currency.js"></script></body></html>'
 core = ['index.html', 'web-play.html', 'web-correction.html', 'web-follow.html', 'web-board.html', 'web-menus.html', 'reference-redesign.js', 'home-redesign.js', 'manifest.webmanifest', 'privacy.html', 'icon-180.png', 'icon-192.png', 'icon-512.png']
 assets = sorted(p.relative_to(here).as_posix() for folder in ['art','items','photos','lib','riders','web'] for p in (here/folder).rglob('*') if p.is_file())
 files = core + assets
