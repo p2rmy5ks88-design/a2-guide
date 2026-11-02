@@ -58,10 +58,14 @@ const check=(name,ok)=>{assert.ok(ok,name);report.checks.push(name);console.log(
     await until(()=>page.evaluate(async({prefix,version})=>{const r=await navigator.serviceWorker.getRegistration(),names=await caches.keys();return!r.installing&&!r.waiting&&names.includes(prefix+version)&&!names.some(n=>n===prefix+version+'-broken')},{prefix,version:manifest.version}));
     const afterFailure=await page.evaluate(async prefix=>(await caches.keys()).filter(n=>n.startsWith(prefix)),prefix);report.afterFailedUpdate=afterFailure;console.log('Offline failed-update caches: '+JSON.stringify(afterFailure));
     check('failed update keeps the current complete cache',afterFailure.includes(prefix+manifest.version)&&!afterFailure.some(n=>n.endsWith('-broken')));check('failed update does not change the open match',await snapshot(page)===expected);
-    await page.evaluate(prefix=>caches.open(prefix+'obsolete'),prefix);phase='next';await page.evaluate(async()=>{const r=await navigator.serviceWorker.getRegistration();await r.update()});
+    await page.evaluate(prefix=>caches.open(prefix+'obsolete'),prefix);phase='next';
+    const updater=await newPage();await updater.goto(origin+'/a2-guide/skyline-update.html');
+    await updater.getByRole('button',{name:'Check for update',exact:true}).click();
+    await updater.getByRole('status').filter({hasText:'Update check complete.'}).waitFor({timeout:60000});
+    check('outside-cache update page downloads a release without replacing the open game',await snapshot(page)===expected);
     await until(()=>page.evaluate(async()=>!!(await navigator.serviceWorker.getRegistration()).waiting),60000);
     check('successful update waits instead of replacing an open game',await page.evaluate(()=>document.body.dataset.offlineTestVersion!=='2')&&await snapshot(page)===expected);
-    const probe=await newPage();await probe.goto(origin+'/probe.html');await page.close();
+    const probe=updater;await page.close();
     await until(()=>probe.evaluate(async({prefix,version,scope})=>{const r=await navigator.serviceWorker.getRegistration(scope),names=(await caches.keys()).filter(n=>n.startsWith(prefix));return r?.active?.state==='activated'&&!r.waiting&&names.length===1&&names[0]===prefix+version},{prefix,version:manifest.version+'-next',scope}));
     check('activation removes only obsolete Skyline cache versions',await probe.evaluate(async()=>await caches.has('other-app-keep')&&await(await caches.match('/other-keep')).text()==='keep'));
     await context.setOffline(true);page=await newPage();await page.goto(scope+'index.html?offline-test=1',{waitUntil:'domcontentloaded'});await resume(page);
