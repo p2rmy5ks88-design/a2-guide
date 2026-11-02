@@ -1,59 +1,53 @@
-# Skyline Estates currency change — web-only stage
+# Skyline Cash and Skyline Coins — web implementation
 
-## Two separate currencies
+## Scope and prior work
 
-- **Skyline Cash (SC)**: in-match property money. Existing numeric balances, starting cash, property prices, rents, mortgages, trades, cards, and payout formulas are not converted. The existing internal unit represents millions of SC: 1600 displays as `SC 1.6B`.
-- **Skyline Coins**: existing persistent gold coins used for Shop purchases, premium Season unlocks, cosmetics, and other collection rewards. Coin balances and purchase paths remain unchanged.
+PR #93 and #94 are merged. PR #95 is open and contains an unbuilt header-only extension. This implementation reuses its brass SC badge and before-Coins placement and completes the wallet and progression integration on top of main `59650455a18270dd66f8e6f588b5ddc7ec0762f6`.
 
-All countries now use the same display for match cash in the **web** implementation. Country identities, names, locations and quiz answers stay unchanged.
+Only generated web entry points and web-only currency modules/tests change. `game.html`, native projects, native workflows and authoritative server rules are unchanged. All source/merge commits use `[skip actions]`; manually run web stability and let Pages publish. No iOS, Android, TestFlight or App Store builds.
 
-## Ways to earn SC
+## Two currencies and two SC scopes
 
-### Inside a normal match
-The existing game already awards cash for passing Start, collecting rent, profitable trades, some cards, events and other ordinary property-game mechanisms. No new currency is minted for these activities: their normal payouts are merely displayed in SC.
+- Match cash is the unchanged numeric board-game balance; 1600 displays as SC 1.6B in every country. Prices, rent, buildings, mortgages, auctions, taxes, trades and events keep their existing mathematics. National currency quiz answers remain factual.
+- Earned SC is a separate, device-local progression wallet. It never receives ordinary rent/payday or final net worth. Its header pill precedes Coins and League and opens the wallet panel.
+- Skyline Coins retain their icon, balances, Shop prices, premium unlocks and entitlements. There is no currency exchange.
+- Existing online wire/log formats stay intact. The web text projection and scoped canvas formatting from PR #94 provide SC presentation without altering snapshots.
 
-### Additional seasonal earned SC reserve
-- Every **fifth FREE Season tier claimed** gives **40 million SC** to a device-local reserve, in addition to the existing reward.
-- Every **weekly challenge completed** gives **25 million SC** to that reserve, in addition to existing Coins and XP.
-- Both grants rely on existing once-only Season claim and weekly completion flags. They cannot be awarded by reopening the screen.
+## Earning rules
 
-### Optional solo practice use
-- The Season screen shows the cash reserve and a toggle, **Use SC in next solo game**.
-- The next *new*, offline/non-simulated solo game consumes up to **100 million SC**, never more than 10% of the selected player’s normal starting cash.
-- Bonuses are disabled for online games; resumed games cannot claim a new starting bonus.
-- Assisted games are **practice matches**; progression tracked through `trackable()` is disabled (no match XP, trophies, weekly completion, or leaderboard result).
-- The reserve is not real money and cannot buy Skyline Coins or Shop items.
+Centrally configured in `lib/skyline-sc-wallet.js`:
 
-Reserve balances and claim flags are device-local, not server-authoritative. **Do not treat them as competitive-wallet, purchase, or entitlement data.**
+| Source | Saved SC | Eligibility / receipt |
+| --- | ---: | --- |
+| Free Season tiers 5, 10, 15, 20, 25, 30, 35, 40 | 40M each | Current Season + tier; existing tier rewards unchanged |
+| Weekly challenge | 25M | Actual completed objective; Season + week + objective |
+| Daily mission | 5M | Actual eligible local objective; UTC day + objective; maximum three daily |
+| Completed local match | 20M | Existing match ID, five rounds, two minutes and three recorded actions |
+| Winning that match | +40M | Same single match receipt, maximum three rewarded matches per UTC day |
+| First tower achievement | 25M | Once; existing achievement transition |
+| Three towers achievement | 50M | Once; existing achievement transition |
+| Complete a City's 15 Awards | 100M | Once per city; actual completion transition |
 
-## Scope
+No SC match reward for online outcomes, simulations, aborted games, existing paid-out match receipts or SC-assisted practice. New Daily/major milestone grants also exclude online and assisted play. Existing weekly objectives (including online ones), XP and Coins remain unchanged. Normal local matches retain existing starting cash. End results explicitly separate match standings/net worth from actual saved SC earned during completion.
 
-Web-only file: `skyline-estates/lib/skyline-currency.js`. Installed by `skyline-estates/build.py` after core declarations and before the boot invocation in all six generated web pages. Native, iOS and TestFlight release workflows are unchanged. This deliberately avoids altering core math and preexisting saves.
+## Spending and disclosure
 
-## Completion and validation — 2 November 2026
+The sole spending use is the retained optional solo-practice boost. The wallet and Season screen explain the limits before enabling it: new offline single-human match only, at most SC 100M and 10% of ordinary player starting cash; no normal XP, trophies, challenges, Season or saved-SC progression. Players can cancel before starting. Online, pass-and-play, resumed and simulated games cannot consume a fresh bonus.
 
-- Regenerated all six web entry pages and offline manifest using `python3 skyline-estates/build.py`; `--check` passes.
-- Fixed eligibility: only a fresh `newGame` instance with exactly one human can consume reserve. Legacy/current saves, pass-and-play, online seats and simulations cannot. Assisted-save status survives reload and keeps normal rewards disabled.
-- Kept the reserve panel below the reward tracks so existing free/premium rows remain visible; its button has a 44px minimum touch target.
-- Currency unit checks pass, including once-only grants, resume/multiplayer exclusion, 10% / SC 100M caps and replay prevention.
-- Real generated-page currency browser suite: 52 checks each in Chromium and WebKit at 956x440, 844x390 and 844x320. Lagos/Stockholm saves retain cash/ownership; claims, reserve use, assisted reward suppression, account coin isolation, touch control and dock clearance pass.
-- Existing tests passed locally: 175 simulated games / 56 regressions; 41 save recovery; 10 turn/save; 14 session; 45 remote-state; 12 online-room; 16 offline-worker; 19 offline-startup; 16 browser smoke; 35 human-flow; 19 complete-match checks. Existing WebKit visual suite: 81 checks across desktop and phone landscape, safe areas, all Shop categories and Season rows. Screenshots visually inspected.
-- Existing offline-startup tests verify waiting-worker activation and updated cache, preserving saves. No cache-clearing/reset workaround.
-- WebKit is Safari-engine desktop automation, **not physical iPhone Safari**. Real toolbar/orientation behavior needs owner confirmation on the deployed website.
-- Installed native apps load bundled `www/index.html` from `game.html`, not the generated Pages entry. `game.html`, native config and native workflows are unchanged. The extra currency module is not imported by native pages. No IPA, native build, TestFlight upload or App Store action is part of this release.
-- Native automatic workflows must be suppressed with `[skip actions]` on source and merge commits; run only web stability/Pages validation manually as needed. Check the remote CI/deployment results before calling the release complete.
+Spending is serialized with the browser's Web Locks API. Each opt-in has one receipt ID; a stale second tab cannot spend the same selection again. Browsers without secure wallet locking keep the balance but cannot spend it. Resume retains the assisted flag and cash; no second deposit.
 
-## Notes on future expansion
+## Persistence, migration and limits
 
-The current SC reserve is intentionally limited to opt-in solo practice to keep ranked and social competition fair. Do not route earned SC into online/ranked starting money. Future Market Pulse, Skyline Showcase and social competition are separate work items.
+The ledger uses separate immutable localStorage keys under `skyline-earned-sc:v1:`, one per unique receipt. Summing those receipts provides the balance and actual totals; repeated claims and concurrent clients writing the same receipt cannot duplicate its value. Full receipts are retained; the panel shows the latest 16 nonzero transactions. A compatibility mirror in `PREF.scReserve` preserves the old reserve interface; Coins and existing saves are not converted/reset.
 
-## Web display correction after PR #93 — 2 November 2026
+Migration carries the exact existing reserve into an opening receipt. Legacy claimed Season/weekly rewards are acknowledged without recrediting them: the old bounded log cannot prove whether money was already spent. A profile that predates SC entirely (no legacy reserve/log fields) can safely receive a one-time backfill for already-claimed current-Season free milestone tiers. Existing achievements/city awards are not repeatedly backfilled. The wallet labels the opening amount and explains that detailed legacy source history may be incomplete.
 
-The deployed PR #93 assets were current, but its formatter explicitly selected city currency when `G.online` was true. Its script also ran after boot had drawn the initial board. Cash-note animations and Catch the Cash bypassed `fmt` and used `CUR.pre` directly. These are presentation gaps, not missing match balances.
+Invalid/nonfinite/negative saved balances fail closed and are kept, rather than overwritten. Failed writes show an error and cannot report successful credits. Daily/match grants use unique UTC receipts, caps and a high-water date to reject clock rollback. Device clock fast-forward, edited localStorage, deleted browser data, cross-profile identity and trusted cross-device balances cannot be secured by this client-only architecture. The UI explicitly calls this device-local progression, not a tamper-proof wallet or entitlement. It has no verified device sync and no online ranking/purchase authority.
 
-- The web view now uses SC in both local and online games. Online logic retains the original city formatter for serialized log parity; an incremental text-node projection displays those values as SC. Canvas drawing uses SC while measuring/painting. The web-only `applyCity` wrapper sets the display currency for note symbols too; country identities and educational quiz answers are unchanged.
-- Currency installs before boot, retaining the existing boot declaration and its 2D fallback override. All generated aliases include the module exactly once.
-- Existing saved/authoritative logs are translated in displayed text nodes only. Amounts are decoded using the original country's suffix and scale (including Japan's 0.1 multiplier). `G.log`, snapshots, rules and server files are not rewritten. Online controls continue sending numeric commands to the unchanged server.
-- The generated offline manifest changes with the assets. The existing cache-first worker intentionally waits until all game tabs close before activating an update. Registration uses `updateViaCache: 'none'`. No cache/storage clearing, forced worker takeover or save migration is required. On iPhone: Save & exit, close all Skyline game tabs (and any standalone home-screen game), then reopen online to receive the updated copy.
-- Local verification: currency unit and generated-entry checks; currency browser checks in Chromium/WebKit at three phone landscape heights; 19 actual offline startup/update checks; 41 save-recovery, 45 remote-state, 16 offline-worker and 10 turn/resume checks; 11 authoritative online-control browser checks; 377 full card-snapshot parity checks. The first remote parity run caught online log strings changing; the corrected layer preserves the existing wire formatter and keeps the full assertions intact. Final Safari-engine and remote CI results are recorded with the release PR.
-- Native/server source `game.html` and all native configuration/workflows remain unchanged. Source and merge commits use `[skip actions]`; manually run only web stability and Pages. No native/TestFlight/App Store build or backend deployment is part of this correction.
+## Interface and validation
+
+Brass circular SC icon, navy/teal pill, gold Coin and existing League control; responsive spacing keeps readable balances and touch targets without overlapping the profile, logo or Settings. The compact scrollable wallet contains available SC, current-Season earnings, source totals, spending, history, earning rules and Season/Daily shortcuts. No permanent navigation tab is added. Free/premium tracks and existing Coin/XP rewards remain; eligible cards visibly include SC and status.
+
+Dedicated tests cover ledger migration and errors, duplicate claims, rollback/caps, confirmed/cancelled practice, refresh/save preservation, actual progression hooks and online text/snapshot parity in Lagos, Stockholm, New York, London, Tokyo and Johannesburg. Rendered browser tests cover 956×440, 844×390, 844×320 and 667×375 and produce before/after header, wallet/history, Season/weekly, Daily, Shop and gameplay screenshots. The full existing seven-job web suite is required before merge. Physical iPhone Safari is not available; Safari-compatible WebKit automation is reported separately.
+
+The generated offline manifest includes all wallet assets. Existing cache-first updates wait for old game clients to close and never clear saved data. For an older iPhone copy: Save & exit, reload online to download the update, close all Skyline tabs and the standalone home-screen game, then reopen. Do not clear Safari website data.
