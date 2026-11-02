@@ -227,6 +227,7 @@ jobs:
       - name: Check generated assets and visual geometry
         run: |
           python3 skyline-estates/build.py --check
+          node skyline-estates/tests/market-pulse.cjs
           node skyline-estates/tests/currency-browser.cjs
           node skyline-estates/tests/visual-correction-browser.cjs
       - name: Upload before-release visual evidence
@@ -239,4 +240,6 @@ jobs:
             ${{ runner.temp }}/after-*.json
             ${{ runner.temp }}/currency-*.png
             ${{ runner.temp }}/currency-*.json
+            ${{ runner.temp }}/market-*.png
+            ${{ runner.temp }}/market-*.json
           if-no-files-found: ignore
