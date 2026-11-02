@@ -106,6 +106,7 @@
     PREF.scReserveLog = Array.isArray(PREF.scReserveLog) ? PREF.scReserveLog.slice(-19) : [];
     PREF.scReserveLog.push({ amount: amount, reason: String(reason).slice(0, 100), at: Date.now() });
     savePref();
+    refreshCashHeader();
   }
 
   /* Free Season milestones: SC 40M every fifth claimed tier.
@@ -184,10 +185,44 @@
       }
     });
   }
+  /* The home header displays the persistent earned SC reserve next to Skyline Coins.
+     Active in-match cash remains inside the match roster, not a second global wallet. */
+  function refreshCashHeader() {
+    const coinButton = document.querySelector('#rprof #tbCoins');
+    if (!coinButton) return;
+    let button = document.querySelector('#rprof #tbSkylineCash');
+    if (!button) {
+      button = document.createElement('button');
+      button.type = 'button';
+      button.id = 'tbSkylineCash';
+      button.className = 'tpill skyline-sc-header';
+      const icon = document.createElement('span');
+      icon.className = 'skyline-sc-symbol';
+      icon.setAttribute('aria-hidden', 'true');
+      icon.textContent = 'SC';
+      const amount = document.createElement('b');
+      amount.className = 'skyline-sc-header-amount';
+      button.append(icon, amount);
+      coinButton.parentElement.insertBefore(button, coinButton);
+      button.addEventListener('click', function () {
+        Promise.resolve(modal({
+          html: '<div class="mh">Skyline Cash (SC)</div>' +
+            '<div class="mtxt">Your saved bonus reserve: <b>' + formatSC(validReserve()) + '</b>.</div>' +
+            '<div class="mtxt muted">Earn SC 40M at every fifth free Season tier you claim and SC 25M for each completed weekly challenge. This reserve can optionally boost a new solo practice match, but cannot buy Shop items or be used in online games. Normal match cash comes from gameplay.</div>' +
+            '<div class="mtxt">Skyline Coins are separate and used for Shop items, collectibles and premium rewards.</div>',
+          btns: [{ k: 'x', label: 'Close' }, { k: 'season', label: 'View Season', primary: true }]
+        })).then(function (choice) { if (choice === 'season') homeTab('season'); });
+      });
+    }
+    button.querySelector('.skyline-sc-header-amount').textContent = formatSC(validReserve()).replace(/^SC /, '');
+    button.setAttribute('aria-label', 'Skyline Cash reserve: ' + formatSC(validReserve()) + '. View earning options.');
+    button.title = 'Skyline Cash reserve — separate from match money and Skyline Coins';
+  }
   const previousRailProfile = railProfile;
   railProfile = function () {
     const result = previousRailProfile.apply(this, arguments);
     decorateCoins();
+    refreshCashHeader();
     return result;
   };
 
@@ -230,12 +265,13 @@
   };
 
   const style = document.createElement('style');
-  style.textContent = '.skyline-coin-label{font-size:10px;opacity:.8;font-weight:700}.skyline-sc-reserve{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:7px 0 8px;padding:7px 11px;border-radius:12px;border:1px solid rgba(226,181,74,.32);background:rgba(8,26,44,.58);color:#f5efdc}.skyline-sc-reserve-text{flex:1 1 260px;min-width:0;display:grid;gap:2px}.skyline-sc-reserve-text strong{font-size:12px;color:#f5ce6b}.skyline-sc-reserve-text small{font-size:10px;line-height:1.35;opacity:.85}.skyline-sc-use{border:1px solid #c7a04f;border-radius:10px;background:#182948;color:#f5ce6b;padding:8px 10px;font:700 11px system-ui;min-height:44px;cursor:pointer}.skyline-sc-use:disabled{opacity:.5;cursor:default}';
+  style.textContent = '.skyline-coin-label{font-size:10px;opacity:.8;font-weight:700}.skyline-sc-header{background:linear-gradient(120deg,#153C49,#101E37);border:1px solid #6BADA6;color:#E9F9F6;gap:5px;min-width:0;white-space:nowrap}.skyline-sc-header b{font-size:12px;font-variant-numeric:tabular-nums}.skyline-sc-symbol{display:inline-grid;place-items:center;width:25px;height:25px;flex:none;border-radius:50%;border:2px solid #E5C46E;background:linear-gradient(135deg,#F6D77A,#B88C34);color:#11293B;box-shadow:0 1px 5px #050E19;font:900 10px/1 system-ui;letter-spacing:-.04em}@media(max-width:850px){.topbar{gap:6px}.skyline-sc-header{padding:4px 7px;gap:4px}.skyline-sc-symbol{width:21px;height:21px;font-size:9px}.skyline-sc-header b{font-size:11px}}.skyline-sc-reserve{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:7px 0 8px;padding:7px 11px;border-radius:12px;border:1px solid rgba(226,181,74,.32);background:rgba(8,26,44,.58);color:#f5efdc}.skyline-sc-reserve-text{flex:1 1 260px;min-width:0;display:grid;gap:2px}.skyline-sc-reserve-text strong{font-size:12px;color:#f5ce6b}.skyline-sc-reserve-text small{font-size:10px;line-height:1.35;opacity:.85}.skyline-sc-use{border:1px solid #c7a04f;border-radius:10px;background:#182948;color:#f5ce6b;padding:8px 10px;font:700 11px system-ui;min-height:44px;cursor:pointer}.skyline-sc-use:disabled{opacity:.5;cursor:default}';
   document.head.appendChild(style);
   decorateCoins();
+  refreshCashHeader();
 
   window.SkylineCurrency = Object.freeze({
-    version: 'web-sc-2',
+    version: 'web-sc-header-1',
     formatCash: formatSC,
     displayText: displayText,
     reserve: function () { return validReserve(); },
