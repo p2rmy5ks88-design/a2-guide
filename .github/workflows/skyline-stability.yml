@@ -42,6 +42,7 @@ jobs:
           t 'node skyline-estates/security/service/lobby-browser.test.cjs "$RUNNER_TEMP/skyline-lobby-browser.json"'
           t 'node skyline-estates/tests/accounts-browser.cjs "$RUNNER_TEMP/skyline-accounts-browser.json"'
           t 'node skyline-estates/tests/cloud-sync-browser.cjs'
+            t 'node skyline-estates/tests/cloud-restore.cjs'
           t 'SKYLINE_SPOT_RUNS=20 node skyline-estates/tests/spotlight-browser.cjs "$RUNNER_TEMP/skyline-spotlight.json"'
           t 'node skyline-estates/tests/debt-portfolio-browser.cjs'
           t 'node skyline-estates/tests/purchase-start-browser.cjs'
