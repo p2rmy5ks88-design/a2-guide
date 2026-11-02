@@ -89,7 +89,13 @@
   function decorateCoins() {
     document.querySelectorAll('.coinpill').forEach(function (pill) {
       pill.title = 'Skyline Coins — Shop and collectible currency';
-      pill.setAttribute('aria-label', 'Skyline Coins: ' + (pill.textContent || '').trim());
+      pill.setAttribute('aria-label', 'Skyline Coins: ' + (pill.querySelector('b')?.textContent || '').trim());
+      if (!pill.querySelector('.skyline-coin-label')) {
+        const label = document.createElement('span');
+        label.className = 'skyline-coin-label';
+        label.textContent = 'Coins';
+        pill.append(label);
+      }
     });
   }
   const previousRailProfile = railProfile;
@@ -138,7 +144,7 @@
   };
 
   const style = document.createElement('style');
-  style.textContent = '.skyline-sc-reserve{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:7px 0 8px;padding:7px 11px;border-radius:12px;border:1px solid rgba(226,181,74,.32);background:rgba(8,26,44,.58);color:#f5efdc}.skyline-sc-reserve-text{flex:1 1 260px;min-width:0;display:grid;gap:2px}.skyline-sc-reserve-text strong{font-size:12px;color:#f5ce6b}.skyline-sc-reserve-text small{font-size:10px;line-height:1.35;opacity:.85}.skyline-sc-use{border:1px solid #c7a04f;border-radius:10px;background:#182948;color:#f5ce6b;padding:8px 10px;font:700 11px system-ui;min-height:36px;cursor:pointer}.skyline-sc-use:disabled{opacity:.5;cursor:default}';
+  style.textContent = '.skyline-coin-label{font-size:10px;opacity:.8;font-weight:700}.skyline-sc-reserve{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:7px 0 8px;padding:7px 11px;border-radius:12px;border:1px solid rgba(226,181,74,.32);background:rgba(8,26,44,.58);color:#f5efdc}.skyline-sc-reserve-text{flex:1 1 260px;min-width:0;display:grid;gap:2px}.skyline-sc-reserve-text strong{font-size:12px;color:#f5ce6b}.skyline-sc-reserve-text small{font-size:10px;line-height:1.35;opacity:.85}.skyline-sc-use{border:1px solid #c7a04f;border-radius:10px;background:#182948;color:#f5ce6b;padding:8px 10px;font:700 11px system-ui;min-height:36px;cursor:pointer}.skyline-sc-use:disabled{opacity:.5;cursor:default}';
   document.head.appendChild(style);
   decorateCoins();
 
