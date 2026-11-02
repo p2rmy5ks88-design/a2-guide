@@ -35,6 +35,10 @@ jobs:
             if(hash(actual)!==hash(expected))throw Error('Published bytes mismatch: '+file);console.log('PASS live bytes '+file+' '+hash(actual));
           }})().catch(e=>{console.error(e);process.exitCode=1});
           JS
+      - name: Upgrade a cached legacy game and wallet with the actual updater page
+        run: |
+          if [ "$VISUAL_ENGINE" = "webkit" ]; then unset CHROME_PATH; fi
+          LIBGL_ALWAYS_SOFTWARE=1 node skyline-estates/tests/legacy-sc-update-check.cjs "$RUNNER_TEMP/legacy-upgrade.json"
       - name: Test actual deployed game in isolated browser storage
         run: node skyline-estates/tests/currency-browser.cjs
       - uses: actions/upload-artifact@v4
@@ -42,5 +46,6 @@ jobs:
         with:
           name: live-sc-${{ matrix.engine }}
           path: |
+            ${{ runner.temp }}/legacy-upgrade.json
             ${{ runner.temp }}/currency-*.png
             ${{ runner.temp }}/currency-*.json
