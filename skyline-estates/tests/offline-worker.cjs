@@ -15,6 +15,7 @@ function fixture({failInstall=false,failStorage=false}={}){
 }
 async function test(name,fn){await fn();count++;console.log('PASS',name)}
 (async()=>{
+  await test('worker identity and imported manifest are pinned to the generated build',()=>{const m={self:{}};vm.runInNewContext(fs.readFileSync(path.join(root,'offline-assets.js'),'utf8'),m);const v=m.self.SKYLINE_OFFLINE.version;assert.ok(source.startsWith('// Skyline offline build: '+v+'\n'));assert.ok(source.includes("importScripts('./offline-assets.js?build="+v+"');"))});
   await test('install caches only the declared local assets with revalidation',async()=>{const f=fixture();await f.event('install');assert.equal(f.requested.length,2);assert.ok(f.requested.every(r=>r.url.startsWith(scope)&&r.cache==='reload'));assert.equal(f.stats().skipped,0)});
   await test('failed candidate install cannot remove the current cache',async()=>{const f=fixture({failInstall:true});f.bucket(prefix+'v0').set(scope+'index.html',new Response('old'));await assert.rejects(f.event('install'));assert.ok(f.stores.has(prefix+'v0'));assert.deepEqual(f.deleted,[prefix+'v1'])});
   await test('activation deletes obsolete caches for this app only',async()=>{const f=fixture();f.bucket(prefix+'v0');f.bucket(prefix+'v1');f.bucket('other-app');f.bucket('skyline-estates-offline:https://example.test/other/:v0');await f.event('activate');assert.deepEqual(f.deleted,[prefix+'v0']);assert.equal(f.stats().claimed,1);assert.ok(f.stores.has('other-app'))});
