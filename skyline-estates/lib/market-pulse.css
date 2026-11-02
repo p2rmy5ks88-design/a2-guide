@@ -1,0 +1,6 @@
+/* Keep decisions reachable on short iPhone landscape screens. */
+#modals:has(.ov:not(.bye) .mpmodal){z-index:1100}
+.mp.mpmodal{overflow:hidden}
+.mpmodal>.mh,.mpmodal>.mbar{flex:0 0 auto}
+.mpmodal>.mtxt{min-height:0;overflow:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.mpmodal>.mbar .btn{min-width:44px;min-height:44px}

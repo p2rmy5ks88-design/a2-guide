@@ -1,14 +1,29 @@
 import hashlib, json, pathlib, re, sys
 here = pathlib.Path(__file__).resolve().parent
 body = (here/'game.html').read_text(encoding='utf-8')
+# Web-only optional economy extension. Native/server game source stays unchanged.
+body = body.replace("delete s.events2;", "delete s.events2;delete s.marketPulse;")
+toggle = "${toggleRow('events2',EV2_RULE[0],loc(EV2_RULE[1]),setup.rules.events2)}"
+assert body.count(toggle) == 1
+body = body.replace(toggle, toggle + "${toggleRow('marketPulse',MP_RULE[0],MP_RULE[1],setup.rules.marketPulse)}")
+mutual = "if(setup.rules[k]&&k==='events2')setup.rules.events=false;if(setup.rules[k]&&k==='events')setup.rules.events2=false;"
+assert body.count(mutual) == 1
+body = body.replace(mutual, "if(setup.rules[k]&&['events','events2','marketPulse'].includes(k))for(const other of ['events','events2','marketPulse'])if(other!==k)setup.rules[other]=false;")
+review = "${setup.rules.events2?`<span class=\"se-chip good\">✓ ${EV2_RULE[0]}</span>`:''}"
+assert body.count(review) == 1
+body = body.replace(review, review + "${setup.rules.marketPulse?`<span class=\"se-chip good\">✓ ${MP_RULE[0]}</span>`:''}")
+# Spotlight's explicit Standard / Strategic choice must override saved Pulse prefs.
+spot = "k==='ev'?{events2:true,events:false}:{events2:false}"
+assert body.count(spot) == 1
+body = body.replace(spot, "k==='ev'?{events2:true,events:false,marketPulse:false}:{events2:false,marketPulse:false}")
 # Install web currency after core declarations but before boot draws the first board.
 # Keep game.html (the native/server source) byte-for-byte unchanged.
 boot = 'try{const h=window.claude?.hot;'
 assert body.count(boot) == 1
-body = body.replace(boot, '</script><script src="./lib/skyline-sc-wallet.js"></script><script src="./lib/skyline-currency.js"></script><script src="./lib/skyline-earned-cash.js"></script><script>\n' + boot)
+body = body.replace(boot, '</script><script src="./lib/skyline-sc-wallet.js"></script><script src="./lib/skyline-currency.js"></script><script src="./lib/skyline-earned-cash.js"></script><script src="./lib/market-pulse.js"></script><script>\n' + boot)
 # Preserve the approved standalone wrapper.
 head = '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-180.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Skyline Estates"><meta name="theme-color" content="#10223f"><script src="../eko-estates/firebase-config.js"></script><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui}img{max-width:100%}[hidden]{display:none!important}</style></head><body>'
-head = head.replace('</head>', '<link rel="stylesheet" href="./lib/menu-presentation.css"></head>')
+head = head.replace('</head>', '<link rel="stylesheet" href="./lib/menu-presentation.css"><link rel="stylesheet" href="./lib/market-pulse.css"></head>')
 # Shared menu-only layer; original game.html retains all board/camera behavior.
 index = head + body + '<script src="./lib/menu-presentation.js"></script></body></html>'
 core = ['index.html', 'web-play.html', 'web-correction.html', 'web-follow.html', 'web-board.html', 'web-menus.html', 'reference-redesign.js', 'home-redesign.js', 'manifest.webmanifest', 'privacy.html', 'icon-180.png', 'icon-192.png', 'icon-512.png']
