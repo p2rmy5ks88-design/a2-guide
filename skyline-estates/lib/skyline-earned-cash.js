@@ -40,9 +40,16 @@
   const major={hotel:R.firstTower,hotels3:R.threeTowers};
   const oldAward=achAward;
   achAward=function(id){
+    if(G&&G.scAssisted)return;
     const before=!!PREF.ach[id],eligible=localEligible(),result=oldAward.apply(this,arguments);
     if(eligible&&!before&&PREF.ach[id]&&major[id])credit('achievement:'+id,major[id],'achievement',ACH.find(a=>a.id===id)?.name||id,{season:season().n});
     return result;
+  };
+  const oldQuiz=quiz;
+  quiz=async function(){
+    if(!(G&&G.scAssisted))return oldQuiz.apply(this,arguments);
+    const game=G,before=PREF.stats.quiz;
+    try{return await oldQuiz.apply(this,arguments)}finally{if(G===game){if(before===undefined)delete PREF.stats.quiz;else PREF.stats.quiz=before;savePref()}}
   };
   const oldCity=cityScan;
   cityScan=function(){
