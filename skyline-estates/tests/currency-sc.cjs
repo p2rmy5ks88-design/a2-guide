@@ -18,7 +18,8 @@ const doc = {
       setAttribute() {}, append() {}, replaceWith() {}, insertAdjacentElement() {}
     };
   },
-  querySelectorAll() { return []; }
+  querySelectorAll() { return []; },
+  querySelector() { return null; }
 };
 const sandbox = {
   window: {},
@@ -27,6 +28,11 @@ const sandbox = {
   TIERS: 40,
   G: null,
   fmt: n => '$' + n,
+  CUR: {}, CUR_CITY: 'lagos',
+  applyCity() {},
+  countryOf() { return {cur:{pre:'$',post:'K',bigPre:'$',big:'M',m:1}}; },
+  modal() {}, toast() {},
+  drawBoard() { sandbox.paintCash = sandbox.fmt(30); }, drawCell() {}, renderRoster() {},
   savePref() { saves++; },
   claimTier(i, prem) {
     const box = prem ? seasonState.cp : seasonState.cf;
@@ -75,7 +81,30 @@ sandbox.newGame(online);
 sandbox.startWith(online);
 assert.equal(online.players[0].cash, 1600, 'online matches must never receive reserve cash');
 assert.equal(PREF.scReserve, 40, 'online match must not spend reserve');
-assert.equal(sandbox.fmt(30), '$30', 'online log formatting must retain the authoritative server format');
+assert.equal(sandbox.fmt(30), '$30', 'online wire formatter must remain unchanged');
+assert.equal(sandbox.window.SkylineCurrency.formatCash(30), 'SC 30M', 'web presentation uses SC for online amounts');
+sandbox.drawBoard();
+assert.equal(sandbox.paintCash, 'SC 30M', 'canvas must paint SC in online games');
+assert.equal(sandbox.fmt(30), '$30', 'painting must restore the original wire formatter');
+assert.equal(sandbox.window.SkylineCurrency.displayText('Paid $30K; balance $1.6M.'), 'Paid SC 30M; balance SC 1.6B.');
+for (const [cur, text, expected] of [
+  [{pre:'₦',post:'M',bigPre:'₦',big:'bn',m:1}, 'Paid ₦30M; ₦1.6bn.', 'Paid SC 30M; SC 1.6B.'],
+  [{pre:'',post:' Mkr',bigPre:'',big:' bn kr',m:1}, 'Paid 30 Mkr; −1.6 bn kr.', 'Paid SC 30M; −SC 1.6B.'],
+  [{pre:'¥',post:'M',bigPre:'¥',big:'B',m:0.1}, 'Paid ¥3M; ¥1B.', 'Paid SC 30M; SC 10B.'],
+  [{pre:'R',post:'K',bigPre:'R',big:'M',m:10}, 'Paid R300K; R1M.', 'Paid SC 30M; SC 100M.']
+]) {
+  sandbox.countryOf=()=>({cur});
+  assert.equal(sandbox.window.SkylineCurrency.displayText(text),expected);
+  assert.equal(sandbox.window.SkylineCurrency.displayText(expected),expected,'SC display must be idempotent');
+}
+const root=path.join(__dirname,'..');
+for (const name of ['index','web-play','web-correction','web-follow','web-board','web-menus']) {
+  const page=fs.readFileSync(path.join(root,name+'.html'),'utf8');
+  const module=page.indexOf('<script src="./lib/skyline-currency.js">');
+  assert.ok(module>0&&module<page.indexOf('try{const h=window.claude?.hot;'),'currency must install before boot: '+name);
+  assert.equal(page.split('src="./lib/skyline-currency.js"').length,2,'load module exactly once');
+}
+assert.ok(!fs.readFileSync(path.join(root,'game.html'),'utf8').includes('skyline-currency.js'),'native/server source excludes web currency');
 for (const [name, g, fresh] of [
   ['legacy resume', {players:[{ai:false,cash:1600},{ai:true,cash:1600}]}, false],
   ['current resume', {masteryId:'old',players:[{ai:false,cash:1600},{ai:true,cash:1600}]}, false],
