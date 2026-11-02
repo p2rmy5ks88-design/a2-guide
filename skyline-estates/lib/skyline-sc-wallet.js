@@ -13,6 +13,7 @@
   const valid=n=>Number.isSafeInteger(n)&&Math.abs(n)<=1000000000;
   const clone=x=>JSON.parse(JSON.stringify(x));
   function create(storage, now=()=>Date.now()) {
+    let migrationBlocked=false;
     const key=id=>PREFIX+'tx:'+encodeURIComponent(id);
     function entries() {
       const rows=[];
@@ -31,6 +32,7 @@
       return {balance,totals,spent:transactions.reduce((n,t)=>n+Math.max(0,-t.amount),0),transactions:transactions.sort((a,b)=>b.at-a.at||a.id.localeCompare(b.id))};
     }
     function record(id,amount,source,label,meta={}) {
+      if(migrationBlocked)throw Error('SC migration needs recovery. Saved data was kept.');
       if(typeof id!=='string'||!id.length||id.length>200||!valid(amount)||typeof source!=='string')throw Error('Invalid SC transaction');
       if(storage.getItem(key(id))!==null)return false;
       const before=view();if(before.balance+amount<0||!valid(before.balance+amount))return false;
@@ -44,7 +46,7 @@
       if(storage.getItem(MIGRATION)!==null)return;
       const hadLegacy=Object.hasOwn(profile,'scReserve')||Object.hasOwn(profile,'scReserveLog');
       const balance=profile.scReserve===undefined?0:profile.scReserve;
-      if(!Number.isSafeInteger(balance)||balance<0||balance>1000000)throw Error('Existing SC reserve is invalid. Saved data was kept.');
+      if(!Number.isSafeInteger(balance)||balance<0||balance>1000000){migrationBlocked=true;throw Error('Existing SC reserve is invalid. Saved data was kept.')}
       record('opening',balance,'opening','Carried forward SC reserve');
       // Existing legacy claims may already have been spent, and its log was bounded.
       // Acknowledge them without guessing/recrediting. A pre-SC profile can safely
