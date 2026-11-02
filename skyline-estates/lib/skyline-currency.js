@@ -59,9 +59,19 @@
   /* A reserve bonus is opt-in, only on creation of a NEW offline solo/practice match.
      At most SC 100M or 10% of normal starting cash can be transferred. */
   const previousStartWith = startWith;
+  // A legacy save may lack masteryId. Only freshly constructed instances qualify.
+  const newMatches = new WeakSet();
+  const previousNewGame = newGame;
+  newGame = function () {
+    const result = previousNewGame.apply(this, arguments);
+    if (G && typeof G === 'object') newMatches.add(G);
+    return result;
+  };
   startWith = function (game) {
-    const eligible = game && !game.online && !game.sim && !game.masteryId &&
-      Array.isArray(game.players) && !game.players.some(function (p) { return !!p.uid; });
+    const fresh = game && newMatches.delete(game);
+    const eligible = fresh && !game.online && !game.sim && !game.masteryId &&
+      Array.isArray(game.players) && game.players.filter(function (p) { return !p.ai; }).length === 1 &&
+      !game.players.some(function (p) { return !!p.uid; });
     if (eligible && PREF.scBoostNext && validReserve() > 0) {
       const player = game.players.find(function (p) { return !p.ai; });
       if (player && Number.isFinite(player.cash) && player.cash > 0) {
@@ -134,7 +144,7 @@
     section.append(text, button);
     const previous = panel.querySelector('.skyline-sc-reserve');
     if (previous) previous.replaceWith(section);
-    else banner.insertAdjacentElement('afterend', section);
+    else (panel.querySelector('#track') || banner).insertAdjacentElement('afterend', section);
   }
   const previousPaneSeason = paneSeason;
   paneSeason = function (panel) {
@@ -144,7 +154,7 @@
   };
 
   const style = document.createElement('style');
-  style.textContent = '.skyline-coin-label{font-size:10px;opacity:.8;font-weight:700}.skyline-sc-reserve{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:7px 0 8px;padding:7px 11px;border-radius:12px;border:1px solid rgba(226,181,74,.32);background:rgba(8,26,44,.58);color:#f5efdc}.skyline-sc-reserve-text{flex:1 1 260px;min-width:0;display:grid;gap:2px}.skyline-sc-reserve-text strong{font-size:12px;color:#f5ce6b}.skyline-sc-reserve-text small{font-size:10px;line-height:1.35;opacity:.85}.skyline-sc-use{border:1px solid #c7a04f;border-radius:10px;background:#182948;color:#f5ce6b;padding:8px 10px;font:700 11px system-ui;min-height:36px;cursor:pointer}.skyline-sc-use:disabled{opacity:.5;cursor:default}';
+  style.textContent = '.skyline-coin-label{font-size:10px;opacity:.8;font-weight:700}.skyline-sc-reserve{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:7px 0 8px;padding:7px 11px;border-radius:12px;border:1px solid rgba(226,181,74,.32);background:rgba(8,26,44,.58);color:#f5efdc}.skyline-sc-reserve-text{flex:1 1 260px;min-width:0;display:grid;gap:2px}.skyline-sc-reserve-text strong{font-size:12px;color:#f5ce6b}.skyline-sc-reserve-text small{font-size:10px;line-height:1.35;opacity:.85}.skyline-sc-use{border:1px solid #c7a04f;border-radius:10px;background:#182948;color:#f5ce6b;padding:8px 10px;font:700 11px system-ui;min-height:44px;cursor:pointer}.skyline-sc-use:disabled{opacity:.5;cursor:default}';
   document.head.appendChild(style);
   decorateCoins();
 
