@@ -16,7 +16,15 @@
     return (n < 0 ? '−' : '') + 'SC ' + (a >= 1000 ? compact(a / 1000) + 'B' : compact(a) + 'M');
   }
   // Only the web view changes. Numeric balances and server snapshots stay intact.
-  fmt = formatSC;
+  const previousFormat = fmt;
+  fmt = function (value) {
+    if (!(G && G.online)) return formatSC(value);
+    // Legacy peer-driven online games still serialize their generated log strings.
+    // Keep those byte-compatible; presentation is translated below instead.
+    const displayCurrency = CUR;
+    try { CUR = countryOf((G.set && G.set.city) || CUR_CITY).cur; return previousFormat(value); }
+    finally { CUR = displayCurrency; }
+  };
   const cashCurrency = Object.freeze({ pre: 'SC ', post: 'M', big: 'B', bigPre: 'SC ', m: 1 });
   const previousApplyCity = applyCity;
   applyCity = function () {
@@ -40,22 +48,46 @@
   }
   function decorateLog(root) {
     if (!root) return;
+    if (root.nodeType === 3) {
+      if (root.parentElement?.closest('script,style,textarea,input,[contenteditable]')) return;
+      const next = displayText(root.data);
+      if (next !== root.data) root.data = next;
+      return;
+    }
     const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
     let node;
-    while ((node = walker.nextNode())) {
-      const next = displayText(node.data);
-      if (next !== node.data) node.data = next;
-    }
+    while ((node = walker.nextNode())) decorateLog(node);
   }
-  const logElement = document.querySelector('#log');
-  if (logElement) {
-    new MutationObserver(() => decorateLog(logElement)).observe(logElement, { childList: true, subtree: true, characterData: true });
-    decorateLog(logElement);
+  if (document.body) {
+    // Incremental text-only projection also covers remote prompts, buttons, floats
+    // and asynchronously mounted dialogs, without touching inputs or game state.
+    new MutationObserver(records => records.forEach(record => {
+      if (record.type === 'characterData') decorateLog(record.target);
+      else record.addedNodes.forEach(decorateLog);
+    })).observe(document.body, { childList: true, subtree: true, characterData: true });
+    decorateLog(document.querySelector('#ui'));
   }
+  function cashPaint(paint) {
+    return function () {
+      const wireFormat = fmt;
+      try { fmt = formatSC; return paint.apply(this, arguments); }
+      finally { fmt = wireFormat; }
+    };
+  }
+  // Canvas money must be formatted before measuring/painting the first board.
+  drawBoard = cashPaint(drawBoard);
+  drawCell = cashPaint(drawCell);
+  const previousRoster = renderRoster;
+  renderRoster = function () {
+    const result = previousRoster.apply(this, arguments);
+    decorateLog(document.querySelector('#roster'));
+    decorateLog(document.querySelector('#round'));
+    return result;
+  };
   const previousModal = modal;
   modal = function () {
     const result = previousModal.apply(this, arguments);
-    document.querySelectorAll('.loglist').forEach(decorateLog);
+    document.querySelectorAll('#modals .mp').forEach(decorateLog);
     return result;
   };
   const previousToast = toast;

@@ -32,6 +32,7 @@ const sandbox = {
   applyCity() {},
   countryOf() { return {cur:{pre:'$',post:'K',bigPre:'$',big:'M',m:1}}; },
   modal() {}, toast() {},
+  drawBoard() { sandbox.paintCash = sandbox.fmt(30); }, drawCell() {}, renderRoster() {},
   savePref() { saves++; },
   claimTier(i, prem) {
     const box = prem ? seasonState.cp : seasonState.cf;
@@ -80,7 +81,11 @@ sandbox.newGame(online);
 sandbox.startWith(online);
 assert.equal(online.players[0].cash, 1600, 'online matches must never receive reserve cash');
 assert.equal(PREF.scReserve, 40, 'online match must not spend reserve');
-assert.equal(sandbox.fmt(30), 'SC 30M', 'online and local displays must use SC');
+assert.equal(sandbox.fmt(30), '$30', 'online wire formatter must remain unchanged');
+assert.equal(sandbox.window.SkylineCurrency.formatCash(30), 'SC 30M', 'web presentation uses SC for online amounts');
+sandbox.drawBoard();
+assert.equal(sandbox.paintCash, 'SC 30M', 'canvas must paint SC in online games');
+assert.equal(sandbox.fmt(30), '$30', 'painting must restore the original wire formatter');
 assert.equal(sandbox.window.SkylineCurrency.displayText('Paid $30K; balance $1.6M.'), 'Paid SC 30M; balance SC 1.6B.');
 for (const [cur, text, expected] of [
   [{pre:'₦',post:'M',bigPre:'₦',big:'bn',m:1}, 'Paid ₦30M; ₦1.6bn.', 'Paid SC 30M; SC 1.6B.'],
