@@ -47,9 +47,15 @@ const root=path.resolve(__dirname,'../..'),report={matches:[],errors:[]},delay=m
     }
     const s=m.final;assert.ok(s.over,'must finish naturally');await page.locator('.endgrid').waitFor();const survivors=s.players.filter(p=>!p.bankrupt),rank=survivors.map(p=>({...p,worth:p.cash+s.own.filter(o=>o.o===p.id).reduce((v,o)=>v+(o.m?o.price/2:o.price)+o.h*o.cost,0)})).sort((a,b)=>b.worth-a.worth);m.winner=rank[0].name;m.rounds=s.round;m.displayedResult=await page.locator('#modals').innerText();
     check('natural terminal outcome',mode==='classic'?survivors.length===1:mode==='quick'?survivors.length<n:s.round===11||survivors.length===1);check('winner displayed and saves cleared',(await page.locator('#modals .ov:not(.bye) .mh').innerText()).startsWith(m.winner+' is the landlord')&&s.saveCleared);check('save and continue preserves the turn',m.resumed);check('cash and building banks hold throughout',m.samples>10&&s.errors.length===0);
+    const showcase=await page.evaluate(()=>{const r=SkylineShowcase.capture(0);return{ok:!!r&&r.netWorth===(P(0).bankrupt?0:netWorth(P(0)))&&r.properties===G.own.filter(o=>o.o===0).length,baseline:JSON.stringify({G,coins:PREF.coins,xp:PREF.xp,trophies:PREF.trophies,sc:SkylineEarnedCash.balance()})}});
+    check('naturally completed match produces actual Showcase statistics',showcase.ok);
+    await page.getByRole('button',{name:'View My Skyline',exact:true}).click();await page.locator('#skyline-showcase [data-share]:not(:disabled)').waitFor();
+    if(process.env.RUNNER_TEMP)await page.screenshot({path:path.join(process.env.RUNNER_TEMP,'skyline-showcase-natural-'+mode+'.png')});
+    await page.locator('#skyline-showcase [data-close]').click();
+    check('Showcase returns to natural results without changing game or rewards',showcase.baseline===await page.evaluate(()=>JSON.stringify({G,coins:PREF.coins,xp:PREF.xp,trophies:PREF.trophies,sc:SkylineEarnedCash.balance()})));
     console.log('MATCH',JSON.stringify({mode,seed,rounds:m.rounds,winner:m.winner,decisions:m.actions.length,samples:m.samples}));
    }catch(e){console.log('MATCH FAILURE',JSON.stringify({mode,actions:m.actions.slice(-20),state:m.final,modals:await page.locator('#modals').innerText()}));throw e}finally{await context.close()}
   }
-  assert.equal(report.errors.length,0);console.log('19 complete-match checks passed');
+  assert.equal(report.errors.length,0);console.log('25 complete-match checks passed');
  }finally{const out=process.argv[2]||path.join(root,'skyline-estates/test-results/complete-matches.json');fs.mkdirSync(path.dirname(path.resolve(out)),{recursive:true});fs.writeFileSync(out,JSON.stringify(report,null,2)+'\n');if(browser)await browser.close();await new Promise(r=>server.close(r))}
 })().catch(e=>{console.error(e);process.exitCode=1});

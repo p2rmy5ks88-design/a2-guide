@@ -202,7 +202,7 @@ jobs:
   visual_correction:
     name: Visual geometry (${{ matrix.engine }})
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 25
     strategy:
       fail-fast: false
       matrix:
@@ -228,6 +228,7 @@ jobs:
         run: |
           python3 skyline-estates/build.py --check
           node skyline-estates/tests/market-pulse.cjs
+          node skyline-estates/tests/showcase-browser.cjs
           node skyline-estates/tests/currency-browser.cjs
           node skyline-estates/tests/visual-correction-browser.cjs
       - name: Upload before-release visual evidence
@@ -242,4 +243,6 @@ jobs:
             ${{ runner.temp }}/currency-*.json
             ${{ runner.temp }}/market-*.png
             ${{ runner.temp }}/market-*.json
+            ${{ runner.temp }}/showcase-*.png
+            ${{ runner.temp }}/showcase-*.json
           if-no-files-found: ignore
