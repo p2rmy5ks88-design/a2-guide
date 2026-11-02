@@ -5,7 +5,7 @@ body = (here/'game.html').read_text(encoding='utf-8')
 # Keep game.html (the native/server source) byte-for-byte unchanged.
 boot = 'try{const h=window.claude?.hot;'
 assert body.count(boot) == 1
-body = body.replace(boot, '</script><script src="./lib/skyline-currency.js"></script><script>\n' + boot)
+body = body.replace(boot, '</script><script src="./lib/skyline-sc-wallet.js"></script><script src="./lib/skyline-currency.js"></script><script src="./lib/skyline-earned-cash.js"></script><script>\n' + boot)
 # Preserve the approved standalone wrapper.
 head = '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-180.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Skyline Estates"><meta name="theme-color" content="#10223f"><script src="../eko-estates/firebase-config.js"></script><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui}img{max-width:100%}[hidden]{display:none!important}</style></head><body>'
 head = head.replace('</head>', '<link rel="stylesheet" href="./lib/menu-presentation.css"></head>')
