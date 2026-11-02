@@ -15,12 +15,51 @@
     const a = Math.abs(n);
     return (n < 0 ? '−' : '') + 'SC ' + (a >= 1000 ? compact(a / 1000) + 'B' : compact(a) + 'M');
   }
-  // Online snapshots/logs must retain the audited server's city currency.
-  // A web-only release cannot change that wire format without a backend release.
-  const previousFormat = fmt;
-  fmt = function (value) {
-    return G && G.online ? previousFormat(value) : formatSC(value);
+  // Only the web view changes. Numeric balances and server snapshots stay intact.
+  fmt = formatSC;
+  const cashCurrency = Object.freeze({ pre: 'SC ', post: 'M', big: 'B', bigPre: 'SC ', m: 1 });
+  const previousApplyCity = applyCity;
+  applyCity = function () {
+    const result = previousApplyCity.apply(this, arguments);
+    CUR = cashCurrency; // Also used by flying notes and Catch the Cash.
+    return result;
   };
+  CUR = cashCurrency;
+
+  // Historical saves and authoritative online logs contain formatted city money.
+  // Translate text nodes at the display boundary; never rewrite G.log or snapshots.
+  const escapeRE = s => String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  function displayText(text) {
+    const cur = countryOf((G && G.set && G.set.city) || CUR_CITY).cur;
+    let result = String(text);
+    for (const [prefix, suffix, scale] of [[cur.bigPre ?? cur.pre, cur.big, 1000], [cur.pre, cur.post, 1]]) {
+      const pattern = new RegExp('(^|[^\\p{L}\\p{N}_])([−-]?)' + escapeRE(prefix) + '(\\d+(?:\\.\\d+)?)' + escapeRE(suffix) + '(?![\\p{L}\\p{N}_])', 'gu');
+      result = result.replace(pattern, (_, boundary, sign, amount) => boundary + formatSC((sign ? -1 : 1) * Number(amount) * scale / cur.m));
+    }
+    return result;
+  }
+  function decorateLog(root) {
+    if (!root) return;
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    let node;
+    while ((node = walker.nextNode())) {
+      const next = displayText(node.data);
+      if (next !== node.data) node.data = next;
+    }
+  }
+  const logElement = document.querySelector('#log');
+  if (logElement) {
+    new MutationObserver(() => decorateLog(logElement)).observe(logElement, { childList: true, subtree: true, characterData: true });
+    decorateLog(logElement);
+  }
+  const previousModal = modal;
+  modal = function () {
+    const result = previousModal.apply(this, arguments);
+    document.querySelectorAll('.loglist').forEach(decorateLog);
+    return result;
+  };
+  const previousToast = toast;
+  toast = function (text) { return previousToast.call(this, displayText(text)); };
 
   /* Saved reserve is for optional solo practice boosts ONLY.
      It is not paid currency, does not buy Shop items, and never joins online matches. */
@@ -164,8 +203,9 @@
   decorateCoins();
 
   window.SkylineCurrency = Object.freeze({
-    version: 'web-sc-1',
+    version: 'web-sc-2',
     formatCash: formatSC,
+    displayText: displayText,
     reserve: function () { return validReserve(); },
     nextSoloBonusEnabled: function () { return !!PREF.scBoostNext; }
   });

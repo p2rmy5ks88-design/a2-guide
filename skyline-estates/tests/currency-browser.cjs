@@ -12,9 +12,9 @@ const check=(name,ok)=>{assert.ok(ok,name);report.checks.push(name);console.log(
  browser=await({chromium,webkit}[engine]).launch({headless:true,...(engine==='chromium'?{executablePath:process.env.CHROME_PATH||undefined}:{})});
  for(const size of [{width:956,height:440},{width:844,height:390},{width:844,height:320}]){
   const context=await browser.newContext({viewport:size,isMobile:true,hasTouch:true,serviceWorkers:'block'});
-  await context.route('https://**/*',r=>r.abort());const p=await context.newPage();p.on('pageerror',e=>report.errors.push(String(e)));
+  await context.route('https://**/*',r=>process.env.CURRENCY_BASE_URL&&new URL(r.request().url()).origin===new URL(process.env.CURRENCY_BASE_URL).origin?r.continue():r.abort());const p=await context.newPage();p.on('pageerror',e=>report.errors.push(String(e)));
   await p.addInitScript(()=>localStorage.setItem('skylinePrefs',localStorage.getItem('skylinePrefs')||JSON.stringify({nick:'Currency QA',nickSet:true,welcomed:1,tutDone:1,coins:250,xp:5000,flat2d:true,rig:false,riders:false})));
-  const url=`http://127.0.0.1:${server.address().port}/skyline-estates/index.html`;
+  const url=process.env.CURRENCY_BASE_URL||`http://127.0.0.1:${server.address().port}/skyline-estates/index.html`;
   async function loaded(){await p.waitForFunction(()=>window.SkylineCurrency);await p.locator('#boot').waitFor({state:'detached'});}
   await p.goto(url);await loaded();
   check('SC module loads '+size.height,await p.evaluate(()=>fmt(1890)==='SC 1.89B'&&PREF.coins===250));
@@ -22,6 +22,21 @@ const check=(name,ok)=>{assert.ok(ok,name);report.checks.push(name);console.log(
    const before=await p.evaluate(city=>{FAST=true;applyCity(city);newGame({cash:1600,set:{city,mode:'classic'},players:[{name:'Human',tok:TOKENS[0],col:PCOL[0],ai:false},{name:'AI',tok:TOKENS[1],col:PCOL[1],ai:true}]});G.round=7;G.phase='post';G.players[0].cash=765;G.own[1].o=0;PREF.scReserve=500;PREF.scBoostNext=true;savePref();if(!save())throw Error('save failed');return{cash:G.players.map(p=>p.cash),own:G.own,city,coins:PREF.coins}},city);
    await p.reload();await loaded();
    check('Legacy '+city+' save restores unchanged '+size.height,await p.evaluate(before=>{run=async()=>{};keyReveal=async()=>{};const g=loadSave();startWith(g);return JSON.stringify(G.players.map(p=>p.cash))===JSON.stringify(before.cash)&&JSON.stringify(G.own)===JSON.stringify(before.own)&&G.set.city===before.city&&PREF.scReserve===500&&PREF.scBoostNext===true&&PREF.coins===before.coins&&!G.scAssisted&&fmt(765)==='SC 765M'},before));
+  }
+  for(const [city,raw] of [['lagos','Paid ₦30M; balance ₦1.6bn.'],['stockholm','Paid 30 Mkr; balance 1.6 bn kr.'],['tokyo','Paid ¥3M; balance ¥0.16B.']]){
+   const before=await p.evaluate(({city,raw})=>{
+    GEN++;FAST=true;applyCity(city);newGame({cash:1600,set:{city,mode:'classic'},players:[{name:'Human',tok:TOKENS[0],col:PCOL[0],ai:false},{name:'AI',tok:TOKENS[1],col:PCOL[1],ai:true}]});
+    G.online=true;G.log=[raw];FAST=false;renderRoster();document.querySelector('#log').textContent=G.log[0];
+    const labels=[],canvas=document.createElement('canvas');canvas.width=canvas.height=1100;const ctx=canvas.getContext('2d'),fill=ctx.fillText.bind(ctx);ctx.fillText=(t,...a)=>{labels.push(String(t));return fill(t,...a)};drawBoard(ctx);
+    return {state:JSON.stringify(G),labels,symbol:CUR.pre,coins:PREF.coins,cash:G.players[0].cash,roster:document.querySelector('#roster .pc')?.textContent};
+   },{city,raw});
+   check('Online '+city+' roster and board show SC '+size.height,before.roster==='SC '+(before.cash/1000)+'B'&&before.labels.some(t=>t.includes('SC '))&&before.symbol==='SC ');
+   await p.waitForFunction(()=>document.querySelector('#log').textContent==='Paid SC 30M; balance SC 1.6B.');
+   await p.locator('#log').click();
+   check('Online '+city+' log history shows SC '+size.height,await p.locator('.loglist').textContent().then(t=>t==='Paid SC 30M; balance SC 1.6B.'));
+   check('Online '+city+' snapshot and wallet unchanged '+size.height,await p.evaluate(before=>JSON.stringify(G)===before.state&&PREF.coins===before.coins,before));
+   await p.getByRole('button',{name:'Close',exact:true}).click();
+   if(city==='lagos')await p.screenshot({path:path.join(out,`currency-${engine}-${size.height}-online.png`)});
   }
   const logic=await p.evaluate(()=>{
    GEN++;FAST=true;run=async()=>{};keyReveal=async()=>{};showTitle();const flags={};

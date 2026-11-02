@@ -28,7 +28,7 @@ Reserve balances and claim flags are device-local, not server-authoritative. **D
 
 ## Scope
 
-Web-only file: `skyline-estates/lib/skyline-currency.js`. Loaded after the existing menu layer by `skyline-estates/build.py` when creating the generated web pages. Native, iOS and TestFlight release workflows are unchanged. This deliberately avoids altering core math and preexisting saves.
+Web-only file: `skyline-estates/lib/skyline-currency.js`. Installed by `skyline-estates/build.py` after core declarations and before the boot invocation in all six generated web pages. Native, iOS and TestFlight release workflows are unchanged. This deliberately avoids altering core math and preexisting saves.
 
 ## Completion and validation — 2 November 2026
 
@@ -47,4 +47,13 @@ Web-only file: `skyline-estates/lib/skyline-currency.js`. Loaded after the exist
 
 The current SC reserve is intentionally limited to opt-in solo practice to keep ranked and social competition fair. Do not route earned SC into online/ranked starting money. Future Market Pulse, Skyline Showcase and social competition are separate work items.
 
-Online compatibility: authoritative online matches retain the existing city-currency formatter and log text, matching the unchanged server. Offline match cash uses SC. A later coordinated backend release is required to rename online currency safely; this web-only release does not deploy the server. The existing full-snapshot parity assertions remain unchanged.
+## Web display correction after PR #93 — 2 November 2026
+
+The deployed PR #93 assets were current, but its formatter explicitly selected city currency when `G.online` was true. Its script also ran after boot had drawn the initial board. Cash-note animations and Catch the Cash bypassed `fmt` and used `CUR.pre` directly. These are presentation gaps, not missing match balances.
+
+- The web formatter now uses SC in both local and online games. The web-only `applyCity` wrapper sets the display currency for note symbols too; country identities and educational quiz answers are unchanged.
+- Currency installs before boot, retaining the existing boot declaration and its 2D fallback override. All generated aliases include the module exactly once.
+- Existing saved/authoritative logs are translated in displayed text nodes only. Amounts are decoded using the original country's suffix and scale (including Japan's 0.1 multiplier). `G.log`, snapshots, rules and server files are not rewritten. Online controls continue sending numeric commands to the unchanged server.
+- The generated offline manifest changes with the assets. The existing cache-first worker intentionally waits until all game tabs close before activating an update. Registration uses `updateViaCache: 'none'`. No cache/storage clearing, forced worker takeover or save migration is required. On iPhone: Save & exit, close all Skyline game tabs (and any standalone home-screen game), then reopen online to receive the updated copy.
+- Local verification: currency unit and generated-entry checks; 79 currency browser checks in Chromium at three phone landscape heights; 19 actual offline startup/update checks; 41 save-recovery, 45 remote-state, 16 offline-worker and 10 turn/resume checks; 11 authoritative online-control browser checks. No runtime exceptions in the completed browser suites. Safari-engine and remote CI results are recorded with the release PR.
+- Native/server source `game.html` and all native configuration/workflows remain unchanged. Source and merge commits use `[skip actions]`; manually run only web stability and Pages. No native/TestFlight/App Store build or backend deployment is part of this correction.
