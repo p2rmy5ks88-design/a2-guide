@@ -2,6 +2,10 @@
 
 Record the build number, date and actual result for every row. "Pass" only when you saw it happen.
 
+**Payment preparation checkpoint (2 November 2026):** stable build 153 keeps purchases off and its restore fix is owner-verified. Do not attempt this payment checklist on that build. A later private-testing build follows only after the paused backend session is explicitly authorized and checked. See `PAYMENT-PREPARATION.md`.
+
+Your normal Apple account can remain signed into the iPhone: TestFlight purchases are free test transactions. The dedicated **Skyline game test account** is a different login and needs no payment card. Do not use the owner's normal game account or the App Review demo account for this test run. Advanced sandbox controls may require a separate Sandbox Apple Account; those accounts also need no card. [Apple TestFlight](https://testflight.apple.com/).
+
 ## 0. Protect your own progress first (about 10 minutes)
 
 1. **Find where your real progress is.** Open each Skyline Estates copy on the iPhone (the TestFlight app and any older installed copy) and note the coins and level in each.
@@ -16,7 +20,7 @@ Record the build number, date and actual result for every row. "Pass" only when 
 |---|---|---|---|
 | 1 | Sign in with the **test** account (email or Apple) | "Test account" prompt; your own coins are **not** added; test balance shown | |
 | 2 | Sign out | "Your own progress is back"; your original coins and level shown | |
-| 3 | Sign in with your **real** Apple ID account | "Save your progress to your account?" Move it: coins, XP and collection are kept | |
+| 3 | Sign back in to the dedicated **game test account**, using its cloud progress | Test balance returns; owner's local backup is retained and not imported | |
 | 4 | Second device or a reinstall of the *test* account only | Same test balance; no coins from the device added | |
 | 5 | Airplane mode: play, earn, spend, then online | Balance syncs once; no duplicates | |
 
@@ -31,7 +35,7 @@ Record the build number, date and actual result for every row. "Pass" only when 
 | 10 | Pay, then immediately swipe the app away | On relaunch, coins arrive once | |
 | 11 | Buy on this phone, check another device / reinstall | Same balance | |
 | 12 | Purchase while signed out | Asked to sign in; no payment sheet | |
-| 13 | **Real sandbox refund** of a pack (Settings → App Store → Sandbox Account → refund) and wait for Apple's REFUND notification. A TEST notification does not count | Balance goes down; if already spent, debt shown and repaid first | |
+| 13 | In-app **Account & recovery → Purchases → Request a refund** for a test pack; confirm Apple's actual REFUND notification with the server operator. A TEST notification does not count | Balance goes down once after a confirmed refund; if already spent, debt shown and repaid first | |
 | 14 | Owner pause (`store-pause.cjs on`), try to buy | "Purchases are paused"; no payment sheet; then `off` | |
 
 ## 3. Deletion (test account only)

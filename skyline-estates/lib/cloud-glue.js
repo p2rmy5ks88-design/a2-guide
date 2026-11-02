@@ -107,46 +107,83 @@ origSave=savePref;savePref=function(){origSave();later()};
 const origAdd=addCoins;addCoins=function(n,why){if(n&&why)engine.reason(String(why));return origAdd(n,why)};
 if(typeof redeemPromo==='function'){const orig=redeemPromo;redeemPromo=async function(raw){const r=await orig(raw);if(r?.ok)engine.promo(String(raw||'').toUpperCase().replace(/[^A-Z0-9]/g,''));return r}}
 const run=o=>engine.sync(o).then(r=>{status.state=r.state;return r});
-addEventListener('online',()=>run({refresh:true}));document.addEventListener('visibilitychange',()=>{if(!document.hidden)run({refresh:true})});
-setInterval(()=>{if(!document.hidden)run()},30000);
-window.SkylineAccounts?.subscribe?.(()=>setTimeout(()=>run({refresh:true}),300)).catch?.(()=>{});
+let recoverStore=async()=>{},storeRetryNeeded=false;
+const syncAndRecover=async(force=false)=>{const r=await run({refresh:true});await recoverStore(force);return r};
+addEventListener('online',()=>syncAndRecover(true));document.addEventListener('visibilitychange',()=>{if(!document.hidden)syncAndRecover(true)});
+setInterval(()=>{if(!document.hidden){run();if(storeRetryNeeded)recoverStore()}},30000);
+window.SkylineAccounts?.subscribe?.(()=>setTimeout(()=>syncAndRecover(),300)).catch?.(()=>{});
 // First sync (and any migration question) waits for the loading screen to finish.
 const firstRun=()=>setTimeout(()=>run({refresh:true}),600);if(document.getElementById('boot'))document.addEventListener('sk-booted',firstRun,{once:true});else firstRun();
 // ---------- App Store coin packs (iOS only; needs purchases switch, sign-in and the deployed service)
 const cap=window.Capacitor,bridge=cap?.isNativePlatform?.()&&cap.getPlatform?.()==='ios'&&cap.isPluginAvailable?.('SkylineStoreKit')?cap.Plugins.SkylineStoreKit:null;
 let store=null,prices=new Map();
+async function storeAccount(){
+ const who=await window.SkylineAccounts.player();if(!who)return null;
+ if(who.providers?.includes('password')&&who.verified!==true)throw Object.assign(Error('persistent-account-required'),{code:'persistent-account-required'});
+ const s=engine.status();
+ if(s.localOnly)throw Object.assign(Error('store/local-save-only'),{code:'store/local-save-only'});
+ if(s.owner!==who.uid||!s.migrated)throw Object.assign(Error('store/cloud-setup-required'),{code:'store/cloud-setup-required'});
+ if(CFG.channel==='private-testing'&&s.profile?.tester!==true)throw Object.assign(Error('store/test-account-required'),{code:'store/test-account-required'});
+ return who;
+}
 if(CFG.purchases===true&&bridge&&window.createSkylineStoreKitClient){
  const api=http();
- store=window.createSkylineStoreKitClient({bridge,enabled:()=>CFG.enabled===true&&CFG.purchases===true,account:()=>window.SkylineAccounts.player(),
+ store=window.createSkylineStoreKitClient({bridge,enabled:()=>CFG.enabled===true&&CFG.purchases===true,account:storeAccount,
   wallet:{purchase:(t,proof)=>api.request('POST','/v1/store/purchase',{proof},t),delivery:(t,k)=>api.request('GET','/v1/store/delivery/'+k,null,t),history:t=>api.request('GET','/v1/wallet/history',null,t),binding:t=>api.request('POST','/v1/store/binding',{},t)},
-  onWallet:()=>run({refresh:true}),onError:e=>toast(STORE_ERR[e.code]||STORE_ERR.default)});
+  onWallet:async()=>{const r=await run({refresh:true});if(r.state!=='synced'||r.pending)throw Object.assign(Error('store/wallet-refresh-unavailable'),{code:'store/wallet-refresh-unavailable'})},onError:e=>{storeRetryNeeded=true;showStoreError(e)}});
  const load=()=>store.products().then(r=>{prices=new Map(r.products.map(p=>[p.id,p.displayPrice]));return r}).catch(()=>null);
- setTimeout(async()=>{if(await window.SkylineAccounts.player().catch(()=>null)){await load();store.recover().catch(()=>{})}},4000);
+ let recovering=null,recoveredUid=null;
+ recoverStore=(force=false)=>{
+  if(recovering)return recovering;
+  recovering=(async()=>{
+   const who=await storeAccount().catch(()=>null);if(!who||!force&&!storeRetryNeeded&&recoveredUid===who.uid)return;
+   await load();storeRetryNeeded=false;
+   try{const results=await store.recover();recoveredUid=who.uid;
+    const failed=results.filter(r=>r.status==='rejected');
+    storeRetryNeeded=storeRetryNeeded||results.some(r=>r.status==='fulfilled'&&r.value?.state==='pending')||failed.some(r=>!r.reason?.status||r.reason.status===401||r.reason.status===429||r.reason.status>=500);
+    if(failed.length)showStoreError({code:'store/delivery-unavailable'});
+   }catch(e){storeRetryNeeded=true;showStoreError(e)}
+  })().finally(()=>recovering=null);return recovering;
+ };
+ setTimeout(()=>recoverStore(),4000);
  window.SkylineStoreLoad=load;
 }
 const STORE_ERR={'store-paused':'Coin purchases are paused for a moment. Nothing was charged. Please try again later.','store/sign-in-required':'Sign in to your Skyline account before buying coins.','store/payments-restricted':'Purchases are turned off on this device (Screen Time or device restrictions).','store/products-unavailable':'The App Store is not reachable right now. Try again when connected.','store/product-unavailable':'This coin pack is not available right now.','store/busy':'A purchase is already in progress.','store/purchase-unavailable':'The App Store could not complete this request. Nothing was charged; try again.','unavailable':'The Skyline service could not be reached. Check your connection and try again. Nothing was charged.',default:'The purchase could not be completed yet. If you were charged, your coins are delivered automatically the next time the app connects.'};
+Object.assign(STORE_ERR,{'store/local-save-only':'Your local backup is active. Pending purchases belong to your account wallet and will be checked when you choose account progress. Your local resources are unchanged.','store/cloud-setup-required':'Set up the signed-in account wallet to check its purchases. Your local save is unchanged.','store/test-account-required':'Free private purchase tests need a dedicated Skyline game test account. Your normal Apple account can stay on the iPhone.','store/account-changed':'The signed-in game account changed. Sign back in to the account that made the purchase to recover its coins.'});
 (()=>{const st=document.createElement('style');st.textContent='.sky-busy{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;background:rgba(5,12,20,.55);pointer-events:auto}.sky-busy>div{display:flex;align-items:center;gap:12px;padding:14px 20px;border-radius:16px;background:#0f2433;border:1.5px solid #e1bc66;color:#fff;font:700 16px system-ui}.sky-busy i{width:20px;height:20px;border-radius:50%;border:3px solid #e1bc66;border-right-color:transparent;animation:skyspin .8s linear infinite}@keyframes skyspin{to{transform:rotate(360deg)}}';document.head.append(st)})();
 function busy(text){const o=document.createElement('div');o.className='sky-busy';o.setAttribute('role','status');o.setAttribute('aria-live','polite');o.innerHTML='<div><i></i><span></span></div>';o.querySelector('span').textContent=text;document.body.append(o);let gone=false;return()=>{if(!gone){gone=true;o.remove()}}}
 async function notice(title,text,ok='OK'){const h=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);return modal({html:`<div class="mh">${h(title)}</div><div class="mtxt">${h(text)}</div>`,btns:[{k:true,label:ok,primary:true}]})}
+let storeNotice=null;
+function showStoreError(e){if(storeNotice)return;try{window.SkylineAccounts?.close?.()}catch(_){}storeNotice=notice('Purchase status',e.code==='store/wallet-refresh-unavailable'?'Your purchase status is saved, but the account balance could not refresh. Try Sync now in Account & recovery when connected. Do not buy again just to retry delivery.':STORE_ERR[e.code]||STORE_ERR.default).finally(()=>storeNotice=null).catch(()=>{})}
 async function verifyFirst(){const go=await modal({html:'<div class="mh">Verify your email first</div><div class="mtxt">Purchases and cloud save need a verified email. Open Account &amp; recovery, tap <b>Send verification email</b>, open the link, then tap <b>I have verified my email</b>.</div>',btns:[{k:true,label:'Open account',primary:true},{k:false,label:'Not now'}]});if(go)window.SkylineAccounts.open()}
 window.SkylineCloud={
  status:()=>({...engine.status(),last:status.last,state:status.state}),sync:()=>run({refresh:true}),
- purchasesReady:()=>!!store,price:id=>prices.get(id)||null,
+ // Do not fall back to a USD example when Apple's localized catalog is not loaded.
+ purchasesReady:()=>!!store,price:id=>prices.get(id)||(store?'View price':null),
  async buyPack(productId){
   if(!store)return false;
   // Every outcome is shown on screen. Toasts live in the in-game layer, which is hidden on the
   // home screen and shop, so purchases use their own busy panel and message box.
   const done=busy('Opening the App Store…');
+  let storeAttempted=false;
   try{
    const who=await window.SkylineAccounts.player(true).catch(()=>null);
    if(!who){done();await notice('Sign in to buy coins','Coins you buy are saved to your Skyline account. Sign in or create an account first.','Open account');window.SkylineAccounts.open();return true}
    if(who.providers?.includes('password')&&who.verified!==true){done();await verifyFirst();return true}
+   await storeAccount();
    if(!prices.has(productId))await window.SkylineStoreLoad();
    if(!prices.has(productId)){done();await notice('Coin pack not available','The App Store did not return this coin pack. Check your connection and try again in a few minutes. Nothing was charged.');return true}
-   const r=await store.buy(productId);done();
-   if(r?.state==='pending')await notice('Purchase waiting for approval','Coins arrive automatically once the purchase is approved.');
+   storeAttempted=true;const r=await store.buy(productId);if(r.walletPending||r.state==='pending'&&r.finished===false)storeRetryNeeded=true;done();
+   if(r?.state==='pending')await notice(r.finished===false?'Purchase delivery pending':'Purchase waiting for approval',r.finished===false?'The purchase is still being verified. The app will retry delivery automatically. Do not buy again to retry.':'Coins arrive automatically once the purchase is approved.');
+   else if(r?.state==='delivered'&&r.walletPending)await notice('Purchase saved','Your purchase was verified, but the account balance could not refresh. Try Sync now in Account & recovery when connected. Do not buy again just to retry delivery.');
    else if(r?.state==='delivered')await notice('Coins added','Your coins were added to your Skyline account.');
-  }catch(e){done();if(e?.code==='persistent-account-required')await verifyFirst();else await notice('Purchase not completed',STORE_ERR[e?.code]||STORE_ERR.default)}
+   else if(r?.state==='refunded')await notice('Purchase refunded','This transaction was refunded. No coins were added for it.');
+  }catch(e){if(storeAttempted)storeRetryNeeded=true;done();if(e?.paymentMayHaveCompleted)await notice('Checking purchase status','The App Store purchase started, but delivery could not be confirmed yet. The app will check unfinished purchases again. Stay with the same Skyline game account; do not buy again just to retry delivery.');
+   else if(e?.code==='persistent-account-required')await verifyFirst();
+   else if(['store/local-save-only','store/cloud-setup-required','store/test-account-required'].includes(e?.code)){
+    const message=e.code==='store/local-save-only'?'Your restored local save is active. Purchased coins belong to an account wallet. Keep this local save as a backup and choose account progress before buying. Nothing was charged.':e.code==='store/test-account-required'?'This private build uses free Apple test purchases. Sign in to a dedicated Skyline game test account; your normal Apple account can stay on the iPhone. Nothing was charged.':'Set up cloud save for the signed-in Skyline account before buying coins. Nothing was charged.';
+    await notice('Account wallet needed',message,'Open account');window.SkylineAccounts.open();
+   }else await notice('Purchase not completed',STORE_ERR[e?.code]||STORE_ERR.default)}
   finally{done()}
   return true;
  },
@@ -159,9 +196,10 @@ window.SkylineCloud={
     engine.resume({discardMigration:true});PREF.cloudLocalOnly=false;rawSave();engine.forgetDecline(user.uid);
     const r=await run({refresh:true}),after=engine.status();
     if(after.owner!==user.uid||!after.migrated){PREF.cloudLocalOnly=true;rawSave();engine.pause();if(r.state==='error')throw Object.assign(Error(r.code),{code:r.code})}
+    else await recoverStore(true);
    },'Progress choice saved.'))}
-  else if(s.owner===user.uid&&s.migrated){box.append(el('p',s.pending?`${s.pending} change${s.pending===1?'':'s'} waiting to sync. Your progress is safe on this device meanwhile.`:'Your coins, XP and collection are saved to this account.'));if(s.profile?.debt)box.append(el('p',`A refunded purchase left ${nf(s.profile.debt)} coins to pay back. New coins pay this first.`));button(box,'Sync now',()=>act(()=>run({refresh:true}),'Synced.'))}
-  else{box.append(el('p','This device is not saving to your account yet.'));button(box,'Set up cloud save',()=>act(async()=>{engine.forgetDecline(user.uid);await run({refresh:true})},'Cloud save updated.'))}
+  else if(s.owner===user.uid&&s.migrated){box.append(el('p',s.pending?`${s.pending} change${s.pending===1?'':'s'} waiting to sync. Your progress is safe on this device meanwhile.`:'Your coins, XP and collection are saved to this account.'));if(s.profile?.debt)box.append(el('p',`A refunded purchase left ${nf(s.profile.debt)} coins to pay back. New coins pay this first.`));button(box,'Sync now',()=>act(()=>syncAndRecover(true),'Synced.'))}
+  else{box.append(el('p','This device is not saving to your account yet.'));button(box,'Set up cloud save',()=>act(async()=>{engine.forgetDecline(user.uid);await syncAndRecover(true)},'Cloud save updated.'))}
   const list=backups();if(list.length){box.append(el('p','Device backups (kept on this device only):'));for(const b of list){const row=el('div',null,{className:'sky-account-actions'});row.append(el('span',`${new Date(b.at).toLocaleString()} · ${nf(b.coins)} coins`));const active=s.localOnly&&PREF.cloudRestoredBackup===b.key;button(row,active?'Restored':'Restore',()=>restore(b.key),active);box.append(row)}}
   if(store&&bridge?.recentPurchases)box.append(purchaseHelp(el,button,act));
   body.append(box);

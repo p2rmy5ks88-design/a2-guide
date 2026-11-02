@@ -83,6 +83,8 @@ jobs:
           node skyline-estates-app/test-promos/local-test-promo.test.cjs
           node skyline-estates/tests/cloud-restore.cjs
           node skyline-estates/security/service/cloud-profile.test.cjs
+          node --test skyline-estates/security/service/storekit-client.test.cjs
+          node skyline-estates/security/service/iap-lifecycle.test.cjs
           python3 skyline-estates/tests/build-pipelines.py
           python3 skyline-estates-app/scripts/verify-ios-sdk.test.py
           python3 skyline-estates-app/scripts/verify-signed-apple.test.py
