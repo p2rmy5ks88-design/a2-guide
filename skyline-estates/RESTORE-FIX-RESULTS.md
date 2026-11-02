@@ -18,3 +18,11 @@ Rollback point: `d9c2dc4fa0808e3ccf0965282c1594ea558a1aae` (private TestFlight b
 - Native bundle parity preserves the game source and all 173 shared assets. No board, camera, pricing, reward amount or rule changes.
 
 Physical iPhone restoration remains owner validation after the private TestFlight update. Build/upload/Apple processing results will be recorded separately when confirmed. Do not delete the installed app or its backups.
+
+## Private iOS delivery checkpoint
+
+Build **1.0 (153)**, runtime source `a4f8e971862f35ed8cf21d5ab010cd02a0c8bc56`, completed workflow [41410069695](https://github.com/p2rmy5ks88-design/a2-guide/actions/runs/41410069695). All steps passed, including 13 restore checks, 16 cloud checks, simulator build, ARM64 bundle verification, signing and archive. The signing log explicitly confirms **internal TestFlight only**; upload succeeded **2 November 2026 at 08:12:26 UTC**. Purchases remain off.
+
+At this checkpoint, Apple's browser session has expired. Owner sign-in is needed to confirm processing and assign the build to Skyline iOS QA. Do not claim the build is installable until Apple/group confirmation. The public App Store submission, main branch, live web deployment and backend were not changed.
+
+The accompanying test-only change waits for the real loading screen to disappear before capturing the restored account section. Both Chromium and WebKit runs passed and their screenshots were visually inspected. Runtime code is identical to the uploaded build; this follow-up changes only test capture timing and this report.

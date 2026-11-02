@@ -75,7 +75,7 @@ const types={'.html':'text/html','.js':'text/javascript','.css':'text/css','.jso
  check('selected backup is retained',await A.page.evaluate(()=>JSON.parse(localStorage.getItem('skylinePrefs.backup.123')).prefs.coins===1001245));
  await recoveryPanel(A.page);
  check('recovery UI clearly shows local mode and selected backup as restored',await A.page.getByText(/Local backup active/).isVisible()&&await A.page.getByRole('button',{name:'Restored',exact:true}).isDisabled());
- if(shots)await A.page.screenshot({path:path.join(shots,'cloud-restored-local-landscape.png')});
+ if(shots){await A.page.locator('#boot').waitFor({state:'hidden',timeout:15000});await A.page.screenshot({path:path.join(shots,'cloud-restored-local-landscape.png')});}
  await A.page.evaluate(async()=>{addCoins(50,'Local restored game');await SkylineCloud.sync()});await A.page.reload();
  await A.page.waitForFunction(()=>typeof SkylineCloud==='object');await A.page.evaluate(()=>SkylineCloud.sync());
  check('playing and another restart preserve local-only rewards without uploading',await A.page.evaluate(()=>PREF.coins===1001295&&PREF.xp===500400&&PREF.cloudLocalOnly)&&(await profile.get('alice')).coins===800);
