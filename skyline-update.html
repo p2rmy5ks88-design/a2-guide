@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#10223f">
+<title>Update Skyline Estates</title>
+<style>
+*{box-sizing:border-box}body{margin:0;padding:24px;min-height:100svh;display:grid;place-items:center;background:#09172b;color:#edf3fa;font:16px/1.6 system-ui}main{width:min(100%,560px);padding:28px;border:1px solid #355367;border-radius:22px;background:#12253c}h1{font-size:26px;line-height:1.2;color:#efcf83}button,a{display:inline-block;padding:12px 18px;min-height:48px;border-radius:12px;font:700 16px system-ui}button{border:0;background:#edca77;color:#10223f;cursor:pointer}button:disabled{opacity:.65}a{color:#bbebe5;border:1px solid #518f90;text-decoration:none;margin-top:12px}small{display:block;color:#b7c6d5;margin-top:20px}#status{padding:14px;border-radius:12px;background:#0a1a2c}button:focus-visible,a:focus-visible{outline:3px solid #8bddd1;outline-offset:3px}
+</style>
+<main>
+<h1>Update Skyline Estates</h1>
+<p>Keep your saved game, Skyline Cash and Coins while checking for the latest web version.</p>
+<ol><li>Save and exit any open match.</li><li>Select <strong>Check for update</strong> and wait for the download.</li><li>Close every Skyline game tab and any home-screen copy, then reopen the game.</li></ol>
+<button id="check" type="button">Check for update</button>
+<p id="status" role="status" aria-live="polite">Your saved data stays on this device. This page does not clear it.</p>
+<a href="./skyline-estates/" id="play">Open Skyline Estates</a>
+<small>Updates apply after the old game tabs close. Keep this page open while the update downloads. An internet connection is needed.</small>
+</main>
+<script>
+'use strict';
+const button=document.querySelector('#check'),status=document.querySelector('#status');
+button.addEventListener('click',async()=>{
+  button.disabled=true;status.textContent='Checking and downloading the latest web version…';
+  try{
+    if(!isSecureContext||!('serviceWorker' in navigator))throw Error('This browser cannot install offline updates. Open the game online in Safari or Chrome.');
+    const registration=await navigator.serviceWorker.register('./skyline-estates/sw.js',{scope:'./skyline-estates/',updateViaCache:'none'});
+    await registration.update();
+    const worker=registration.installing;
+    if(worker)await new Promise((resolve,reject)=>{
+      const changed=()=>{if(worker.state==='installed'||worker.state==='activated')resolve();else if(worker.state==='redundant')reject(Error('The download did not finish. Check your connection and try again.'));};
+      worker.addEventListener('statechange',changed);changed();
+    });
+    status.textContent='Update check complete. Close every Skyline game tab and any home-screen copy, then reopen the game. Your saved data has been kept.';
+  }catch(error){status.textContent=error.message||'Could not download the update. Check your connection and try again.'}
+  finally{button.disabled=false}
+});
+</script>
+</html>
