@@ -229,6 +229,7 @@ jobs:
           python3 skyline-estates/build.py --check
           node skyline-estates/tests/market-pulse.cjs
           node skyline-estates/tests/showcase-browser.cjs
+          node skyline-estates/tests/challenges-browser.cjs
           node skyline-estates/tests/currency-browser.cjs
           node skyline-estates/tests/visual-correction-browser.cjs
       - name: Upload before-release visual evidence
@@ -245,4 +246,6 @@ jobs:
             ${{ runner.temp }}/market-*.json
             ${{ runner.temp }}/showcase-*.png
             ${{ runner.temp }}/showcase-*.json
+            ${{ runner.temp }}/challenges-*.png
+            ${{ runner.temp }}/challenges-*.json
           if-no-files-found: ignore

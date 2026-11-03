@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-180.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Skyline Estates"><meta name="theme-color" content="#10223f"><script src="../eko-estates/firebase-config.js"></script><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui}img{max-width:100%}[hidden]{display:none!important}</style><link rel="stylesheet" href="./lib/menu-presentation.css"><link rel="stylesheet" href="./lib/market-pulse.css"><link rel="stylesheet" href="./web/skyline-showcase.css"></head><body><title>Skyline Estates</title>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-180.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Skyline Estates"><meta name="theme-color" content="#10223f"><script src="../eko-estates/firebase-config.js"></script><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui}img{max-width:100%}[hidden]{display:none!important}</style><link rel="stylesheet" href="./lib/menu-presentation.css"><link rel="stylesheet" href="./lib/market-pulse.css"><link rel="stylesheet" href="./web/skyline-showcase.css"><link rel="stylesheet" href="./web/challenges.css"></head><body><title>Skyline Estates</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@700&family=Manrope:wght@500;600;700;800&display=swap">
@@ -4695,7 +4695,7 @@ const seasonNo=()=>Math.max(2,Math.floor((Date.now()-SEASON_EPOCH)/SEASON_LEN)+2
 const seasonName=n=>SEASON_NAMES[(n-1)%SEASON_NAMES.length];
 const seasonEnds=()=>SEASON_EPOCH+(seasonNo()-1)*SEASON_LEN;
 const PREM_PRICE=1200;
-function season(){const n=seasonNo();let S=PREF.season;if(!S||S.n!==n){if(S&&PREF.trophies>800)PREF.trophies=Math.round(800+(PREF.trophies-800)/2);S=PREF.season={n,sxp:0,prem:false,cf:{},cp:{},tr:0,wk:null};savePref()}return S}
+function season(){const n=seasonNo();let S=PREF.season;if(!S||S.n<n){if(S&&PREF.trophies>800)PREF.trophies=Math.round(800+(PREF.trophies-800)/2);S=PREF.season={n,sxp:0,prem:false,cf:{},cp:{},tr:0,wk:null};savePref()}return S}
 function seasonXP(n){const S=season();S.sxp+=n}
 const seasonTierNow=()=>Math.min(TIERS,Math.floor(season().sxp/TIER_XP));
 /* Skyline Gala rewards: an item every few tiers on both tracks, a free board style, and a season-only avatar frame at the top */
@@ -4711,7 +4711,7 @@ function seasonClaimable(){const S=season(),t=seasonTierNow();let n=0;for(let i=
 const WEEKLY=[
   {id:'wins3',n:'Win 3 games',g:3,k:'wins'},{id:'games5',n:'Finish 5 games',g:5,k:'games'},{id:'countries2',n:'Play in 2 different countries',g:2,k:'countries'},
   {id:'houses15',n:'Build 15 houses',g:15,k:'houses'},{id:'rent3000',n:'Collect {m3000} in rent',g:3000,k:'rent',money:1},{id:'trades4',n:'Complete 4 trades',g:4,k:'trades'},
-  {id:'auctions3',n:'Win 3 auctions',g:3,k:'auctions'},{id:'towers3',n:'Build 3 towers',g:3,k:'towers'},{id:'online2',n:'Finish 2 online games',g:2,k:'online'}];
+  {id:'auctions3',n:'Win 3 auctions',g:3,k:'auctions'},{id:'towers3',n:'Build 3 towers',g:3,k:'towers'},{id:'online2',n:'Finish 2 online games',g:2,k:'online'},{id:'strategic2-v1',n:'Finish 2 qualifying Strategic Event matches',g:2,k:'qualifiedStrategic'},{id:'pulse2-v1',n:'Finish 2 qualifying Market Pulse matches',g:2,k:'qualifiedPulse'}];
 const WEEK_SXP=400,WEEK_COINS=60;
 function weekNo(){return Math.floor((Date.now()-SEASON_EPOCH)/(7*864e5))}
 function weekly(){const S=season(),w=weekNo();if(!S.wk||S.wk.w<w){const r=seeded(w*13+5),pick=[];while(pick.length<3){const m=WEEKLY[Math.floor(r()*WEEKLY.length)];if(!pick.includes(m.id))pick.push(m.id)}S.wk={w,list:pick,prog:{},done:{},cs:[]};savePref()}return S.wk}
@@ -7559,7 +7559,7 @@ function boot(data){
   if(data&&data.G){try{const g=JSON.parse(data.G);startWith(g);return}catch(e){}}
   showTitle();
 }
-</script><script src="./lib/skyline-sc-wallet.js"></script><script src="./lib/skyline-currency.js"></script><script src="./lib/skyline-earned-cash.js"></script><script src="./lib/market-pulse.js"></script><script>
+</script><script src="./lib/skyline-sc-wallet.js"></script><script src="./lib/skyline-currency.js"></script><script src="./lib/skyline-earned-cash.js"></script><script src="./lib/market-pulse.js"></script><script src="./web/challenges.js"></script><script>
 try{const h=window.claude?.hot;if(h&&h.ready)h.ready(boot);else boot(h?.data??{})}catch(e){boot({})}
 setTimeout(()=>{try{const c=(new URLSearchParams(location.search).get('join')||'').toUpperCase();if(!/^[A-Z0-9]{5}$/.test(c)||!FIRE)return;history.replaceState(null,'',location.pathname);if(!G||G.over)openOnline(c)}catch(e){}},1200);
 </script>
