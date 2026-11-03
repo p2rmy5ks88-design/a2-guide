@@ -53,3 +53,19 @@
 @media(max-height:360px) and (orientation:landscape){.pfm .pfm-stats span:nth-child(4){display:none}.pfm .pfm-pips{display:none}}
 /* Phone layouts scale #modals down (~0.89): size so rendered targets stay ≥44 px (Redeem ≥48 px). */
 @media(max-height:500px) and (orientation:landscape){.pfm .pfm-btn,.pfm .pfm-tabs button,.pfm .pfm-x{min-height:50px}.pfm .pfm-btn.big{min-height:55px}}
+/* Daylight: light sheet, navy text, gold primary actions. */
+html.light .mp.pf2.pfm{background:linear-gradient(180deg,#ffffff,#f1f4f8);color:#13284a;border-color:#c9a85a}
+html.light .pfm .pfm-top h2{color:#9a6c12}
+html.light .pfm .pfm-x,html.light .pfm .pfm-tabs button,html.light .pfm .pfm-btn{background:#ffffff;color:#13284a;border-color:#cfd8e2}
+html.light .pfm .pfm-btn.ghost{background:transparent;color:#304a60}
+html.light .pfm .pfm-tabs button em{background:#e7edf3;color:#13284a}
+html.light .pfm .pfm-tabs button.on,html.light .pfm .pfm-btn.gold{background:linear-gradient(180deg,#f3d27e,#d9a845);color:#1a1406;border-color:#c9a85a}
+html.light .pfm .pfm-stats span,html.light .pfm .pfm-row{background:#ffffff;border-color:#d3dbe4}
+html.light .pfm .pfm-stats small,html.light .pfm .pfm-group span,html.light .pfm .pfm-cost small{color:#526781}
+html.light .pfm .pfm-stats b,html.light .pfm .pfm-cost b{color:#8a6414}
+html.light .pfm .pfm-group,html.light .pfm .pfm-group b,html.light .pfm .pfm-info b{color:#13284a}
+html.light .pfm .pfm-info small{color:#526781}html.light .pfm em.bad{color:#c0392b}
+html.light .pfm .pfm-pips i{background:#d9e2ea}html.light .pfm .pfm-why{color:#9a5a00}
+html.light .pfm .pfm-btn:disabled{background:#eef2f6;color:#8a9aab;border-color:#dde4eb}
+html.light .pfm .pfm-empty{color:#304a60}
+html.light .ov.pfmov{background:rgba(19,40,74,.28)!important}
