@@ -15,11 +15,11 @@ const copy=x=>JSON.parse(JSON.stringify(x)),report={production:false,matches:[]}
  await svc.start.startGame('host',{requestId:requestId(),code:room.code,revision:1});
  let v,rolls=0,operations=0;
  for(;operations<2000;operations++){
-  now+=2000;v=await svc.views.readGame('host',{code:room.code});if(v.status==='over')break;
+  now+=5000;v=await svc.views.readGame('host',{code:room.code});if(v.status==='over')break;
   const actor=['host','guest'][v.actorSeat];v=await svc.views.readGame(actor,{code:room.code});const b={requestId:requestId(),code:room.code,revision:v.revision},d=v.decision;
   if(v.stage==='pre'){const r=await svc.plans.reserveRoll(actor,b);await svc.turns.commitRoll(actor,{...b,requestId:requestId(),planId:r.planId});rolls++}
   else if(v.stage==='post')await svc.turns.endTurn(actor,b);
-  else if(v.stage==='purchase')await svc.turns.choose(actor,{...b,kind:d.canBuy?'buy':'decline'});
+  else if(v.stage==='purchase')await svc.turns.choose(actor,{...b,kind:d.canBuy&&v.game.players[v.seat].cash-d.price>=350?'buy':'decline'});
   else if(v.stage==='card')await svc.turns.choose(actor,{...b,kind:'drawCard'});
   else if(v.stage==='jail'){if(d.canPay)await svc.turns.choose(actor,{...b,kind:'payBail'});else{const r=await svc.plans.reserveJailRoll(actor,b);await svc.turns.commitJailRoll(actor,{...b,requestId:requestId(),planId:r.planId});rolls++}}
   else if(v.stage==='auction'){if(!Number.isInteger(d.seat))await svc.turns.choose(actor,{...b,kind:'startAuction'});else await svc.turns.auctionBid(actor,{...b,amount:0})}
