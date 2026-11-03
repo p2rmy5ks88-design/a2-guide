@@ -36,10 +36,24 @@ const check=(n,v)=>{assert.ok(v,n);report.checks.push(n);console.log('PASS',n)};
   for(const id of ['season-games-v1','season-cities-v1','season-build-v1']){const s=SkylineChallenges.specs.find(s=>s.id===id);ok(id+' reaches target',SkylineChallenges.value(s)===s.target);ok(id+' claims', (await SkylineChallenges.claim(id)).ok)}
   const now=Date.now,latest=season().n;Date.now=()=>SEASON_EPOCH-864e5;ok('clock rollback retains Season and claim flags',season().n===latest&&!!SkylineChallenges.claims()['s'+latest+':'+spec.id]);Date.now=()=>SEASON_EPOCH+(latest-1)*SEASON_LEN+1;ok('next Season resets new objectives',season().n===latest+1&&SkylineChallenges.value(spec)===0);Date.now=now;
   ok('wallet and inventory survive Season reset',itemOwned('dice','mint')&&SkylineEarnedCash.balance()>=oldSC+25);ok('existing save key preserved',localStorage.getItem(SKEY)===beforeSave);
+
+  const who=challengeFixture('stockholm','storage-recovery');SkylineChallenges.record(who);const stock=SkylineChallenges.specs.find(s=>s.city==='stockholm');
+  const originalSet=Storage.prototype.setItem,cb=PREF.coins,xb=PREF.xp,sb=SkylineEarnedCash.balance();let failed=false;
+  Storage.prototype.setItem=function(k,v){if(k===PKEY&&!failed){failed=true;throw Error('quota probe')}return originalSet.call(this,k,v)};
+  const rejected=await SkylineChallenges.claim(stock.id);Storage.prototype.setItem=originalSet;
+  ok('profile write failure rejects claim',!rejected.ok);ok('failed profile commit preserves rewards',PREF.coins===cb&&PREF.xp===xb&&SkylineEarnedCash.balance()===sb);
+  ok('failed profile claim can retry safely',(await SkylineChallenges.claim(stock.id)).ok);
+  const dub=challengeFixture('dubai','wallet-recovery');SkylineChallenges.record(dub);const ds=SkylineChallenges.specs.find(s=>s.city==='dubai');let broken=false;
+  Storage.prototype.setItem=function(k,v){if(k.includes('objective-reward')&&!broken){broken=true;throw Error('wallet probe')}return originalSet.call(this,k,v)};
+  const interrupted=await SkylineChallenges.claim(ds.id);Storage.prototype.setItem=originalSet;const committedCoins=PREF.coins,committedXP=PREF.xp;
+  ok('interrupted SC write reports pending recovery',!interrupted.ok);SkylineChallenges.repair();
+  ok('SC receipt recovery retains claimed profile rewards',PREF.coins===committedCoins&&PREF.xp===committedXP&&SkylineEarnedCash.view().transactions.some(t=>t.id==='objective-reward:s'+season().n+':'+ds.id));
+  const concurrent=await Promise.all([SkylineChallenges.claim(ds.id),SkylineChallenges.claim(ds.id)]);ok('concurrent retries cannot repeat rewards',concurrent.every(r=>!r.ok)&&PREF.coins===committedCoins);
+  G.progDone=false;const replayBefore=JSON.stringify(PREF);progressGameEnd(dub);ok('replayed finished match cannot grant existing profile rewards',JSON.stringify(PREF)===replayBefore);
   return checks;
  });result.forEach(n=>check(n,true));
  for(const tab of ['daily','season','spotlight','ach','shop','portfolio']){await p.evaluate(tab=>homeTab(tab),tab);await p.waitForTimeout(80);check(tab+' opens without exceptions',report.errors.length===0)}
- await p.evaluate(()=>homeTab('season'));await p.locator('.challenge-extension summary').click();await p.screenshot({path:path.join(out,`challenges-${engine}-season.png`)});
+ await p.evaluate(()=>homeTab('season'));await p.locator('.challenge-extension summary').click();await p.locator('.challenge-cards article').first().scrollIntoViewIfNeeded();await p.screenshot({path:path.join(out,`challenges-${engine}-season.png`)});
  const last=p.locator('[data-objective]').last();await last.scrollIntoViewIfNeeded();check('landscape objective action remains reachable',await last.isVisible());
  await p.reload();await ready();check('claimed objective receipt survives refresh',await p.evaluate(()=>Object.keys(SkylineChallenges.claims()).length>=4));
  check('no browser exceptions',report.errors.length===0);await context.close();
