@@ -27,7 +27,7 @@
    await rankings();await community();
   });box.querySelector('[data-connect]')?.addEventListener('click',load);
  }
- function showInvite(){if(!CONFIG.enabled||!/^#skyline-room=/.test(location.hash)||!document.querySelector('#title'))return;let b=document.querySelector('.verified-invite-open');if(b)return;b=document.createElement('button');b.className='friendly-open verified-invite-open';b.textContent='Open verified friend invitation';b.onclick=()=>{homeTab('leagues');document.querySelector('.verified-card')?.scrollIntoView({block:'start'});b.remove()};document.body.append(b)}
+ function showInvite(){if(!CONFIG.enabled||!/^#skyline-room=/.test(location.hash)||!document.querySelector('#pane')||document.querySelector('.verified-card'))return;let b=document.querySelector('.verified-invite-open');if(b)return;b=document.createElement('button');b.className='friendly-open verified-invite-open';b.textContent='Open verified friend invitation';b.onclick=()=>{homeTab('leagues');document.querySelector('.verified-card')?.scrollIntoView({block:'start'});b.remove()};document.querySelector('#pane').append(b)}
  new MutationObserver(showInvite).observe(document.documentElement,{childList:true,subtree:true});window.addEventListener('hashchange',showInvite);
  window.SkylineVerified=Object.freeze({attach,api,settings,enabled:CONFIG.enabled});
 })();

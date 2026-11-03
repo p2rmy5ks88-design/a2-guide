@@ -25,6 +25,7 @@ jobs:
           node-version: 22
       - name: Verify isolated server package and natural matches
         run: |
+          node skyline-estates/tests/competition-transactions.cjs
           node skyline-estates/tests/competition-service.cjs
           node skyline-estates/tests/competition-match.cjs
       - uses: google-github-actions/auth@v3
@@ -36,7 +37,7 @@ jobs:
         run: npm install --prefix skyline-estates/competition-functions --no-audit --no-fund
       - name: Deploy only the isolated competition function
         working-directory: skyline-estates/competition-functions
-        run: npx --yes firebase-tools@14.12.0 deploy --non-interactive --project eko-estates --config firebase.json --only functions:skyline-competition
+        run: npx --yes firebase-tools@latest deploy --non-interactive --project eko-estates --config firebase.json --only functions:skyline-competition
       - name: Check public capability endpoint
         run: |
           curl --fail --silent --show-error https://europe-west1-eko-estates.cloudfunctions.net/skylineCompetition/v1/competition/capabilities > "$RUNNER_TEMP/competition-capabilities.json"
