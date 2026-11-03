@@ -233,6 +233,11 @@ a{color:var(--accent)}
       <span class="hero-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg></span>
       <div class="hero-text"><span class="eyebrow">Live events</span><h2>Events</h2><p class="lede">How each recurring and limited event works, what to buy, and how far free play gets you. Most events run on a roughly monthly cycle; event points expire at the end, but King Fishing Tickets and Dice carry over.</p></div>
     </header>
+    <div class="card" id="codesCard">
+      <div class="row between"><h3>Free redeem codes</h3><span class="src" id="codesUpd"></span></div>
+      <div id="codeList" class="codes"></div>
+      <p class="src" style="margin:0">Redeem at <a href="https://gift.archero2.com" target="_blank" rel="noopener">gift.archero2.com</a>: enter your User ID (in-game Settings), the code and the 4-digit check, then collect the rewards in your Mailbox. Each code works once per account.</p>
+    </div>
     <div class="subnav" role="group" aria-label="Event filter" id="evFilter">
       <button aria-pressed="true" data-ev="all">All</button>
       <button aria-pressed="false" data-ev="daily">Daily</button>
@@ -366,6 +371,12 @@ a{color:var(--accent)}
 
 <style id="premium">
 [hidden]{display:none!important}
+.codes{display:grid;gap:8px}
+button.code{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;align-items:center;text-align:left;width:100%;padding:10px 12px;border-radius:12px;border:1px dashed color-mix(in srgb,var(--accent) 45%,transparent);background:color-mix(in srgb,var(--accent) 6%,var(--raised));color:var(--fg);cursor:pointer;font:inherit}
+button.code b{font:700 .95rem var(--f-mono);color:var(--accent);letter-spacing:.02em;user-select:all;-webkit-user-select:all}
+button.code span{grid-column:1;font-size:.8rem;color:color-mix(in srgb,var(--fg) 70%,transparent)}
+button.code em{font-style:normal;color:var(--warn)}
+button.code i{grid-column:2;grid-row:1/3;font:600 .74rem var(--f-body);font-style:normal;color:var(--accent-ink);background:linear-gradient(135deg,var(--accent-2),var(--accent));padding:6px 10px;border-radius:999px}
 .resgrid{display:grid;gap:8px}
 .resrow{display:grid;grid-template-columns:22px minmax(0,1fr) 92px;gap:8px;align-items:center}
 .resrow .n{font:700 .8rem var(--f-mono);color:var(--accent);text-align:center}
@@ -798,7 +809,19 @@ const TWIN = [
 const TWIN_NOPAIR = ["Sharp Arrow","Arrow Rain","Revive"];
 const TWIN_COST = [["Legendary+2 + Legendary+2","5,000","10,000"],["Legendary+2 + Legendary+3","7,500","15,000"],["Legendary+3 + Legendary+3","10,000","20,000"],["Legendary+2 + Mythic","12,500","25,000"],["Legendary+3 + Mythic","15,000","30,000"],["Mythic + Mythic","20,000","40,000"]];
 /* [other name you may see, name used in this app (Game Vault wiki), what it is, confidence] */
-const GAME = {ver:"v1.1.9", checked:"2026-10-21"};
+const GAME = {ver:"v1.1.9", checked:"2026-11-03"};
+/* Redeem codes: [code, rewards, expires YYYY-MM-DD or ""]. Expired ones hide automatically. */
+const CODES_UPDATED = "2026-11-01";
+const CODES = [
+  ["Halloween2026","200 Gems, 10 Energy, 10k Gold","2026-11-06"],
+  ["koeeeWR7","200 Gems",""],
+  ["AboveAllKlaus","200 Gems",""],
+  ["OneTeamNo1","200 Gems",""],
+  ["EXPKid","200 Gems",""],
+  ["A2xRM","300 Energy, 10 Gems, 10k Gold",""],
+  ["koeeeWR6","200 Gems",""],
+  ["lucky2026","20 Energy, 200 Gold",""]
+];
 const REPORT_URL = "https://github.com/p2rmy5ks88-design/a2-guide/issues/new";
 /* Last time each card was compared with current guides. Anything not listed uses GAME.checked. */
 const CHECKED = {
@@ -808,6 +831,7 @@ const CHECKED = {
   "runes":"2026-10-18","event:Airship Trade":"2026-10-20","chapters":"2026-10-17","heroes":"2026-10-17"
 };
 const CHANGELOG = [
+  ["2026-11-03","Events",["Free redeem codes card at the top of Events, with tap-to-copy (Halloween2026 runs until 6 Nov)","Checked for game updates: still v1.1.9, builds unchanged"]],
   ["2026-10-21","Build checker",["Resonance slots: pick up to 3 resonance heroes with stars, scored against the S/A/B lineups for your set","\"Fill best for my set\" button","Saved loadouts now keep resonance"]],
   ["2026-10-20","Events",["Airship Trade: full guide from the in-game rules: refresh odds chart, daily routine, plunder and Guild Airship tips"]],
   ["2026-10-18","Trust & freshness",["\"Checked\" date and game version on every mode, event and preset","Report outdated info button on each card","This What's new page, with a guide to the Sourced / Inferred labels","Builds now described as starting points, with the reason they work"]],
@@ -1640,6 +1664,16 @@ function diceBlock(){
 
 /* =================== EVENTS =================== */
 let evFilter = "all";
+function renderCodes(){
+  const now = new Date().toISOString().slice(0,10);
+  const live = CODES.filter(c=>!c[2] || c[2]>=now);
+  $("#codesUpd").textContent = "List from " + fmtDate(CODES_UPDATED);
+  $("#codeList").innerHTML = live.map(([c,r,x])=>`<button class="code" data-code="${esc(c)}" type="button"><b>${esc(c)}</b><span>${esc(r)}${x?` · <em>until ${fmtDate(x)}</em>`:""}</span><i>Copy</i></button>`).join("") || `<p class="empty">No known active codes right now.</p>`;
+}
+$("#codeList").addEventListener("click", async e=>{ const b=e.target.closest("[data-code]"); if(!b) return; const t=b.querySelector("i");
+  try { await navigator.clipboard.writeText(b.dataset.code); t.textContent="Copied"; }
+  catch(_) { const r=document.createRange(); r.selectNodeContents(b.querySelector("b")); const sel=getSelection(); sel.removeAllRanges(); sel.addRange(r); t.textContent="Selected"; }
+  setTimeout(()=>t.textContent="Copy",1500); });
 function renderEvents(){
   const list = EVENTS.filter(e=>evFilter==="all"||e.cyc===evFilter);
   $("#eventList").innerHTML = list.map(e=>`<details class="fold"${e.visual?" open":""}>
@@ -1748,7 +1782,7 @@ $("#savedList").addEventListener("click", e=>{
 $("#heroSearch").addEventListener("input", e=>renderHeroes(e.target.value));
 
 try { localStorage.removeItem("a2-acct"); } catch(e){}
-fillSelects(); renderMyRunes(); renderResult(); renderSaved(); renderModes(); renderChapters(); renderEvents(); renderChecks(); renderMore(); renderHeroes();
+fillSelects(); renderMyRunes(); renderResult(); renderSaved(); renderModes(); renderChapters(); renderEvents(); renderCodes(); renderChecks(); renderMore(); renderHeroes();
 const hsh = location.hash.replace("#","");
 const start = TABS.includes(hsh) ? hsh : ls.get("a2-tab","build");
 if(TABS.includes(start) && start!=="build") showTab(start);
