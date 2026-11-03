@@ -28,7 +28,15 @@
   if(receipt){if(G.set.events2)weeklyAdd('qualifiedStrategic',1);if(G.set.marketPulse)weeklyAdd('qualifiedPulse',1)}return receipt;
  }
  const oldProgress=progressGameEnd;progressGameEnd=function(w){if(G?.masteryId&&(PREF.tokenMastery?.receipts?.[G.masteryId]||rows().some(t=>t.id==='objective-match:'+G.masteryId)))return null;const r=oldProgress.apply(this,arguments);try{if(r)record(w)}catch(e){error=e.message}return r};
- function repair(){for(const [id,c]of Object.entries(claims()))if(c?.version===1&&SPEC.some(s=>id==='s'+c.season+':'+s.id&&s.sc===c.sc&&s.title===c.title))ledger.record('objective-reward:'+id,c.sc,'challenge',c.title,{season:c.season});PREF.scReserve=ledger.view().balance}
+ function repair(){
+  // A native device-backup restore must not reopen an already-paid objective.
+  // SC receipts survive profile rollback; restore only the claim marker, never
+  // award Coins/XP again or rewrite the restored profile's balances.
+  for(const t of ledger.view().transactions){if(t.source!=='challenge'||!Number.isSafeInteger(t.season)||!SPEC.some(s=>t.id==='objective-reward:s'+t.season+':'+s.id&&t.amount===s.sc&&t.label===s.title))continue;
+   const id=t.id.slice('objective-reward:'.length);if(!claims()[id])PREF.challengeClaims={...claims(),[id]:{version:1,season:t.season,title:t.label,sc:t.amount,at:t.at}};
+  }
+  for(const [id,c]of Object.entries(claims()))if(c?.version===1&&SPEC.some(s=>id==='s'+c.season+':'+s.id&&s.sc===c.sc&&s.title===c.title))ledger.record('objective-reward:'+id,c.sc,'challenge',c.title,{season:c.season});PREF.scReserve=ledger.view().balance;
+ }
  async function claim(id){
   if(!navigator.locks)return {ok:false,message:'Claiming needs secure browser storage locking. Your progress is kept.'};
   return navigator.locks.request('skyline-challenge-claims',()=>{

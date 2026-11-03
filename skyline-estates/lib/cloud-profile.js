@@ -60,11 +60,13 @@ function createCloudProfile({storage,http,account,adapter,ask=async()=>null,noti
  const rid=randomId||(()=>{const b=new Uint8Array(18);(scope.crypto||require('node:crypto').webcrypto).getRandomValues(b);return 'c'+Array.from(b,x=>x.toString(16).padStart(2,'0')).join('')});
  const read=k=>{try{const v=storage.getItem(k);return v?JSON.parse(v):null}catch{return null}};
  const write=(k,v)=>{try{if(v==null)storage.removeItem(k);else storage.setItem(k,JSON.stringify(v));return true}catch{return false}};
- let running=null,declined=new Set(),journal={reasons:[],promos:[]},lastFetch=0;
+ let running=null,declined=new Set(),journal={reasons:[],promos:[]},lastFetch=0,paused=false;
+ const isPaused=()=>paused||adapter.localOnly?.()===true;
  const stateOf=uid=>uid?read(KEY+uid):null;
  const saveState=st=>write(KEY+st.uid,st);
  // Record local differences into the owner's outbox. Works while signed out/offline.
  function capture(){
+  if(isPaused())return null;
   const owner=adapter.owner();if(!owner)return null;const st=stateOf(owner);if(!st?.migrated||!st.shadow)return null;
   const now=norm(adapter.extract()),c=diff(now,norm(st.shadow));
   if(!c&&!journal.promos.length)return null;
@@ -77,7 +79,7 @@ function createCloudProfile({storage,http,account,adapter,ask=async()=>null,noti
   st.shadow=now;saveState(st);return changes;
  }
  function reconcile(st){
-  if(!st.profile)return;const t=target(st.profile,st.outbox);
+  if(isPaused()||!st.profile)return;const t=target(st.profile,st.outbox);
   adapter.apply(t,{debt:st.profile.debt||0});st.shadow=norm(adapter.extract());saveState(st);
  }
  function failure(e){return e?.code||(e?.status>=500?'unavailable':'network')}
@@ -86,42 +88,53 @@ function createCloudProfile({storage,http,account,adapter,ask=async()=>null,noti
  async function flush(acct,_st,{refresh=false}={}){
   const uid=acct.uid,fresh=()=>stateOf(uid);let changed=false;const done=new Set();
   for(;;){
+   if(isPaused())return;
    const st=fresh();if(!st)return;const op=st.outbox.find(o=>!done.has(o.requestId));if(!op||op.nextAt>clock())break;
    done.add(op.requestId);op.sent=true;saveState(st);
    try{const r=await http.request('POST','/v1/profile/sync',{requestId:op.requestId,changes:op.changes},acct.token);
+    if(isPaused())return;
+    // A save schedules capture on the next timer turn. A fast response can
+    // arrive first: record the current local delta before reconciling it away.
+    capture();
     const now=fresh();if(!now)return;now.outbox=now.outbox.filter(o=>o.requestId!==op.requestId);now.profile=r.profile;saveState(now);changed=true;
     for(const n of r.notes||[])notify('note',n);
-   }catch(e){const code=failure(e),now=fresh();if(!now)return;
+   }catch(e){if(isPaused())return;capture();const code=failure(e),now=fresh();if(!now)return;
     if(code==='account-removed'){detach(now);notify('account-removed');return}
     const o=now.outbox.find(x=>x.requestId===op.requestId);
     if(RETRYABLE.has(code)||e?.status>=500||!e?.status){if(o){o.tries++;o.nextAt=clock()+Math.min(300000,2000*2**Math.min(o.tries,8))}saveState(now);notify('offline',code);break}
     now.outbox=now.outbox.filter(x=>x.requestId!==op.requestId);saveState(now);notify('dropped',code);changed=true}
   }
-  if(!changed&&(refresh||clock()-lastFetch>300000)&&!(fresh()?.outbox.length)){
-   try{const p=await http.request('GET','/v1/profile',null,acct.token),now=fresh();if(!now)return;
+  if(!isPaused()&&!changed&&(refresh||clock()-lastFetch>300000)&&!(fresh()?.outbox.length)){
+   try{const p=await http.request('GET','/v1/profile',null,acct.token);
+    if(isPaused())return;
+    capture();const now=fresh();if(!now)return;
     // A capture during the read means the profile may be older than local changes; reconcile adds them back from the outbox.
     now.profile=p;saveState(now);lastFetch=clock();changed=true}
-   catch(e){const code=failure(e);if(code==='account-removed'){const now=fresh();if(now)detach(now);notify('account-removed');return}notify('offline',code)}
+   catch(e){if(isPaused())return;const code=failure(e);if(code==='account-removed'){const now=fresh();if(now)detach(now);notify('account-removed');return}notify('offline',code)}
   }
   if(changed){const now=fresh();if(now)reconcile(now)}
  }
  function detach(st){write(KEY+st.uid,null);if(adapter.owner()===st.uid)adapter.setOwner(null)}
  async function onboard(acct){
-  if(declined.has(acct.uid))return;
+  if(isPaused()||declined.has(acct.uid))return;
   let pending=read(MIGRATE_KEY);if(pending&&pending.uid!==acct.uid){pending=null;write(MIGRATE_KEY,null)}
   if(!pending){
    const profile=await http.request('GET','/v1/profile',null,acct.token),owner=adapter.owner();
+   if(isPaused())return;
    // Test accounts never take this device's progress: they only show their own cloud state, and the
    // device save is backed up and restored automatically when the tester signs out.
    const kind=profile.tester?'tester':owner&&owner!==acct.uid?'switch':profile.migrated?'merge':'first';
    const choice=await ask(kind,profile);
+   if(isPaused())return;
    if(!['import','cloud-only'].includes(choice)||(kind==='switch'||kind==='tester')&&choice!=='cloud-only'){declined.add(acct.uid);return}
    const snap=norm(adapter.extract());
    pending={uid:acct.uid,tester:kind==='tester',requestId:rid(),mode:choice,snapshot:choice==='import'?{coins:Math.max(0,snap.coins),xp:Math.max(0,snap.xp),items:snap.items,max:snap.max,flags:snap.flags,eq:snap.eq,eqRev:Math.max(1,clock())}:undefined};
    if(!write(MIGRATE_KEY,pending))throw Object.assign(Error('storage-unavailable'),{code:'storage-unavailable'});
   }
   const body={requestId:pending.requestId,mode:pending.mode};if(pending.snapshot)body.snapshot=pending.snapshot;
+  if(isPaused())return;
   const r=await http.request('POST','/v1/profile/migrate',body,acct.token);
+  if(isPaused())return;
   // Keep the whole device save before it is replaced by the account's state.
   adapter.backup(pending.tester?'before-tester':pending.mode==='import'&&r.mode==='first'?'moved-to-account':'before-account');
   const st={v:VERSION,uid:acct.uid,migrated:true,tester:!!pending.tester,profile:r.profile,outbox:[],shadow:null};
@@ -131,24 +144,28 @@ function createCloudProfile({storage,http,account,adapter,ask=async()=>null,noti
  // A call made while a sync is running waits for it and then runs again, so changes made
  // after the running sync captured its state are never reported as synced too early.
  async function sync(options={}){
+  if(isPaused())return{state:'local-only'};
   if(running)return running.then(()=>sync(options));
   running=(async()=>{
    const acct=await account(),owner=adapter.owner(),ownerState=stateOf(owner);
+   if(isPaused())return{state:'local-only'};
    // Leaving a test account (sign-out or another account): flush its last changes if possible, then put
    // the player's own device save back. Test coins never stay on the device.
    if(owner&&ownerState?.tester&&(!acct?.uid||acct.uid!==owner)){write(KEY+owner,null);adapter.restoreDevice('before-tester');return{state:'restored'}}
    if(!acct?.uid||!acct?.token)return{state:'signed-out'};
-   if(adapter.owner()!==acct.uid||!stateOf(acct.uid)?.migrated){await onboard(acct);if(adapter.owner()!==acct.uid)return{state:'local'}}
-   capture();const st=stateOf(acct.uid);await flush(acct,st,options);return{state:'synced',pending:stateOf(acct.uid)?.outbox.length||0};
+   if(adapter.owner()!==acct.uid||!stateOf(acct.uid)?.migrated){await onboard(acct);if(isPaused())return{state:'local-only'};if(adapter.owner()!==acct.uid)return{state:'local'}}
+   capture();const st=stateOf(acct.uid);await flush(acct,st,options);return isPaused()?{state:'local-only'}:{state:'synced',pending:stateOf(acct.uid)?.outbox.length||0};
   })().catch(e=>{notify('error',failure(e));return{state:'error',code:failure(e)}}).finally(()=>{running=null});
   return running;
  }
  return{
   capture,sync,
-  reason(why){if(typeof why==='string'&&why)journal.reasons.push(why.slice(0,60))},
-  promo(code){if(typeof code==='string'&&code)journal.promos.push(code.slice(0,40));return capture()},
+  pause(){paused=true;journal={reasons:[],promos:[]}},
+  resume({discardMigration=false}={}){if(discardMigration&&!write(MIGRATE_KEY,null))throw Object.assign(Error('storage-unavailable'),{code:'storage-unavailable'});paused=false},
+  reason(why){if(!isPaused()&&typeof why==='string'&&why)journal.reasons.push(why.slice(0,60))},
+  promo(code){if(isPaused())return null;if(typeof code==='string'&&code)journal.promos.push(code.slice(0,40));return capture()},
   forgetDecline(uid){declined.delete(uid)},
-  status(){const owner=adapter.owner(),st=stateOf(owner);return{owner,migrated:!!st?.migrated,pending:st?.outbox?.length||0,profile:st?.profile||null}},
+  status(){const owner=adapter.owner(),st=stateOf(owner);return{owner,localOnly:isPaused(),migrated:!!st?.migrated,pending:st?.outbox?.length||0,profile:st?.profile||null}},
   // Called after the server has removed the account.
   detach(uid){const st=stateOf(uid);if(st)detach(st);else if(adapter.owner()===uid)adapter.setOwner(null)}
  };

@@ -19,6 +19,9 @@ on:
   pull_request:
     paths:
       - "skyline-estates/game.html"
+      - "skyline-estates/build.py"
+      - "skyline-estates/web/**"
+      - "skyline-estates/security/service/*.mjs"
       - "skyline-estates/reference-redesign.js"
       - "skyline-estates/lib/**"
       - "skyline-estates/riders/**"
@@ -36,6 +39,9 @@ on:
     branches: [main]
     paths:
       - "skyline-estates/game.html"
+      - "skyline-estates/build.py"
+      - "skyline-estates/web/**"
+      - "skyline-estates/security/service/*.mjs"
       - "skyline-estates/reference-redesign.js"
       - "skyline-estates/lib/**"
       - "skyline-estates/riders/**"
@@ -190,6 +196,24 @@ jobs:
           python3 "$GITHUB_WORKSPACE/skyline-estates-app/scripts/verify-signed-apple.py" "$RUNNER_TEMP/SkylineEstates.xcarchive/Products/Applications/App.app"
           xcodebuild -exportArchive -archivePath "$RUNNER_TEMP/SkylineEstates.xcarchive" \
             -exportOptionsPlist "$RUNNER_TEMP/skyline-distribution/export.plist" -exportPath "$RUNNER_TEMP/export" $AUTH | tail -n 20
+          # Retain the same signed archive as an IPA, without retaining credentials.
+          python3 -c "import plistlib; p='$RUNNER_TEMP/skyline-distribution/export.plist'; d=plistlib.load(open(p,'rb')); d['destination']='export'; plistlib.dump(d,open(p,'wb'))"
+          xcodebuild -exportArchive -archivePath "$RUNNER_TEMP/SkylineEstates.xcarchive" \
+            -exportOptionsPlist "$RUNNER_TEMP/skyline-distribution/export.plist" -exportPath "$RUNNER_TEMP/signed-ipa" $AUTH | tail -n 20
+          test -n "$(find "$RUNNER_TEMP/signed-ipa" -maxdepth 1 -name '*.ipa' -print -quit)"
+          (cd "$RUNNER_TEMP/signed-ipa" && shasum -a 256 *.ipa > SHA256SUMS.txt)
+          printf 'Source: %s\nVersion: %s (%s)\nChannel: %s\nApp Store distribution IPA; installation is through TestFlight or the App Store.\n' "$GITHUB_SHA" "$VERSION_NAME" "$VERSION_CODE" "$SKYLINE_CLOUD_CHANNEL" > "$RUNNER_TEMP/signed-ipa/BUILD.txt"
+      - name: Retain signed App Store IPA
+        if: github.event_name == 'workflow_dispatch' && inputs.publish && success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: skyline-estates-ios-app-store-signed
+          retention-days: 30
+          if-no-files-found: error
+          path: |
+            ${{ runner.temp }}/signed-ipa/*.ipa
+            ${{ runner.temp }}/signed-ipa/SHA256SUMS.txt
+            ${{ runner.temp }}/signed-ipa/BUILD.txt
       - name: Upload simulator build and log
         if: always()
         uses: actions/upload-artifact@v4
