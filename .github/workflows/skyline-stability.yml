@@ -50,6 +50,7 @@ jobs:
           t 'node skyline-estates/tests/home-redesign-browser.cjs'
           t 'node skyline-estates/tests/collection-vault-browser.cjs'
           t 'node skyline-estates/tests/portfolio-fast-upgrades-browser.cjs'
+          t 'node skyline-estates/tests/testflight-hotfix-browser.cjs'
           t 'node skyline-estates/tests/portfolio-integrated-browser.cjs'
           t 'node skyline-estates/tests/gameplay-ux-browser.cjs'
           t 'node skyline-estates/tests/web-presentation-browser.cjs'
@@ -237,6 +238,8 @@ jobs:
           node skyline-estates/tests/challenges-browser.cjs
           node skyline-estates/tests/cloud-restore.cjs
           node skyline-estates/tests/native-roadmap-browser.cjs
+          node skyline-estates/tests/testflight-hotfix-browser.cjs
+          HOTFIX_NATIVE=1 node skyline-estates/tests/testflight-hotfix-browser.cjs
           node skyline-estates/tests/social-browser.cjs
           node skyline-estates/tests/verified-browser.cjs
           node skyline-estates/tests/competition-transactions.cjs
@@ -255,6 +258,9 @@ jobs:
           path: |
             ${{ runner.temp }}/native-roadmap-*.png
             ${{ runner.temp }}/native-roadmap-*.json
+            ${{ runner.temp }}/hotfix-*.json
+            ${{ runner.temp }}/sc-buildings-*.png
+            ${{ runner.temp }}/mortgage-*.png
             ${{ runner.temp }}/after-*.png
             ${{ runner.temp }}/after-*.json
             ${{ runner.temp }}/currency-*.png

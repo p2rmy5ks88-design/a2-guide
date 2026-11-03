@@ -11,6 +11,7 @@ on:
     paths:
       - "skyline-estates/game.html"
       - "skyline-estates/build.py"
+      - "skyline-estates/release_hotfixes.py"
       - "skyline-estates/web/**"
       - "skyline-estates/security/service/*.mjs"
       - "skyline-estates/reference-redesign.js"
@@ -31,6 +32,7 @@ on:
     paths:
       - "skyline-estates/game.html"
       - "skyline-estates/build.py"
+      - "skyline-estates/release_hotfixes.py"
       - "skyline-estates/web/**"
       - "skyline-estates/security/service/*.mjs"
       - "skyline-estates/reference-redesign.js"
