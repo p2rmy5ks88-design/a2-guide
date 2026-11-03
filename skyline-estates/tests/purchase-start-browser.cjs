@@ -9,11 +9,11 @@ const SERVICE='https://skyline-test.invalid/skylinePlayer';let browser,server,ch
 const check=(name,ok,detail)=>{assert.ok(ok,name+(detail!==undefined?' '+JSON.stringify(detail):''));checks++;console.log('PASS',name)};
 (async()=>{
  server=http.createServer((q,r)=>{const p=path.resolve(root,'.'+decodeURIComponent(q.url.split('?')[0]));if(!p.startsWith(root+path.sep))return r.writeHead(403).end();fs.readFile(p,(e,b)=>{r.writeHead(e?404:200,{'Content-Type':types[path.extname(p)]||'application/octet-stream'});r.end(e?'missing':b)})});
- await new Promise(r=>server.listen(0,'127.0.0.1',r));const url='http://127.0.0.1:'+server.address().port+'/skyline-estates/index.html';
+ await new Promise(r=>server.listen(0,'127.0.0.1',r));const url='http://127.0.0.1:'+server.address().port+(process.env.SKYLINE_NATIVE_BUNDLE?'/skyline-estates-app/www/index.html':'/skyline-estates/index.html');
  const useWebkit=process.env.SKYLINE_BROWSER==='webkit';browser=await(useWebkit?webkit:chromium).launch({headless:true,...(!useWebkit?{args:['--disable-webgl'],...(process.env.CHROME_PATH?{executablePath:process.env.CHROME_PATH}:{})}:{})});
  // who: null | {verified,providers}; products: list of ids StoreKit returns; binding: HTTP status for /v1/store/binding
  async function open({who={verified:true,providers:['password']},products=['coins_600','coins_1500','coins_4000','coins_10000'],binding=200,localOnly=false,cloudReady=true,tester=true,canPay=true,unfinishedFailures=0,purchaseFailure=false,channel='private-testing'}={}){
-  const ctx=await browser.newContext({viewport:{width:956,height:440},hasTouch:true,serviceWorkers:'block'}),page=await ctx.newPage();page.on('pageerror',e=>errors.push(String(e)));
+  const ctx=await browser.newContext({viewport:{width:956,height:440},deviceScaleFactor:shots?3:1,hasTouch:true,serviceWorkers:'block'}),page=await ctx.newPage();page.on('pageerror',e=>errors.push(String(e)));
   await page.addInitScript(({who,products,localOnly,cloudReady,tester,canPay,unfinishedFailures,purchaseFailure})=>{
    if(!localStorage.getItem('skylinePrefs'))localStorage.setItem('skylinePrefs',JSON.stringify({nickSet:true,welcomed:1,tutDone:1,coach:{pre:1,post:1},flat2d:true,rig:false,riders:false,coins:705,cloudOwner:localOnly?'local-device-backup':cloudReady&&who?'tester':undefined,cloudLocalOnly:localOnly}));
    if(cloudReady)localStorage.setItem('skylineCloud.v1.tester',JSON.stringify({v:1,uid:'tester',migrated:true,tester,profile:{coins:705,xp:0,inv:{},max:{},flags:{},eq:{},tester},outbox:[],shadow:{coins:705,xp:0,items:{},max:{},flags:{},eq:{}}}));
