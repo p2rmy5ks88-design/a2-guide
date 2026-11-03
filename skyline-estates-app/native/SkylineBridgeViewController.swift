@@ -18,7 +18,7 @@ class SkylineBridgeViewController: CAPBridgeViewController {
 public class SkylineSharePlugin: CAPPlugin, CAPBridgedPlugin {
     public let identifier = "SkylineSharePlugin"
     public let jsName = "SkylineShare"
-    public let pluginMethods = [CAPPluginMethod(name: "shareImage", returnType: CAPPluginReturnPromise)]
+    public let pluginMethods: [CAPPluginMethod] = [CAPPluginMethod(name: "shareImage", returnType: CAPPluginReturnPromise)]
 
     @objc func shareImage(_ call: CAPPluginCall) {
         guard let encoded = call.getString("base64"), encoded.utf8.count <= 14_000_000,
@@ -27,7 +27,7 @@ public class SkylineSharePlugin: CAPPlugin, CAPBridgedPlugin {
               let image = UIImage(data: data), image.size.width <= 4096, image.size.height <= 4096 else {
             call.reject("A valid Showcase PNG is required", "share/invalid-image"); return
         }
-        let text = String((call.getString("text") ?? "My Skyline · Skyline Estates").prefix(500))
+        let text = String((call.getString("text") ?? "My Skyline Â· Skyline Estates").prefix(500))
         DispatchQueue.main.async { [weak self] in
             guard let owner = self?.bridge?.viewController, owner.presentedViewController == nil else {
                 call.reject("Close the current sheet before sharing", "share/busy"); return
