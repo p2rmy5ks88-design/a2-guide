@@ -134,7 +134,20 @@
     button.title='Saved earned Skyline Cash · separate from match cash';
     coins.title='Skyline Coins · Shop, cosmetics and premium unlocks';
     if(!coins.querySelector('.skyline-coin-label'))coins.insertAdjacentHTML('beforeend','<span class="skyline-coin-label">Coins</span>');
+    requestAnimationFrame(fitLogo);
   }
+  /* The centred home logo must never sit under the SC / Coins pills: shrink it to the free gap
+     between the profile block and the pills, or hide it on very narrow headers. */
+  function fitLogo(){
+    const logo=document.querySelector('#title .hd-logo'),pill=document.querySelector('#tbSkylineCash'),who=document.querySelector('#tbWho');
+    if(!logo||!pill)return;logo.style.transform='';logo.style.visibility='';
+    const L=logo.getBoundingClientRect(),P=pill.getBoundingClientRect(),W=who?who.getBoundingClientRect():{right:0};
+    if(L.right<=P.left-8&&L.left>=W.right+8)return;
+    const centre=innerWidth/2,room=2*Math.min(P.left-8-centre,centre-W.right-8);
+    if(room<120){logo.style.visibility='hidden';return}
+    logo.style.transformOrigin='50% 0';logo.style.transform='translateX(-50%) scale('+Math.min(1,room/L.width).toFixed(3)+')';
+  }
+  addEventListener('resize',()=>requestAnimationFrame(fitLogo),{passive:true});
   const oldRail=railProfile;
   railProfile=function(){const result=oldRail.apply(this,arguments);refreshCashHeader();return result};
   function chip(text){const e=document.createElement('small');e.className='sc-reward';e.textContent=text;return e}
