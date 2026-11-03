@@ -23,8 +23,11 @@
    host.querySelector('[data-resume]').onclick=run(async()=>{const code=localStorage.getItem('skyline-verified-room');if(!code)throw Error('No verified match is saved on this device.');const client=await roomClient(),room=await client.room(code);client.close();await startRoom(room)});
    host.querySelector('[data-recover]').onclick=run(async()=>{const client=await roomClient(),p=client.pending();if(!p)throw Error('No room action needs recovery.');const r=await client.reconcile(p.requestId);await client.complete(p.requestId);if(r.resolution!=='committed')throw Error('The room action was not applied. Try the invitation again.');const room=await client.room(r.receipt.code);client.close();await startRoom(room)});
    host.querySelector('[data-join]').onclick=run(async()=>{const input=await invitation(host.querySelector('[data-join-code]').value),client=await roomClient();const sent=await client.mutate('join',{code:input.code,invite:input.invite,name:'SkylineGuest'},{track:true});const room=await client.room(sent.receipt.code);await client.complete(sent.requestId);client.close();await startRoom(room)});
+   if(/^#skyline-room=/.test(location.hash))host.querySelector('[data-join-code]').value=GAME+location.hash;
    await rankings();await community();
   });box.querySelector('[data-connect]')?.addEventListener('click',load);
  }
+ function showInvite(){if(!CONFIG.enabled||!/^#skyline-room=/.test(location.hash)||!document.querySelector('#title'))return;let b=document.querySelector('.verified-invite-open');if(b)return;b=document.createElement('button');b.className='friendly-open verified-invite-open';b.textContent='Open verified friend invitation';b.onclick=()=>{homeTab('leagues');document.querySelector('.verified-card')?.scrollIntoView({block:'start'});b.remove()};document.body.append(b)}
+ new MutationObserver(showInvite).observe(document.documentElement,{childList:true,subtree:true});window.addEventListener('hashchange',showInvite);
  window.SkylineVerified=Object.freeze({attach,api,settings,enabled:CONFIG.enabled});
 })();

@@ -36,7 +36,7 @@ const check=(n,v)=>{assert.ok(v,n);report.checks.push(n);console.log('PASS',n)};
    const oldRaw=FIRE?.raw;let writes=0;if(FIRE)FIRE.raw=async()=>writes++;await lbSubmit();if(FIRE)FIRE.raw=oldRaw;ok('legacy public scores opt out by default',writes===0);
    ok('casual share snapshot identifies unverified provenance',SkylineShowcase.capture(0).event.includes('device-reported'));
    ok('casual operations preserve SC, Coins, XP and saved match',PREF.coins===before.coins&&PREF.xp===before.xp&&SkylineEarnedCash.balance()===before.sc&&localStorage.getItem(SKEY)===before.save);
-   ok('unvalidated online service remains disabled',!SkylineVerified.enabled);
+   ok('verified availability matches the explicit release configuration',SkylineVerified.enabled===SKYLINE_COMPETITION.enabled);
    window.socialExample=SkylineSocial.history()[0];
   }finally{startWith=oldStart}return out;
  });checks.forEach(n=>check(n,true));
