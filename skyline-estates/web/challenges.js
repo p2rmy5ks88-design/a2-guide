@@ -27,7 +27,7 @@
   const receipt=ledger.record('objective-match:'+G.masteryId,0,'objective-match','Qualified challenge match',{version:1,season:season().n,city:G.set.city||'lagos',won:p===w,houses:Math.max(0,Math.min(1000,st.houses||0)),towers:G.own.filter(o=>o.o===p.id&&o.h===5).length,districts});
   if(receipt){if(G.set.events2)weeklyAdd('qualifiedStrategic',1);if(G.set.marketPulse)weeklyAdd('qualifiedPulse',1)}return receipt;
  }
- const oldProgress=progressGameEnd;progressGameEnd=function(w){if(G?.masteryId&&(PREF.tokenMastery?.receipts?.[G.masteryId]||ledger.view().transactions.some(t=>t.id==='objective-match:'+G.masteryId)))return null;const r=oldProgress.apply(this,arguments);try{if(r)record(w)}catch(e){error=e.message}return r};
+ const oldProgress=progressGameEnd;progressGameEnd=function(w){if(G?.masteryId&&(PREF.tokenMastery?.receipts?.[G.masteryId]||rows().some(t=>t.id==='objective-match:'+G.masteryId)))return null;const r=oldProgress.apply(this,arguments);try{if(r)record(w)}catch(e){error=e.message}return r};
  function repair(){for(const [id,c]of Object.entries(claims()))if(c?.version===1&&SPEC.some(s=>id==='s'+c.season+':'+s.id&&s.sc===c.sc&&s.title===c.title))ledger.record('objective-reward:'+id,c.sc,'challenge',c.title,{season:c.season});PREF.scReserve=ledger.view().balance}
  async function claim(id){
   if(!navigator.locks)return {ok:false,message:'Claiming needs secure browser storage locking. Your progress is kept.'};
