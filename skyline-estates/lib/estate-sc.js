@@ -30,7 +30,8 @@
    PREF.estateOwned||={};PREF.estateOwned[t.city]=[...new Set([...(PREF.estateOwned[t.city]||[]),t.square])];changed=true}
   for(const t of rows.filter(validToken).sort((a,b)=>a.to-b.to)){if(tokenLevel(t.token)>=t.to)continue;
    PREF.tokLv||={};PREF.tokLv[t.token]=t.to;changed=true}
-  PREF.scReserve=ledger.view().balance;if(changed)savePref();return changed;
+  // Mirror the balance only once the earned wallet owns it (it migrates the legacy reserve first).
+  if(window.SkylineEarnedCash)PREF.scReserve=ledger.view().balance;if(changed)savePref();return changed;
  }
  /* One read model for every upgrade card: level, next level, benefits, SC cost, SC balance and
     the exact reason it is unavailable. Used by the Collection screens and their tests. */
