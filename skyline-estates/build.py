@@ -16,6 +16,12 @@ body = body.replace(review, review + "${setup.rules.marketPulse?`<span class=\"s
 spot = "k==='ev'?{events2:true,events:false}:{events2:false}"
 assert body.count(spot) == 1
 body = body.replace(spot, "k==='ev'?{events2:true,events:false,marketPulse:false}:{events2:false,marketPulse:false}")
+# Append options before the wallet initializes the weekly selection. Saved lists stay intact.
+weekly_tail = "{id:'online2',n:'Finish 2 online games',g:2,k:'online'}];"
+assert body.count(weekly_tail) == 1
+body = body.replace(weekly_tail, weekly_tail[:-2] + ",{id:'strategic2-v1',n:'Finish 2 qualifying Strategic Event matches',g:2,k:'qualifiedStrategic'},{id:'pulse2-v1',n:'Finish 2 qualifying Market Pulse matches',g:2,k:'qualifiedPulse'}];")
+# Preserve the latest Season if the device clock moves backwards.
+body = body.replace('if(!S||S.n!==n)', 'if(!S||S.n<n)')
 # Add an optional nested Showcase without resolving/reopening the results modal.
 results = "btns:[{k:'season',label:'Season'},{k:'new',label:'New game',primary:true}]"
 assert body.count(results) == 1
@@ -24,10 +30,10 @@ body = body.replace(results, "onMount:panel=>window.SkylineShowcase?.attachResul
 # Keep game.html (the native/server source) byte-for-byte unchanged.
 boot = 'try{const h=window.claude?.hot;'
 assert body.count(boot) == 1
-body = body.replace(boot, '</script><script src="./lib/skyline-sc-wallet.js"></script><script src="./lib/skyline-currency.js"></script><script src="./lib/skyline-earned-cash.js"></script><script src="./lib/market-pulse.js"></script><script>\n' + boot)
+body = body.replace(boot, '</script><script src="./lib/skyline-sc-wallet.js"></script><script src="./lib/skyline-currency.js"></script><script src="./lib/skyline-earned-cash.js"></script><script src="./lib/market-pulse.js"></script><script src="./web/challenges.js"></script><script>\n' + boot)
 # Preserve the approved standalone wrapper.
 head = '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-180.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Skyline Estates"><meta name="theme-color" content="#10223f"><script src="../eko-estates/firebase-config.js"></script><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui}img{max-width:100%}[hidden]{display:none!important}</style></head><body>'
-head = head.replace('</head>', '<link rel="stylesheet" href="./lib/menu-presentation.css"><link rel="stylesheet" href="./lib/market-pulse.css"><link rel="stylesheet" href="./web/skyline-showcase.css"></head>')
+head = head.replace('</head>', '<link rel="stylesheet" href="./lib/menu-presentation.css"><link rel="stylesheet" href="./lib/market-pulse.css"><link rel="stylesheet" href="./web/skyline-showcase.css"><link rel="stylesheet" href="./web/challenges.css"></head>')
 # Shared menu-only layer; original game.html retains all board/camera behavior.
 index = head + body + '<script src="./lib/menu-presentation.js"></script><script src="./web/skyline-showcase.js"></script></body></html>'
 core = ['index.html', 'web-play.html', 'web-correction.html', 'web-follow.html', 'web-board.html', 'web-menus.html', 'reference-redesign.js', 'home-redesign.js', 'manifest.webmanifest', 'privacy.html', 'icon-180.png', 'icon-192.png', 'icon-512.png']
