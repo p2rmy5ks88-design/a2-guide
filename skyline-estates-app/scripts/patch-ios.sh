@@ -15,6 +15,7 @@ set_key UIStatusBarHidden bool true
 set_key UIViewControllerBasedStatusBarAppearance bool false
 set_key UIRequiresFullScreen bool true
 set_key ITSAppUsesNonExemptEncryption bool false
+set_key NSPhotoLibraryAddUsageDescription string "Save your Skyline Showcase image to Photos only when you choose Save Image."
 set_key CFBundleDisplayName string "Skyline Estates"
 set_key CFBundleShortVersionString string "${VERSION_NAME:-1.0.0}"
 set_key CFBundleVersion string "${VERSION_CODE:-1}"
