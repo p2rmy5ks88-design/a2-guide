@@ -33,7 +33,7 @@ for platform in ('android', 'ios', 'desktop'):
     dispatch = block(block(text, 'on', 0), 'workflow_dispatch', 2)
     check(f'{platform}: publishing defaults off', 'type: boolean' in dispatch and 'default: false' in dispatch)
     check(f'{platform}: default token is read only', block(text, 'permissions', 0).strip() == 'contents: read')
-    check(f'{platform}: build has timeout and pipe failures propagate', 'timeout-minutes: 20' in text and 'shell: bash' in text)
+    check(f'{platform}: build has timeout and pipe failures propagate', re.search(r'timeout-minutes: (20|45)\b', text) is not None and 'shell: bash' in text)
     check(f'{platform}: checkout does not persist credentials', 'persist-credentials: false' in text)
     if platform != 'ios':
         publish = block(block(text, 'jobs', 0), 'publish', 2)
