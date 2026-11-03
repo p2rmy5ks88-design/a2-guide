@@ -1,0 +1,11 @@
+'use strict';
+const {onRequest}=require('firebase-functions/v2/https');
+const {initializeApp,getApps,applicationDefault}=require('firebase-admin/app');
+const {getAuth}=require('firebase-admin/auth');
+const {createTransactionStore}=require('./transaction-store.cjs');
+const {composeCompetition}=require('./runtime/competition/compose.cjs');
+const databaseURL='https://eko-estates-default-rtdb.europe-west1.firebasedatabase.app',credential=applicationDefault();
+const app=getApps().find(a=>a.name==='skyline-competition')||initializeApp({projectId:'eko-estates',databaseURL,credential},'skyline-competition');
+const db=createTransactionStore({databaseURL,getAccessToken:async()=>(await credential.getAccessToken()).access_token});
+const service=composeCompetition({db,verifyIdToken:(token,revoked)=>getAuth(app).verifyIdToken(token,revoked)});
+exports.skylineCompetition=onRequest({region:'europe-west1',serviceAccount:'skyline-competition@eko-estates.iam.gserviceaccount.com',minInstances:0,maxInstances:3,concurrency:10,timeoutSeconds:30,memory:'256MiB'},service.handler);
