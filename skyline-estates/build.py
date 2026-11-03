@@ -43,7 +43,7 @@ assert body.count(boot) == 1
 body = body.replace(boot, '</script><script src="./lib/skyline-sc-wallet.js"></script><script src="./lib/skyline-currency.js"></script><script src="./lib/skyline-earned-cash.js"></script><script src="./lib/market-pulse.js"></script><script src="./web/challenges.js"></script><script src="./web/social.js"></script><script src="./web/verified-config.js"></script><script src="./web/verified.js"></script><script>\n' + boot)
 # The native wrapper reuses these reviewed optional features without copying the
 # browser wrapper, changing the pinned rules source, or replacing native accounts.
-body = body.replace('<script src="./web/challenges.js">', '<script src="./lib/estate-sc.js"></script><script src="./lib/portfolio-manage.js"></script><script src="./web/challenges.js">')
+body = body.replace('<script src="./web/challenges.js">', '<script src="./lib/estate-sc.js"></script><script src="./lib/portfolio-manage.js"></script><script src="./lib/results-trophies.js"></script><script src="./web/challenges.js">')
 if '--emit-app-body' in sys.argv:
     sys.stdout.buffer.write(body.encode('utf-8'))
     sys.exit(0)

@@ -18,6 +18,10 @@ const mime={'.html':'text/html','.js':'text/javascript','.mjs':'text/javascript'
   FAST=true;GEN++;applyCity('stockholm');newGame({cash:1600,set:{city:'stockholm',mode:'classic',ai:'normal',perks:false,minigames:false},players:[{name:'Hotfix QA',tok:'🚌',col:PCOL[0],ai:false,owner:true},{name:'AI',tok:TOKENS[1],col:PCOL[1],ai:true}]});FAST=false;G.round=36;G.over=true;G.players[1].bankrupt=true;GROUPS.pink.forEach(i=>G.own[i]={o:0,h:0,m:false});achGameEnd(G.players[0]);const r=progressGameEnd(G.players[0]);setup.city='stockholm';savePref();return{tr:r?.tr,wins:careerWins(),square:GROUPS.pink[0],coins:PREF.coins,sc:SkylineEarnedCash.balance()};
  });
  check('normal completed win grants trophies, career win and collected buildings',result.tr===30&&result.wins===1&&await p.evaluate(i=>PREF.estateOwned.stockholm.includes(i),result.square));
+ // Results screen states the trophy outcome: +30 for this win; a practice match states why there are none.
+ const card=await p.evaluate(()=>{const html=()=>{modal({html:'<div class="endgrid"></div>',btns:[{k:'x',label:'OK'}]});const out=document.querySelector('#modals').innerHTML;document.querySelector('#modals').innerHTML='';return out};
+  const win=html();const keep=G;G={...keep,scAssisted:true,progDone:false,sim:false};const before=PREF.trophies;progressGameEnd(G.players[0]);const practice=html();const after=PREF.trophies;G=keep;return{win,practice,unchanged:before===after}});
+ check('results show earned trophies, or the exact reason a match is ineligible',/data-trophy-result="30"/.test(card.win)&&/\+30 🏆/.test(card.win)&&/data-trophy-result="ineligible"/.test(card.practice)&&/Assisted practice/.test(card.practice)&&card.unchanged);
  await p.evaluate(()=>homeTab('portfolio'));await p.locator('.rf-fast-open').click();
  check('earned SC building upgrades are offered with the actual SC cost',await p.locator('.rf-fast-upgrade').first().isEnabled()&&(await p.locator('.rf-fast-hub').innerText()).includes('SC 30M'));
  await p.screenshot({path:path.join(out,`sc-buildings-${engine}-${native?'native':'web'}.png`)});
