@@ -2,7 +2,12 @@
  const CONFIG=window.SKYLINE_COMPETITION,ROOT='https://europe-west1-eko-estates.cloudfunctions.net/',GAME='https://p2rmy5ks88-design.github.io/a2-guide/skyline-estates/';
  const labels={season:'Season Rankings',city:'City Champions',worth:'Highest Net Worth',developers:'Master Developers',weekly:'Weekly Challenge Rankings'};
  const settings=city=>({mode:'timed',rounds:10,cash:1600,ai:'normal',speed:'fast',timer:0,minigames:false,perks:false,ffa:false,events:false,speedDie:false,pot:false,goDouble:false,jailRent:false,auction:true,even:true,interest:true,city,theme:city});
- async function session(){if(!FIRE)throw Error('Connect to the internet to sign in for verified competition.');const idToken=await FIRE.token();return {uid:FIRE.uid(),idToken}}
+ async function session(){
+  if(window.Capacitor?.isNativePlatform?.()&&Capacitor.getPlatform?.()==='ios'&&window.SkylineAccounts?.enabled?.()){
+   const player=await SkylineAccounts.player();if(!player)throw Error('Sign in from Account & recovery to use verified competition. Your device progress stays here.');return {uid:player.uid,idToken:player.token};
+  }
+  if(!FIRE)throw Error('Connect to the internet to sign in for verified competition.');const idToken=await FIRE.token();return {uid:FIRE.uid(),idToken};
+ }
  const storage={getItem:k=>localStorage.getItem('competition:'+k),setItem:(k,v)=>localStorage.setItem('competition:'+k,v),removeItem:k=>localStorage.removeItem('competition:'+k)};
  async function api(route,body){if(!CONFIG.enabled)throw Error('Verified service is awaiting deployment and acceptance tests.');const s=await session(),abort=new AbortController(),timer=setTimeout(()=>abort.abort(),10000);try{const r=await fetch(CONFIG.service+'/v1/competition/'+route,{method:'POST',redirect:'error',credentials:'omit',cache:'no-store',signal:abort.signal,headers:{Authorization:'Bearer '+s.idToken,'Content-Type':'application/json'},body:JSON.stringify(body)});const v=await r.json();if(!r.ok||v.protocol!==1)throw Error(v.error||'Service unavailable');return v}finally{clearTimeout(timer)}}
  const fetchGame=(url,options)=>{const u=new URL(url);if(u.origin!==new URL(ROOT).origin||!/^\/v2\/(rooms|game)\//.test(u.pathname))throw Error('Unexpected competition destination');return fetch(CONFIG.service+u.pathname,options)};

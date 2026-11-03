@@ -224,26 +224,37 @@ jobs:
       - name: Install Safari-engine test browser
         if: matrix.engine == 'webkit'
         run: npx --prefix skyline-estates/tests playwright install --with-deps webkit
+      - name: Build and verify the native web bundle
+        run: |
+          npm install --prefix skyline-estates-app --no-audit --no-fund
+          npm run --prefix skyline-estates-app build:web
+          node skyline-estates/tests/verify-bundle.cjs skyline-estates-app
       - name: Check generated assets and visual geometry
         run: |
           python3 skyline-estates/build.py --check
           node skyline-estates/tests/market-pulse.cjs
           node skyline-estates/tests/showcase-browser.cjs
           node skyline-estates/tests/challenges-browser.cjs
+          node skyline-estates/tests/cloud-restore.cjs
+          node skyline-estates/tests/native-roadmap-browser.cjs
           node skyline-estates/tests/social-browser.cjs
           node skyline-estates/tests/verified-browser.cjs
           node skyline-estates/tests/competition-transactions.cjs
           node skyline-estates/tests/competition-service.cjs
           node skyline-estates/tests/competition-match.cjs
-          node skyline-estates/tests/published-web.cjs
           node skyline-estates/tests/currency-browser.cjs
           node skyline-estates/tests/visual-correction-browser.cjs
+      - name: Verify already-published assets on explicit production acceptance
+        if: github.event_name == 'workflow_dispatch'
+        run: node skyline-estates/tests/published-web.cjs
       - name: Upload before-release visual evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: skyline-visual-${{ matrix.engine }}
           path: |
+            ${{ runner.temp }}/native-roadmap-*.png
+            ${{ runner.temp }}/native-roadmap-*.json
             ${{ runner.temp }}/after-*.png
             ${{ runner.temp }}/after-*.json
             ${{ runner.temp }}/currency-*.png

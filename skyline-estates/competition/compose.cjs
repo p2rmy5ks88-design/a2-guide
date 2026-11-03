@@ -10,7 +10,7 @@ const {createOperationService}=require('../security/service/operation-service.cj
 const {createHttpHandler}=require('../security/service/http.cjs');
 const {createCompetitionService,settings,CITIES}=require('./service.cjs');
 const TOKENS=['🚌','🛺','🏍️','🥁','🍲','🦅'],COLORS=['#f6c400','#ff5d73','#41c8ff','#6be38b','#c08bff','#ff9a3c'];
-function composeCompetition({db,verifyIdToken,clock=Date.now,allowedOrigins=new Set(['https://p2rmy5ks88-design.github.io']),randomBytes,operationLimit=30}){
+function composeCompetition({db,verifyIdToken,clock=Date.now,allowedOrigins=new Set(['https://p2rmy5ks88-design.github.io','capacitor://localhost','http://localhost','https://localhost']),randomBytes,operationLimit=30}){
  const options={db,verifyIdToken,clock,operationLimit,...(randomBytes?{randomBytes}:{})},competition=createCompetitionService(options),admission=createAdmissionService({...options,maxPlayers:2,invitationLifetimeMs:7*864e5});
  const original=admission.execute;admission.execute=async(token,action,b)=>{if(action==='create'){const city=b?.settings?.city;if(!CITIES.includes(city)||Object.keys(b.settings).length!==Object.keys(settings(city)).length||Object.entries(settings(city)).some(([k,v])=>b.settings[k]!==v))throw new ServiceError(400,'standard-settings-required')}return original(token,action,b)};
  const resolveRoster=(_root,room)=>Object.values(room.seats).sort((a,b)=>a.seat-b.seat).map((s,i)=>({uid:s.uid,name:s.name,tok:TOKENS[i],col:COLORS[i],ai:false,tl:1,fin:null,ch:null,estate:{}}));

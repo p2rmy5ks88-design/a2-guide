@@ -10,11 +10,11 @@ const check=(name,ok,detail)=>{assert.ok(ok,name+(detail!==undefined?' '+JSON.st
  await new Promise(r=>server.listen(0,'127.0.0.1',r));const url='http://127.0.0.1:'+server.address().port+'/skyline-estates/index.html';
  browser=await chromium.launch({headless:true,args:['--disable-webgl'],...(process.env.CHROME_PATH?{executablePath:process.env.CHROME_PATH}:{})});
  const ctx=await browser.newContext({viewport:{width:956,height:440},hasTouch:true,serviceWorkers:'block'}),page=await ctx.newPage();page.on('pageerror',e=>errors.push(String(e)));
- // Same as the App Store build without purchases: native iOS, accounts on, purchases off.
+ // Explicit off switch remains supported independently of the public release channel.
  await page.addInitScript(()=>{if(!localStorage.getItem('skylinePrefs'))localStorage.setItem('skylinePrefs',JSON.stringify({nickSet:true,welcomed:1,tutDone:1,coach:{pre:1,post:1},flat2d:true,rig:false,riders:false,coins:705}));
   window.Capacitor={isNativePlatform:()=>true,getPlatform:()=>'ios',isPluginAvailable:n=>n==='SkylineStoreKit',Plugins:{SkylineStoreKit:{products:async()=>{window.__store=true;return{products:[]}},purchase:async()=>{window.__store=true},unfinished:async()=>({transactions:[]}),addListener:async()=>({remove:async()=>{}})}}}});
  await page.route('https://**/*',r=>r.abort());
- await page.route('**/lib/cloud-config.js',r=>r.fulfill({contentType:'text/javascript',body:fs.readFileSync(path.join(root,'skyline-estates-app/cloud/ios-release.js'),'utf8')}));
+ await page.route('**/lib/cloud-config.js',r=>r.fulfill({contentType:'text/javascript',body:fs.readFileSync(path.join(root,'skyline-estates-app/cloud/ios-release.js'),'utf8').replace('purchases:ios','purchases:false')}));
  await page.goto(url);await page.waitForFunction(()=>typeof homeTab==='function'&&typeof COIN_SALES==='function');await page.waitForFunction(()=>!document.getElementById('boot'),null,{timeout:12000});
  const cfg=await page.evaluate(()=>window.SKYLINE_CLOUD);
  check('release config: accounts on, purchases off, only inside the iOS app',cfg.enabled===true&&cfg.purchases===false&&cfg.channel==='ios-release',cfg);

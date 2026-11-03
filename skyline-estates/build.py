@@ -39,6 +39,11 @@ body = body.replace(results, "onMount:panel=>window.SkylineShowcase?.attachResul
 boot = 'try{const h=window.claude?.hot;'
 assert body.count(boot) == 1
 body = body.replace(boot, '</script><script src="./lib/skyline-sc-wallet.js"></script><script src="./lib/skyline-currency.js"></script><script src="./lib/skyline-earned-cash.js"></script><script src="./lib/market-pulse.js"></script><script src="./web/challenges.js"></script><script src="./web/social.js"></script><script src="./web/verified-config.js"></script><script src="./web/verified.js"></script><script>\n' + boot)
+# The native wrapper reuses these reviewed optional features without copying the
+# browser wrapper, changing the pinned rules source, or replacing native accounts.
+if '--emit-app-body' in sys.argv:
+    sys.stdout.buffer.write(body.encode('utf-8'))
+    sys.exit(0)
 # Preserve the approved standalone wrapper.
 head = '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-180.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Skyline Estates"><meta name="theme-color" content="#10223f"><script src="../eko-estates/firebase-config.js"></script><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui}img{max-width:100%}[hidden]{display:none!important}</style></head><body>'
 head = head.replace('</head>', '<link rel="stylesheet" href="./lib/menu-presentation.css"><link rel="stylesheet" href="./lib/market-pulse.css"><link rel="stylesheet" href="./web/skyline-showcase.css"><link rel="stylesheet" href="./web/challenges.css"><link rel="stylesheet" href="./web/social.css"></head>')
