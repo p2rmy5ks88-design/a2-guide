@@ -35,8 +35,9 @@ function admissionReceipt(root,uid,result){
  return{...result,data};
 }
 
-function createAdmissionService({db,verifyIdToken,clock=Date.now,generateCode=randomCode,operationLimit=30,readTimeoutMs=3000}){
+function createAdmissionService({db,verifyIdToken,clock=Date.now,generateCode=randomCode,operationLimit=30,readTimeoutMs=3000,maxPlayers=6,invitationLifetimeMs=0}){
  if(!db||typeof verifyIdToken!=='function')throw Error('Verified authentication and a privileged store are required');
+ if(!Number.isInteger(maxPlayers)||maxPlayers<2||maxPlayers>6||!Number.isSafeInteger(invitationLifetimeMs)||invitationLifetimeMs<0)throw Error('Invalid admission policy');
  const identity=identityVerifier(verifyIdToken);
  function view(room){return{protocol:2,code:room.meta.code,status:room.meta.status,hostUid:room.meta.hostUid,revision:room.state.revision,settings:room.meta.settings,seats:Object.values(room.seats||{}).sort((a,b)=>a.seat-b.seat)}}
  async function execute(token,action,input){
@@ -72,12 +73,13 @@ function createAdmissionService({db,verifyIdToken,clock=Date.now,generateCode=ra
     else if(action==='invite'){
      if(room.members?.[uid]!==true||room.meta.hostUid!==uid)outcome=error(403,'host-required');
      else if(!Number.isSafeInteger(room.state.revision+1))outcome=error(409,'invalid-revision');
-     else{root.service.invites[body.code]=hash(invite);room.state.revision++;outcome={status:200,data:{protocol:2,code:body.code,invite}}}
+     else{root.service.invites[body.code]=hash(invite);if(invitationLifetimeMs)room.meta.invitedAt=now;room.state.revision++;outcome={status:200,data:{protocol:2,code:body.code,invite}}}
     }else if(action==='join'){
      const expected=root.service.invites[body.code],actual=hash(body.invite);
      if(!expected||!crypto.timingSafeEqual(Buffer.from(expected,'hex'),Buffer.from(actual,'hex')))outcome=error(403,'not-authorized');
+     else if(invitationLifetimeMs&&now-(room.meta.invitedAt??room.meta.createdAt)>=invitationLifetimeMs)outcome=error(403,'invitation-expired');
      else if(room.members?.[uid]===true)outcome={status:200,data:{protocol:2,code:body.code}};
-     else if(Object.keys(room.members||{}).length>=6)outcome=error(409,'room-full');
+     else if(Object.keys(room.members||{}).length>=maxPlayers)outcome=error(409,'room-full');
      else{const seats=Object.values(room.seats||{}),used=new Set(seats.map(s=>s.seat));let seat=0;while(used.has(seat))seat++;let selected=body.name,k=2;while(seats.some(s=>s.name===selected))selected=body.name.slice(0,10)+' '+k++;
       room.members={...room.members,[uid]:true};room.seats={...room.seats,[uid]:{uid,name:selected,seat}};room.state.revision++;outcome={status:200,data:{protocol:2,code:body.code}}}
     }else if(room.members?.[uid]!==true)outcome=error(403,'not-authorized');

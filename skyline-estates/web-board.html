@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-180.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Skyline Estates"><meta name="theme-color" content="#10223f"><script src="../eko-estates/firebase-config.js"></script><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui}img{max-width:100%}[hidden]{display:none!important}</style><link rel="stylesheet" href="./lib/menu-presentation.css"><link rel="stylesheet" href="./lib/market-pulse.css"><link rel="stylesheet" href="./web/skyline-showcase.css"><link rel="stylesheet" href="./web/challenges.css"></head><body><title>Skyline Estates</title>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-180.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Skyline Estates"><meta name="theme-color" content="#10223f"><script src="../eko-estates/firebase-config.js"></script><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui}img{max-width:100%}[hidden]{display:none!important}</style><link rel="stylesheet" href="./lib/menu-presentation.css"><link rel="stylesheet" href="./lib/market-pulse.css"><link rel="stylesheet" href="./web/skyline-showcase.css"><link rel="stylesheet" href="./web/challenges.css"><link rel="stylesheet" href="./web/social.css"></head><body><title>Skyline Estates</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@700&family=Manrope:wght@500;600;700;800&display=swap">
@@ -2161,7 +2161,7 @@ function el(t,c,h){const e=document.createElement(t);if(c)e.className=c;if(h!=nu
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let CUR={pre:'$',post:'K',big:'M',bigPre:'$',m:1};
 function fmt(n){const neg=n<0;let v=Math.abs(n)*CUR.m;const num=x=>String(+x.toFixed(2));const s=v>=1000?(CUR.bigPre??CUR.pre)+num(v/1000)+CUR.big:CUR.pre+num(v)+CUR.post;return (neg?'−':'')+s}
-const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor((window.SkylineSocial?.random('shuffle')??Math.random())*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
 const nextOf=(arr,pos)=>arr.find(x=>x>pos)??arr[0];
 let FAST=false,GEN=0;
 class Abort extends Error{}
@@ -2588,7 +2588,7 @@ addEventListener('resize',()=>{if(G&&!userCam&&tweens.length===0)camOverview(P(G
 /* ================= DICE ================= */
 const FACEUP={1:[0,0],2:[-Math.PI/2,0],3:[0,Math.PI/2],4:[0,-Math.PI/2],5:[Math.PI/2,0],6:[Math.PI,0]};
 async function rollDice(){
-  const d=[1+Math.floor(Math.random()*6),1+Math.floor(Math.random()*6)];const pl=P(G.turn);if(pl&&speedOn(pl)){d.sv=1+Math.floor(Math.random()*6);d.s=SPEED_FACE(d.sv)}
+  const d=[1+Math.floor((window.SkylineSocial?.random('dice')??Math.random())*6),1+Math.floor((window.SkylineSocial?.random('dice')??Math.random())*6)];const pl=P(G.turn);if(pl&&speedOn(pl)){d.sv=1+Math.floor((window.SkylineSocial?.random('dice')??Math.random())*6);d.s=SPEED_FACE(d.sv)}
   if(FAST||!S3)return d;
   G.lastDice={a:d[0],b:d[1],sv:d.sv||0,n:((G.lastDice&&G.lastDice.n)||0)+1};pushState();
   await throwDice(d);
@@ -2887,10 +2887,10 @@ function aiValue(p,i){const s=SQ[i];let v=s.p;
   else if(s.t==='rail')v*=1+.2*RAILS.filter(j=>G.own[j].o===p.id).length;
   else v*=UTILS.some(j=>G.own[j].o===p.id)?1.2:.9;
   return v}
-function aiWantsBuy(p,i){const s=SQ[i];if(p.cash<s.p)return false;if(Math.random()>lvl().buy)return false;
+function aiWantsBuy(p,i){const s=SQ[i];if(p.cash<s.p)return false;if((window.SkylineSocial?.random('ai')??Math.random())>lvl().buy)return false;
   const v=aiValue(p,i),after=p.cash-s.p;if(v>s.p*1.35)return after>=Math.min(40,aiReserve(p));return after>=aiReserve(p)}
 function aiBid(q,i,bid){const lim=Math.min(aiValue(q,i)*lvl().bid,q.cash-aiReserve(q)*.4);if(bid+10>lim)return 0;
-  const inc=[10,10,20,30,50][Math.floor(Math.random()*5)];return Math.max(bid+10,Math.min(Math.floor(lim/10)*10,bid+inc))}
+  const inc=[10,10,20,30,50][Math.floor((window.SkylineSocial?.random('ai')??Math.random())*5)];return Math.max(bid+10,Math.min(Math.floor(lim/10)*10,bid+inc))}
 function aiRaise(p,amt){let g=0;while(p.cash<amt&&g++<200){
   const sells=propsOf(p.id).filter(i=>canSell(p.id,i)).sort((a,b)=>SQ[a].h-SQ[b].h);if(sells.length){sell(p.id,sells[0]);continue}
   const ms=propsOf(p.id).filter(i=>canMortgage(p.id,i)).sort((a,b)=>{const ma=SQ[a].g&&ownsAll(p.id,SQ[a].g)?1:0,mb=SQ[b].g&&ownsAll(p.id,SQ[b].g)?1:0;return ma-mb||SQ[a].p-SQ[b].p});
@@ -2926,10 +2926,10 @@ async function aiPostTurn(p){
   for(const i of propsOf(p.id))if(G.own[i].m&&p.cash-unmCost(i)>aiReserve(p)*1.6){unmortgage(p.id,i);renderRoster();await sleep(250)}
   let g=0;while(g++<60){
     const c=propsOf(p.id).filter(i=>canBuild(p.id,i)&&p.cash-devCost(p.id,i)>=aiReserve(p));if(!c.length)break;
-    if(G.set.ai==='easy'&&Math.random()<.4)break;
+    if(G.set.ai==='easy'&&(window.SkylineSocial?.random('ai')??Math.random())<.4)break;
     c.sort((a,b)=>G.own[a].h-G.own[b].h||SQ[b].p-SQ[a].p);
     build(p.id,c[0]);renderRoster();if(!FAST){toast(`${p.name} builds on ${SQ[c[0]].n}`);camFollow(c[0],500)}await sleep(450)}
-  if(G.round-p.lastOffer>=3&&Math.random()<.5){const t=aiProposeTrade(p);if(t){p.lastOffer=G.round;
+  if(G.round-p.lastOffer>=3&&(window.SkylineSocial?.random('ai')??Math.random())<.5){const t=aiProposeTrade(p);if(t){p.lastOffer=G.round;
     if(!FAST)toast(`${p.name} wants to make a deal with ${P(t.to).name}`);await sleep(600);
     const ok=await resolveTrade(t);if(!ok)p.declined[t.key]=G.round}}
 }
@@ -7559,7 +7559,7 @@ function boot(data){
   if(data&&data.G){try{const g=JSON.parse(data.G);startWith(g);return}catch(e){}}
   showTitle();
 }
-</script><script src="./lib/skyline-sc-wallet.js"></script><script src="./lib/skyline-currency.js"></script><script src="./lib/skyline-earned-cash.js"></script><script src="./lib/market-pulse.js"></script><script src="./web/challenges.js"></script><script>
+</script><script src="./lib/skyline-sc-wallet.js"></script><script src="./lib/skyline-currency.js"></script><script src="./lib/skyline-earned-cash.js"></script><script src="./lib/market-pulse.js"></script><script src="./web/challenges.js"></script><script src="./web/social.js"></script><script src="./web/verified-config.js"></script><script src="./web/verified.js"></script><script>
 try{const h=window.claude?.hot;if(h&&h.ready)h.ready(boot);else boot(h?.data??{})}catch(e){boot({})}
 setTimeout(()=>{try{const c=(new URLSearchParams(location.search).get('join')||'').toUpperCase();if(!/^[A-Z0-9]{5}$/.test(c)||!FIRE)return;history.replaceState(null,'',location.pathname);if(!G||G.over)openOnline(c)}catch(e){}},1200);
 </script>

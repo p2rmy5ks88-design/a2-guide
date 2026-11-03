@@ -1,0 +1,11 @@
+# Phase 4 web social competition
+
+Live-ready independent increment: casual asynchronous friend links, two supported score types, same four actual cities, SC1.6B/10rounds/normalAI/no perks/no events/no minigames/no assistance. Seeded deck/key/dice/AI streams are stored with the match and ignore presentation randomness. Same human seat0, level-one token, no starting property advantages. The standard late-start bonus remains identical for the same seed. Original board rules and all ordinary games keep their existing randomness. No profile rewards from friendly attempts.
+
+Explicit invitations expire after seven days. Latest20 compact statuses are stored locally; links contain no account UID, wallet, Coins, room credentials or private save. Result exchange is manual/shareable and validates matching conditions plus internally consistent totals. Device-reported comparisons remain unverified; no prizes or trusted ranking submissions. Default anonymous naming, invitation opt-out and explicit share controls. Existing legacy rankings are labelled device-reported, opt-in, with explicit own-row removal.
+
+Showcase captures actual casual final statistics and labels their provenance. It never fabricates opponent results or verified victories. New Season/city cosmetics remain in existing inventory.
+
+The separate authoritative competition function and web controls are implemented behind disabled web/verified-config.js. Five protected ranking categories, explicit public-profile/community consent, two-human trusted matches, private invite expiry/capacity, rate limiting, daily eligibility limits, authoritative shared contributions and exactly-once decorative badge claims are tested in isolated stores. They are NOT claimed as deployed/authenticated production verification. See competition-functions/DEPLOY.md for access state, routes and acceptance gate.
+
+No native, Apple, wallet service or security rules are changed. The existing admission module gains optional maxPlayers/invitationLifetimeMs parameters; defaults preserve six-player legacy/prototype behavior. The isolated function opts into two players/seven-day invites. Existing online rooms and paths remain available.

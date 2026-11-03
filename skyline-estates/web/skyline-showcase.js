@@ -44,7 +44,7 @@
   const owner=G.online||G.owner===pid||(G.owner==null&&G.players.find(q=>!q.ai)?.id===pid),league=owner&&LEAGUES[leagueIdx()]?text(LEAGUES[leagueIdx()].name,50):null;
   let source=G.masteryId;if(!source){if(!gameIds.has(G))gameIds.set(G,crypto.randomUUID?crypto.randomUUID():Array.from(crypto.getRandomValues(new Uint32Array(4))).join('-'));source=gameIds.get(G)}
   const ev=G.ev2&&EV2_DEFS[G.ev2.id]?G.ev2:null,choice=ev?.choices?.[pid];
-  const event=ev?text(`${ev.name} · recorded round ${ev.from}${choice==='permit'?' · bought district permit':choice==='hold'?' · kept match cash':''}`,160):null;
+  const event=G.friendChallenge?'Friendly challenge · device-reported · no profile rewards':ev?text(`${ev.name} · recorded round ${ev.from}${choice==='permit'?' · bought district permit':choice==='hold'?' · kept match cash':''}`,160):null;
   const r={v:1,id:hash(source)+'-'+pid,ended:Date.now(),name:text(p.name),token:text(p.tok,12),city,netWorth:p.bankrupt?0:netWorth(p),rank,seats:G.players.length,tied:same>1,outcome,mode:['classic','quick','timed'].includes(G.set.mode)?G.set.mode:'classic',round:G.round,online:!!G.online,assisted:!!G.scAssisted,properties:rows.length,developed,houses,towers,colour:colour(p.col),rows,achievements:achievements.slice(0,5),league,event,title:outcome==='win'?'City Champion':outcome==='draw'?'Shared Skyline Lead':rows.length?'Rising Developer':'Estate Builder'};
   if(!valid(r))return null;byPlayer.set(pid,clone(r));return clone(r);
  }

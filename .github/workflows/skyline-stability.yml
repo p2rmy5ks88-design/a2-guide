@@ -230,6 +230,10 @@ jobs:
           node skyline-estates/tests/market-pulse.cjs
           node skyline-estates/tests/showcase-browser.cjs
           node skyline-estates/tests/challenges-browser.cjs
+          node skyline-estates/tests/social-browser.cjs
+          node skyline-estates/tests/competition-service.cjs
+          node skyline-estates/tests/competition-match.cjs
+          node skyline-estates/tests/published-web.cjs
           node skyline-estates/tests/currency-browser.cjs
           node skyline-estates/tests/visual-correction-browser.cjs
       - name: Upload before-release visual evidence
@@ -248,4 +252,7 @@ jobs:
             ${{ runner.temp }}/showcase-*.json
             ${{ runner.temp }}/challenges-*.png
             ${{ runner.temp }}/challenges-*.json
+            ${{ runner.temp }}/social-*.png
+            ${{ runner.temp }}/social-*.json
+            ${{ runner.temp }}/skyline-competition-*.json
           if-no-files-found: ignore
