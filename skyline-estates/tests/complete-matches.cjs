@@ -20,7 +20,8 @@ const root=path.resolve(__dirname,'../..'),report={matches:[],errors:[]},delay=m
    async function propertyAction(p){const pf=page.locator('#modals .ov:not(.bye) .pf2'),re={sell:/^Sell /,build:/^Build (house|tower)/,mortgage:/^Mortgage/,redeem:/^Redeem /}[p.action];
     // Debt repayment lists every property with its own buttons; otherwise select the row first.
     const debtRow=pf.locator('.pfdrow[data-square="'+p.square+'"]');if(await debtRow.count()){await click(btn(re,debtRow),'property '+p.action+' '+p.name);return}
-    await pf.locator('.pf2row:not(.lock)[data-square="'+p.square+'"]').click();await click(btn(re,pf.locator('.pf2a')),'property '+p.action+' '+p.name)}
+    // Full-width manager: every owned row carries its own action buttons.
+    await pf.locator('.pfm-tabs [data-f="all"]').click();await click(btn(re,pf.locator('.pfm-row[data-square="'+p.square+'"]')),'property '+p.action+' '+p.name)}
    try{
     await page.goto(origin+'/skyline-estates/index.html');await page.waitForFunction(()=>typeof window.__sim==='function');await page.locator('#boot').waitFor({state:'detached',timeout:15000});await page.addStyleTag({content:'*,*::before,*::after{animation:none!important;transition:none!important}.ov.bye{display:none!important}'});
     await click(page.locator('#qPP'),'Pass and play');for(let i=0;i<6;i++)await page.locator(`[data-type="${i}:${i<n?'human':'off'}"]`).click();for(let i=0;i<n;i++)await page.locator(`[data-name="${i}"]`).fill('Seat '+i);

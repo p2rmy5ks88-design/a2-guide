@@ -4689,13 +4689,20 @@ function xpFloat(n){if(FAST)return;const f=el('div','xpfloat',`+${n} XP`);docume
 
 /* ---- 30-day seasons ---- */
 /* Season 2 (Skyline Gala) restarted the clock on 25 Oct 2026: 45-day seasons, 40 tiers */
-const SEASON_EPOCH=Date.UTC(2026,9,25),SEASON_LEN=45*864e5,TIER_XP=250,TIERS=40,SEASON_DAYS=45;
+const SEASON_BASE=1000;const seasonDisplay=n=>n>SEASON_BASE?n-SEASON_BASE:n;const SEASON_EPOCH=Date.UTC(2026,10,3),SEASON_LEN=45*864e5,TIER_XP=250,TIERS=40,SEASON_DAYS=45;
 const SEASON_NAMES=['Harbour Lights','Skyline Gala','Neon Nights','Golden Hour','Festival Fever','Winter Lights','Summer Skylines'];
-const seasonNo=()=>Math.max(2,Math.floor((Date.now()-SEASON_EPOCH)/SEASON_LEN)+2);
-const seasonName=n=>SEASON_NAMES[(n-1)%SEASON_NAMES.length];
-const seasonEnds=()=>SEASON_EPOCH+(seasonNo()-1)*SEASON_LEN;
+const seasonNo=()=>SEASON_BASE+Math.max(1,Math.floor((Date.now()-SEASON_EPOCH)/SEASON_LEN)+1);
+const seasonName=n=>SEASON_NAMES[(seasonDisplay(n)-1)%SEASON_NAMES.length];
+const seasonEnds=()=>SEASON_EPOCH+(seasonNo()-SEASON_BASE)*SEASON_LEN;
 const PREM_PRICE=1200;
-function season(){const n=seasonNo();let S=PREF.season;if(!S||S.n<n){if(S&&PREF.trophies>800)PREF.trophies=Math.round(800+(PREF.trophies-800)/2);S=PREF.season={n,sxp:0,prem:false,cf:{},cp:{},tr:0,wk:null};savePref()}return S}
+function season(){const n=seasonNo();let S=PREF.season;
+      if(S&&S.n<SEASON_BASE){
+        PREF.seasonArchive={...(PREF.seasonArchive||{}),['legacy-s'+S.n]:{...S,trophies:PREF.trophies||0}};
+        PREF.season={n,sxp:0,prem:!!S.prem,cf:{},cp:{},tr:0,wk:null};PREF.trophies=0;
+        // Preserve the paid pass, inventory, career, currencies and old claims in the archive.
+        S=PREF.season;savePref();
+      }
+      if(!S||S.n<n){if(S&&PREF.trophies>800)PREF.trophies=Math.round(800+(PREF.trophies-800)/2);S=PREF.season={n,sxp:0,prem:false,cf:{},cp:{},tr:0,wk:null};savePref()}return S}
 function seasonXP(n){const S=season();S.sxp+=n}
 const seasonTierNow=()=>Math.min(TIERS,Math.floor(season().sxp/TIER_XP));
 /* Skyline Gala rewards: an item every few tiers on both tracks, a free board style, and a season-only avatar frame at the top */
@@ -5278,7 +5285,7 @@ function paneP(T){const saved=loadSave(),c=CITY_DATA[setup.city],C=countryOf(set
       <button class="mode" id="qPP"><span class="mi">${svgI('people')}</span><span><b>Pass and play</b><small>2–6 friends on this phone</small></span></button>
       ${IS_APP&&!FIRE?'':`<button class="mode" id="tOnline"><span class="mi">${svgI('globe')}</span><span><b>Play online</b><small>Friends on their own phones</small></span></button>`}
       <button class="mode" id="qCustom"><span class="mi">${svgI('sliders')}</span><span><b>Custom game</b><small>Players, rules, modes</small></span></button>
-      <button class="seasoncard" id="qSeason"><span class="sh"><b>SEASON ${S.n} · ${esc(seasonName(S.n).toUpperCase())}</b><small>${left} days</small></span><span class="xpbar"><i style="width:${t/TIERS*100}%"></i></span><small>Tier ${t} of ${TIERS}${cl?` · ${cl} reward${cl>1?'s':''} ready to claim`:''}</small></button>
+      <button class="seasoncard" id="qSeason"><span class="sh"><b>SEASON ${seasonDisplay(S.n)} · ${esc(seasonName(S.n).toUpperCase())}</b><small>${left} days</small></span><span class="xpbar"><i style="width:${t/TIERS*100}%"></i></span><small>Tier ${t} of ${TIERS}${cl?` · ${cl} reward${cl>1?'s':''} ready to claim`:''}</small></button>
     </div></div>`;
   T.querySelector('#pCity').onclick=()=>homeTab('world');
   if(saved)T.querySelector('#tCont').onclick=()=>{initAudio();startWith(saved)};
@@ -5354,7 +5361,7 @@ function paneTokens(T){const all=TOKENS.concat(NEW_TOKENS);let sel=setup.slots[0
     const bu=T.querySelector('#tBuy');if(bu)bu.onclick=async()=>{if(await confirmBuy(`Unlock ${info[0]}`,TOKEN_HOW[sel].coins)){grantItem('tok',sel);draw();railProfile()}}};
   draw()}
 function paneLeagues(T){const i=leagueIdx(),L=LEAGUES[i],N=LEAGUES[i+1],S=season();
-  T.innerHTML=`<div class="phead"><h2>Leagues</h2><span class="small">Season ${S.n} · ${S.tr||0} 🏆 this season</span></div>
+  T.innerHTML=`<div class="phead"><h2>Leagues</h2><span class="small">Season ${seasonDisplay(S.n)} · ${S.tr||0} 🏆 this season</span></div>
     <div class="card leaguehead"><span class="lic">${L.icon}</span><span><b>${L.name} league</b><small>${PREF.trophies} trophies${N?` · ${N.min-PREF.trophies} more for ${N.icon} ${N.name}`:' · top league!'}</small><span class="xpbar"><i style="width:${N?Math.min(100,(PREF.trophies-L.min)/(N.min-L.min)*100):100}%"></i></span></span></div>
     <div class="ladder">${LEAGUES.map((x,k)=>`<div class="lrung${k===i?' on':''}${k<=PREF.leagueBest?' got':''}"><span>${x.icon}</span><b>${x.name}</b><small>${x.min}+ 🏆</small><em>${x.coins?`${k<=PREF.leagueBest?'✓ ':''}${x.coins} ${COIN}`:'Start'}${x.id==='gold'?' + Neon Night':x.id==='platinum'?' + Marble dice':''}</em></div>`).join('')}</div>
     <div class="card"><div class="ch">Global leaderboard <small>Top 50 by trophies this season</small><button class="sm" id="lbR">Refresh</button></div><div id="lb" class="lb"><div class="small">${FIRE?'Loading…':'The leaderboard needs an internet connection and online play.'}</div></div></div>
@@ -5550,9 +5557,9 @@ function paneShop(T){let tab=setup.shopTab||'daily';if(tab==='surr'&&!setup.shop
     const d=B.querySelector('#sDef');if(d)d.onclick=()=>{equipItem(tab,tab==='dice'?'classic':null);redraw()}}
   else if(tab==='boost'){const S=season();
     B.innerHTML=`<div class="igrid">
-      <article class="icard" style="--rc:#E2B13C"><div class="iwrap"><span class="iart glyph star">${SVG_STAR}</span></div><b>Season ${S.n} premium</b><small class="itier">A second reward on all ${TIERS} tiers</small>${S.prem?'<span class="iown">Owned</span>':`<button class="ibuy" id="bPrem">${COIN_I}<span>${nfmt(PREM_PRICE)}</span></button>`}</article>
+      <article class="icard" style="--rc:#E2B13C"><div class="iwrap"><span class="iart glyph star">${SVG_STAR}</span></div><b>Season ${seasonDisplay(S.n)} premium</b><small class="itier">A second reward on all ${TIERS} tiers</small>${S.prem?'<span class="iown">Owned</span>':`<button class="ibuy" id="bPrem">${COIN_I}<span>${nfmt(PREM_PRICE)}</span></button>`}</article>
       <article class="icard" style="--rc:#2F7FE0"><div class="iwrap"><span class="iart glyph bolt">${SVG_BOLT}</span></div><b>Double XP × 3</b><small class="itier">${PREF.boostGames?`${PREF.boostGames} game${PREF.boostGames===1?'':'s'} left`:'Your next 3 games'}</small><button class="ibuy" id="bXP">${COIN_I}<span>300</span></button></article></div>`;
-    const bp=B.querySelector('#bPrem');if(bp)bp.onclick=async()=>{if(await confirmBuy(`Season ${S.n} premium pass`,PREM_PRICE,`Unlocks the premium reward on all ${TIERS} tiers this season, including tiers you’ve already reached.`)){S.prem=true;savePref();railProfile();redraw()}};
+    const bp=B.querySelector('#bPrem');if(bp)bp.onclick=async()=>{if(await confirmBuy(`Season ${seasonDisplay(S.n)} premium pass`,PREM_PRICE,`Unlocks the premium reward on all ${TIERS} tiers this season, including tiers you’ve already reached.`)){S.prem=true;savePref();railProfile();redraw()}};
     B.querySelector('#bXP').onclick=async()=>{if(await confirmBuy('Double XP × 3',300)){PREF.boostGames+=3;savePref();railProfile();redraw()}}}
   else if(tab==='coins'){B.innerHTML=`<div class="igrid">${IAP_PACKS.map((p,i)=>`<article class="icard" style="--rc:${['#2F7FE0','#2F7FE0','#8F3FD8','#E2B13C'][i]||'#2F7FE0'}">${p.tag?`<em class="ideal">${esc(p.tag)}</em>`:''}<div class="iwrap"><span class="iart coins n${i}"></span></div><b>${nfmt(p.coins)} coins</b><small class="itier">Coin pack</small><button class="ibuy cash" data-i="${i}">${esc(IAP.price(p))}</button></article>`).join('')}</div>
       <div class="small shopnote">${window.SkylineCloud?.purchasesReady?.()?'Purchases are handled by the App Store and saved to your Skyline account.':'Coin packs are sold in the Skyline Estates app for iPhone and Android.'} You also earn coins from wins, level-ups, missions, the Lucky Spin, season tiers and league promotions.</div>`;
@@ -5564,7 +5571,7 @@ function rewardArt(r){if(r.frame)return `<span class="iart gala">${framed(`<span
   if(r.boost&&!r.coins)return `<span class="iart glyph bolt">${SVG_BOLT}</span>`;return `<span class="iart coin1${r.boost?' plus':''}"></span>`}
 function rewardLabel(r){const o=[];if(r.surr)o.push(itemOf('surr',r.surr).name);if(r.fin)o.push(itemOf('fin',r.fin).name+' finish');if(r.dice)o.push(itemOf('dice',r.dice).name+' dice');if(r.coins)o.push(`${r.coins} coins`);if(r.boost)o.push(`${r.boost}× double XP`);if(r.frame)o.unshift('Skyline Gala frame');return o.join(' + ')}
 function paneSeason(T){const S=season(),t=seasonTierNow(),left=Math.max(0,Math.ceil((seasonEnds()-Date.now())/864e5)),into=S.sxp-t*TIER_XP,W=weekly(),ca=seasonClaimable();
-  T.innerHTML=`<div class="sban"><div class="sbt"><small>SEASON ${S.n}</small><h2>${esc(seasonName(S.n))}</h2><span>Ends in <b>${left} day${left===1?'':'s'}</b></span></div>
+  T.innerHTML=`<div class="sban"><div class="sbt"><small>SEASON ${seasonDisplay(S.n)}</small><h2>${esc(seasonName(S.n))}</h2><span>Ends in <b>${left} day${left===1?'':'s'}</b></span></div>
     <div class="sbp"><div class="sbl"><span>Tier <b>${t}</b> of ${TIERS}</span><span>${t>=TIERS?'All tiers reached':`${into} / ${TIER_XP} XP`}</span></div><span class="sbar" aria-hidden="true"><i style="width:${t>=TIERS?100:into/TIER_XP*100}%"></i></span></div>
     <div class="sbb">${ca?`<button class="ibtn ghost" id="sAll">Claim all (${ca})</button>`:''}${S.prem?'<span class="premown">Premium unlocked</span>':`<button class="ibtn gold" id="sPrem">Unlock Premium <span>${COIN_I}${nfmt(PREM_PRICE)}</span></button>`}</div></div>
     <div class="strack" id="track"><span class="snum lab"></span><div class="slab"><b>Free</b><small>Everyone</small></div><div class="slab prem"><b>Premium</b><small>${S.prem?'Unlocked':'Locked'}</small></div></div>
@@ -5579,7 +5586,7 @@ function paneSeason(T){const S=season(),t=seasonTierNow(),left=Math.max(0,Math.c
       tk.append(c)})}
   const cur=tk.querySelector('.snum.now')||tk.querySelector('.snum.got:last-of-type');if(cur)setTimeout(()=>{tk.scrollLeft=Math.max(0,cur.offsetLeft-tk.clientWidth/2+44)},30);
   const a=T.querySelector('#sAll');if(a)a.onclick=()=>{let n=0;for(let i=1;i<=t;i++){if(claimTier(i,false))n++;if(claimTier(i,true))n++}if(n){sfx('win');toast(`${n} reward${n>1?'s':''} claimed!`)}homeTab('season')};
-  const sp=T.querySelector('#sPrem');if(sp)sp.onclick=async()=>{if(await confirmBuy(`Season ${S.n} premium pass`,PREM_PRICE,`Unlocks the premium reward on all ${TIERS} tiers this season, including tiers you’ve already reached.`)){S.prem=true;savePref();railProfile();homeTab('season')}}}
+  const sp=T.querySelector('#sPrem');if(sp)sp.onclick=async()=>{if(await confirmBuy(`Season ${seasonDisplay(S.n)} premium pass`,PREM_PRICE,`Unlocks the premium reward on all ${TIERS} tiers this season, including tiers you’ve already reached.`)){S.prem=true;savePref();railProfile();homeTab('season')}}}
 
 /* ================= GAME CONTROLLER (Steam Deck, Xbox, PlayStation) ================= */
 /* D-pad or left stick moves a gold focus ring between buttons, A presses, B goes back.
@@ -5964,7 +5971,7 @@ openAssets=function(p,opts={}){const debt=opts.debt||0,ro=!!opts.readonly;let fi
     const groupsOf=()=>{const out=[];Object.keys(GROUPS).forEach(g=>{const all=GROUPS[g],mine=all.filter(j=>G.own[j].o===p.id);if(mine.length)out.push({k:g,name:GNAME[g],col:GC[g],all,mine})});
       const rails=RAILS.filter(j=>G.own[j].o===p.id),utils=UTILS.filter(j=>G.own[j].o===p.id);if(rails.length)out.push({k:'rail',name:'Transit hubs',col:'#7f8a96',all:RAILS,mine:rails});if(utils.length)out.push({k:'util',name:'Utilities',col:'#9aa3ad',all:UTILS,mine:utils});return out};
     const pass=i=>filter==='all'||(filter==='build'?(!ro&&canBuild(p.id,i)):G.own[i].m);
-    const draw=()=>{const list=propsOf(p.id);if(sel==null||G.own[sel].o!==p.id)sel=list.find(i=>!ro&&canBuild(p.id,i))??list[0]??null;
+    const draw=()=>{pn.classList.toggle('pf2mort',filter==='mort');const list=propsOf(p.id);if(sel==null||G.own[sel].o!==p.id||(filter==='mort'&&!G.own[sel].m))sel=list.find(i=>filter==='mort'?G.own[i].m:!ro&&canBuild(p.id,i))??list[0]??null;
       pn.querySelector('.pfh').innerHTML=`<div class="mh">${ro?esc(p.name)+'’s portfolio':'Your portfolio'}</div><div class="pfs"><span><small>Cash</small><b>${fmt(p.cash)}</b></span><span><small>Assets</small><b>${list.length} propert${list.length===1?'y':'ies'}</b></span><span><small>Net worth</small><b>${fmt(netWorth(p))}</b></span></div>`+
         (debt?`<div class="debt">${opts.who?'<b>'+esc(p.name)+'</b>: ':''}You owe <b>${fmt(debt)}</b>${opts.to?' to '+esc(opts.to.name):''}. ${p.cash>=debt?'You can pay now.':`Raise <b>${fmt(debt-p.cash)}</b> more by selling buildings or mortgaging (up to ${fmt(liquidity(p))} in total).`}</div>`:'');
       const T=pn.querySelector('.pft');T.innerHTML=[['all','All'],['build','Can build'],['mort','Mortgaged']].filter(([k])=>!(ro&&k==='build')).map(([k,l])=>`<button class="pftab${filter===k?' on':''}" role="tab" aria-selected="${filter===k}" data-f="${k}">${l}</button>`).join('');
@@ -5975,7 +5982,8 @@ openAssets=function(p,opts={}){const debt=opts.debt||0,ro=!!opts.readonly;let fi
         const box=el('div','pgrp');box.innerHTML=`<div class="pgh"><i style="background:${gq.col}"></i><b>${esc(gq.name)}</b><em class="${full?'full':''}">${full&&gq.k!=='rail'&&gq.k!=='util'?'Complete set':gq.mine.length+' / '+gq.all.length}</em></div>`;
         rows.forEach(i=>{const o=G.own[i],mine=o.o===p.id;const b=el(mine?'button':'div','prow'+(i===sel?' on':'')+(mine?'':' lock')+(o.m?' mort':''));
           b.innerHTML=mine?`<span>${esc(SQ[i].n)}</span>${o.m?'<small>Mortgaged</small>':SQ[i].t==='prop'?`<small>${LADDER[o.h][0]}</small>`:''}<span class="chev" aria-hidden="true">›</span>`:`<span>${esc(SQ[i].n)}</span><small>${o.o>=0?'Owned by '+esc(P(o.o).name):'Not owned yet'}</small>`;
-          if(mine){b.onclick=()=>{sel=i;draw()};b.ondblclick=()=>showSquare(i)}box.append(b)});L.append(box)});
+          if(mine){b.onclick=()=>{sel=i;draw()};b.ondblclick=()=>showSquare(i)}box.append(b);
+          if(mine&&o.m&&!ro&&!debt){const redeem=el('button','pf-redeem','Redeem '+fmt(unmCost(i)));redeem.dataset.redeem=String(i);redeem.disabled=!canUnmort(p.id,i);redeem.setAttribute('aria-label','Redeem '+SQ[i].n+' for '+fmt(unmCost(i)));redeem.onclick=()=>{if(!canUnmort(p.id,i)){toast('Not enough match cash to redeem this property.');return}unmortgage(p.id,i);renderRoster();save();draw()};box.append(redeem)}});L.append(box)});
       const D=pn.querySelector('.pfd');if(sel==null){D.innerHTML='';return}const i=sel,s=SQ[i],o=G.own[i],gr=s.g?GROUPS[s.g]:null,own=gr?gr.filter(j=>G.own[j].o===p.id).length:0;
       const isP=s.t==='prop',why=ro?'':whyNoBuild(p,i,debt),can=!ro&&!debt&&canBuild(p.id,i),cost=isP?devCost(p.id,i):0;
       D.innerHTML=`<div class="pdh"><i style="background:${s.g?GC[s.g]:'#9aa3ad'}"></i><div><b>${esc(s.n)}</b><small>${esc(isP?GNAME[s.g]+(s.lm?' · '+s.lm:''):s.t==='rail'?'Transit hub':'Utility')}</small></div>${isP?`<em class="${own===gr.length?'full':''}">${own===gr.length?'Complete set':'Set'} (${own}/${gr.length})</em>`:''}</div>
@@ -6503,7 +6511,7 @@ paneLeagues=function(T){const i=leagueIdx(),L=LEAGUES[i],N=LEAGUES[i+1],S=season
       <div class="lgme"><b>${esc(L.name.toUpperCase())} LEAGUE</b><span class="lgt">🏆 <b>${nfmt(PREF.trophies)}</b>${N?` / ${nfmt(N.min)}`:''}</span><span class="xpbar"><i style="width:${pct}%"></i></span><small>${N?`${nfmt(N.min-PREF.trophies)} trophies to ${esc(N.name)}`:'The top league. Well played.'}</small></div></section>
     <section class="lglad card"><ol>${LEAGUES.map((x,k)=>`<li class="${k<i?'past':k===i?'cur':k===i+1?'next':''}"><span class="lgdot"></span>${lgGem(x.id,40)}<span class="lgn"><b>${x.name}</b><small>🏆 ${nfmt(x.min)}</small></span>
       ${k===i?'<em class="lgcur">Current</em>':k===i+1&&x.coins?`<span class="lgnext"><small>Next reward</small><b>${COIN_I}${nfmt(x.coins)} coins</b>${LG_REWARD[x.id]?`<b>✦ ${LG_REWARD[x.id]}</b>`:''}</span>`:k<=PREF.leagueBest&&x.coins?`<small class="lggot">✓ ${nfmt(x.coins)} coins</small>`:x.coins?`<small class="lgrw">${nfmt(x.coins)} coins${LG_REWARD[x.id]?' + '+LG_REWARD[x.id]:''}</small>`:''}</li>`).join('')}</ol></section>
-    <section class="lgr card"><div class="lgrh"><h2>Season rankings</h2><small>Season ${S.n} · top 50 players by trophies this season</small></div><div id="lb" class="lgbody"><div class="small">${FIRE?'Loading…':'Rankings need an internet connection.'}</div></div></section>
+    <section class="lgr card"><div class="lgrh"><h2>Season rankings</h2><small>Season ${seasonDisplay(S.n)} · top 50 players by trophies this season</small></div><div id="lb" class="lgbody"><div class="small">${FIRE?'Loading…':'Rankings need an internet connection.'}</div></div></section>
   </div>${lgScore()}`;
   const me=()=>FIRE&&FIRE.uid&&FIRE.uid();
   const av=r=>{const c=r.c&&CHARS.find(x=>x.id===r.c);return c?charSVG(c.id,40):`<span class="lgini">${esc((cleanName(r.n)||'?').slice(0,1).toUpperCase())}</span>`};
@@ -6529,17 +6537,17 @@ paneLeagues=function(T){const i=leagueIdx(),L=LEAGUES[i],N=LEAGUES[i+1],S=season
   T.innerHTML=`<div class="lg3">
     <section class="lg3hero card"${photo?` style="--ph:url(${photo})"`:''}>
       <div class="lg3gem">${lgGem(L.id,72)}</div>
-      <div class="lg3me"><small>YOUR LEAGUE · SEASON ${S.n}</small><h2>${esc(L.name)}</h2>
+      <div class="lg3me"><small>YOUR LEAGUE · SEASON ${seasonDisplay(S.n)}</small><h2>${esc(L.name)}</h2>
         <span class="xpbar"><i style="width:${pct}%"></i></span>
         <span class="lg3t">🏆 <b>${nfmt(PREF.trophies)}</b>${N?` / ${nfmt(N.min)} · ${nfmt(N.min-PREF.trophies)} to ${esc(N.name)}`:' · top league'}</span></div>
       ${N?`<div class="lg3next"><small>Reward at ${esc(N.name)}</small><b>${COIN_I}${nfmt(N.coins)} coins</b>${LG_REWARD[N.id]?`<span>+ ${esc(LG_REWARD[N.id])}</span>`:''}</div>`:''}</section>
     <div class="lg3row">${LEAGUES.map((x,k)=>`<div class="lg3l${k<i?' past':k===i?' cur':''}">${lgGem(x.id,34)}<b>${x.name}</b><small>${nfmt(x.min)} 🏆</small></div>`).join('')}</div>
-    <section class="lg3rank card"><div class="lg3rh"><h3>Season ${S.n} rankings</h3><small id="lbUpdated" aria-live="polite">Device-reported scores</small><button class="sm" id="lbR">⟳ Refresh</button></div><div id="lb"><div class="small">${FIRE?'Loading…':'Rankings need an internet connection.'}</div></div></section>
+    <section class="lg3rank card"><div class="lg3rh"><h3>Season ${seasonDisplay(S.n)} rankings</h3><small id="lbUpdated" aria-live="polite">Device-reported scores</small><button class="sm" id="lbR">⟳ Refresh</button></div><div id="lb"><div class="small">${FIRE?'Loading…':'Rankings need an internet connection.'}</div></div></section>
     <div class="lg3sc">Win <b class="up">+30</b> · Second of 3+ <b class="up">+12</b> · Last <b class="dn">−8</b> 🏆 <button class="lg3how" id="lgHow">How scoring works ›</button></div></div>`;
   const av=r=>{const c=r.c&&CHARS.find(x=>x.id===r.c);return c?charSVG(c.id,34):`<span class="lgini">${esc((cleanName(r.n)||'?').slice(0,1).toUpperCase())}</span>`};
   const row=(r,k,me)=>`<div class="lg3r${me?' me':''}${k<3?' top':''}"><em>${k<3?['🥇','🥈','🥉'][k]:k+1}</em><span class="lgav">${av(r)}</span><b>${esc(cleanName(r.n))}${me?' <small>(you)</small>':''}</b><small>Lv ${+r.l||1}</small><span>${nfmt(+r.t)} 🏆</span></div>`;
   let loading=false;const load=async()=>{if(loading)return;const E=T.querySelector('#lb'),button=T.querySelector('#lbR'),updated=T.querySelector('#lbUpdated');if(!FIRE){E.innerHTML=`<div class="small">Your season so far: ${nfmt(S.tr||0)} 🏆. Connect to load rankings.</div>`;return}loading=true;button.disabled=true;E.innerHTML='<div class="small">Loading…</div>';
-    try{const rows=await lbFetch()||[],u=FIRE.uid();if(!E.isConnected||seasonNo()!==S.n)return;updated.textContent='Device-reported · Updated '+new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});if(!rows.length){E.innerHTML='<div class="small">No scores yet this season. Finish a game to be first.</div>';return}
+    try{await lbSubmit();const rows=await lbFetch()||[],u=FIRE.uid();const own=rows.find(r=>r.u===u);if(own){own.t=S.tr||0;own.l=lvlOf(PREF.xp);own.n=myName()||'You';own.c=myChar();rows.sort((a,b)=>b.t-a.t||a.u.localeCompare(b.u))}if(!E.isConnected||seasonNo()!==S.n)return;updated.textContent='Device-reported · Updated '+new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});if(!rows.length){E.innerHTML='<div class="small">No published scores yet. Your current Season score: '+nfmt(S.tr||0)+' 🏆.</div>';return}
       const mi=rows.findIndex(r=>r.u===u);E.innerHTML=rows.map((r,k)=>row(r,k,r.u===u)).join('')+(mi<0?`<div class="lg3you">${row({n:myName()||'You',l:lvlOf(PREF.xp),t:S.tr||0,c:myChar()},-1,true).replace('<em>0</em>','<em>–</em>')}</div>`:'')}
     catch(e){if(E.isConnected){E.innerHTML='<div class="small">Couldn’t load the rankings. Check your connection and tap Refresh.</div>';updated.textContent='Refresh failed · try again'}}finally{loading=false;button.disabled=false}};
   T.querySelector('#lbR').onclick=load;
@@ -6753,7 +6761,7 @@ const stSw=(id,on,label)=>`<button class="stsw${on?' on':''}" id="${id}" role="s
   const p=T.querySelector('.herotxt p');if(p)p.outerHTML=`<p class="h3tag">${esc(c.blurb)}</p><div class="h3aw"><span>City awards ${n} / ${CT.length}</span><span class="xpbar"><i style="width:${n/CT.length*100}%"></i></span></div>`;
   const pb=T.querySelector('#qAI');if(pb&&!/solo/i.test(pb.textContent))pb.innerHTML='▶ Play solo';
   T.querySelectorAll('.side .mode').forEach(b=>{if(!b.querySelector('.m3arr'))b.insertAdjacentHTML('beforeend','<span class="m3arr" aria-hidden="true">→</span>')});
-  const sc=T.querySelector('#qSeason');if(sc){sc.classList.add('s3card');sc.innerHTML=`<small class="s3eb">SEASON ${S.n}</small><b class="s3nm">${esc(seasonName(S.n))}</b><span class="xpbar"><i style="width:${t/TIERS*100}%"></i></span><small class="s3ft">${t>=TIERS?'Season complete':`Tier ${t} of ${TIERS}`} · View rewards →</small>`}}catch(e){}return r}}
+  const sc=T.querySelector('#qSeason');if(sc){sc.classList.add('s3card');sc.innerHTML=`<small class="s3eb">SEASON ${seasonDisplay(S.n)}</small><b class="s3nm">${esc(seasonName(S.n))}</b><span class="xpbar"><i style="width:${t/TIERS*100}%"></i></span><small class="s3ft">${t>=TIERS?'Season complete':`Tier ${t} of ${TIERS}`} · View rewards →</small>`}}catch(e){}return r}}
 
 /* ================= COLLECTION (after the Revision 2 redesign) ================= */
 /* Characters: "Your collection" heading, a feature card for the chosen character (portrait, role, ride button,
@@ -6826,7 +6834,7 @@ openAssets=function(p,opts={}){const debt=opts.debt||0,ro=!!opts.readonly;let fi
         L.append(r)});
       const F=pn.querySelector('.pf2f');F.innerHTML='';const bk=el('button','btn danger','Declare bankruptcy');bk.onclick=()=>close('bankrupt');const pb=el('button','btn pri','Pay '+fmt(debt));pb.disabled=p.cash<debt;pb.onclick=()=>close('pay');F.append(bk,pb);
       const x=pn.querySelector('.pf2x');if(x)x.hidden=true};
-    const draw=()=>{const list=propsOf(p.id);if(sel==null||G.own[sel].o!==p.id)sel=list.find(i=>!ro&&canBuild(p.id,i))??list[0]??null;
+    const draw=()=>{pn.classList.toggle('pf2mort',filter==='mort');const list=propsOf(p.id);if(sel==null||G.own[sel].o!==p.id||(filter==='mort'&&!G.own[sel].m))sel=list.find(i=>filter==='mort'?G.own[i].m:!ro&&canBuild(p.id,i))??list[0]??null;
       if(debt&&!ro){drawDebt(list);return}pn.classList.remove('pf2dm');
       pn.querySelector('.pf2h').innerHTML=`<h2>${ro?esc(p.name)+'’s portfolio':'Your portfolio'}</h2>`;
       pn.querySelector('.pf2s').innerHTML=`<span><i>${PF_IC.cash}</i><small>Cash</small><b>${fmt(p.cash)}</b></span><span><i>${PF_IC.assets}</i><small>Assets</small><b>${list.length} propert${list.length===1?'y':'ies'}</b></span><span><i>${PF_IC.worth}</i><small>Net worth</small><b>${fmt(netWorth(p))}</b></span>`;
@@ -6837,7 +6845,7 @@ openAssets=function(p,opts={}){const debt=opts.debt||0,ro=!!opts.readonly;let fi
 
       /* Action-first build tray. Each action uses the game's existing canBuild/
          build path and is rechecked on click; no new building permissions. */
-      if(!ro&&!debt){
+      if(!ro&&!debt&&filter!=='mort'){
         const hub=el('section','pf3quick'),overview=pn.querySelector('.pf3overview');
         hub.setAttribute('aria-label','Quick house and tower construction');
         const cards=ready.slice(0,4).map(i=>{
@@ -6872,7 +6880,8 @@ openAssets=function(p,opts={}){const debt=opts.debt||0,ro=!!opts.readonly;let fi
         if(open)rows.forEach(i=>{const o=G.own[i],mine=o.o===p.id,isP=SQ[i].t==='prop';const b=el(mine?'button':'div','pf2row'+(i===sel?' on':'')+(mine?'':' lock')+(o.m?' mort':''));
           b.dataset.square=String(i);b.innerHTML=mine?`<span class="pf2rn">${esc(SQ[i].n)}</span>${o.m?'<small class="bad">Mortgaged</small>':isP?`<span class="pf2hc"><i>${o.h>=3?PF_IC.tower:PF_IC.house}</i>${o.h===5?'H':o.h}</span>`:''}<i class="pf2ch">${PF_IC.chev}</i>`
             :`<span class="pf2rn">${esc(SQ[i].n)}</span><span class="pf3missing">Missing</span><span class="pf2lk"><i>${PF_IC.lock}</i><small>${o.o>=0?'Owned by '+esc(P(o.o).name):'Unowned · available to buy'}</small></span>`;
-          if(mine){b.onclick=()=>{sel=i;draw()};b.ondblclick=()=>showSquare(i)}box.append(b)});L.append(box)});if(!L.children.length)L.innerHTML='<p class="pf2none">No properties match this filter.</p>';
+          if(mine){b.onclick=()=>{sel=i;draw()};b.ondblclick=()=>showSquare(i)}box.append(b);
+          if(mine&&o.m&&!ro&&!debt){const redeem=el('button','pf-redeem','Redeem '+fmt(unmCost(i)));redeem.dataset.redeem=String(i);redeem.disabled=!canUnmort(p.id,i);redeem.setAttribute('aria-label','Redeem '+SQ[i].n+' for '+fmt(unmCost(i)));redeem.onclick=()=>{if(!canUnmort(p.id,i)){toast('Not enough match cash to redeem this property.');return}unmortgage(p.id,i);renderRoster();save();draw()};box.append(redeem)}});L.append(box)});if(!L.children.length)L.innerHTML='<p class="pf2none">No properties match this filter.</p>';
       const F=pn.querySelector('.pf2f');F.innerHTML='';
       if(debt){const bk=el('button','btn danger','Declare bankruptcy');bk.onclick=()=>close('bankrupt');const pb=el('button','btn pri','Pay '+fmt(debt));pb.disabled=p.cash<debt;pb.onclick=()=>close('pay');F.append(bk,pb)}
       const x=pn.querySelector('.pf2x')||el('button','pf2x','✕');x.setAttribute('aria-label','Close');x.onclick=()=>close(debt?'auto':'done');if(!x.parentElement)pn.append(x);if(debt)x.hidden=true;
@@ -7559,7 +7568,7 @@ function boot(data){
   if(data&&data.G){try{const g=JSON.parse(data.G);startWith(g);return}catch(e){}}
   showTitle();
 }
-</script><script src="./lib/skyline-sc-wallet.js"></script><script src="./lib/skyline-currency.js"></script><script src="./lib/skyline-earned-cash.js"></script><script src="./lib/market-pulse.js"></script><script src="./web/challenges.js"></script><script src="./web/social.js"></script><script src="./web/verified-config.js"></script><script src="./web/verified.js"></script><script>
+</script><script src="./lib/skyline-sc-wallet.js"></script><script src="./lib/skyline-currency.js"></script><script src="./lib/skyline-earned-cash.js"></script><script src="./lib/market-pulse.js"></script><script src="./lib/estate-sc.js"></script><script src="./lib/portfolio-manage.js"></script><script src="./lib/results-trophies.js"></script><script src="./web/challenges.js"></script><script src="./web/social.js"></script><script src="./web/verified-config.js"></script><script src="./web/verified.js"></script><script>
 try{const h=window.claude?.hot;if(h&&h.ready)h.ready(boot);else boot(h?.data??{})}catch(e){boot({})}
 setTimeout(()=>{try{const c=(new URLSearchParams(location.search).get('join')||'').toUpperCase();if(!/^[A-Z0-9]{5}$/.test(c)||!FIRE)return;history.replaceState(null,'',location.pathname);if(!G||G.over)openOnline(c)}catch(e){}},1200);
 </script>
@@ -7584,4 +7593,18 @@ setTimeout(()=>{try{const c=(new URLSearchParams(location.search).get('join')||'
 .evo-peek{display:flex;align-items:center;gap:12px;padding:16px;border:1px solid #56716d;border-radius:14px;background:#102c37;color:#e5eef3}.evo-peek>div{flex:1;min-width:0}.evo-peek h4{font:700 25px var(--display);margin:8px 0;color:#efcb7c}.evo-peek p{font-size:13px;line-height:1.6}.evo-peek small{font-size:10px;letter-spacing:.08em;color:#eacb8b}.evo-model{width:130px!important;max-width:35%;height:auto!important}
 @media(max-width:480px){.pf2s span{display:flex;flex-direction:column;align-items:flex-start;padding:9px 8px;gap:4px;min-width:0}.pf2s span i{display:none}.pf2s small{font-size:10px}.pf2s b{font-size:13px;line-height:1.2;max-width:100%;white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere}.pf3missing{display:none}.pf3metrics b{font-size:15px}.pf3overview{padding:8px}.pf2t button{font-size:11px;padding:0 2px}.evo-track{gap:5px}.evo-track button{padding:10px 4px}.evo-peek{padding:10px}.evo-peek p{font-size:12px}}
 </style>
-<script src="./lib/menu-presentation.js"></script><script src="./web/skyline-showcase.js"></script></body></html>
+<style>
+    .mp.pf2.pf2mort .pf3overview{display:none}
+    .mp.pf2 .pf2grp{flex-shrink:0}.mp.pf2 .pf2row{flex-shrink:0;min-height:48px}
+    .pf-redeem{min-height:52px;flex-shrink:0;border:1px solid #f6d681;border-radius:10px;background:#e9c36f;color:#112333;font-size:14px;font-weight:800;cursor:pointer}
+    .pf-redeem:disabled{background:#304451;color:#ccd7dc;border-color:#627c87}.pf-redeem:focus-visible{outline:3px solid white;outline-offset:2px}
+    @media(max-height:500px) and (min-width:481px){
+      .mp.pf2{width:min(100%,1000px);padding:10px 12px;gap:6px}
+      .mp.pf2 .pf2h h2{font-size:23px}.mp.pf2 .pf2s span{padding:6px 10px}.mp.pf2 .pf2s b{font-size:16px}
+      .mp.pf2 .pf3overview{padding:5px 8px;max-height:92px;overflow:auto;flex-shrink:1;min-height:0}
+      .mp.pf2 .pf3metrics,.mp.pf2 .pf3overview>p{display:none}
+      .mp.pf2 .pf3quick{border:0;margin:0;padding:0}.mp.pf2 .pf3quickhead small{display:none}
+      .mp.pf2:not(.pf2dm) .pf2b{min-height:130px;grid-template-columns:minmax(0,1fr) minmax(0,1fr);overflow:hidden}.mp.pf2 .pf2pic{max-height:110px}
+      .mp.pf2 .pf2g{scrollbar-width:auto;scrollbar-color:#e9c36f #152c3a}
+    }
+    </style><script src="./lib/menu-presentation.js"></script><script src="./web/skyline-showcase.js"></script></body></html>

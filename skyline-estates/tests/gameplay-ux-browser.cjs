@@ -29,14 +29,14 @@ const root=path.resolve(__dirname,'../..'),mime={'.html':'text/html','.js':'text
    window.__uxModal=openAssets(P(0));
    return{owned,cost,cash,houses,expected:GROUPS.pink.length,unowned:GROUPS.orange[0]};
   });
-  await page.locator('.pf3quick').waitFor();
+  await page.locator('.pfm .pfm-tabs [data-f="build"]').waitFor();
   const initial=await page.evaluate(()=>({
    count:document.querySelectorAll('[data-quick-build]').length,
-   heading:document.querySelector('.pf3quickhead b')?.textContent,
+   heading:document.querySelector('.pfm-tabs [data-f="build"]')?.title,
    emptyOwned:!Array.from(document.querySelectorAll('[data-quick-build]')).some(x=>Number(x.dataset.quickBuild)===GROUPS.orange[0]),
    heights:[...document.querySelectorAll('[data-quick-build]')].map(x=>x.getBoundingClientRect().height)
   }));
-  ok('Build-now lists only legal buildable properties at '+vp.width,initial.count===before.expected&&initial.heading.includes('('+before.expected+')')&&initial.emptyOwned&&initial.heights.every(h=>h>=40),initial);
+  ok('Build-now lists only legal buildable properties at '+vp.width,initial.count===before.expected&&initial.heading==='Can build: '+before.expected&&initial.emptyOwned&&initial.heights.every(h=>h>=40),initial);
   await page.screenshot({path:path.join(process.env.RUNNER_TEMP||'/tmp','skyline-quick-build-'+vp.width+'.png')});
   await page.locator('[data-quick-build="'+before.owned+'"]').click();
   const state=await page.evaluate(i=>({

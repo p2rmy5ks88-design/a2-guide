@@ -59,9 +59,9 @@ const check=(name,ok)=>{assert.ok(ok,name);report.checks.push(name);console.log(
   check('existing Coins shop remains available '+label,await p.locator('#tbCoins').isVisible());
   await p.evaluate(()=>{showTitle();homeTab('play')});await p.locator('#tbSkylineCash').tap();await active.locator('.sc-wallet').waitFor();await shot('wallet');await active.locator('.sc-wallet details').last().locator('summary').click();await shot('wallet-history');
   await active.getByRole('button',{name:'Use SC in solo practice',exact:true}).click();
-  await active.getByRole('button',{name:'Keep my SC',exact:true}).waitFor();check('practice limitations disclosed before opt-in '+label,/earns no XP, trophies, Season progress/.test(await p.locator('#modals').innerText()));
+  await active.getByRole('button',{name:'Keep my SC',exact:true}).waitFor();check('practice limitations disclosed before opt-in '+label,/earns no career wins.*XP, trophies, Season progress/.test(await p.locator('#modals').innerText()));
   await active.getByRole('button',{name:'Keep my SC',exact:true}).click();await active.locator('.sc-wallet').waitFor();check('declining keeps opt-in off '+label,await p.evaluate(()=>!PREF.scBoostNext));
-  await active.getByRole('button',{name:'Use SC in solo practice',exact:true}).click();await active.getByRole('button',{name:'Enable solo practice bonus',exact:true}).click();await active.locator('.sc-wallet').waitFor();check('explicit opt-in enabled '+label,await p.evaluate(()=>PREF.scBoostNext));
+  await active.getByRole('button',{name:'Use SC in solo practice',exact:true}).click();await active.getByRole('button',{name:'Start practice without progression',exact:true}).click();await active.locator('.sc-wallet').waitFor();check('explicit opt-in enabled '+label,await p.evaluate(()=>PREF.scBoostNext));
   await active.getByRole('button',{name:'Cancel solo bonus',exact:true}).click();await active.locator('.sc-wallet').waitFor();check('can cancel before starting '+label,await p.evaluate(()=>!PREF.scBoostNext));await active.getByRole('button',{name:'Close',exact:true}).click();
   // Qualifying local finish uses existing match ID and real completion hooks.
   const match=await p.evaluate(()=>{

@@ -52,8 +52,8 @@ const root=path.resolve(__dirname,'../..'),types={'.html':'text/html','.js':'tex
     await page.locator('.em-match-open').click();
     await page.waitForFunction(()=>document.querySelector('#title').hidden&&!document.querySelector('#ui').hidden,{timeout:15000});
     if(await page.locator('#modals .keysm').count())await page.getByRole('button',{name:'Let’s go',exact:true}).click();
-    await page.waitForFunction(()=>!!document.querySelector('#modals .pf2h'),null,{timeout:12000});
-    const opened=await page.evaluate(()=>({active:!document.querySelector('#ui').hidden,manager:!!document.querySelector('#modals .pf2h'),cash:G.players[0].cash}));
+    await page.waitForFunction(()=>!!document.querySelector('#modals .pfm-top'),null,{timeout:12000});
+    const opened=await page.evaluate(()=>({active:!document.querySelector('#ui').hidden,manager:!!document.querySelector('#modals .pfm-top'),cash:G.players[0].cash}));
     verify('Building shortcut opens existing legal Properties manager, without spending',opened.active&&opened.manager&&opened.cash===saved.cash,opened);
   }
   verify('No page overflow or browser errors at '+vp.width,await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)&&errors.length===0,errors);
