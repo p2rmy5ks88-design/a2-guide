@@ -287,7 +287,7 @@ function hdCityPane(T){const saved=loadSave(),c=CITY_DATA[setup.city],C=countryO
   </div>
   <button class="hd-panel hd-aw" id="hdAwards" type="button" aria-label="City awards ${n} of ${CT.length}">${LAUREL}<span class="tx"><small>City Awards</small><b>${n} / ${CT.length}</b><span class="bar"><i style="width:${n/CT.length*100}%"></i></span></span></button>
   <button class="hd-panel hd-chg" id="pCity" type="button">${PIN}<span>Change City</span></button><span class="hd-sep" aria-hidden="true"></span>
-  <button class="hd-panel hd-season" id="qSeason" type="button" style="--sart:url(${S.n===2?'art/skyline-gala.svg':'art/shop.jpg'})" aria-label="Season ${S.n}, ${esc(seasonName(S.n))}, tier ${t} of ${TIERS}${cl?', '+cl+' rewards ready':''}"><span class="tx"><small>SEASON ${S.n}</small><b>${esc(seasonName(S.n))}</b></span>${cl?`<span class="rdy">${cl} ready</span>`:''}<span class="go" aria-hidden="true">→</span></button>
+  <button class="hd-panel hd-season" id="qSeason" type="button" style="--sart:url(${S.n===2?'art/skyline-gala.svg':'art/shop.jpg'})" aria-label="Season ${typeof seasonDisplay==="function"?seasonDisplay(S.n):S.n}, ${esc(seasonName(S.n))}, tier ${t} of ${TIERS}${cl?', '+cl+' rewards ready':''}"><span class="tx"><small>SEASON ${typeof seasonDisplay==="function"?seasonDisplay(S.n):S.n}</small><b>${esc(seasonName(S.n))}</b></span>${cl?`<span class="rdy">${cl} ready</span>`:''}<span class="go" aria-hidden="true">→</span></button>
  </div>`;
  const q=s=>T.querySelector(s);
  q('#pCity').onclick=()=>{sfx('tap');homeTab('world')};
