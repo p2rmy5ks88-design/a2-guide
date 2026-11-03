@@ -1,7 +1,7 @@
 /* Web progression extension. Existing Daily/Weekly rewards and premium tiers stay
    authoritative. New objectives consume qualified immutable completion receipts. */
 (()=>{'use strict';
- if(window.SkylineChallenges)return;
+ if(window.SkylineChallenges||!window.SkylineEarnedCash)return;
  const ledger=SkylineSCWallet.create(localStorage),clone=x=>JSON.parse(JSON.stringify(x));
  const SPEC=Object.freeze([
   {id:'season-games-v1',title:'Season Investor',kind:'games',target:20,sc:50,coins:150,xp:500},
