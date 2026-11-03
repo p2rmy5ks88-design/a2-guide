@@ -34,7 +34,7 @@
     pn.querySelector('.pfm-stats').innerHTML=`<span><small>Match cash</small><b data-pfm-cash>${fmt(p.cash)}</b></span><span><small>Properties</small><b>${list.length}</b></span><span><small>Complete sets</small><b>${sets.filter(x=>x.mine.length===x.all.length).length}</b></span><span><small>Net worth</small><b>${fmt(netWorth(p))}</b></span>${ro?`<span class="pfm-ro"><small>Status</small><b>${G.over?'Match finished':'View only'}</b></span>`:''}`;
     const tabs=[['all','All properties',list.length],['build','Can build',can.length],['mort','Mortgaged',mort.length],['missing','Missing sets',incomplete.length]].filter(([k])=>!(ro&&k==='build'));
     if(!tabs.some(([k])=>k===filter))filter='all';
-    const T=pn.querySelector('.pfm-tabs');T.innerHTML=tabs.map(([k,l,n])=>`<button role="tab" data-f="${k}" aria-selected="${filter===k}" class="${filter===k?'on':''}">${l}<em>${n}</em></button>`).join('');
+    const T=pn.querySelector('.pfm-tabs');T.innerHTML=tabs.map(([k,l,n])=>`<button role="tab" data-f="${k}" aria-selected="${filter===k}" class="${filter===k?'on':''}" title="${l}: ${n}">${l}<em aria-hidden="true">${n}</em></button>`).join('');
     T.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{filter=b.dataset.f;draw();pn.querySelector('.pfm-list').scrollTop=0});
     const L=pn.querySelector('.pfm-list');L.innerHTML='';
     if(filter==='missing'){drawMissing(L,incomplete);return}
@@ -53,11 +53,11 @@
     const rent=o.m?'No rent while mortgaged':isP?`Rent ${fmt(rentFor(i,7))}`:s.t==='rail'?`Rent ${fmt(rentFor(i,7))}`:'Rent 4–10× dice';
     r.innerHTML=`<span class="pfm-info"><b>${esc(s.n)}</b><small>${esc(groupName(i))} · ${o.m?'<em class="bad">Mortgaged</em>':isP?level(o):'Owned'} · ${rent}</small>${isP?`<span class="pfm-pips" aria-label="${level(o)}">${[1,2,3,4].map(k=>`<i class="${o.h===5||o.h>=k?'on':''}"></i>`).join('')}<i class="tower ${o.h===5?'on':''}"></i></span>`:''}</span><span class="pfm-acts"></span><small class="pfm-why"></small>`;
     const A=r.querySelector('.pfm-acts'),W=r.querySelector('.pfm-why'),notes=[];
-    const btn=(label,cls,ok,fn,note)=>{const b=el('button','pfm-btn '+cls,label);b.disabled=!ok;b.onclick=()=>{if(!b.disabled)act(fn,i)};A.append(b);if(!ok&&note)notes.push(note)};
+    const btn=(label,cls,ok,fn,note,tag)=>{const b=el('button','pfm-btn '+cls,label);b.disabled=!ok;if(tag&&ok)b.dataset[tag]=String(i);b.onclick=()=>{if(!b.disabled)act(fn,i)};A.append(b);if(!ok&&note)notes.push(note)};
     if(!ro){
-     if(isP&&!o.m&&o.h<5){const c=devCost(p.id,i);btn(`${o.h===4?'Build tower':'Build house'}<small>${fmt(c)} · rent → ${fmt(s.r[o.h+1])}</small>`,'gold',canBuild(p.id,i),()=>build(p.id,i),why.build)}
-     if(isP&&o.h)btn(`Sell<small>+${fmt(s.h/2)}</small>`,'dark',canSell(p.id,i),()=>sell(p.id,i),why.sell);
-     if(o.m)btn(`Redeem<small>${fmt(unmCost(i))}</small>`,'gold',canUnmort(p.id,i),()=>unmortgage(p.id,i),why.redeem);
+     if(isP&&!o.m&&o.h<5){const c=devCost(p.id,i);btn(`${o.h===4?'Build tower':'Build house'}<small>${fmt(c)} · rent → ${fmt(s.r[o.h+1])}</small>`,'gold',canBuild(p.id,i),()=>build(p.id,i),why.build,'quickBuild')}
+     if(isP&&o.h)btn(`Sell <small>+${fmt(s.h/2)}</small>`,'dark',canSell(p.id,i),()=>sell(p.id,i),why.sell);
+     if(o.m)btn(`Redeem <small>${fmt(unmCost(i))}</small>`,'gold',canUnmort(p.id,i),()=>unmortgage(p.id,i),why.redeem);
      else btn(`Mortgage<small>+${fmt(s.p/2)}</small>`,'dark',canMortgage(p.id,i),()=>mortgage(p.id,i),why.mort);
     }else notes.push(why.all);
     const loc=el('button','pfm-btn ghost','Locate');loc.setAttribute('aria-label','Locate '+s.n+' on the board');loc.onclick=()=>{close('done');setTimeout(()=>{try{camFocus(i)}catch{}highlight(i)},250)};A.append(loc);

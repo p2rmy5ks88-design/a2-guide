@@ -51,3 +51,5 @@
  .pfm .pfm-group{margin-top:2px}
 }
 @media(max-height:360px) and (orientation:landscape){.pfm .pfm-stats span:nth-child(4){display:none}.pfm .pfm-pips{display:none}}
+/* Phone layouts scale #modals down (~0.89): size so rendered targets stay ≥44 px (Redeem ≥48 px). */
+@media(max-height:500px) and (orientation:landscape){.pfm .pfm-btn,.pfm .pfm-tabs button,.pfm .pfm-x{min-height:50px}.pfm .pfm-btn.big{min-height:55px}}

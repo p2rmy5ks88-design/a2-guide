@@ -71,10 +71,10 @@ const check=(name,ok,detail)=>{assert.ok(ok,name+(detail!==undefined?' '+JSON.st
  if(shots){await page.waitForTimeout(900);}if(shots)await page.screenshot({path:path.join(shots,'debt-portfolio-ready.png')});
  await pay.click();check('Pay closes the debt view with the pay result',await page.evaluate(()=>window.__res)==='pay');
  // 7. the normal portfolio is unchanged outside debt
- await page.evaluate(()=>{window.__res=openAssets(P(0),{})});await page.waitForSelector('.mp.pf2 .pf2t button');
+ await page.evaluate(()=>{window.__res=openAssets(P(0),{})});await page.waitForSelector('.mp.pf2 .pfm-tabs button');
  await page.waitForFunction(()=>document.querySelectorAll('.mp.pf2').length===1);
- const normal=await page.evaluate(()=>{const m=document.querySelector('.mp.pf2');return{dm:m.classList.contains('pf2dm'),tabs:m.querySelectorAll('.pf2t button').length,detail:getComputedStyle(m.querySelector('.pf2d')).display}});
- check('normal portfolio keeps its tabs, overview and detail pane',!normal.dm&&normal.tabs>=3&&normal.detail!=='none',normal);
+ const normal=await page.evaluate(()=>{const m=document.querySelector('.mp.pf2');return{dm:m.classList.contains('pf2dm'),tabs:[...m.querySelectorAll('.pfm-tabs button')].map(b=>b.dataset.f),preview:!!m.querySelector('.pf2d,.pf2pic'),rows:m.querySelectorAll('.pfm-row').length}});
+ check('normal portfolio is the full-width manager: four views, no picture/detail preview',!normal.dm&&normal.tabs.join()==='all,build,mort,missing'&&!normal.preview&&normal.rows>0,normal);
  await ctx.close();
  // 8. phone held upright (game rotates to landscape): same guarantees
  const P2=await open({width:390,height:844});await P2.page.evaluate(setup);await P2.page.waitForSelector('.pf2dm .pfdrow');

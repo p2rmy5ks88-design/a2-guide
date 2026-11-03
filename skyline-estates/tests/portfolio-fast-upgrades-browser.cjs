@@ -32,7 +32,7 @@ const mime={'.html':'text/html','.js':'text/javascript','.svg':'image/svg+xml','
   await page.locator('.rf-fast-upgrade').click();
   await page.getByRole('button',{name:'Confirm upgrade',exact:true}).click();
   await page.waitForFunction(d=>propertyRarity('lagos',d.square)===d.rarity+1,data,{timeout:12000});
-  check('confirmed upgrade uses original economy',await page.evaluate(d=>PREF.coins===d.coins&&SkylineEarnedCash.balance()===d.sc-ESTATE_UPGRADE[d.rarity+1].coins,data));
+  check('confirmed upgrade uses original economy',await page.evaluate(d=>PREF.coins===d.coins&&SkylineEarnedCash.balance()===d.sc-ESTATE_UPGRADE[d.rarity+1].sc,data));
   await page.locator('.rf-fast-detail').click();
   const detail=await page.evaluate(d=>({tab:document.querySelector('.rf-mobile-view-select select')?.value,propertyName:document.querySelector('.rf-property h2')?.textContent,expected:CITY_DATA.lagos.props[PROP_IDX.indexOf(d.square)][0],button:!!document.querySelector('[data-estate-upgrade]'),mobileGrowth:document.querySelector('.rf-mobile-growth')?.open}),data);
   check('one-step Details opens correct property growth',detail.tab==='growth'&&detail.propertyName===detail.expected&&detail.button&& (vp.width>850||detail.mobileGrowth===true),detail);
