@@ -9,8 +9,11 @@ const nm=p=>path.join(app,'node_modules',p);const faces=[];
 const addFont=(pkg,file,family,weight)=>{const f=nm(`${pkg}/files/${file}`);if(!fs.existsSync(f)){console.warn('missing font',f);return}fs.copyFileSync(f,path.join(www,'fonts',file));faces.push(`@font-face{font-family:'${family}';src:url(fonts/${file}) format('woff2');font-weight:${weight};font-display:swap}`)};
 addFont('@fontsource/outfit','outfit-latin-700-normal.woff2','Outfit',700);
 for(const w of [500,600,700,800])addFont('@fontsource/manrope',`manrope-latin-${w}-normal.woff2`,'Manrope',w);
+const localTest=process.env.SKYLINE_LOCAL_TEST_REWARDS||'0';
+if(!['0','1'].includes(localTest))throw Error('Invalid local reward flag');
+if(localTest==='1'){body=body.replace('<script src="./lib/cloud-glue.js"></script>','<script src="local-test-promo.js"></script><script src="./lib/cloud-glue.js"></script>');fs.copyFileSync(path.join(app,'test-promos/local-test-promo.js'),path.join(www,'local-test-promo.js'));}
 const head=`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><meta name="format-detection" content="telephone=no"><meta name="color-scheme" content="light"><script src="firebase-config.js"></script><style>${faces.join('')}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui}img{max-width:100%}[hidden]{display:none!important}</style></head><body>`;
-fs.writeFileSync(path.join(www,'index.html'),head.replace('</head>','<link rel="stylesheet" href="lib/menu-presentation.css"></head>')+body+'<script src="lib/menu-presentation.js"></script></body></html>');
+fs.writeFileSync(path.join(www,'index.html'),head.replace('</head>',(localTest==='1'?'<script>window.SKYLINE_LOCAL_TEST_BUILD=true;</script>':'')+'<link rel="stylesheet" href="lib/menu-presentation.css"></head>')+body+'<script src="lib/menu-presentation.js"></script>'+(localTest==='1'?'<script>SkylineLocalTestRewards.install();</script>':'')+'</body></html>');
 fs.cpSync(path.join(shared,'audio'),path.join(www,'audio'),{recursive:true});
 fs.copyFileSync(path.join(shared,'firebase-config.js'),path.join(www,'firebase-config.js'));
 // The Collection/Portfolio UI is a required local runtime module.

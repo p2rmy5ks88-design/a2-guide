@@ -9,6 +9,12 @@ spec=importlib.util.spec_from_file_location('distribution',Path(__file__).with_n
 d=importlib.util.module_from_spec(spec)
 spec.loader.exec_module(d)
 class DistributionProfileTests(unittest.TestCase):
+    def test_local_rewards_force_internal_testflight_even_with_release_channel(self):
+        source=Path(__file__).with_name('ios-distribution.py').read_text()
+        self.assertIn("'testFlightInternalTestingOnly':os.environ.get('SKYLINE_CLOUD_CHANNEL')!='ios-release' or os.environ.get('SKYLINE_LOCAL_TEST_REWARDS')=='1'",source)
+        for channel,local,expected in [('ios-release','1',True),('ios-release','0',False),('private-testing','0',True),('off','0',True)]:
+            with mock.patch.dict(d.os.environ,{'SKYLINE_CLOUD_CHANNEL':channel,'SKYLINE_LOCAL_TEST_REWARDS':local}):
+                self.assertEqual(d.os.environ.get('SKYLINE_CLOUD_CHANNEL')!='ios-release' or d.os.environ.get('SKYLINE_LOCAL_TEST_REWARDS')=='1',expected)
     def setUp(self):
         self.p={'Name':'Skyline TestFlight Fixture','TeamIdentifier':[d.verifier.TEAM], 'Entitlements':{'application-identifier':d.verifier.TEAM+'.'+d.verifier.BUNDLE,'com.apple.developer.team-identifier':d.verifier.TEAM,d.verifier.APPLE:['Default'],'get-task-allow':False},'ExpirationDate':dt.datetime.now(dt.timezone.utc)+dt.timedelta(days=30),'DeveloperCertificates':[b'fixture certificate'],'UUID':'12345678-1234-1234-1234-123456789ABC'}
     def test_store_profile_selects_exact_certificate_and_uuid(self):
