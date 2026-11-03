@@ -259,3 +259,18 @@ document.head.appendChild(rfFastCSS);
 .rf-sc-upgrade .rf-sc-costs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:0}.rf-sc-upgrade .rf-sc-costs div{background:#06192680;border:1px solid #2f5166;border-radius:10px;padding:6px 8px}.rf-sc-upgrade dt{font-size:10.5px;color:#a9c1cc}.rf-sc-upgrade dd{margin:0;font-weight:800;font-size:14px;color:#f4d28b}.rf-sc-upgrade dd.short{color:#ff9d8a}
 .rf-sc-upgrade button{min-height:48px;font-size:15px}.rf-sc-upgrade .rf-sc-reason{font-size:12.5px;color:#cfe0e7}
 `;document.head.append(st)})();
+/* Daylight: Collection and Portfolio follow the light theme instead of staying navy. Coin
+   amounts inherit their pill's text colour so they stay readable on dark and light pills. */
+(()=>{const st=document.createElement('style');st.textContent=`
+html.light .reference-home{--rf-bg:#f4f6f9;--rf-panel:#ffffff;--rf-line:#d3dbe4;--rf-ink:#13284a;--rf-muted:#526781;--rf-gold:#b7861f;background:linear-gradient(180deg,#f6f8fb,#e9eef4)!important;color:var(--rf-ink)!important}
+html.light .reference-home .rf-panel,html.light .reference-home .refdash section,html.light .reference-home [class*="rf-"][class*="card"]{background:#fff!important;color:#13284a!important;border-color:#d3dbe4!important}
+html.light .reference-home h1,html.light .reference-home h2,html.light .reference-home h3,html.light .reference-home b,html.light .reference-home strong{color:#13284a}
+html.light .reference-home small,html.light .reference-home p{color:#526781}
+html.light .rf-sc-upgrade{background:#fff!important;color:#13284a;border-color:#c9a85a}html.light .rf-sc-upgrade .rf-sc-costs div{background:#f4f6f9;border-color:#d3dbe4}html.light .rf-sc-upgrade dd{color:#8a6414}html.light .rf-sc-upgrade .rf-sc-reason,html.light .rf-sc-upgrade .rf-sc-benefits{color:#304a60}
+#rprof #tbCoins b,#rprof #tbCoins .coinnum{color:inherit!important}
+html.light #rprof .tpill{background:#ffffff!important;color:#13284a!important;border-color:#d3dbe4!important;box-shadow:0 2px 8px #13284a1a!important}html.light #rprof .tpill b{color:#13284a!important}
+html.light .cv-shell,html.light .cv-top,html.light .em-album,html.light .em-district,html.light .cv-world-card,html.light .cv-world-intro{background:#ffffff!important;color:#13284a!important;border-color:#d3dbe4!important}
+html.light .cv-shell h1,html.light .cv-shell h2,html.light .cv-top h2,html.light .em-album b,html.light .em-district b{color:#13284a!important}
+html.light .cv-shell p,html.light .cv-top p,html.light .em-album small,html.light .em-district small{color:#526781!important}html.light .cv-eyebrow,html.light .em-eyebrow{color:#9a6c12!important}
+html.light #title .home:has(.cv-shell),html.light #title .home:has(.em-hero),html.light #title .home:has(.reference-home){background:linear-gradient(180deg,#f6f8fb,#e9eef4)!important}
+`;document.head.append(st)})();
