@@ -242,9 +242,11 @@ jobs:
           node skyline-estates/tests/competition-transactions.cjs
           node skyline-estates/tests/competition-service.cjs
           node skyline-estates/tests/competition-match.cjs
-          node skyline-estates/tests/published-web.cjs
           node skyline-estates/tests/currency-browser.cjs
           node skyline-estates/tests/visual-correction-browser.cjs
+      - name: Verify already-published assets on explicit production acceptance
+        if: github.event_name == 'workflow_dispatch'
+        run: node skyline-estates/tests/published-web.cjs
       - name: Upload before-release visual evidence
         if: always()
         uses: actions/upload-artifact@v4
