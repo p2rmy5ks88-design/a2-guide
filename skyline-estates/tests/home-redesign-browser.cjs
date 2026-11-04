@@ -31,6 +31,8 @@ const types={'.html':'text/html','.js':'text/javascript','.jpg':'image/jpeg','.p
    spot:!sp||document.querySelector('#hdSpot').textContent.includes(`${Math.min(SPOT_GOAL,spotCount(sp.id))} / ${SPOT_GOAL}`)}});
  check('header, awards and Spotlight follow live game state after it changes',Object.values(live).every(Boolean),live);
  for(const [label,want] of [['Portfolio','portfolio'],['Collection','collection'],['Shop','shop'],['Awards','ach'],['Progress','progress'],['City','play']]){
+  // Collection auto-hides the dock behind its accessible Menu handle; reveal it first.
+  if(!await page.locator('.hd-di',{hasText:label}).isVisible())await page.locator('.collection-nav-handle').click();
   await page.locator('.hd-di',{hasText:label}).click();await page.waitForTimeout(150);const t=await tab(page),sec=await page.evaluate(()=>SEC_OF[setup.tab]||setup.tab),on=await page.evaluate(()=>document.querySelector('.hd-di.on')?.textContent.trim());
   const ok=want==='ach'?t==='ach':want==='progress'?sec==='progress'&&t!=='ach':sec===want;
   check(`dock ${label} opens the existing ${want} section (${t}) and stays highlighted`,ok&&on===label,{t,sec,on})}
@@ -46,8 +48,10 @@ const types={'.html':'text/html','.js':'text/javascript','.jpg':'image/jpeg','.p
  if(other){const now=await page.evaluate(()=>({h:document.querySelector('.hd-city h1').textContent,bg:document.querySelector('.hd-bg .hd-photo').getAttribute('style')}));check('changing city updates the name and background artwork',now.h===other.name&&now.bg.includes(other.k),{other,now})}
  await page.evaluate(()=>{setup.city='lagos';homeTab('play')});
  // Other sections keep their screens and gain the dock.
- for(const k of ['portfolio','cast','shop','season','settings']){await page.evaluate(k=>homeTab(k),k);await page.waitForTimeout(200);const s=await page.evaluate(()=>({dock:document.querySelectorAll('.hd-di').length,stage:!!document.querySelector('.hd-stage'),pane:document.querySelector('#pane').children.length,dockBox:document.querySelector('#title .rail').getBoundingClientRect().top,paneBottom:document.querySelector('#pane').getBoundingClientRect().bottom}));
-  check(`${k} keeps its own screen above the dock`,s.dock===6&&!s.stage&&s.pane>0&&s.paneBottom<=s.dockBox+1,s)}
+ for(const k of ['portfolio','cast','shop','season','settings']){await page.evaluate(k=>homeTab(k),k);await page.waitForTimeout(200);const s=await page.evaluate(()=>({dock:document.querySelectorAll('.hd-di').length,stage:!!document.querySelector('.hd-stage'),pane:document.querySelector('#pane').children.length,dockBox:document.querySelector('#title .rail').getBoundingClientRect().top,paneBottom:document.querySelector('#pane').getBoundingClientRect().bottom,handle:(()=>{const h=document.querySelector('.collection-nav-handle');if(!h)return null;const r=h.getBoundingClientRect();return r.width>=44&&r.height>=40&&getComputedStyle(h).display!=='none'})()}));
+  // Collection categories auto-hide the dock behind a visible Menu handle (owner request).
+  if(k==='cast')check(`${k} hides the dock behind a visible, touch-sized Menu handle`,s.dock===6&&!s.stage&&s.pane>0&&s.handle===true,s);
+  else check(`${k} keeps its own screen above the dock`,s.dock===6&&!s.stage&&s.pane>0&&s.paneBottom<=s.dockBox+1,s)}
  await ctx.close();
 
  // A saved game shows Continue.
