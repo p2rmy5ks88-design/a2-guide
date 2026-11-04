@@ -554,6 +554,8 @@ try{if(document.querySelector('#title .home'))homeTab(setup.tab||'play')}catch(e
 (()=>{const st=document.createElement('style');st.textContent=`
 #title .rf-collection-grid .rf-hero-stage{display:block!important;min-height:0!important;height:auto!important;padding:0!important;margin:6px 0 0!important;background:none!important;border:0!important}
 #title .rf-collection-grid .rf-hero-stage>:not(.rf-finishes){display:none!important}
+/* Owner: also drop the finish row here; finishes are still chosen and equipped in Shop → Finishes. */
+#title .rf-collection-grid .rf-hero-stage{display:none!important}
 #title .rf-collection-grid .rf-finishes{position:static!important;display:flex!important;align-items:center;gap:10px;width:auto!important;max-width:none!important;padding:6px 10px!important;margin:0!important;transform:none!important}
 #title .rf-collection-grid .rf-finishes>b{white-space:nowrap;font-size:13px}
 #title .rf-collection-grid .rf-finishes>div{display:flex!important;flex-wrap:wrap;gap:6px}
