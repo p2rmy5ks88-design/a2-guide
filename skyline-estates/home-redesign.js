@@ -311,112 +311,7 @@ try{const t=document.getElementById('title');if(t&&!t.hidden&&t.querySelector('.
 })();
 
 
-/* Collection Vault — visual navigation over the existing inventory, upgrade and avatar systems.
-   The four displays use existing game records. This layer does not change entitlements or rules. */
-(()=>{
-'use strict';
-const originalVaultTab=homeTab;
-const VAULT_TABS=[['tokens','Token Vault','items/tok-crown.jpg','Inspect token rarity, powers and evolution'],
- ['buildings','Buildings','items/bld-5.jpg','Explore the six real development stages'],
- ['vault-worlds','Board Worlds','items/surr-garden.jpg','Discover cosmetic board environments'],
- ['frames','Prestige','items/surr-marble.jpg','Showcase earned avatar frames']];
-const vaultStyle=document.createElement('style');
-vaultStyle.id='skyline-collection-vault-style';
-vaultStyle.textContent=[
-'#title .home.hd-dock #pane.sec-collection{background:radial-gradient(circle at 50% 0%,rgba(24,80,87,.5),transparent 62%),linear-gradient(180deg,#071b2a,#0b1e32)!important}',
-'#title .home.hd-dock #pane.sec-collection>.subtabs{display:none!important}',
-'#title .home.hd-dock #pane.sec-collection>.subpane{width:100%!important;min-height:0!important;max-width:none!important;margin:0!important;padding:0 1px 24px!important;overflow:visible!important}',
-'#title .home.hd-dock #pane.sec-collection>.subpane>.refdash{max-width:none}',
-'#title .home.hd-dock .cv-shell{padding:clamp(12px,1.4vw,22px) clamp(10px,1.6vw,24px) 16px;background:linear-gradient(150deg,rgba(19,53,68,.96),rgba(9,29,47,.97));border:1px solid rgba(225,187,105,.55);border-radius:22px;margin:6px 0 18px;box-shadow:0 18px 40px #0005,inset 0 1px #ffffff22;color:#f7f2e6}',
-'#title .cv-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}',
-'#title .cv-top .cv-eyebrow{color:#e5bd71;font-weight:800;letter-spacing:.2em;font-size:11px;text-transform:uppercase}',
-'#title .cv-top h2{font-size:clamp(23px,2.4vw,36px);line-height:1.14;margin:3px 0 4px;color:#fff9e8}',
-'#title .cv-top p{color:#b8d0d2;margin:0;font-size:13px;line-height:1.4}',
-'#title .cv-profile-link{min-height:44px;border:1px solid #d5ad68;border-radius:24px;padding:8px 17px;background:#152f40;color:#f5da9d;font-weight:800;cursor:pointer}',
-'#title .cv-profile-link:hover,#title .cv-profile-link:focus-visible{background:#234958;outline:2px solid #f6d691;outline-offset:2px}',
-'#title .cv-categories{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(7px,1vw,16px)}',
-'#title .cv-category{position:relative;isolation:isolate;overflow:hidden;min-width:0;min-height:125px;padding:0;display:flex;align-items:flex-end;text-align:left;border:2px solid #5b6574;border-radius:17px;background:#102a38;box-shadow:0 8px 17px #0006;cursor:pointer;color:white;transition:transform .16s,box-shadow .16s,border-color .16s}',
-'#title .cv-category img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.72;z-index:0}',
-'#title .cv-category:after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,#061423 1%,#091e30aa 49%,transparent 100%);z-index:1}',
-'#title .cv-category:hover{transform:translateY(-3px);border-color:#ffe09d;box-shadow:0 12px 23px #0009}',
-'#title .cv-category:focus-visible{outline:3px solid #fff2bc;outline-offset:2px}',
-'#title .cv-category[aria-selected="true"]{border-color:#f6ca70;box-shadow:0 0 0 1px #c38e3d,0 0 18px #d49b4773,inset 0 0 15px #fff2ba1c}',
-'#title .cv-category .cv-copy{position:relative;z-index:2;display:block;width:100%;padding:36px 12px 12px}',
-'#title .cv-category b{display:block;font-size:clamp(14px,1.35vw,19px);line-height:1.12;color:#fff9ef}',
-'#title .cv-category small{display:block;margin-top:5px;color:#e2c68d;font-size:clamp(10px,.82vw,12px);font-weight:700}',
-'#title .cv-world-intro{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin:7px 2px 18px}',
-'#title .cv-world-intro h3{margin:0 0 5px;font-size:23px;color:#f8e4b8}',
-'#title .cv-world-intro p{font-size:13px;color:#bcd2d4;max-width:650px;margin:0;line-height:1.5}',
-'#title .cv-world-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}',
-'#title .cv-world-card{background:linear-gradient(180deg,#153747,#0d2434);border:1px solid #396374;border-radius:17px;overflow:hidden;box-shadow:0 12px 22px #0004;min-width:0}',
-'#title .cv-world-card.cv-equipped{border-color:#e6c16f}',
-'#title .cv-world-art{position:relative;aspect-ratio:1.45;overflow:hidden;background:#102b38}',
-'#title .cv-world-art img{display:block;width:100%;height:100%;object-fit:cover}',
-'#title .cv-world-tag{position:absolute;left:10px;top:10px;border-radius:15px;background:#071927e8;border:1px solid #dfbd72;padding:5px 9px;color:#ffebbd;font-size:11px;font-weight:800}',
-'#title .cv-world-body{padding:12px}',
-'#title .cv-world-body h4{font-size:17px;margin:0 0 5px;color:#f8efd7}',
-'#title .cv-world-body p{font-size:12px;line-height:1.4;color:#b9d1d4;margin:0 0 10px;min-height:34px}',
-'#title .cv-world-foot{display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap}',
-'#title .cv-world-foot b{font-size:11px;color:#f0cb80}',
-'#title .cv-open-shop{min-height:40px;border-radius:17px;border:1px solid #dfb86b;background:#ddad55;color:#182638;font-size:12px;font-weight:800;padding:5px 12px;cursor:pointer}',
-'#title .cv-world-note{font-size:12px;color:#a9c1c5;margin:14px 3px 3px}',
-'#title .home.hd-dock:has(.trusted-lobby)>.rail,#title .home.hd-dock:has(.trusted-room-entry)>.rail{display:none!important}',
-'#title .home.hd-dock:has(.trusted-lobby),#title .home.hd-dock:has(.trusted-room-entry){padding-bottom:0!important}',
-'#title .cv-profile-back{margin:6px 8px 15px;min-height:42px;background:linear-gradient(90deg,#193749,#102a39);color:#e9c987;border:1px solid #d1ac69;border-radius:19px;padding:8px 17px;font-weight:800;cursor:pointer}',
-'@media(max-width:850px){#title .cv-category{min-height:86px;border-radius:13px}#title .cv-category .cv-copy{padding:22px 7px 7px}#title .cv-category small{font-size:10px}#title .cv-categories{gap:6px}#title .cv-world-grid{grid-template-columns:repeat(2,minmax(0,1fr))}#title .cv-world-card{font-size:12px}#title .cv-top p{display:none}}',
-'@media(max-width:530px){#title .cv-shell{padding:7px 8px;border-radius:13px;margin:2px 0 7px}#title .cv-top{margin-bottom:5px}#title .cv-top h2{font-size:17px;margin:1px 0}#title .cv-top .cv-eyebrow{font-size:9px}#title .cv-profile-link{min-height:40px;padding:5px 10px;font-size:11px}#title .cv-category{min-height:64px}#title .cv-category b{font-size:11px}#title .cv-category small{font-size:9px;margin-top:1px}#title .cv-category img{opacity:.5}#title .cv-world-intro h3{font-size:17px}#title .cv-world-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}}'
-].join('\n');
-document.head.appendChild(vaultStyle);
 
-function vaultCount(id){
- if(id==='tokens'){const all=TOKENS.concat(NEW_TOKENS);return all.filter(tokenUnlocked).length+' / '+all.length+' owned';}
- if(id==='buildings')return BLD.length+' development stages';
- if(id==='vault-worlds')return SURROUND_PREMIUM.filter(it=>itemOwned('surr',it.id)).length+' / '+SURROUND_PREMIUM.length+' owned';
- if(id==='frames'){const all=frameIds().map(frameDef).filter(Boolean);return all.filter(f=>f.own).length+' / '+all.length+' unlocked';}
- return '';
-}
-function vaultWorlds(){
- const owned=SURROUND_PREMIUM.filter(it=>itemOwned('surr',it.id)).length;
- return '<section class="cv-worlds"><div class="cv-world-intro"><div><h3>Board Worlds</h3><p>Explore the actual cosmetic surrounds available in Skyline Estates. Ownership and unlock conditions come from your saved progress; scenery never changes the rules.</p></div><strong>'+owned+' / '+SURROUND_PREMIUM.length+' collected</strong></div><div class="cv-world-grid">'+
- SURROUND_PREMIUM.map(it=>{
-  const own=itemOwned('surr',it.id),eq=equippedSurround()===it.id;
-  const status=eq?'Equipped':own?'Owned':'Not owned';
-  return '<article class="cv-world-card'+(eq?' cv-equipped':'')+'"><div class="cv-world-art"><img loading="lazy" decoding="async" src="items/surr-'+it.id+'.jpg" alt="'+esc(it.name)+' surround preview"><span class="cv-world-tag">'+status+'</span></div><div class="cv-world-body"><h4>'+esc(it.name)+'</h4><p>'+esc(it.desc)+'</p><div class="cv-world-foot"><b>'+esc(ITEM_RAR.surr[it.id]||'R')+' · '+(own?'In your collection':nfmt(it.price)+' coins')+'</b><button class="cv-open-shop" data-vault-shop="'+it.id+'" type="button">View in Shop</button></div></div></article>';
- }).join('')+'</div><p class="cv-world-note">Only existing premium surrounds appear here. Equip, preview or purchase them in the Shop.</p></section>';
-}
-function decorateVault(request,actual){
- const pane=document.querySelector('#title #pane'),home=document.querySelector('#title .home');
- if(!pane||!home)return;
- if(actual==='cast'){
-  const back=document.createElement('button');back.type='button';back.className='cv-profile-back';back.textContent='← Back to Collection Vault';
-  back.onclick=()=>homeTab('collection');pane.prepend(back);
-  return;
- }
- if((SEC_OF[setup.tab]||setup.tab)!=='collection')return;
- const key=request==='vault-worlds'?'vault-worlds':actual;
- if(!['tokens','buildings','frames','vault-worlds'].includes(key))return;
- const host=pane.querySelector('.subpane')||pane;
- if(key==='vault-worlds'){
-  clearPreview();peekOver(null);
-  host.innerHTML=vaultWorlds();pane.classList.remove('tab-frames');pane.classList.add('tab-vault-worlds');
-  host.querySelectorAll('[data-vault-shop]').forEach(btn=>btn.onclick=()=>{setup.shopTab='surr';setup.shopTabSet=1;homeTab('shop')});
- }
- const nav=document.createElement('section');nav.className='cv-shell';nav.setAttribute('aria-label','Collection Vault');
- nav.innerHTML='<div class="cv-top"><div><span class="cv-eyebrow">Your Collection</span><h2>Collection Vault</h2><p>Collect, unlock and showcase your Skyline Estates treasures.</p></div><button type="button" class="cv-profile-link">Customize Avatar ↗</button></div><nav class="cv-categories" aria-label="Collection categories" role="tablist">'+
- VAULT_TABS.map(([id,name,art])=>'<button class="cv-category" data-vault-tab="'+id+'" role="tab" aria-selected="'+(id===key)+'" type="button"><img src="'+art+'" alt="" loading="lazy"><span class="cv-copy"><b>'+name+'</b><small>'+vaultCount(id)+'</small></span></button>').join('')+'</nav>';
- pane.prepend(nav);
- nav.querySelector('.cv-profile-link').onclick=()=>homeTab('cast');
- nav.querySelectorAll('[data-vault-tab]').forEach(btn=>btn.onclick=()=>{sfx('tap');homeTab(btn.dataset.vaultTab)});
-}
-homeTab=function(k){
- const actual=k==='collection'?'tokens':k==='vault-worlds'?'frames':k;
- const result=originalVaultTab.call(this,actual);
- try{decorateVault(k,actual)}catch(e){console.error('Collection Vault view:',e)}
- return result;
-};
-window.SkylineCollectionVault={tabs:VAULT_TABS.map(x=>x[0])};
-try{if(document.querySelector('#title .home')&&!document.querySelector('#title').hidden&&['collection','tokens','frames','buildings'].includes(SEC_OF[setup.tab]||setup.tab))homeTab(setup.tab)}catch(e){console.error(e)}
-})();
 
 
 /* Estate Album: integrates with existing Property Upgrade Center, never replaces it. */
@@ -524,3 +419,143 @@ portraitDock.textContent='@media(max-width:480px) and (orientation:portrait){'+
 document.head.appendChild(portraitDock);
 window.SkylineEstateAlbum={version:2,integrated:true};
 })();
+
+/* Collection browser: shared inventory shell. No ownership, reward or purchase rules live here. */
+(()=>{
+'use strict';
+const state={cast:{filter:'all',sort:'name'},frames:{filter:'all',sort:'progression'},buildings:{filter:'all',sort:'level'}};
+const originalTab=homeTab;
+let navigationOpen=false;
+function collectionNavigation(){
+ const home=document.querySelector('#title .home');if(!home)return;
+ const active=['cast','tokens','frames','buildings'].includes(setup.tab);
+ home.classList.toggle('collection-mode',active);home.classList.toggle('collection-nav-open',active&&navigationOpen);
+ const rail=home.querySelector(':scope>.rail');if(!rail)return;rail.id='collection-main-navigation';rail.hidden=active&&!navigationOpen;rail.inert=active&&!navigationOpen;
+ let handle=home.querySelector('.collection-nav-handle');
+ if(!active){handle?.remove();navigationOpen=false;return}
+ home.classList.remove('peek-r','peek-t');
+ if(!handle){handle=document.createElement('button');handle.type='button';handle.className='collection-nav-handle';handle.setAttribute('aria-controls',rail.id);home.append(handle);handle.onclick=()=>{navigationOpen=!navigationOpen;collectionNavigation();handle.focus()}}
+ handle.textContent=navigationOpen?'⌄ Hide navigation':'⌃ Menu';handle.setAttribute('aria-expanded',String(navigationOpen));
+ const nav=home.querySelector('#pane>.subtabs');if(nav){nav.setAttribute('aria-label','Collection categories');nav.querySelectorAll('[data-s]').forEach(b=>{const labels={cast:['people','Characters'],tokens:['collection','Tokens'],frames:['collectionFrame','Frames'],buildings:['city','Buildings']},x=labels[b.dataset.s];if(x)b.innerHTML=svgI(x[0],20)+'<span>'+x[1]+'</span>'})}
+}
+homeTab=function(k){const prev=setup.tab;const r=originalTab.call(this,k==='collection'?'tokens':k);if(!['cast','tokens','frames','buildings'].includes(prev))navigationOpen=false;collectionNavigation();return r};
+addEventListener('keydown',e=>{if(e.key==='Escape'&&document.querySelector('.collection-mode.collection-nav-open')){navigationOpen=false;collectionNavigation();document.querySelector('.collection-nav-handle')?.focus()}});
+function filterRows(rows,s){return rows.filter(r=>s.filter==='all'||(s.filter==='own')===r.owned).sort((a,b)=>s.sort==='ownership'?Number(b.owned)-Number(a.owned):s.sort==='progression'?b.progress-a.progress:s.sort==='level'?b.level-a.level:a.name.localeCompare(b.name))}
+function catalog(T,kind,rows,detail){
+ const s=state[kind],list=filterRows(rows,s);if(!list.some(r=>r.id===s.selected))s.selected=list[0]?.id;
+ const row=list.find(r=>r.id===s.selected);
+ const draw=()=>catalog(T,kind,rows,detail);
+ T.innerHTML='<div class="refdash rf-token rf-collection-grid"><section class="rf-token-list"><div class="rf-filters">'+(kind==='buildings'?[['all','Stages ('+rows.length+')']]:[['all','All ('+rows.length+')'],['own','Owned ('+rows.filter(r=>r.owned).length+')'],['lock','Locked ('+rows.filter(r=>!r.owned).length+')']]).map(([id,label])=>'<button data-catalog-filter="'+id+'" class="'+(s.filter===id?'active':'')+'">'+label+'</button>').join('')+'<label class="rf-sort">Sort <select aria-label="Sort collection">'+[['name','Name'],['ownership','Ownership'],...(kind==='frames'?[['progression','Progress']]:kind==='buildings'?[['level','Stage']]:[])].map(([id,name])=>'<option value="'+id+'"'+(s.sort===id?' selected':'')+'>'+name+'</option>').join('')+'</select></label></div><div class="rf-token-grid">'+(list.length?list.map(r=>'<button class="rf-token-card'+(r.id===s.selected?' selected':'')+(r.owned?'':' locked')+'" data-catalog-item="'+esc(r.id)+'" aria-pressed="'+(r.id===s.selected)+'">'+(kind==='buildings'?'':'<span class="rf-owned" aria-label="'+(r.owned?'Owned':'Locked')+'">'+(r.owned?'✓':PF_IC.lock)+'</span>')+'<div class="rf-catalog-art">'+r.art+'</div><strong>'+esc(r.name)+'</strong><small>'+esc(r.subtitle)+'</small>'+(r.goal?'<span class="rf-bar"><i style="width:'+Math.min(100,100*r.progress)+'%"></i></span><small>'+r.count+' / '+r.goal+'</small>':'')+'</button>').join(''):'<p class="rf-empty" role="status">No items match this filter.</p>')+'</div></section><section class="rf-token-detail rf-catalog-detail">'+(row?detail(row):'<section class="rf-panel rf-empty">Choose another filter to browse your collection.</section>')+'</section></div>';
+ T.querySelectorAll('[data-catalog-filter]').forEach(b=>b.onclick=()=>{s.filter=b.dataset.catalogFilter;draw()});T.querySelector('select').onchange=e=>{s.sort=e.target.value;draw()};
+ T.querySelectorAll('[data-catalog-item]').forEach(b=>b.onclick=()=>{const y=T.querySelector('.rf-token-grid').scrollTop;s.selected=b.dataset.catalogItem;draw();T.querySelector('.rf-token-grid').scrollTop=y;[...T.querySelectorAll('[data-catalog-item]')].find(b=>b.dataset.catalogItem===s.selected)?.focus({preventScroll:true})});
+ if(row&&kind==='cast'){
+  T.querySelector('[data-character-equip]')?.addEventListener('click',()=>{if(!charUnlocked(row.id))return;PREF.eq.char=row.id;savePref();railProfile();paneCast(T)});
+  T.querySelectorAll('[data-g]').forEach(b=>b.onclick=()=>{previewChar(row.id,setup.slots[0].tok);previewGesture(b.dataset.g)});
+  T.querySelector('[data-save-name]')?.addEventListener('click',()=>{if(setUsername(T.querySelector('[data-name]').value)){railProfile();toast('Username saved')}else toast('Use 2–12 letters or numbers')});
+ }
+ if(row&&kind==='frames')T.querySelector('[data-frame-equip]')?.addEventListener('click',()=>{if(row.id&&!frameDef(row.id).own)return;PREF.eq.frame=row.id;savePref();railProfile();paneFrames(T)});
+ if(kind==='buildings')T.querySelector('[data-property-upgrades]')?.addEventListener('click',()=>homeTab('portfolio'));
+}
+paneCast=function(T){clearPreview();peekOver(null);const rows=CHARS.map(c=>({id:c.id,name:c.name,owned:!!charUnlocked(c.id),art:charSVG(c.id,120),subtitle:c.role,data:c}));catalog(T,'cast',rows,r=>'<section class="rf-panel rf-catalog-hero"><header><div><h2>'+esc(r.name)+'</h2><p>'+esc(r.data.role)+'</p></div><button class="rf-gold" data-character-equip'+(!r.owned||myChar()===r.id?' disabled':'')+'>'+(myChar()===r.id?'✓ Equipped':'Equip character')+'</button></header><div class="rf-catalog-preview">'+r.art+'</div><p>'+esc(r.data.desc)+'</p><p class="rf-status">'+(r.owned?'Owned':esc(charHow(r.data)))+'</p><div class="rf-gestures">'+['wave','cheer','dance','think','sulk'].map(g=>'<button data-g="'+g+'">'+g+'</button>').join('')+'</div></section><section class="rf-panel rf-catalog-info"><h3>Your profile</h3><label>Username <input data-name maxlength="12" value="'+esc(myName())+'"></label><button class="rf-gold" data-save-name>Save name</button><p>Characters unlock through existing wins, player levels and City Awards.</p></section>')};
+paneFrames=function(T){clearPreview();peekOver(null);const defs=[{id:'',name:'No frame',own:true,prog:[1,1],how:'Plain avatar'},...frameIds().map(frameDef).filter(Boolean)],rows=defs.map(f=>({id:f.id,name:f.name,owned:!!f.own,art:framed('<span class="pav">'+charSVG(myChar(),80)+'</span>',f.id?f:null),subtitle:f.own?'Owned':f.how,goal:f.prog[1],count:f.prog[0],progress:f.prog[0]/f.prog[1],data:f}));catalog(T,'frames',rows,r=>'<section class="rf-panel rf-catalog-hero"><header><h2>'+esc(r.name)+'</h2><button class="rf-gold" data-frame-equip'+(!r.owned||(PREF.eq.frame||'')===r.id?' disabled':'')+'>'+((PREF.eq.frame||'')===r.id?'✓ Equipped':'Equip frame')+'</button></header><div class="rf-catalog-preview">'+r.art+'</div><p>'+esc(r.data.how)+'</p></section><section class="rf-panel rf-token-progress"><header><b>Award progress</b><b>'+r.count+' / '+r.goal+'</b></header><span class="rf-bar gold"><i style="width:'+Math.min(100,r.progress*100)+'%"></i></span><p>'+ (r.owned?'Unlocked':esc(r.data.how))+'</p><small>Frames are earned cosmetics. They have no paid levels or match perks.</small></section>')};
+const roofPane=paneBuildings;
+/* Keep the existing Rooftops section (equip/preview/buy, Spotlight rewards) below the new stage browser. */
+paneBuildings=function(T){let roofs=null;try{roofPane(T);roofs=T.querySelector('.roofs');roofs?.remove()}catch(e){console.error(e)}clearPreview();peekOver(null);const rows=BLD.map(([name,desc,requirement],i)=>({id:String(i),name,owned:true,art:mdl({kind:'building',level:i,owner:PCOL[0],label:name},'rf-building-preview',240,200),subtitle:requirement,level:i,data:{desc,requirement}}));catalog(T,'buildings',rows,r=>'<section class="rf-panel rf-catalog-hero"><header><h2>'+esc(r.name)+'</h2><span class="rf-rarity">Stage '+(r.level+1)+' / '+BLD.length+'</span></header><div class="rf-catalog-preview">'+r.art+'</div><p>'+esc(r.data.desc)+'</p><p class="rf-status">'+esc(r.data.requirement)+'</p></section><section class="rf-panel rf-catalog-info"><h3>Building development</h3><p>These are the existing in-match building appearances. Build houses and towers using match SC and the property rules.</p><p>Permanent property rarity is separate: upgrade collected properties with saved SC and career wins in your Portfolio.</p><button class="rf-gold" data-property-upgrades>View property upgrades →</button></section>');if(roofs)(T.querySelector('.refdash')||T).append(roofs)};
+const style=document.createElement('style');style.id='collection-reference-layout';style.textContent=`
+/* Retain the waiting room's existing dock exclusion outside Collection. */
+#title .home.hd-dock:has(.trusted-lobby)>.rail,#title .home.hd-dock:has(.trusted-room-entry)>.rail{display:none!important}
+#title .home.hd-dock:has(.trusted-lobby),#title .home.hd-dock:has(.trusted-room-entry){padding-bottom:0!important}
+
+html.rot:has(#title:not([hidden]) .collection-mode) body{transform:none!important;width:100vw!important;height:100dvh!important;padding:0!important}
+#title .home.collection-mode{padding-top:env(safe-area-inset-top,0px)!important;display:flex!important;flex-direction:column!important}
+
+#title .home.collection-mode{padding-bottom:calc(44px + env(safe-area-inset-bottom,0px))!important;background:radial-gradient(ellipse at 65% 15%,#0b3045,#001321 75%)!important;grid-template-columns:minmax(0,1fr)!important}
+#title .home.collection-mode.collection-nav-open{padding-bottom:calc(var(--hd-dockh) + 54px + env(safe-area-inset-bottom,0px))!important}
+#title .home.collection-mode>.rail[hidden]{display:none!important}
+#title .home.collection-mode>.rail{bottom:calc(46px + env(safe-area-inset-bottom,0px))!important}
+.collection-nav-handle{position:absolute;z-index:7;bottom:env(safe-area-inset-bottom,0px);left:50%;transform:translateX(-50%);min-height:44px;min-width:112px;padding:8px 20px;border:1px solid #a58b50;border-radius:20px 20px 0 0;background:#0b2639;color:#f4d88a;font:700 12px system-ui;cursor:pointer}
+.collection-nav-handle:focus-visible{outline:3px solid #ffe39a;outline-offset:-4px}
+#title .collection-mode #rprof{position:relative!important;inset:auto!important;display:flex!important;align-items:center!important;height:64px!important;min-height:64px!important;max-height:64px!important;padding:6px max(12px,env(safe-area-inset-right,0px)) 6px max(12px,env(safe-area-inset-left,0px))!important;gap:8px!important;overflow:visible!important;background:transparent!important}
+#title .collection-mode #rprof .tpill{display:inline-flex!important;align-items:center;gap:5px;flex:none!important;min-height:40px!important;max-height:44px!important;width:auto!important;max-width:150px;padding:6px 10px!important;white-space:nowrap}
+#title .collection-mode #rprof .tpill svg,#title .collection-mode #rprof .tpill img,#title .collection-mode #rprof .skyline-sc-diamond{display:inline-block!important;width:20px!important;height:20px!important;min-width:20px!important;flex:none!important}
+#title .collection-mode #rprof #tbWho{display:flex!important;flex-direction:row!important;align-items:center!important;gap:8px!important;flex-wrap:nowrap!important;min-width:0!important;width:auto!important;height:52px!important;padding:0!important;overflow:visible!important}
+#title .collection-mode #rprof #tbWho .rav{width:44px!important;height:44px!important;flex:none!important}
+#title .collection-mode #rprof #tbWho .ri{flex:0 1 auto!important;width:auto!important;display:flex!important;flex-direction:column!important;min-width:0!important}
+#title .collection-mode #rprof #tbWho .ri>b{font-size:14px!important;line-height:1.3!important;height:auto!important;max-height:none!important;overflow:visible!important}
+#title .collection-mode #rprof #tbWho .xpbar{display:none!important}
+#title .collection-mode .hmain{padding:0!important;width:100%!important;min-width:0;min-height:0;overflow:hidden}
+#title .collection-mode #pane{position:relative;flex:1;min-height:0;display:block!important;overflow:hidden!important;padding:8px max(12px,env(safe-area-inset-right,0px)) 6px max(12px,env(safe-area-inset-left,0px))!important;background:transparent!important}
+#title .collection-mode #pane>.subtabs{position:absolute;top:8px;left:max(12px,env(safe-area-inset-left,0px));width:calc((100% - max(12px,env(safe-area-inset-left,0px)) - max(12px,env(safe-area-inset-right,0px)) - 12px)*.46)!important;height:48px;min-height:48px;margin:0!important;padding:4px!important;display:flex!important;gap:2px;background:#041e2e;border:1px solid #2d596d;border-radius:12px;z-index:2}
+#title .collection-mode .subtabs .stab{display:flex;align-items:center;justify-content:center;gap:6px;flex:1;min-width:0;min-height:40px;padding:4px!important;font-size:12px;color:#dae5ef!important}
+#title .collection-mode .subtabs .stab.on{border:1px solid #f3cf78;background:linear-gradient(120deg,#475736,#063043);box-shadow:0 0 10px #f1cc5b66}
+#title .collection-mode #pane>.subpane{width:100%!important;height:100%!important;min-height:0!important;margin:0!important;padding:0!important;overflow:hidden!important}
+#title .collection-mode .rf-collection-grid{display:grid!important;grid-template-columns:minmax(0,46fr) minmax(0,54fr)!important;gap:12px;height:100%!important;min-height:0!important;margin:0!important;font-size:13px;color:#eff4fa}
+#title .collection-mode .rf-token-list{display:flex!important;flex-direction:column;padding-top:58px!important;min-height:0;gap:0}
+#title .collection-mode .rf-filters{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) minmax(68px,1fr);gap:5px;margin-bottom:10px;flex:none}
+#title .collection-mode .rf-filters>button{min-height:44px;padding:4px 5px;font-size:11px}
+#title .collection-mode .rf-sort{min-height:44px;padding:4px;min-width:0;margin:0;font-size:0}
+#title .collection-mode .rf-sort select{width:100%;max-width:100%;min-width:0;min-height:34px;font-size:11px}
+#title .collection-mode .rf-token-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;overflow-y:auto;overflow-x:hidden;align-content:start;padding:3px 3px 12px;min-height:0;overscroll-behavior:contain}
+#title .collection-mode .rf-token-card{min-height:0;padding:10px 8px;gap:6px;border-radius:15px;color:#f1f5fa;overflow:hidden}
+#title .collection-mode .rf-token-card.selected{padding:9px 7px}
+#title .collection-mode .rf-token-thumb{width:100%!important;height:clamp(80px,12.5vw,180px)!important;max-width:none;object-fit:contain}
+#title .collection-mode .rf-token-card>strong{font-size:14px}
+#title .collection-mode .rf-token-card>small{font-size:11px}
+#title .collection-mode .rf-token-detail{display:flex!important;flex-direction:column;gap:8px;overflow-y:auto!important;overflow-x:hidden;padding:0 3px 16px;min-height:0;overscroll-behavior:contain}
+#title .collection-mode .rf-token-hero{flex:none;min-height:0!important;padding:14px 14px 0}
+#title .collection-mode .rf-token-hero header p{font-size:12px;max-width:340px}
+#title .collection-mode .rf-token-large{width:57%!important;height:clamp(155px,13vw,190px)!important;object-fit:contain}
+#title .collection-mode .rf-hero-stage{min-height:0!important;padding:0 6px 0 18px}
+#title .collection-mode .rf-finishes{width:42%;padding:10px;margin-top:10px}
+#title .collection-mode .rf-finishes>div{gap:6px;grid-template-columns:repeat(4,minmax(0,1fr))}
+#title .collection-mode .rf-finishes button{min-width:36px;min-height:36px;max-width:48px}
+#title .collection-mode .rf-arrow{width:44px;height:44px;line-height:36px}
+#title .collection-mode .rf-token-progress{padding:8px 12px;min-height:0!important;position:relative}
+#title .collection-mode .rf-token-progress header{font-size:16px;margin:0 0 7px}
+#title .collection-mode .rf-token-progress p{font-size:12px;margin-top:5px}
+#title .collection-mode .rf-token-progress .rf-xp-total{text-align:right;color:#e9d59e}
+#title .collection-mode .rf-evolution{flex:none;padding:10px 12px;overflow:visible}
+#title .collection-mode .rf-stage-track{display:grid;grid-auto-flow:row;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;overflow:visible;padding:3px 1px 10px}
+#title .collection-mode .rf-stage{min-width:0!important;min-height:0!important;padding:8px 3px;gap:4px}
+#title .collection-mode .rf-evolution>h3{font-size:16px;color:#eff4fa;margin-bottom:8px}#title .collection-mode .rf-stage.current{border:2px solid #f1ce70;box-shadow:0 0 9px #f4cd6640}#title .collection-mode .rf-stage em svg,#title .collection-mode .rf-owned svg{width:14px;height:14px}#title .collection-mode .rf-sc-benefits p{font-size:11px;margin:2px 0 6px}#title .collection-mode .rf-sc-benefits ul{margin:3px 0;padding-left:14px}#title .collection-mode .rf-stage>b{font-size:11px}
+#title .collection-mode .rf-stage>small{font-size:9px}
+#title .collection-mode .rf-stage .rf-stage-illustration{display:block;width:100%!important;height:clamp(48px,5vw,74px)!important;max-height:none!important;object-fit:contain}
+#title .collection-mode .rf-stage>em{top:26px;right:2px}
+#title .collection-mode .rf-upgrade-footer{flex-wrap:wrap;align-items:stretch;gap:10px}
+#title .collection-mode .rf-sc-upgrade{padding:8px;width:100%;min-width:0;display:grid;grid-template-columns:1fr 1fr;gap:8px 14px;text-align:left}
+#title .collection-mode .rf-sc-levels{grid-column:1}.collection-mode .rf-sc-benefits{grid-column:1;grid-row:2}
+#title .collection-mode .rf-sc-costs{grid-column:2;grid-row:1/3;grid-template-columns:1fr 1fr}
+#title .collection-mode .rf-sc-upgrade button,#title .collection-mode .rf-sc-reason{grid-column:1/-1}
+#title .collection-mode .rf-sc-upgrade button{opacity:1;min-height:48px}
+#title .collection-mode .rf-sc-upgrade button:disabled{background:linear-gradient(#50606a,#283e4a);color:#d2dce2!important;border-color:#7b929c;box-shadow:none;cursor:not-allowed}
+#title .collection-mode .rf-sc-upgrade dd{font-size:13px;margin:3px 0 0}
+#title .collection-mode .rf-empty{padding:20px;color:#b7cddd}
+#title .collection-mode .rf-catalog-art{height:130px;width:100%;display:grid;place-items:center}
+#title .collection-mode .rf-catalog-art img{object-fit:contain;max-width:100%;max-height:120px}
+#title .collection-mode .rf-catalog-art .csvg{border-radius:12px}
+#title .collection-mode .rf-catalog-hero,#title .collection-mode .rf-catalog-info{flex:none;padding:18px}
+#title .collection-mode .rf-catalog-hero header{justify-content:space-between}
+#title .collection-mode .rf-catalog-preview{height:240px;display:grid;place-items:center;margin:12px 0}
+#title .collection-mode .rf-catalog-preview img{max-width:100%;height:100%;object-fit:contain;max-height:240px;border-radius:14px}
+#title .collection-mode .rf-catalog-preview .pav img{height:150px;width:150px}
+#title .collection-mode .rf-catalog-info p{margin:10px 0;line-height:1.6}
+#title .collection-mode .rf-catalog-info input{max-width:100%;margin:8px;border:1px solid #688295;border-radius:8px;min-height:44px;padding:8px;background:#062235;color:white}
+#title .collection-mode .rf-gestures{display:flex;gap:5px;flex-wrap:wrap;margin-top:12px}
+#title .collection-mode .rf-gestures button{min-height:44px;border:1px solid #476d7f;border-radius:8px;background:#092b40;color:#e6eff7;padding:8px}
+@media(orientation:landscape) and (max-height:500px){#title .collection-mode .hmain{gap:2px!important}#title .collection-mode #rprof{height:50px!important;min-height:50px!important;max-height:50px!important;padding-top:2px!important;padding-bottom:2px!important}#title .collection-mode #rprof #tbWho{height:44px!important}#title .collection-mode #pane>.subtabs{height:44px;min-height:44px}#title .collection-mode .rf-token-list{padding-top:50px!important}#title .collection-mode .rf-filters{margin-bottom:5px}#title .collection-mode .rf-token-card{gap:3px}#title .collection-mode .rf-token-thumb{height:95px!important}}
+@media(max-width:1050px){#title .collection-mode .rf-token-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}#title .collection-mode .rf-stage-track{grid-template-columns:repeat(3,minmax(0,1fr))}#title .collection-mode .subtabs .stab{font-size:10px;gap:3px}#title .collection-mode .subtabs .stab svg{width:16px}#title .collection-mode .rf-token-large{height:170px!important}#title .collection-mode .rf-token-hero h2{font-size:18px}#title .collection-mode .rf-equip{min-width:94px;padding:8px;font-size:11px}#title .collection-mode .rf-finishes{padding:7px}#title .collection-mode .rf-token-hero header p{font-size:11px}#title .collection-mode .rf-finishes button{min-width:30px;min-height:30px}#title .collection-mode .rf-finishes>div{gap:7px}}
+@media(max-width:720px) and (orientation:landscape){#title .collection-mode .rf-collection-grid{grid-template-columns:minmax(0,42fr) minmax(0,58fr)!important;gap:8px}#title .collection-mode #pane>.subtabs{width:calc((100% - 32px)*.42)!important}#title .collection-mode .subtabs .stab svg{display:none}#title .collection-mode .rf-filters{gap:4px}#title .collection-mode .rf-filters>button{padding:4px 6px;font-size:10px}#title .collection-mode .rf-sort{width:auto;margin:0}#title .collection-mode .rf-token-thumb{height:92px!important}#title .collection-mode .rf-token-card .rf-rarity{min-width:0;font-size:10px}#title .collection-mode .rf-sc-upgrade{grid-template-columns:1fr}#title .collection-mode .rf-sc-costs{grid-column:1;grid-row:auto}#title .collection-mode .rf-sc-benefits{grid-row:auto}#title .collection-mode .rf-token-hero header p{display:none}}
+@media(max-width:600px) and (orientation:portrait){#title .collection-mode #tbLeague{display:none!important}#title .collection-mode #rprof #tbWho{flex:1!important;max-width:165px!important}#title .collection-mode #rprof #tbWho .rav{width:36px!important;height:36px!important}#title .collection-mode #rprof #tbWho .ri>b{white-space:nowrap;overflow:hidden!important;text-overflow:ellipsis}#title .collection-mode #rprof #tbWho .rf-profile-chevron{display:none}#title .collection-mode #rprof #tbWho .ri>b{font-size:11px!important}#title .collection-mode #rprof #tbWho .ri>b small{display:none!important}#title .collection-mode #rprof .tpill{padding:6px!important;font-size:10px!important}#title .collection-mode #pane{overflow:auto!important}#title .collection-mode #pane>.subtabs{position:sticky;top:0;left:auto;width:100%!important;margin-bottom:8px!important}#title .collection-mode #pane>.subpane{height:auto!important;overflow:visible!important}#title .collection-mode .rf-collection-grid{display:flex!important;flex-direction:column;height:auto!important}#title .collection-mode .rf-token-list{padding-top:0!important}#title .collection-mode .rf-token-grid{max-height:330px}#title .collection-mode .rf-token-detail{overflow:visible!important}#title .collection-mode .rf-token-thumb{height:110px!important}#title .collection-mode .rf-sc-upgrade{grid-template-columns:1fr}#title .collection-mode .rf-sc-costs{grid-column:1;grid-row:auto}#title .collection-mode .rf-sc-benefits{grid-row:auto}}
+`;document.head.append(style);
+try{if(document.querySelector('#title .home'))homeTab(setup.tab||'play')}catch(e){console.error('Collection browser',e)}
+})();
+/* Owner request: drop the large showcase preview (the grid card already shows the collectible)
+   so progress, evolution and the SC upgrade get the space. Finishes stay as one compact row. */
+(()=>{const st=document.createElement('style');st.textContent=`
+#title .rf-collection-grid .rf-hero-stage{display:block!important;min-height:0!important;height:auto!important;padding:0!important;margin:6px 0 0!important;background:none!important;border:0!important}
+#title .rf-collection-grid .rf-hero-stage>:not(.rf-finishes){display:none!important}
+#title .rf-collection-grid .rf-finishes{position:static!important;display:flex!important;align-items:center;gap:10px;width:auto!important;max-width:none!important;padding:6px 10px!important;margin:0!important;transform:none!important}
+#title .rf-collection-grid .rf-finishes>b{white-space:nowrap;font-size:13px}
+#title .rf-collection-grid .rf-finishes>div{display:flex!important;flex-wrap:wrap;gap:6px}
+#title .rf-collection-grid .rf-finishes button{width:40px!important;height:40px!important;min-width:40px}
+`;document.head.append(st)})();
