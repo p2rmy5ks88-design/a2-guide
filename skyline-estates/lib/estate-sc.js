@@ -59,6 +59,13 @@
  upgradeCollection=async function(kind,key,expected,city){
   if(kind!=='estate'&&kind!=='token')return original.apply(this,arguments);
   const run=()=>{
+   // Read the current persisted profile while holding the upgrade lock. Another tab
+   // may have equipped an item, completed a game or purchased a cosmetic meanwhile.
+   const raw=localStorage.getItem(PKEY);
+   if(raw!==null){let fresh;try{fresh=JSON.parse(raw)}catch{throw Error('Saved profile could not be read. No SC was spent.')}
+    if(!fresh||typeof fresh!=='object'||Array.isArray(fresh))throw Error('Saved profile is invalid. No SC was spent.');
+    Object.assign(PREF,fresh);
+   }
    repair();
    if(!Number.isInteger(expected)||expected<1)throw Error('Invalid upgrade');
    if(kind==='estate'&&(!Object.hasOwn(CITY_DATA,city)||!Number.isInteger(key)||SQ[key]?.t!=='prop'||expected>4))throw Error('Invalid building upgrade');

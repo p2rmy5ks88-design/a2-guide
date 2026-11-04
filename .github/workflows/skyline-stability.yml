@@ -48,6 +48,7 @@ jobs:
           t 'node skyline-estates/tests/purchase-start-browser.cjs'
           t 'node skyline-estates/tests/no-purchases-browser.cjs'
           t 'node skyline-estates/tests/home-redesign-browser.cjs'
+          t 'node skyline-estates/tests/collection-sc.cjs'
           t 'node skyline-estates/tests/collection-vault-browser.cjs'
           t 'node skyline-estates/tests/portfolio-fast-upgrades-browser.cjs'
           t 'node skyline-estates/tests/testflight-hotfix-browser.cjs'
@@ -238,6 +239,8 @@ jobs:
           node skyline-estates/tests/challenges-browser.cjs
           node skyline-estates/tests/cloud-restore.cjs
           node skyline-estates/tests/native-roadmap-browser.cjs
+          node skyline-estates/tests/collection-vault-browser.cjs
+          COLLECTION_BASE=skyline-estates-app/www node skyline-estates/tests/collection-vault-browser.cjs
           node skyline-estates/tests/testflight-hotfix-browser.cjs
           HOTFIX_NATIVE=1 node skyline-estates/tests/testflight-hotfix-browser.cjs
           node skyline-estates/tests/social-browser.cjs
