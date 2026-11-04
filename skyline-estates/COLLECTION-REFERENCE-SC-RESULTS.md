@@ -34,7 +34,7 @@ The bottom dock hides automatically in Collection. Its 44px Menu handle remains 
 
 ## Local validation
 
-- Collection browser: 43 checks on both the web page and the built native web bundle, with no browser exceptions. Includes 1420×900, 956×440, 844×390, 667×320 and 390×844; geometry, upgrade reachability, navigation, filters, real inventory, unchanged browsing data, exact SC debit, reload persistence and receipt recovery.
+- Collection browser: 44 checks on both the web page and the built native web bundle, with no browser exceptions. Includes 1420×900, 956×440, 844×390, 667×320 and 390×844; geometry, upgrade reachability, navigation, filters, real inventory, unchanged browsing data, exact SC debit, reload persistence and receipt recovery.
 - Collection/Portfolio reference suite: 24 checks, zero browser exceptions; equipment restrictions, every token's artwork/evolution, purchase isolation, rewards, SC upgrades and existing Portfolio flows.
 - Existing hotfix regressions: 21 checks each for web and native bundles, including seasons, purchases/inventory, property upgrades, duplicate/recovery behavior, mortgage controls and practice restrictions.
 - Browser startup/gameplay-view smoke: 16 checks, zero page errors.
