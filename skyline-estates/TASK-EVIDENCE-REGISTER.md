@@ -87,7 +87,8 @@ VERIFIED for web. The native, backend and purchase rows are recorded with their 
 | 10 | AI decision quality and feedback | VERIFIED (Chromium sims) | See the Task 10 section below. |
 | 11 | Onboarding first match | VERIFIED (Chromium); live player test pending | See the Task 11 section below. |
 | 12 | Navigation, layout & accessibility | VERIFIED (Chromium); VoiceOver on device pending | See the Task 12 section below. |
-| 13–15 | Product, UX, AI, balance, beta | NOT STARTED | |
+| 13 | Touch, audio, native lifecycle | CODE COMPLETE + automated; Device BLOCKED | See the Task 13 section below. |
+| 14–15 | Balance, beta | NOT STARTED | |
 | 16–18 | Release gates | NOT STARTED | Owner authorization for TestFlight / store builds. |
 
 ## Task 03 — Competition authority & reconnect (5 Nov 2026, main `f97f9e3`)
@@ -522,3 +523,54 @@ These are false positives, confirmed with screenshots:
 ### Pending
 
 A VoiceOver pass on a physical iPhone.
+
+## Task 13 — Touch, audio and native lifecycle (5 Nov 2026)
+
+### Packaging audit (existing, not reinitialised)
+
+- Capacitor 7: core, ios, android, app, splash-screen and status-bar.
+- `@capacitor-firebase/authentication` 7.5.0.
+- `cordova-plugin-purchase` 13.12.
+- **iOS orientation:** locked to landscape left/right (`scripts/patch-ios.sh`). The app therefore never uses the web's upright-phone rotation (Task 12 is web-only).
+- **Bundle:** `www/` is not committed. It is built from the shared source on every iOS run (`build-web.mjs`) and checked by `verify-bundle.cjs` in skyline-ios.yml.
+- A local `build-web` run on `724c` + this change includes every new lib: rot-media, a11y-dialogs, native-lifecycle, first-session, ai-styles and city-event-advice.
+- Local `verify-bundle` needs the app's npm fonts, which CI installs.
+
+### Existing lifecycle behaviour (verified in source)
+
+- **Web Audio:** `AudioContext` suspends when hidden and resumes on return, via both `visibilitychange` and Capacitor `appStateChange`.
+- **Native save:** the native app saves the match when it goes inactive.
+- **Rendering:** the render loop stops while hidden.
+- **Camera:** pinch, drag and gamepad camera control, plus reduced motion, are documented in WEB-FOLLOW-CAMERA.md.
+
+### Fixed (new `lib/native-lifecycle.js`)
+
+- **Skyline FM:** stream `<audio>` elements are now paused while hidden. Before, an unrouted stream (when `createMediaElementSource` fails) kept playing and downloading in the background. On return, only the stream that was playing resumes, and only if the radio is still on.
+- **Web save:** an in-progress local match is saved on `visibilitychange` hidden and on `pagehide` (Safari may discard background tabs). Online matches are untouched, since the server holds them.
+
+### Owner decision needed
+
+- `navigator.audioSession.type='playback'` makes game sounds play even with the iPhone silent switch on. That suits the radio, but many players expect a game to stay silent.
+- Option: switch to `ambient` (respects the silent switch) unless Skyline FM is playing.
+- Not changed without approval.
+
+### Tests (PASS)
+
+- `tests/lifecycle-browser.cjs` (new, in CI; 3 checks):
+  - streams paused and match saved when hidden;
+  - only the playing stream resumes;
+  - radio switched off stays off.
+
+### Blocked: needs a physical iPhone
+
+To test:
+- silent switch;
+- phone call;
+- music interruption;
+- background and foreground;
+- multi-touch camera feel.
+
+To measure:
+- memory;
+- FPS;
+- launch and resume time.
