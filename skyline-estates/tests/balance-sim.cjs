@@ -7,6 +7,7 @@ const CONFIGS={
  base:{n:90,seed:5000,set:{perks:false},tl:[1,1,1]},
  tier6:{n:90,seed:6000,set:{},boost:6},     // one seat Chaotic (tier 6), others tier 1; boosted seat rotates
  tier3:{n:60,seed:7000,set:{},boost:3},     // one seat Epic (tier 3)
+ tier3b:{n:90,seed:17000,set:{},boost:3},   // replication of tier3 with fresh seeds
  events:{n:60,seed:8000,set:{perks:false,events2:true}},
  pulse:{n:60,seed:9000,set:{perks:false,marketPulse:true}},
  stockholm:{n:30,seed:10000,set:{perks:false,city:'stockholm'}},
