@@ -1,0 +1,33 @@
+// Task 11: 4-slide welcome tour, full Menu tour with Replay tips, Skip tips, no tips for returning players.
+const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
+const assert=require('node:assert/strict'),path=require('node:path');
+const url='file://'+path.resolve(__dirname,'../index.html');
+const prefs=x=>JSON.stringify({nick:'Ada',nickSet:true,welcomed:1,tutDone:1,flat2d:true,...x});
+const start=()=>{GEN++;newGame({cash:1500,set:{ai:'normal',speed:'fast',city:'lagos'},players:[{name:'Ada',tok:TOKENS[0],col:PCOL[0],ai:false},{name:'Kofi',tok:TOKENS[1],col:PCOL[1],ai:true}]});
+ const t=document.querySelector('#title');if(t)t.hidden=true;document.querySelector('#ui').hidden=false;G.turn=0;G.phase='pre';setPrompt('Your turn')};
+(async()=>{
+ const browser=await chromium.launch({headless:true,args:['--disable-webgl'],...(process.env.CHROME_PATH?{executablePath:process.env.CHROME_PATH}:{})});
+ const open=async x=>{const p=await browser.newPage({viewport:{width:844,height:390}});await p.route('https://**/*',r=>r.abort());
+  await p.addInitScript(v=>{if(!sessionStorage.getItem('seeded')){sessionStorage.setItem('seeded',1);localStorage.setItem('skylinePrefs',v)}},prefs(x));
+  await p.goto(url);await p.locator('#boot').waitFor({state:'detached',timeout:25000});return p};
+ let p=await open({stats:{games:0}});
+ await p.evaluate(()=>{openTutorial(true)});await p.waitForTimeout(400);
+ assert.equal(await p.locator('.ttx small').innerText(),'STEP 1 OF 4','welcome tour is 4 slides');
+ assert.equal(await p.locator('#tReplay').count(),0,'no Replay button in the welcome tour');
+ await p.locator('#tSkip').click();await p.waitForTimeout(300);
+ await p.evaluate(()=>{openTutorial(false)});await p.waitForTimeout(400);
+ assert.equal(await p.locator('.ttx small').innerText(),'STEP 1 OF 8','Menu tour keeps all 8 slides');
+ await p.locator('#tSkip').click();await p.waitForTimeout(300);
+ await p.evaluate(start);await p.locator('#coach .cskip').waitFor({state:'visible',timeout:5000});
+ assert.match(await p.locator('#coach .ctx').innerText(),/Roll/);
+ await p.locator('#coach .cskip').click();
+ assert.equal(await p.evaluate(()=>PREF.coachOff),1,'Skip tips turns tips off');
+ assert.equal(await p.evaluate(()=>COACH.find(c=>c.id==='build').t.includes('Portfolio')),true,'build tip names Portfolio');
+ await p.evaluate(()=>{openTutorial(false)});await p.locator('#tReplay').click();
+ assert.deepEqual(await p.evaluate(()=>({off:PREF.coachOff,replay:PREF.coachReplay,seen:Object.keys(PREF.coach).length})),{off:0,replay:1,seen:0},'Replay tips re-enables');
+ await p.close();
+ p=await open({stats:{games:5}});
+ await p.evaluate(start);await p.waitForTimeout(1300);
+ assert.equal(await p.locator('#coach').count(),0,'returning players get no tips');
+ console.log('FIRST SESSION 8 checks');await browser.close();
+})().catch(e=>{console.error(e);process.exit(1)});

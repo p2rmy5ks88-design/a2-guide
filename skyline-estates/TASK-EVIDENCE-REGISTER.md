@@ -85,7 +85,8 @@ VERIFIED for web. The native, backend and purchase rows are recorded with their 
 | 08 | Trophies / Season / rewards truth | VERIFIED (Chromium) | See the Task 08 section below. |
 | 09 | Signature city / strategic identity | VERIFIED (Chromium); Device pending | See the Task 09 section below. |
 | 10 | AI decision quality and feedback | VERIFIED (Chromium sims) | See the Task 10 section below. |
-| 11–15 | Product, UX, AI, balance, beta | NOT STARTED | |
+| 11 | Onboarding first match | VERIFIED (Chromium); live player test pending | See the Task 11 section below. |
+| 12–15 | Product, UX, AI, balance, beta | NOT STARTED | |
 | 16–18 | Release gates | NOT STARTED | Owner authorization for TestFlight / store builds. |
 
 ## Task 03 — Competition authority & reconnect (5 Nov 2026, main `f97f9e3`)
@@ -411,3 +412,53 @@ Deterministic `__sim`: 60 three-AI games, equal seeds 777–779, styles rotated 
 - gameplay-ux: 17 checks.
 - release-content.
 - build-pipelines.
+
+## Task 11 — First-session onboarding (5 Nov 2026)
+
+### Observed baseline flow (fresh profile, 844×390)
+
+1. Welcome 1/3: name and character.
+2. Welcome 2/3: token.
+3. Welcome 3/3: +500 Coins, then Look around / Skip, just play / Show me how to play.
+4. "Show me how to play" showed **8 slides (~1,340 characters)** before the first roll.
+5. "Play my first game" starts a default Lagos Solo match. The default City + Solo path already existed.
+6. The Skyline Keys turn-order draw (one tap), then the match.
+
+### In-match coach tips (first 2 games)
+
+- Before: roll, buy, build and end turn only.
+- Problems found:
+  - the build tip said "Properties" (the button is "Portfolio");
+  - there was no Skip or Replay;
+  - nothing explained match SC versus saved SC versus Coins.
+
+### Changes (new `lib/first-session.js`)
+
+- **Welcome tour:** 4 slides (goal, roll, buy, build; ~680 characters). The last slide says tips will appear in play.
+- **New moment-based tips:**
+  - SC currencies, from round 2;
+  - Lucky Break / City Hall card landing;
+  - tax square;
+  - Lockup;
+  - low cash (points to Portfolio mortgage and sell).
+- **Coach tips:** "Skip tips" turns them off. Menu › How to play keeps all 8 slides and adds "Replay tips".
+- **Wording:** the build tip now names Portfolio.
+
+### Returning players
+
+- No tips after 2 games unless replayed.
+- No forced tour.
+
+### Tests (all PASS)
+
+- `tests/first-session-browser.cjs` (new, in CI; 8 checks):
+  - 4- vs 8-slide tours;
+  - Skip tips;
+  - Replay tips;
+  - Portfolio wording;
+  - no tips for returning players.
+- currency-browser, currency-sc, gameplay-ux, home-redesign, ai-styles.
+
+### Pending
+
+An observed test with real first-time players (the plan's step 05). This needs the owner to recruit 3–5 people.
