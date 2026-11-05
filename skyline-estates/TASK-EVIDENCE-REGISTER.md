@@ -90,7 +90,9 @@ VERIFIED for web. The native, backend and purchase rows are recorded with their 
 | 13 | Touch, audio, native lifecycle | CODE COMPLETE + automated; Device BLOCKED | See the Task 13 section below. |
 | 14 | Quantitative balance audit | VERIFIED (600 seeded sims) | BALANCE-REPORT.md; no rebalancing justified. |
 | 15 | Closed beta / retention | CODE COMPLETE (plan + opt-in diary); beta BLOCKED on owner recruiting | BETA-PLAN.md; metrics blank until observed. |
-| 16–18 | Release gates | NOT STARTED | Owner authorization for TestFlight / store builds. |
+| 16 | Production web acceptance | RELEASED (web, live = main `f4b5dd1`); device acceptance pending | See the Task 16 section below. |
+| 17 | iOS / TestFlight readiness | BLOCKED: upload needs owner approval | Build 169 lacks #108–#128. |
+| 18 | Android readiness | NOT STARTED (not pursued) | |
 
 ## Task 03 — Competition authority & reconnect (5 Nov 2026, main `f97f9e3`)
 
@@ -618,3 +620,36 @@ To measure:
 
 - Recruiting and running the beta need the owner.
 - A TestFlight upload needs separate approval.
+
+## Task 16 — Production web acceptance (5 Nov 2026)
+
+### Live = main
+
+- Live GitHub Pages files were sha256-identical to main:
+  - at `366fb0e`: 15 files (index, sw, offline-assets, both redesign scripts and 10 lib modules);
+  - after #128, at `f4b5dd1`: re-verified (deployed in about 60 s).
+
+### Live smoke test (Chromium, touch, via the live URL)
+
+**844×390:**
+- all 9 feature modules loaded;
+- 0 page errors;
+- Collection tabs are tokens / frames / buildings;
+- utilities are City Power Grid / Lagoon Water Board;
+- Gala frame reads "Premium Season pass, tier 40";
+- AI card shows "AI · Trader";
+- in-match Portfolio is named "Portfolio" and opens as a dialog.
+
+**390×844 upright (rotated):**
+- the Play Solo and Play Online cards are on screen;
+- 0 page errors.
+
+### Fixed during acceptance (#128)
+
+- The achievement pop-up had lost its styling: narrow, with no background.
+- At the top centre, it covered dialog titles such as the Portfolio header.
+- Now: explicit navy/gold styling, and it moves to the bottom-left corner while a dialog is open.
+
+### Pending
+
+- Physical iPhone Safari acceptance by the owner.
