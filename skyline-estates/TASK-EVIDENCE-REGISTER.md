@@ -82,7 +82,8 @@ VERIFIED for web. The native, backend and purchase rows are recorded with their 
 | 05 | Saves / cloud / offline | VERIFIED (automated); Device pending | See the Task 05 section below. |
 | 06 | Collection + SC upgrade UI acceptance | VERIFIED (Chromium); Device pending | See the Task 06 section below. |
 | 07 | Portfolio mortgage/build usability | VERIFIED (Chromium); Device pending | See the Task 07 section below. |
-| 08–15 | Product, UX, AI, balance, beta | NOT STARTED | |
+| 08 | Trophies / Season / rewards truth | VERIFIED (Chromium) | See the Task 08 section below. |
+| 09–15 | Product, UX, AI, balance, beta | NOT STARTED | |
 | 16–18 | Release gates | NOT STARTED | Owner authorization for TestFlight / store builds. |
 
 ## Task 03 — Competition authority & reconnect (5 Nov 2026, main `f97f9e3`)
@@ -279,3 +280,35 @@ Still to test on a physical iPhone:
 Check on a physical iPhone:
 - landscape touch feel;
 - redeeming during a live turn.
+
+## Task 08 — Trophies, Season and rewards truth (5 Nov 2026)
+
+All fixes are in `release_hotfixes.py`; `game.html` is unchanged.
+
+### Fixed
+
+1. **Skyline Gala frame.**
+   - It said "Season 2 premium pass, tier 40", but it is the tier-40 premium reward of every Season (`tierReward`).
+   - Its progress checked the pre-reset internal Season number 2, so it always showed 0.
+   - Now: "Premium Season pass, tier 40", with progress shown from the current premium pass.
+2. **League item unlocks** (Neon Night surround at Gold, Marble dice at Platinum).
+   - These used the current league, which resets each Season, so a reached reward could be lost.
+   - They now use the best league ever reached, the same rule as the once-only promotion coins.
+3. **Leagues hero.**
+   - After a reset it promised "Reward at Silver 150 coins" again, but the coins are paid once.
+   - It now shows "✓ Already earned".
+
+### Unchanged, verified
+
+- The results card states trophies earned, or the exact reason none were awarded (from #106).
+- Promotion coins are granted once per league (`leagueBest`).
+- The Season rewards preview grants nothing and says only verified ranks count.
+- The rankings screen is labelled "Device-reported".
+
+### Checks
+
+- **Runtime fixture:** best league Gold, trophies 0.
+  - Hero shows "Silver reward ✓ Already earned".
+  - Neon Night surround owned = true; Marble dice owned = false.
+  - Gala frame text correct.
+- **Tests (all PASS):** testflight-hotfix-browser, release-content, token-mastery, currency-browser.

@@ -19,6 +19,18 @@ def apply(body):
       ''')
     replace('${S.n}', '${seasonDisplay(S.n)}')
 
+    # Task 08: the Gala frame is the premium-pass tier-40 reward of every Season (tierReward), not a
+    # "Season 2" item; progress checked the pre-reset internal number 2 and so always showed 0.
+    replace("t=typeof seasonTierNow==='function'&&season().n===2?seasonTierNow():0;return{id,name:'Skyline Gala',cls:'fr-gala',how:'Season 2 premium pass, tier 40'", "t=typeof seasonTierNow==='function'&&season().prem?seasonTierNow():0;return{id,name:'Skyline Gala',cls:'fr-gala',how:'Premium Season pass, tier 40'")
+
+    # Task 08: league item unlocks are earned once (like promotion coins), so a Season trophy reset
+    # must not take back a reached league's surround or dice.
+    replace("(u.league&&leagueIdx()>=LEAGUES.findIndex(l=>l.id===u.league))", "(u.league&&Math.max(leagueIdx(),PREF.leagueBest||0)>=LEAGUES.findIndex(l=>l.id===u.league))")
+
+    # Task 08: promotion coins pay once per league (leagueBest); after a Season reset the hero must not
+    # promise them again.
+    replace("${N?`<div class=\"lg3next\"><small>Reward at ${esc(N.name)}</small>", "${N&&i+1<=PREF.leagueBest?`<div class=\"lg3next\"><small>${esc(N.name)} reward</small><b>✓ Already earned</b></div>`:N?`<div class=\"lg3next\"><small>Reward at ${esc(N.name)}</small>")
+
     # Task 02 IP audit: avoid utility names identical/close to a classic board game's.
     replace("const GENERIC_UTILS=[['Power Company','⚡'],['Water Works','💧']];", "const GENERIC_UTILS=[['City Power Grid','⚡'],['Lagoon Water Board','💧']];")
 
