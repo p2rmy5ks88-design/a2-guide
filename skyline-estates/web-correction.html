@@ -4069,7 +4069,7 @@ const DICE_SKINS=[{id:'classic',name:'Classic',face:'#fffdf6',edge:'#e5dcc6',pip
   {id:'mint',name:'Mint',face:'#c8f2dc',edge:'#8fd8b2',pip:'#0f5a36',one:'#e23b6a',price:400},{id:'candy',name:'Candy',face:'#ffd6e8',edge:'#ff9fc6',pip:'#8a1f5a',one:'#2a9af0',price:0,prem:4},{id:'marble',name:'Marble',face:'#f4f1ea',edge:'#cfc8b8',pip:'#7a6a3a',one:'#c8962a',price:0,league:'platinum'}];
 function itemOwned(kind,id){if(kind==='dice'&&id==='classic')return true;if(PREF.inv[kind]&&PREF.inv[kind][id])return true;
   const it=(kind==='fin'?FINISHES:kind==='dice'?DICE_SKINS:SURROUND_PREMIUM).find(x=>x.id===id);if(!it)return false;const u=it.unlock||it;
-  return (u.level&&lvlOf(PREF.xp)>=u.level)||(u.lvl&&lvlOf(PREF.xp)>=u.lvl)||(u.ach&&achDone({id:u.ach}))||(u.league&&leagueIdx()>=LEAGUES.findIndex(l=>l.id===u.league))}
+  return (u.level&&lvlOf(PREF.xp)>=u.level)||(u.lvl&&lvlOf(PREF.xp)>=u.lvl)||(u.ach&&achDone({id:u.ach}))||(u.league&&Math.max(leagueIdx(),PREF.leagueBest||0)>=LEAGUES.findIndex(l=>l.id===u.league))}
 const equippedSurround=()=>PREF.eq.surr&&itemOwned('surr',PREF.eq.surr)?PREF.eq.surr:null;
 function grantItem(kind,id){PREF.inv[kind]=PREF.inv[kind]||{};PREF.inv[kind][id]=Date.now();savePref()}
 function diceSkin(){const s=DICE_SKINS.find(d=>d.id===PREF.eq.dice&&itemOwned('dice',d.id))||DICE_SKINS[0];return s}
@@ -5004,7 +5004,7 @@ const CHARS=[
   {id:'nova',name:'Nova Laurent',role:'The Icon',desc:'Only for those who earn every trophy.',skin:'#d6a98a',hair:'#e9e4dc',style:'long',top:'#f2efe8',bottom:'#f2efe8',shirt:'#1c1d22',acc:['lapels','goldtrim'],unlock:{ach:'platinum'}}];
 PREF.eq.char=PREF.eq.char||'ava';PREF.inv.char=PREF.inv.char||{};PREF.riders=PREF.riders!==false;
 function charUnlocked(id){const c=CHARS.find(x=>x.id===id);if(!c)return false;const u=c.unlock;if(!u||PREF.inv.char[id])return true;
-  return (u.wins&&PREF.stats.wins>=u.wins)||(u.lvl&&lvlOf(PREF.xp)>=u.lvl)||(u.ach&&achDone({id:u.ach}))||(u.league&&leagueIdx()>=LEAGUES.findIndex(l=>l.id===u.league))||(u.streak&&statVal('streak')>=u.streak)||false}
+  return (u.wins&&PREF.stats.wins>=u.wins)||(u.lvl&&lvlOf(PREF.xp)>=u.lvl)||(u.ach&&achDone({id:u.ach}))||(u.league&&Math.max(leagueIdx(),PREF.leagueBest||0)>=LEAGUES.findIndex(l=>l.id===u.league))||(u.streak&&statVal('streak')>=u.streak)||false}
 function charHow(c){const u=c.unlock;if(!u)return 'Starter character';if(u.wins)return `Win ${u.wins} games (${Math.min(u.wins,PREF.stats.wins)}/${u.wins})`;if(u.lvl)return `Reach level ${u.lvl}`;if(u.ach){const a=ACH.find(x=>x.id===u.ach);return a?`Earn “${a.name}”: ${loc(a.desc)}`:''}
   if(u.league)return `Reach the ${LEAGUES.find(l=>l.id===u.league).name} league`;if(u.streak)return `Reach a ${u.streak}-day daily streak`;if(u.season)return `Season track, tier ${u.season} (free)`;return ''}
 const myChar=()=>charUnlocked(PREF.eq.char)?PREF.eq.char:'ava';
@@ -5685,7 +5685,7 @@ const CHAMP_COINS=2000,CHAMP_XP=1000,PRISM_AT=5,PRISM_COINS=3000,CROWN_COINS=100
 PREF.champ=PREF.champ||{};PREF.champM=PREF.champM||{};PREF.frameNew=PREF.frameNew||[];if(PREF.eq.frame===undefined)PREF.eq.frame='';
 const champCount=()=>Object.keys(PREF.champ).length;
 function frameDef(id){if(!id)return null;
-  if(id==='gala'){const own=!!(PREF.inv.frame&&PREF.inv.frame.gala),t=typeof seasonTierNow==='function'&&season().n===2?seasonTierNow():0;return{id,name:'Skyline Gala',cls:'fr-gala',how:'Season 2 premium pass, tier 40',own,coins:0,prog:[own?40:Math.min(40,t),40]}}
+  if(id==='gala'){const own=!!(PREF.inv.frame&&PREF.inv.frame.gala),t=typeof seasonTierNow==='function'&&season().prem?seasonTierNow():0;return{id,name:'Skyline Gala',cls:'fr-gala',how:'Premium Season pass, tier 40',own,coins:0,prog:[own?40:Math.min(40,t),40]}}
   if(id==='prism')return{id,name:'Prism',cls:'fr-prism',how:`Become Champion of ${PRISM_AT} cities`,own:champCount()>=PRISM_AT,coins:PRISM_COINS,prog:[Math.min(PRISM_AT,champCount()),PRISM_AT]};
   if(id==='crown')return{id,name:'Skyline Crown',cls:'fr-crown',how:`Become Champion of all ${CITY_ORDER.length} cities`,own:champCount()>=CITY_ORDER.length,coins:CROWN_COINS,prog:[champCount(),CITY_ORDER.length]};
   const c=id.slice(2);if(!CITY_DATA[c])return null;const cols=countryOf(c).cols||['#E2B54A','#FFFFFF'];
@@ -6540,7 +6540,7 @@ paneLeagues=function(T){const i=leagueIdx(),L=LEAGUES[i],N=LEAGUES[i+1],S=season
       <div class="lg3me"><small>YOUR LEAGUE · SEASON ${seasonDisplay(S.n)}</small><h2>${esc(L.name)}</h2>
         <span class="xpbar"><i style="width:${pct}%"></i></span>
         <span class="lg3t">🏆 <b>${nfmt(PREF.trophies)}</b>${N?` / ${nfmt(N.min)} · ${nfmt(N.min-PREF.trophies)} to ${esc(N.name)}`:' · top league'}</span></div>
-      ${N?`<div class="lg3next"><small>Reward at ${esc(N.name)}</small><b>${COIN_I}${nfmt(N.coins)} coins</b>${LG_REWARD[N.id]?`<span>+ ${esc(LG_REWARD[N.id])}</span>`:''}</div>`:''}</section>
+      ${N&&i+1<=PREF.leagueBest?`<div class="lg3next"><small>${esc(N.name)} reward</small><b>✓ Already earned</b></div>`:N?`<div class="lg3next"><small>Reward at ${esc(N.name)}</small><b>${COIN_I}${nfmt(N.coins)} coins</b>${LG_REWARD[N.id]?`<span>+ ${esc(LG_REWARD[N.id])}</span>`:''}</div>`:''}</section>
     <div class="lg3row">${LEAGUES.map((x,k)=>`<div class="lg3l${k<i?' past':k===i?' cur':''}">${lgGem(x.id,34)}<b>${x.name}</b><small>${nfmt(x.min)} 🏆</small></div>`).join('')}</div>
     <section class="lg3rank card"><div class="lg3rh"><h3>Season ${seasonDisplay(S.n)} rankings</h3><small id="lbUpdated" aria-live="polite">Device-reported scores</small><button class="sm" id="lbR">⟳ Refresh</button></div><div id="lb"><div class="small">${FIRE?'Loading…':'Rankings need an internet connection.'}</div></div></section>
     <div class="lg3sc">Win <b class="up">+30</b> · Second of 3+ <b class="up">+12</b> · Last <b class="dn">−8</b> 🏆 <button class="lg3how" id="lgHow">How scoring works ›</button></div></div>`;
