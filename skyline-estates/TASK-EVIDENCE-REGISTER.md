@@ -77,8 +77,61 @@ VERIFIED for web. The native, backend and purchase rows are recorded with their 
 | 00 | Inventory & baseline | VERIFIED (web) | This file. |
 | 01 | Release / migration / backup controls | VERIFIED (automated) | RELEASE-CONTROLS.md; 10 checks PASS on d1cceae. Device save/restore is still a separate gate. |
 | 02 | IP originality / trade dress | CODE COMPLETE + legal flags | IP-AUDIT.md; utilities renamed (City Power Grid / Lagoon Water Board). Board layout, card effects and real landmarks flagged for LEGAL REVIEW, which blocks store release. |
-| 03 | Competition authority | NOT STARTED | Backend deploy approval. |
+| 03 | Competition authority | VERIFIED (automated); Prod BLOCKED | See the Task 03 section below. |
 | 04 | Purchase integrity | NOT STARTED | StoreKit sandbox; PR #68 owner approval. |
 | 05 | Saves / cloud / offline | NOT STARTED | Review PR #91. |
 | 06–15 | Product, UX, AI, balance, beta | NOT STARTED | |
 | 16–18 | Release gates | NOT STARTED | Owner authorization for TestFlight / store builds. |
+
+## Task 03 — Competition authority & reconnect (5 Nov 2026, main `f97f9e3`)
+
+### Security flow
+
+1. The client authenticates (Firebase ID token).
+2. `competition/compose.cjs` → admission:
+   - verified, expiring invitations;
+   - exactly 2 seats, enforced atomically;
+   - allowlisted room settings.
+3. The start service resolves the server roster.
+4. Turn service, roll plans and operations run against the pinned audited kernel.
+5. The end-kernel result is projected server-side and ingested into rankings:
+   - per Season;
+   - at most 3 eligible results per day;
+   - once only across instances;
+   - no browser score or wallet fields.
+
+The composition imports no Apple or purchase modules.
+
+### Negative cases
+
+All in `tests/competition-service.cjs` and `tests/competition-match.cjs`; all PASS:
+
+- browser score and wallet fields rejected;
+- unauthenticated requests rejected;
+- non-members rejected;
+- no duplicate points across two instances and repeated participants;
+- ties get no invented winner;
+- pre-launch and archived results cannot repopulate Season 1;
+- invitation expiry and capacity enforced;
+- per-identity rate limit;
+- reward claimed once only after the stored goal is met.
+
+### Test results
+
+- PASS: competition-service, competition-match, competition-production, competition-transactions; start, turn-kernel and turn-service; lobby-controller; operation-service.
+- Not run: `turn-browser.test.cjs` could not run locally because its Playwright module path is missing in this environment. CI runs it.
+
+### Legacy leaderboard (`lb/s<n>/<uid>`, client-written)
+
+- **Problem:** the database rules let a signed-in user write their own trophies, 0–100000. That value is self-reported.
+- **Current mitigation, checked in Chromium on the Leagues pane:**
+  - it is labelled "Device-reported scores";
+  - casual challenges say "never verified";
+  - the server "Verified competition" section is separate;
+  - the Season rewards preview says only verified ranked results count.
+
+### Blockers
+
+- **Production backend:** live deployment is paused until the owner approves, so no live endpoint version is recorded.
+- **Recommended, needs owner approval** (it is a rules deploy): restrict or retire `lb` writes, or have the rankings read only server-verified rows.
+- **Reconnect:** a physical-device reconnect test is outstanding.
