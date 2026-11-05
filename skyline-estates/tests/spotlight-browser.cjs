@@ -102,12 +102,12 @@ const check=(name,ok,detail)=>{assert.ok(ok,name+(detail?' '+JSON.stringify(deta
       inside:r.left>=pr.left-1&&r.right<=pr.right+1&&r.top>=pr.top-1&&r.bottom<=pr.bottom+1,overflowX:pane.scrollWidth<=pane.clientWidth+2}});
   ui.play=ui.layout[0]>=44&&ui.layout[1]>=44&&ui.visible&&ui.tappable;
   if(shots)await v.page.screenshot({path:path.join(shots,`spotlight-${label}.png`)});
-  await v.page.evaluate(()=>homeTab('buildings'));await v.page.waitForSelector('.roofs .roofrow');
-  const roof=await v.page.evaluate(()=>({rows:document.querySelectorAll('.roofs .roofrow').length,equipped:document.querySelector('.roofrow.sel b').textContent,stage:!!document.querySelector('.roofstage canvas[data-done]')}));
-  if(shots)await v.page.screenshot({path:path.join(shots,`rooftops-${label}.png`)});
+  await v.page.evaluate(()=>{homeTab('collection');homeTab('frames')});await v.page.waitForSelector('.lmk-plinth select');
+  const roof=await v.page.evaluate(()=>{const s=document.querySelector('.lmk-plinth select');return{plinths:s.options.length,equipped:s.selectedOptions[0].textContent,roofsGone:!document.querySelector('.roofs .roofrow')}});
+  if(shots)await v.page.screenshot({path:path.join(shots,`landmarks-${label}.png`)});
   await v.page.evaluate(()=>{setup.rules={...setup.rules,events2:true,events:false};const me=setup.slots[0];startFromSetup(document.body,setup.slots.map((s,i)=>({...s,type:i<2?'human':'off',tok:i===0?me.tok:s.tok})))});
   await v.page.waitForSelector('#ev2chip');const chip=await v.page.evaluate(()=>{const c=document.querySelector('#ev2chip').getBoundingClientRect();return{w:c.width,inView:c.left>=0&&c.right<=innerWidth,roof:G.players[0].roof}});
-  check(`${label}: Spotlight, rooftop picker and event chip fit the screen`,ui.play&&ui.inside&&ui.overflowX&&roof.rows===6&&roof.equipped==='Golden Rooftop Garden'&&roof.stage&&chip.inView&&chip.roof==='golden-garden',{ui,roof,chip});
+  check(`${label}: Spotlight, landmark plinth and event chip fit the screen`,ui.play&&ui.inside&&ui.overflowX&&roof.plinths===2&&roof.equipped==='Golden Garden'&&roof.roofsGone&&chip.inView&&chip.roof==='golden-garden',{ui,roof,chip});
   if(shots)await v.page.screenshot({path:path.join(shots,`event-chip-${label}.png`)});
   await v.ctx.close();
  }
