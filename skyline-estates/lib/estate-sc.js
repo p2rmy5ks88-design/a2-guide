@@ -44,7 +44,7 @@
    const fields=[['pay',v=>'Payday +'+pct(v)],['rr',v=>v+' re-roll'+(v>1?'s':'')+' per game'],['pass',v=>v+' Lucky Pass'+(v>1?'es':'')],['shield',()=>'First rent bill halved'],['surge',()=>'First Start payday tripled'],['coinX',v=>'Game coins +'+pct(v)],['xpX',v=>'Player XP +'+pct(v)]];
    const benefits=next?fields.filter(([k])=>(then[k]||0)>(now[k]||0)).map(([k,f])=>f(then[k])+((now[k]||0)?' (now '+f(now[k]).replace(/^[^0-9+]*/,'')+')':'')):[];
    if(next&&!benefits.length)benefits.push(refStageName(level+1)+' finish and rarity badge');
-   const reason=!owned?'Unlock this token first':!next?'Highest rarity reached':wins<next.wins?`Needs ${next.wins} wins with this token (you have ${wins})`:have<price?`Needs ${SkylineCurrency.formatCash(price-have)} more saved SC`:'';
+   const reason=!owned?'Unlock this token first':!next?'Highest rarity reached':wins<next.wins?`Needs ${next.wins} win${next.wins===1?'':'s'} with this token (you have ${wins})`:have<price?`Needs ${SkylineCurrency.formatCash(price-have)} more saved SC`:'';
    return{kind,key,owned,level,next:next?level+1:null,price,balance:have,wins,winsNeeded:next?.wins??null,benefits,ready:!reason,reason};
   }
   const level=propertyRarity(city,key),next=ESTATE_UPGRADE[level+1],wins=careerWins(),price=next?cost(level+1,'estate'):null;
@@ -52,7 +52,7 @@
   const collected=!!(PREF.estateOwned?.[city]?.includes(key)||(owner&&G.own[key]?.o===owner.id));
   const boost=[0,0,5,10,15,25];
   const benefits=next?[`Rent +${boost[level+1]}% in future matches with Collection perks (now +${boost[level]}%)`]:[];
-  const reason=!collected?'Own this property in a completed match first':!next?'Highest rarity reached':wins<next.wins?`Needs ${next.wins} career wins (you have ${wins}). Assisted practice does not count`:have<price?`Needs ${SkylineCurrency.formatCash(price-have)} more saved SC`:'';
+  const reason=!collected?'Own this property in a completed match first':!next?'Highest rarity reached':wins<next.wins?`Needs ${next.wins} career win${next.wins===1?'':'s'} (you have ${wins}). Assisted practice does not count`:have<price?`Needs ${SkylineCurrency.formatCash(price-have)} more saved SC`:'';
   return{kind,key,city,owned:collected,level,next:next?level+1:null,price,balance:have,wins,winsNeeded:next?.wins??null,benefits,ready:!reason,reason};
  }
  const original=upgradeCollection;
