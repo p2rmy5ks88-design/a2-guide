@@ -75,7 +75,7 @@ VERIFIED for web. The native, backend and purchase rows are recorded with their 
 | ID | Task | Status | Evidence / blocker |
 |---|---|---|---|
 | 00 | Inventory & baseline | VERIFIED (web) | This file. |
-| 01 | Release / migration / backup controls | NOT STARTED | |
+| 01 | Release / migration / backup controls | VERIFIED (automated) | RELEASE-CONTROLS.md; 10 checks PASS on d1cceae. Device save/restore is still a separate gate. |
 | 02 | IP originality / trade dress | NOT STARTED | |
 | 03 | Competition authority | NOT STARTED | Backend deploy approval. |
 | 04 | Purchase integrity | NOT STARTED | StoreKit sandbox; PR #68 owner approval. |
