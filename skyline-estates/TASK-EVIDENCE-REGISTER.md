@@ -79,7 +79,7 @@ VERIFIED for web. The native, backend and purchase rows are recorded with their 
 | 02 | IP originality / trade dress | CODE COMPLETE + legal flags | IP-AUDIT.md; utilities renamed (City Power Grid / Lagoon Water Board). Board layout, card effects and real landmarks flagged for LEGAL REVIEW, which blocks store release. |
 | 03 | Competition authority | VERIFIED (automated); Prod BLOCKED | See the Task 03 section below. |
 | 04 | Purchase integrity | VERIFIED (automated); Device BLOCKED | See the Task 04 section below. |
-| 05 | Saves / cloud / offline | NOT STARTED | Review PR #91. |
+| 05 | Saves / cloud / offline | VERIFIED (automated); Device pending | See the Task 05 section below. |
 | 06–15 | Product, UX, AI, balance, beta | NOT STARTED | |
 | 16–18 | Release gates | NOT STARTED | Owner authorization for TestFlight / store builds. |
 
@@ -173,3 +173,39 @@ All in `tests/competition-service.cjs` and `tests/competition-match.cjs`; all PA
 - **StoreKit sandbox:** purchase, restore, interrupted purchase and refund still need testing on a physical iPhone in TestFlight. The owner must run these; no physical-device evidence exists yet.
 - **PR #68** (coin packs) stays unmerged until the owner approves.
 - **Production wallet endpoint:** no live verification yet, because the backend deploy is paused until the owner approves.
+
+## Task 05 — Saves, cloud / local persistence, offline (5 Nov 2026, main `f3bd15f`)
+
+### PR #91 (local backup restore)
+
+- **Superseded.** Its restore fix (`cloud-profile.js` local-only pause, `cloud-restore.cjs` regressions) is already identical in main through `853d4ca`.
+- A test cherry-pick left only its notes file as a difference.
+- #91 also carries #90's opt-in test reward commits, which are not merged.
+- Recommendation: the owner closes #91. #90 still needs a separate decision.
+
+### Tests (all PASS)
+
+- cloud-restore
+- cloud-profile
+- save-recovery
+- offline-worker
+- offline-startup
+- cloud-sync-browser (Chromium)
+
+These cover:
+- restore with no cloud overwrite;
+- the pending local change recorded before reconciliation;
+- corrupt save recovery;
+- the service worker waiting for open game tabs;
+- offline boot.
+
+Together with the Task 01 wallet migration fixtures:
+- SC and upgrade receipts are append-only;
+- `repair()` re-applies paid levels.
+
+### Pending
+
+Still to test on a physical iPhone:
+- restore a backup in TestFlight and relaunch the app;
+- airplane mode during a match;
+- sign out and back in.
