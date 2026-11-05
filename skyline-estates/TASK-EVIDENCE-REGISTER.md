@@ -693,3 +693,28 @@ To measure:
 ### Follow-up
 
 - Curated landmark names for some cities. Generated names such as "Airport Road" come from the city tables.
+
+## Owner request — Collection layout v2 (6 Nov 2026)
+
+### Changes
+
+- **Buildings tab removed.** Collection is now Tokens | Landmarks. Calls to `homeTab('buildings')` redirect to Tokens. Property upgrades stay in Portfolio.
+- **No reserved Menu strip.** The Collection fills to the bottom of the screen, and the lists scroll clear of the Menu handle (40 px).
+- **Tokens** (new `lib/collection-tokens.js`), matching the owner's reference:
+  - a 3-column grid of compact cards: 56 px image left; name, rarity, level, XP bar and XP right;
+  - Token Progress and Evolution stages / upgrade underneath;
+  - the large showcase panel is removed, and its Equip button moves into the Token Progress header.
+- **Landmarks** uses the same card style:
+  - Country picker and All / Earned / Locked filters;
+  - 3 columns, so one city per row;
+  - a selected card shows "Play in <city>";
+  - a country-set panel with the display-plinth picker;
+  - the 3D showcase panel is removed.
+- **Compact sizing:** cards about 90 px tall, 40 px filter buttons. 2 columns at 760 px or narrower, 1 column at 430 px or narrower.
+
+### Checks
+
+- Screenshots at 868×400, 667×375 and 390×844: 0 page errors.
+- Tests PASS:
+  - landmarks, collection-vault and reference-dashboard (updated for the new layout);
+  - spotlight, home-redesign, testflight-hotfix, a11y-layout, currency.

@@ -63,50 +63,52 @@
    V.obj.rotation.y=-.5;tick();if(fb)fb.hidden=true}catch{if(fb)fb.hidden=false}}
  // ---- pane ----
  function playIn(c){if(!cityUnlocked(c)){toast(`Unlock ${CITY_DATA[c].name} first in Change City`);return}setup.city=c;PREF.city=c;savePref();try{applyTheme(c)}catch{}homeTab('play');toast(`${CITY_DATA[c].name} selected. Tap Play Solo`)}
+ const LS={filter:'all'};
  function pane(T){try{clearPreview();peekOver(null)}catch{}checkSets();
   const ck=countryNow(),C=COUNTRIES.find(x=>x.key===ck)||COUNTRIES[0],cities=C.cities.filter(c=>CITY_DATA[c]);
   const rows=cities.map(c=>({c,ms:marks(c)})),bronze=rows.filter(r=>r.ms[0].have).length,setDone=!!(PREF[SETS_KEY]&&PREF[SETS_KEY][C.key]);
   const wonders=WONDERS.map(w=>({...w,have:wonderHave(w),prog:w.how}));
-  const all=[...rows.flatMap(r=>r.ms),...wonders];
-  if(!S.sel||!all.some(m=>m.name===S.sel.name&&m.city===S.sel.city))S.sel=rows.flatMap(r=>r.ms).find(m=>!m.have)||all[0];
-  const sel=all.find(m=>m.name===S.sel.name&&m.city===S.sel.city)||all[0];
-  const tile=m=>`<button class="lmk-tile${m.have?' have':''}${m===sel?' on':''}" data-lm="${esc(m.city)}|${esc(m.name)}" aria-pressed="${m===sel}" aria-label="${esc(m.name)}, ${TIER[m.tier].label}, ${m.have?'earned':'needs '+esc(m.prog)}">${icon(m,m.have)}<span><b>${esc(m.name)}</b><small>${m.have?TIER[m.tier].label+' ✓':esc(m.city?TIER[m.tier].need:m.prog)}</small></span></button>`;
+  const all=[...rows.flatMap(r=>r.ms),...wonders],earned=all.filter(m=>m.have).length;
+  const list=all.filter(m=>LS.filter==='all'||(LS.filter==='own'?m.have:!m.have));
+  const key=m=>m.city+'|'+m.name,selKey=S.sel?S.sel.city+'|'+S.sel.name:'';
+  const pct=m=>{if(m.have)return 100;if(!m.city)return 0;const w=wins(m.city);return Math.round(100*(m.tier==='bronze'?Math.min(1,w):m.tier==='silver'?Math.min(3,w)/3:awards(m.city)/CT.length))};
+  const card=m=>{const on=key(m)===selKey,cn=m.city?CITY_DATA[m.city].name:'Wonder';return `<button class="lmk-card${m.have?' have':''}${on?' on':''}" data-lm="${esc(key(m))}" aria-pressed="${on}" aria-label="${esc(m.name)}, ${cn}, ${TIER[m.tier].label}, ${m.have?'earned':'needs '+esc(m.city?TIER[m.tier].need:m.prog)}">
+   <span class="lmk-art">${icon(m,m.have,50,42)}</span>
+   ${m.have?'<span class="lmk-ok" aria-hidden="true">✓</span>':'<span class="lmk-lock" aria-hidden="true">🔒</span>'}
+   <strong>${esc(m.name)}</strong>
+   <span class="lmk-pill" style="--t:${TIER[m.tier].c}">${TIER[m.tier].label}</span>
+   <small>${esc(cn)}</small>
+   <span class="lmk-bar"><i style="width:${pct(m)}%"></i></span>
+   <small>${m.have?'Earned':esc(m.prog)}</small>
+   ${on&&m.city?`<span class="lmk-go" data-lm-play="${esc(m.city)}" role="button" tabindex="0">Play in ${esc(cn)}</span>`:''}</button>`};
   const owned=Object.keys((PREF.inv&&PREF.inv.roof)||{}).filter(id=>PLINTH[id]);
-  const city=sel.city?CITY_DATA[sel.city].name:'Wonder';
-  const next=sel.city?marks(sel.city).find(m=>!m.have):null;
-  T.innerHTML=`<div class="lmk">
-   <section class="lmk-show" aria-label="Landmark showcase">
-    <div class="lmk-top"><b>${esc(city)} · ${TIER[sel.tier].label}</b><small>${sel.have?'Earned':'Locked'}</small></div>
-    <div class="lmk-stage"><canvas aria-hidden="true"></canvas><div class="lmk-fb" hidden>${icon(sel,sel.have,150,124)}</div></div>
-    <h3>${esc(sel.name)}</h3>
-    <p>${sel.have?(sel.city?`Earned in ${esc(city)}`:esc(sel.how)):`Needs ${esc(sel.city?TIER[sel.tier].need:sel.how)} · ${esc(sel.prog)}`}</p>
-    ${next&&next.name!==sel.name?`<p class="lmk-next">Next: <b>${esc(next.name)}</b> · ${esc(next.prog)}</p>`:''}
-    <div class="lmk-acts">${sel.city?`<button class="lmk-play" data-lm-play="${esc(sel.city)}">Play in ${esc(city)}</button>`:''}
-     <label class="lmk-plinth">Plinth <select aria-label="Showcase plinth"><option value="">Stone</option>${owned.map(id=>`<option value="${id}"${plinthId()===id?' selected':''}>${esc(PLINTH[id].name.replace(' Plinth',''))}</option>`).join('')}</select></label></div>
-   </section>
-   <section class="lmk-list" aria-label="Landmarks by city">
-    <div class="lmk-head"><label class="lmk-country">Country <select aria-label="Country">${COUNTRIES.map(x=>`<option value="${x.key}"${x.key===C.key?' selected':''}>${esc(x.name)}</option>`).join('')}</select></label>
-     <div class="lmk-set" title="Earn every Bronze landmark in ${esc(C.name)}"><span class="lmk-bar"><i style="width:${Math.round(bronze/cities.length*100)}%"></i></span><small>${setDone?'Set complete ✓':`${bronze}/${cities.length} → +500 Coins`}</small></div></div>
-    ${rows.map(r=>`<div class="lmk-city"><div class="lmk-cn"><b>${esc(CITY_DATA[r.c].name)}</b><small>${wins(r.c)} win${wins(r.c)===1?'':'s'}</small></div><div class="lmk-tiles">${r.ms.map(tile).join('')}</div></div>`).join('')}
-    <div class="lmk-city"><div class="lmk-cn"><b>Wonders</b><small>special</small></div><div class="lmk-tiles">${wonders.map(tile).join('')}</div></div>
-   </section></div>`;
-  T.querySelectorAll('[data-lm]').forEach(b=>b.onclick=()=>{const[c,n]=b.dataset.lm.split('|');S.sel={city:c,name:n};const y=T.querySelector('.lmk-list').scrollTop;pane(T);T.querySelector('.lmk-list').scrollTop=y;T.querySelector('.lmk-tile.on')?.focus({preventScroll:true})});
+  T.innerHTML=`<div class="lmk2">
+   <div class="lmk-filters"><label class="lmk-country"><span>Country</span><select aria-label="Country">${COUNTRIES.map(x=>`<option value="${x.key}"${x.key===C.key?' selected':''}>${esc(x.name)}</option>`).join('')}</select></label>
+    ${[['all','All ('+all.length+')'],['own','Earned ('+earned+')'],['lock','Locked ('+(all.length-earned)+')']].map(([id,l])=>`<button data-lmf="${id}" class="${LS.filter===id?'active':''}">${l}</button>`).join('')}</div>
+   <div class="lmk-grid">${list.map(card).join('')||'<p class="lmk-empty">Nothing here yet.</p>'}</div>
+   <section class="lmk-setp"><header><b>${esc(C.name)} landmark set</b><b>${bronze} / ${cities.length}</b></header>
+    <span class="lmk-bar big"><i style="width:${Math.round(bronze/cities.length*100)}%"></i></span>
+    <p>${setDone?'Set complete ✓ Reward collected.':`Earn every Bronze landmark in ${esc(C.name)} (1 win in each city) → <b>+500 Coins</b> and the Gold token finish.`}</p>
+    <label class="lmk-plinth">Display plinth <select aria-label="Display plinth"><option value="">Stone</option>${owned.map(id=>`<option value="${id}"${plinthId()===id?' selected':''}>${esc(PLINTH[id].name.replace(' Plinth',''))}</option>`).join('')}</select></label></section>
+  </div>`;
+  T.querySelectorAll('[data-lm]').forEach(b=>b.onclick=e=>{if(e.target.closest('[data-lm-play]'))return;const[c,n]=b.dataset.lm.split('|');S.sel={city:c,name:n};const sc=T.querySelector('.lmk2').scrollTop;pane(T);T.querySelector('.lmk2').scrollTop=sc});
+  T.querySelectorAll('[data-lm-play]').forEach(x=>{const go=e=>{e.stopPropagation();playIn(x.dataset.lmPlay)};x.onclick=go;x.onkeydown=e=>{if(e.key==='Enter'||e.key===' ')go(e)}});
+  T.querySelectorAll('[data-lmf]').forEach(b=>b.onclick=()=>{LS.filter=b.dataset.lmf;pane(T)});
   T.querySelector('.lmk-country select').onchange=e=>{S.country=e.target.value;S.sel=null;pane(T)};
   T.querySelector('.lmk-plinth select').onchange=e=>{PREF.eq.roof=e.target.value||null;savePref();pane(T)};
-  T.querySelector('[data-lm-play]')?.addEventListener('click',e=>playIn(e.currentTarget.dataset.lmPlay));
-  clearNav(T);showcase(T.querySelector('.lmk-stage'),sel,sel.have)}
- // Landscape Collection floats its tab bar over the left column: start the list below it.
- function clearNav(T){const l=T.querySelector('.lmk-list'),n=document.querySelector('#pane>.subtabs');if(!l)return;l.style.marginTop='';if(!n)return;const a=n.getBoundingClientRect(),b=l.getBoundingClientRect();
-  if(a.height&&a.right>b.left+4&&a.left<b.right-4&&a.bottom>b.top)l.style.marginTop=Math.ceil(a.bottom-b.top+6)+'px'}
- addEventListener('resize',()=>{const T=document.querySelector('.lmk')?.parentElement;if(T)requestAnimationFrame(()=>clearNav(T))});
+  clearNav(T)}
+ // Landscape Collection floats its tab bar over the content: start below it.
+ function clearNav(T){const l=T.querySelector('.lmk2'),n=document.querySelector('#pane>.subtabs');if(!l)return;l.style.paddingTop='';if(!n)return;const a=n.getBoundingClientRect(),b=l.getBoundingClientRect();
+  if(a.height&&a.bottom>b.top)l.style.paddingTop=Math.ceil(a.bottom-b.top+6)+'px'}
+ addEventListener('resize',()=>{const T=document.querySelector('.lmk2')?.parentElement;if(T)requestAnimationFrame(()=>clearNav(T))});
  paneFrames=pane;
  // Buildings tab: drop the old Rooftops panel.
  const pb=paneBuildings;paneBuildings=function(T){const r=pb.apply(this,arguments);T.querySelectorAll('.rf-roofs-panel,.roofs').forEach(n=>n.remove());return r};
  // Tab label: Frames → Landmarks.
  const relabel=()=>{const b=document.querySelector('#pane>.subtabs [data-s="frames"]');if(b&&!/Landmarks/.test(b.textContent)){const s=b.querySelector('span');if(s)s.textContent='Landmarks';else b.textContent='Landmarks';b.setAttribute('aria-label','Landmarks')}};
- const ht=homeTab;homeTab=function(){const r=ht.apply(this,arguments);try{relabel()}catch{}return r};
+ const ht=homeTab;homeTab=function(k){if(k==='buildings')k='tokens';const r=ht.call(this,k);try{relabel()}catch{}return r};
  const st=document.createElement('style');st.textContent=`
-.lmk{display:grid;grid-template-columns:minmax(0,1fr) 232px;grid-template-areas:"list show";gap:8px;height:100%;min-height:0;box-sizing:border-box;padding-bottom:calc(58px + env(safe-area-inset-bottom,0px));font-family:inherit}
+.lmk{display:grid;grid-template-columns:minmax(0,1fr) 232px;grid-template-areas:"list show";gap:8px;height:100%;min-height:0;box-sizing:border-box;padding-bottom:6px;font-family:inherit}
 .lmk-show{grid-area:show;display:flex;flex-direction:column;gap:3px;padding:8px 10px;border-radius:14px;background:radial-gradient(120% 80% at 50% 30%,#173d57,#0a1f2e);border:1px solid #c9a85a;color:#f2f5f7;min-height:0;overflow:auto}
 .lmk-top{display:flex;justify-content:space-between;font-size:10px;letter-spacing:.06em;text-transform:uppercase}.lmk-top b{color:#f4d28b}.lmk-top small{color:#a9c1cc}
 .lmk-stage{position:relative;height:118px;flex:none}.lmk-stage canvas{width:100%;height:100%;display:block}.lmk-fb{position:absolute;inset:0;display:grid;place-items:center}
@@ -114,7 +116,7 @@
 .lmk-acts{display:flex;gap:6px;margin-top:auto;padding-top:4px;align-items:center}
 .lmk-play{flex:1 1 auto;min-height:40px;border-radius:11px;border:1px solid #f6dc95;background:linear-gradient(180deg,#f3d27e,#d9a845);color:#1a1406;font:800 12.5px Manrope,system-ui;cursor:pointer}
 .lmk-plinth,.lmk-country{display:flex;align-items:center;gap:4px;font-size:10.5px;color:#a9c1cc}.lmk-plinth select{max-width:96px}.lmk-plinth select,.lmk-country select{min-height:40px;border-radius:10px;border:1px solid #3d6075;background:#0b2131;color:#f2f5f7;font:700 12px Manrope,system-ui;padding:0 6px;max-width:130px}
-.lmk-list{grid-area:list;display:flex;flex-direction:column;gap:5px;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;min-height:0;padding-right:2px}
+.lmk-list{grid-area:list;display:flex;flex-direction:column;gap:5px;overflow-y:auto;padding-bottom:calc(52px + env(safe-area-inset-bottom,0px));overscroll-behavior:contain;-webkit-overflow-scrolling:touch;min-height:0;padding-right:2px}
 .lmk-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;position:sticky;top:0;z-index:1;background:#0b1f2e;padding-bottom:4px}
 .lmk-set{flex:1 1 120px;display:flex;align-items:center;gap:6px;min-width:0}.lmk-set small{font-size:10.5px;color:#f4d28b;white-space:nowrap}
 .lmk-bar{flex:1;height:7px;border-radius:4px;background:#24465a;overflow:hidden}.lmk-bar i{display:block;height:100%;background:linear-gradient(90deg,#e2b13c,#f4d28b)}
@@ -129,7 +131,38 @@
 @media (max-height:400px){.lmk-stage{height:76px}.lmk-show .lmk-next{display:none}.lmk-show h3{font-size:13.5px}.lmk-plinth{font-size:0;gap:0}}
 html.light .lmk-show{background:radial-gradient(120% 80% at 50% 30%,#ffffff,#eef3f8);color:#13284a;border-color:#c9a85a}html.light .lmk-show h3{color:#13284a}html.light .lmk-show p{color:#304a60}html.light .lmk-show .lmk-next{color:#9a5a00}
 html.light .lmk-city,html.light .lmk-tile.have{background:#fff;border-color:#d3dbe4}html.light .lmk-tile{background:#f4f7fa;color:#13284a;border-color:#c8d3de}html.light .lmk-cn b{color:#13284a}html.light .lmk-head{background:transparent}
-html.light .lmk-plinth select,html.light .lmk-country select{background:#fff;color:#13284a;border-color:#cfd8e2}`;
+html.light .lmk-plinth select,html.light .lmk-country select{background:#fff;color:#13284a;border-color:#cfd8e2}
+
+.lmk2{height:100%;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;gap:8px;box-sizing:border-box;padding-bottom:calc(56px + env(safe-area-inset-bottom,0px));color:#f2f5f7}
+.lmk-filters{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.lmk-filters button{min-height:40px;font-size:12px!important;flex:1 1 90px;border-radius:12px;border:1px solid #2f5166;background:#0b2131;color:#cfe0e7;font:700 12.5px Manrope,system-ui;cursor:pointer}
+.lmk-filters button.active{background:linear-gradient(180deg,#f3d27e,#d9a845);color:#1a1406;border-color:#f6dc95}
+.lmk-country{display:flex;align-items:center;gap:6px;font-size:11px;color:#a9c1cc;flex:1 1 170px}.lmk-country select{flex:1;min-height:40px;border-radius:12px;border:1px solid #2f5166;background:#0b2131;color:#f2f5f7;font:800 13px Manrope,system-ui;padding:0 8px}
+.lmk-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.lmk-card{position:relative;display:grid;grid-template-columns:56px minmax(0,1fr);column-gap:8px;row-gap:2px;align-items:center;align-content:center;justify-items:start;text-align:left;padding:6px 8px;border-radius:12px;border:1px solid #2f5166;background:linear-gradient(180deg,#0f2a3d,#0a1f2e);color:#f2f5f7;cursor:pointer;font:inherit;min-height:80px}
+.lmk-card.on{border-color:#f4d28b;box-shadow:0 0 0 1px #f4d28b inset}
+.lmk-card .lmk-art{grid-column:1;grid-row:1/span 5;width:56px;height:56px;display:grid;place-items:center;border-radius:10px;background:radial-gradient(circle at 50% 40%,#183f59,#0a1f2e)}
+.lmk-card>:not(.lmk-art):not(.lmk-ok):not(.lmk-lock){grid-column:2}
+.lmk-card strong{font-size:12.5px;line-height:1.2;padding-right:20px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lmk-pill{font-size:9.5px;font-weight:800;padding:0 8px;border-radius:10px;background:color-mix(in srgb,var(--t) 30%,#0b2131);border:1px solid var(--t);color:#fff}
+.lmk-card small{font-size:10px;color:#a9c1cc}.lmk-card.have small:last-of-type{color:#9fe0b4}
+.lmk-bar{display:block;width:100%;height:5px;border-radius:4px;background:#24465a;overflow:hidden}.lmk-bar i{display:block;height:100%;background:linear-gradient(90deg,#e2b13c,#f4d28b)}.lmk-bar.big{height:12px}
+.lmk-ok,.lmk-lock{position:absolute;top:5px;right:5px;width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-size:10px}.lmk-ok{background:#2fa35a;color:#fff}.lmk-lock{background:#1d3a4e;font-size:11px}
+.lmk-go{grid-column:1/-1!important;justify-self:stretch;margin-top:4px;min-height:40px;display:grid;place-items:center;border-radius:10px;border:1px solid #f6dc95;background:linear-gradient(180deg,#f3d27e,#d9a845);color:#1a1406;font:800 12.5px Manrope,system-ui}
+.lmk-setp{padding:10px 12px;border-radius:14px;border:1px solid #2f5166;background:#0b2131;display:grid;gap:6px}.lmk-setp header{display:flex;justify-content:space-between;font-size:14px}.lmk-setp p{margin:0;font-size:12px;color:#cfe0e7}
+.lmk-plinth{display:flex;align-items:center;gap:8px;font-size:12px;color:#a9c1cc}.lmk-plinth select{min-height:40px;border-radius:12px;border:1px solid #3d6075;background:#0b2131;color:#f2f5f7;font:700 12.5px Manrope,system-ui;padding:0 8px}
+.lmk-empty{color:#cfe0e7;font-size:13px}
+@media (max-width:760px){.lmk-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:430px){.lmk-grid{grid-template-columns:minmax(0,1fr)}}
+html.light .lmk2{color:#13284a}html.light .lmk-card,html.light .lmk-setp{background:#fff;border-color:#d3dbe4;color:#13284a}html.light .lmk-card small,html.light .lmk-setp p{color:#526781}html.light .lmk-card .lmk-art{background:radial-gradient(circle at 50% 40%,#eaf1f7,#dbe5ee)}
+html.light .lmk-filters button,html.light .lmk-country select,html.light .lmk-plinth select{background:#fff;color:#13284a;border-color:#cfd8e2}html.light .lmk-filters button.active{background:linear-gradient(180deg,#f3d27e,#d9a845);color:#1a1406}html.light .lmk-pill{color:#13284a}
+/* Collection: Buildings tab removed (Tokens | Landmarks). */
+#pane>.subtabs [data-s="buildings"]{display:none!important}
+/* No reserved strip for the Menu handle: content runs to the bottom and scrolls clear of it. */
+#title .home:has(#pane.sec-collection){padding-bottom:0!important}
+#title .collection-nav-handle{min-height:40px;padding:6px 18px;font-size:12px}
+
+`;
  document.head.append(st);
  addEventListener('DOMContentLoaded',()=>{try{checkSets()}catch{}});
  window.SkylineLandmarks=Object.freeze({marks,checkSets,PLINTH});
