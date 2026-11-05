@@ -533,7 +533,7 @@ A VoiceOver pass on a physical iPhone.
 - `cordova-plugin-purchase` 13.12.
 - **iOS orientation:** locked to landscape left/right (`scripts/patch-ios.sh`). The app therefore never uses the web's upright-phone rotation (Task 12 is web-only).
 - **Bundle:** `www/` is not committed. It is built from the shared source on every iOS run (`build-web.mjs`) and checked by `verify-bundle.cjs` in skyline-ios.yml.
-- A local `build-web` run on `724c` + this change includes every new lib: rot-media, a11y-dialogs, native-lifecycle, first-session, ai-styles and city-event-advice.
+- A local `build-web` run on `714c831` + this change includes every new lib: rot-media, a11y-dialogs, native-lifecycle, first-session, ai-styles and city-event-advice.
 - Local `verify-bundle` needs the app's npm fonts, which CI installs.
 
 ### Existing lifecycle behaviour (verified in source)
