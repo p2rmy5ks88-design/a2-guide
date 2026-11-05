@@ -89,7 +89,7 @@ VERIFIED for web. The native, backend and purchase rows are recorded with their 
 | 12 | Navigation, layout & accessibility | VERIFIED (Chromium); VoiceOver on device pending | See the Task 12 section below. |
 | 13 | Touch, audio, native lifecycle | CODE COMPLETE + automated; Device BLOCKED | See the Task 13 section below. |
 | 14 | Quantitative balance audit | VERIFIED (600 seeded sims) | BALANCE-REPORT.md; no rebalancing justified. |
-| 15 | Closed beta / retention | NOT STARTED | |
+| 15 | Closed beta / retention | CODE COMPLETE (plan + opt-in diary); beta BLOCKED on owner recruiting | BETA-PLAN.md; metrics blank until observed. |
 | 16–18 | Release gates | NOT STARTED | Owner authorization for TestFlight / store builds. |
 
 ## Task 03 — Competition authority & reconnect (5 Nov 2026, main `f97f9e3`)
@@ -586,3 +586,35 @@ To measure:
 - **Events:** neutral.
 - **Comebacks:** 30–50%.
 - **Rules:** unchanged. See BALANCE-REPORT.md.
+
+## Task 15 — Closed beta and retention evidence (5 Nov 2026)
+
+### Deliverables
+
+- **BETA-PLAN.md:**
+  - scope: 20–50 volunteers, 2 weeks, owner channels only;
+  - consent and privacy rules;
+  - 11 feedback questions covering upgrades, trading, first match, rewards, SC vs Coins and social play;
+  - an anonymised results table (blank);
+  - a severity table (S1–S4);
+  - a beta action log.
+- **`lib/beta-diary.js`** (opt-in, on-device only, nothing sent anywhere):
+  - `?beta=1` asks for consent;
+  - it records anonymous counts only;
+  - `?beta=export` lets the tester copy a summary;
+  - `?beta=0` deletes the diary.
+- No new infrastructure or backend was created.
+
+### Tests (PASS)
+
+- `tests/beta-diary-browser.cjs` (new, in CI; 6 checks):
+  - nothing is recorded without consent;
+  - starts and completions are counted;
+  - no names or identifiers are stored;
+  - `?beta=0` deletes the diary.
+- Also PASS: first-session, gameplay-ux, testflight-hotfix.
+
+### Blocked
+
+- Recruiting and running the beta need the owner.
+- A TestFlight upload needs separate approval.
