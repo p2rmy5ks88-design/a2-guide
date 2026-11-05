@@ -1,0 +1,31 @@
+// Task 12: forced-landscape home layout and accessible dialogs (role, focus in, Tab trap, Escape, focus return).
+const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
+const assert=require('node:assert/strict'),http=require('node:http'),fs=require('node:fs'),path=require('node:path');
+const root=path.resolve(__dirname,'../..'),types={'.html':'text/html','.js':'text/javascript','.css':'text/css','.jpg':'image/jpeg','.png':'image/png','.webp':'image/webp','.svg':'image/svg+xml','.json':'application/json'};
+(async()=>{
+ const server=http.createServer((req,res)=>{const p=path.resolve(root,'.'+decodeURIComponent(req.url.split('?')[0]));if(!p.startsWith(root+path.sep)){res.writeHead(403);return res.end()}fs.readFile(p,(e,b)=>{res.writeHead(e?404:200,{'Content-Type':types[path.extname(p)]||'application/octet-stream'});res.end(e?'missing':b)})});
+ await new Promise(r=>server.listen(0,'127.0.0.1',r));const url=`http://127.0.0.1:${server.address().port}/skyline-estates/index.html`;
+ const browser=await chromium.launch({headless:true,args:['--disable-webgl'],...(process.env.CHROME_PATH?{executablePath:process.env.CHROME_PATH}:{})});
+ const open=async(vp,touch)=>{const c=await browser.newContext({viewport:vp,hasTouch:touch,isMobile:touch,serviceWorkers:'block'}),p=await c.newPage();await p.route('https://**/*',r=>r.abort());
+  await p.addInitScript(()=>localStorage.setItem('skylinePrefs',JSON.stringify({nick:'Ada',nickSet:true,welcomed:1,tutDone:1,flat2d:true,stats:{games:5}})));
+  await p.goto(url);await p.locator('#boot').waitFor({state:'detached',timeout:25000});await p.waitForTimeout(900);return p};
+ const cards=p=>p.evaluate(()=>['Play Solo','Play Online'].map(s=>{const e=[...document.querySelectorAll('button')].find(b=>b.innerText.includes(s)),r=e.getBoundingClientRect();return r.left>=0&&r.top>=0&&r.right<=innerWidth&&r.bottom<=innerHeight}));
+ let p=await open({width:390,height:844},true);
+ assert.equal(await p.evaluate(()=>document.documentElement.classList.contains('rot')),true,'upright touch phone is rotated');
+ assert.deepEqual(await cards(p),[true,true],'rotated home shows the Play cards on screen');
+ await p.close();
+ p=await open({width:844,height:390},true);
+ assert.equal(await p.evaluate(()=>SkylineRotMedia.count()),0,'landscape screens keep stylesheets untouched');
+ assert.deepEqual(await cards(p),[true,true],'landscape home shows the Play cards');
+ await p.evaluate(()=>{GEN++;newGame({cash:1500,set:{ai:'normal',speed:'fast',city:'lagos'},players:[{name:'Ada',tok:TOKENS[0],col:PCOL[0],ai:false},{name:'Kofi',tok:TOKENS[1],col:PCOL[1],ai:true}]});document.querySelector('#title').hidden=true;document.querySelector('#ui').hidden=false});
+ await p.waitForTimeout(400);
+ assert.equal(await p.locator('#bAssets').getAttribute('aria-label'),'Portfolio','Portfolio button name matches its label');
+ await p.locator('#bAssets').focus();await p.keyboard.press('Enter');await p.waitForTimeout(600);
+ const d=await p.evaluate(()=>{const x=document.querySelector('#modals [role=dialog][aria-modal=true]');return x&&{label:document.getElementById(x.getAttribute('aria-labelledby'))?.textContent.trim(),inside:x.contains(document.activeElement)}});
+ assert.equal(d?.label,'Your portfolio');assert.ok(d.inside,'focus moves into the dialog');
+ for(let i=0;i<12;i++)await p.keyboard.press('Tab');
+ assert.ok(await p.evaluate(()=>!!document.activeElement.closest('#modals')),'Tab stays inside the dialog');
+ await p.keyboard.press('Escape');await p.waitForTimeout(500);
+ assert.equal(await p.evaluate(()=>document.activeElement.id),'bAssets','focus returns to the opener');
+ console.log('A11Y LAYOUT 9 checks');await browser.close();server.close();
+})().catch(e=>{console.error(e);process.exit(1)});

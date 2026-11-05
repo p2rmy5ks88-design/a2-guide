@@ -63,6 +63,7 @@ jobs:
           t 'node skyline-estates/tests/token-mastery.cjs'
           t 'node skyline-estates/tests/ai-styles-browser.cjs'
           t 'node skyline-estates/tests/first-session-browser.cjs'
+          t 'node skyline-estates/tests/a11y-layout-browser.cjs'
           t 'node skyline-estates/security/service/property-rarity.test.cjs'
           t 'SKYLINE_NO_WEBGL=1 node skyline-estates/tests/reference-dashboard-browser.cjs "$RUNNER_TEMP/skyline-reference-dashboard.json"'
       - name: Upload test diagnostics
