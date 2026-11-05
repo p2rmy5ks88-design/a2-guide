@@ -436,7 +436,7 @@ function collectionNavigation(){
  home.classList.remove('peek-r','peek-t');
  if(!handle){handle=document.createElement('button');handle.type='button';handle.className='collection-nav-handle';handle.setAttribute('aria-controls',rail.id);home.append(handle);handle.onclick=()=>{navigationOpen=!navigationOpen;collectionNavigation();handle.focus()}}
  handle.textContent=navigationOpen?'⌄ Hide navigation':'⌃ Menu';handle.setAttribute('aria-expanded',String(navigationOpen));
- const nav=home.querySelector('#pane>.subtabs');if(nav){nav.setAttribute('aria-label','Collection categories');nav.querySelectorAll('[data-s]').forEach(b=>{const labels={cast:['people','Characters'],tokens:['collection','Tokens'],frames:['collectionFrame','Frames'],buildings:['city','Buildings']},x=labels[b.dataset.s];if(x)b.innerHTML=svgI(x[0],20)+'<span>'+x[1]+'</span>'})}
+ const nav=home.querySelector('#pane>.subtabs');if(nav){nav.setAttribute('aria-label','Collection categories');nav.querySelectorAll('[data-s]').forEach(b=>{if(b.dataset.s==='cast'){b.remove();return}const labels={cast:['people','Characters'],tokens:['collection','Tokens'],frames:['collectionFrame','Frames'],buildings:['city','Buildings']},x=labels[b.dataset.s];if(x)b.innerHTML=svgI(x[0],20)+'<span>'+x[1]+'</span>'})}
 }
 homeTab=function(k){const prev=setup.tab;const r=originalTab.call(this,k==='collection'?'tokens':k);if(!['cast','tokens','frames','buildings'].includes(prev))navigationOpen=false;collectionNavigation();return r};
 addEventListener('keydown',e=>{if(e.key==='Escape'&&document.querySelector('.collection-mode.collection-nav-open')){navigationOpen=false;collectionNavigation();document.querySelector('.collection-nav-handle')?.focus()}});
@@ -565,7 +565,7 @@ try{if(document.querySelector('#title .home'))homeTab(setup.tab||'play')}catch(e
 /* Owner: Characters have no gameplay role, so their Collection tab is hidden (the avatar stays in the
    profile frame). Rooftops live in the Buildings detail column instead of overlapping the stage grid. */
 (()=>{const st=document.createElement('style');st.textContent=`
-#title #pane>.subtabs [data-s="cast"]{display:none!important}
+#pane>.subtabs [data-s="cast"]{display:none!important}
 #title .rf-token-detail .rf-roofs-panel{position:static!important;display:block;margin-top:10px;padding:12px;border:1px solid #2f5166;border-radius:14px;background:#0b2131;grid-column:auto!important}
 #title .rf-roofs-panel .roofsplit{display:grid;grid-template-columns:minmax(0,1fr);gap:10px}
 #title .rf-roofs-panel .roofstage{max-height:220px;overflow:hidden}
