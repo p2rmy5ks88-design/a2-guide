@@ -44,6 +44,14 @@ function mpAI(pid,e){
  const p=P(pid),saving=e.targets.filter(i=>canBuild(pid,i)).reduce((n,i)=>n+Math.round(SQ[i].h*.1),0);
  return p.cash>=210&&saving>=20?'permit':'hold';
 }
+/* Task 09: turn the permit choice into the player's own numbers (no price changes):
+   which streets they can build on now, the extra saving per build and the break-even count. */
+function mpAdvice(p,e){
+ const mine=e.targets.filter(i=>G.own[i].o===p.id),now=e.targets.filter(i=>canBuild(p.id,i));
+ const per=mine.length?Math.max(1,Math.round(SQ[mine[0]].h*.1)):0,need=per?Math.ceil(10/per):0,last=e.from+1;
+ if(!now.length)return `<b>Suggested: keep cash.</b> You can't build in ${esc(e.area)} right now (you need every street there, unmortgaged). A permit only pays off if you complete the district and build ${need} home${need===1?'':'s'} before the end of round ${last}.`;
+ return `<b>Worth it if you build ${need}+ home${need===1?'':'s'} in ${esc(e.area)} by the end of round ${last}.</b> You can build on ${now.length} street${now.length===1?'':'s'} now, and each home saves an extra <b>${fmt(per)}</b> with a permit.`;
+}
 async function mpOffer(p){const e=ev2Active();
  if(!mpEligible(p.id,e)||Object.hasOwn(e.choices,p.id))return;
  if(p.ai||FAST){mpChoose(p.id,mpAI(p.id,e),e);return}
@@ -51,7 +59,7 @@ async function mpOffer(p){const e=ev2Active();
  // cannot cover the decision on a short landscape screen.
  document.querySelectorAll('.ev2ban').forEach(b=>b.remove());
  const game=G,generation=GEN,t=ev2Text(e);save();
- const choice=await modal({cls:'wide ev2modal mpmodal',html:`<div class="mh">${esc(p.name)} · District decision</div><div class="mtxt"><p><b>${esc(t.title)}</b><br>${esc(t.eff)} · ${esc(t.dur)}</p><p>Keep your match cash, or buy a district permit for <b>${fmt(10)}</b>. It adds <b>10% off building</b> in ${esc(e.area)} until the end of round ${e.from+1}. Total discount: ${e.kind==='dev'?25:10}%. The fee is paid now; savings depend on what you build.</p><p>Example: a ${fmt(100)} base build saves an extra ${fmt(10)}. One such build recovers the fee; more can make it worthwhile. Normal ownership, even-building, mortgage and bank-supply rules still apply.</p><p>Available match cash: <b>${fmt(p.cash)}</b>. Saved SC and Coins are unaffected. Every player, including AI, gets the same offer while owning a street here.</p></div>`,btns:[{k:'hold',label:'Keep cash',primary:true},{k:'permit',label:`Permit · ${fmt(10)}`,disabled:p.cash<10}]});
+ const choice=await modal({cls:'wide ev2modal mpmodal',html:`<div class="mh">${esc(p.name)} · District decision</div><div class="mtxt"><p><b>${esc(t.title)}</b><br>${esc(t.eff)} · ${esc(t.dur)}</p><p>Keep your match cash, or buy a district permit for <b>${fmt(10)}</b>. It adds <b>10% off building</b> in ${esc(e.area)} until the end of round ${e.from+1}. Total discount: ${e.kind==='dev'?25:10}%. The fee is paid now; savings depend on what you build.</p><p class="mp-verdict">${mpAdvice(p,e)}</p><p class="mp-rules">Normal ownership, even-building, mortgage and bank-supply rules still apply.</p><p>Available match cash: <b>${fmt(p.cash)}</b>. Saved SC and Coins are unaffected. Every player, including AI, gets the same offer while owning a street here.</p></div>`,btns:[{k:'hold',label:'Keep cash',primary:true},{k:'permit',label:`Permit · ${fmt(10)}`,disabled:p.cash<10}]});
  if(G!==game||GEN!==generation||G.turn!==p.id||G.over)return;
  mpChoose(p.id,choice==='permit'?'permit':'hold',e);
 }

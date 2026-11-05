@@ -83,7 +83,8 @@ VERIFIED for web. The native, backend and purchase rows are recorded with their 
 | 06 | Collection + SC upgrade UI acceptance | VERIFIED (Chromium); Device pending | See the Task 06 section below. |
 | 07 | Portfolio mortgage/build usability | VERIFIED (Chromium); Device pending | See the Task 07 section below. |
 | 08 | Trophies / Season / rewards truth | VERIFIED (Chromium) | See the Task 08 section below. |
-| 09–15 | Product, UX, AI, balance, beta | NOT STARTED | |
+| 09 | Signature city / strategic identity | VERIFIED (Chromium); Device pending | See the Task 09 section below. |
+| 10–15 | Product, UX, AI, balance, beta | NOT STARTED | |
 | 16–18 | Release gates | NOT STARTED | Owner authorization for TestFlight / store builds. |
 
 ## Task 03 — Competition authority & reconnect (5 Nov 2026, main `f97f9e3`)
@@ -312,3 +313,47 @@ All fixes are in `release_hotfixes.py`; `game.html` is unchanged.
   - Neon Night surround owned = true; Marble dice owned = false.
   - Gala frame text correct.
 - **Tests (all PASS):** testflight-hotfix-browser, release-content, token-mastery, currency-browser.
+
+## Task 09 — Signature Skyline strategic play (5 Nov 2026)
+
+### Mechanic inventory (existing, unchanged rules)
+
+- **Market Pulse** (optional, local games only). From round 3 a rotating district gets one of:
+  - District Demand: +10% rent;
+  - Permit Window: −15% building;
+  - Quiet Market: −10% rent.
+
+  Each lasts 2 rounds, followed by 1 neutral round. Owners choose: keep cash, or buy a permit (SC 10M) for an extra 10% off building. AI gets the same offer.
+- **City Strategic Events** (one event slot):
+  - City events, e.g. Lagos Film Festival (+50% rent in Surulere & Yaba) and Stockholm's Slussen upgrade (−50% building for one turn);
+  - generic Development Boom, festival and infrastructure events.
+- **City Spotlight:** a cross-match goal ("play N matches in a city" → rooftop reward). It is not an in-match decision.
+- **Token powers:** payday, re-rolls, Lucky Pass, rent shield and surge, applied through Collection perks.
+
+### Decision map: gaps found and fixed (text only, no rebalancing)
+
+1. **Market Pulse permit (keep cash vs permit).**
+   - Before: the dialog gave only a generic example ("a SC 100M build saves SC 10M").
+   - Now it uses the player's own numbers. Example: "Worth it if you build 2+ homes in Yaba & Surulere by the end of round 4. You can build on 3 streets now, and each home saves an extra SC 9M with a permit."
+   - When the player can't build there yet: "Suggested: keep cash", with the reason.
+2. **City events: what they mean for you** (new `lib/city-event-advice.js`).
+   - Before: banners, the chip and the info dialog stated the effect and duration only.
+   - Now the banner, the chip (title and aria-label) and the info dialog add a personal line. Example: "For Ada: you own 2 of 3 here: rent you collect +50% · landing on rivals' street here costs 50% more."
+   - Building events say whether the player can build now, must complete the district first, or should watch rivals build cheaper.
+
+### Captures
+
+At 844×390 and 390×844 (Chromium), with no page errors:
+- the permit verdict;
+- the Film Festival banner;
+- the info dialog with the personal line.
+
+### Tests
+
+- market-pulse: 66 checks and 95 simulations PASS. Decision buttons are visible and tappable at 956×440, 844×390, 844×320 and 667×375.
+- release-content: PASS.
+- gameplay-ux-browser: PASS.
+
+### Not changed
+
+Prices, rents, durations, AI permit logic, ranked rules and the online protocol.
