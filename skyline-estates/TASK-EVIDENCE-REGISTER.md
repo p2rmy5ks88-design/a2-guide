@@ -81,7 +81,8 @@ VERIFIED for web. The native, backend and purchase rows are recorded with their 
 | 04 | Purchase integrity | VERIFIED (automated); Device BLOCKED | See the Task 04 section below. |
 | 05 | Saves / cloud / offline | VERIFIED (automated); Device pending | See the Task 05 section below. |
 | 06 | Collection + SC upgrade UI acceptance | VERIFIED (Chromium); Device pending | See the Task 06 section below. |
-| 07–15 | Product, UX, AI, balance, beta | NOT STARTED | |
+| 07 | Portfolio mortgage/build usability | VERIFIED (Chromium); Device pending | See the Task 07 section below. |
+| 08–15 | Product, UX, AI, balance, beta | NOT STARTED | |
 | 16–18 | Release gates | NOT STARTED | Owner authorization for TestFlight / store builds. |
 
 ## Task 03 — Competition authority & reconnect (5 Nov 2026, main `f97f9e3`)
@@ -242,3 +243,39 @@ Still to test on a physical iPhone:
 
 - Physical iPhone landscape check of scrolling and dropdowns.
 - A real SC upgrade receipt that persists across a relaunch.
+
+## Task 07 — Portfolio mortgage / build usability (5 Nov 2026)
+
+### Overlap and usability audit
+
+- Fixture: an in-match Portfolio with a built district, plain streets, a mortgaged street, a transit hub and a mortgaged utility.
+- Coverage: all 4 tabs × Night and Daylight × 844×390, 667×375, 390×844 and 1280×800.
+- Each screen is checked with the list at the top and scrolled to the bottom.
+- Checks: overlaps, controls off screen, clipped text, and buttons smaller than 44 px.
+
+### Fixed
+
+- In portrait, "Mortgaged" and "Missing sets" were off the right edge of a scrolling tab row. They are now a 2×2 tab grid.
+- In Daylight, every build pip showed grey, so the built level was not visible. The light override outranked `.on`; built pips are now green and towers gold.
+
+### Results
+
+- 0 controls off screen.
+- 0 targets smaller than 44 px.
+- 0 clipped labels.
+- The remaining raw intersections are rows scrolled under the clipped list edge. Screenshots confirm these are not visible collisions.
+- Build, Sell and Mortgage reasons are shown inline, e.g. "Sell this district's buildings before mortgaging".
+- Redeem shows the cost against match cash.
+
+### Tests (all PASS)
+
+- portfolio-integrated-browser
+- debt-portfolio-browser
+- portfolio-fast-upgrades-browser
+- gameplay-ux-browser
+
+### Still to do
+
+Check on a physical iPhone:
+- landscape touch feel;
+- redeeming during a live turn.
