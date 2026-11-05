@@ -76,7 +76,7 @@ VERIFIED for web. The native, backend and purchase rows are recorded with their 
 |---|---|---|---|
 | 00 | Inventory & baseline | VERIFIED (web) | This file. |
 | 01 | Release / migration / backup controls | VERIFIED (automated) | RELEASE-CONTROLS.md; 10 checks PASS on d1cceae. Device save/restore is still a separate gate. |
-| 02 | IP originality / trade dress | NOT STARTED | |
+| 02 | IP originality / trade dress | CODE COMPLETE + legal flags | IP-AUDIT.md; utilities renamed (City Power Grid / Lagoon Water Board). Board layout, card effects and real landmarks flagged for LEGAL REVIEW, which blocks store release. |
 | 03 | Competition authority | NOT STARTED | Backend deploy approval. |
 | 04 | Purchase integrity | NOT STARTED | StoreKit sandbox; PR #68 owner approval. |
 | 05 | Saves / cloud / offline | NOT STARTED | Review PR #91. |

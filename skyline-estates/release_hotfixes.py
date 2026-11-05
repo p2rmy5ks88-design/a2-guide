@@ -19,6 +19,9 @@ def apply(body):
       ''')
     replace('${S.n}', '${seasonDisplay(S.n)}')
 
+    # Task 02 IP audit: avoid utility names identical/close to a classic board game's.
+    replace("const GENERIC_UTILS=[['Power Company','⚡'],['Water Works','💧']];", "const GENERIC_UTILS=[['City Power Grid','⚡'],['Lagoon Water Board','💧']];")
+
     # The current UI fetched its own stale published row without publishing first.
     replace('try{const rows=await lbFetch()||[],u=FIRE.uid();', 'try{await lbSubmit();const rows=await lbFetch()||[],u=FIRE.uid();const own=rows.find(r=>r.u===u);if(own){own.t=S.tr||0;own.l=lvlOf(PREF.xp);own.n=myName()||\'You\';own.c=myChar();rows.sort((a,b)=>b.t-a.t||a.u.localeCompare(b.u))}')
     replace("if(!rows.length){E.innerHTML='<div class=\"small\">No scores yet this season. Finish a game to be first.</div>';return}", "if(!rows.length){E.innerHTML='<div class=\"small\">No published scores yet. Your current Season score: '+nfmt(S.tr||0)+' 🏆.</div>';return}")
