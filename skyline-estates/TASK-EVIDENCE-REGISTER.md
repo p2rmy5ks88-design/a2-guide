@@ -78,7 +78,7 @@ VERIFIED for web. The native, backend and purchase rows are recorded with their 
 | 01 | Release / migration / backup controls | VERIFIED (automated) | RELEASE-CONTROLS.md; 10 checks PASS on d1cceae. Device save/restore is still a separate gate. |
 | 02 | IP originality / trade dress | CODE COMPLETE + legal flags | IP-AUDIT.md; utilities renamed (City Power Grid / Lagoon Water Board). Board layout, card effects and real landmarks flagged for LEGAL REVIEW, which blocks store release. |
 | 03 | Competition authority | VERIFIED (automated); Prod BLOCKED | See the Task 03 section below. |
-| 04 | Purchase integrity | NOT STARTED | StoreKit sandbox; PR #68 owner approval. |
+| 04 | Purchase integrity | VERIFIED (automated); Device BLOCKED | See the Task 04 section below. |
 | 05 | Saves / cloud / offline | NOT STARTED | Review PR #91. |
 | 06–15 | Product, UX, AI, balance, beta | NOT STARTED | |
 | 16–18 | Release gates | NOT STARTED | Owner authorization for TestFlight / store builds. |
@@ -135,3 +135,41 @@ All in `tests/competition-service.cjs` and `tests/competition-match.cjs`; all PA
 - **Production backend:** live deployment is paused until the owner approves, so no live endpoint version is recorded.
 - **Recommended, needs owner approval** (it is a rules deploy): restrict or retire `lb` writes, or have the rankings read only server-verified rows.
 - **Reconnect:** a physical-device reconnect test is outstanding.
+
+## Task 04 — Purchase / entitlement integrity (5 Nov 2026)
+
+### Design (source)
+
+- `lib/storekit-client.js` (StoreKit 2):
+  - It never changes local Coins and never invents prices.
+  - Only the 4 fixed coin-pack product IDs are accepted.
+  - It requires a signed-in account and re-checks it after every await, so a purchase cannot be credited to a different account after a switch.
+  - It allows one purchase at a time.
+- Delivery goes through the server wallet: `wallet.purchase` (verify), `wallet.delivery`, then StoreKit `finish`. The transaction is finished only after the server records delivery.
+- A balance read that fails after delivery shows "wallet pending". It is never shown as a failed purchase.
+
+### Purchases on and off
+
+- Purchases are on only in iOS native builds whose channel is `private-testing` or `ios-release`.
+- Pushes and PRs build with the channel `off`.
+- The web game has no purchases (`no-purchases-browser` PASS).
+- Coins buy Shop and cosmetic items only. Saved SC cannot be bought.
+
+### Tests (all PASS on `5b2c8db`)
+
+- storekit-client
+- purchase-delivery
+- iap-lifecycle
+- wallet
+- purchase-vault
+- wallet-integration
+- firestore-wallet
+- no-purchases-browser
+- purchase-start-browser
+- native-firebase-config
+
+### Blockers
+
+- **StoreKit sandbox:** purchase, restore, interrupted purchase and refund still need testing on a physical iPhone in TestFlight. The owner must run these; no physical-device evidence exists yet.
+- **PR #68** (coin packs) stays unmerged until the owner approves.
+- **Production wallet endpoint:** no live verification yet, because the backend deploy is paused until the owner approves.
