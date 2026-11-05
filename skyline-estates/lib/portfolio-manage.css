@@ -69,3 +69,7 @@ html.light .pfm .pfm-pips i{background:#d9e2ea}html.light .pfm .pfm-why{color:#9
 html.light .pfm .pfm-btn:disabled{background:#eef2f6;color:#8a9aab;border-color:#dde4eb}
 html.light .pfm .pfm-empty{color:#304a60}
 html.light .ov.pfmov{background:rgba(19,40,74,.28)!important}
+/* Task 07: Daylight kept every build pip grey (the light override outranked .on). */
+html.light .pfm .pfm-pips i.on{background:#2fa35a}html.light .pfm .pfm-pips i.tower.on{background:#d9a845}
+/* Task 07: portrait phones hid "Mortgaged" and "Missing sets" off the right edge; show all four as a 2×2 grid. */
+@media(max-width:560px){.pfm .pfm-tabs{flex-wrap:wrap;overflow:visible}.pfm .pfm-tabs button{flex:1 1 calc(50% - 6px);justify-content:center}}
