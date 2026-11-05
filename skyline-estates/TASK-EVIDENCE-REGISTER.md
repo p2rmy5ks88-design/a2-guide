@@ -84,7 +84,8 @@ VERIFIED for web. The native, backend and purchase rows are recorded with their 
 | 07 | Portfolio mortgage/build usability | VERIFIED (Chromium); Device pending | See the Task 07 section below. |
 | 08 | Trophies / Season / rewards truth | VERIFIED (Chromium) | See the Task 08 section below. |
 | 09 | Signature city / strategic identity | VERIFIED (Chromium); Device pending | See the Task 09 section below. |
-| 10–15 | Product, UX, AI, balance, beta | NOT STARTED | |
+| 10 | AI decision quality and feedback | VERIFIED (Chromium sims) | See the Task 10 section below. |
+| 11–15 | Product, UX, AI, balance, beta | NOT STARTED | |
 | 16–18 | Release gates | NOT STARTED | Owner authorization for TestFlight / store builds. |
 
 ## Task 03 — Competition authority & reconnect (5 Nov 2026, main `f97f9e3`)
@@ -357,3 +358,56 @@ At 844×390 and 390×844 (Chromium), with no page errors:
 ### Not changed
 
 Prices, rents, durations, AI permit logic, ranked rules and the online protocol.
+
+## Task 10 — AI decisions and explanation (5 Nov 2026)
+
+### Audit
+
+- Every local AI used one strategy: `aiValue`, `aiReserve`, `aiWantsBuy`, `aiBid`, `aiPostTurn` and `aiProposeTrade`.
+- Difficulty only changed buy and bid probabilities.
+- Ranked online matches are human-only and run on the server kernel, so they are out of scope.
+
+### Strategy matrix
+
+New `lib/ai-styles.js`. Styles are built only from the existing hooks: no extra cash, no dice or card knowledge, and rules unchanged.
+
+| Style | Cash cushion | Valuation | Trades |
+|---|---|---|---|
+| Builder | ×1.2 | Own or completing district ×1.2; new district ×0.9 | Half as often |
+| Trader | ×1.0 | Blocking a rival's near-complete district ×1.25; transit and utilities ×1.15 | Normal |
+| Investor | ×0.88 | Everything ×1.06 | Normal |
+
+- The style is fixed by seat token, so it needs no save-schema change.
+- Player cards show "AI · Builder / Trader / Investor", with the strategy as a tooltip.
+
+### Explanations
+
+- Short, non-blocking speech bubbles after a buy decision, rate-limited and never shown in fast mode or simulations.
+- Examples: "Completes Yaba & Surulere!", "Blocking Kofi in Ikoyi", "Collecting the network", "Keeping a cash cushion".
+
+### Fairness
+
+Deterministic `__sim`: 60 three-AI games, equal seeds 777–779, styles rotated across seats, 300-round limit.
+
+| | Leader wins | Unfinished | Errors | Average rounds |
+|---|---|---|---|---|
+| With styles | Builder 25 · Trader 16 · Investor 19 | 0 | 0 | 67 |
+| Base engine, same seeds | by seat: 28 · 16 · 16 | 0 | 0 | 61 |
+
+- The spread across styles is about the same as the base engine's spread across seats.
+- Bank and cash invariants held in all 60 styled games.
+- The first Investor tuning (cushion ×0.75) won only 14 of 60, so it was eased to ×0.88.
+
+### Engine parity
+
+- Simulations stay style-neutral unless a test opts in (`SkylineAIStyles.simulate(true)`).
+- This keeps Market Pulse's check that "events-off games exactly match the base engine" valid.
+
+### Tests (all PASS)
+
+- `tests/ai-styles-browser.cjs` (new; added to skyline-stability): 12 seeded styled games, labels and buy explanation.
+- complete-matches: 25 checks.
+- market-pulse: 66 checks, 95 simulations.
+- gameplay-ux: 17 checks.
+- release-content.
+- build-pipelines.
