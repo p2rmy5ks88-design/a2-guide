@@ -653,3 +653,43 @@ To measure:
 ### Pending
 
 - Physical iPhone Safari acceptance by the owner.
+
+## Owner request — Collection Landmarks (5 Nov 2026; mockup approved)
+
+### What changed
+
+- Collection › **Frames** is replaced by **Landmarks**. New `lib/landmarks.js`, loaded after home-redesign.js.
+- Each city has 3 landmarks, all read from existing stats, with no prices:
+  - Bronze: 1 win in the city;
+  - Silver: 3 wins;
+  - Gold: City Champion.
+- Country picker with set progress. A complete country set pays +500 Coins once, plus the Gold token finish if the player doesn't own it.
+- Showcase: an animated three.js model on a plinth, with an SVG fallback and no rotation under reduced motion.
+  - Shows the requirement and progress.
+  - "Play in <city>" button.
+  - Compact iPhone layout: landscape list + 232 px showcase; upright, the showcase sits above the list.
+
+### Conversion (nothing deleted)
+
+- Champion frames → Gold landmarks.
+- Gala, Prism and Crown frames → Wonders (Gala Tower, Prism Spire, Crown Pavilion).
+- Rooftops → display plinths (renamed in place; Spotlight rewards follow). The equipped rooftop becomes the equipped plinth.
+- Buildings in matches use the standard roof (`roofOf` → null). The rooftops panel is removed from Buildings.
+- Player inventories are untouched.
+
+### Screenshots checked
+
+844×390, 667×375 and 390×844, Night and Daylight:
+- the tab bar no longer overlaps the list;
+- the showcase fits with Play and Plinth visible;
+- 0 page errors.
+
+### Tests (PASS)
+
+- `tests/landmarks-browser.cjs` (new, in CI; 9 checks).
+- Updated for the new design: collection-vault, reference-dashboard (also corrected for the Characters tab removed in #112), spotlight.
+- Also PASS: currency, purchase-start, home-redesign, gameplay-ux, testflight-hotfix, a11y-layout, first-session, portfolio-integrated.
+
+### Follow-up
+
+- Curated landmark names for some cities. Generated names such as "Airport Road" come from the city tables.
