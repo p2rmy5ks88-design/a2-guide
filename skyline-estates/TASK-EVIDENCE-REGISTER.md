@@ -88,7 +88,8 @@ VERIFIED for web. The native, backend and purchase rows are recorded with their 
 | 11 | Onboarding first match | VERIFIED (Chromium); live player test pending | See the Task 11 section below. |
 | 12 | Navigation, layout & accessibility | VERIFIED (Chromium); VoiceOver on device pending | See the Task 12 section below. |
 | 13 | Touch, audio, native lifecycle | CODE COMPLETE + automated; Device BLOCKED | See the Task 13 section below. |
-| 14–15 | Balance, beta | NOT STARTED | |
+| 14 | Quantitative balance audit | VERIFIED (600 seeded sims) | BALANCE-REPORT.md; no rebalancing justified. |
+| 15 | Closed beta / retention | NOT STARTED | |
 | 16–18 | Release gates | NOT STARTED | Owner authorization for TestFlight / store builds. |
 
 ## Task 03 — Competition authority & reconnect (5 Nov 2026, main `f97f9e3`)
@@ -533,7 +534,7 @@ A VoiceOver pass on a physical iPhone.
 - `cordova-plugin-purchase` 13.12.
 - **iOS orientation:** locked to landscape left/right (`scripts/patch-ios.sh`). The app therefore never uses the web's upright-phone rotation (Task 12 is web-only).
 - **Bundle:** `www/` is not committed. It is built from the shared source on every iOS run (`build-web.mjs`) and checked by `verify-bundle.cjs` in skyline-ios.yml.
-- A local `build-web` run on `724c` + this change includes every new lib: rot-media, a11y-dialogs, native-lifecycle, first-session, ai-styles and city-event-advice.
+- A local `build-web` run on `714c831` + this change includes every new lib: rot-media, a11y-dialogs, native-lifecycle, first-session, ai-styles and city-event-advice.
 - Local `verify-bundle` needs the app's npm fonts, which CI installs.
 
 ### Existing lifecycle behaviour (verified in source)
@@ -574,3 +575,14 @@ To measure:
 - memory;
 - FPS;
 - launch and resume time.
+
+## Task 14 — Quantitative balance audit (5 Nov 2026)
+
+- **Harness:** `tests/balance-sim.cjs` (seeded matrix: base, tier6, tier3, tier3b, events, pulse, Stockholm, Tokyo, Dubai, hard, easy).
+- **Report script:** `tests/balance-report.py` (Wilson 95% confidence intervals).
+- **Data:** `balance/balance-2026-11-05.csv` (600 games, 0 errors).
+- **First-seat advantage:** none detected.
+- **Token tiers:** no significant advantage. The tier 3 outlier did not replicate.
+- **Events:** neutral.
+- **Comebacks:** 30–50%.
+- **Rules:** unchanged. See BALANCE-REPORT.md.
