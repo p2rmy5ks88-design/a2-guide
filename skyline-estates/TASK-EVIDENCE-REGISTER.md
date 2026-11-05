@@ -80,7 +80,8 @@ VERIFIED for web. The native, backend and purchase rows are recorded with their 
 | 03 | Competition authority | VERIFIED (automated); Prod BLOCKED | See the Task 03 section below. |
 | 04 | Purchase integrity | VERIFIED (automated); Device BLOCKED | See the Task 04 section below. |
 | 05 | Saves / cloud / offline | VERIFIED (automated); Device pending | See the Task 05 section below. |
-| 06–15 | Product, UX, AI, balance, beta | NOT STARTED | |
+| 06 | Collection + SC upgrade UI acceptance | VERIFIED (Chromium); Device pending | See the Task 06 section below. |
+| 07–15 | Product, UX, AI, balance, beta | NOT STARTED | |
 | 16–18 | Release gates | NOT STARTED | Owner authorization for TestFlight / store builds. |
 
 ## Task 03 — Competition authority & reconnect (5 Nov 2026, main `f97f9e3`)
@@ -209,3 +210,35 @@ Still to test on a physical iPhone:
 - restore a backup in TestFlight and relaunch the app;
 - airplane mode during a match;
 - sign out and back in.
+
+## Task 06 — Collection + SC upgrade UI acceptance (5 Nov 2026)
+
+### Overlap audit
+
+- Coverage: Tokens / Frames / Buildings × Night and Daylight × 844×390, 667×375, 390×844 and 1280×800 (24 screens).
+- Each screen is checked at the top and again with every list scrolled to the bottom.
+
+### Fixed
+
+- The floating "⌃ Menu" handle covered the last grid row and the "Upgrade for SC" button. The grid and detail columns now reserve 64 px plus the safe area.
+- In portrait, the Frames / Buildings tab labels were clipped by a 48 px row. The row height is now automatic.
+- Rooftops in portrait was squeezed into 2 columns of 163 px, and "City Spotlight reward" overflowed its card. It is now one column and the label wraps.
+- Daylight Rooftops rows, the Token perks box and the profile name (navy on the dark header) were unreadable. They now use light cards and a white name pill.
+- "Needs 1 wins" now reads "Needs 1 win" (both token and building reasons).
+
+### Results
+
+- Overlap check: 0 handle overlaps and 0 off-screen controls across the 24 screens.
+- The remaining raw intersections are cards scrolled under clipped scroll areas. These are not visible collisions, which the screenshots confirm.
+
+### Tests (all PASS)
+
+- collection-sc: wins regex updated.
+- collection-vault-browser: now expects the 3 categories, since Characters was removed in #112.
+- home-redesign-browser
+- portfolio-fast-upgrades-browser
+
+### Still to do
+
+- Physical iPhone landscape check of scrolling and dropdowns.
+- A real SC upgrade receipt that persists across a relaunch.

@@ -15,7 +15,7 @@ let browser;
  if(process.env.COLLECTION_BEFORE){await p.screenshot({path:path.join(out,'collection-before.png')});await c.close();return}
 
  const before=await p.evaluate(()=>({profile:JSON.stringify({...PREF,lastOpen:undefined}),balance:SkylineCollectionSC.balance()}));
- check('four requested categories',JSON.stringify(await p.locator('.subtabs .stab').allTextContents())===JSON.stringify(['Characters','Tokens','Frames','Buildings']));
+ check('three Collection categories (Characters removed)',JSON.stringify(await p.locator('.subtabs .stab').allTextContents())===JSON.stringify(['Tokens','Frames','Buildings']));
  check('real token inventory is a grid',await p.locator('.rf-token-card').count()===await p.evaluate(()=>TOKENS.concat(NEW_TOKENS).length));
  check('six real evolution stages and seven cosmetic finishes',await p.locator('[data-stage]').count()===6&&await p.locator('[data-finish]').count()===7);
  check('XP is accumulated / next milestone and price is saved SC',/1,400 \/ 3,000 XP/.test(await p.locator('.rf-xp-total').innerText())&&/SC 900M/.test(await p.locator('[data-sc-cost]').innerText()));
@@ -33,7 +33,7 @@ let browser;
  await p.locator('[data-filter=lock]').click();check('locked filter uses real ownership',await p.locator('.rf-token-card').count()===await p.evaluate(()=>TOKENS.concat(NEW_TOKENS).filter(t=>!tokenUnlocked(t)).length));
  await p.locator('[data-filter=own]').click();check('owned filter uses real ownership',await p.locator('.rf-token-card').count()===await p.evaluate(()=>TOKENS.concat(NEW_TOKENS).filter(tokenUnlocked).length));await p.locator('[data-filter=all]').click();
  await p.getByLabel('Sort tokens').selectOption('progression');check('XP sorting',await p.locator('.rf-token-card').first().getAttribute('data-token')==='🚕');
- for(const tab of ['cast','frames','buildings']){await p.evaluate(t=>homeTab(t),tab);check(tab+' has a selectable browser and showcase',await p.locator('[data-catalog-item]').count()>0&&await p.locator('.rf-catalog-hero').count()===1);await p.locator('[data-catalog-item]').last().click();check(tab+' selection updates without navigating',await p.evaluate(t=>setup.tab===t,tab));if(tab==='cast'){await p.getByRole('button',{name:'Open profile menu',exact:true}).click();await p.keyboard.press('Escape')} }
+ for(const tab of ['frames','buildings']){await p.evaluate(t=>homeTab(t),tab);check(tab+' has a selectable browser and showcase',await p.locator('[data-catalog-item]').count()>0&&await p.locator('.rf-catalog-hero').count()===1);await p.locator('[data-catalog-item]').last().click();check(tab+' selection updates without navigating',await p.evaluate(t=>setup.tab===t,tab));if(tab==='cast'){await p.getByRole('button',{name:'Open profile menu',exact:true}).click();await p.keyboard.press('Escape')} }
  check('browsing did not change saved progression, inventory or wallet',await p.evaluate(b=>JSON.stringify({...PREF,lastOpen:undefined})===b.profile&&SkylineCollectionSC.balance()===b.balance,before));
  await p.evaluate(()=>homeTab('tokens'));await p.locator('[data-token="🚌"]').click();await p.locator('[data-stage="6"]').click();check('future stage previews do not equip',/not equipped/.test(await p.locator('.rf-perk-heading').innerText()));
  const money=await p.evaluate(()=>({coins:PREF.coins,sc:SkylineCollectionSC.balance(),level:tokLv('🚌'),xp:tokenMastery('🚌').xp}));
