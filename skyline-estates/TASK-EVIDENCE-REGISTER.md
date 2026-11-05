@@ -86,7 +86,8 @@ VERIFIED for web. The native, backend and purchase rows are recorded with their 
 | 09 | Signature city / strategic identity | VERIFIED (Chromium); Device pending | See the Task 09 section below. |
 | 10 | AI decision quality and feedback | VERIFIED (Chromium sims) | See the Task 10 section below. |
 | 11 | Onboarding first match | VERIFIED (Chromium); live player test pending | See the Task 11 section below. |
-| 12–15 | Product, UX, AI, balance, beta | NOT STARTED | |
+| 12 | Navigation, layout & accessibility | VERIFIED (Chromium); VoiceOver on device pending | See the Task 12 section below. |
+| 13–15 | Product, UX, AI, balance, beta | NOT STARTED | |
 | 16–18 | Release gates | NOT STARTED | Owner authorization for TestFlight / store builds. |
 
 ## Task 03 — Competition authority & reconnect (5 Nov 2026, main `f97f9e3`)
@@ -462,3 +463,62 @@ Deterministic `__sim`: 60 three-AI games, equal seeds 777–779, styles rotated 
 ### Pending
 
 An observed test with real first-time players (the plan's step 05). This needs the owner to recruit 3–5 people.
+
+## Task 12 — Navigation, layout & accessibility (5 Nov 2026)
+
+### Responsive scan
+
+- **Coverage:** home tabs City / Portfolio / Collection / Shop / Awards / Progress × Night and Daylight × 844×390, 667×375 and 390×844 (touch).
+- **Checks:**
+  - controls off screen;
+  - controls covered by another element (hit test);
+  - buttons with no name;
+  - targets under 40 px.
+- **Phone landscape:** no off-screen or covered primary actions.
+
+### Found and fixed
+
+1. **Upright phone, forced-landscape mode (`html.rot`): Play cards off screen.**
+   - Newer stylesheets evaluated media queries and vh/vw against the upright viewport, so the home Play cards rendered at x = −74.
+   - New `lib/rot-media.js` re-evaluates those rules and units against the visible landscape size, only while rotated.
+   - It never touches the original game styles, and it is inactive in landscape: 0 rules rewritten, verified.
+   - Collection's deliberate un-rotation (#109) is respected.
+   - Result: the rotated home matches the 844×390 layout.
+2. **Dialogs (all `modal()` overlays)** — new `lib/a11y-dialogs.js`:
+   - `role="dialog"`, `aria-modal` and a heading label;
+   - focus moves into the dialog;
+   - Tab is trapped inside;
+   - Escape presses a clear dismiss button only (never a game action);
+   - focus returns to the opener.
+
+   Verified with the in-match Menu and the Portfolio sheet.
+3. **Portfolio button name:** it announced "Your properties". It is now "Portfolio", matching the visible label.
+4. **Touch targets:**
+   - Collection Sort dropdown: 34 px → 42 px.
+   - Progress sub-tabs keep a 34 px visual height. The tap area is extended with an invisible margin, because a taller row pushed the Season tracks into the dock (currency-browser check).
+
+### Not changed
+
+- Removed tabs, cosmetic rows and preview panels stay removed.
+- The SC diamond and Coin icons are unchanged.
+- Gold stays reserved for primary actions.
+
+### Scanner notes
+
+These are false positives, confirmed with screenshots:
+- "Keep playing" buttons have text but sit off screen in a scroll area.
+- Rotated-Shop "covered" hits are content inside the scrolling pane.
+
+### Tests (all PASS)
+
+- `tests/a11y-layout-browser.cjs` (new, in CI; 9 checks):
+  - the rotated home shows its Play cards;
+  - landscape stylesheets are untouched;
+  - Portfolio name;
+  - dialog role and label;
+  - focus in, Tab trap, Escape and focus return.
+- currency-browser, gameplay-ux, home-redesign, collection-vault, first-session, portfolio-integrated, debt-portfolio, testflight-hotfix.
+
+### Pending
+
+A VoiceOver pass on a physical iPhone.
