@@ -120,5 +120,21 @@ let n=0;const ok=(m)=>{n++;console.log('PASS',m)};
   await p.evaluate(()=>{$('#modals').innerHTML='';flatDraw();return 1});await p.waitForTimeout(600);await p.screenshot({path:path.join(shots,'05-landmark-board-844x390.png')})}
  assert.deepEqual(p.errs,[]);await p.close();
  p=await open({});r=await p.evaluate(fx=>{G=JSON.parse(fx).game;const i=1;return{rv:G.rv??null,rent:rentFor(4,7)}},legacy);assert.equal(r.rv,null);ok('legacy save keeps classic full-set rules');await p.close();
+
+ // ---- Task 06 · city corners ----
+ p=await open({});await quick(p);await p.waitForFunction(()=>G&&G.players&&G.rv===2);
+ r=await p.evaluate(async()=>{const names=[0,10,20,30].map(i=>SQ[i].n);FAST=true;GEN++;const a=G.players[1];a.ai=true;a.cr=null;a.cash=2000;G.turn=a.id;
+  a.pos=30;await land(a,[3,4]);const forum={cr:a.cr,jail:a.inJail,pos:a.pos};
+  a.pos=20;const c=a.cash;await land(a,[3,4]);const tx={pos:a.pos,moved:a.pos!==20};
+  a.pos=0;const c2=a.cash;await land(a,[3,4]);const hq={gain:a.cash-c2,grant:!!a.lcGrant};
+  a.lcPre=true;await lcEnterReview(a,'card');const pre={cr:a.cr,used:a.lcPre};await lcEnterReview(a,'card');const second=!!a.cr;a.cr=null;FAST=false;
+  return{names,forum,tx,hq,pre,second,valid:validateSave(G)}});
+ assert.deepEqual(r.names,['Skyline HQ','Planning Office','Transit Exchange','Investment Forum']);assert.deepEqual(r.forum,{cr:null,jail:false,pos:30});
+ assert.ok(r.hq.gain>0||r.hq.grant,JSON.stringify(r.hq));assert.deepEqual(r.pre,{cr:null,used:false});assert.equal(r.second,true);assert.ok(r.valid);
+ ok('corners: Skyline HQ bonus, Planning Office Pre-approval (cancels one review), Transit Exchange ride, Investment Forum (no detention)');
+ if(shots){await p.setViewportSize({width:844,height:390});await p.evaluate(()=>{$('#modals').innerHTML='';const me=G.players[0];me.ai=false;me.cash=1200;me.pos=30;G.turn=0;land(me,[4,4]);flatDraw();return 1});await p.waitForTimeout(800);await p.screenshot({path:path.join(shots,'06-investment-forum-844x390.png')});
+  await p.evaluate(()=>{$('#modals').innerHTML='';flatDraw();return 1});await p.waitForTimeout(500);await p.screenshot({path:path.join(shots,'06-corners-board-844x390.png')})}
+ assert.deepEqual(p.errs,[]);await p.close();
+ p=await open({lc:false});await quick(p);await p.waitForFunction(()=>G&&G.players);r=await p.evaluate(()=>[0,30].map(i=>SQ[i].n));assert.deepEqual(r,['START','Police Check']);ok('classic match keeps classic corner names');await p.close();
  await browser.close();console.log(`LIVING CITY ${n} checks`);
 })().catch(e=>{console.error(e);process.exit(1)});
