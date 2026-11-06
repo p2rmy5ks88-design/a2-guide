@@ -16,7 +16,7 @@ attrs[target.uuid] ||= {}
 caps = attrs[target.uuid]['SystemCapabilities'] ||= {}
 caps['com.apple.SignInWithApple'] = {'enabled' => 1}
 # Local StoreKit 2 bridge. Keep these App-only sources out of dependency targets.
-%w[SkylineStoreProducts.swift SkylineStoreKitPlugin.swift SkylineBridgeViewController.swift].each do |name|
+%w[SkylineStoreProducts.swift SkylineStoreKitPlugin.swift SkylineBridgeViewController.swift SkylineSceneDelegate.swift].each do |name|
   FileUtils.cp(File.join('native', name), File.join('ios/App/App', name))
   source_ref = group.files.find { |f| f.path == name } || group.new_file(name)
   target.source_build_phase.add_file_reference(source_ref, true)

@@ -11,7 +11,7 @@ permissions:
 jobs:
   sdk27:
     runs-on: xcode-27
-    timeout-minutes: 25
+    timeout-minutes: 35
     defaults:
       run:
         shell: bash
@@ -47,6 +47,21 @@ jobs:
           xcrun vtool -show-build "$PRODUCT/App" | tee "$RUNNER_TEMP/skyline-sdk27-binary.txt"
           python3 "$GITHUB_WORKSPACE/skyline-estates-app/scripts/verify-ios-sdk.py" binary "$RUNNER_TEMP/skyline-sdk27-binary.txt"
           python3 -c 'import pathlib,re,os; text=pathlib.Path(os.environ["RUNNER_TEMP"]+"/skyline-sdk27-binary.txt").read_text(); sdks=re.findall(r"^\s*sdk (\d+)",text,re.M); assert sdks and all(int(s)>=27 for s in sdks)'
+      - name: Launch on an iOS 27 simulator (must not crash)
+        run: |
+          APP="$RUNNER_TEMP/sdk27-simulator/Build/Products/Release-iphonesimulator/App.app"
+          RT=$(xcrun simctl list runtimes -j | python3 -c 'import json,sys; r=[x for x in json.load(sys.stdin)["runtimes"] if x["isAvailable"] and x["platform"]=="iOS"]; r.sort(key=lambda x:[int(v) for v in x["version"].split(".")]); print(r[-1]["identifier"]+" "+r[-1]["version"])')
+          echo "Runtime: $RT"; python3 -c "import sys; v=sys.argv[1].split('.'); assert int(v[0])>=27, v" "${RT#* }"
+          DT=$(xcrun simctl list runtimes -j | python3 -c 'import json,sys; rid=sys.argv[1]; r=[x for x in json.load(sys.stdin)["runtimes"] if x["identifier"]==rid][0]; print([d["identifier"] for d in r["supportedDeviceTypes"] if d["name"].startswith("iPhone")][-1])' "${RT% *}")
+          UDID=$(xcrun simctl create skyline-launch "$DT" "${RT% *}")
+          xcrun simctl boot "$UDID"; xcrun simctl bootstatus "$UDID" -b
+          xcrun simctl install "$UDID" "$APP"
+          xcrun simctl launch "$UDID" com.kenstylez.skylineestates | tee "$RUNNER_TEMP/skyline-sdk27-launch.txt"
+          sleep 20
+          xcrun simctl spawn "$UDID" launchctl list | grep -i skylineestates | tee -a "$RUNNER_TEMP/skyline-sdk27-launch.txt"
+          xcrun simctl io "$UDID" screenshot --display=1 "$RUNNER_TEMP/skyline-sdk27-launch.png" || true
+          if ls ~/Library/Logs/DiagnosticReports/App-*.ips 2>/dev/null; then head -c 4000 ~/Library/Logs/DiagnosticReports/App-*.ips; exit 1; fi
+          grep -Eq '^[0-9]+\s' <(xcrun simctl spawn "$UDID" launchctl list | grep -i skylineestates) || { echo 'App is not running after launch'; exit 1; }
       - name: Retain compatibility evidence only
         if: always()
         uses: actions/upload-artifact@v4
@@ -55,3 +70,4 @@ jobs:
           path: |
             ${{ runner.temp }}/skyline-sdk27-*.txt
             ${{ runner.temp }}/skyline-sdk27-*.log
+            ${{ runner.temp }}/skyline-sdk27-*.png

@@ -16,6 +16,14 @@ set_key UIViewControllerBasedStatusBarAppearance bool false
 set_key UIRequiresFullScreen bool true
 set_key ITSAppUsesNonExemptEncryption bool false
 set_key NSPhotoLibraryAddUsageDescription string "Save your Skyline Showcase image to Photos only when you choose Save Image."
+# UIScene lifecycle (required when built with the iOS 27 SDK): Main.storyboard loads into the scene window.
+M=UIApplicationSceneManifest; C=":$M:UISceneConfigurations:UIWindowSceneSessionRoleApplication:0"
+$PB -c "Delete :$M" "$P" 2>/dev/null || true
+$PB -c "Add :$M dict" -c "Add :$M:UIApplicationSupportsMultipleScenes bool false" -c "Add :$M:UISceneConfigurations dict" \
+  -c "Add :$M:UISceneConfigurations:UIWindowSceneSessionRoleApplication array" -c "Add $C dict" \
+  -c "Add $C:UISceneConfigurationName string Default" \
+  -c "Add $C:UISceneDelegateClassName string App.SkylineSceneDelegate" \
+  -c "Add $C:UISceneStoryboardFile string Main" "$P"
 set_key CFBundleDisplayName string "Skyline Estates"
 set_key CFBundleShortVersionString string "${VERSION_NAME:-1.0.0}"
 set_key CFBundleVersion string "${VERSION_CODE:-1}"
