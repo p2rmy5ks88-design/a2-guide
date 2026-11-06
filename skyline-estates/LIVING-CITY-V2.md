@@ -248,3 +248,26 @@ Data: `balance/living-city-t06.csv`. The owner approved 150 games for this run.
   - **3D board:** shows stage geometry as before (no new 3D art). Landmark badges and corner icons show on the 2D board, the city map and the cards.
   - **Online rules:** V2 needs backend parity and separate approval before online/ranked use.
   - **IP review:** professional review is still required (see the similarities listed under Task 06).
+
+## V2.1 — Native-first: 3D parity, Daylight/Dark, versioned backend (6 Nov 2026)
+
+- **3D board** (the same `G` state as 2D; no extra state):
+  - Stages already map to the existing geometry: `FAM[o.h]` gives 1 Low-rise, 2 Mid-rise, 3 High-rise, 5 Skyscraper.
+  - Added: a gold crown above a Landmark, a gold or amber outline on streets hit by an event, and the four V2 corner tiles (kit icon plus live label) drawn into the 3D board texture.
+  - The texture redraws when switching between V2 and classic matches.
+  - Classic matches keep the classic tiles.
+- **Daylight:**
+  - outlines use amber `#b45309` on light surfaces; dark text in Civic Review, cards and stage tables;
+  - the theme switch (`applyUI`) only changes styling and refreshes the 3D markers, so state, choices and the camera are untouched.
+- **Backend** (authoritative admission, `security/service/admission.cjs`):
+  - Rulesets are versioned. Classic is 1 and enforced; Living City is 2, advertised with `online:false`.
+  - A request without a `ruleset` field gets classic, so older installed apps are unchanged.
+  - `ruleset:2` is rejected with 409 `ruleset-not-enabled`. Any V2 state key (`rv`, `events2`, …) is rejected with 400.
+  - The capabilities endpoint advertises the `rulesets`.
+  - Online V2 stays **off** until the server kernel enforces the V2 actions.
+  - Test: `security/service/ruleset.test.cjs`, 8 checks.
+- **Evidence:** `tests/evidence/living-city-v21/`:
+  - 3D Dark and Daylight at 844×390;
+  - choice card, Civic Review and Landmark dialogs in Dark and Daylight at 844×390, 956×440 and 667×320;
+  - two Android landscape sizes, 915×412 and 800×360.
+  - These are Chromium renders, plus SwiftShader for the WebGL ones. They are not device screenshots.

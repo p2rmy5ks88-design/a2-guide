@@ -7,8 +7,13 @@ const hash=x=>crypto.createHash('sha256').update(x).digest('hex');
 const codePattern=/^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{5}$/;
 function fields(value,keys){if(!plain(value)||Object.keys(value).some(k=>!keys.includes(k)))fail(400,'invalid-fields')}
 function name(value){if(typeof value!=='string'||!value.trim()||value.trim().length>12||/[<>\x00-\x1f\x7f]/.test(value))fail(400,'invalid-name');return value.trim()}
+// Versioned rulesets. The authoritative engine enforces the classic ruleset (1) only. Living City (2) is
+// advertised as not enabled until the server kernel enforces it; requests for it are rejected explicitly, and an
+// absent field means classic, so older installed apps keep working unchanged.
+const RULESETS=Object.freeze({classic:{version:1,online:true},livingCity:{version:2,online:false}});
 function settings(value){
  const booleans=['minigames','perks','ffa','events','speedDie','pot','goDouble','jailRent','auction','even','interest'];
+ if(plain(value)&&Object.hasOwn(value,'ruleset')){if(value.ruleset===2||value.ruleset==='living-city')fail(409,'ruleset-not-enabled');if(value.ruleset!==1)fail(400,'invalid-ruleset');value={...value};delete value.ruleset}
  fields(value,['mode','rounds','city','theme','cash','timer','ai','speed',...booleans]);
  if(!['classic','quick','timed'].includes(value.mode)||typeof value.city!=='string'||!/^[a-z][a-z0-9_]{1,23}$/.test(value.city))fail(400,'invalid-settings');
  if(Object.hasOwn(value,'cash')&&![1200,1600,2000].includes(value.cash)||Object.hasOwn(value,'timer')&&![0,90].includes(value.timer)||Object.hasOwn(value,'rounds')&&![10,20,30,45].includes(value.rounds)||value.mode==='timed'&&value.rounds==null)fail(400,'invalid-settings');
@@ -124,4 +129,4 @@ function createAdmissionService({db,verifyIdToken,clock=Date.now,generateCode=ra
  }
  return{execute,readRoom,settleAdmission,assetAction:(token,body)=>execute(token,'action',body)};
 }
-module.exports={createAdmissionService,ServiceError,identityVerifier,validateAdmissionRequest};
+module.exports={RULESETS,createAdmissionService,ServiceError,identityVerifier,validateAdmissionRequest};
