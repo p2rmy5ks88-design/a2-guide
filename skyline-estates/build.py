@@ -33,7 +33,7 @@ body = body[:a] + body[a:b].replace('Math.random()', "(window.SkylineSocial?.ran
 # Preserve the latest Season if the device clock moves backwards.
 body = body.replace('if(!S||S.n!==n)', 'if(!S||S.n<n)')
 # Add an optional nested Showcase without resolving/reopening the results modal.
-results = "btns:[{k:'season',label:'Season'},{k:'new',label:'New game',primary:true}]"
+results = "btns:[{k:'home',label:'Home'},{k:'season',label:'Season'},{k:'new',label:G.online?'New game':'Play again',primary:true}]"
 assert body.count(results) == 1
 body = body.replace(results, "onMount:panel=>window.SkylineShowcase?.attachResults(panel)," + results)
 # Install web currency after core declarations but before boot draws the first board.

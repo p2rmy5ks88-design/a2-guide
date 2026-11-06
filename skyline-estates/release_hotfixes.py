@@ -35,6 +35,10 @@ def apply(body):
     # place them by trophies with a note on publishing instead.
     replace('const mi=rows.findIndex(r=>r.u===u);E.innerHTML=rows.map((r,k)=>row(r,k,r.u===u)).join(\'\')+(mi<0?`<div class="lg3you">${row({n:myName()||\'You\',l:lvlOf(PREF.xp),t:S.tr||0,c:myChar()},-1,true).replace(\'<em>0</em>\',\'<em>–</em>\')}</div>`:\'\')', 'const mi=rows.findIndex(r=>r.u===u);if(mi<0){rows.push({u,n:myName()||\'You\',l:lvlOf(PREF.xp),t:S.tr||0,c:myChar()});rows.sort((a,b)=>b.t-a.t||String(a.u).localeCompare(String(b.u)))}E.innerHTML=rows.map((r,k)=>row(r,k,r.u===u)).join(\'\')+(mi<0?`<div class="small lg3note">${PREF.social&&PREF.social.rankings?\'Your score is shown here from this device and will appear for others once it publishes.\':\'Only you can see your score. To appear for others, turn on “Publish legacy device-reported Season scores” in Social privacy below.\'}</div>`:\'\')')
 
+    # Results: Home button and Play again; '1 property'.
+    replace("btns:[{k:'season',label:'Season'},{k:'new',label:'New game',primary:true}]});\n  if(k==='season'){setup.tab='season';showTitle()}else if(k==='new')showTitle();", "btns:[{k:'home',label:'Home'},{k:'season',label:'Season'},{k:'new',label:G.online?'New game':'Play again',primary:true}]});\n  if(k==='season'){setup.tab='season';showTitle()}else if(k==='home'){setup.tab='play';showTitle()}else if(k==='new'){const again=!G.online;setup.tab='play';showTitle();if(again)setTimeout(()=>{const q=document.querySelector('#qAI');if(q)q.click()},250)}")
+    replace('`${b.name} bought ${st(b).buys} properties`', "`${b.name} bought ${st(b).buys} propert${st(b).buys===1?'y':'ies'}`")
+
     # Task 02 IP audit: avoid utility names identical/close to a classic board game's.
     replace("const GENERIC_UTILS=[['Power Company','⚡'],['Water Works','💧']];", "const GENERIC_UTILS=[['City Power Grid','⚡'],['Lagoon Water Board','💧']];")
 
