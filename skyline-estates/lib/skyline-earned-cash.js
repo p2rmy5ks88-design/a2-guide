@@ -143,6 +143,14 @@
     if(!logo||!pill)return;logo.style.transform='';logo.style.visibility='';
     const L=logo.getBoundingClientRect(),P=pill.getBoundingClientRect(),W=who?who.getBoundingClientRect():{right:0};
     if(L.right<=P.left-8&&L.left>=W.right+8)return;
+    // Not enough room in the header row: move the logo down into the open sky between the header and the
+    // game modes, centred where it was, as long as it clears the city title, the Spotlight card and the modes.
+    const pills=[...document.querySelectorAll('#tbSkylineCash,#tbCoins,#tbLeague,#hdGear,#tbWho')].map(e=>e.getBoundingClientRect());
+    const dy=Math.ceil(Math.max(...pills.map(r=>r.bottom))+4-L.top);
+    const hit=(a,b)=>a.left<b.right&&a.right>b.left&&a.top<b.bottom&&a.bottom>b.top;
+    const blocks=[...document.querySelectorAll('#title .hd-city,#title .hd-spot,#title .hd-modes')].map(e=>e.getBoundingClientRect());
+    const moved={left:L.left,right:L.right,top:L.top+dy,bottom:L.bottom+dy};
+    if(!blocks.some(b=>hit(moved,b))){logo.style.transformOrigin='50% 0';logo.style.transform='translateX(-50%) translateY('+dy+'px)';return}
     const centre=innerWidth/2,room=2*Math.min(P.left-8-centre,centre-W.right-8);
     if(room<120){logo.style.visibility='hidden';return}
     logo.style.transformOrigin='50% 0';logo.style.transform='translateX(-50%) scale('+Math.min(1,room/L.width).toFixed(3)+')';
@@ -161,7 +169,7 @@
   const watchHeader=()=>{if(!ro)return;['#tbSkylineCash','#tbCoins','#tbLeague','#tbWho','#hdGear'].forEach(s=>{const e=document.querySelector(s);if(e)ro.observe(e)})};
   const fitLater=()=>{watchHeader();try{styleXp()}catch{}requestAnimationFrame(fitLogo)};
   new MutationObserver(fitLater).observe(document.documentElement,{childList:true,subtree:false});
-  addEventListener('DOMContentLoaded',fitLater);try{document.fonts&&document.fonts.ready.then(fitLater)}catch{}setTimeout(fitLater,1500);
+  addEventListener('DOMContentLoaded',fitLater);try{document.fonts&&document.fonts.ready.then(fitLater)}catch{}setTimeout(fitLater,1500);setTimeout(fitLater,3500);
   const oldRail=railProfile;
   railProfile=function(){const result=oldRail.apply(this,arguments);refreshCashHeader();return result};
   function chip(text){const e=document.createElement('small');e.className='sc-reward';e.textContent=text;return e}
