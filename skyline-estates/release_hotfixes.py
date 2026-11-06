@@ -5,6 +5,10 @@ def apply(body):
         assert old in body, old[:100]
         body = body.replace(old, new)
 
+    # Distinct wording (IP review): no classic-board phrases in player-visible text.
+    replace("label:'THE BOARDWALK'", "label:'SANTA MONICA PIER'")
+    replace('<b>Get out of the Lockup</b>', '<b>Bail Pass</b>')
+    body = body.replace('Luxury Fee', 'Penthouse Levy')
     replace('const SEASON_EPOCH=Date.UTC(2026,9,25)', 'const SEASON_BASE=1000;const seasonDisplay=n=>n>SEASON_BASE?n-SEASON_BASE:n;const SEASON_EPOCH=Date.UTC(2026,10,3)')
     replace('Math.max(2,Math.floor((Date.now()-SEASON_EPOCH)/SEASON_LEN)+2)', 'SEASON_BASE+Math.max(1,Math.floor((Date.now()-SEASON_EPOCH)/SEASON_LEN)+1)')
     replace('SEASON_NAMES[(n-1)%SEASON_NAMES.length]', 'SEASON_NAMES[(seasonDisplay(n)-1)%SEASON_NAMES.length]')

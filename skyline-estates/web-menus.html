@@ -2099,7 +2099,7 @@ const SQ=[
  {t:'chance',n:'Lucky Break'},
  {t:'prop',n:'',lm:'',g:'green',p:280,h:190,r:[22,100,275,725,990,1230]},
  {t:'prop',n:'',lm:'',g:'green',p:300,h:190,r:[24,110,300,790,1080,1345]},
- {t:'tax',n:'Luxury Fee',amt:90},
+ {t:'tax',n:'Penthouse Levy',amt:90},
  {t:'rail',n:'',lm:'',ic:'🚆',p:200},
  {t:'esusu',n:'City Hall'},
  {t:'prop',n:'',lm:'',g:'navy',p:330,h:200,r:[26,115,325,860,1170,1455]},
@@ -3153,7 +3153,7 @@ function ownHint(i,viewer,incoming,t){if(viewer==null)return '';
 }
 function propChip(i,viewer,incoming,t){const s=SQ[i],o=G.own[i],gc=s.g?GC[s.g]:'#9aa6b4';const set=s.g?GNAME[s.g]:s.t==='rail'?'Transport':'Utility';
   return `<span class="tchip" style="--g:${gc}"><i></i><span><b>${s.n}</b><small>${set}${o.h?' · '+houseLabel(i):''}${o.m?' · mortgaged':''}</small>${ownHint(i,viewer,incoming,t)}</span></span>`}
-function tradeSide(props,cash,card,viewer,incoming,t){const parts=props.map(i=>propChip(i,viewer,incoming,t));if(cash)parts.push(`<span class="tchip cash"><i></i><span><b>${fmt(cash)}</b><small>Cash</small></span></span>`);if(card)parts.push(`<span class="tchip card"><i></i><span><b>Get out of the Lockup</b><small>Card</small></span></span>`);return parts.join('')||'<span class="muted">Nothing</span>'}
+function tradeSide(props,cash,card,viewer,incoming,t){const parts=props.map(i=>propChip(i,viewer,incoming,t));if(cash)parts.push(`<span class="tchip cash"><i></i><span><b>${fmt(cash)}</b><small>Cash</small></span></span>`);if(card)parts.push(`<span class="tchip card"><i></i><span><b>Bail Pass</b><small>Card</small></span></span>`);return parts.join('')||'<span class="muted">Nothing</span>'}
 function tradeSummary(t){const f=P(t.from);
   return `<div class="tsum"><div><h4>${esc(f.name)} gives you</h4><div class="tchips">${tradeSide(t.give,t.gc,t.gcard,t.to,true,t)}</div></div><div><h4>${esc(f.name)} wants from you</h4><div class="tchips">${tradeSide(t.get,t.rc,t.rcard,t.to,false,t)}</div></div></div>`}
 
@@ -3814,7 +3814,7 @@ const CITY_RAW={"lagos": {"key": "lagos", "country": "NG", "name": "Lagos", "blu
 const CITY_DATA={},CITY_ORDER=[],CITY_COUNTRY={};
 const GENERIC_UTILS=[['City Power Grid','⚡'],['Lagoon Water Board','💧']];
 COUNTRIES.forEach(c=>c.cities.forEach(k=>{const r=CITY_RAW[k];CITY_ORDER.push(k);CITY_COUNTRY[k]=c;
-  CITY_DATA[k]=Object.assign({},r,{jail:'City Lockup',warden:'Traffic police',hospital:'the city hospital',utils:GENERIC_UTILS,taxes:['City Tax','Luxury Fee'],flag:c.flag,
+  CITY_DATA[k]=Object.assign({},r,{jail:'City Lockup',warden:'Traffic police',hospital:'the city hospital',utils:GENERIC_UTILS,taxes:['City Tax','Penthouse Levy'],flag:c.flag,
     sw:`linear-gradient(135deg,${c.cols[0]} 0 46%,${c.cols[1]==='#ffffff'?'#e8eef4':c.cols[1]} 54%)`})}));
 const countryOf=k=>CITY_COUNTRY[k]||COUNTRIES[0];
 const PROP_IDX=SQ.map((s,i)=>s.t==='prop'?i:-1).filter(i=>i>=0);
@@ -4496,7 +4496,7 @@ function paintKit(R){return (ctx,ph)=>{const rnd=seeded(R.seed||7);
 const KIT={
   stockholm:{p:{ground:['#8cbf6a','#6f9f55'],water:'archipelago',wcol:'#3a7fb0',label:'OLD TOWN',ly:475},b:g=>{K.globe(g,735,760,.5);K.towers(g,400,750,5,.6,3,['#e8c48a','#d89a6a','#f0dcb0']);K.wheel(g,560,770,.6);K.boats(g,[[460,600,.4,'#ffffff'],[650,610,-.3,'#005293']]);K.trees(g,[[330,480],[790,480],[330,700],[790,700]],'pine');K.flag(g,550,700,['#005293','#fecb00','#005293'])}},
   nyc:{p:{ground:['#8a9a7a','#6f7f64'],water:'none',parkRect:[440,520,220,180],label:'CENTRAL PARK',ly:500,lcol:'#1f3a1f'},b:g=>{K.towers(g,370,600,9,2,4);K.towers(g,740,600,9,2.4,9);K.needle(g,735,770,2.4,'#c8d0d8');K.park(g,550,610,200,160,'round',10);K.bridge(g,320,790,600,790,'suspension');K.movers(g,'#ffcc00',740,.05,.5);addWalkers(g,16,[[450,530,650,690]])}},
-  la:{p:{ground:['#d8c79a','#c9b47f'],spec:'150,120,60',water:'coast',label:'THE BOARDWALK',ly:500,lcol:'#7a5a2a'},b:g=>{K.wheel(g,720,700,.75);K.towers(g,430,560,6,1.4,5,['#e8d8c0','#9fd8f5']);K.trees(g,[[340,640],[400,650],[460,640],[640,650],[790,640]],'palm',.9);K.beach(g,540,670,5);K.boats(g,[[450,760,.4,'#ffffff'],[650,780,-.3,'#e23b2e']]);addWalkers(g,14,[[320,640,780,690]])}},
+  la:{p:{ground:['#d8c79a','#c9b47f'],spec:'150,120,60',water:'coast',label:'SANTA MONICA PIER',ly:500,lcol:'#7a5a2a'},b:g=>{K.wheel(g,720,700,.75);K.towers(g,430,560,6,1.4,5,['#e8d8c0','#9fd8f5']);K.trees(g,[[340,640],[400,650],[460,640],[640,650],[790,640]],'palm',.9);K.beach(g,540,670,5);K.boats(g,[[450,760,.4,'#ffffff'],[650,780,-.3,'#e23b2e']]);addWalkers(g,14,[[320,640,780,690]])}},
   london:{p:{ground:['#86a86a','#6f9258'],water:'river',wcol:'#4f7f98',label:'THE RIVER',ly:500},b:g=>{K.clock(g,380,520,1.6);K.bridge(g,520,560,520,690,'twin');K.dome(g,735,740,.32,'#e8e2d2','#c8c8c0');K.towers(g,720,520,5,1.6,8,['#9fb8c8','#c8d6e2']);K.boats(g,[[620,620,.4,'#c8102e']]);K.movers(g,'#c8102e',780,.04,.6);K.trees(g,[[340,740],[420,770],[460,720]],'round')}},
   manchester:{p:{ground:['#9a8a72','#857660'],spec:'90,60,40',water:'canals',label:'CASTLEFIELD',ly:500},b:g=>{K.mills(g,600,540);K.stadium(g,720,740,'#c8102e');K.movers(g,'#ffcc00',700,.05,.6);K.boats(g,[[380,640,.3,'#2e6fd6'],[620,645,-.25,'#e23b2e']]);K.trees(g,[[340,740],[380,790],[520,760]],'round');addWalkers(g,14,[[460,660,640,820]])}},
   paris:{p:{ground:['#9ab07a','#7f9a64'],water:'river',wcol:'#4f86a8',label:'LA SEINE',ly:500},b:g=>{K.lattice(g,720,520,2.2);K.arch(g,400,740,'#e8dcc0');K.bridge(g,560,560,560,690,'stone');K.boats(g,[[460,620,.4,'#ffffff'],[680,610,-.3,'#2e6fd6']]);K.park(g,720,760,140,90,'round',7);addWalkers(g,14,[[330,700,520,800]])}},
