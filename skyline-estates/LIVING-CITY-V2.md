@@ -128,8 +128,38 @@ The decks keep 16 cards each, under the same indices and Bail Pass slots (Lucky 
   - it rides when the hub is buyable or the fare is cheap;
   - it buys a bond only when cash is above its reserve.
 - **Checks:**
-  - \`living-city-browser\` passes 13 checks: decks free of staples, the AI resolves all 12 choice cards, decks stay complete with no duplicates, the grant is used once, the rent cap holds, the bond pays once, human choice works, and legacy decks are unchanged;
-  - \`complete-matches\` plays 3 full human matches through V2 (choice cards included);
+  - `living-city-browser` passes 13 checks: decks free of staples, the AI resolves all 12 choice cards, decks stay complete with no duplicates, the grant is used once, the rent cap holds, the bond pays once, human choice works, and legacy decks are unchanged;
+  - `complete-matches` plays 3 full human matches through V2 (choice cards included);
   - human-flows, gameplay-ux, stability (175 games), market-pulse, turn-resume, save-recovery, timed-finish, the TestFlight hotfix and first-session also pass.
-- **Balance** (\`balance/living-city-t02.csv\`), 200 seeds: see the table row below.
+- **Balance** (`balance/living-city-t02.csv`), 200 seeds: see the table row below.
 | lc200 | 200 (30000–30199) | 199 | 62 | 2.00 | 33% [27–39] | — | 34% [27–41] | 52 | 3.9 | 4.9 |
+
+## Task 03 — Civic Review (replaces the Lockup in V2)
+
+- **Triggers** (all city-planning causes, not dice):
+  - a Planning hold card (Lucky Break 8);
+  - a Civic Review notice card (City Hall 7);
+  - a development audit: 4 or more building levels added in one turn;
+  - the Police Check corner (until Task 06).
+- **Three doubles is "gridlock":** the turn ends, with no detention.
+- **While under review:** the token is never moved and the owner collects **no rent**.
+- **At the reviewed player's next turn, exactly one choice:**
+  - **Fast-Track Permit**: pay 70, then play the turn normally;
+  - **Bail Pass**: one held pass is used and returned to its deck;
+  - **Standard Review**: skip the whole turn (no roll); the review closes at its end.
+  - Standard Review is always available, so a turn can never get stuck.
+- **State:** `p.cr={from,why}`. `p.inJail` is never set in V2, and a save with both states is rejected. Bankruptcy clears the review.
+- **AI:**
+  - uses a Bail Pass when it has earning streets;
+  - otherwise pays the permit when it has 2 or more earning streets and cash above its reserve;
+  - otherwise takes Standard Review;
+  - stops after 3 levels in one turn unless it is rich enough to accept a review.
+- **Tuning:** an audit at 3 levels made games 15% longer (71 rounds against 62). At 4 levels, games run 66 rounds against 63 for classic. File: `balance/living-city-t03.csv`.
+
+| lc200 (Task 03) | 200 games, 200 finished | 66 avg rounds | First seat 38% [32–45] | Comeback 44% |
+|---|---|---|---|---|
+
+- **Checks:**
+  - `living-city-browser` passes 19 checks;
+  - `complete-matches` plays 3 full human matches with choice cards and Civic Review;
+  - human-flows, gameplay-ux, turn-resume and save-recovery pass.
