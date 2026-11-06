@@ -68,6 +68,7 @@ jobs:
           t 'node skyline-estates/tests/beta-diary-browser.cjs'
           t 'node skyline-estates/tests/landmarks-browser.cjs'
           t 'node skyline-estates/tests/avatars-browser.cjs'
+          t 'node skyline-estates/tests/living-city-browser.cjs'
           t 'node skyline-estates/security/service/property-rarity.test.cjs'
           t 'SKYLINE_NO_WEBGL=1 node skyline-estates/tests/reference-dashboard-browser.cjs "$RUNNER_TEMP/skyline-reference-dashboard.json"'
       - name: Upload test diagnostics

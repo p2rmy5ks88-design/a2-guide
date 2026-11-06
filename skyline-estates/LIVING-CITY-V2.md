@@ -70,3 +70,30 @@ The mockups and the reference infographic are not shipped.
 - A save without `rv` loads with classic rules. Saves are validated per rule version.
 - Online room settings never include `rv`.
 - The Skyline Cash wallet, Coins, Shop, StoreKit and Collection purchases are not touched.
+
+## Task 01 — Strategic City Events on by default (rule version 2)
+
+- **New offline matches** (Play solo, Custom, Spotlight) get `G.rv=2`, `G.lcv=1` and Strategic Events on. Classic City Events are forced off, so only one system ever runs.
+- **When the player's choice wins:**
+  - A player who opted into classic City Events keeps them, and Strategic Events stay off.
+  - A player who switched Strategic Events off keeps them off.
+- **Cadence is unchanged.** Audited: the first event is in round 3, then one every 3 rounds; event durations are unchanged.
+- **Setting:** Custom › Rules has one **Living City rules** switch (`PREF.lc`, default on). Turning it off gives classic rules exactly as before.
+- **Online:** `cfgSetOnline()` carries no V2 keys. `validateSave` rejects `rv` on an online match.
+- **UI:**
+  - the kit event icons appear on the event chip and the start banner;
+  - the affected streets are outlined on the 2D board and on the city map;
+  - the chip is compact on the 2D board, so it no longer covers the board at 844×390 or 956×440;
+  - the Rules page gains a Living City section in V2 matches.
+- **Checks:**
+  - `tests/living-city-browser.cjs` passes 6 checks;
+  - market-pulse (66 checks, 95 simulations), turn-resume, save-recovery, complete-matches, spotlight and avatars pass;
+  - `build.py --check` passes.
+- **Balance** (`balance/living-city-t01.csv`), 200 seeds each:
+
+| Config | Avg rounds | First-seat win | Comeback | Builds |
+|---|---|---|---|---|
+| classic | 63 | 32% [26–39] | 39% | 56 |
+| V2 (Task 01) | 61 | 37% [31–44] | 36% | 55 |
+
+The V2 first-seat interval includes 33%.
