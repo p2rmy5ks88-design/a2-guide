@@ -204,6 +204,8 @@ html.lc-on.flat #ev2chip{max-width:clamp(96px,calc(50vw - 50vh - 72px),200px)!im
 .lc-dev{width:100%;border-collapse:collapse;font-size:12px}.lc-dev th{text-align:left;font-size:10.5px;opacity:.7}.lc-dev td{padding:2px 3px;white-space:nowrap;font-size:11px}html.lc-on .pfm-pips i:nth-child(4){display:none}.lc-dev .lc-stg{width:24px;height:24px;vertical-align:middle;margin-right:5px;border-radius:5px}
 .lc-dev tr.lc-now td{background:#e2b13c22;font-weight:800}.lc-dev small{opacity:.7;font-size:10px}.lc-devnote{font-size:10.5px;opacity:.75;margin-top:4px}
 .lc-sky .lc-stg{width:1.2em;height:1.2em;vertical-align:middle}[data-quick-build] .lc-stg{width:22px;height:22px;vertical-align:-6px;margin-right:4px;border-radius:4px}
+.mc.lc-lm{box-shadow:inset 0 0 0 2px #e2b13c}.mc .lc-lmb{position:absolute;right:1px;top:1px;width:14px;height:14px;pointer-events:none}.lc-lmline{font-size:11px;margin:4px 0;display:flex;align-items:center;gap:2px}.lc-lmline .lc-ic{width:18px;height:18px}
+.lc-lmm .mbar{flex-wrap:wrap}.lc-lmm .mbar .btn{min-height:44px;flex:1 1 160px}
 @media (max-height:420px){.lc-card{grid-template-columns:84px minmax(0,1fr)}.lc-cbody p{font-size:12px;margin-bottom:4px}.lc-cbody>b{font-size:15px}.lc-ch{font-size:11px;gap:2px}}`;document.head.append(st)}
 
 /* ---------- Task 03 · Civic Review (replaces the Lockup in V2 matches) ---------- */
@@ -307,5 +309,49 @@ function lcPortfolioFix(root){document.documentElement.classList.toggle('lc-on',
 new MutationObserver(()=>{if(G&&lc()){const m=$('#modals');if(m)lcPortfolioFix(m)}}).observe(document.getElementById('modals')||document.body,{childList:true,subtree:true});
 LC_VALID.push(g=>{let hs=0,tw=0;for(let i=0;i<40;i++){const h=g.own[i].h;if(h===4)return false;if(h===5)tw++;else hs+=h}return hs+g.houses===36&&tw+g.hotels===12});
 LC_RULES.push(['district_growth','Skyline Development','Streets grow Plot → Low-rise → Mid-rise → High-rise → Skyscraper. Each stage costs more (0.8×, 1×, 1.2×, 2× the build price). High-rise rent is 10% above the classic three-house rent, and High-rise and Skyscraper ignore falling-rent events. Only a district’s Landmark can become a Skyscraper. Selling refunds half the stage price.']);
+
+
+/* ---------- Task 05 · District Growth and one Landmark per district ---------- */
+// Replaces the classic blanket rule (a full colour set doubles every unbuilt street's rent) in V2 matches:
+//   District Growth: owning 2+ streets of a district gives those streets +15% rent (counted in the −25…+50% cap).
+//   Landmark: once you own the whole district, you may designate ONE street (fee: 25% of its price, match cash).
+//     The Landmark keeps double rent while unbuilt, earns +20% at every stage (in the cap), and is the only street
+//     in the district that can rise to Skyscraper.
+//   A Landmark is tied to its owner and to whole-district ownership. When ownership of the district breaks
+//   (trade, bankruptcy, a city sale) the designation is removed; a new owner of the whole district may designate again.
+const LC_LM_FEE=.25,LC_GROWTH=15,LC_LM_PCT=20;
+const lcLM=()=>G.lm||(G.lm={});
+function lcLandmarkAt(i){if(!lc()||SQ[i].t!=='prop')return false;const L=G.lm&&G.lm[SQ[i].g];return !!(L&&L.i===i&&G.own[i].o===L.pid&&ownsAll(L.pid,SQ[i].g))}
+function lcSyncLandmarks(){if(!lc()||!G.lm)return;for(const g of Object.keys(G.lm)){const L=G.lm[g];if(!GROUPS[g]||!ownsAll(L.pid,g)||G.own[L.i].o!==L.pid||P(L.pid).bankrupt){delete G.lm[g];log(`${SQ[L.i].n} is no longer a Landmark: district ownership changed`)}}}
+lcCanSky=i=>lcLandmarkAt(i);
+const lcEligibleDistricts=pid=>Object.keys(GROUPS).filter(g=>ownsAll(pid,g)&&!lcLM()[g]&&GROUPS[g].some(i=>!G.own[i].m));
+const lcLmFee=i=>Math.round(SQ[i].p*LC_LM_FEE/5)*5;
+function lcDesignate(pid,i){const g=SQ[i].g,p=P(pid),fee=lcLmFee(i);if(!lc()||!ownsAll(pid,g)||lcLM()[g]||G.own[i].m||p.cash<fee)return false;
+  p.cash-=fee;float(pid,-fee);G.lm[g]={i,pid};G.lcStats=G.lcStats||{};G.lcStats.landmarks=(G.lcStats.landmarks||0)+1;log(`${p.name} made ${SQ[i].n} the Landmark of ${GNAME[g]} (${fmt(fee)})`);if(!FAST)toast(`${SQ[i].n} is now a Landmark`);updateCell(i);renderRoster();return true}
+LC_EXTRA_PCT.push(i=>{if(SQ[i].t!=='prop')return 0;const o=G.own[i];if(o.o<0)return 0;let t=0;const n=GROUPS[SQ[i].g].filter(j=>G.own[j].o===o.o).length;if(n>=2)t+=LC_GROWTH;if(lcLandmarkAt(i))t+=LC_LM_PCT;return t});
+// remove the blanket full-set doubling; keep double unbuilt rent only on the Landmark
+{const _rf=rentFor;rentFor=function(i,dsum,o2){const r=_rf.apply(this,arguments);if(!lc()||SQ[i].t!=='prop'||!r)return r;const o=G.own[i];
+  if(o.h===0&&ownsAll(o.o,SQ[i].g)&&!lcLandmarkAt(i))return Math.round(r/2);return r}}
+const lcAiPickLM=(p,g)=>GROUPS[g].filter(i=>!G.own[i].m).sort((a,b)=>SQ[b].r[5]-SQ[a].r[5])[0];
+async function lcOfferLandmarks(p){for(const g of lcEligibleDistricts(p.id)){
+  if(p.ai||FAST){const i=lcAiPickLM(p,g);if(i!=null&&p.cash-lcLmFee(i)>=aiReserve(p)*.5)lcDesignate(p.id,i);continue}
+  const ask=(G.lmAsked||(G.lmAsked={}));if(ask[p.id+':'+g]!=null&&G.round-ask[p.id+':'+g]<3)continue;ask[p.id+':'+g]=G.round;
+  const opts=GROUPS[g].filter(i=>!G.own[i].m);
+  const k=await modal({cls:'lc-lmm',html:`<div class="lc-cr">${LC_ICON('landmark',48)}<div><div class="mh">Choose a Landmark · ${esc(GNAME[g])}</div><p class="mtxt">You own the whole district. One street can become its Landmark: double rent while unbuilt, +20% rent at every stage, and the only street here that can rise to Skyscraper. Other streets keep District Growth (+15%). Fee: 25% of the street’s price.</p></div></div>`,
+    btns:[...opts.map(i=>({k:'i'+i,label:`${esc(SQ[i].n)} · ${fmt(lcLmFee(i))}`,disabled:p.cash<lcLmFee(i)})),{k:'later',label:'Later',primary:false}],tdef:'later'});
+  if(k&&k[0]==='i')lcDesignate(p.id,+k.slice(1))}}
+{const _ap=aiPostTurn;aiPostTurn=async function(p){if(lc()){lcSyncLandmarks();await lcOfferLandmarks(p)}return _ap.apply(this,arguments)}}
+{const _ac=actions;actions=function(text,btns){if(lc()&&G&&!G.over&&btns&&btns.some(b=>b.k==='end')){const p=P(G.turn);if(p&&!p.ai&&lcEligibleDistricts(p.id).length){const ask=G.lmAsked||{};if(lcEligibleDistricts(p.id).some(g=>ask[p.id+':'+g]==null||G.round-ask[p.id+':'+g]>=3))return lcOfferLandmarks(p).then(()=>_ac.call(this,text,btns))}}return _ac.apply(this,arguments)}}
+{const _ex=executeTrade;executeTrade=function(t){const r=_ex.apply(this,arguments);try{lcSyncLandmarks()}catch(e){}return r}}
+{const _bk=bankrupt;bankrupt=function(p,to){const r=_bk.apply(this,arguments);try{lcSyncLandmarks()}catch(e){}return r}}
+{const _a=advanceTurn;advanceTurn=function(){_a();try{lcSyncLandmarks()}catch(e){}}}
+// presentation: badge on the board cell and the property card
+{const _mc=mapCellHTML;mapCellHTML=function(i,...a){const h=_mc(i,...a);return lcLandmarkAt(i)?h.replace('<div class="mc','<div class="mc lc-lm').replace(/<\/div>$/,`<img class="lc-lmb" src="living/icons/64/landmark.png" alt="Landmark" width="14" height="14"></div>`):h}}
+{const _dh=deedHTML;deedHTML=function(i){const h=_dh(i);if(!lc()||SQ[i].t!=='prop')return h;const g=SQ[i].g,L=G.lm&&G.lm[g];
+  const line=lcLandmarkAt(i)?`<div class="lc-lmline">${LC_ICON('landmark',18)}Landmark of ${esc(GNAME[g])}: +20% rent, Skyscraper allowed</div>`:L?`<div class="lc-lmline muted">${esc(SQ[L.i].n)} is this district’s Landmark</div>`:`<div class="lc-lmline muted">${LC_ICON('district_growth',18)}District Growth: own 2+ streets here for +15% rent</div>`;
+  return h.replace('<div class="own">',line+'<div class="own">')}}
+{const _fd=flatDraw;let last='';flatDraw=function(){const k=lc()?JSON.stringify(G.lm||{}):'';if(k!==last){last=k;const H=$('#flatbd');if(H)H.dataset.sig=''}return _fd.apply(this,arguments)}}
+LC_VALID.push(g=>{const L=g.lm;if(L==null)return true;if(typeof L!=='object'||Array.isArray(L))return false;return Object.entries(L).every(([k,v])=>GROUPS[k]&&v&&GROUPS[k].includes(v.i)&&Number.isInteger(v.pid)&&v.pid>=0&&v.pid<g.players.length)});
+LC_RULES.push(['landmark','District Growth & Landmarks','No automatic double rent for a full colour set. Owning 2+ streets in a district gives them +15% rent. Own the whole district to name one Landmark (fee 25% of its price): double rent while unbuilt, +20% rent, and the only street that can become a Skyscraper. Selling or trading away part of the district removes the Landmark. All city rent changes together are capped at +50%.']);
 
 window.SkylineLivingCity={lc,LC_RV,optIn:lcOptIn,rulesModal:()=>lcRulesModal()};
