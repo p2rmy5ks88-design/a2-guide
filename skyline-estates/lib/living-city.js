@@ -201,6 +201,9 @@ html.lc-on.flat #ev2chip{max-width:clamp(96px,calc(50vw - 50vh - 72px),200px)!im
 .lc-cardm .mbar .btn small{display:block;font-size:10.5px;font-weight:600;opacity:.85;margin-top:2px;white-space:normal}
 .lc-crtag{background:#e2b13c!important;color:#10283b!important}.lc-cr{display:grid;grid-template-columns:56px 1fr;gap:10px;align-items:start}.lc-crm .mbar{flex-wrap:wrap}.lc-crm .mbar .btn{min-height:44px;flex:1 1 150px}
 @media (max-height:420px){.lc-cr{grid-template-columns:40px 1fr}.lc-cr .lc-ic{width:40px;height:40px}.lc-crm .lc-ch{font-size:11px}}
+.lc-dev{width:100%;border-collapse:collapse;font-size:12px}.lc-dev th{text-align:left;font-size:10.5px;opacity:.7}.lc-dev td{padding:2px 3px;white-space:nowrap;font-size:11px}html.lc-on .pfm-pips i:nth-child(4){display:none}.lc-dev .lc-stg{width:24px;height:24px;vertical-align:middle;margin-right:5px;border-radius:5px}
+.lc-dev tr.lc-now td{background:#e2b13c22;font-weight:800}.lc-dev small{opacity:.7;font-size:10px}.lc-devnote{font-size:10.5px;opacity:.75;margin-top:4px}
+.lc-sky .lc-stg{width:1.2em;height:1.2em;vertical-align:middle}[data-quick-build] .lc-stg{width:22px;height:22px;vertical-align:-6px;margin-right:4px;border-radius:4px}
 @media (max-height:420px){.lc-card{grid-template-columns:84px minmax(0,1fr)}.lc-cbody p{font-size:12px;margin-bottom:4px}.lc-cbody>b{font-size:15px}.lc-ch{font-size:11px;gap:2px}}`;document.head.append(st)}
 
 /* ---------- Task 03 · Civic Review (replaces the Lockup in V2 matches) ---------- */
@@ -252,5 +255,57 @@ async function lcReviewTurn(p){const can=p.cash>=LC_PERMIT;let k;
    if(lcUnder(p)&&!t){t=el('span','tag lc-crtag','Review');t.title='Civic Review: no rent until resolved';pn.append(t)}else if(!lcUnder(p)&&t)t.remove()}}catch(e){}return r}}
 LC_VALID.push(g=>g.players.every(p=>!p.inJail&&(p.cr==null||p.cr&&Number.isInteger(p.cr.from)&&p.cr.from>=1&&p.cr.from<=g.round&&typeof p.cr.why==='string'&&p.cr.why.length<=12))&&(g.lcTurnBuilt==null||Number.isInteger(g.lcTurnBuilt.n)));
 LC_RULES.push(['civic_review','Civic Review','Replaces the Lockup. Opened by a Planning hold card, a planning inspection, or a development audit (4+ building levels in one turn). While under review you collect no rent. At your next turn: pay a Fast-Track Permit, use a Bail Pass, or take a Standard Review (skip that turn). Three doubles cause gridlock: your turn simply ends.']);
+
+
+/* ---------- Task 04 · Skyline Development (Plot → Low-rise → Mid-rise → High-rise → Skyscraper) ---------- */
+// Explicit stage mapping on the existing numeric slot (so 3D models, saves and bank counters stay valid):
+//   G.own[i].h  0 Plot · 1 Low-rise · 2 Mid-rise · 3 High-rise · 5 Skyscraper   (4 is never used in V2)
+// Differences from four houses + tower:
+//   • costs rise by stage (0.8× / 1.0× / 1.2× / 2.0× the street's build price) — same 5.0× total to the top;
+//   • High-rise rent is 10% above the classic three-house rent; there is no four-house step;
+//   • High-rise and Skyscraper are resilient: falling-rent events (e.g. Quiet Market) do not cut their rent;
+//   • only a district's designated Landmark can rise to Skyscraper (Task 05);
+//   • selling refunds half of that stage's price; bank permits: Low/Mid/High use 1 home permit, a Skyscraper
+//     uses 1 tower permit and returns its 3 home permits (selling it needs 3 home permits back).
+const LC_STAGES=[{k:'plot',n:'Plot',m:0},{k:'low_rise',n:'Low-rise',m:.8},{k:'mid_rise',n:'Mid-rise',m:1},{k:'high_rise',n:'High-rise',m:1.2},null,{k:'skyscraper',n:'Skyscraper',m:2}];
+const lcNextH=h=>h===3?5:h+1, lcPrevH=h=>h===5?3:h-1;
+let lcSwap=null;const lcH0=i=>lcSwap&&lcSwap.i===i?lcSwap.h0:SQ[i].h;
+const lcCostAt=(i,h)=>Math.round(lcH0(i)*LC_STAGES[h].m/5)*5;           // price of the stage that results in level h
+function lcStageCost(i){const h=G.own[i].h;return h>=5?0:lcCostAt(i,lcNextH(h))}
+let lcCanSky=i=>true;                                                   // Task 05: Landmark only
+const lcStageRent=(i,h)=>{const r=SQ[i].r;return h===3?Math.round(r[3]*1.1):h===5?r[5]:r[h]};
+function lcWithCost(i,c,fn){if(lcSwap)return fn();const h0=SQ[i].h;lcSwap={i,h0};SQ[i].h=c;try{return fn()}finally{SQ[i].h=h0;lcSwap=null}}
+{const _dc=devCost;devCost=function(pid,i){if(!lc()||SQ[i].t!=='prop')return _dc.apply(this,arguments);const c=lcStageCost(i);return lcWithCost(i,c,()=>_dc(pid,i))}}
+{const _cb=canBuild;canBuild=function(pid,i){if(!lc()||SQ[i].t!=='prop')return _cb.apply(this,arguments);const o=G.own[i];if(o.h>=5)return false;
+  if(o.h===3&&(!lcCanSky(i)||G.hotels<1))return false;
+  const c=lcStageCost(i);if(o.h===3){const hs=G.houses;G.houses=Math.max(1,hs);try{return lcWithCost(i,c,()=>_cb(pid,i))}finally{G.houses=hs}}return lcWithCost(i,c,()=>_cb(pid,i))}}
+{const _b=build;build=function(pid,i){if(!lc()||SQ[i].t!=='prop')return _b.apply(this,arguments);const o=G.own[i],h0=o.h,c=lcStageCost(i);
+  const r=lcWithCost(i,c,()=>_b(pid,i));
+  if(h0===3&&o.h===4){o.h=5;G.houses+=4;G.hotels--;updateCell(i,true)}
+  G.lcStats=G.lcStats||{};G.lcStats['st_'+o.h]=(G.lcStats['st_'+o.h]||0)+1;if(!FAST&&!P(pid).ai)toast(`${SQ[i].n}: ${LC_STAGES[o.h].n}`);return r}}
+{const _cs=canSell;canSell=function(pid,i){if(!lc()||SQ[i].t!=='prop')return _cs.apply(this,arguments);const o=G.own[i];if(o.h!==5)return _cs(pid,i);
+  const hs=G.houses;G.houses=hs>=3?Math.max(4,hs):0;try{return _cs(pid,i)}finally{G.houses=hs}}}
+{const _sl=sell;sell=function(pid,i){if(!lc()||SQ[i].t!=='prop')return _sl.apply(this,arguments);const o=G.own[i],h=o.h,back=Math.round(lcCostAt(i,h)/2);
+  P(pid).cash+=back;if(h===5){G.hotels++;G.houses-=3}else G.houses++;o.h=lcPrevH(h);updateCell(i);float(pid,back)}}
+// Rent: stage table above; resilience = falling-rent events never reduce High-rise or Skyscraper rent.
+{const _rp=lcRentPct;lcRentPct=function(i){let t=_rp(i);const h=G.own[i].h;if((h===3||h===5)&&typeof ev2RentPct==='function'&&ev2RentPct(i)<0)t-=ev2RentPct(i);return Math.max(LC_CAP[0],Math.min(LC_CAP[1],t))}}
+{const _rf=rentFor;rentFor=function(i,dsum,o2){const r=_rf.apply(this,arguments);if(!lc()||SQ[i].t!=='prop'||G.own[i].h!==3||!r)return r;return Math.round(r*1.1)}}
+// Bankruptcy refunds use V2 stage prices (half of everything paid), permits return correctly.
+{const _bk=bankrupt;bankrupt=function(p,to){if(lc()){let adj=0;for(const i of propsOf(p.id)){const h=G.own[i].h;if(!h||SQ[i].t!=='prop')continue;let paid=0;for(let k=h;k>0;k=lcPrevH(k))paid+=lcCostAt(i,k);adj+=Math.round(paid/2)-h*SQ[i].h/2}if(to&&adj)to.cash+=adj}return _bk.apply(this,arguments)}}
+const lcStageImg=(h,size=40)=>`<img class="lc-stg" src="living/buildings/${size>48?256:128}/${LC_STAGES[h].k}.${size>48?'webp':'png'}" width="${size}" height="${size}" alt="" aria-hidden="true" decoding="async">`;
+{const _dh=deedHTML;deedHTML=function(i){const h=_dh(i);if(!lc()||SQ[i].t!=='prop')return h;const s=SQ[i],cur=G&&G.own[i]?G.own[i].h:0;
+  const rows=[0,1,2,3,5].map(k=>`<tr class="${k===cur?'lc-now':''}"><td>${lcStageImg(k,28)}${LC_STAGES[k].n}${k===5?' <small>Landmark only</small>':''}</td><td>${k?fmt(lcCostAt(i,k)):'—'}</td><td>${fmt(k?lcStageRent(i,k):s.r[0])}</td></tr>`).join('');
+  return h.replace(/(Owned by [^<]*?·\s*)(\d houses?|tower|Skyline Tower)/,(m,a)=>a+(LC_STAGES[cur]?LC_STAGES[cur].n:'')).replace(/<table[\s\S]*?<\/table>/,`<table class="lc-dev"><tr><th>Stage</th><th>Build</th><th>Rent</th></tr>${rows}</table><div class="lc-devnote">High-rise and Skyscraper ignore falling-rent events. Selling refunds half the stage price.</div>`)}}
+// 2D board / map: stage pips (1–3) and a skyscraper marker
+{const _mc=mapCellHTML;mapCellHTML=function(i,...a){const h=_mc(i,...a);if(!lc()||SQ[i].t!=='prop'||G.own[i].h!==5)return h;return h.replace('<span class="hs ht">🏨</span>',`<span class="hs ht lc-sky">${lcStageImg(5,14)}</span>`)}}
+// Portfolio: build buttons and level labels show stages and the real V2 cost/rent.
+function lcPortfolioFix(root){document.documentElement.classList.toggle('lc-on',lc());if(!lc())return;
+  root.querySelectorAll('.pfm-row[data-square] .pfm-acts button').forEach(b=>{if(b.dataset.quickBuild==null&&/^Build (house|tower)/.test(b.textContent))b.dataset.lcBuild=b.closest('.pfm-row').dataset.square});
+  root.querySelectorAll('[data-quick-build],[data-lc-build]').forEach(b=>{const i=+(b.dataset.quickBuild??b.dataset.lcBuild),o=G.own[i];if(!o||o.h>=5)return;const nh=lcNextH(o.h),lbl=`Build ${LC_STAGES[nh].n}`;
+   const html=`${lcStageImg(nh,22)}${lbl}<small>${fmt(devCost(G.turn,i))} · rent → ${fmt(lcStageRent(i,nh))}${nh===5&&!lcCanSky(i)?' · Landmark only':''}</small>`;if(b.dataset.lcl!==html){b.dataset.lcl=html;b.innerHTML=html;b.setAttribute('aria-label',lbl);b.title=lbl}});
+  root.querySelectorAll('.pfm-row[data-square]').forEach(r=>{const i=+r.dataset.square,o=G.own[i];if(!o||SQ[i].t!=='prop')return;if(o.h){const sb=[...r.querySelectorAll('.pfm-acts button')].find(b=>/^Sell/.test(b.textContent)),sm2=sb&&sb.querySelector('small'),v='+'+fmt(Math.round(lcCostAt(i,o.h)/2));if(sm2&&sm2.textContent!==v)sm2.textContent=v}const sm=r.querySelector('.pfm-info small');if(sm&&!sm.dataset.lc){sm.innerHTML=sm.innerHTML.replace(/Skyline Tower|\d houses?|No buildings/,LC_STAGES[o.h]?LC_STAGES[o.h].n:'');sm.dataset.lc=1}})}
+new MutationObserver(()=>{if(G&&lc()){const m=$('#modals');if(m)lcPortfolioFix(m)}}).observe(document.getElementById('modals')||document.body,{childList:true,subtree:true});
+LC_VALID.push(g=>{let hs=0,tw=0;for(let i=0;i<40;i++){const h=g.own[i].h;if(h===4)return false;if(h===5)tw++;else hs+=h}return hs+g.houses===36&&tw+g.hotels===12});
+LC_RULES.push(['district_growth','Skyline Development','Streets grow Plot → Low-rise → Mid-rise → High-rise → Skyscraper. Each stage costs more (0.8×, 1×, 1.2×, 2× the build price). High-rise rent is 10% above the classic three-house rent, and High-rise and Skyscraper ignore falling-rent events. Only a district’s Landmark can become a Skyscraper. Selling refunds half the stage price.']);
 
 window.SkylineLivingCity={lc,LC_RV,optIn:lcOptIn,rulesModal:()=>lcRulesModal()};
