@@ -1,0 +1,29 @@
+name: Skyline IAM dependency audit (read-only)
+# Lists which identities the deployed functions, Cloud Run services and recent builds run as. Read-only: no changes.
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+  id-token: write
+jobs:
+  audit:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: google-github-actions/auth@v3
+        with:
+          project_id: eko-estates
+          workload_identity_provider: ${{ vars.SKYLINE_COMPETITION_WIF_PROVIDER || secrets.SKYLINE_COMPETITION_WIF_PROVIDER }}
+          service_account: ${{ vars.SKYLINE_COMPETITION_SERVICE_ACCOUNT || secrets.SKYLINE_COMPETITION_SERVICE_ACCOUNT }}
+      - uses: google-github-actions/setup-gcloud@v2
+      - name: Functions (runtime + build identities)
+        run: gcloud functions list --project eko-estates --format="table(name.basename(),environment,state,serviceConfig.serviceAccountEmail,buildConfig.serviceAccount,serviceAccountEmail)" || true
+      - name: Cloud Run services (runtime identity)
+        run: gcloud run services list --project eko-estates --format="table(metadata.name,region,spec.template.spec.serviceAccountName)" || true
+      - name: Recent builds (build identity)
+        run: gcloud builds list --project eko-estates --region=europe-west1 --limit 15 --format="table(id.slice(0:8),createTime.date('%Y-%m-%d'),status,serviceAccount)" || true; gcloud builds list --project eko-estates --limit 10 --format="table(id.slice(0:8),createTime.date('%Y-%m-%d'),status,serviceAccount)" || true
+      - name: App Engine / Scheduler / Firestore usage
+        run: |
+          gcloud app describe --project eko-estates --format="value(id,servingStatus,serviceAccount)" 2>&1 | tail -2 || true
+          gcloud scheduler jobs list --project eko-estates --location europe-west1 --format="table(name.basename(),httpTarget.oidcToken.serviceAccountEmail)" 2>&1 | tail -5 || true
