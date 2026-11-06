@@ -34,6 +34,8 @@ for R in roles/cloudfunctions.developer roles/run.admin roles/artifactregistry.w
 # may act as the function runtime identity and the default build identity only
 gcloud iam service-accounts add-iam-policy-binding $RUNTIME --member="serviceAccount:$SA" --role=roles/iam.serviceAccountUser >/dev/null
 gcloud iam service-accounts add-iam-policy-binding $PN-compute@developer.gserviceaccount.com --member="serviceAccount:$SA" --role=roles/iam.serviceAccountUser >/dev/null
+# the Firebase CLI also checks ActAs on the App Engine default identity
+gcloud iam service-accounts add-iam-policy-binding $P@appspot.gserviceaccount.com --member="serviceAccount:$SA" --role=roles/iam.serviceAccountUser >/dev/null
 gcloud iam service-accounts add-iam-policy-binding $SA --role=roles/iam.workloadIdentityUser \
   --member="principalSet://iam.googleapis.com/projects/$PN/locations/global/workloadIdentityPools/$POOL/attribute.repository/$REPO" >/dev/null
 echo
