@@ -16,7 +16,7 @@ const channel=process.env.SKYLINE_CLOUD_CHANNEL||'off';assert.ok(['off','private
 const privateConfig=path.join(src,'lib','cloud-config.js');
 function tree(source,target){assert.ok(fs.statSync(source).isDirectory());for(const e of fs.readdirSync(source,{withFileTypes:true})){const a=path.join(source,e.name),b=path.join(target,e.name);if(e.isDirectory())tree(a,b);else if(channel!=='off'&&a===privateConfig)identical(path.join(app,'cloud',channel+'.js'),b);else identical(a,b)}}
 identical(path.join(src,'reference-redesign.js'),path.join(www,'reference-redesign.js'));identical(path.join(src,'home-redesign.js'),path.join(www,'home-redesign.js'));
-for(const dir of ['lib','riders','photos','art','items'])tree(path.join(src,dir),path.join(www,dir));
+for(const dir of ['lib','photos','art','items','avatars'])tree(path.join(src,dir),path.join(www,dir));
 if(native){
  for(const f of ['skyline-showcase.js','skyline-showcase.css','challenges.js','challenges.css','social.js','social.css','verified.js','verified-config.js'])identical(path.join(src,'web',f),path.join(www,'web',f));
  for(const f of fs.readdirSync(path.join(src,'security','service')).filter(f=>f.endsWith('.mjs')))identical(path.join(src,'security','service',f),path.join(www,'security','service',f));

@@ -1,0 +1,206 @@
+{
+  "schemaVersion": 1,
+  "count": 25,
+  "avatars": [
+    {
+      "id": "avatar_01",
+      "displayName": "Avatar 01",
+      "image": "avatars/full/skyline_avatar_01.webp",
+      "thumbnail": "avatars/small/skyline_avatar_01_96.png",
+      "gridRow": 1,
+      "gridColumn": 1
+    },
+    {
+      "id": "avatar_02",
+      "displayName": "Avatar 02",
+      "image": "avatars/full/skyline_avatar_02.webp",
+      "thumbnail": "avatars/small/skyline_avatar_02_96.png",
+      "gridRow": 1,
+      "gridColumn": 2
+    },
+    {
+      "id": "avatar_03",
+      "displayName": "Avatar 03",
+      "image": "avatars/full/skyline_avatar_03.webp",
+      "thumbnail": "avatars/small/skyline_avatar_03_96.png",
+      "gridRow": 1,
+      "gridColumn": 3
+    },
+    {
+      "id": "avatar_04",
+      "displayName": "Avatar 04",
+      "image": "avatars/full/skyline_avatar_04.webp",
+      "thumbnail": "avatars/small/skyline_avatar_04_96.png",
+      "gridRow": 1,
+      "gridColumn": 4
+    },
+    {
+      "id": "avatar_05",
+      "displayName": "Avatar 05",
+      "image": "avatars/full/skyline_avatar_05.webp",
+      "thumbnail": "avatars/small/skyline_avatar_05_96.png",
+      "gridRow": 1,
+      "gridColumn": 5
+    },
+    {
+      "id": "avatar_06",
+      "displayName": "Avatar 06",
+      "image": "avatars/full/skyline_avatar_06.webp",
+      "thumbnail": "avatars/small/skyline_avatar_06_96.png",
+      "gridRow": 2,
+      "gridColumn": 1
+    },
+    {
+      "id": "avatar_07",
+      "displayName": "Avatar 07",
+      "image": "avatars/full/skyline_avatar_07.webp",
+      "thumbnail": "avatars/small/skyline_avatar_07_96.png",
+      "gridRow": 2,
+      "gridColumn": 2
+    },
+    {
+      "id": "avatar_08",
+      "displayName": "Avatar 08",
+      "image": "avatars/full/skyline_avatar_08.webp",
+      "thumbnail": "avatars/small/skyline_avatar_08_96.png",
+      "gridRow": 2,
+      "gridColumn": 3
+    },
+    {
+      "id": "avatar_09",
+      "displayName": "Avatar 09",
+      "image": "avatars/full/skyline_avatar_09.webp",
+      "thumbnail": "avatars/small/skyline_avatar_09_96.png",
+      "gridRow": 2,
+      "gridColumn": 4
+    },
+    {
+      "id": "avatar_10",
+      "displayName": "Avatar 10",
+      "image": "avatars/full/skyline_avatar_10.webp",
+      "thumbnail": "avatars/small/skyline_avatar_10_96.png",
+      "gridRow": 2,
+      "gridColumn": 5
+    },
+    {
+      "id": "avatar_11",
+      "displayName": "Avatar 11",
+      "image": "avatars/full/skyline_avatar_11.webp",
+      "thumbnail": "avatars/small/skyline_avatar_11_96.png",
+      "gridRow": 3,
+      "gridColumn": 1
+    },
+    {
+      "id": "avatar_12",
+      "displayName": "Avatar 12",
+      "image": "avatars/full/skyline_avatar_12.webp",
+      "thumbnail": "avatars/small/skyline_avatar_12_96.png",
+      "gridRow": 3,
+      "gridColumn": 2
+    },
+    {
+      "id": "avatar_13",
+      "displayName": "Avatar 13",
+      "image": "avatars/full/skyline_avatar_13.webp",
+      "thumbnail": "avatars/small/skyline_avatar_13_96.png",
+      "gridRow": 3,
+      "gridColumn": 3
+    },
+    {
+      "id": "avatar_14",
+      "displayName": "Avatar 14",
+      "image": "avatars/full/skyline_avatar_14.webp",
+      "thumbnail": "avatars/small/skyline_avatar_14_96.png",
+      "gridRow": 3,
+      "gridColumn": 4
+    },
+    {
+      "id": "avatar_15",
+      "displayName": "Avatar 15",
+      "image": "avatars/full/skyline_avatar_15.webp",
+      "thumbnail": "avatars/small/skyline_avatar_15_96.png",
+      "gridRow": 3,
+      "gridColumn": 5
+    },
+    {
+      "id": "avatar_16",
+      "displayName": "Avatar 16",
+      "image": "avatars/full/skyline_avatar_16.webp",
+      "thumbnail": "avatars/small/skyline_avatar_16_96.png",
+      "gridRow": 4,
+      "gridColumn": 1
+    },
+    {
+      "id": "avatar_17",
+      "displayName": "Avatar 17",
+      "image": "avatars/full/skyline_avatar_17.webp",
+      "thumbnail": "avatars/small/skyline_avatar_17_96.png",
+      "gridRow": 4,
+      "gridColumn": 2
+    },
+    {
+      "id": "avatar_18",
+      "displayName": "Avatar 18",
+      "image": "avatars/full/skyline_avatar_18.webp",
+      "thumbnail": "avatars/small/skyline_avatar_18_96.png",
+      "gridRow": 4,
+      "gridColumn": 3
+    },
+    {
+      "id": "avatar_19",
+      "displayName": "Avatar 19",
+      "image": "avatars/full/skyline_avatar_19.webp",
+      "thumbnail": "avatars/small/skyline_avatar_19_96.png",
+      "gridRow": 4,
+      "gridColumn": 4
+    },
+    {
+      "id": "avatar_20",
+      "displayName": "Avatar 20",
+      "image": "avatars/full/skyline_avatar_20.webp",
+      "thumbnail": "avatars/small/skyline_avatar_20_96.png",
+      "gridRow": 4,
+      "gridColumn": 5
+    },
+    {
+      "id": "avatar_21",
+      "displayName": "Avatar 21",
+      "image": "avatars/full/skyline_avatar_21.webp",
+      "thumbnail": "avatars/small/skyline_avatar_21_96.png",
+      "gridRow": 5,
+      "gridColumn": 1
+    },
+    {
+      "id": "avatar_22",
+      "displayName": "Avatar 22",
+      "image": "avatars/full/skyline_avatar_22.webp",
+      "thumbnail": "avatars/small/skyline_avatar_22_96.png",
+      "gridRow": 5,
+      "gridColumn": 2
+    },
+    {
+      "id": "avatar_23",
+      "displayName": "Avatar 23",
+      "image": "avatars/full/skyline_avatar_23.webp",
+      "thumbnail": "avatars/small/skyline_avatar_23_96.png",
+      "gridRow": 5,
+      "gridColumn": 3
+    },
+    {
+      "id": "avatar_24",
+      "displayName": "Avatar 24",
+      "image": "avatars/full/skyline_avatar_24.webp",
+      "thumbnail": "avatars/small/skyline_avatar_24_96.png",
+      "gridRow": 5,
+      "gridColumn": 4
+    },
+    {
+      "id": "avatar_25",
+      "displayName": "Avatar 25",
+      "image": "avatars/full/skyline_avatar_25.webp",
+      "thumbnail": "avatars/small/skyline_avatar_25_96.png",
+      "gridRow": 5,
+      "gridColumn": 5
+    }
+  ]
+}

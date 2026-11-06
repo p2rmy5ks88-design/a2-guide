@@ -40,7 +40,7 @@ body = body.replace(results, "onMount:panel=>window.SkylineShowcase?.attachResul
 # Keep game.html (the native/server source) byte-for-byte unchanged.
 boot = 'try{const h=window.claude?.hot;'
 assert body.count(boot) == 1
-body = body.replace(boot, '</script><script src="./lib/skyline-sc-wallet.js"></script><script src="./lib/skyline-currency.js"></script><script src="./lib/skyline-earned-cash.js"></script><script src="./lib/market-pulse.js"></script><script src="./lib/city-event-advice.js"></script><script src="./lib/ai-styles.js"></script><script src="./lib/first-session.js"></script><script src="./lib/rot-media.js"></script><script src="./lib/a11y-dialogs.js"></script><script src="./lib/native-lifecycle.js"></script><script src="./lib/beta-diary.js"></script><script src="./web/challenges.js"></script><script src="./web/social.js"></script><script src="./web/verified-config.js"></script><script src="./web/verified.js"></script><script>\n' + boot)
+body = body.replace(boot, '</script><script src="./lib/skyline-sc-wallet.js"></script><script src="./lib/skyline-currency.js"></script><script src="./lib/skyline-earned-cash.js"></script><script src="./lib/market-pulse.js"></script><script src="./lib/city-event-advice.js"></script><script src="./lib/ai-styles.js"></script><script src="./lib/first-session.js"></script><script src="./lib/rot-media.js"></script><script src="./lib/a11y-dialogs.js"></script><script src="./lib/native-lifecycle.js"></script><script src="./lib/beta-diary.js"></script><script src="./lib/avatars.js"></script><script src="./web/challenges.js"></script><script src="./web/social.js"></script><script src="./web/verified-config.js"></script><script src="./web/verified.js"></script><script>\n' + boot)
 # The native wrapper reuses these reviewed optional features without copying the
 # browser wrapper, changing the pinned rules source, or replacing native accounts.
 body = body.replace('<script src="./home-redesign.js"></script>', '<script src="./home-redesign.js"></script><script src="./lib/landmarks.js"></script><script src="./lib/collection-tokens.js"></script>')
@@ -54,7 +54,7 @@ head = head.replace('</head>', '<link rel="stylesheet" href="./lib/menu-presenta
 # Shared menu-only layer; original game.html retains all board/camera behavior.
 index = head + body + '<script src="./lib/menu-presentation.js"></script><script src="./web/skyline-showcase.js"></script></body></html>'
 core = ['index.html', 'web-play.html', 'web-correction.html', 'web-follow.html', 'web-board.html', 'web-menus.html', 'reference-redesign.js', 'home-redesign.js', 'manifest.webmanifest', 'privacy.html', 'icon-180.png', 'icon-192.png', 'icon-512.png']
-assets = sorted(p.relative_to(here).as_posix() for folder in ['art','items','photos','lib','riders','web'] for p in (here/folder).rglob('*') if p.is_file())
+assets = sorted(p.relative_to(here).as_posix() for folder in ['art','items','photos','lib','web','avatars'] for p in (here/folder).rglob('*') if p.is_file())
 files = core + assets
 texts = {'.html','.js','.mjs','.cjs','.json','.webmanifest','.txt','.css','.svg'}
 def canonical(p, data):
