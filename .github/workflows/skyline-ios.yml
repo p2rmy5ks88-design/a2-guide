@@ -78,6 +78,8 @@ jobs:
       # App Store releases use the store version (1.0); private TestFlight builds keep 1.0.<run>.
       VERSION_NAME: ${{ github.event_name == 'workflow_dispatch' && inputs.cloud_channel == 'ios-release' && inputs.store_version || format('1.0.{0}', github.run_number) }}
       VERSION_CODE: '${{ github.run_number }}'
+      # Xcode 27 supports iOS 15.0+ deployment targets only (Capacitor pods default to 14.0).
+      DT_OVERRIDE: ${{ github.event_name == 'workflow_dispatch' && inputs.sdk27 && 'IPHONEOS_DEPLOYMENT_TARGET=15.0' || '' }}
     steps:
       - uses: actions/checkout@v4
         with: { persist-credentials: false }
@@ -138,7 +140,7 @@ jobs:
         working-directory: skyline-estates-app/ios/App
         run: |
           if [ -d App.xcworkspace ]; then T="-workspace App.xcworkspace"; else T="-project App.xcodeproj"; fi
-          xcodebuild $T -scheme App -configuration Release -sdk iphonesimulator \
+          xcodebuild $T -scheme App -configuration Release -sdk iphonesimulator $DT_OVERRIDE \
             -destination 'generic/platform=iOS Simulator' -derivedDataPath "$RUNNER_TEMP/skyline-ios" CODE_SIGNING_ALLOWED=NO build 2>&1 | tee "$RUNNER_TEMP/skyline-ios-build.log" | tail -n 20
           test -d "$RUNNER_TEMP/skyline-ios/Build/Products/Release-iphonesimulator/App.app"
           tar -czf "$RUNNER_TEMP/skyline-ios-simulator.tar.gz" -C "$RUNNER_TEMP/skyline-ios/Build/Products/Release-iphonesimulator" App.app
@@ -146,7 +148,7 @@ jobs:
         working-directory: skyline-estates-app/ios/App
         run: |
           if [ -d App.xcworkspace ]; then T="-workspace App.xcworkspace"; else T="-project App.xcodeproj"; fi
-          xcodebuild $T -scheme App -configuration Release -sdk iphoneos \
+          xcodebuild $T -scheme App -configuration Release -sdk iphoneos $DT_OVERRIDE \
             -destination 'generic/platform=iOS' -derivedDataPath "$RUNNER_TEMP/skyline-ios-device" \
             ARCHS=arm64 CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" build \
             2>&1 | tee "$RUNNER_TEMP/skyline-ios-device-build.log" | tail -n 20
@@ -204,7 +206,7 @@ jobs:
           ruby "$GITHUB_WORKSPACE/skyline-estates-app/scripts/configure-ios-distribution.rb" "$PWD/App.xcodeproj" "$RUNNER_TEMP/skyline-distribution/signing-settings.json"
           if [ -d App.xcworkspace ]; then T="-workspace App.xcworkspace"; else T="-project App.xcodeproj"; fi
           AUTH="-authenticationKeyPath $RUNNER_TEMP/asc.p8 -authenticationKeyID $ASC_KEY_ID -authenticationKeyIssuerID $ASC_ISSUER"
-          xcodebuild $T -scheme App -configuration Release -destination 'generic/platform=iOS' \
+          xcodebuild $T -scheme App -configuration Release -destination 'generic/platform=iOS' $DT_OVERRIDE \
             -archivePath "$RUNNER_TEMP/SkylineEstates.xcarchive" archive | tail -n 20
           python3 "$GITHUB_WORKSPACE/skyline-estates-app/scripts/verify-signed-apple.py" "$RUNNER_TEMP/SkylineEstates.xcarchive/Products/Applications/App.app"
           xcodebuild -exportArchive -archivePath "$RUNNER_TEMP/SkylineEstates.xcarchive" \
