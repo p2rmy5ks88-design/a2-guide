@@ -19,7 +19,7 @@ fs.copyFileSync(path.join(shared,'firebase-config.js'),path.join(www,'firebase-c
 fs.copyFileSync(path.join(src,'reference-redesign.js'),path.join(www,'reference-redesign.js'));
 fs.copyFileSync(path.join(src,'home-redesign.js'),path.join(www,'home-redesign.js'));
 // realistic riders: three.js modules, character models, animations and portraits
-for(const d of ['lib','photos','art','items','avatars'].filter(d=>fs.existsSync(path.join(src,d))))fs.cpSync(path.join(src,d),path.join(www,d),{recursive:true});
+for(const d of ['lib','photos','art','items','avatars','living'].filter(d=>fs.existsSync(path.join(src,d))))fs.cpSync(path.join(src,d),path.join(www,d),{recursive:true});
 // Feature UI only: retain the native board/camera and account/purchase bridges.
 fs.mkdirSync(path.join(www,'web'),{recursive:true});
 for(const f of ['skyline-showcase.js','skyline-showcase.css','challenges.js','challenges.css','social.js','social.css','verified.js','verified-config.js'])fs.copyFileSync(path.join(src,'web',f),path.join(www,'web',f));
