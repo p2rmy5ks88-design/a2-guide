@@ -13,5 +13,10 @@ fi
 G=android/app/build.gradle
 VC="${VERSION_CODE:-1}"; VN="${VERSION_NAME:-1.0.0}"
 sed -i.bak -E "s/versionCode [0-9]+/versionCode ${VC}/; s/versionName \"[^\"]*\"/versionName \"${VN}\"/" "$G"; rm -f "$G.bak"
+# Google Play: target API 36 (Android 16), required for app updates from 31 Aug 2026.
+V=android/variables.gradle
+sed -i.bak -E "s/compileSdkVersion = [0-9]+/compileSdkVersion = 36/; s/targetSdkVersion = [0-9]+/targetSdkVersion = 36/" "$V"; rm -f "$V.bak"
+grep -q 'targetSdkVersion = 36' "$V" || { echo "targetSdk 36 not applied"; exit 1; }
+grep -q suppressUnsupportedCompileSdk android/gradle.properties || echo 'android.suppressUnsupportedCompileSdk=36' >> android/gradle.properties
 node scripts/native-firebase-config.mjs android
-echo "Android patched: landscape, fullscreen, versionCode ${VC}, versionName ${VN}"
+echo "Android patched: landscape, fullscreen, target API 36, versionCode ${VC}, versionName ${VN}"
