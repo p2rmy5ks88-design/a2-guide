@@ -235,3 +235,16 @@ Data: `balance/living-city-t06.csv`. The owner approved 150 games for this run.
 - V2 matches are about 14% shorter and remain fair (the first-seat interval includes 33%).
 - **Checks:** `living-city-browser` passes 29 checks. `complete-matches` plays 3 full human matches with every V2 dialog.
 - **Test tool fix:** the balance harness now runs one game per evaluate. Its earlier slowdown was a test-tool issue, not a game hang.
+
+## Task 07 — Validation and web release (6 Nov 2026)
+
+- **Live:** https://p2rmy5ks88-design.github.io/a2-guide/skyline-estates/ serves main @ 5f7f9f7. The sha256 of `index.html`, `lib/living-city.js` and `sw.js` match main. The first Pages publish timed out on GitHub's side; a re-run succeeded.
+- **Screenshots:** in `tests/evidence/living-city-before/` and `tests/evidence/living-city-after/`. These are Chromium only, at 956×440, 844×390, 667×320 and 390×844. They are not physical-iPhone tests, and WebKit is not installed in this environment.
+- **Untouched:** wallet, Coins, Shop, StoreKit and Collection; online/ranked rules and the backend; TestFlight and App Store.
+- **Saves:** existing saves keep classic rules. They are not cleared: the save format is the same and new matches only add `rv`, `lcv` and V2 fields.
+- **Rollback:** Custom › Rules › Living City off, for each player. Or revert the merges #142–#147 and rebuild.
+- **Known limits:**
+  - **Portrait (390×844):** the board layout overlaps; this existed before V2. The game is designed for landscape, and the iPhone app is locked to landscape.
+  - **3D board:** shows stage geometry as before (no new 3D art). Landmark badges and corner icons show on the 2D board, the city map and the cards.
+  - **Online rules:** V2 needs backend parity and separate approval before online/ranked use.
+  - **IP review:** professional review is still required (see the similarities listed under Task 06).
