@@ -2,7 +2,9 @@
    simulator/emulator can screenshot it. Inserted into www/index.html by scripts/inject-native-probe.sh. */
 (function(){var K='lcProbeStep',n=+(localStorage.getItem(K)||0);localStorage.setItem(K,String(n+1));
  var S=[['dark','board'],['light','board'],['dark','review'],['light','card'],['dark','dev'],['light','landmark']][n%6];
- localStorage.setItem('skylinePrefs',JSON.stringify({nick:'Ada',nickSet:true,welcomed:1,tutDone:1,stats:{games:9},city:'lagos',ui:S[0],lc:true}));
+ // CI emulators have no GPU: on Android only the first scene uses the 3D board; the rest use the 2D board (same state).
+ var flat=/Android/.test(navigator.userAgent)&&n%6!==0;
+ localStorage.setItem('skylinePrefs',JSON.stringify({nick:'Ada',nickSet:true,welcomed:1,tutDone:1,stats:{games:9},city:'lagos',ui:S[0],lc:true,flat2d:flat}));
  function go(){if(document.getElementById('boot')||typeof homeTab!=='function'){return setTimeout(go,500)}
   homeTab('play');document.querySelector('#qAI').click();setTimeout(function(){try{GEN++;document.querySelector('#modals').innerHTML='';var me=G.players[0];me.ai=false;G.turn=0;
    var gr=GROUPS.sky;gr.forEach(function(j,k){G.own[j].o=0;G.own[j].h=[5,3,2][k];G.own[j].m=false});G.lm={sky:{i:gr[0],pid:0}};
