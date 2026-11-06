@@ -59,7 +59,7 @@ jobs:
           xcrun simctl launch "$UDID" com.kenstylez.skylineestates | tee "$RUNNER_TEMP/skyline-sdk27-launch.txt"
           sleep 20
           xcrun simctl spawn "$UDID" launchctl list | grep -i skylineestates | tee -a "$RUNNER_TEMP/skyline-sdk27-launch.txt"
-          xcrun simctl io "$UDID" screenshot "$RUNNER_TEMP/skyline-sdk27-launch.png" || true
+          xcrun simctl io "$UDID" screenshot --display=1 "$RUNNER_TEMP/skyline-sdk27-launch.png" || true
           if ls ~/Library/Logs/DiagnosticReports/App-*.ips 2>/dev/null; then head -c 4000 ~/Library/Logs/DiagnosticReports/App-*.ips; exit 1; fi
           grep -Eq '^[0-9]+\s' <(xcrun simctl spawn "$UDID" launchctl list | grep -i skylineestates) || { echo 'App is not running after launch'; exit 1; }
       - name: Retain compatibility evidence only
