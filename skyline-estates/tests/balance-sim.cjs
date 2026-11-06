@@ -16,6 +16,7 @@ const CONFIGS={
  hard:{n:30,seed:13000,set:{perks:false,ai:'hard'}},
  easy:{n:30,seed:14000,set:{perks:false,ai:'easy'}},
  classic200:{n:200,seed:30000,set:{perks:false}},           // Living City comparisons: same seeds, classic rules
+ lc20:{n:20,seed:30000,set:{perks:false},lc:true},
  lc200:{n:200,seed:30000,set:{perks:false},lc:true}         // Living City V2 rules (offline rule version 2)
 };
 (async()=>{
