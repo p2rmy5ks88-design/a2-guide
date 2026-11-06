@@ -3164,9 +3164,9 @@ function renderRoster(){
     const cur=p.id===G.turn&&!G.over;const lh=isLocalHuman(p);const d=el('button','pcard'+(cur?' cur':'')+(p.bankrupt?' out':'')+(lh&&hasLvl(3)?' gold':''));d.id='pc'+p.id;d.style.setProperty('--pc',p.col);
     const props=propsOf(p.id).map(i=>{const o=G.own[i];return `<i class="pp${o.h===5?' hot':''}${o.m?' mo':''}" style="--g:${SQ[i].g?GC[SQ[i].g]:'#9aa6b4'}">${o.h===5?'H':o.h||''}</i>`}).join('');
     const me=G.online&&p.uid&&p.uid===NET.me;
-    d.innerHTML=`${cur?'<span class="nowtag">PLAYING</span>':''}<div class="pt">${p.tok}</div><div class="pinfo"><div class="pn">${esc(p.name)}${me?'<span class="tag you">You</span>':''}${lh?`<span class="tag lv">Lv ${lvlOf(PREF.xp)}</span>`:''}${p.ai?'<span class="tag">AI</span>':''}${p.inJail?'<span class="tag jail">Jail</span>':''}${p.bankrupt?'<span class="tag">Out</span>':''}</div><div class="pc">${fmt(p.cash)}</div>${props?`<div class="pg">${props}</div>`:''}</div>`;
+    d.innerHTML=`${cur?'<span class="nowtag">PLAYING</span>':''}<div class="pt">${p.tok}</div><div class="pinfo"><div class="pn">${esc(p.name)}${me?'<span class="tag you">You</span>':''}${lh?`<span class="tag lv">Lv ${lvlOf(PREF.xp)}</span>`:''}${p.ai?'<span class="tag">AI</span>':''}${p.inJail?'<span class="tag jail">Lockup</span>':''}${p.bankrupt?'<span class="tag">Out</span>':''}</div><div class="pc">${fmt(p.cash)}</div>${props?`<div class="pg">${props}</div>`:''}</div>`;
     d.onclick=()=>badgeTap(p);R.append(d)});
-  {const e=evDef();$('#round').textContent='Round '+G.round+(G.set.mode==='timed'?' of '+G.set.rounds:'')+(G.set.pot&&G.pot?' · Jackpot '+fmt(G.pot):'')+` · 🏠 ${G.houses} · 🏨 ${G.hotels} · 🏷️ ${forSale()}`+(e?' · '+evText(e,'t'):'')}
+  {const e=evDef();$('#round').textContent='Round '+G.round+(G.set.mode==='timed'?' of '+G.set.rounds:'')+(G.set.pot&&G.pot?' · Jackpot '+fmt(G.pot):'')+` · 🏠 ${G.houses} · 🏙️ ${G.hotels} · 🏷️ ${forSale()}`+(e?' · '+evText(e,'t'):'')}
   tok3.forEach((t,i)=>{t.visible=!P(i).bankrupt});
   $('#ui').style.setProperty('--turn',G.over?'transparent':P(G.turn).col);
   pushState();achScan();
@@ -6140,7 +6140,7 @@ let FLAT=false;
 function flatDraw(){const H=$('#flatbd');if(!H||!G)return;const W=Math.min(innerWidth,innerHeight)-24,S=Math.max(280,Math.min(W,900)),k=S/1100,cp=G.over?null:P(G.turn),fs=Math.max(5.5,CW*k*.15);
   const sig=JSON.stringify([S,G.turn,G.houses,G.hotels,G.players.map(p=>[p.pos,p.bankrupt,p.inJail]),G.own.map(o=>[o.o,o.h,o.m])]);if(H.dataset.sig===sig)return;H.dataset.sig=sig;
   let h='';for(let i=0;i<40;i++)h+=mapCellHTML(i,k,cp);
-  h+=`<div class="mcen" style="left:${C*k}px;top:${C*k}px;width:${(1100-2*C)*k}px;height:${(1100-2*C)*k}px;--fs:${fs}px"><b>${esc(CITY.name)}</b><span>${'Round '+G.round}${cp?' · '+esc(cp.name)+'’s turn':''}</span><span>🏷️ ${forSale()} for sale · 🏠 ${G.houses} · 🏨 ${G.hotels}</span></div>`;
+  h+=`<div class="mcen" style="left:${C*k}px;top:${C*k}px;width:${(1100-2*C)*k}px;height:${(1100-2*C)*k}px;--fs:${fs}px"><b>${esc(CITY.name)}</b><span>${'Round '+G.round}${cp?' · '+esc(cp.name)+'’s turn':''}</span><span>🏷️ ${forSale()} for sale · 🏠 ${G.houses} · 🏙️ ${G.hotels}</span></div>`;
   H.style.width=H.style.height=S+'px';H.innerHTML=h;H.querySelectorAll('.mc').forEach(c=>c.onclick=()=>showSquare(+c.dataset.i))}
 function flatOn(){FLAT=true;document.documentElement.classList.add('flat');if(!$('#flatbd')){const w=el('div','mapm flatwrap');const d=el('div','mapbd');d.id='flatbd';w.append(d);document.body.insertBefore(w,$('#ui'))}
   setInterval(()=>{if(G&&$('#title').hidden)flatDraw()},400)}
@@ -7289,8 +7289,8 @@ function mapCellHTML(i,k,cp){const s=SQ[i],r=rect(i),sd=sideOf(i),cw=CW*k,fs=Mat
   const o=buyable(i)?G.own[i]:null,own=o&&o.o>=0?P(o.o):null;
   const toks=G.players.filter(p=>!p.bankrupt&&p.pos===i).map(p=>`<i class="${cp&&p.id===cp.id?'now':''}${p.inJail?' jl':''}" style="--pc:${p.col}">${p.tok}</i>`).join('');
   let band='';if(s.g){const B=Math.max(3,cw*.16);band=`<span class="band" style="--g:${GC[s.g]};${[`left:0;right:0;top:0;height:${B}px`,`top:0;bottom:0;right:0;width:${B}px`,`left:0;right:0;bottom:0;height:${B}px`,`top:0;bottom:0;left:0;width:${B}px`][sd]}"></span>`}
-  const ic={go:'🏁',jail:'🔒',free:'🅿️',gojail:'👮',chance:'❓',esusu:'💰',tax:'🧾'}[s.t]||s.ic||'';
-  const hs=o&&o.h?(o.h===5?'<span class="hs ht">🏨</span>':`<span class="hs">${'●'.repeat(o.h)}</span>`):'';
+  const ic={go:'🏁',jail:'🔒',free:'☕',gojail:'👮',chance:'❓',esusu:'💰',tax:'🧾'}[s.t]||s.ic||'';
+  const hs=o&&o.h?(o.h===5?'<span class="hs ht">🏙️</span>':`<span class="hs">${'●'.repeat(o.h)}</span>`):'';
   const bg=own?`background-color:${own.col}2e;`:'';
   const big=cw>=40,sale=o&&o.o<0;
   return `<div class="mc${o&&o.m?' mo':''}${sale?' fs':''}" role="button" tabindex="0" data-i="${i}" style="left:${r.x*k}px;top:${r.y*k}px;width:${r.w*k}px;height:${r.h*k}px;--fs:${fs}px;${bg}">${band}${ic&&!toks?`<span class="ic">${ic}</span>`:''}${big||(!ic&&!toks&&!hs)?`<span class="nm">${esc(s.n)}</span>`:''}${hs}${toks?`<span class="tks">${toks}</span>`:''}${own?`<span class="ow" style="--oc:${own.col}" title="${esc(own.name)}"></span>`:''}</div>`}
@@ -7298,10 +7298,10 @@ function drawMap(pn){const W=pn.querySelector('.mapwrap'),B=pn.querySelector('.m
   const base=Math.max(220,Math.min(W.clientWidth,W.clientHeight)-12),S=Math.round(base*mapZoom),k=S/1100,cp=G.over?null:P(G.turn),fs=Math.max(5.5,CW*k*.15);
   B.style.width=S+'px';B.style.height=S+'px';
   let h='';for(let i=0;i<40;i++)h+=mapCellHTML(i,k,cp);
-  h+=`<div class="mcen" style="left:${C*k}px;top:${C*k}px;width:${(1100-2*C)*k}px;height:${(1100-2*C)*k}px;--fs:${fs}px"><b>${esc(CITY.name)}</b><span>${'Round '+G.round}${cp?' · '+`${esc(cp.name)}’s turn`:' · '+'Game over'}</span><span>${`🏷️ ${forSale()} for sale`}</span><span>${`🏠 ${G.houses} houses left`} · ${`🏨 ${G.hotels} towers left`}</span><small>Tap a square for details. Double-tap a player on the left to see where their token is.</small></div>`;
+  h+=`<div class="mcen" style="left:${C*k}px;top:${C*k}px;width:${(1100-2*C)*k}px;height:${(1100-2*C)*k}px;--fs:${fs}px"><b>${esc(CITY.name)}</b><span>${'Round '+G.round}${cp?' · '+`${esc(cp.name)}’s turn`:' · '+'Game over'}</span><span>${`🏷️ ${forSale()} for sale`}</span><span>${`🏠 ${G.houses} houses left`} · ${`🏙️ ${G.hotels} towers left`}</span><small>Tap a square for details. Double-tap a player on the left to see where their token is.</small></div>`;
   B.innerHTML=h;
   B.querySelectorAll('.mc').forEach(c=>{const go=()=>showSquare(+c.dataset.i);c.onclick=go;c.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go()}}});
-  pn.querySelector('#mapH').textContent=`🏠 ${G.houses} houses left`;pn.querySelector('#mapS').textContent=`🏷️ ${forSale()} for sale`;pn.querySelector('#mapT').textContent=`🏨 ${G.hotels} towers left`}
+  pn.querySelector('#mapH').textContent=`🏠 ${G.houses} houses left`;pn.querySelector('#mapS').textContent=`🏷️ ${forSale()} for sale`;pn.querySelector('#mapT').textContent=`🏙️ ${G.hotels} towers left`}
 async function openMap(){if(!G||$('#modals').children.length)return;sfx('tap');let iv=0;
   await modal({cls:'wide mapm',html:`<div class="maphd"><div class="mh">Map</div><span class="chip" id="mapS"></span><span class="chip" id="mapH"></span><span class="chip" id="mapT"></span><button class="btn" id="mapZ">${mapZoom>1?'🔍 Zoom out':'🔍 Zoom in'}</button><button class="btn mapx" id="mapX" aria-label="Close the map">✕</button></div><div class="mapwrap"><div class="mapbd"></div></div>`,
     btns:[],onMount:(pn,close)=>{pn.querySelector('#mapX').onclick=()=>close('x');

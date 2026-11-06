@@ -205,7 +205,7 @@ html.lc-on.flat #ev2chip{max-width:clamp(96px,calc(50vw - 50vh - 72px),200px)!im
 .lc-dev tr.lc-now td{background:#e2b13c22;font-weight:800}.lc-dev small{opacity:.7;font-size:10px}.lc-devnote{font-size:10.5px;opacity:.75;margin-top:4px}
 .lc-sky .lc-stg{width:1.2em;height:1.2em;vertical-align:middle}[data-quick-build] .lc-stg{width:22px;height:22px;vertical-align:-6px;margin-right:4px;border-radius:4px}
 .mc.lc-lm{box-shadow:inset 0 0 0 2px #e2b13c}.mc .lc-lmb{position:absolute;right:1px;top:1px;width:14px;height:14px;pointer-events:none}.lc-lmline{font-size:11px;margin:4px 0;display:flex;align-items:center;gap:2px}.lc-lmline .lc-ic{width:18px;height:18px}
-.lc-lmm .mbar{flex-wrap:wrap}.lc-lmm .mbar .btn{min-height:44px;flex:1 1 160px}
+.mc .lc-cic{width:1.9em;height:1.9em;max-width:80%;object-fit:contain}.lc-lmm .mbar{flex-wrap:wrap}.lc-lmm .mbar .btn{min-height:44px;flex:1 1 160px}
 @media (max-height:420px){.lc-card{grid-template-columns:84px minmax(0,1fr)}.lc-cbody p{font-size:12px;margin-bottom:4px}.lc-cbody>b{font-size:15px}.lc-ch{font-size:11px;gap:2px}}`;document.head.append(st)}
 
 /* ---------- Task 03 · Civic Review (replaces the Lockup in V2 matches) ---------- */
@@ -299,7 +299,7 @@ const lcStageImg=(h,size=40)=>`<img class="lc-stg" src="living/buildings/${size>
   const rows=[0,1,2,3,5].map(k=>`<tr class="${k===cur?'lc-now':''}"><td>${lcStageImg(k,28)}${LC_STAGES[k].n}${k===5?' <small>Landmark only</small>':''}</td><td>${k?fmt(lcCostAt(i,k)):'—'}</td><td>${fmt(k?lcStageRent(i,k):s.r[0])}</td></tr>`).join('');
   return h.replace(/(Owned by [^<]*?·\s*)(\d houses?|tower|Skyline Tower)/,(m,a)=>a+(LC_STAGES[cur]?LC_STAGES[cur].n:'')).replace(/<table[\s\S]*?<\/table>/,`<table class="lc-dev"><tr><th>Stage</th><th>Build</th><th>Rent</th></tr>${rows}</table><div class="lc-devnote">High-rise and Skyscraper ignore falling-rent events. Selling refunds half the stage price.</div>`)}}
 // 2D board / map: stage pips (1–3) and a skyscraper marker
-{const _mc=mapCellHTML;mapCellHTML=function(i,...a){const h=_mc(i,...a);if(!lc()||SQ[i].t!=='prop'||G.own[i].h!==5)return h;return h.replace('<span class="hs ht">🏨</span>',`<span class="hs ht lc-sky">${lcStageImg(5,14)}</span>`)}}
+{const _mc=mapCellHTML;mapCellHTML=function(i,...a){const h=_mc(i,...a);if(!lc()||SQ[i].t!=='prop'||G.own[i].h!==5)return h;return h.replace(/<span class="hs ht">[^<]*<\/span>/,`<span class="hs ht lc-sky">${lcStageImg(5,14)}</span>`)}}
 // Portfolio: build buttons and level labels show stages and the real V2 cost/rent.
 function lcPortfolioFix(root){document.documentElement.classList.toggle('lc-on',lc());if(!lc())return;
   root.querySelectorAll('.pfm-row[data-square] .pfm-acts button').forEach(b=>{if(b.dataset.quickBuild==null&&/^Build (house|tower)/.test(b.textContent))b.dataset.lcBuild=b.closest('.pfm-row').dataset.square});
@@ -353,5 +353,41 @@ async function lcOfferLandmarks(p){for(const g of lcEligibleDistricts(p.id)){
 {const _fd=flatDraw;let last='';flatDraw=function(){const k=lc()?JSON.stringify(G.lm||{}):'';if(k!==last){last=k;const H=$('#flatbd');if(H)H.dataset.sig=''}return _fd.apply(this,arguments)}}
 LC_VALID.push(g=>{const L=g.lm;if(L==null)return true;if(typeof L!=='object'||Array.isArray(L))return false;return Object.entries(L).every(([k,v])=>GROUPS[k]&&v&&GROUPS[k].includes(v.i)&&Number.isInteger(v.pid)&&v.pid>=0&&v.pid<g.players.length)});
 LC_RULES.push(['landmark','District Growth & Landmarks','No automatic double rent for a full colour set. Owning 2+ streets in a district gives them +15% rent. Own the whole district to name one Landmark (fee 25% of its price): double rent while unbuilt, +20% rent, and the only street that can become a Skyscraper. Selling or trading away part of the district removes the Landmark. All city rent changes together are capped at +50%.']);
+
+
+/* ---------- Task 06 · Original corner functions (V2 only; positions and economy of the 40 spaces unchanged) ---------- */
+// 0  Skyline HQ        passing pays payday as before; LANDING exactly lets you choose +50% payday or a 25% development grant.
+// 10 Planning Office   visiting square (Civic Review never moves tokens); landing offers a Pre-approval (pay 40):
+//                      the next Civic Review trigger against you is cancelled (one use).
+// 20 Transit Exchange  landing lets you pay a 20 fare to ride to any transit hub (normal rent/buy applies there).
+// 30 Investment Forum  no detention: buy one unowned street anywhere at its price +10%, or take a 25 stipend.
+const LC_CORNER={0:['Skyline HQ','city_cash'],10:['Planning Office','planning_hold'],20:['Transit Exchange','transit'],30:['Investment Forum','investment']};
+LC_CORNERS_ON=()=>true;
+const LC_SQ0={0:SQ[0].n,30:SQ[30].n};
+{const _bb=buildBoard;buildBoard=function(...a){if(lc())for(const k in LC_CORNER)SQ[k].n=LC_CORNER[k][0];else{SQ[0].n=LC_SQ0[0];SQ[30].n=LC_SQ0[30];if(CITY){if(CITY.jail)SQ[10].n=CITY.jail;if(CITY.free)SQ[20].n=CITY.free}}return _bb.apply(this,a)}}
+{const _mc=mapCellHTML;mapCellHTML=function(i,...a){const h=_mc(i,...a);if(!lc()||!LC_CORNER[i])return h;return h.replace(/<span class="ic">[^<]*<\/span>/,`<span class="ic"><img class="lc-cic" src="living/icons/64/${LC_CORNER[i][1]}.png" alt="" width="24" height="24"></span>`)}}
+async function lcChoose(p,icon,title,text,choices,aiK){const ok=choices.filter(c=>c.ok!==false);if(p.ai||FAST){let k=aiK();if(!ok.some(c=>c.k===k))k=ok[ok.length-1].k;return k}
+  return modal({cls:'lc-crm',html:`<div class="lc-cr">${LC_ICON(icon,48)}<div><div class="mh">${esc(title)}</div><p class="mtxt">${esc(text)}</p><ul class="lc-ch">${choices.map(c=>`<li class="${c.ok===false?'off':''}"><b>${esc(c.label)}</b><span>${esc(c.info||'')}</span></li>`).join('')}</ul></div></div>`,
+   btns:choices.map((c,j)=>({k:c.k,label:esc(c.label),primary:j===0&&c.ok!==false,disabled:c.ok===false})),tdef:ok[ok.length-1].k})}
+const lcStat=k=>{G.lcStats=G.lcStats||{};G.lcStats[k]=(G.lcStats[k]||0)+1};
+async function lcCorner(p,d){const i=p.pos;
+  if(i===0){const pd=payday(p),half=Math.round(pd/2);const k=await lcChoose(p,'city_cash','Skyline HQ','You stopped at Skyline HQ. Pick a head-office bonus.',[{k:'cash',label:`Bonus payday · +${fmt(half)}`,info:'Half a payday on top of the payday you just collected.'},{k:'grant',label:'Development grant (25%)',info:'25% off your next building level, before the end of next round.'}],()=>Object.keys(GROUPS).some(g=>ownsAll(p.id,g))?'grant':'cash');
+   lcStat('hq_'+k);if(k==='grant'){if(!p.lcGrant||p.lcGrant.pct<25)p.lcGrant={pct:25,until:G.round+1};log(`${p.name} takes an HQ development grant`)}else await collect(p,half);return}
+  if(i===10){if(p.lcPre)return;const k=await lcChoose(p,'planning_hold','Planning Office','The permit desk offers a Pre-approval: the next Civic Review opened against you is cancelled.',[{k:'pre',label:`Pre-approval · ${fmt(40)}`,ok:p.cash>=40,info:'One use. Keeps your rent flowing.'},{k:'no',label:'Just visiting',info:'Nothing changes.'}],()=>p.cash-40>=aiReserve(p)*1.5&&propsOf(p.id).length>=4?'pre':'no');
+   lcStat('po_'+k);if(k==='pre'&&await pay(p,40,null,'fee')){p.lcPre=true;log(`${p.name} holds a planning Pre-approval`)}return}
+  if(i===20){const opts=RAILS.map(j=>({j,steps:(j-p.pos+40)%40})).sort((a,b)=>a.steps-b.steps);
+   const k=await lcChoose(p,'transit','Transit Exchange','Pay a fare to ride to any transit hub. Normal rent applies there, or you may buy it. Passing Skyline HQ pays your payday.',[...opts.map(o=>{const own=G.own[o.j],r=own.o>=0&&own.o!==p.id&&!own.m?rentFor(o.j,7):0;return{k:'h'+o.j,label:`${SQ[o.j].n} · ${fmt(20)}`,ok:p.cash>=20+r,info:own.o<0?'Unowned':own.o===p.id?'Your hub':`Rent ${fmt(r)}`}}),{k:'stay',label:'Stay',info:'Rest here.'}],
+    ()=>{const b=opts.find(o=>G.own[o.j].o<0&&p.cash>=SQ[o.j].p+20+aiReserve(p));return b?'h'+b.j:'stay'});
+   lcStat('tx_'+(k==='stay'?'stay':'ride'));if(k!=='stay'&&await pay(p,20,null,'fee')){await moveTo(p,+k.slice(1));await land(p,d)}return}
+  if(i===30){const val=j=>{const g=SQ[j].g,mine=GROUPS[g].filter(x=>G.own[x].o===p.id).length,open=GROUPS[g].every(x=>G.own[x].o<0||G.own[x].o===p.id);return SQ[j].p*(1+mine*(open?.8:.3))};
+   const cand=SQ.map((s,j)=>j).filter(j=>SQ[j].t==='prop'&&G.own[j].o<0).sort((a,b)=>val(b)-val(a)).slice(0,3),price=j=>Math.round(SQ[j].p*1.1/5)*5;
+   const k=await lcChoose(p,'investment','Investment Forum','Investors pitch city land. Buy one unowned street anywhere at its price +10%, or network for a stipend.',[...cand.map(j=>({k:'b'+j,label:`Buy ${SQ[j].n} · ${fmt(price(j))}`,ok:p.cash>=price(j),info:GNAME[SQ[j].g]})),{k:'net',label:`Network · +${fmt(25)}`,info:'Collect a stipend.'}],
+    ()=>{const j=cand.find(j=>p.cash-price(j)>=aiReserve(p)&&val(j)>SQ[j].p*1.5);return j!=null?'b'+j:'net'});
+   lcStat('if_'+(k==='net'?'net':'buy'));if(k[0]==='b'){const j=+k.slice(1);if(G.own[j].o<0&&p.cash>=price(j))buyProp(p,j,price(j))}else await collect(p,25)}}
+{const _ld=land;land=async function(p,d,o2){if(lc()&&LC_CORNER[p.pos]!=null){const i0=p.pos;renderRoster();await lcCorner(p,d);renderRoster();if((i0===0||i0===20)&&p.pos===i0)return _ld.apply(this,arguments);return}return _ld.apply(this,arguments)}}
+// Pre-approval cancels the next Civic Review trigger (one use).
+{const _er=lcEnterReview;lcEnterReview=async function(p,why){if(lc()&&p.lcPre&&!p.cr){p.lcPre=false;lcStat('pre_used');log(`${p.name}’s Pre-approval cancels the Civic Review`);if(!FAST)toast(`${p.name}: Pre-approval used`);return}return _er.apply(this,arguments)}}
+LC_VALID.push(g=>g.players.every(p=>p.lcPre==null||typeof p.lcPre==='boolean'));
+LC_RULES.push(['investment','City corners','Skyline HQ (landing: bonus payday or a 25% grant) · Planning Office (Pre-approval cancels your next Civic Review) · Transit Exchange (pay a fare to ride to any hub) · Investment Forum (buy any unowned street at +10%, or a stipend). Nobody is detained.']);
 
 window.SkylineLivingCity={lc,LC_RV,optIn:lcOptIn,rulesModal:()=>lcRulesModal()};

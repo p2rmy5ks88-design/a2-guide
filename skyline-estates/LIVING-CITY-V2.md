@@ -163,3 +163,75 @@ The decks keep 16 cards each, under the same indices and Bail Pass slots (Lucky 
   - `living-city-browser` passes 19 checks;
   - `complete-matches` plays 3 full human matches with choice cards and Civic Review;
   - human-flows, gameplay-ux, turn-resume and save-recovery pass.
+
+## Task 04 — Skyline Development
+
+- **Stages** on the existing numeric slot: `h` 0 is Plot, 1 Low-rise, 2 Mid-rise, 3 High-rise, 5 Skyscraper. Level 4 is never used, so the 3D models, bank counters and saves stay valid.
+- **Stage costs:** 0.8×, 1.0×, 1.2× and 2.0× the street's build price, which is the same 5.0× in total as classic.
+- **Rents:**
+  - Low-rise and Mid-rise use the classic 1- and 2-house rents;
+  - High-rise pays 1.1× the classic 3-house rent;
+  - Skyscraper pays the classic tower rent;
+  - there is no 4-house step.
+- **Resilience:** falling-rent events never cut High-rise or Skyscraper rent.
+- **Skyscraper:** only the district's Landmark can become one (Task 05).
+- **Selling** refunds half the stage price.
+- **Permits:** Low-rise, Mid-rise and High-rise each use one home permit. A Skyscraper uses one tower permit and returns 3 home permits.
+- **Bankruptcy** refunds half of everything paid.
+- **Save validation:** no level 4, and the home and tower permit counts must balance against the bank (36 and 12).
+- **UI:** the property card shows a stage table with the kit building art. The portfolio buttons read "Build Low-rise / … / Skyscraper" with the V2 cost and rent, and selling shows the stage refund. A Skyscraper marker appears on the 2D board. The 3D models are unchanged.
+
+## Task 05 — District Growth and one Landmark per district
+
+- **No blanket full-set doubling in V2.**
+- **District Growth:** owning 2 or more streets in a district gives +15% rent.
+- **Landmark:**
+  - with the whole district, you may designate one Landmark for a fee of 25% of its price;
+  - it keeps double rent while unbuilt, earns +20% at every stage, and is the only street that can become a Skyscraper.
+- **Rent cap:** all rent percentages share one cap of −25%…+50%: events, Market Pulse, card programmes, District Growth and Landmark.
+- **Revocation:** a Landmark is removed deterministically whenever the owner stops owning the whole district (trade, bankruptcy, a city sale). The new owner of the whole district may designate again.
+- **AI** designates the street with the highest top-stage rent when cash ≥ fee + half its reserve.
+- **Display:** Landmark badges on the board and the property card.
+
+## Task 06 — Original corner functions (V2 only; the 40 positions and prices are unchanged)
+
+| Corner | V2 name | Landing |
+|---|---|---|
+| 0 | Skyline HQ | +50% payday, or a 25% development grant (passing still pays payday) |
+| 10 | Planning Office | Pre-approval for 40: cancels your next Civic Review (one use) |
+| 20 | Transit Exchange | pay a 20 fare to ride to any transit hub (normal rent or buy there) |
+| 30 | Investment Forum | buy any unowned street at +10%, or a stipend of 25 (no detention) |
+
+- **Changes in all rule versions:**
+  - the Rest Stop pictogram changes from 🅿️ to ☕;
+  - the 🏨 pictograms become 🏙️;
+  - the roster tag "Jail" now reads "Lockup".
+- **Corner icons** in V2 come from the kit.
+
+### Remaining similarities, for professional IP review
+
+These are kept on purpose (the owner chose to keep the 40-space board):
+- a 40-space square loop with corners at 0/10/20/30;
+- 22 streets in 8 groups, 4 transit hubs and 2 utilities;
+- the most expensive group sits just before Start;
+- dice movement, buying or auction, and mortgages at half price plus 10% interest.
+
+These are no longer similar in V2:
+- the jail mechanic;
+- full-set doubling;
+- the houses-and-hotel ladder;
+- the staple card effects;
+- the corner actions.
+
+## Combined balance (Tasks 01–06, offline rule version 2)
+
+Data: `balance/living-city-t06.csv`. The owner approved 150 games for this run.
+
+| Config | Games | Finished | Avg rounds | First-seat win | Comeback | Builds |
+|---|---|---|---|---|---|---|
+| classic | 200 | 200 | 63 | 32% [26–39] | 39% | 56 |
+| Living City V2 | 150 | 149 | 54 | 31% [24–39] | 31% | 47 |
+
+- V2 matches are about 14% shorter and remain fair (the first-seat interval includes 33%).
+- **Checks:** `living-city-browser` passes 29 checks. `complete-matches` plays 3 full human matches with every V2 dialog.
+- **Test tool fix:** the balance harness now runs one game per evaluate. Its earlier slowdown was a test-tool issue, not a game hang.
