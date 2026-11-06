@@ -30,6 +30,7 @@ jobs:
           node skyline-estates/tests/competition-match.cjs
           node skyline-estates/tests/lc-engine.cjs
           node skyline-estates/tests/lc-online-service.cjs
+          node skyline-estates/tests/lc-test-access.cjs
       - uses: google-github-actions/auth@v3
         with:
           project_id: eko-estates

@@ -56,12 +56,15 @@ function createEngine(root){
     return{...state,v:1,rules:'living-city-2',source:hash,turnNo:E.turnNo,turnStart:E.turnStart,tape:E.tape.map(x=>({...x})),G:JSON.parse(rt.run('JSON.stringify(G)')),boundary:r.boundary||null,over:!!r.over,revision:(state.revision||0)+1}}
   return{
     sourceHash:hash,
-    async create({seats,set,seed}){
+    async create({seats,set,seed,scenario}){
       if(!Array.isArray(seats)||seats.length<2||seats.length>6)throw new EngineError('invalid-seats',400);
       const ids=seats.filter(s=>!s.ai).map(s=>s.uid);if(!ids.length||ids.some(u=>typeof u!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(u))||new Set(ids).size!==ids.length)throw new EngineError('invalid-seats',400);
       rt.run('FAST=true;GEN++');rt.ctx.__cfg={seats,set:{ai:'normal',speed:'fast',pot:false,maxRounds:300,city:'lagos',perks:false,...set,online:false},seed};
       rt.run(`applyCity(__cfg.set.city);newGame({lc:true,cash:1600,set:__cfg.set,players:__cfg.seats.map((s,i)=>({name:s.name,tok:s.tok||TOKENS[i],col:PCOL[i],ai:!!s.ai,tl:1,uid:s.ai?null:s.uid}))});G.first=0;G.turn=0;G.players.forEach((p,i)=>{p.uid=__cfg.seats[i].ai?null:__cfg.seats[i].uid})`);
       if(rt.run('G.rv')!==2)throw new EngineError('living-city-unavailable',500);
+      // Test rooms only: the first human holds one whole district (Landmark + development) and the second human opens
+      // the match under Civic Review. Everything after this is ordinary server play.
+      if(scenario==='lc-test')rt.run(`(()=>{const hs=G.players.filter(p=>!p.ai);const g=Object.keys(GROUPS).find(k=>GROUPS[k].every(i=>SQ[i].t==='prop'));GROUPS[g].forEach(i=>{G.own[i].o=hs[0].id;G.own[i].h=0;G.own[i].m=false});if(hs[1])hs[1].cr={from:1,why:'card'};log('Test room: '+hs[0].name+' starts with a district; '+(hs[1]?hs[1].name+' starts under Civic Review.':''))})()`);
       const s0={seed:String(seed||crypto.randomBytes(12).toString('hex')),turnNo:0,turnStart:rt.run('JSON.stringify(G)'),tape:[],revision:0};
       await load(s0);return settle(s0)},
     async act(state,uid,{revision,answer}){

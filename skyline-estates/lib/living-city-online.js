@@ -6,7 +6,7 @@
 (()=>{
 const SVC=(window.SKYLINE_COMPETITION&&window.SKYLINE_COMPETITION.service)||'https://europe-west1-eko-estates.cloudfunctions.net/skylineCompetition';
 const CLIENT={rules:[1,2],lc:1},POLL_MS=1500;
-const S={cur:0,code:null,view:null,shownKey:null,pending:false,poll:0,queue:Promise.resolve(),cap:null,capAt:-1e12,epoch:0};
+const S={cur:0,test:false,code:null,view:null,shownKey:null,pending:false,poll:0,queue:Promise.resolve(),cap:null,capAt:-1e12,epoch:0};
 const T=k=>({'living-city-online-disabled':'Living City rooms are switched off right now. Try classic online.','client-upgrade-required':'Update Skyline Estates to join Living City rooms.',
   'room-not-found':'No Living City room with that code.','already-started':'That room has already started.','room-full':'That room is full.','not-a-member':'You are not in that room.',
   'host-only':'Only the host can start the game.','invalid-seat-count':'A room needs 2 to 4 players.','stale-revision':'The game moved on. Updating…','not-your-decision':'It is not your move.',
@@ -19,7 +19,8 @@ async function api(path,body){const tok=await idToken();let r;
   try{r=await fetch(SVC+path,{method:'POST',headers:{'content-type':'application/json',authorization:'Bearer '+tok},body:JSON.stringify(body)})}catch(x){const e=Error('network');e.code='network';throw e}
   let j=null;try{j=await r.json()}catch(x){}if(!r.ok){const e=Error((j&&j.error)||'http-'+r.status);e.code=(j&&j.error)||'http';e.status=r.status;throw e}return j}
 async function available(){if(Date.now()-S.capAt<60000)return S.cap;
-  try{const ac=new AbortController(),to=setTimeout(()=>ac.abort(),3500);const r=await fetch(SVC+'/v1/competition/capabilities',{signal:ac.signal});clearTimeout(to);const j=await r.json();const L=j&&j.rulesets&&j.rulesets.livingCity;S.cap=!!(L&&L.online===true&&L.ranked!==true&&(L.minClient||1)<=CLIENT.lc)}catch(e){S.cap=false}
+  try{const ac=new AbortController(),to=setTimeout(()=>ac.abort(),3500);const r=await fetch(SVC+'/v1/competition/capabilities',{signal:ac.signal});clearTimeout(to);const j=await r.json();const L=j&&j.rulesets&&j.rulesets.livingCity;const fit=L&&L.ranked!==true&&(L.minClient||1)<=CLIENT.lc;S.cap=fit&&L.online===true?'on':fit&&L.test===true?'test':false}catch(e){S.cap=false}
+  if(S.cap==='test'){try{const me=await api('/v3/lc/me',{});if(!me.tester)S.cap=false}catch(e){S.cap=false}}
   S.capAt=Date.now();return S.cap}
 const live=()=>typeof G!=='undefined'&&G&&G.lcNet;
 /* ---------- local-state protection: an online room never touches saves, and only your seat is "local" ---------- */
@@ -79,21 +80,36 @@ function startLoop(){if(S.poll)return;const ep=S.epoch;S.poll=setInterval(()=>{i
 function stopLoop(){if(S.poll){clearInterval(S.poll);S.poll=0}}
 addEventListener('visibilitychange',()=>{if(!document.hidden&&live())S.queue=S.queue.then(()=>refresh())});
 const remember=code=>{PREF.lcRoom={code,at:Date.now()};savePref()},forget=()=>{if(PREF.lcRoom){delete PREF.lcRoom;savePref()}};
-async function enter(code,view){S.epoch++;stopLoop();S.code=code;S.view=view;S.shownKey=null;S.pending=false;S.queue=Promise.resolve();remember(code);await show(view,true);pump()}
-{const _st=showTitle;showTitle=function(){S.epoch++;stopLoop();S.view=null;S.pending=false;return _st.apply(this,arguments)}}
+/* ---------- test rooms only: in-app safety checks and a server test report ---------- */
+async function safetyChecks(){const v=S.view;if(!v)return;const mine=v.decision&&v.decision.type,res=[];
+  const tryAct=async(label,body,expect)=>{try{await api('/v3/lc/act',{code:S.code,...body});res.push(`✗ ${label}: accepted`)}catch(e){res.push(`${expect.includes(e.code)?'✓':'✗'} ${label}: refused (${e.code})`)}};
+  await tryAct('Old move sent again',{revision:v.revision-1,answer:{value:'roll'}},['stale-revision']);
+  if(mine){await tryAct('Made-up answer',{revision:v.revision,answer:{value:'cash+999999'}},['invalid-answer']);
+    const i=G.own.findIndex((o,i)=>SQ[i].t==='prop'&&o.o!==G.lcMe);await tryAct('Building on a street you do not own',{revision:v.revision,answer:{assets:[{kind:'build',square:i}]}},['illegal-asset-action','invalid','missing-answer'])}
+  else{await tryAct('Moving out of turn',{revision:v.revision,answer:{value:'roll'}},['not-your-decision']);await tryAct('Building out of turn',{revision:v.revision,answer:{assets:[{kind:'build',square:1}]}},['not-your-decision'])}
+  await modal({html:`<div class="mh">Safety checks</div><div class="mtxt">${res.map(esc).join('<br>')}</div><div class="mtxt muted">Nothing in the game changed. The server counted each refusal in the test report.</div>`,btns:[{k:'x',label:'OK',primary:true}]}).catch(()=>{});
+  S.queue=S.queue.then(()=>refresh())}
+async function report(){try{const a=await api('/v3/lc/audit',{code:S.code}),m=a.match||{};const L=o=>Object.entries(o||{}).map(([k,v])=>esc(k)+' '+v).join(', ')||'none';
+  await modal({cls:'wide',html:`<div class="mh">Test report · ${esc(a.code)}</div><div class="mtxt">Status <b>${esc(a.status)}</b> · round ${m.round||'-'} · revision ${a.revision}${m.over?' · <b>finished</b>':''}<br>Answers: ${L(a.audit.answered)}<br>Refused: ${L(a.audit.rejected)}<br>Landmarks ${m.landmarks||0} · built streets ${m.built||0} · event ${m.event?esc(m.event.id):'none yet'}<br>Living City: ${L(m.lcStats)}</div>`,btns:[{k:'x',label:'OK',primary:true}]})}catch(e){toast(T(e.code))}}
+function testTools(){let b=document.getElementById('lcTestBar');if(!S.test||!live()){if(b)b.remove();return}if(b)return;
+  b=document.createElement('div');b.id='lcTestBar';b.style.cssText='position:fixed;left:8px;bottom:calc(8px + env(safe-area-inset-bottom));z-index:40;display:flex;gap:6px';
+  b.innerHTML='<button class="pill" id="lcChk">Safety checks</button><button class="pill" id="lcRep">Test report</button>';document.body.append(b);
+  b.querySelector('#lcChk').onclick=()=>safetyChecks();b.querySelector('#lcRep').onclick=()=>report()}
+async function enter(code,view){S.epoch++;stopLoop();S.code=code;S.view=view;S.shownKey=null;S.pending=false;S.queue=Promise.resolve();remember(code);await show(view,true);testTools();pump()}
+{const _st=showTitle;showTitle=function(){S.epoch++;stopLoop();S.view=null;S.pending=false;const tb=document.getElementById('lcTestBar');if(tb)tb.remove();return _st.apply(this,arguments)}}
 /* ---------- rooms: menu and lobby ---------- */
-async function lobby(code,first){let room=first,timer=0;
-  const k=await modal({cls:'wide',html:`<div class="mh">Living City room <b>${esc(code)}</b></div><div class="mtxt muted">New rules: Strategic Events, Civic Review, building stages and Landmarks. Casual play — no ranked results.</div><div class="ollist" id="lcSeats"></div><div class="mtxt" id="lcHost"></div><div class="mtxt muted" id="lcErr"></div>`,
+async function lobby(code,first){let room=first,timer=0;S.test=!!first.test;
+  const k=await modal({cls:'wide',html:`<div class="mh">Living City room <b>${esc(code)}</b>${first.test?' · test':''}</div><div class="mtxt muted">New rules: Strategic Events, Civic Review, building stages and Landmarks. Casual play — no ranked results.</div><div class="ollist" id="lcSeats"></div><div class="mtxt" id="lcHost"></div><div class="mtxt muted" id="lcErr"></div>`,
     btns:[{k:'x',label:'Leave'}],onMount:(pn,close)=>{
       const draw=()=>{pn.querySelector('#lcSeats').innerHTML=room.seats.map(s=>`<div class="olitem"><b>${esc(s.name)}</b><span>${s.you?'You':s.ai?'Computer':'Player'}</span></div>`).join('');
         const H=pn.querySelector('#lcHost');if(!room.host){H.textContent=`Share code ${code}. Waiting for the host to start…`;return}if(H.dataset.on)return;H.dataset.on=1;
-        H.innerHTML=`<div class="olrow"><label>Computer players <select id="lcAi"><option>0</option><option selected>1</option><option>2</option></select></label><label>Mode <select id="lcMode"><option value="timed20">20 rounds</option><option value="timed10">10 rounds</option><option value="classic">Last landlord standing</option></select></label></div><button class="btn pri" id="lcStart">Start game</button>`;
+        H.innerHTML=`<div class="olrow"><label>Computer players <select id="lcAi"><option>0</option><option selected>1</option><option>2</option></select></label><label>Mode <select id="lcMode"><option value="timed20">20 rounds</option><option value="timed10">10 rounds</option><option value="classic">Last landlord standing</option></select></label>${room.test?'<label><input type="checkbox" id="lcScn" checked> Test scenario (host starts with a district, second player under Civic Review)</label>':''}</div><button class="btn pri" id="lcStart">Start game</button>`;
         H.querySelector('#lcStart').onclick=async()=>{const ai=+H.querySelector('#lcAi').value,m=H.querySelector('#lcMode').value;
-          try{const r=await api('/v3/lc/start',{code,ai,mode:m==='classic'?'classic':'timed',rounds:m==='timed10'?10:20});clearInterval(timer);close('go');enter(code,r.game)}catch(e){pn.querySelector('#lcErr').textContent=T(e.code)}}};
+          try{const sc=H.querySelector('#lcScn');const r=await api('/v3/lc/start',{code,ai,mode:m==='classic'?'classic':'timed',rounds:m==='timed10'?10:20,...(sc&&sc.checked?{scenario:'lc-test'}:{})});clearInterval(timer);close('go');enter(code,r.game)}catch(e){pn.querySelector('#lcErr').textContent=T(e.code)}}};
       draw();timer=setInterval(async()=>{if(!pn.isConnected){clearInterval(timer);return}try{const r=await api('/v3/lc/state',{code});room=r;draw();if(r.status!=='lobby'&&r.game){clearInterval(timer);close('go');enter(code,r.game)}}catch(e){}},2000)}}).catch(()=>'go');
   clearInterval(timer);return k}
 async function join(code){try{const r=await api('/v3/lc/state',{code}).catch(()=>null);
-    if(r&&r.status!=='lobby'&&r.game){if(r.game.over){forget();toast('That game has finished.');return}return enter(code,r.game)}
+    if(r)S.test=!!r.test;if(r&&r.status!=='lobby'&&r.game){if(r.game.over){forget();toast('That game has finished.');return}return enter(code,r.game)}
     const j=r&&r.status==='lobby'?r:await api('/v3/lc/join',{code,name:cleanName(myName()||PREF.nick||'Player'),client:CLIENT});return lobby(code,j)}
   catch(e){if(e.code==='not-a-member'||e.code==='room-not-found')forget();toast(T(e.code))}}
 async function menu(){const last=PREF.lcRoom&&Date.now()-PREF.lcRoom.at<2*864e5?PREF.lcRoom.code:null;
@@ -102,13 +118,13 @@ async function menu(){const last=PREF.lcRoom&&Date.now()-PREF.lcRoom.at<2*864e5?
     <div class="olcard"><h4>Join a room</h4><div class="olrow"><input id="lcCode" maxlength="5" placeholder="Code" aria-label="Room code" autocapitalize="characters"><button class="btn" id="lcJoin">Join</button></div>${last?`<h4>Your last room</h4><div class="olrow"><b>${esc(last)}</b><button class="btn" id="lcRe">Rejoin</button></div>`:''}<div class="mtxt muted" id="lcErr"></div></div></div>`,
     btns:[{k:'x',label:'Close'}],onMount:(pn,close)=>{const err=pn.querySelector('#lcErr');
       const need=()=>{if((myName()||'').trim())return true;err.textContent='Set your player name in Play online first.';return false};
-      pn.querySelector('#lcNew').onclick=async()=>{if(!need())return;try{const r=await api('/v3/lc/create',{name:cleanName(myName()),city:setup.city,client:CLIENT});close('x');remember(r.code);lobby(r.code,r)}catch(e){err.textContent=T(e.code)}};
+      pn.querySelector('#lcNew').onclick=async()=>{if(!need())return;try{const r=await api('/v3/lc/create',{name:cleanName(myName()),city:setup.city,client:CLIENT,test:S.cap==='test'});close('x');remember(r.code);lobby(r.code,r)}catch(e){err.textContent=T(e.code)}};
       pn.querySelector('#lcJoin').onclick=()=>{const c=(pn.querySelector('#lcCode').value||'').trim().toUpperCase();if(!/^[A-Z0-9]{5}$/.test(c)){err.textContent='Enter the 5-character room code.';return}if(!need())return;close('x');join(c)};
       const re=pn.querySelector('#lcRe');if(re)re.onclick=()=>{close('x');join(last)}}});
   return k}
-{const _oo=openOnline;openOnline=async function(pre){if(!pre&&await available()){
+{const _oo=openOnline;openOnline=async function(pre){const mode=pre?false:await available();if(mode){
     const k=await modal({html:`<div class="mh">Play online</div><div class="mtxt">Choose the rules for your online room.</div><ul class="lc-ch"><li><b>Classic</b><span>The online rooms you know.</span></li><li><b>Living City</b><span>New rules, checked by the server. Casual only.</span></li></ul>`,
-      btns:[{k:'classic',label:'Classic rooms'},{k:'lc',label:'Living City rooms',primary:true},{k:'x',label:'Close'}]});
+      btns:[{k:'classic',label:'Classic rooms'},{k:'lc',label:mode==='test'?'Living City rooms (test)':'Living City rooms',primary:true},{k:'x',label:'Close'}]});
     if(k==='lc')return menu().catch(()=>{});if(k!=='classic')return}
   return _oo.apply(this,arguments)}}
 window.SkylineLivingCityOnline={version:1,client:CLIENT,available,join,menu,_state:S};
