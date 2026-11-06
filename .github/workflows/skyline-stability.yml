@@ -72,6 +72,7 @@ jobs:
           t 'node skyline-estates/tests/living-city-parity.cjs 6 2'
           t 'node skyline-estates/tests/lc-engine.cjs'
           t 'node skyline-estates/tests/lc-online-service.cjs'
+          t 'node skyline-estates/tests/lc-online-client.cjs'
           t 'node skyline-estates/security/service/property-rarity.test.cjs'
           t 'SKYLINE_NO_WEBGL=1 node skyline-estates/tests/reference-dashboard-browser.cjs "$RUNNER_TEMP/skyline-reference-dashboard.json"'
       - name: Upload test diagnostics

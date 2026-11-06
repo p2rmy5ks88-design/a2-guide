@@ -18,8 +18,10 @@ function __assetOps(pid){while(__E.cursor<__E.tape.length&&__E.tape[__E.cursor].
     const ok={build:canBuild,sell:canSell,mortgage:canMortgage,redeem:canUnmort}[kind];if(!ok||!Number.isInteger(i)||!ok(pid,i))throw Error('illegal-asset-action');
     ({build,sell,mortgage,redeem:unmortgage})[kind](pid,i);__E.cursor++}}
 sleep=()=>Promise.resolve();ttStart=()=>{};ttStop=()=>{};
-actions=async function(text,btns){const pid=G.turn;__assetOps(pid);const keys=btns.filter(b=>!b.disabled).map(b=>b.k);return __decide('actions',pid,{keys},v=>keys.includes(v))};
-modal=async function(o){const btns=(o&&o.btns)||[];const keys=btns.filter(b=>!b.disabled).map(b=>b.k);if(!keys.length||o.auto)return btns[0]&&btns[0].k;const pid=G.turn;__assetOps(pid);return __decide('modal',pid,{keys,cls:o.cls||''},v=>keys.includes(v))};
+function __btns(b){return b.map(x=>({k:x.k,label:String(x.label||''),primary:!!x.primary,danger:!!x.danger,disabled:!!x.disabled}))}
+function __cut(h){h=String(h||'');return h.length>12000?h.slice(0,12000):h}
+actions=async function(text,btns){const pid=G.turn;__assetOps(pid);const keys=btns.filter(b=>!b.disabled).map(b=>b.k);return __decide('actions',pid,{keys,ui:{text:__cut(text),btns:__btns(btns)}},v=>keys.includes(v))};
+modal=async function(o){const btns=(o&&o.btns)||[];const keys=btns.filter(b=>!b.disabled).map(b=>b.k);if(!keys.length||o.auto)return btns[0]&&btns[0].k;const pid=G.turn;__assetOps(pid);return __decide('modal',pid,{keys,cls:o.cls||'',ui:{html:__cut(o.html),btns:__btns(btns),cls:String(o.cls||'')}},v=>keys.includes(v))};
 openAssets=async function(p){__assetOps(p.id)};
 isRemote=q=>!!(q&&!q.ai);
 askRemote=async function(q,kind,payload){
@@ -30,8 +32,9 @@ askRemote=async function(q,kind,payload){
 const ADAPTER_RULES=String.raw`
 LCUI.humanInFast=true;
 LCUI.decide=async function(kind,p,s){
-  const opt=kind==='card'?{deck:s.deck,id:s.c&&s.c.id,choices:(s.ch||[]).map(x=>({k:x.k,ok:x.ok!==false}))}:kind==='review'?{can:s.can,passes:p.goojf.length}:kind==='landmark'?{group:s.g,opts:s.opts}:kind==='corner'?{square:p.pos,choices:s.choices.map(x=>({k:x.k,ok:x.ok!==false}))}:{};
+  const opt=kind==='card'?{deck:s.deck,id:s.c&&s.c.id,choices:(s.ch||[]).map(x=>({k:x.k,ok:x.ok!==false,label:String(x.label||''),info:String(x.info||'')}))}:kind==='review'?{can:s.can,passes:p.goojf.length}:kind==='landmark'?{group:s.g,opts:s.opts}:kind==='corner'?{square:p.pos,icon:s.icon,title:s.title,text:s.text,choices:s.choices.map(x=>({k:x.k,ok:x.ok!==false,label:String(x.label||''),info:String(x.info||'')}))}:{};
   if(kind==='info'||kind==='card'&&!s.ch)return 'ok';
+  let spec=null;try{spec=JSON.parse(JSON.stringify({...s,aiPick:undefined}))}catch(e){}opt.spec=spec;
   return __decide('lc:'+kind,p.id,opt,v=>typeof v==='string'&&v.length<=16)};
 async function __step(){
   for(let guard=0;guard<400;guard++){
@@ -65,8 +68,7 @@ function createEngine(root){
       if(state.over)throw new EngineError('match-over');if(revision!==state.revision)throw new EngineError('stale-revision');
       const b=state.boundary;if(!b)throw new EngineError('no-decision-pending');const seat=state.G.players[b.pid];if(!seat||seat.uid!==uid)throw new EngineError('not-your-decision',403);
       const ops=Array.isArray(answer&&answer.assets)?answer.assets:[];if(ops.length>20)throw new EngineError('too-many-assets',400);
-      const entries=ops.map(o=>({type:'asset',pid:b.pid,value:{kind:o.kind,square:o.square}}));if(!('value' in (answer||{})))throw new EngineError('missing-answer',400);
-      entries.push({type:b.type,pid:b.pid,value:answer.value});
+      const entries=ops.map(o=>({type:'asset',pid:b.pid,value:{kind:o.kind,square:o.square}}));if('value' in (answer||{}))entries.push({type:b.type,pid:b.pid,value:answer.value});else if(!entries.length||b.type!=='actions')throw new EngineError('missing-answer',400);
       await load({...state,tape:state.tape.concat(entries)});return settle(state)},
     view(state,uid){const me=state.G.players.findIndex(p=>p.uid===uid);return{revision:state.revision,rules:state.rules,over:state.over,G:state.G,me,decision:state.boundary&&state.boundary.pid===me?state.boundary:null,waitingFor:state.boundary?state.boundary.pid:null}}}}
 module.exports={createEngine,EngineError};
