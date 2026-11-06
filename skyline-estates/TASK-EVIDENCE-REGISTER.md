@@ -718,3 +718,52 @@ To measure:
 - Tests PASS:
   - landmarks, collection-vault and reference-dashboard (updated for the new layout);
   - spotlight, home-redesign, testflight-hotfix, a11y-layout, currency.
+
+## Owner request: 25 profile avatars (6 Nov 2026)
+
+Source: `Skyline_Estates_25_Mobile_Avatars.zip`.
+
+### Assets
+
+- `avatars/full/skyline_avatar_01–25.webp` (256 px).
+- `avatars/small/…_96.png` (96 px).
+- `avatars/avatars.json`.
+- Added to the offline manifest (`build.py`), the native bundle (`build-web.mjs`) and `verify-bundle`.
+
+### Implementation (`lib/avatars.js`)
+
+- Stable IDs `avatar_01…25` are stored in the existing `PREF.eq.char` slot. The cloud profile accepts any short ID, so sync, online seats and leaderboard rows are unchanged.
+- `charSVG` draws the portraits everywhere:
+  - 96 px PNG when size × device pixel ratio ≤ 96;
+  - WebP otherwise (with srcset);
+  - `object-fit: cover`, round clip.
+- Compact picker in Profile menu › **Avatar & name**: 25 tiles of 44 px, a 72 px preview and the name field. No prices or unlocks.
+- The welcome screen offers the 25 portraits (44 px).
+- The Characters tab stays removed.
+
+### Migration
+
+- A legacy character becomes an avatar alias, e.g. `kofi` → `avatar_10`. The old ID is kept in `PREF.charLegacy`, and aliases remain for older saves and other players.
+- Unchanged: name, Coins, SC, inventory/purchases, equipped plinth, stats and trophies (verified).
+- Token levels are unaffected: the same saved data gives identical results with and without the avatar module.
+
+### Removed
+
+- Legacy portraits `riders/por_*.jpg`.
+- The 3D character riders: the `riders/` folder (9.4 MB), with riders and realistic riders turned off and their Settings switches hidden.
+- The dead Characters pane code in `home-redesign.js`.
+
+### Checks
+
+- 868×400 @3×, 667×375 @2× and 390×844 @3×:
+  - 25 distinct portraits, all loaded;
+  - header badge 38 px (PNG at 2×, WebP at 3×);
+  - 0 page errors and 0 missing assets.
+- Tests:
+  - `tests/avatars-browser.cjs` (new, in CI; 8 checks).
+  - reference-dashboard and home-redesign, updated for the picker.
+  - first-session, collection-vault, testflight-hotfix, currency, accounts, cloud-sync and social.
+
+### Not changed
+
+TestFlight / App Store (owner hold).
