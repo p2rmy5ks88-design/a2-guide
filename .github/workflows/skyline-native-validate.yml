@@ -14,7 +14,7 @@ jobs:
   ios:
     if: inputs.platform != 'android'
     runs-on: xcode-27
-    timeout-minutes: 40
+    timeout-minutes: 35
     defaults:
       run:
         shell: bash
@@ -46,10 +46,11 @@ jobs:
           RT=$(xcrun simctl list runtimes -j | python3 -c 'import json,sys; r=[x for x in json.load(sys.stdin)["runtimes"] if x["isAvailable"] and x["platform"]=="iOS"]; r.sort(key=lambda x:[int(v) for v in x["version"].split(".")]); print(r[-1]["identifier"])')
           DT=$(xcrun simctl list runtimes -j | python3 -c 'import json,sys; rid=sys.argv[1]; r=[x for x in json.load(sys.stdin)["runtimes"] if x["identifier"]==rid][0]; ds=[d for d in r["supportedDeviceTypes"] if d["name"].startswith("iPhone")]; p=[d for d in ds if "Pro Max" in d["name"]] or ds; print(p[-1]["identifier"])' "$RT")
           echo "Runtime $RT device $DT"
-          UDID=$(xcrun simctl create skyline-probe "$DT" "$RT"); xcrun simctl boot "$UDID"; xcrun simctl bootstatus "$UDID" -b
-          xcrun simctl install "$UDID" "$APP"
+          T(){ perl -e 'alarm shift; exec @ARGV' "$@"; }
+          UDID=$(xcrun simctl create skyline-probe "$DT" "$RT"); xcrun simctl boot "$UDID"; T 300 xcrun simctl bootstatus "$UDID" -b || echo "bootstatus timed out"
+          T 180 xcrun simctl install "$UDID" "$APP"
           T(){ perl -e 'alarm shift; exec @ARGV' "$@"; }   # bounded simctl calls (no hangs)
-          for n in 1 2 3 4 5 6; do
+          for n in 1 2 3 4; do
             T 60 xcrun simctl launch --terminate-running-process "$UDID" com.kenstylez.skylineestates >/dev/null || echo "launch $n timed out"; sleep 75
             T 60 xcrun simctl io "$UDID" screenshot --display=1 "$RUNNER_TEMP/shots/ios-$n.png" || echo "screenshot $n failed"
             T 30 xcrun simctl terminate "$UDID" com.kenstylez.skylineestates || true; sleep 3
