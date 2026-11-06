@@ -97,3 +97,39 @@ The mockups and the reference infographic are not shipped.
 | V2 (Task 01) | 61 | 37% [31–44] | 36% | 55 |
 
 The V2 first-seat interval includes 33%.
+
+## Task 02 — City-specific choice cards (V2 decks)
+
+The decks keep 16 cards each, under the same indices and Bail Pass slots (Lucky Break 9, City Hall 6). Shuffling, held passes, bankruptcy returns and save validation therefore work unchanged. In V2 matches, 14 staple effects are replaced:
+
+| Deck · index | Classic effect | V2 card (choice) |
+|---|---|---|
+| Lucky Break 2 | nearest transit, pay double | **Transit corridor**: ride to the next hub (normal rent; you may buy it) or stay and take +20 |
+| Lucky Break 5 | advance to the top street | **Sponsor {festival}**: pay 60 for +20% rent in your strongest district for 2 rounds, or volunteer for +20 |
+| Lucky Break 6 | advance to a street | **Development grant**: 50% off one legal build before the end of next round, or +40 |
+| Lucky Break 7 | back to Start | **Market forecast**: pay 20 to see the next city event (it is pre-rolled and then used), or +10 (+30 when events are off) |
+| Lucky Break 8 | go to the Lockup | **Planning hold**: enter Civic Review (Task 03) |
+| Lucky Break 10 | nearest utility at a dice multiple | **Green initiative**: pay 15 per street (at most 90) for +10% rent plus a Rent Shield for 3 rounds, or stay out |
+| Lucky Break 11 | every player pays you | **City bond**: pay 100 now, collect 130 at your next Start |
+| Lucky Break 12 | pay each player | Street lights fee: pay 40 |
+| Lucky Break 15 | repairs per home and tower | **Smart grid**: pay 15 per building level for +10% rent on developed streets for 3 rounds, or skip |
+| City Hall 2 | each player pays you | **Bus lanes**: pay 60 for +25% transit-hub rent for 3 rounds, or decline for +15 |
+| City Hall 3 | repairs per home and tower | **Green permit**: 25% off your next build, or +30 |
+| City Hall 7 | go to the Lockup | **Civic Review notice** (Task 03) |
+| City Hall 10 | advance to a street | **Market surge**: sell one unbuilt street to the city for 120% of its price, or hold |
+| City Hall 11 | advance to a transit hub | **City transit pass**: ride to a hub you own, or a refund of +25 |
+
+- **One capped rent formula:** event % (Strategic Events or Market Pulse), plus card programmes, plus the Landmark bonus (Task 05). The total is clamped to −25%…+50% and never compounds.
+- **Grants:** event plus grant discounts are capped at 50% of the build cost. Selling still refunds half the full price, so building and selling can never create money.
+- **Display:** each card shows the kit art, with the title, text and every consequence as live HTML. The buttons are at least 44 px tall and fit at 667×320.
+- **AI:** every choice card has an AI rule:
+  - it sponsors or joins with two or more streets in the district and cash above its reserve;
+  - it takes a grant when it owns a full set;
+  - it rides when the hub is buyable or the fare is cheap;
+  - it buys a bond only when cash is above its reserve.
+- **Checks:**
+  - \`living-city-browser\` passes 13 checks: decks free of staples, the AI resolves all 12 choice cards, decks stay complete with no duplicates, the grant is used once, the rent cap holds, the bond pays once, human choice works, and legacy decks are unchanged;
+  - \`complete-matches\` plays 3 full human matches through V2 (choice cards included);
+  - human-flows, gameplay-ux, stability (175 games), market-pulse, turn-resume, save-recovery, timed-finish, the TestFlight hotfix and first-session also pass.
+- **Balance** (\`balance/living-city-t02.csv\`), 200 seeds: see the table row below.
+| lc200 | 200 (30000–30199) | 199 | 62 | 2.00 | 33% [27–39] | — | 34% [27–41] | 52 | 3.9 | 4.9 |

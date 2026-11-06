@@ -40,11 +40,164 @@ function lcRulesModal(){return modal({cls:'wide lc-rules',html:`<div class="mh">
 // Saves: rule version is explicit and validated; V2 state is checked by each feature's validator.
 const LC_VALID=[];
 {const _vs=validateSave;validateSave=function(g){if(!_vs(g))return false;try{if(g.rv==null)return true;if(g.rv!==LC_RV||g.lcv!==1||g.online)return false;return LC_VALID.every(f=>f(g))}catch(e){return false}}}
+
+/* ---------- Shared V2 helpers: capped rent modifiers, development grants ---------- */
+// One capped formula for every temporary rent change in a V2 match: Strategic/Market Pulse event % + card
+// programmes + Landmark bonus, clamped to −25%…+50%. Never compounds multiplicatively.
+const LC_CAP=[-25,50],lcRound=()=>G.round;
+function lcMods(){return (G.lcMods||(G.lcMods=[])).filter(m=>m.until>=G.round)}
+function lcModPct(i){const o=G.own[i];if(o.o<0)return 0;let t=0;for(const m of lcMods()){if(m.pid!==o.o)continue;
+  if(m.scope==='hubs'&&SQ[i].t==='rail')t+=m.pct;else if(m.scope==='streets'&&SQ[i].t==='prop'&&(!m.group||SQ[i].g===m.group))t+=m.pct;else if(m.scope==='built'&&SQ[i].t==='prop'&&o.h>0)t+=m.pct}return t}
+const LC_EXTRA_PCT=[];                              // later tasks add (i)=>pct (Landmark)
+function lcRentPct(i){const ev=typeof ev2RentPct==='function'?ev2RentPct(i):0,shield=(G.lcMods||[]).some(m=>m.shield&&m.until>=G.round&&m.pid===G.own[i].o);
+  let t=(shield&&ev<0?0:ev)+lcModPct(i);for(const f of LC_EXTRA_PCT)t+=f(i);return Math.max(LC_CAP[0],Math.min(LC_CAP[1],t))}
+{const _rf=rentFor;rentFor=function(i,dsum,o2){if(!lc())return _rf.apply(this,arguments);
+  const ev=ev2RentPct;let r;ev2RentPct=()=>0;try{r=_rf.apply(this,arguments)}finally{ev2RentPct=ev}
+  const m=r?lcRentPct(i):0;return m?Math.round(r*(100+m)/100):r}}
+// Development grant: one building level at a discount, normal build rules still apply, expires after its rounds.
+// Total discount (event + grant) is capped at 50%, and selling refunds half the full price, so no money is created.
+function lcGrantDisc(pid,i,base){const p=P(pid),g=p&&p.lcGrant;if(!lc()||!g||g.until<G.round||SQ[i].t!=='prop')return 0;
+  const ev=typeof ev2Disc==='function'?ev2Disc(pid,i):0;return Math.max(0,Math.min(Math.round(base*g.pct/100),Math.floor(base*.5)-ev))}
+const lcBase=i=>typeof lcStageCost==='function'&&lc()?lcStageCost(i):SQ[i].h;
+{const _dc=devCost;devCost=function(pid,i){const c=_dc(pid,i);return lc()?c-lcGrantDisc(pid,i,lcBase(i)):c}}
+{const _cb=canBuild;canBuild=function(pid,i){const d=lc()?lcGrantDisc(pid,i,lcBase(i)):0;if(!d)return _cb(pid,i);const p=P(pid);p.cash+=d;try{return _cb(pid,i)}finally{p.cash-=d}}}
+{const _b=build;build=function(pid,i){const d=lc()?lcGrantDisc(pid,i,lcBase(i)):0;if(d){P(pid).cash+=d;P(pid).lcGrant=null}const r=_b(pid,i);if(d){if(!FAST)float(pid,d);log(`${P(pid).name} used a development grant: ${fmt(d)} off`)}return r}}
+
+/* ---------- Task 02 · City-specific choice cards (V2 decks) ---------- */
+// Same 16-index decks and the same Bail Pass slots (Lucky Break 9, City Hall 6), so deck order, held passes,
+// bankruptcy returns and save validation work unchanged. Familiar staple effects are replaced with decisions.
+const lcFest=()=>CITY.festival||'the city festival';
+const lcBestGroup=pid=>{let best=null,n=0;for(const g in GROUPS){const k=GROUPS[g].filter(i=>G.own[i].o===pid&&!G.own[i].m).length;if(k>n){n=k;best=g}}return best};
+const lcNextHub=pos=>RAILS.find(x=>x>pos)??RAILS[0];
+const lcLevels=pid=>propsOf(pid).reduce((a,i)=>a+(G.own[i].h===5?4:G.own[i].h),0);
+const lcSteps=(p,t)=>(t-p.pos+40)%40;
+const lcHubRentFor=(p,j)=>{const o=G.own[j];return o.o>=0&&o.o!==p.id&&!o.m?rentFor(j,7):0};
+let lcEnterReview=async(p)=>sendToJail(p);   // Task 03 replaces this with Civic Review
+// card: {t (plain text), title, art, icon, ask(p)->[choices], ai(p,choices)->k}. choice: {k,label,info,cost,ok}
+const simple=(t,f,extra)=>Object.assign({t,f},extra||{});
+const LC_CHANCE=[
+ null,null,                                                                   // 0,1 keep classic text
+ {id:'corridor',title:'Transit corridor',art:'city_transit',
+  t:()=>`A new rapid transit corridor opens. Ride it to ${SQ[lcNextHub(G.players[G.turn].pos)].n}, or stay and take the commuter rebate.`,
+  ask:p=>{const j=lcNextHub(p.pos),rent=lcHubRentFor(p,j),pass=p.pos+lcSteps(p,j)>=40;return[
+   {k:'ride',label:`Ride to ${SQ[j].n}`,info:`${G.own[j].o<0?'Unowned: you may buy it.':rent?'Pay normal rent '+fmt(rent)+'.':'Your own hub.'}${pass?' Collect payday at Start.':''}`},
+   {k:'stay',label:`Stay · +${fmt(20)}`,info:'Collect the commuter rebate and stay here.'}]},
+  ai:(p,c)=>{const j=lcNextHub(p.pos),o=G.own[j];return o.o<0&&p.cash>=SQ[j].p+aiReserve(p)?'ride':o.o===p.id?'ride':lcHubRentFor(p,j)<=20&&p.pos+lcSteps(p,j)>=40?'ride':'stay'},
+  run:async(p,k,d)=>{if(k==='ride'){await moveTo(p,lcNextHub(p.pos));await land(p,d)}else await collect(p,20)}},
+ null,null,                                                                   // 3,4 keep
+ {id:'sponsor',title:()=>`Sponsor ${lcFest()}`,art:'lagos_festival',
+  t:()=>`${lcFest()} is looking for sponsors. Back it for a short rent boost in your strongest district, or volunteer for a small stipend.`,
+  ask:p=>{const g=lcBestGroup(p.id);return[
+   {k:'sponsor',label:`Sponsor · ${fmt(60)}`,ok:!!g&&p.cash>=60,info:g?`Your streets in ${GNAME[g]} earn +20% rent for 2 rounds (city rent changes are capped at +50%).`:'You need an unmortgaged street.'},
+   {k:'volunteer',label:`Volunteer · +${fmt(20)}`,info:'Collect a volunteer stipend.'}]},
+  ai:p=>{const g=lcBestGroup(p.id);if(!g)return'volunteer';const n=GROUPS[g].filter(i=>G.own[i].o===p.id).length;return n>=2&&p.cash-60>=aiReserve(p)?'sponsor':'volunteer'},
+  run:async(p,k)=>{if(k==='sponsor'){const g=lcBestGroup(p.id);if(!await pay(p,60,null,'fee'))return;G.lcMods.push({pid:p.id,scope:'streets',group:g,pct:20,until:G.round+1,src:'sponsor'});log(`${p.name} sponsors ${lcFest()}: +20% rent in ${GNAME[g]} until round ${G.round+1}`)}else await collect(p,20)}},
+ {id:'grant',title:'Development grant',art:'development_grant',
+  t:()=>`City Hall offers a development grant: 50% off your next building level (normal building rules apply) before the end of next round, or take the cash.`,
+  ask:p=>[{k:'grant',label:'Take the grant',info:'Your next build costs 50% less. Expires after next round. Building rules unchanged.'},{k:'cash',label:`Take ${fmt(40)}`,info:'Collect the cash now.'}],
+  ai:p=>Object.keys(GROUPS).some(g=>ownsAll(p.id,g))?'grant':'cash',
+  run:async(p,k)=>{if(k==='grant'){p.lcGrant={pct:50,until:G.round+1};log(`${p.name} holds a 50% development grant until round ${G.round+1}`)}else await collect(p,40)}},
+ {id:'forecast',title:'Market forecast',art:'market_surge',
+  t:()=>G.set.events2?`An analyst offers a forecast of the next city event. Pay to see which district it hits and what it does, or take a small dividend.`:`City events are off in this match. Collect a small market dividend.`,
+  ask:p=>G.set.events2?[{k:'buy',label:`Buy forecast · ${fmt(20)}`,ok:p.cash>=20,info:'See the next event now (round '+(G.ev2Next||3)+').'},{k:'skip',label:`Dividend · +${fmt(10)}`,info:'Collect a small dividend.'}]:[{k:'skip',label:`Collect ${fmt(30)}`,info:''}],
+  ai:p=>'skip',
+  run:async(p,k)=>{if(k==='buy'){if(!await pay(p,20,null,'fee'))return;const f=lcForecast();if(!FAST&&!p.ai)await modal({html:`<div class="mh">${LC_ICON('market_pulse',28)} Forecast</div><div class="mtxt">${esc(f)}</div>`,btns:[{k:'x',label:'OK',primary:true}]});log(`${p.name} bought a market forecast`)}else await collect(p,G.set.events2?10:30)}},
+ {id:'hold',title:'Planning hold',art:'civic_review_notice',t:()=>`The Planning Office has questions about your paperwork. Your file goes to Civic Review.`,run:async p=>lcEnterReview(p,'card')},
+ {classic:true,goojf:true,t:'Bail Pass: clears one Civic Review at once. Keep this card.'},   // 9 Bail Pass (same slot)
+ {id:'green',title:'Green initiative',art:'green_development',
+  t:()=>`Join the city’s solar-roof programme: pay per street you own for a Rent Shield and a small rent rise, or stay out.`,
+  ask:p=>{const n=propsOf(p.id).filter(i=>SQ[i].t==='prop').length,c=Math.min(90,15*n);return[
+   {k:'join',label:`Join · ${fmt(c)}`,ok:n>0&&p.cash>=c,info:n?`For 3 rounds: +10% rent on your streets, and falling-rent events can’t cut it.`:'You need at least one street.'},
+   {k:'no',label:'Stay out',info:'Nothing changes.'}]},
+  ai:p=>{const n=propsOf(p.id).filter(i=>SQ[i].t==='prop').length;return n>=3&&p.cash-Math.min(90,15*n)>=aiReserve(p)?'join':'no'},
+  run:async(p,k)=>{if(k!=='join')return;const n=propsOf(p.id).filter(i=>SQ[i].t==='prop').length,c=Math.min(90,15*n);if(!await pay(p,c,null,'fee'))return;G.lcMods.push({pid:p.id,scope:'streets',group:null,pct:10,shield:true,until:G.round+2,src:'green'});log(`${p.name} joins the solar-roof programme until round ${G.round+2}`)}},
+ {id:'bond',title:'City infrastructure bond',art:'market_surge',icon:'investment',
+  t:()=>`The city sells infrastructure bonds: pay now and collect more when you next reach Start.`,
+  ask:p=>[{k:'buy',label:`Buy bond · ${fmt(100)}`,ok:p.cash>=100&&!p.lcBond,info:p.lcBond?'You already hold a bond.':`Collect ${fmt(130)} the next time you pass or land on Start.`},{k:'no',label:'No thanks',info:'Keep your cash.'}],
+  ai:p=>!p.lcBond&&p.cash-100>=aiReserve(p)*1.2?'buy':'no',
+  run:async(p,k)=>{if(k==='buy'&&!p.lcBond){if(!await pay(p,100,null,'fee'))return;p.lcBond=130;log(`${p.name} bought a city bond`)}}},
+ simple('You sponsor new street lights along {traffic}. Pay {m40}.',async p=>pay(p,40,null,'fee'),{id:'lights',title:'Street lights'}),
+ null,null,                                                                   // 13,14 keep
+ {id:'grid',title:'Smart grid connection',art:'green_development',icon:'power_grid',
+  t:()=>`The new smart grid reaches your buildings. Pay per building level for a 3-round rent rise on your developed streets, or skip it.`,
+  ask:p=>{const l=lcLevels(p.id),c=15*l;return[{k:'join',label:l?`Connect · ${fmt(c)}`:'No buildings',ok:l>0&&p.cash>=c,info:l?'+10% rent on your developed streets for 3 rounds.':'You have no buildings to connect.'},{k:'no',label:'Skip',info:'Nothing changes.'}]},
+  ai:p=>{const l=lcLevels(p.id);return l>=3&&p.cash-15*l>=aiReserve(p)?'join':'no'},
+  run:async(p,k)=>{if(k!=='join')return;const c=15*lcLevels(p.id);if(!c||!await pay(p,c,null,'fee'))return;G.lcMods.push({pid:p.id,scope:'built',pct:10,until:G.round+2,src:'grid'});log(`${p.name} connects to the smart grid until round ${G.round+2}`)}}
+];
+const LC_ESUSU=[
+ null,null,
+ {id:'buslanes',title:'Bus lanes',art:'city_transit',icon:'transit',
+  t:()=>`City Hall asks transit owners to co-fund new bus lanes. Hubs you own earn more for 3 rounds if you join.`,
+  ask:p=>{const n=RAILS.filter(j=>G.own[j].o===p.id).length;return[{k:'join',label:`Co-fund · ${fmt(60)}`,ok:n>0&&p.cash>=60,info:n?`+25% rent on your ${n} transit hub${n>1?'s':''} for 3 rounds.`:'You own no transit hubs.'},{k:'no',label:`Decline · +${fmt(15)}`,info:'Collect a consultation fee.'}]},
+  ai:p=>{const n=RAILS.filter(j=>G.own[j].o===p.id).length;return n>=2&&p.cash-60>=aiReserve(p)?'join':'no'},
+  run:async(p,k)=>{if(k==='join'){if(!await pay(p,60,null,'fee'))return;G.lcMods.push({pid:p.id,scope:'hubs',pct:25,until:G.round+2,src:'buslanes'});log(`${p.name} co-funds bus lanes until round ${G.round+2}`)}else await collect(p,15)}},
+ {id:'greenpermit',title:'Green development permit',art:'green_development',icon:'grant',
+  t:()=>`A green-building permit is available: 25% off your next building level before the end of next round, or a small rebate now.`,
+  ask:p=>[{k:'grant',label:'Take the permit',info:'25% off your next build (expires after next round). Rules unchanged.'},{k:'cash',label:`Rebate · +${fmt(30)}`,info:'Collect now.'}],
+  ai:p=>Object.keys(GROUPS).some(g=>ownsAll(p.id,g))?'grant':'cash',
+  run:async(p,k)=>{if(k==='grant'){if(!p.lcGrant||p.lcGrant.pct<25)p.lcGrant={pct:25,until:G.round+1}}else await collect(p,30)}},
+ null,null,{classic:true,goojf:true,t:'Bail Pass: clears one Civic Review at once. Keep this card.'},   // 4,5 keep · 6 Bail Pass
+ {id:'notice',title:'Civic Review notice',art:'civic_review_notice',t:()=>`A neighbour objects to your plans. City Hall opens a Civic Review of your file.`,run:async p=>lcEnterReview(p,'card')},
+ null,null,
+ {id:'surge',title:'Market surge',art:'market_surge',
+  t:()=>`Buyers are queuing for land. Sell one unbuilt, unmortgaged street back to the city for 120% of its price, or hold.`,
+  ask:p=>{const c=propsOf(p.id).filter(i=>SQ[i].t==='prop'&&!G.own[i].m&&!G.own[i].h&&!GROUPS[SQ[i].g].some(j=>G.own[j].o===p.id&&G.own[j].h)).sort((a,b)=>SQ[b].p-SQ[a].p);
+   return[...c.slice(0,3).map(i=>({k:'s'+i,label:`Sell ${SQ[i].n} · +${fmt(Math.round(SQ[i].p*1.2))}`,info:`Back to the bank, unowned.`})),{k:'hold',label:'Hold',info:'Keep your streets.'}]},
+  ai:(p,c)=>{const s=c.filter(x=>x.k[0]==='s');if(!s.length)return'hold';const i=+s[s.length-1].k.slice(1),g=SQ[i].g,mine=GROUPS[g].filter(j=>G.own[j].o===p.id).length;return p.cash<aiReserve(p)&&mine===1?s[s.length-1].k:'hold'},
+  run:async(p,k)=>{if(k[0]!=='s')return;const i=+k.slice(1);if(G.own[i].o!==p.id||G.own[i].h||G.own[i].m)return;G.own[i].o=-1;updateCell(i);await collect(p,Math.round(SQ[i].p*1.2));log(`${p.name} sold ${SQ[i].n} to the city`)}},
+ {id:'pass',title:'City transit pass',art:'city_transit',icon:'transit',
+  t:()=>`Your city transit pass is valid today: ride to a transit hub you own, or take the fare refund.`,
+  ask:p=>[...RAILS.filter(j=>G.own[j].o===p.id).map(j=>({k:'h'+j,label:`Ride to ${SQ[j].n}`,info:p.pos+lcSteps(p,j)>=40?'Collect payday at Start.':''})),{k:'refund',label:`Refund · +${fmt(25)}`,info:'Stay here.'}],
+  ai:(p,c)=>{const h=c.filter(x=>x.k[0]==='h').find(x=>p.pos+lcSteps(p,+x.k.slice(1))>=40);return h?h.k:'refund'},
+  run:async(p,k,d)=>{if(k[0]==='h'){await moveTo(p,+k.slice(1));await land(p,d)}else await collect(p,25)}},
+ null,null,null,null
+];
+function lcCard(deck,idx){const v2=(deck==='chance'?LC_CHANCE:LC_ESUSU)[idx];return v2||{classic:true,...(deck==='chance'?CHANCE:ESUSU)[idx]}}
+const lcVal=x=>typeof x==='function'?x():x;
+function lcForecast(){if(!G.lcFore)G.lcFore=ev2Pick();const D=EV2_DEFS[G.lcFore],n=G.ev2n||0,r=G.ev2Next||3;let g=D.group;if(g==='fest')g=festGroup();else if(g==='rot')g=EV2_GROUPS[(n+r)%EV2_GROUPS.length];
+  const area=D.area||(g?GNAME[g]:'every street'),eff=D.kind==='rent'?`rent ${D.pct>0?'+':''}${D.pct}% on ${area} streets`:`building ${D.pct}% cheaper ${g?'in '+area:'on every street'}`;
+  return `${D.name||lcFest()} starts in round ${r}: ${eff}.`}
+{const _pk=ev2Pick;ev2Pick=function(){if(lc()&&G.lcFore){const f=G.lcFore;G.lcFore=null;if(EV2_DEFS[f])return f}return _pk.apply(this,arguments)}}
+{const _og=onPassGo;onPassGo=function(p){_og.apply(this,arguments);if(lc()&&p.lcBond){const a=p.lcBond;p.lcBond=0;p.cash+=a;float(p.id,a);log(`${p.name}’s city bond pays ${fmt(a)}`)}}}
+function lcCardHTML(deck,c,p,choices){const art=c.art?`<img class="lc-art" src="living/cards/${c.art}.webp" width="160" height="160" alt="" aria-hidden="true" decoding="async">`:'';
+  return `<div class="lc-card ${deck}">${art}<div class="lc-cbody"><small>${deck==='chance'?'LUCKY BREAK':'CITY HALL'}</small><b>${c.icon?LC_ICON(c.icon,22):''}${esc(lcVal(c.title)||'')}</b><p>${esc(loc(lcVal(c.t)))}</p>
+   ${choices?`<ul class="lc-ch">${choices.map(x=>`<li class="${x.ok===false?'off':''}"><b>${esc(x.label)}</b>${x.info?`<span>${esc(x.info)}</span>`:''}</li>`).join('')}</ul>`:''}${p.ai&&choices?`<em>${esc(p.name)} is deciding…</em>`:''}</div></div>`}
+{const _dc=drawCard;drawCard=async function(p,deck,d){if(!lc())return _dc.apply(this,arguments);
+  const idx=G[deck].shift();let c=lcCard(deck,idx);
+  if(c.goojf)p.goojf.push({deck,idx});else G[deck].push(idx);
+  if(c.classic){log(`${p.name} drew: ${loc(c.t)}`);if(!FAST){sfx('card');await _cardShow(p,deck,c,null)}if(!c.goojf)await c.f(p,d);return}
+  if(!c.ask){log(`${p.name} drew: ${lcVal(c.title)||loc(lcVal(c.t))}`);if(!FAST){sfx('card');await _cardShow(p,deck,c,null)}await (c.run||c.f)(p,d);return}
+  const ch=c.ask(p),ok=ch.filter(x=>x.ok!==false);let k;
+  if(p.ai||FAST){k=c.ai(p,ok);if(!ok.some(x=>x.k===k))k=ok[ok.length-1].k;if(!FAST){sfx('card');await _cardShow(p,deck,c,ch,k)}}
+  else{sfx('card');k=await _cardShow(p,deck,c,ch)}
+  const pick=ch.find(x=>x.k===k);log(`${p.name} drew ${lcVal(c.title)} and chose: ${pick?pick.label:k}`);
+  G.lcCardStats=G.lcCardStats||{};const key=c.id+':'+k;G.lcCardStats[key]=(G.lcCardStats[key]||0)+1;
+  await c.run(p,k,d)}}
+async function _cardShow(p,deck,c,ch,aiPick){
+  if(!ch||p.ai)return modal({cls:'lc-cardm',html:lcCardHTML(deck,c.classic?{title:deck==='chance'?'Lucky Break':'City Hall',t:c.t}:c,p,ch),btns:[{k:'ok',label:p.ai?(aiPick?`${esc(p.name)}: ${esc(ch.find(x=>x.k===aiPick).label)}`:`${esc(p.name)} reads the card…`):'OK',primary:!p.ai,disabled:p.ai}],auto:p.ai?2600:0,tdef:p.ai?undefined:'ok'});
+  const ok=ch.filter(x=>x.ok!==false);
+  return modal({cls:'lc-cardm',html:lcCardHTML(deck,c,p,ch),btns:ch.map((x,j)=>({k:x.k,label:esc(x.label),primary:j===0&&x.ok!==false,disabled:x.ok===false})),tdef:ok[ok.length-1].k})}
+LC_VALID.push(g=>{const okMod=m=>m&&Number.isInteger(m.pid)&&m.pid>=0&&m.pid<g.players.length&&['hubs','streets','built'].includes(m.scope)&&Number.isInteger(m.pct)&&Math.abs(m.pct)<=50&&Number.isInteger(m.until);
+  if(g.lcMods!=null&&!(Array.isArray(g.lcMods)&&g.lcMods.length<=64&&g.lcMods.every(okMod)))return false;
+  if(g.lcFore!=null&&!EV2_DEFS[g.lcFore])return false;
+  return g.players.every(p=>(p.lcBond==null||p.lcBond===0||p.lcBond===130)&&(p.lcGrant==null||p.lcGrant&&[25,50].includes(p.lcGrant.pct)&&Number.isInteger(p.lcGrant.until)))});
+{const _ng2=newGame;newGame=function(cfg){_ng2(cfg);if(lc()){G.lcMods=[]}}}
+// prune expired programmes each round so saves stay small
+{const _a=advanceTurn;advanceTurn=function(){_a();if(lc()&&G.lcMods)G.lcMods=G.lcMods.filter(m=>m.until>=G.round)}}
 {const st=document.createElement('style');st.textContent=`
 .lc-ic{display:inline-block;vertical-align:-4px;margin-right:6px;object-fit:contain}
 #ev2chip .lc-ic{width:20px;height:20px}.ev2ban .lc-ic{width:32px;height:32px;vertical-align:-8px}
 html.lc-on.flat #ev2chip{max-width:clamp(96px,calc(50vw - 50vh - 72px),200px)!important;padding:5px 10px!important}html.lc-on.flat #ev2chip b{font-size:11.5px!important}html.lc-on.flat #ev2chip span{font-size:11px!important;-webkit-line-clamp:2!important}
 .mc.lc-ev{box-shadow:inset 0 0 0 3px #f4d28b,0 0 10px #f4d28b88!important}
 .lc-rl{display:grid;gap:8px;margin-top:6px}.lc-r{display:grid;grid-template-columns:36px 1fr;gap:8px;align-items:start}.lc-r small{display:block;opacity:.85;font-size:12px;line-height:1.35}
-.lc-setup b .lc-ic{vertical-align:-5px}`;document.head.append(st)}
+.lc-setup b .lc-ic{vertical-align:-5px}
+.lc-cardm .mp{max-width:min(620px,94vw)}
+.lc-card{display:grid;grid-template-columns:clamp(84px,22vh,150px) minmax(0,1fr);gap:12px;align-items:start}
+.lc-card .lc-art{width:100%;height:auto;aspect-ratio:1;border-radius:14px;background:#0b2131;object-fit:cover}
+.lc-cbody small{display:block;font-size:10px;letter-spacing:.12em;opacity:.7;font-weight:800}.lc-cbody>b{display:block;font-size:17px;margin:2px 0 4px}
+.lc-cbody p{margin:0 0 6px;font-size:13px;line-height:1.35}.lc-ch li{display:grid;grid-template-columns:auto 1fr;gap:6px;align-items:baseline}.lc-ch li b::after{content:' ·'}.lc-cbody em{font-size:12px;opacity:.8}
+.lc-ch{list-style:none;margin:0;padding:0;display:grid;gap:4px;font-size:12px}.lc-ch li b{display:block}.lc-ch li span{opacity:.8}.lc-ch li.off{opacity:.5}
+.lc-cardm .mbar{flex-wrap:wrap}.lc-cardm .mbar .btn{min-height:44px;flex:1 1 180px;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.2}
+.lc-cardm .mbar .btn small{display:block;font-size:10.5px;font-weight:600;opacity:.85;margin-top:2px;white-space:normal}
+@media (max-height:420px){.lc-card{grid-template-columns:84px minmax(0,1fr)}.lc-cbody p{font-size:12px;margin-bottom:4px}.lc-cbody>b{font-size:15px}.lc-ch{font-size:11px;gap:2px}}`;document.head.append(st)}
 window.SkylineLivingCity={lc,LC_RV,optIn:lcOptIn,rulesModal:()=>lcRulesModal()};
