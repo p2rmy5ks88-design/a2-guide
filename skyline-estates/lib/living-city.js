@@ -199,5 +199,58 @@ html.lc-on.flat #ev2chip{max-width:clamp(96px,calc(50vw - 50vh - 72px),200px)!im
 .lc-ch{list-style:none;margin:0;padding:0;display:grid;gap:4px;font-size:12px}.lc-ch li b{display:block}.lc-ch li span{opacity:.8}.lc-ch li.off{opacity:.5}
 .lc-cardm .mbar{flex-wrap:wrap}.lc-cardm .mbar .btn{min-height:44px;flex:1 1 180px;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.2}
 .lc-cardm .mbar .btn small{display:block;font-size:10.5px;font-weight:600;opacity:.85;margin-top:2px;white-space:normal}
+.lc-crtag{background:#e2b13c!important;color:#10283b!important}.lc-cr{display:grid;grid-template-columns:56px 1fr;gap:10px;align-items:start}.lc-crm .mbar{flex-wrap:wrap}.lc-crm .mbar .btn{min-height:44px;flex:1 1 150px}
+@media (max-height:420px){.lc-cr{grid-template-columns:40px 1fr}.lc-cr .lc-ic{width:40px;height:40px}.lc-crm .lc-ch{font-size:11px}}
 @media (max-height:420px){.lc-card{grid-template-columns:84px minmax(0,1fr)}.lc-cbody p{font-size:12px;margin-bottom:4px}.lc-cbody>b{font-size:15px}.lc-ch{font-size:11px;gap:2px}}`;document.head.append(st)}
+
+/* ---------- Task 03 · Civic Review (replaces the Lockup in V2 matches) ---------- */
+// Triggers (city-planning causes, not dice): a Planning hold / Civic Review notice card, a development audit when a
+// player adds 3+ building levels in one turn, and the Police Check corner (until Task 06 gives it a new role).
+// Three doubles in V2 is "gridlock": you stay put and the turn ends, with no detention.
+// Under review: you collect NO rent. At the start of your next turn choose exactly one:
+//   Fast-Track Permit (pay LC_PERMIT, then play normally) · Bail Pass (consume one held pass, play normally) ·
+//   Standard Review (skip this whole turn; review ends at the end of it). The token is never moved.
+const LC_PERMIT=70,LC_AUDIT=4;
+const lcUnder=p=>!!(lc()&&p&&p.cr&&!p.bankrupt);
+lcEnterReview=async function(p,why){if(!lc()||p.bankrupt)return sendToJail(p);if(p.cr)return;
+  p.cr={from:G.round,why:String(why||'card').slice(0,12)};G.lcStats=G.lcStats||{};G.lcStats['cr_'+p.cr.why]=(G.lcStats['cr_'+p.cr.why]||0)+1;
+  log(`${p.name} is under Civic Review (${why==='audit'?'development audit':why==='inspect'?'planning inspection':'planning hold'}). No rent until it is resolved.`);
+  if(!FAST){sfx('jail');toast(`${p.name}: Civic Review opened`)}renderRoster()};
+// sendToJail in V2: three doubles = gridlock (no detention). Other legacy callers open a review instead.
+{const _sj=sendToJail;sendToJail=async function(p){if(!lc())return _sj.apply(this,arguments);
+  if(G.turn===p.id&&(G.doubles||0)>=3){G.lcStats=G.lcStats||{};G.lcStats.gridlock=(G.lcStats.gridlock||0)+1;log(`${p.name} hits gridlock after three doubles. Turn over.`);if(!FAST)toast('Gridlock! Your turn ends');return}
+  return lcEnterReview(p,'inspect')}}
+// no rent while the owner is under review
+{const _ld=land;land=async function(p,d,o2){if(lc()){const i=p.pos;if(buyable(i)){const o=G.own[i];if(o.o>=0&&o.o!==p.id&&!o.m&&lcUnder(P(o.o))){G.lcStats=G.lcStats||{};G.lcStats.crRentSaved=(G.lcStats.crRentSaved||0)+rentFor(i,d[0]+d[1],o2||{});
+    if(!FAST)toast(`${P(o.o).name} is under Civic Review. No rent today.`);log(`${p.name} owes no rent: ${P(o.o).name} is under Civic Review`);renderRoster();return}}
+   if(SQ[i].t==='gojail'&&!LC_CORNERS_ON()){await lcEnterReview(p,'inspect');renderRoster();return}}
+  return _ld.apply(this,arguments)}}
+let LC_CORNERS_ON=()=>false;                       // Task 06 gives the corner its own role
+function lcAiReview(p){const earning=propsOf(p.id).filter(i=>!G.own[i].m&&(G.own[i].h>0||SQ[i].t!=='prop'||ownsAll(p.id,SQ[i].g))).length;
+  if(p.goojf.length&&earning>=1)return'pass';if(earning>=2&&p.cash-LC_PERMIT>=aiReserve(p))return'permit';return'standard'}
+async function lcReviewTurn(p){const can=p.cash>=LC_PERMIT;let k;
+  if(p.ai||FAST){k=lcAiReview(p);if(k==='permit'&&!can)k='standard';if(k==='pass'&&!p.goojf.length)k='standard'}
+  else{k=await modal({cls:'lc-crm',html:`<div class="lc-cr">${LC_ICON('civic_review',48)}<div><div class="mh">Civic Review</div><p class="mtxt">${esc(p.name)}, your file is under review since round ${p.cr.from}. While it is open you collect <b>no rent</b>. Choose one:</p>
+     <ul class="lc-ch"><li><b>Fast-Track Permit · ${fmt(LC_PERMIT)}</b><span>Pay now, review closes, play this turn normally.${can?'':' (Not enough cash.)'}</span></li><li><b>Bail Pass</b><span>${p.goojf.length?'Use 1 of your '+p.goojf.length+' Bail Pass'+(p.goojf.length>1?'es':'')+'. Review closes, play normally.':'You hold no Bail Pass.'}</span></li><li><b>Standard Review</b><span>Skip this whole turn (no roll, no building or trades). The review closes at the end of it.</span></li></ul></div></div>`,
+     btns:[{k:'permit',label:`Fast-Track · ${fmt(LC_PERMIT)}`,primary:can,disabled:!can},{k:'pass',label:'Use Bail Pass',disabled:!p.goojf.length},{k:'standard',label:'Standard Review',primary:!can}],tdef:'standard'})}
+  G.lcStats=G.lcStats||{};G.lcStats['crx_'+k]=(G.lcStats['crx_'+k]||0)+1;
+  if(k==='permit'){if(!await pay(p,LC_PERMIT,null,'fee'))return'out';p.cr=null;log(`${p.name} paid for a Fast-Track Permit`);renderRoster();return'play'}
+  if(k==='pass'){const c=p.goojf.pop();G[c.deck].push(c.idx);p.cr=null;log(`${p.name} used a Bail Pass to close the review`);renderRoster();return'play'}
+  log(`${p.name} completes a Standard Review and skips this turn`);if(!FAST)toast(`${p.name}: Standard Review, turn skipped`);p.cr=null;renderRoster();return'skip'}
+// Development audit: count building levels added this turn by the player whose turn it is.
+{const _b=build;build=function(pid,i){const r=_b.apply(this,arguments);if(lc()&&pid===G.turn){const t=G.lcTurnBuilt||(G.lcTurnBuilt={pid,n:0});if(t.pid!==pid){t.pid=pid;t.n=0}t.n++;
+   if(t.n===LC_AUDIT-1&&!P(pid).ai&&!FAST)toast(`One more building level this turn triggers a Civic Review (development audit)`);if(t.n===LC_AUDIT&&!FAST)toast(`Development audit: a Civic Review opens at the end of your turn`)}return r}}
+{const _cb=canBuild;canBuild=function(pid,i){const ok=_cb.apply(this,arguments);if(!ok||!lc())return ok;const p=P(pid),t=G.lcTurnBuilt;
+   if(p.ai&&pid===G.turn&&t&&t.pid===pid&&t.n>=LC_AUDIT-1&&!p.cr&&p.cash<aiReserve(p)*2.5)return false;return ok}}
+{const _pt=playTurn;playTurn=async function(p){if(!lc())return _pt.apply(this,arguments);
+  if(G.phase!=='post')G.lcTurnBuilt={pid:p.id,n:0};
+  if(p.cr&&G.phase!=='post'){G.phase='busy';const r=await lcReviewTurn(p);if(r!=='play'){G.phase='busy';return}}
+  await _pt.apply(this,arguments);
+  const t=G.lcTurnBuilt;if(!p.bankrupt&&!G.over&&t&&t.pid===p.id&&t.n>=LC_AUDIT&&!p.cr)await lcEnterReview(p,'audit');G.lcTurnBuilt=null}}
+{const _bk=bankrupt;bankrupt=function(p,to){if(lc())p.cr=null;return _bk.apply(this,arguments)}}
+{const _rr=renderRoster;renderRoster=function(){const r=_rr.apply(this,arguments);try{if(lc()&&!FAST)for(const p of G.players){const pn=document.querySelector('#pc'+p.id+' .pn');if(!pn)continue;let t=pn.querySelector('.lc-crtag');
+   if(lcUnder(p)&&!t){t=el('span','tag lc-crtag','Review');t.title='Civic Review: no rent until resolved';pn.append(t)}else if(!lcUnder(p)&&t)t.remove()}}catch(e){}return r}}
+LC_VALID.push(g=>g.players.every(p=>!p.inJail&&(p.cr==null||p.cr&&Number.isInteger(p.cr.from)&&p.cr.from>=1&&p.cr.from<=g.round&&typeof p.cr.why==='string'&&p.cr.why.length<=12))&&(g.lcTurnBuilt==null||Number.isInteger(g.lcTurnBuilt.n)));
+LC_RULES.push(['civic_review','Civic Review','Replaces the Lockup. Opened by a Planning hold card, a planning inspection, or a development audit (4+ building levels in one turn). While under review you collect no rent. At your next turn: pay a Fast-Track Permit, use a Bail Pass, or take a Standard Review (skip that turn). Three doubles cause gridlock: your turn simply ends.']);
+
 window.SkylineLivingCity={lc,LC_RV,optIn:lcOptIn,rulesModal:()=>lcRulesModal()};
