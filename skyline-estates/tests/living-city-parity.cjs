@@ -10,21 +10,7 @@ const MATCH=`(async(seed,lc)=>{let s=seed;Math.random=()=>{s=(Math.imul(s,166452
  let err=null;const pe=window.__onErr;window.__onErr=e=>err=e;try{await run()}finally{window.__onErr=pe}
  const g=JSON.parse(JSON.stringify(G));delete g.log;delete g.logN;delete g.masteryId;delete g.lastDice;
  return JSON.stringify({err:err&&String(err),g})})`;
-function headless(){
-  const html=fs.readFileSync(path.join(ROOT,'index.html'),'utf8');
-  const core=[...html.matchAll(/<script([^>]*)>([\s\S]*?)<\/script>/g)].filter(m=>!/src=/.test(m[1]))[0][2];
-  const handler={get(t,k){if(k===Symbol.toPrimitive)return()=>'';if(k==='then')return undefined;if(k in t)return t[k];return stub()},apply(){return stub()},construct(){return stub()},set(t,k,v){t[k]=v;return true}};
-  function stub(){return new Proxy(function(){},handler)}
-  const store=new Map(),ctx={console,Math,JSON,Date,setTimeout:()=>0,clearTimeout(){},setInterval:()=>0,clearInterval(){},requestAnimationFrame:()=>0,performance:{now:()=>0},
-    localStorage:{getItem:k=>store.get(k)??null,setItem:(k,v)=>store.set(k,String(v)),removeItem:k=>store.delete(k),key:()=>null,length:0},sessionStorage:{getItem:()=>null,setItem(){},removeItem(){}},
-    crypto:crypto.webcrypto,navigator:{userAgent:'skyline-rules-server',language:'en',languages:['en']},location:{search:'',hash:'',href:'https://server/',protocol:'https:',hostname:'server'},
-    document:stub(),Image:function(){return stub()},Audio:function(){return stub()},matchMedia:()=>({matches:false,addEventListener(){},addListener(){}}),getComputedStyle:()=>stub(),
-    innerWidth:844,innerHeight:390,devicePixelRatio:1,fetch:()=>new Promise(()=>{}),MutationObserver:function(){return{observe(){},disconnect(){}}},ResizeObserver:function(){return{observe(){},disconnect(){}}},
-    addEventListener(){},removeEventListener(){},dispatchEvent(){},CustomEvent:function(){},Event:function(){},URL,URLSearchParams,TextEncoder,TextDecoder,structuredClone,queueMicrotask,Promise};
-  ctx.window=ctx;ctx.self=ctx;ctx.globalThis=ctx;vm.createContext(ctx);
-  vm.runInContext(core,ctx,{filename:'game-core.js'});
-  for(const l of RULE_LIBS)vm.runInContext(fs.readFileSync(path.join(ROOT,l),'utf8'),ctx,{filename:l});
-  const play=vm.runInContext(MATCH,ctx);return(seed,lc)=>play(seed,lc)}
+function headless(){const {readSources,createRuntime}=require('../online/headless-runtime.cjs');const rt=createRuntime(readSources(ROOT));const play=rt.run(MATCH);return(seed,lc)=>play(seed,lc)}
 const digest=s=>crypto.createHash('sha256').update(s).digest('hex').slice(0,16);
 (async()=>{
   const server=headless();

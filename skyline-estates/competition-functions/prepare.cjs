@@ -8,4 +8,6 @@ function copy(relative){if(seen.has(relative))return;seen.add(relative);const so
  if(relative.endsWith('.cjs'))for(const m of data.toString().matchAll(/require\(['"](\.[^'"]+)['"]\)/g)){const target=path.resolve(path.dirname(source),m[1]);const rel=path.relative(from,target);if(rel.startsWith('..')||path.isAbsolute(rel))throw Error('Dependency outside game source');copy(rel)}
 }
 copy('game.html');copy('competition/compose.cjs');
+// Living City authoritative engine: the shipped game core (index.html) and the rule libraries it runs.
+for(const f of ['index.html','lib/market-pulse.js','lib/ai-styles.js','lib/living-city-rules.js'])copy(f);
 console.log((check?'Verified ':'Packaged ')+seen.size+' audited server files');

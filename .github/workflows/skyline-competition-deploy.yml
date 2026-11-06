@@ -28,6 +28,8 @@ jobs:
           node skyline-estates/tests/competition-transactions.cjs
           node skyline-estates/tests/competition-service.cjs
           node skyline-estates/tests/competition-match.cjs
+          node skyline-estates/tests/lc-engine.cjs
+          node skyline-estates/tests/lc-online-service.cjs
       - uses: google-github-actions/auth@v3
         with:
           project_id: eko-estates
@@ -41,5 +43,5 @@ jobs:
       - name: Check public capability endpoint
         run: |
           curl --fail --silent --show-error https://europe-west1-eko-estates.cloudfunctions.net/skylineCompetition/v1/competition/capabilities > "$RUNNER_TEMP/competition-capabilities.json"
-          node -e "const x=require(process.env.RUNNER_TEMP+'/competition-capabilities.json');if(x.protocol!==1||x.version!==1||!x.verified)process.exit(1)"
+          node -e "const x=require(process.env.RUNNER_TEMP+'/competition-capabilities.json');if(x.protocol!==1||x.version!==1||!x.verified||!x.rulesets||x.rulesets.classic.online!==true)process.exit(1);console.log('rulesets',JSON.stringify(x.rulesets))"
           echo 'Service endpoint responds. Web verification remains disabled until authenticated production acceptance passes.'

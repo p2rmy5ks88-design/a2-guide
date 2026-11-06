@@ -9,7 +9,9 @@
 const LC_RV=2;
 const lc=(g=G)=>!!(g&&g.rv===LC_RV&&!g.online);
 const lcOptIn=()=>PREF.lc!==false;
-const LCUI={decide:async(kind,p,spec)=>{throw Error('Living City decision needs a client or server adapter: '+kind)}};               // Living City rules for new offline matches (default on)
+const LCUI={humanInFast:false,decide:async(kind,p,spec)=>{throw Error('Living City decision needs a client or server adapter: '+kind)}};
+// AI decides for AI seats, and for everyone in FAST simulations. The authoritative server runs FAST but sets humanInFast.
+const lcAuto=p=>p.ai||(FAST&&!LCUI.humanInFast);               // Living City rules for new offline matches (default on)
 
 /* ---------- Task 01 · Strategic City Events on by default ---------- */
 // One event system per match: Strategic Events (events2) unless the player explicitly opted into the classic
@@ -151,7 +153,7 @@ function lcForecast(){if(!G.lcFore)G.lcFore=ev2Pick();const D=EV2_DEFS[G.lcFore]
   if(c.classic){log(`${p.name} drew: ${loc(c.t)}`);if(!FAST){sfx('card');await LCUI.decide('card',p,{deck,c,ch:null})}if(!c.goojf)await c.f(p,d);return}
   if(!c.ask){log(`${p.name} drew: ${lcVal(c.title)||loc(lcVal(c.t))}`);if(!FAST){sfx('card');await LCUI.decide('card',p,{deck,c,ch:null})}await (c.run||c.f)(p,d);return}
   const ch=c.ask(p),ok=ch.filter(x=>x.ok!==false);let k;
-  if(p.ai||FAST){k=c.ai(p,ok);if(!ok.some(x=>x.k===k))k=ok[ok.length-1].k;if(!FAST){sfx('card');await LCUI.decide('card',p,{deck,c,ch,aiPick:k})}}
+  if(lcAuto(p)){k=c.ai(p,ok);if(!ok.some(x=>x.k===k))k=ok[ok.length-1].k;if(!FAST){sfx('card');await LCUI.decide('card',p,{deck,c,ch,aiPick:k})}}
   else{sfx('card');k=await LCUI.decide('card',p,{deck,c,ch});if(!ok.some(x=>x.k===k))throw Error('Invalid card choice')}
   const pick=ch.find(x=>x.k===k);log(`${p.name} drew ${lcVal(c.title)} and chose: ${pick?pick.label:k}`);
   G.lcCardStats=G.lcCardStats||{};const key=c.id+':'+k;G.lcCardStats[key]=(G.lcCardStats[key]||0)+1;
@@ -190,7 +192,7 @@ let LC_CORNERS_ON=()=>false;                       // Task 06 gives the corner i
 function lcAiReview(p){const earning=propsOf(p.id).filter(i=>!G.own[i].m&&(G.own[i].h>0||SQ[i].t!=='prop'||ownsAll(p.id,SQ[i].g))).length;
   if(p.goojf.length&&earning>=1)return'pass';if(earning>=2&&p.cash-LC_PERMIT>=aiReserve(p))return'permit';return'standard'}
 async function lcReviewTurn(p){const can=p.cash>=LC_PERMIT;let k;
-  if(p.ai||FAST){k=lcAiReview(p);if(k==='permit'&&!can)k='standard';if(k==='pass'&&!p.goojf.length)k='standard'}
+  if(lcAuto(p)){k=lcAiReview(p);if(k==='permit'&&!can)k='standard';if(k==='pass'&&!p.goojf.length)k='standard'}
   else{k=await LCUI.decide('review',p,{can});if(!['permit','pass','standard'].includes(k)||k==='permit'&&!can||k==='pass'&&!p.goojf.length)throw Error('Invalid review choice')}
   G.lcStats=G.lcStats||{};G.lcStats['crx_'+k]=(G.lcStats['crx_'+k]||0)+1;
   if(k==='permit'){if(!await pay(p,LC_PERMIT,null,'fee'))return'out';p.cr=null;log(`${p.name} paid for a Fast-Track Permit`);renderRoster();return'play'}
@@ -273,7 +275,7 @@ LC_EXTRA_PCT.push(i=>{if(SQ[i].t!=='prop')return 0;const o=G.own[i];if(o.o<0)ret
   if(o.h===0&&ownsAll(o.o,SQ[i].g)&&!lcLandmarkAt(i))return Math.round(r/2);return r}}
 const lcAiPickLM=(p,g)=>GROUPS[g].filter(i=>!G.own[i].m).sort((a,b)=>SQ[b].r[5]-SQ[a].r[5])[0];
 async function lcOfferLandmarks(p){for(const g of lcEligibleDistricts(p.id)){
-  if(p.ai||FAST){const i=lcAiPickLM(p,g);if(i!=null&&p.cash-lcLmFee(i)>=aiReserve(p)*.5)lcDesignate(p.id,i);continue}
+  if(lcAuto(p)){const i=lcAiPickLM(p,g);if(i!=null&&p.cash-lcLmFee(i)>=aiReserve(p)*.5)lcDesignate(p.id,i);continue}
   const ask=(G.lmAsked||(G.lmAsked={}));if(ask[p.id+':'+g]!=null&&G.round-ask[p.id+':'+g]<3)continue;ask[p.id+':'+g]=G.round;
   const opts=GROUPS[g].filter(i=>!G.own[i].m);
   const k=await LCUI.decide('landmark',p,{g,opts});if(k!=='later'&&!(typeof k==='string'&&k[0]==='i'&&opts.includes(+k.slice(1))))throw Error('Invalid landmark choice');
@@ -295,7 +297,7 @@ LC_RULES.push(['landmark','District Growth & Landmarks','No automatic double ren
 // 30 Investment Forum  no detention: buy one unowned street anywhere at its price +10%, or take a 25 stipend.
 const LC_CORNER={0:['Skyline HQ','city_cash'],10:['Planning Office','planning_hold'],20:['Transit Exchange','transit'],30:['Investment Forum','investment']};
 LC_CORNERS_ON=()=>true;
-async function lcChoose(p,icon,title,text,choices,aiK){const ok=choices.filter(c=>c.ok!==false);if(p.ai||FAST){let k=aiK();if(!ok.some(c=>c.k===k))k=ok[ok.length-1].k;return k}
+async function lcChoose(p,icon,title,text,choices,aiK){const ok=choices.filter(c=>c.ok!==false);if(lcAuto(p)){let k=aiK();if(!ok.some(c=>c.k===k))k=ok[ok.length-1].k;return k}
   const k=await LCUI.decide('corner',p,{icon,title,text,choices});if(!ok.some(c=>c.k===k))throw Error('Invalid corner choice');return k}
 const lcStat=k=>{G.lcStats=G.lcStats||{};G.lcStats[k]=(G.lcStats[k]||0)+1};
 async function lcCorner(p,d){const i=p.pos;
