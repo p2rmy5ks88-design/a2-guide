@@ -46,7 +46,7 @@ body = body.replace(boot, '</script><script src="./lib/skyline-sc-wallet.js"></s
 body = body.replace('<script src="./home-redesign.js"></script>', '<script src="./home-redesign.js"></script><script src="./lib/landmarks.js"></script><script src="./lib/collection-tokens.js"></script>')
 body = body.replace('<script src="./web/challenges.js">', '<script src="./lib/estate-sc.js"></script><script src="./lib/portfolio-manage.js"></script><script src="./lib/results-trophies.js"></script><script src="./lib/season-rewards.js"></script><script src="./web/challenges.js">')
 # Living City V2 rules (offline rule version 2) wrap the final gameplay functions, so they load last.
-body = body.replace('<script src="./lib/season-rewards.js"></script>', '<script src="./lib/season-rewards.js"></script><script src="./lib/living-city-rules.js"></script><script src="./lib/living-city.js"></script>', 1)
+body = body.replace('<script src="./lib/season-rewards.js"></script>', '<script src="./lib/season-rewards.js"></script><script src="./lib/living-city-rules.js"></script><script src="./lib/living-city.js"></script><script src="./lib/living-city-online.js"></script>', 1)
 if '--emit-app-body' in sys.argv:
     sys.stdout.buffer.write(body.encode('utf-8'))
     sys.exit(0)
