@@ -8,6 +8,7 @@ adb shell getprop ro.build.version.sdk > shots/device.txt
 aapt_dump=$(adb shell dumpsys package com.kenstylez.skylineestates | grep -E "targetSdk|versionName" | head -3); echo "$aapt_dump" >> shots/device.txt
 for n in 1 2 3 4 5 6; do
   adb shell am start -n com.kenstylez.skylineestates/.MainActivity >/dev/null; sleep 50
+  adb shell input keyevent KEYCODE_WAKEUP; adb shell dumpsys window | grep -q "Application Not Responding" && { echo "ANR scene $n" >> shots/device.txt; adb shell input keyevent KEYCODE_ENTER; sleep 5; }
   adb shell screencap -p /sdcard/s.png; adb pull /sdcard/s.png "shots/android-$n.png" >/dev/null
   adb shell am force-stop com.kenstylez.skylineestates; sleep 3
 done
