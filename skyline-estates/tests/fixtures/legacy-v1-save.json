@@ -1,0 +1,353 @@
+{
+ "saveVersion": 1,
+ "savedAt": 1793969007054,
+ "game": {
+  "v": 1,
+  "tokenPowerVersion": 3,
+  "players": [
+   {
+    "id": 0,
+    "uid": null,
+    "name": "Ada",
+    "tok": "🚌",
+    "col": "#f6c400",
+    "ai": false,
+    "cash": 900,
+    "pos": 6,
+    "inJail": false,
+    "jailTurns": 0,
+    "goojf": [
+     {
+      "deck": "chance",
+      "idx": 9
+     }
+    ],
+    "tl": 1,
+    "estate": {},
+    "fin": null,
+    "ch": null,
+    "bankrupt": false,
+    "lastOffer": -9,
+    "declined": {}
+   },
+   {
+    "id": 1,
+    "uid": null,
+    "name": "Bot A",
+    "tok": "🛺",
+    "col": "#ff5d73",
+    "ai": true,
+    "cash": 1700,
+    "pos": 10,
+    "inJail": true,
+    "jailTurns": 1,
+    "goojf": [],
+    "tl": 1,
+    "estate": {},
+    "fin": null,
+    "ch": null,
+    "bankrupt": false,
+    "lastOffer": -9,
+    "declined": {}
+   },
+   {
+    "id": 2,
+    "uid": null,
+    "name": "Bot B",
+    "tok": "🏍️",
+    "col": "#41c8ff",
+    "ai": true,
+    "cash": 1600,
+    "pos": 0,
+    "inJail": false,
+    "jailTurns": 0,
+    "goojf": [],
+    "tl": 1,
+    "estate": {},
+    "fin": null,
+    "ch": null,
+    "bankrupt": false,
+    "lastOffer": -9,
+    "declined": {}
+   }
+  ],
+  "own": [
+   {
+    "o": -1,
+    "h": 0,
+    "m": false
+   },
+   {
+    "o": 0,
+    "h": 2,
+    "m": false
+   },
+   {
+    "o": 0,
+    "h": 2,
+    "m": false
+   },
+   {
+    "o": -1,
+    "h": 0,
+    "m": false
+   },
+   {
+    "o": 0,
+    "h": 1,
+    "m": false
+   },
+   {
+    "o": 2,
+    "h": 0,
+    "m": false
+   },
+   {
+    "o": -1,
+    "h": 0,
+    "m": false
+   },
+   {
+    "o": 1,
+    "h": 0,
+    "m": true
+   },
+   {
+    "o": -1,
+    "h": 0,
+    "m": false
+   },
+   {
+    "o": -1,
+    "h": 0,
+    "m": false
+   },
+   {
+    "o": -1,
+    "h": 0,
+    "m": false
+   },
+   {
+    "o": -1,
+    "h": 0,
+    "m": false
+   },
+   {
+    "o": -1,
+    "h": 0,
+    "m": false
+   },
+   {
+    "o": -1,
+    "h": 0,
+    "m": false
+   },
+   {
+    "o": -1,
+    "h": 0,
+    "m": false
+   },
+   {
+    "o": -1,
+    "h": 0,
+    "m": false
+   },
+   {
+    "o": -1,
+    "h": 0,
+    "m": false
+   },
+   {
+    "o": -1,
+    "h": 0,
+    "m": false
+   },
+   {
+    "o": -1,
+    "h": 0,
+    "m": false
+   },
+   {
+    "o": -1,
+    "h": 0,
+    "m": false
+   },
+   {
+    "o": -1,
+    "h": 0,
+    "m": false
+   },
+   {
+    "o": -1,
+    "h": 0,
+    "m": false
+   },
+   {
+    "o": -1,
+    "h": 0,
+    "m": false
+   },
+   {
+    "o": -1,
+    "h": 0,
+    "m": false
+   },
+   {
+    "o": -1,
+    "h": 0,
+    "m": false
+   },
+   {
+    "o": -1,
+    "h": 0,
+    "m": false
+   },
+   {
+    "o": -1,
+    "h": 0,
+    "m": false
+   },
+   {
+    "o": -1,
+    "h": 0,
+    "m": false
+   },
+   {
+    "o": -1,
+    "h": 0,
+    "m": false
+   },
+   {
+    "o": -1,
+    "h": 0,
+    "m": false
+   },
+   {
+    "o": -1,
+    "h": 0,
+    "m": false
+   },
+   {
+    "o": -1,
+    "h": 0,
+    "m": false
+   },
+   {
+    "o": -1,
+    "h": 0,
+    "m": false
+   },
+   {
+    "o": -1,
+    "h": 0,
+    "m": false
+   },
+   {
+    "o": -1,
+    "h": 0,
+    "m": false
+   },
+   {
+    "o": -1,
+    "h": 0,
+    "m": false
+   },
+   {
+    "o": -1,
+    "h": 0,
+    "m": false
+   },
+   {
+    "o": -1,
+    "h": 0,
+    "m": false
+   },
+   {
+    "o": -1,
+    "h": 0,
+    "m": false
+   },
+   {
+    "o": -1,
+    "h": 0,
+    "m": false
+   }
+  ],
+  "turn": 2,
+  "round": 7,
+  "chance": [
+   15,
+   13,
+   4,
+   12,
+   6,
+   2,
+   5,
+   11,
+   10,
+   1,
+   7,
+   14,
+   8,
+   3,
+   0
+  ],
+  "esusu": [
+   6,
+   5,
+   12,
+   1,
+   2,
+   11,
+   13,
+   3,
+   7,
+   10,
+   15,
+   14,
+   0,
+   4,
+   8,
+   9
+  ],
+  "pot": 0,
+  "houses": 31,
+  "hotels": 12,
+  "set": {
+   "ai": "normal",
+   "speed": "normal",
+   "timer": 0,
+   "mode": "classic",
+   "rounds": 20,
+   "city": "lagos",
+   "theme": "lagos",
+   "cash": 1600,
+   "minigames": true,
+   "perks": true,
+   "ffa": false,
+   "events": false,
+   "speedDie": false,
+   "pot": false,
+   "goDouble": false,
+   "jailRent": false,
+   "auction": true,
+   "even": true,
+   "interest": true
+  },
+  "log": [
+   "Game resumed."
+  ],
+  "logN": 1,
+  "over": false,
+  "phase": "pre",
+  "keys": [
+   77,
+   50,
+   91
+  ],
+  "first": 2,
+  "lateBonus": 1,
+  "keysShown": false,
+  "masteryId": "e6c182d6-0c72-4399-acb6-dc943dd03198"
+ }
+}

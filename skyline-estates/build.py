@@ -54,7 +54,7 @@ head = head.replace('</head>', '<link rel="stylesheet" href="./lib/menu-presenta
 # Shared menu-only layer; original game.html retains all board/camera behavior.
 index = head + body + '<script src="./lib/menu-presentation.js"></script><script src="./web/skyline-showcase.js"></script></body></html>'
 core = ['index.html', 'web-play.html', 'web-correction.html', 'web-follow.html', 'web-board.html', 'web-menus.html', 'reference-redesign.js', 'home-redesign.js', 'manifest.webmanifest', 'privacy.html', 'icon-180.png', 'icon-192.png', 'icon-512.png']
-assets = sorted(p.relative_to(here).as_posix() for folder in ['art','items','photos','lib','web','avatars'] for p in (here/folder).rglob('*') if p.is_file())
+assets = sorted(p.relative_to(here).as_posix() for folder in ['art','items','photos','lib','web','avatars','living'] for p in (here/folder).rglob('*') if p.is_file())
 files = core + assets
 texts = {'.html','.js','.mjs','.cjs','.json','.webmanifest','.txt','.css','.svg'}
 def canonical(p, data):
