@@ -48,10 +48,11 @@ jobs:
           echo "Runtime $RT device $DT"
           UDID=$(xcrun simctl create skyline-probe "$DT" "$RT"); xcrun simctl boot "$UDID"; xcrun simctl bootstatus "$UDID" -b
           xcrun simctl install "$UDID" "$APP"
+          T(){ perl -e 'alarm shift; exec @ARGV' "$@"; }   # bounded simctl calls (no hangs)
           for n in 1 2 3 4 5 6; do
-            xcrun simctl launch "$UDID" com.kenstylez.skylineestates >/dev/null; sleep 60
-            xcrun simctl io "$UDID" screenshot --display=1 "$RUNNER_TEMP/shots/ios-$n.png" || true
-            xcrun simctl terminate "$UDID" com.kenstylez.skylineestates || true; sleep 3
+            T 60 xcrun simctl launch --terminate-running-process "$UDID" com.kenstylez.skylineestates >/dev/null || echo "launch $n timed out"; sleep 75
+            T 60 xcrun simctl io "$UDID" screenshot --display=1 "$RUNNER_TEMP/shots/ios-$n.png" || echo "screenshot $n failed"
+            T 30 xcrun simctl terminate "$UDID" com.kenstylez.skylineestates || true; sleep 3
           done
           ls -la "$RUNNER_TEMP/shots"
       - uses: actions/upload-artifact@v4
