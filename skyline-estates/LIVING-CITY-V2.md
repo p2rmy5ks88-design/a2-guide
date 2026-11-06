@@ -271,3 +271,16 @@ Data: `balance/living-city-t06.csv`. The owner approved 150 games for this run.
   - choice card, Civic Review and Landmark dialogs in Dark and Daylight at 844×390, 956×440 and 667×320;
   - two Android landscape sizes, 915×412 and 800×360.
   - These are Chromium renders, plus SwiftShader for the WebGL ones. They are not device screenshots.
+
+## Online Phase 1 — Shared rules core (7 Nov 2026)
+
+- **Split:**
+  - `lib/living-city-rules.js` is the DOM-free rules core: events and Market Pulse hooks, choice-card decks, Civic Review, Skyline Development, District Growth and Landmarks, the rent cap, corners, and the save validators.
+  - `lib/living-city.js` is presentation only: dialogs, badges, stage art, 3D markers, corner tiles and theme styles.
+  - Every human decision goes through one hook, `LCUI.decide(kind, player, spec)`. The kinds are `card`, `review`, `landmark`, `corner` and `info`.
+  - The app implements the hook with dialogs; the server will answer it with validated commands (Phase 2).
+  - The rules core validates the returned choice (an illegal choice throws). AI and FAST paths never call the hook.
+- **Parity test** (`tests/living-city-parity.cjs`):
+  - The same seeded matches run in the full app (Chromium, every UI library) and headless in Node, with only the game core plus `market-pulse`, `ai-styles` and `living-city-rules` and a universal DOM stub.
+  - Result: **14/14 identical final states**, 10 Living City and 4 classic. The comparison covers every field of `G` except the log, so turn order, dice, cards, events, review, stages, Landmarks, corners, cash, bankruptcies and decks all match.
+- **Portfolio:** on small iPhones, Living City rows keep the street column at least 150 px wide, and the build-button caption wraps.
