@@ -3,7 +3,7 @@
 // building action, rejected out-of-turn input, untouched local saves and the classic online path unchanged.
 'use strict';
 const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
-const assert=require('node:assert/strict'),fs=require('node:fs'),http=require('node:http'),path=require('node:path');
+const crypto=require('node:crypto'),assert=require('node:assert/strict'),fs=require('node:fs'),http=require('node:http'),path=require('node:path');
 const {composeCompetition}=require('../competition/compose.cjs');
 const root=path.resolve(__dirname,'../..'),SVC='https://europe-west1-eko-estates.cloudfunctions.net/skylineCompetition';
 let n=0;const ok=m=>{n++;console.log('PASS',m)},delay=ms=>new Promise(r=>setTimeout(r,ms));
@@ -11,8 +11,8 @@ function memoryDb(){const data={};const get=p=>p.split('/').reduce((o,k)=>o&&o[k
   const set=(p,v)=>{const ks=p.split('/'),last=ks.pop();let o=data;for(const k of ks)o=o[k]=o[k]||{};if(v==null)delete o[last];else o[last]=v};
   return{data,set,ref(p){return{async transaction(fn){const cur=get(p);const next=fn(cur==null?null:JSON.parse(JSON.stringify(cur)));set(p,next);return{committed:true,snapshot:{val:()=>next}}}}}}}
 (async()=>{
-  const db=memoryDb(),users={tA:'alice-uid',tB:'bob-uid'};let skew=0;
-  const svc=composeCompetition({db,clock:()=>Date.now()+skew,verifyIdToken:async t=>{if(!users[t])throw Error('bad');return{uid:users[t]}}});
+  const db=memoryDb(),users={tA:{uid:'alice-uid',email:'alice@test.example',email_verified:true,firebase:{sign_in_provider:'apple.com'}},tB:{uid:'bob-uid',email:'bob@test.example',email_verified:true,firebase:{sign_in_provider:'google.com'}}};let skew=0;
+  const svc=composeCompetition({db,clock:()=>Date.now()+skew,verifyIdToken:async t=>{if(!users[t])throw Error('bad');return users[t]}});const H=e=>crypto.createHash('sha256').update(e).digest('hex');
   async function callSvc(method,url,headers,body){let status,out,hdr={};const req={method,url,headers,body:body?JSON.parse(body):undefined};
     await svc.handler(req,{setHeader(k,v){hdr[k]=v},writeHead(s){status=s;return{end:x=>{out=x||''}}}});return{status,out,hdr}}
   const files=http.createServer((req,res)=>{const f=path.resolve(root,'.'+decodeURIComponent(req.url.split('?')[0]));if(!f.startsWith(root+path.sep)){res.writeHead(403).end();return}
@@ -37,20 +37,20 @@ function memoryDb(){const data={};const get=p=>p.split('/').reduce((o,k)=>o&&o[k
   assert.equal(await offered(A),false);A.evaluate(()=>openOnline()).catch(()=>{});await delay(800);
   assert.ok(await A.locator('#olNew').count()+await A.locator('text=Online play').count()+await A.locator('#modals .mh').filter({hasText:'Play online'}).count()>0,'classic online menu opens');
   assert.equal(await A.locator('text=Living City rooms').count(),0);await A.evaluate(()=>{$('#modals').innerHTML='';GEN++});ok('flag off: no Living City option; classic Play online opens as before');
-  db.set('skylineV2/flags',{lcOnline:true});skew+=60000;assert.equal(await offered(A),true);
+  // live-test configuration: global flag off, test access for two listed accounts only
+  db.set('skylineV2/flags',{lcTest:{on:true,until:Date.now()+skew+60000+3600e3,testers:{[H('alice@test.example')]:true,[H('bob@test.example')]:true}}});skew+=60000;
+  assert.equal(await offered(A),'test');assert.equal(await offered(B),'test');ok('test access on: both listed accounts see "Living City rooms (test)"; global flag stays off');
   // Alice: Play online → Living City rooms → Create room
-  A.evaluate(()=>openOnline()).catch(()=>{});await A.getByRole('button',{name:'Living City rooms'}).click();await A.getByRole('button',{name:'Create room'}).click();
+  A.evaluate(()=>openOnline()).catch(()=>{});await A.getByRole('button',{name:'Living City rooms (test)'}).click();await A.getByRole('button',{name:'Create room'}).click();
   await A.locator('#lcSeats').waitFor();const code=(await A.locator('#modals .mh b').first().innerText()).trim();assert.match(code,/^[A-Z0-9]{5}$/);
   B.evaluate(c=>SkylineLivingCityOnline.join(c),code).catch(()=>{});await B.locator('#lcSeats').waitFor();await A.locator('#lcSeats .olitem').nth(1).waitFor({timeout:6000});
   ok(`room ${code} created in the app and joined by a second signed-in player; capability {rules:[1,2],lc:1} sent`);
   await A.locator('#lcAi').selectOption('1');await A.locator('#lcMode').selectOption('timed10');await A.getByRole('button',{name:'Start game'}).click();
   for(const p of [A,B])await p.waitForFunction(()=>G&&G.lcNet&&G.rv===2,null,{timeout:8000});
   assert.deepEqual(await A.evaluate(()=>[G.lcMe,lc(),G.players.length,G.set.rounds]),[0,true,3,10]);
-  // Server-side fixture (test store only): Alice holds a whole district and Bob starts under Civic Review, so the
-  // match reaches Landmark choice, development and Civic Review quickly. The server replays from this turn start.
-  {const room=db.data.skylineV2.lc[code],m=JSON.parse(room.match),g=await A.evaluate(()=>{const k=Object.keys(GROUPS).find(k=>GROUPS[k].every(i=>SQ[i].t==='prop'));return GROUPS[k]});
-   const fix=G=>{g.forEach(i=>{G.own[i].o=0;G.own[i].h=0;G.own[i].m=false});G.players[1].cr={from:1,why:'card'};return G};
-   m.turnStart=JSON.stringify(fix(JSON.parse(m.turnStart)));m.G=fix(m.G);room.match=JSON.stringify(m)}ok('both apps render the server match: rule version 2, Living City UI on, 3 seats, 10 rounds');
+  assert.ok(await A.evaluate(()=>G.own.some(o=>o.o===0))&&await B.evaluate(()=>!!G.players[1].cr));assert.equal(db.data.skylineV2.lc[code].test,true);ok('test room started with the server test scenario (district for host, Civic Review for second player)');
+  await A.locator('#lcChk').click();await A.locator('#modals .mh').filter({hasText:'Safety checks'}).waitFor();const chk=await A.locator('#modals .mtxt').first().innerText();assert.ok(!chk.includes('✗')&&(chk.match(/✓/g)||[]).length===3,chk);await A.getByRole('button',{name:'OK'}).click();
+  ok('in-app safety checks: 3/3 invalid requests refused ('+chk.replace(/\n/g,'; ')+')');ok('both apps render the server match: rule version 2, Living City UI on, 3 seats, 10 rounds');
   // out-of-turn input is refused locally and never reaches the server state
   const notMe=await A.evaluate(()=>G.turn!==G.lcMe)?A:B;const before=await notMe.evaluate(()=>JSON.stringify(G.own));
   await notMe.evaluate(()=>{const i=SQ.findIndex(s=>s.t==='prop');build(G.lcMe,i)});assert.equal(await notMe.evaluate(()=>JSON.stringify(G.own)),before);ok('building out of turn is refused in the app');
@@ -79,6 +79,7 @@ function memoryDb(){const data={};const get=p=>p.split('/').reduce((o,k)=>o&&o[k
   assert.ok(Object.keys(srv.G.lm||{}).length,'a Landmark stands at the end');assert.ok(events.size,'Strategic Events happened');
   ok(`Civic Review, Landmark (${Object.values(srv.G.lm).map(L=>SQN[L.i]).join(', ')}), development and Strategic Events (${[...events].join(', ')}) all played through the server; lcStats ${JSON.stringify(srv.G.lcStats||{})}`);
   for(const p of [A,B])assert.equal(await p.evaluate(()=>localStorage.getItem('skylineSave')),'LOCAL-SAVE-MARKER');ok('local saved games untouched by the online room');
+  const au=db.data.skylineV2.lc[code].audit;assert.ok(Object.values(au.rejected).reduce((a,b)=>a+b,0)>=3&&au.answered.lc_review&&au.answered.lc_landmark&&au.answered.asset_build,JSON.stringify(au));ok('server audit: '+JSON.stringify(au));
   assert.equal(db.data.skylineV2.lc[code].status,'finished');assert.ok(!db.data.skylineV2.competition);ok('room finished; nothing ranked written');
   assert.deepEqual(errors,[]);await browser.close();files.close();console.log(`LC ONLINE CLIENT ${n} checks · Living City decisions: ${[...seenLc].join(', ')||'none'}`);
 })().catch(e=>{console.error(e);process.exit(1)});

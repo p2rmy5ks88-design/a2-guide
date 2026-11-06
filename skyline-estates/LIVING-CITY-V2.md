@@ -338,3 +338,20 @@ Data: `balance/living-city-t06.csv`. The owner approved 150 games for this run.
   - Complete 10-round match covering actions, buy/auction, cards, Civic Review, Landmark, corners and Strategic Events.
   - Local save untouched; nothing ranked.
   - Classic suites still pass: online-rooms (12 checks), remote-state (45 checks), living-city-browser (27 checks) and parity (14/14).
+
+## Online Phase 4 — Live test access (7 Nov 2026)
+
+- **Test access flag** `skylineV2/flags/lcTest = {on, until, testers:{sha256(email):true}}`:
+  - Only listed signed-in accounts can create or join, and the email must be verified. Anonymous and custom-token accounts are refused.
+  - Rooms created this way are marked `test`. Only listed accounts can join them.
+  - Access expires by itself at `until`. An `until` more than 24 h ahead is ignored, so a mistake fails closed.
+  - Capabilities say only `test:true`, and the list is never exposed. `/v3/lc/me` tells a listed account it is a tester.
+  - The global `lcOnline` switch stays off.
+- **Test rooms** can start with a `lc-test` scenario: the host owns one whole district, and the second player opens under Civic Review. They also record an audit of answers by type, asset actions, and refusals by reason, readable by members at `/v3/lc/audit`.
+- **The app** shows "Living City rooms (test)" only to listed accounts. A test room has two buttons:
+  - **Safety checks:** sends three deliberately invalid requests from the signed-in session; the server must refuse all three.
+  - **Test report:** shows the server's audit for the room.
+- **Owner tool:** `competition-functions/lc-test-access.sh on|off|status|report CODE`, run in Cloud Shell. Emails are typed there and stored only as hashes.
+- **Tests:**
+  - `tests/lc-test-access.cjs`, 9 checks: allowlist, refusal of unverified, anonymous and unlisted accounts, scenario, audit, expiry, and failing closed.
+  - `tests/lc-online-client.cjs`, now 14 checks and run in test-access mode.

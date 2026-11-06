@@ -20,7 +20,7 @@ function composeCompetition({db,verifyIdToken,clock=Date.now,allowedOrigins=new 
  const gameServices={start,turns:createTurnService(options),plans:createRollPlanService(options),views:createGameViewService(options),operations:createOperationService(options)};
  const gameHandler=createHttpHandler(admission,{allowedOrigins,gameServices});
  const livingCity=createLivingCityService({db,verifyIdToken,clock});
- const lcRoutes={'/v3/lc/create':'create','/v3/lc/join':'join','/v3/lc/start':'start','/v3/lc/act':'act','/v3/lc/state':'state'};
+ const lcRoutes={'/v3/lc/create':'create','/v3/lc/join':'join','/v3/lc/start':'start','/v3/lc/act':'act','/v3/lc/state':'state','/v3/lc/me':'me','/v3/lc/audit':'audit'};
  const routes={'/v1/competition/me':'getProfile','/v1/competition/profile':'updateProfile','/v1/competition/ingest':'ingest','/v1/competition/rankings':'rankings','/v1/competition/community':'community','/v1/competition/project/claim':'claimProject'};
  async function handler(req,res){
   const path=(req.url||'/').split('?')[0].replace(/^\/skylineCompetition(?=\/)/,'');
