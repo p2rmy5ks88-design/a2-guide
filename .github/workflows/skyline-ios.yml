@@ -16,6 +16,10 @@ on:
         type: choice
         options: [off, private-testing, ios-release]
         default: 'off'
+      sdk27:
+        description: 'Build with Xcode 27.1 / iOS 27.1 SDK (iPhone Duo ready)'
+        type: boolean
+        default: true
   pull_request:
     paths:
       - "skyline-estates/game.html"
@@ -64,7 +68,8 @@ permissions:
 jobs:
   ios:
     timeout-minutes: 45
-    runs-on: macos-26
+    # Manual builds default to the Xcode 27.1 runner (iOS 27.1 SDK); PR checks stay on macOS 26.
+    runs-on: ${{ github.event_name == 'workflow_dispatch' && inputs.sdk27 && 'xcode-27' || 'macos-26' }}
     defaults:
       run:
         shell: bash
@@ -100,6 +105,12 @@ jobs:
           xcrun --sdk iphoneos --show-sdk-version >> "$RUNNER_TEMP/skyline-ios-toolchain.txt"
           cat "$RUNNER_TEMP/skyline-ios-toolchain.txt"
           python3 scripts/verify-ios-sdk.py toolchain "$RUNNER_TEMP/skyline-ios-toolchain.txt"
+      - name: Require iOS 27.1 SDK for SDK 27 builds
+        if: github.event_name == 'workflow_dispatch' && inputs.sdk27
+        run: |
+          python3 -c 'import subprocess; v=tuple(int(x) for x in subprocess.check_output(["xcrun","--sdk","iphoneos","--show-sdk-version"],text=True).strip().split(".")[:2]); print("iOS SDK",v); assert v>=(27,1), v'
+          gem list -i xcodeproj >/dev/null || gem install --user-install --no-document xcodeproj
+          echo "$(ruby -e 'print Gem.user_dir')/bin" >> "$GITHUB_PATH"
       - name: Validate App Store version selected for publishing
         if: github.event_name == 'workflow_dispatch' && inputs.publish && inputs.cloud_channel == 'ios-release'
         run: |
