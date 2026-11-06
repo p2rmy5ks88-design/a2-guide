@@ -284,3 +284,31 @@ Data: `balance/living-city-t06.csv`. The owner approved 150 games for this run.
   - The same seeded matches run in the full app (Chromium, every UI library) and headless in Node, with only the game core plus `market-pulse`, `ai-styles` and `living-city-rules` and a universal DOM stub.
   - Result: **14/14 identical final states**, 10 Living City and 4 classic. The comparison covers every field of `G` except the log, so turn order, dice, cards, events, review, stages, Landmarks, corners, cash, bankruptcies and decks all match.
 - **Portfolio:** on small iPhones, Living City rows keep the street column at least 150 px wide, and the build-button caption wraps.
+
+## Online Phase 2 — Authoritative server (7 Nov 2026)
+
+- **Engine** (`online/lc-engine.cjs`):
+  - The server runs the shared rules core headless (`online/headless-runtime.cjs`) and advances the match until a human decision is needed (a "boundary").
+  - Boundary types: `actions` (roll, end, Lockup options), `modal` (buy or auction), `bid`, `trade`, `lc:card`, `lc:review`, `lc:landmark` and `lc:corner`.
+  - A player answers only their own boundary. Optional asset operations (`build`, `sell`, `mortgage`, `redeem`) are validated with the game's own `canBuild`/`canSell`/… checks.
+  - The server replays the current turn from its start snapshot with the recorded answers. Randomness is seeded per turn from a server-held seed.
+  - Clients never submit dice, cash, outcomes or state.
+  - **Rejected:**
+    - another player answering (403);
+    - a stale or duplicate revision (409);
+    - an answer that wasn't offered (400);
+    - illegal building actions (400);
+    - after the match is over (409).
+  - **Online v1 simplifications:** raising cash for a debt is automatic, using the same deterministic AI rule, and players can't propose trades (they can still answer AI trade offers).
+- **Service** (`competition/living-city-service.cjs`, routes `/v3/lc/create|join|start|act|state`):
+  - authenticated Firebase ID tokens, room membership and a host-only start;
+  - 2–4 humans plus optional AI, in classic or 10/20/30-round timed mode;
+  - state stored as JSON under `skylineV2/lc/{code}` with compare-and-set revisions.
+  - Casual rooms only. No ranked or competition results, SC ledger, Coins or purchases.
+- **Capability negotiation:** a client must send `client:{rules:[…2],lc:1}`. Older apps never send it and get 426 `client-upgrade-required`.
+- **Feature flag:** `skylineV2/flags/lcOnline` must be `true`, otherwise new rooms get 403 `living-city-online-disabled`. It's **off by default**. Capabilities report `rulesets.livingCity.online`, `ranked:false`.
+- **Tests:**
+  - `tests/lc-engine.cjs`, 5 checks: a complete match with 2 humans and 1 AI (a 301-round run covered every boundary type), plus the rejections.
+  - `tests/lc-online-service.cjs`, 6 checks: the HTTP flow, flag, capability, membership, a full timed match, and no ranked writes.
+  - The classic suites still pass: competition-service (36 checks), competition-match (4 matches), online-rooms (12 checks), ruleset (8 checks).
+  - Parity: 6/6, now using the server runtime itself.
