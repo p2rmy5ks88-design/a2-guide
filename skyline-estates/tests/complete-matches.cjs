@@ -42,9 +42,9 @@ const root=path.resolve(__dirname,'../..'),report={matches:[],errors:[]},delay=m
      }else if(await page.locator('#modals .ov:not(.bye) .lc-crm .mbar .btn:not([disabled])').count()){
       // Living City Civic Review: pay the Fast-Track Permit when affordable, otherwise Standard Review
       await click(page.locator('#modals .ov:not(.bye) .lc-crm .mbar .btn:not([disabled])').first(),'civic review');acted=true
-     }else if(await page.locator('#modals .ov:not(.bye) .lc-cardm .mbar .btn:not([disabled])').count()){
+     }else if(await page.locator('#modals .ov:not(.bye) .lc-cardm .mbar .btn:not([disabled]),#modals .ov:not(.bye) .lc-lmm .mbar .btn:not([disabled])').count()){
       // Living City choice cards: take the last available option (always the no-cost choice)
-      await click(page.locator('#modals .ov:not(.bye) .lc-cardm .mbar .btn:not([disabled])').last(),'choice card');acted=true
+      await click(page.locator('#modals .ov:not(.bye) .lc-cardm .mbar .btn:not([disabled]),#modals .ov:not(.bye) .lc-lmm .mbar .btn:not([disabled])').last(),'choice card');acted=true
      }else if(await active.isVisible()){
       const buy=btn(/^Buy for /,active);if(await buy.count()){const price=s.own[s.players[s.turn].pos].price;if(s.turn===0&&s.players[0].cash-price>=100&&await buy.isEnabled())await click(buy,'buy');else await click(btn('Auction',active),'auction');acted=true}else{for(const name of ['OK','Continue','Let’s go','Not now','Later','Close']){const b=btn(name,active);if(await b.count()&&await b.isVisible()&&await b.isEnabled()){await click(b,'modal '+name);acted=true;break}}}
      }else{
