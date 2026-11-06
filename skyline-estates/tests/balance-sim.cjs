@@ -14,7 +14,9 @@ const CONFIGS={
  tokyo:{n:30,seed:11000,set:{perks:false,city:'tokyo'}},
  dubai:{n:30,seed:12000,set:{perks:false,city:'dubai'}},
  hard:{n:30,seed:13000,set:{perks:false,ai:'hard'}},
- easy:{n:30,seed:14000,set:{perks:false,ai:'easy'}}
+ easy:{n:30,seed:14000,set:{perks:false,ai:'easy'}},
+ classic200:{n:200,seed:30000,set:{perks:false}},           // Living City comparisons: same seeds, classic rules
+ lc200:{n:200,seed:30000,set:{perks:false},lc:true}         // Living City V2 rules (offline rule version 2)
 };
 (async()=>{
  const want=process.argv.slice(2).length?process.argv.slice(2):Object.keys(CONFIGS);
@@ -36,7 +38,7 @@ const CONFIGS={
    try{for(let k=0;k<c.n;k++){const seed=(c.seed+k)>>>0;let s=seed;Math.random=()=>{s=(Math.imul(s,1664525)+1013904223)>>>0;return s/4294967296};FAST=true;
      C.b=C.a=C.t=0;window.__balSnap={v:null};
      const boostSeat=c.boost?k%3:-1,tl=[0,1,2].map(i=>i===boostSeat?c.boost:(c.tl?c.tl[i]:1));
-     GEN++;newGame({cash:1600,set:{ai:'normal',speed:'fast',pot:false,maxRounds:300,city:'lagos',...c.set},players:[0,1,2].map(i=>({name:NAMES[i],tok:TOKENS[i],col:PCOL[i],ai:true,tl:tl[i]}))});G.sim=true;
+     GEN++;newGame({lc:!!c.lc,cash:1600,set:{ai:'normal',speed:'fast',pot:false,maxRounds:300,city:'lagos',...c.set},players:[0,1,2].map(i=>({name:NAMES[i],tok:TOKENS[i],col:PCOL[i],ai:true,tl:tl[i]}))});G.sim=true;
      let err=null;const pe=window.__onErr;window.__onErr=e=>err=e;try{await run()}finally{window.__onErr=pe}
      const ended=!err&&endCheck(),win=ended?standings()[0].id:-1,first=G.first||0,l20=window.__balSnap.v;
      out.push([id,k+1,seed,first,win,win<0?-1:(win-first+3)%3,boostSeat,boostSeat<0?'':(win===boostSeat?1:0),G.round,err?'error':ended?'finished':'round-limit',G.players.filter(p=>p.bankrupt).length,l20==null?'':l20,win<0||l20==null?'':(win!==l20?1:0),C.b,C.a,C.t].join(','))}}
