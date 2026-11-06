@@ -1,7 +1,9 @@
 /* Native validation probe (CI only, never shipped): each app launch shows the next Living City scene so the
    simulator/emulator can screenshot it. Inserted into www/index.html by scripts/inject-native-probe.sh. */
 (function(){var K='lcProbeStep',n=+(localStorage.getItem(K)||0);localStorage.setItem(K,String(n+1));
- var S=[['dark','board'],['light','board'],['dark','review'],['light','card'],['dark','dev'],['light','landmark']][n%6];
+ var L=[['dark','board'],['light','board'],['dark','review'],['light','card'],['dark','dev'],['light','landmark']];
+ if(/iPhone|iPad/.test(navigator.userAgent))L=[['dark','dev'],['light','landmark'],['light','dev'],['dark','landmark']].concat(L);
+ var S=L[n%L.length];
  // CI emulators have no GPU: on Android only the first scene uses the 3D board; the rest use the 2D board (same state).
  var flat=/Android/.test(navigator.userAgent)&&n%6!==0;
  localStorage.setItem('skylinePrefs',JSON.stringify({nick:'Ada',nickSet:true,welcomed:1,tutDone:1,stats:{games:9},city:'lagos',ui:S[0],lc:true,flat2d:flat}));
