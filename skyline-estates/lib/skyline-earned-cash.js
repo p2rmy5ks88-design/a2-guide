@@ -139,6 +139,8 @@
   /* The centred home logo must never sit under the SC / Coins pills: shrink it to the free gap
      between the profile block and the pills, or hide it on very narrow headers. */
   function fitLogo(){
+    // The home header no longer shows the Skyline Estates logo (it clashed with the SC/Coins pills); the city title carries the branding.
+    return;
     const logo=document.querySelector('#title .hd-logo'),pill=document.querySelector('#tbSkylineCash'),who=document.querySelector('#tbWho');
     if(!logo||!pill)return;logo.style.transform='';logo.style.visibility='';
     const L=logo.getBoundingClientRect(),P=pill.getBoundingClientRect(),W=who?who.getBoundingClientRect():{right:0};

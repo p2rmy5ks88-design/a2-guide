@@ -19,3 +19,4 @@
 /* Season 1 names (e.g. "Harbour Lights") wrapped to two lines at 667x375 and pushed the premium
    reward row under the dock. Keep the title on one line on short landscape phones. */
 @media(max-height:420px) and (orientation:landscape){#title .sban .sbt h2{white-space:nowrap!important;overflow:hidden;text-overflow:ellipsis;font-size:17px!important;line-height:20px!important;max-width:100%}#title .sban .sbt{min-width:0}}
+#title .home.hd-on .hd-logo{display:none!important}
