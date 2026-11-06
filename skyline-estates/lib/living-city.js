@@ -206,6 +206,13 @@ html.lc-on.flat #ev2chip{max-width:clamp(96px,calc(50vw - 50vh - 72px),200px)!im
 .lc-sky .lc-stg{width:1.2em;height:1.2em;vertical-align:middle}[data-quick-build] .lc-stg{width:22px;height:22px;vertical-align:-6px;margin-right:4px;border-radius:4px}
 .mc.lc-lm{box-shadow:inset 0 0 0 2px #e2b13c}.mc .lc-lmb{position:absolute;right:1px;top:1px;width:14px;height:14px;pointer-events:none}.lc-lmline{font-size:11px;margin:4px 0;display:flex;align-items:center;gap:2px}.lc-lmline .lc-ic{width:18px;height:18px}
 .mc .lc-cic{width:1.9em;height:1.9em;max-width:80%;object-fit:contain}.lc-lmm .mbar{flex-wrap:wrap}.lc-lmm .mbar .btn{min-height:44px;flex:1 1 160px}
+html.light .mc.lc-ev{box-shadow:inset 0 0 0 3px #b45309,0 0 8px #b4530966!important}
+html.light .mc.lc-lm{box-shadow:inset 0 0 0 2px #8a6100}
+html.light .lc-dev tr.lc-now td{background:#f5e3b0}
+html.light .lc-crtag{background:#8a6100!important;color:#fff!important}
+html.light .lc-ch li span,html.light .lc-cbody p{color:#1d3046}
+html.light .lc-card .lc-art{background:#e9eef5}
+html.light .lc-lmline.muted{color:#3c4f63}
 @media (max-height:420px){.lc-card{grid-template-columns:84px minmax(0,1fr)}.lc-cbody p{font-size:12px;margin-bottom:4px}.lc-cbody>b{font-size:15px}.lc-ch{font-size:11px;gap:2px}}`;document.head.append(st)}
 
 /* ---------- Task 03 · Civic Review (replaces the Lockup in V2 matches) ---------- */
@@ -387,7 +394,43 @@ async function lcCorner(p,d){const i=p.pos;
 {const _ld=land;land=async function(p,d,o2){if(lc()&&LC_CORNER[p.pos]!=null){const i0=p.pos;renderRoster();await lcCorner(p,d);renderRoster();if((i0===0||i0===20)&&p.pos===i0)return _ld.apply(this,arguments);return}return _ld.apply(this,arguments)}}
 // Pre-approval cancels the next Civic Review trigger (one use).
 {const _er=lcEnterReview;lcEnterReview=async function(p,why){if(lc()&&p.lcPre&&!p.cr){p.lcPre=false;lcStat('pre_used');log(`${p.name}’s Pre-approval cancels the Civic Review`);if(!FAST)toast(`${p.name}: Pre-approval used`);return}return _er.apply(this,arguments)}}
+
+// 3D board texture: V2 corner tiles (original art; kit icons + live labels). Classic matches keep their tiles.
+const LC_CIMG={};for(const k in LC_CORNER){const im=new Image();im.decoding='async';im.src=`living/icons/128/${LC_CORNER[k][1]}.png`;LC_CIMG[k]=im}
+{const _at=applyTheme;applyTheme=function(...a){try{if(typeof S3!=='undefined'&&S3){const key=lc()?'v2':'classic';if(S3.lcKey!==key){S3.boardDrawnFor=null;S3.lcKey=key}}}catch(e){}return _at.apply(this,a)}}
+const LC_CSUB={0:()=>'PAYDAY +'+fmt(PAYDAY),10:()=>'PRE-APPROVAL DESK',20:()=>'RIDE TO ANY HUB',30:()=>'BUY ANY STREET'};
+{const _dc=drawCorner;drawCorner=function(ctx,i,r){if(!lc()||!LC_CORNER[i])return _dc.apply(this,arguments);
+  const cx=r.x+r.w/2,cy=r.y+r.h/2,dark=!!(typeof BP!=='undefined'&&BP.glow),g=ctx.createLinearGradient(r.x,r.y,r.x+r.w,r.y+r.h);
+  g.addColorStop(0,dark?'#0f2a3d':'#fff6dc');g.addColorStop(1,dark?'#1d4560':'#f1d58c');ctx.fillStyle=g;ctx.fillRect(r.x,r.y,r.w,r.h);
+  ctx.strokeStyle='#c9a227';ctx.lineWidth=4;ctx.strokeRect(r.x+6,r.y+6,r.w-12,r.h-12);
+  const rot={0:-Math.PI/4,10:Math.PI/4,20:Math.PI*.75,30:-Math.PI*.75}[i];ctx.save();ctx.translate(cx,cy);ctx.rotate(rot);ctx.textAlign='center';ctx.textBaseline='middle';
+  const im=LC_CIMG[i];if(im&&im.complete&&im.naturalWidth)try{ctx.drawImage(im,-26,-50,52,52)}catch(e){}
+  const name=LC_CORNER[i][0].toUpperCase();let fs=17;ctx.font=`800 ${fs}px ${typeof FD!=='undefined'?FD:'sans-serif'}`;while(ctx.measureText(name).width>124&&fs>9){fs--;ctx.font=`800 ${fs}px ${typeof FD!=='undefined'?FD:'sans-serif'}`}
+  ctx.fillStyle=dark?'#f4d28b':'#5a3d00';ctx.fillText(name,0,16);ctx.font=`800 9.5px ${typeof FB!=='undefined'?FB:'sans-serif'}`;ctx.fillStyle=dark?'#e8eef4':'#1d3046';ctx.fillText(LC_CSUB[i](),0,34);ctx.restore()}}
 LC_VALID.push(g=>g.players.every(p=>p.lcPre==null||typeof p.lcPre==='boolean'));
 LC_RULES.push(['investment','City corners','Skyline HQ (landing: bonus payday or a 25% grant) · Planning Office (Pre-approval cancels your next Civic Review) · Transit Exchange (pay a fare to ride to any hub) · Investment Forum (buy any unowned street at +10%, or a stipend). Nobody is detained.']);
+
+
+/* ---------- V2.1 · 3D board parity (crown, event outlines, corner markers) and Daylight/Dark ---------- */
+// The 3D board already maps stages to geometry through FAM[o.h] (1 Low-rise, 2 Mid-rise, 3 High-rise, 5 Skyscraper),
+// so 3D and 2D read the same o.h. V2.1 adds: a gold crown above a Landmark, a gold outline on streets affected by
+// an active/upcoming city event; the four V2 corner tiles are drawn into the 3D board texture (Task 06 section). All read G only; no state is written.
+const lcLight=()=>document.documentElement.classList.contains('light');
+function lc3DPlot(i){if(FAST||typeof S3==='undefined'||!S3||!S3.plots)return;const pl=S3.plots[i];if(!pl||!pl.node)return;
+  if(pl.lcCrown){pl.node.remove(pl.lcCrown);pl.lcCrown=null}if(pl.lcRing){pl.node.remove(pl.lcRing);pl.lcRing=null}
+  if(!lc()||!G||SQ[i].t!=='prop')return;
+  if(lcLandmarkAt(i)){const c=new Node(),y=(pl.top||.2)+.1,gold=S3.M.gold;c.add(N(S3.geo.cyl8,gold,0,y,0).sc(.12,.045,.12));
+    for(let k=0;k<5;k++){const a=k/5*Math.PI*2;c.add(N(S3.geo.cone4,gold,Math.cos(a)*.095,y+.08,Math.sin(a)*.095).sc(.035,.1,.035))}
+    c.add(N(S3.geo.sph,mat('#fff3c4',{spec:.6}),0,y+.05,0).sc(.04,.04,.04));pl.node.add(c);pl.lcCrown=c}
+  const t=lcEvTargets();if(t&&t.includes(i)){const r=new Node(),m=mat(lcLight()?'#b45309':'#f4d28b',{spec:.2}),s=.3,w=.05,h=.045;
+    r.add(N(S3.geo.box,m,0,h,s).sc(s*2,h,w),N(S3.geo.box,m,0,h,-s).sc(s*2,h,w),N(S3.geo.box,m,s,h,0).sc(w,h,s*2),N(S3.geo.box,m,-s,h,0).sc(w,h,s*2));pl.node.add(r);pl.lcRing=r}}
+function lc3DAll(){if(FAST||typeof S3==='undefined'||!S3||!S3.plots)return;for(let i=0;i<40;i++)if(SQ[i].t==='prop')lc3DPlot(i)}
+{const _uc=updateCell;updateCell=function(i){const r=_uc.apply(this,arguments);try{lc3DPlot(i)}catch(e){}return r}}
+{const _a=advanceTurn;advanceTurn=function(){_a();try{lc3DAll()}catch(e){}}}
+{const _sw=startWith;startWith=function(...a){const r=_sw.apply(this,a);try{lc3DAll()}catch(e){}return r}}
+{const _sy=lcSyncLandmarks;lcSyncLandmarks=function(){const before=JSON.stringify(G&&G.lm||{});_sy();if(JSON.stringify(G&&G.lm||{})!==before)try{lc3DAll()}catch(e){}}}
+// Theme switches only change CSS and 3D materials; refresh markers so outlines keep their contrast.
+{const _ui=applyUI;applyUI=function(){const r=_ui.apply(this,arguments);try{if(G&&lc())lc3DAll()}catch(e){}return r}}
+window.SkylineLivingCity3D={plot:i=>lc3DPlot(i),all:()=>lc3DAll()};
 
 window.SkylineLivingCity={lc,LC_RV,optIn:lcOptIn,rulesModal:()=>lcRulesModal()};
