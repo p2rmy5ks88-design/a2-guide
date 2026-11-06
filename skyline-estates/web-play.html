@@ -4945,7 +4945,7 @@ function progressGameEnd(w){if(!trackable()||G.progDone)return null;G.progDone=t
   cityScan(true);missionScan(true,w);PREF.lastCountry=countryOf(c).key;savePref();achBump();lbSubmit();return {won,coins,tr,lc,rank,mastery}}
 function highlights(){const pl=G.players,best=(f)=>pl.reduce((b,p)=>(f(p)>(b?f(b):-1)?p:b),null);const out=[];
   const r=best(p=>st(p).maxRent);if(r&&st(r).maxRent)out.push(['💸','Biggest rent',`${r.name} collected ${fmt(st(r).maxRent)} in one go`]);
-  const b=best(p=>st(p).buys);if(b&&st(b).buys)out.push(['🏘️','Top buyer',`${b.name} bought ${st(b).buys} properties`]);
+  const b=best(p=>st(p).buys);if(b&&st(b).buys)out.push(['🏘️','Top buyer',`${b.name} bought ${st(b).buys} propert${st(b).buys===1?'y':'ies'}`]);
   const h=best(p=>st(p).hotels*5+st(p).houses);if(h&&(st(h).houses+st(h).hotels))out.push(['🏙️','Master builder',`${h.name} built ${st(h).houses} houses and ${st(h).hotels} towers`]);
   const j=best(p=>st(p).jail);if(j&&st(j).jail)out.push(['🚔','Lockup regular',`${j.name} went to the Lockup ${st(j).jail} time${st(j).jail>1?'s':''}`]);
   const t=best(p=>st(p).trades);if(t&&st(t).trades)out.push(['🤝','Deal maker',`${t.name} closed ${st(t).trades} trade${st(t).trades>1?'s':''}`]);return out}
@@ -4959,8 +4959,8 @@ async function finish(){
     ${res?`<div class="xpcard"><div class="rewrow"><span class="rew"><b>+${XPGAME}</b><small>XP</small></span><span class="rew coin"><b>+${res.coins}</b><small>${COIN} coins</small></span><span class="rew"><b>${res.tr>0?'+':''}${res.tr}</b><small>🏆 trophies</small></span></div>
       <div class="xprow"><span>Level ${lv} · ${rankOf(lv)}</span><span>${L.icon} ${L.name} · ${PREF.trophies} 🏆</span></div><div class="xpbar"><i style="width:${Math.min(100,(PREF.xp-a)/(b-a)*100)}%"></i></div>
       <small>${res.mastery?`${esc(TOKEN_INFO[res.mastery.token][0])}: +${res.mastery.xp} token XP${res.mastery.stage>res.mastery.before?` · Evolved to ${TOKEN_LV[res.mastery.stage].name}!`:""}<br>`:""}${PREF.xp-a} / ${b-a} XP to level ${lv+1} · Season tier ${tier}/${TIERS}${seasonClaimable()?' · rewards to claim!':''}</small></div>`:''}</div></div>`,
-    onMount:panel=>window.SkylineShowcase?.attachResults(panel),btns:[{k:'season',label:'Season'},{k:'new',label:'New game',primary:true}]});
-  if(k==='season'){setup.tab='season';showTitle()}else if(k==='new')showTitle();
+    onMount:panel=>window.SkylineShowcase?.attachResults(panel),btns:[{k:'home',label:'Home'},{k:'season',label:'Season'},{k:'new',label:G.online?'New game':'Play again',primary:true}]});
+  if(k==='season'){setup.tab='season';showTitle()}else if(k==='home'){setup.tab='play';showTitle()}else if(k==='new'){const again=!G.online;setup.tab='play';showTitle();if(again)setTimeout(()=>{const q=document.querySelector('#qAI');if(q)q.click()},250)}
 }
 function fireworks(){if(FAST)return;const c=$('#confetti'),x=c.getContext('2d');c.width=LW();c.height=LH();const ps=[];
   for(let b=0;b<3;b++){const cx=LW()*(.25+b*.25),cy=LH()*(.25+Math.random()*.2),col=['#ffc61a','#ff5d73','#41c8ff','#6be38b'][b%4];for(let k=0;k<40;k++){const a=Math.random()*7,s=2+Math.random()*4;ps.push({x:cx,y:cy,vx:Math.cos(a)*s,vy:Math.sin(a)*s,l:60+Math.random()*30,c:col,d:b*12})}}

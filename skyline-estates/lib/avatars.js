@@ -30,6 +30,9 @@
   const to=resolve(c||'ava');if(c)PREF.charLegacy=PREF.charLegacy||c;PREF.eq.char=to;migrated={from:c||null,to};return true}
  const sp=savePref;savePref=function(){try{migrate()}catch{}return sp.apply(this,arguments)};
  try{if(migrate())sp()}catch{}
+ // ---- board player cards: small avatar badge on human players' token circle (token stays the identifier) ----
+ const rr=renderRoster;renderRoster=function(){const r=rr.apply(this,arguments);try{if(!G||FAST)return r;
+   for(const p of G.players){if(p.ai||!p.ch)continue;const t=document.querySelector('#pc'+p.id+' .pt');if(t&&!t.querySelector('.pav-badge')){const b=document.createElement('span');b.className='pav-badge';b.innerHTML=img(byId(p.ch),22);t.append(b)}}}catch{}return r};
  // ---- picker (Profile menu › Avatar & name) ----
  let pickerOpen=false;
  async function openPicker(){if(pickerOpen||document.querySelector('#modals .avpm'))return;pickerOpen=true;try{return await showPicker()}finally{pickerOpen=false}}
@@ -53,6 +56,7 @@
    o={...o,html:o.html.replace(/<div class="wlchars">[\s\S]*?<\/div><\/div>$/,`<div class="wlchars avw">${AV.map(a=>`<button class="wlc${a.id===cur?' on':''}" data-c="${a.id}" aria-label="${a.name}">${img(a,40)}</button>`).join('')}</div></div>`)}}
   return md.apply(this,[o])};
  const st=document.createElement('style');st.textContent=`
+#roster .pt{position:relative}#roster .pav-badge{position:absolute;right:-5px;bottom:-5px;width:22px;height:22px;border-radius:50%;overflow:hidden;border:2px solid #0e2638;box-shadow:0 1px 3px #0008;background:#0b2131}#roster .pav-badge img{width:100%;height:100%}
 img.av-img{object-fit:cover;display:block;border-radius:inherit;image-rendering:auto;background:#0b2131}
 .avpm .mp{max-width:min(560px,94vw)}
 .avp{display:grid;grid-template-columns:118px minmax(0,1fr);gap:10px;align-items:start}
