@@ -52,7 +52,7 @@ jobs:
           APP="$RUNNER_TEMP/sdk27-simulator/Build/Products/Release-iphonesimulator/App.app"
           RT=$(xcrun simctl list runtimes -j | python3 -c 'import json,sys; r=[x for x in json.load(sys.stdin)["runtimes"] if x["isAvailable"] and x["platform"]=="iOS"]; r.sort(key=lambda x:[int(v) for v in x["version"].split(".")]); print(r[-1]["identifier"]+" "+r[-1]["version"])')
           echo "Runtime: $RT"; python3 -c "import sys; v=sys.argv[1].split('.'); assert int(v[0])>=27, v" "${RT#* }"
-          DT=$(xcrun simctl list devicetypes -j | python3 -c 'import json,sys; print([d["identifier"] for d in json.load(sys.stdin)["devicetypes"] if d["name"].startswith("iPhone")][-1])')
+          DT=$(xcrun simctl list runtimes -j | python3 -c 'import json,sys; rid=sys.argv[1]; r=[x for x in json.load(sys.stdin)["runtimes"] if x["identifier"]==rid][0]; print([d["identifier"] for d in r["supportedDeviceTypes"] if d["name"].startswith("iPhone")][-1])' "${RT% *}")
           UDID=$(xcrun simctl create skyline-launch "$DT" "${RT% *}")
           xcrun simctl boot "$UDID"; xcrun simctl bootstatus "$UDID" -b
           xcrun simctl install "$UDID" "$APP"
