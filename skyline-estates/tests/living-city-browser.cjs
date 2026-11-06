@@ -28,5 +28,33 @@ let n=0;const ok=(m)=>{n++;console.log('PASS',m)};
  assert.deepEqual(r,{valid:true,rv:null,e2:null,jail:true,pass:1,deck:15});ok('legacy v1 fixture validates and keeps classic rules, Lockup state, Bail Pass and deck');
  r=await p.evaluate(fx=>{const g=JSON.parse(fx).game;g.rv=2;g.lcv=1;g.online=true;return validateSave(g)},legacy);assert.equal(r,false);ok('a V2 rule version on an online match is rejected');
  await p.close();
+
+ // ---- Task 02 · choice cards ----
+ p=await open({});await quick(p);await p.waitForFunction(()=>G&&G.players&&G.rv===2);
+ r=await p.evaluate(()=>{const bad=/nearest|Back to Start|Lockup|per home|every player|each player|Go there/i;const rep={chance:[2,5,6,7,8,10,11,12,15],esusu:[2,3,7,10,11]};
+  const txt=(d,i)=>{const c=lcCard(d,i);return c.classic?loc(c.t):loc(lcVal(c.t))};
+  return{replaced:Object.entries(rep).every(([d,a])=>a.every(i=>!lcCard(d,i).classic)),staples:[...Array(16).keys()].flatMap(i=>[txt('chance',i),txt('esusu',i)]).filter(t=>bad.test(t)),pass:!!lcCard('chance',9).goojf&&!!lcCard('esusu',6).goojf}});
+ assert.deepEqual(r,{replaced:true,staples:[],pass:true},JSON.stringify(r));ok('V2 decks: 14 staple effects replaced (no nearest-hub, back-to-Start, Lockup, per-building repairs, pay/collect-each, advance-to); Bail Pass slots kept');
+ r=await p.evaluate(async()=>{FAST=true;const ai=G.players[1];ai.cash=1500;const errs=[];const ids=[];
+  for(const [d,a] of [['chance',[2,5,6,7,10,11,12,15]],['esusu',[2,3,10,11]]])for(const i of a){G[d]=[i,...G[d].filter(x=>x!==i)];try{ai.pos=d==='chance'?7:17;await drawCard(ai,d,[2,3]);ids.push(lcCard(d,i).id)}catch(e){errs.push(String(e))}}
+  const decks=['chance','esusu'].every(d=>G[d].length+G.players.reduce((a,p)=>a+p.goojf.filter(c=>c.deck===d).length,0)===16&&new Set(G[d]).size===G[d].length);FAST=false;return{errs,decks,n:ids.length,valid:validateSave(G)}});
+ assert.deepEqual(r,{errs:[],decks:true,n:12,valid:true},JSON.stringify(r));ok('AI resolves all 12 choice cards; decks stay complete (16 incl. held passes), no duplicates; save still valid');
+ r=await p.evaluate(()=>{const p0=G.players[0];[1,3].forEach(i=>{G.own[i].o=0;G.own[i].h=0;G.own[i].m=false});G.own[2]&&(G.own[2].o=0);const i=1;GROUPS[SQ[i].g].forEach(j=>{G.own[j].o=0;G.own[j].m=false});
+  p0.cash=1000;const full=devCost(0,i);p0.lcGrant={pct:50,until:G.round+1};const disc=devCost(0,i);const c0=p0.cash;build(0,i);const paid=c0-p0.cash;return{full,disc,paid,used:p0.lcGrant===null}});
+ assert.ok(r.disc===Math.round(r.full/2)&&r.paid===r.disc&&r.used,JSON.stringify(r));ok('development grant: 50% off one legal build, consumed once');
+ r=await p.evaluate(()=>{const i=GROUPS.navy[0];G.own[i].o=1;G.own[i].h=2;G.own[i].m=false;const base=(()=>{const m=G.lcMods;G.lcMods=[];const v=rentFor(i,7);G.lcMods=m;return v})();
+  G.lcMods=[{pid:1,scope:'streets',group:null,pct:20,until:G.round+1},{pid:1,scope:'built',pct:10,until:G.round+1},{pid:1,scope:'streets',group:'navy',pct:20,until:G.round+1}];G.ev2={v:1,id:'fest',kind:'rent',pct:50,from:G.round,rounds:2,targets:[i],group:'navy',name:'Fest',area:'x',city:'lagos'};
+  const capped=rentFor(i,7);G.ev2=null;G.lcMods=[];return{base,capped,max:Math.round(base*1.5)}});
+ assert.equal(r.capped,r.max,JSON.stringify(r));ok('rent changes use one capped formula: event +50% and card programmes +50% give +50%, not compounded');
+ r=await p.evaluate(async()=>{FAST=true;const q=G.players[2];q.cash=500;q.lcBond=130;q.pos=38;const c0=q.cash;await moveSteps(q,3);const once=q.cash-c0;q.pos=38;const c1=q.cash;await moveSteps(q,3);FAST=false;return{first:once,second:q.cash-c1,pay:payday(q)}});
+ assert.deepEqual(r,{first:r.pay+130,second:r.pay,pay:r.pay});ok('city bond pays 130 once at Start');
+ if(shots){for(const [w,h] of [[844,390],[667,320]]){await p.setViewportSize({width:w,height:h});await p.evaluate(()=>{$('#modals').innerHTML='';const me=G.players[0];me.ai=false;G.chance=[5,...G.chance.filter(x=>x!==5)];GROUPS.orange.forEach(j=>G.own[j].o=0);drawCard(me,'chance',[2,3]);return 1});await p.waitForTimeout(900);await p.screenshot({path:path.join(shots,`02-choice-card-${w}x${h}.png`)});
+   const b=await p.evaluate(()=>[...document.querySelectorAll('.lc-cardm .mbar .btn')].map(x=>{const r=x.getBoundingClientRect();return{h:Math.round(r.height),bottom:r.bottom<=innerHeight+1}}));assert.ok(b.length===2&&b.every(x=>x.h>=44&&x.bottom),'card buttons '+JSON.stringify(b))}}
+ r=await p.evaluate(async()=>{$('#modals').innerHTML='';GEN++;const me=G.players[0];me.ai=false;me.cash=900;G.chance=[6,...G.chance.filter(x=>x!==6)];const pr=drawCard(me,'chance',[2,3]);await new Promise(r=>setTimeout(r,500));
+  const b=[...document.querySelectorAll('.lc-cardm .mbar .btn')].find(x=>/grant/i.test(x.textContent));b.click();await pr;return{grant:me.lcGrant&&me.lcGrant.pct}});
+ assert.deepEqual(r,{grant:50});ok('human chooses on the card (live HTML title, costs and consequences on each button)');
+ assert.deepEqual(p.errs,[]);await p.close();
+ p=await open({});r=await p.evaluate(async fx=>{FAST=true;G=JSON.parse(fx).game;G.chance=[2,...G.chance.filter(x=>x!==2)];const pl=G.players[2];pl.pos=6;await drawCard(pl,'chance',[1,2]);FAST=false;return{rv:G.rv??null,log:G.log.find(l=>/Taxi!/.test(l))||G.log[0]}},legacy);
+ assert.ok(r.rv===null&&/Taxi!/.test(r.log),JSON.stringify(r));ok('legacy save keeps the classic card deck');await p.close();
  await browser.close();console.log(`LIVING CITY ${n} checks`);
 })().catch(e=>{console.error(e);process.exit(1)});
