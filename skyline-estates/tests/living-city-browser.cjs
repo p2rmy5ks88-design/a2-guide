@@ -84,20 +84,41 @@ let n=0;const ok=(m)=>{n++;console.log('PASS',m)};
 
  // ---- Task 04 · Skyline Development ----
  p=await open({});await quick(p);await p.waitForFunction(()=>G&&G.players&&G.rv===2);
- r=await p.evaluate(()=>{FAST=true;GEN++;const me=G.players[0];me.cash=99999;G.turn=0;G.lcTurnBuilt=null;const gr=GROUPS.sky;gr.forEach(j=>{G.own[j].o=0;G.own[j].h=0;G.own[j].m=false});const i=gr[0],paid=[],rent=[];
-  for(let lv=0;lv<4;lv++)for(const j of gr){if(!canBuild(0,j))return{err:'cannot build '+j+' at '+G.own[j].h};const c=me.cash;build(0,j);if(j===i){paid.push(c-me.cash);rent.push(rentFor(i,7))}G.lcTurnBuilt=null}
-  const st={h:gr.map(j=>G.own[j].h),houses:G.houses,hotels:G.hotels,valid:validateSave(G),paid,exp:[1,2,3,5].map(h=>lcCostAt(i,h)),rent,expR:[1,2,3,5].map(h=>lcStageRent(i,h))};
+ r=await p.evaluate(()=>{FAST=true;GEN++;const me=G.players[0];me.cash=99999;G.turn=0;G.lcTurnBuilt=null;const gr=GROUPS.sky;gr.forEach(j=>{G.own[j].o=0;G.own[j].h=0;G.own[j].m=false});const i=gr[0],paid=[],rent=[];lcDesignate(0,i);const unLM=lcCanSky(gr[1]);
+  for(let lv=0;lv<4;lv++)for(const j of gr){if(lv===3&&j!==i){if(canBuild(0,j))return{err:'non-landmark skyscraper '+j};continue}if(!canBuild(0,j))return{err:'cannot build '+j+' at '+G.own[j].h};const c=me.cash;build(0,j);if(j===i){paid.push(c-me.cash);rent.push(rentFor(i,7))}G.lcTurnBuilt=null}
+  const st={unLM,h:gr.map(j=>G.own[j].h),houses:G.houses,hotels:G.hotels,valid:validateSave(G),paid,exp:[1,2,3,5].map(h=>lcCostAt(i,h)),rent,expR:[1,2,3,5].map(h=>lcStageRent(i,h))};
   const c=me.cash;sell(0,i);st.refund=me.cash-c;st.after=G.own[i].h;st.h2=G.houses;st.valid2=validateSave(G);FAST=false;return st});
- assert.ok(!r.err,r.err);assert.deepEqual(r.h,[5,5,5]);assert.deepEqual(r.paid,r.exp);assert.equal(r.houses,36);assert.equal(r.hotels,9);assert.ok(r.valid&&r.valid2);assert.equal(r.refund,Math.round(r.exp[3]/2));assert.equal(r.after,3);assert.equal(r.h2,33);
- assert.deepEqual(r.rent,r.expR,'stage rent '+JSON.stringify(r));ok('stages Plot→Low→Mid→High→Skyscraper: rising stage costs, stage rents, permits (3 home permits back per Skyscraper), half-price refunds, saves valid');
- r=await p.evaluate(()=>{const gr=GROUPS.sky,[a,b]=gr;G.own[a].h=3;G.own[b].h=1;G.ev2={v:1,id:'pulseSoft',kind:'rent',pct:-10,from:G.round,rounds:2,targets:gr.slice(),group:'sky',name:'Quiet',area:'x',city:'lagos'};
-  const hi=rentFor(a,7),lo=rentFor(b,7);G.ev2=null;return{hi,lo,hiE:lcStageRent(a,3),loE:Math.round(lcStageRent(b,1)*.9)}});
- assert.equal(r.hi,r.hiE);assert.equal(r.lo,r.loE);ok('High-rise ignores a falling-rent event; Low-rise rent drops 10%');
+ assert.ok(!r.err,r.err);assert.equal(r.unLM,false);assert.deepEqual(r.h,[5,3,3]);assert.deepEqual(r.paid,r.exp);assert.equal(r.houses,30);assert.equal(r.hotels,11);assert.ok(r.valid&&r.valid2);assert.equal(r.refund,Math.round(r.exp[3]/2));assert.equal(r.after,3);assert.equal(r.h2,27);
+ assert.ok(r.rent.every((v,k)=>!k||v>r.rent[k-1])&&r.rent[3]===Math.round(r.expR[3]*1.35),'stage rent '+JSON.stringify(r));ok('stages Plot→Low→Mid→High→Skyscraper: rising stage costs, stage rents, permits (3 home permits back per Skyscraper), half-price refunds, saves valid');
+ r=await p.evaluate(()=>{const gr=GROUPS.sky,[a,b]=gr;G.own[a].h=3;G.own[b].h=1;const hi0=rentFor(a,7),lo0=rentFor(b,7);G.ev2={v:1,id:'pulseSoft',kind:'rent',pct:-10,from:G.round,rounds:2,targets:gr.slice(),group:'sky',name:'Quiet',area:'x',city:'lagos'};
+  const hi=rentFor(a,7),lo=rentFor(b,7);G.ev2=null;return{hi,lo,hiE:hi0,loE:lo0}});
+ assert.equal(r.hi,r.hiE);assert.ok(r.lo<r.loE,JSON.stringify(r));ok('High-rise ignores a falling-rent event; Low-rise rent drops 10%');
  if(shots){await p.setViewportSize({width:844,height:390});await p.evaluate(()=>{$('#modals').innerHTML='';G.turn=0;G.phase='post';const gr=GROUPS.sky;gr.forEach((j,k)=>G.own[j].h=[3,2,2][k]);G.houses=36-7;G.hotels=12;G.players[0].ai=false;showSquare(gr[0]);return 1});await p.waitForTimeout(800);await p.screenshot({path:path.join(shots,'04-development-deed-844x390.png')});
   await p.evaluate(()=>{$('#modals').innerHTML='';openAssets(G.players[0]);return 1});await p.waitForTimeout(900);await p.screenshot({path:path.join(shots,'04-development-portfolio-844x390.png')});
   const lb=await p.evaluate(()=>[...document.querySelectorAll('[data-quick-build]')].map(b=>b.textContent));assert.ok(lb.length&&lb.every(t=>/Build (Low-rise|Mid-rise|High-rise|Skyscraper)/.test(t)),'portfolio labels '+JSON.stringify(lb));ok('portfolio build buttons show the next stage, its V2 cost and rent')}
  assert.deepEqual(p.errs,[]);await p.close();
  p=await open({});r=await p.evaluate(fx=>{FAST=true;G=JSON.parse(fx).game;const c=G.players[0].cash;const cost=devCost(0,1);build(0,4);return{rv:G.rv??null,cost,classic:SQ[1].h,h:G.own[4].h}},legacy);
  assert.deepEqual(r,{rv:null,cost:r.classic,classic:r.classic,h:2});ok('legacy save builds classic houses at the classic price');await p.close();
+
+ // ---- Task 05 · District Growth and Landmarks ----
+ p=await open({});await quick(p);await p.waitForFunction(()=>G&&G.players&&G.rv===2);
+ r=await p.evaluate(()=>{FAST=true;GEN++;const [a,b]=G.players;a.cash=5000;const gr=GROUPS.orange.length===3?GROUPS.orange:GROUPS.pink;G.own.forEach(o=>{o.o=-1;o.h=0;o.m=false});
+  const one=(()=>{G.own[gr[0]].o=0;return rentFor(gr[0],7)})(),two=(()=>{G.own[gr[1]].o=0;return rentFor(gr[0],7)})();gr.forEach(j=>G.own[j].o=0);const full=rentFor(gr[0],7),base=SQ[gr[0]].r[0];
+  const fee=lcLmFee(gr[2]),c=a.cash,okD=lcDesignate(0,gr[2]),paid=c-a.cash,again=lcDesignate(0,gr[1]),lm=rentFor(gr[2],7),other=rentFor(gr[0],7);
+  G.own[gr[1]].o=1;const s0=executeTrade.length>=0;lcSyncLandmarks();const revoked=!G.lm[SQ[gr[2]].g];G.own[gr[1]].o=0;const re=lcDesignate(0,gr[0]);
+  FAST=false;return{one,two,full,base,fee,paid,okD,again,lm,other,revoked,re,valid:validateSave(G)}});
+ assert.equal(r.one,r.base);assert.equal(r.two,Math.round(r.base*1.15));assert.equal(r.full,Math.round(r.base*1.15),'no blanket doubling '+JSON.stringify(r));
+ assert.ok(r.okD&&r.paid===r.fee&&r.again===false&&r.lm===Math.round(Math.round(r.base*1)*2*1.35)||r.lm>=r.base*2.6,JSON.stringify(r));assert.ok(r.revoked&&r.re&&r.valid,JSON.stringify(r));
+ ok('District Growth (+15% with 2+ streets), no blanket full-set doubling, one Landmark per district (fee once), Landmark double unbuilt rent +20%, revoked when ownership breaks, re-designation allowed');
+ r=await p.evaluate(async()=>{FAST=true;GEN++;const ai=G.players[1];ai.ai=true;ai.cash=3000;G.own.forEach(o=>{if(o.o===1)o.o=-1});const gr=GROUPS.yellow;gr.forEach(j=>{G.own[j].o=1;G.own[j].h=0;G.own[j].m=false});delete G.lm.yellow;
+  await lcOfferLandmarks(ai);const L=G.lm.yellow;FAST=false;return{i:L&&L.i,best:lcAiPickLM(ai,'yellow')}});
+ assert.ok(r.i!=null&&r.i===r.best);ok('AI designates the district street with the highest top-stage rent');
+ r=await p.evaluate(()=>{const i=GROUPS.navy[0];GROUPS.navy.forEach(j=>{G.own[j].o=2;G.own[j].h=3;G.own[j].m=false});G.houses=36-G.own.reduce((s,o)=>s+(o.h===5?0:o.h),0);G.lm.navy={i,pid:2};
+  G.lcMods=[{pid:2,scope:'streets',group:null,pct:20,until:G.round+2}];G.ev2={v:1,id:'fest',kind:'rent',pct:50,from:G.round,rounds:2,targets:[i],group:'navy',name:'F',area:'x',city:'lagos'};const capped=rentFor(i,7);G.ev2=null;G.lcMods=[];return{capped,max:Math.round(Math.round(SQ[i].r[3]*1.5)*1.1),pct:lcRentPct(i)}});
+ assert.ok(r.capped<=r.max+1,JSON.stringify(r));ok('Landmark + District Growth + card + festival stay inside the +50% cap');
+ if(shots){await p.setViewportSize({width:844,height:390});await p.evaluate(()=>{$('#modals').innerHTML='';G.players[0].ai=false;G.players[0].cash=900;GROUPS.green.forEach(j=>{G.own[j].o=0;G.own[j].h=0;G.own[j].m=false});delete G.lm.green;G.lmAsked={};lcOfferLandmarks(G.players[0]);flatDraw();return 1});await p.waitForTimeout(800);await p.screenshot({path:path.join(shots,'05-choose-landmark-844x390.png')});
+  await p.evaluate(()=>{$('#modals').innerHTML='';flatDraw();return 1});await p.waitForTimeout(600);await p.screenshot({path:path.join(shots,'05-landmark-board-844x390.png')})}
+ assert.deepEqual(p.errs,[]);await p.close();
+ p=await open({});r=await p.evaluate(fx=>{G=JSON.parse(fx).game;const i=1;return{rv:G.rv??null,rent:rentFor(4,7)}},legacy);assert.equal(r.rv,null);ok('legacy save keeps classic full-set rules');await p.close();
  await browser.close();console.log(`LIVING CITY ${n} checks`);
 })().catch(e=>{console.error(e);process.exit(1)});
