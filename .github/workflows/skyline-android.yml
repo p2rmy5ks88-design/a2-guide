@@ -7,6 +7,10 @@ on:
         description: 'Publish the build (and use signing credentials if configured)'
         type: boolean
         default: false
+      sign_only:
+        description: 'With publish: build the signed AAB/APK as an artifact only; skip the GitHub test release (never uploads to Play)'
+        type: boolean
+        default: false
   pull_request:
     paths:
       - "skyline-estates/game.html"
@@ -91,6 +95,9 @@ jobs:
       - name: Build test APK
         working-directory: skyline-estates-app/android
         run: ./gradlew assembleDebug --no-daemon
+      - name: Report signing configuration
+        if: github.event_name == 'workflow_dispatch' && inputs.publish && inputs.sign_only
+        run: if [ -z "$KEYSTORE_B64" ]; then echo '::error::Android upload keystore secrets are not configured; signed candidate cannot be built'; exit 1; fi
       - name: Build signed Play Store bundle
         if: github.event_name == 'workflow_dispatch' && inputs.publish && env.KEYSTORE_B64 != ''
         working-directory: skyline-estates-app/android
@@ -115,7 +122,7 @@ jobs:
           if-no-files-found: error
 
   publish:
-    if: github.event_name == 'workflow_dispatch' && inputs.publish
+    if: github.event_name == 'workflow_dispatch' && inputs.publish && !inputs.sign_only
     needs: android
     runs-on: ubuntu-latest
     permissions:

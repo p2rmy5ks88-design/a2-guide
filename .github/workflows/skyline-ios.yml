@@ -16,6 +16,10 @@ on:
         type: choice
         options: [off, private-testing, ios-release]
         default: 'off'
+      sign_only:
+        description: 'With publish: sign and export the App Store IPA as an artifact only; do NOT upload to TestFlight'
+        type: boolean
+        default: false
       sdk27:
         description: 'Build with Xcode 27.1 / iOS 27.1 SDK (iPhone Duo ready)'
         type: boolean
@@ -209,8 +213,10 @@ jobs:
           xcodebuild $T -scheme App -configuration Release -destination 'generic/platform=iOS' $DT_OVERRIDE \
             -archivePath "$RUNNER_TEMP/SkylineEstates.xcarchive" archive | tail -n 20
           python3 "$GITHUB_WORKSPACE/skyline-estates-app/scripts/verify-signed-apple.py" "$RUNNER_TEMP/SkylineEstates.xcarchive/Products/Applications/App.app"
+          if [ "${{ inputs.sign_only }}" = "true" ]; then echo 'Sign-only release candidate: skipping the TestFlight upload export'; else
           xcodebuild -exportArchive -archivePath "$RUNNER_TEMP/SkylineEstates.xcarchive" \
             -exportOptionsPlist "$RUNNER_TEMP/skyline-distribution/export.plist" -exportPath "$RUNNER_TEMP/export" $AUTH | tail -n 20
+          fi
           # Retain the same signed archive as an IPA, without retaining credentials.
           python3 -c "import plistlib; p='$RUNNER_TEMP/skyline-distribution/export.plist'; d=plistlib.load(open(p,'rb')); d['destination']='export'; plistlib.dump(d,open(p,'wb'))"
           xcodebuild -exportArchive -archivePath "$RUNNER_TEMP/SkylineEstates.xcarchive" \
