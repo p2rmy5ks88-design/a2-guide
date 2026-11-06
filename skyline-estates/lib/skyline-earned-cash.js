@@ -134,7 +134,7 @@
     button.title='Saved earned Skyline Cash · separate from match cash';
     coins.title='Skyline Coins · Shop, cosmetics and premium unlocks';
     if(!coins.querySelector('.skyline-coin-label'))coins.insertAdjacentHTML('beforeend','<span class="skyline-coin-label">Coins</span>');
-    requestAnimationFrame(fitLogo);
+    requestAnimationFrame(()=>{try{watchHeader()}catch{}fitLogo()});
   }
   /* The centred home logo must never sit under the SC / Coins pills: shrink it to the free gap
      between the profile block and the pills, or hide it on very narrow headers. */
@@ -148,6 +148,12 @@
     logo.style.transformOrigin='50% 0';logo.style.transform='translateX(-50%) scale('+Math.min(1,room/L.width).toFixed(3)+')';
   }
   addEventListener('resize',()=>requestAnimationFrame(fitLogo),{passive:true});
+  // Re-fit when any header pill changes size later (native Coins "+" button, fonts loading, new balances).
+  let ro=null;try{ro=new ResizeObserver(()=>requestAnimationFrame(fitLogo))}catch{}
+  const watchHeader=()=>{if(!ro)return;['#tbSkylineCash','#tbCoins','#tbLeague','#tbWho','#hdGear'].forEach(s=>{const e=document.querySelector(s);if(e)ro.observe(e)})};
+  const fitLater=()=>{watchHeader();requestAnimationFrame(fitLogo)};
+  new MutationObserver(fitLater).observe(document.documentElement,{childList:true,subtree:false});
+  addEventListener('DOMContentLoaded',fitLater);try{document.fonts&&document.fonts.ready.then(fitLater)}catch{}setTimeout(fitLater,1500);
   const oldRail=railProfile;
   railProfile=function(){const result=oldRail.apply(this,arguments);refreshCashHeader();return result};
   function chip(text){const e=document.createElement('small');e.className='sc-reward';e.textContent=text;return e}
