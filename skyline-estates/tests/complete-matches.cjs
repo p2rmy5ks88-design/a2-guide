@@ -39,6 +39,9 @@ const root=path.resolve(__dirname,'../..'),report={matches:[],errors:[]},delay=m
       const debt=pf.locator('.pf2debt .debt');if(await debt.isVisible()){const pay=btn(/^Pay /,pf);if(await pay.isEnabled())await click(pay,'pay debt');else{const text=await debt.innerText(),who=s.players.find(p=>text.startsWith(p.name+':'));const p=await plan(who?who.id:s.turn,true);if(p)await propertyAction(p);else await click(btn('Declare bankruptcy',pf),'bankruptcy')}}else{const p=await plan(s.turn,false);if(p)await propertyAction(p);else await click(btn('Close',pf),'close portfolio')}acted=true;
      }else if(await page.locator('#modals .ov:not(.bye) .auc').isVisible()){
       const auc=page.locator('#modals .ov:not(.bye) .auc .abar'),name=await auc.locator('.mtxt b').first().innerText(),bid=btn(/^Bid /,auc).first();if(name==='Seat 0'&&s.players[0].cash>100&&await bid.isEnabled())await click(bid,'bid Seat 0');else await click(btn('Drop out',auc),'drop '+name);acted=true;
+     }else if(await page.locator('#modals .ov:not(.bye) .lc-crm .mbar .btn:not([disabled])').count()){
+      // Living City Civic Review: pay the Fast-Track Permit when affordable, otherwise Standard Review
+      await click(page.locator('#modals .ov:not(.bye) .lc-crm .mbar .btn:not([disabled])').first(),'civic review');acted=true
      }else if(await page.locator('#modals .ov:not(.bye) .lc-cardm .mbar .btn:not([disabled])').count()){
       // Living City choice cards: take the last available option (always the no-cost choice)
       await click(page.locator('#modals .ov:not(.bye) .lc-cardm .mbar .btn:not([disabled])').last(),'choice card');acted=true

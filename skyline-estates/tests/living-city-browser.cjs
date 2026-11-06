@@ -56,5 +56,30 @@ let n=0;const ok=(m)=>{n++;console.log('PASS',m)};
  assert.deepEqual(p.errs,[]);await p.close();
  p=await open({});r=await p.evaluate(async fx=>{FAST=true;G=JSON.parse(fx).game;G.chance=[2,...G.chance.filter(x=>x!==2)];const pl=G.players[2];pl.pos=6;await drawCard(pl,'chance',[1,2]);FAST=false;return{rv:G.rv??null,log:G.log.find(l=>/Taxi!/.test(l))||G.log[0]}},legacy);
  assert.ok(r.rv===null&&/Taxi!/.test(r.log),JSON.stringify(r));ok('legacy save keeps the classic card deck');await p.close();
+
+ // ---- Task 03 · Civic Review ----
+ p=await open({});await quick(p);await p.waitForFunction(()=>G&&G.players&&G.rv===2);
+ r=await p.evaluate(async()=>{FAST=true;GEN++;const [a,b]=G.players;a.ai=true;const i=GROUPS.pink[0];G.own[i].o=a.id;G.own[i].m=false;
+  G.chance=[8,...G.chance.filter(x=>x!==8)];await drawCard(a,'chance',[1,2]);const cr=!!a.cr,jail=a.inJail;
+  b.pos=i-1;const c0=b.cash,ca=a.cash;await moveSteps(b,1);await land(b,[1,0]);const rentPaid=c0-b.cash,got=a.cash-ca;
+  const v=validateSave(G);a.inJail=true;const both=validateSave(G);a.inJail=false;FAST=false;return{cr,jail,rentPaid,got,v,both,pos:a.pos}});
+ assert.deepEqual(r,{cr:true,jail:false,rentPaid:0,got:0,v:true,both:false,pos:r.pos});ok('Planning hold opens a Civic Review (token not moved, no Lockup state); owner under review collects no rent; review+Lockup together is rejected');
+ r=await p.evaluate(async()=>{FAST=true;const q=G.players[2];q.cr=null;G.turn=q.id;G.doubles=3;const pos=q.pos;await sendToJail(q);const out={cr:q.cr,pos:q.pos===pos,jail:q.inJail,grid:G.lcStats.gridlock};G.doubles=0;FAST=false;return out});
+ assert.deepEqual(r,{cr:null,pos:true,jail:false,grid:1});ok('three doubles = gridlock: turn ends, no detention');
+ r=await p.evaluate(async()=>{FAST=true;GEN++;const a=G.players[1];a.ai=true;a.cr={from:G.round,why:'card'};G.chance=G.chance.filter(x=>x!==9);a.goojf=[{deck:'chance',idx:9}];G.own.forEach((o,i)=>{if(o.o===a.id)o.o=-1});const i=GROUPS.orange[0];G.own[i].o=a.id;GROUPS.orange.forEach(j=>G.own[j].o=a.id);
+  const r1=await lcReviewTurn(a);const deck=G.chance.includes(9)&&a.goojf.length===0;
+  a.cr={from:G.round,why:'card'};a.goojf=[];a.cash=2000;const c=a.cash;const r2=await lcReviewTurn(a);const fee=c-a.cash;
+  a.cr={from:G.round,why:'card'};a.cash=10;const r3=await lcReviewTurn(a);FAST=false;return{r1,deck,r2,fee,r3,cleared:a.cr}});
+ assert.deepEqual(r,{r1:'play',deck:true,r2:'play',fee:70,r3:'skip',cleared:null});ok('AI resolves review: Bail Pass consumed once (returned to its deck), Fast-Track charged once (70), Standard Review when cash is short');
+ r=await p.evaluate(async()=>{FAST=true;GEN++;const a=G.players[3]||G.players[2];a.ai=true;a.cr={from:G.round,why:'card'};a.cash=5;a.goojf=[];G.turn=a.id;G.phase='pre';const pos=a.pos,rd=G.round;await playTurn(a);FAST=false;return{moved:a.pos!==pos,cr:a.cr,rd:G.round===rd}});
+ assert.deepEqual(r,{moved:false,cr:null,rd:true});ok('Standard Review skips the whole turn (no roll) and then closes; no stuck turn');
+ r=await p.evaluate(async()=>{FAST=true;GEN++;const a=G.players[1];a.ai=true;a.cr=null;a.cash=50000;G.own.forEach(o=>{if(o.o===a.id){o.o=-1;o.h=0}});GROUPS.sky.forEach(j=>{G.own[j].o=a.id;G.own[j].h=0;G.own[j].m=false});G.turn=a.id;G.phase='pre';
+  const rnd=Math.random;let k=0;Math.random=()=>[.1,.5][k++%2];try{await playTurn(a)}finally{Math.random=rnd}FAST=false;const lv=GROUPS.sky.reduce((s,j)=>s+G.own[j].h,0);return{lv,cr:a.cr&&a.cr.why}});
+ assert.ok(r.lv>=4&&r.cr==="audit",JSON.stringify(r));ok('development audit: 4+ building levels in one turn opens a Civic Review at the end of the turn');
+ if(shots){for(const [w,h] of [[844,390],[667,320]]){await p.setViewportSize({width:w,height:h});await p.evaluate(()=>{$('#modals').innerHTML='';const me=G.players[0];me.ai=false;me.cash=900;me.cr={from:G.round,why:'card'};me.goojf=[{deck:'esusu',idx:6}];G.esusu=G.esusu.filter(x=>x!==6);lcReviewTurn(me);renderRoster();return 1});await p.waitForTimeout(700);await p.screenshot({path:path.join(shots,`03-civic-review-${w}x${h}.png`)});
+   const b=await p.evaluate(()=>[...document.querySelectorAll('.lc-crm .mbar .btn')].map(x=>{const r=x.getBoundingClientRect();return r.height>=44&&r.bottom<=innerHeight+1}));assert.ok(b.length===3&&b.every(Boolean),'review buttons')}
+  const r9=await p.evaluate(async()=>{const me=G.players[0],c=me.cash;[...document.querySelectorAll('.lc-crm .mbar .btn')].find(x=>/Fast-Track/.test(x.textContent)).click();await new Promise(r=>setTimeout(r,400));return{fee:c-me.cash,cr:me.cr}});
+  assert.deepEqual(r9,{fee:70,cr:null});ok('human Fast-Track Permit: fee charged once, review closed')}
+ assert.deepEqual(p.errs,[]);await p.close();
  await browser.close();console.log(`LIVING CITY ${n} checks`);
 })().catch(e=>{console.error(e);process.exit(1)});
