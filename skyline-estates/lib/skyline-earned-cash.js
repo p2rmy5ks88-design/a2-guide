@@ -134,7 +134,7 @@
     button.title='Saved earned Skyline Cash · separate from match cash';
     coins.title='Skyline Coins · Shop, cosmetics and premium unlocks';
     if(!coins.querySelector('.skyline-coin-label'))coins.insertAdjacentHTML('beforeend','<span class="skyline-coin-label">Coins</span>');
-    requestAnimationFrame(()=>{try{watchHeader()}catch{}fitLogo()});
+    requestAnimationFrame(()=>{try{watchHeader();styleXp()}catch{}fitLogo()});
   }
   /* The centred home logo must never sit under the SC / Coins pills: shrink it to the free gap
      between the profile block and the pills, or hide it on very narrow headers. */
@@ -148,10 +148,18 @@
     logo.style.transformOrigin='50% 0';logo.style.transform='translateX(-50%) scale('+Math.min(1,room/L.width).toFixed(3)+')';
   }
   addEventListener('resize',()=>requestAnimationFrame(fitLogo),{passive:true});
+  // Level bar under the name: clear track, gold fill and a short '% to next level' label.
+  function styleXp(){const w=document.querySelector('#tbWho'),bar=w&&w.querySelector('.xpbar');if(!bar)return;
+    let row=bar.parentElement.classList.contains('xprow')?bar.parentElement:null;
+    if(!row){row=document.createElement('span');row.className='xprow';bar.before(row);row.append(bar);const t=document.createElement('small');t.className='xpnext';row.append(t)}
+    const pct=Math.max(0,Math.min(100,parseFloat(bar.querySelector('i')?.style.width)||0)),lv=(()=>{try{return lvlOf(PREF.xp)}catch{return null}})();
+    const label=lv?Math.round(pct)+'% to Lv '+(lv+1):Math.round(pct)+'%',short=Math.round(pct)+'%';const t=row.querySelector('.xpnext');if(t.textContent!==short)t.textContent=short;t.title=label;
+    bar.setAttribute('role','progressbar');bar.setAttribute('aria-valuenow',String(Math.round(pct)));bar.setAttribute('aria-valuemin','0');bar.setAttribute('aria-valuemax','100');bar.setAttribute('aria-label',label)}
+  {const st=document.createElement('style');st.textContent='#title #tbWho .xprow{display:flex!important;align-items:center;gap:6px;margin-top:3px;width:auto!important;min-width:max-content;justify-content:flex-start!important}#title #tbWho .xprow .xpbar{flex:0 0 92px!important;width:92px!important;height:6px!important;margin:0!important;border-radius:4px!important;background:rgba(255,255,255,.14)!important;box-shadow:inset 0 0 0 1px rgba(226,177,60,.45);overflow:hidden}#title #tbWho .xprow .xpbar i{display:block;height:100%;border-radius:4px;background:linear-gradient(90deg,#d9a845,#f4d28b)!important;box-shadow:0 0 6px rgba(244,210,139,.55)}#title #tbWho .xprow .xpnext{display:inline!important;width:auto!important;font:800 10px/1 Manrope,system-ui,sans-serif!important;letter-spacing:0!important;color:#f4d28b;white-space:nowrap}html.light #title #tbWho .xpnext{color:#8a6414}html.light #title #tbWho .xprow .xpbar{background:#e3e9ef!important}';document.head.append(st)}
   // Re-fit when any header pill changes size later (native Coins "+" button, fonts loading, new balances).
   let ro=null;try{ro=new ResizeObserver(()=>requestAnimationFrame(fitLogo))}catch{}
   const watchHeader=()=>{if(!ro)return;['#tbSkylineCash','#tbCoins','#tbLeague','#tbWho','#hdGear'].forEach(s=>{const e=document.querySelector(s);if(e)ro.observe(e)})};
-  const fitLater=()=>{watchHeader();requestAnimationFrame(fitLogo)};
+  const fitLater=()=>{watchHeader();try{styleXp()}catch{}requestAnimationFrame(fitLogo)};
   new MutationObserver(fitLater).observe(document.documentElement,{childList:true,subtree:false});
   addEventListener('DOMContentLoaded',fitLater);try{document.fonts&&document.fonts.ready.then(fitLater)}catch{}setTimeout(fitLater,1500);
   const oldRail=railProfile;
