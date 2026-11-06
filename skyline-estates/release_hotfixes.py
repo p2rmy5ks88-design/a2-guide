@@ -31,6 +31,10 @@ def apply(body):
     # promise them again.
     replace("${N?`<div class=\"lg3next\"><small>Reward at ${esc(N.name)}</small>", "${N&&i+1<=PREF.leagueBest?`<div class=\"lg3next\"><small>${esc(N.name)} reward</small><b>✓ Already earned</b></div>`:N?`<div class=\"lg3next\"><small>Reward at ${esc(N.name)}</small>")
 
+    # Leagues: a player missing from the published list was drawn as rank "undefined" below everyone;
+    # place them by trophies with a note on publishing instead.
+    replace('const mi=rows.findIndex(r=>r.u===u);E.innerHTML=rows.map((r,k)=>row(r,k,r.u===u)).join(\'\')+(mi<0?`<div class="lg3you">${row({n:myName()||\'You\',l:lvlOf(PREF.xp),t:S.tr||0,c:myChar()},-1,true).replace(\'<em>0</em>\',\'<em>–</em>\')}</div>`:\'\')', 'const mi=rows.findIndex(r=>r.u===u);if(mi<0){rows.push({u,n:myName()||\'You\',l:lvlOf(PREF.xp),t:S.tr||0,c:myChar()});rows.sort((a,b)=>b.t-a.t||String(a.u).localeCompare(String(b.u)))}E.innerHTML=rows.map((r,k)=>row(r,k,r.u===u)).join(\'\')+(mi<0?`<div class="small lg3note">${PREF.social&&PREF.social.rankings?\'Your score is shown here from this device and will appear for others once it publishes.\':\'Only you can see your score. To appear for others, turn on “Publish legacy device-reported Season scores” in Social privacy below.\'}</div>`:\'\')')
+
     # Task 02 IP audit: avoid utility names identical/close to a classic board game's.
     replace("const GENERIC_UTILS=[['Power Company','⚡'],['Water Works','💧']];", "const GENERIC_UTILS=[['City Power Grid','⚡'],['Lagoon Water Board','💧']];")
 
