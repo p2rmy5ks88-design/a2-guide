@@ -25,7 +25,7 @@ const check=(name,ok,detail)=>{assert.ok(ok,name+(detail!==undefined?' '+JSON.st
  check('no starter bundle or price buttons for coin packs',await page.locator('#bStarter').count()===0&&!/kr|\$\d/.test(await page.locator('#pane').innerText()));
  check('coin pill has no "+" and explains earning',await page.locator('#tbCoins .plus').count()===0&&/How to earn more/.test(await page.locator('#tbCoins').getAttribute('aria-label')));
  await page.locator('#tbCoins').click();const m=page.locator('.mp').last();await m.waitFor({state:'visible'});
- check('tapping coins shows how to earn coins',/Earn coins/.test(await m.innerText())&&/Lucky Spin/.test(await m.innerText()));
+ check('tapping coins shows how to earn coins',/Earn coins/.test(await m.innerText())&&!/Lucky Spin/.test(await m.innerText()));
  await page.getByRole('button',{name:'OK'}).click();
  // Not enough coins for an item: the button says Earn, never Get, and opens the earn explanation.
  const short=await page.evaluate(async()=>{PREF.coins=1;const seen=[];const old=modal;modal=async c=>{seen.push({html:c.html,labels:(c.btns||[]).map(b=>b.label)});return seen.length===1?'shop':'x'};try{await confirmBuy('Test item',500,'')}finally{modal=old}return seen});
