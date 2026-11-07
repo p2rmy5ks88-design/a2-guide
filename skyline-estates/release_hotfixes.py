@@ -5,6 +5,15 @@ def apply(body):
         assert old in body, old[:100]
         body = body.replace(old, new)
 
+    # Lucky Spin removed (all builds): no wheel card, no profile spin button, no "spin ready" dots or chips.
+    replace("const wheelReady=()=>PREF.daily.spun!==today()&&!(PREF.daily.spun&&dayNum(PREF.daily.spun)>dayNum(today()));", "const wheelReady=()=>false;")
+    replace("async function openWheel(){initAudio();", "async function openWheel(){return;initAudio();")
+    replace(".wheelcard{flex:none;", ".wheelcard,#pWheel{display:none!important}.wheelcard{flex:none;")
+    replace("the free Lucky Spin, season tiers", "season tiers")
+    replace("missions, the Lucky Spin, season tiers", "missions, season tiers")
+    body = body.replace("achievements, missions, the Lucky Spin, season tiers", "achievements, missions, season tiers")
+    replace("<b>Daily missions and Lucky Spin</b>", "<b>Daily missions</b>")
+    replace(" The Lucky Spin is free once a day.</p>", "</p>")
     # Distinct wording (IP review): no classic-board phrases in player-visible text.
     replace("label:'THE BOARDWALK'", "label:'SANTA MONICA PIER'")
     replace('<b>Get out of the Lockup</b>', '<b>Bail Pass</b>')

@@ -1253,7 +1253,7 @@ html.light .wscmp tr.up td:last-child{color:#1f9a5c}
 .bundle .bstage{height:118px;background:url(art/shop.jpg) center 60%/cover no-repeat!important;box-shadow:inset 0 0 0 1px rgba(226,181,74,.35),inset 0 -30px 40px -20px rgba(0,0,0,.45)}
 .bundle .bstage>*{display:none}
 /* Lucky Spin card: the brass wheel on its column */
-.wheelcard{flex:none;background:linear-gradient(90deg,#0e1a33 0%,rgba(14,26,51,.94) 42%,rgba(14,26,51,.25) 75%),url(art/spin.jpg) 85% 40%/cover no-repeat!important;min-height:140px}
+.wheelcard,#pWheel{display:none!important}.wheelcard{flex:none;background:linear-gradient(90deg,#0e1a33 0%,rgba(14,26,51,.94) 42%,rgba(14,26,51,.25) 75%),url(art/spin.jpg) 85% 40%/cover no-repeat!important;min-height:140px}
 .wheelcard .ch,.wheelcard .small{color:#F4EBD6}
 /* Settings: brass sliders above the categories */
 /* Collection: the three brass figures beside the heading */
@@ -4797,8 +4797,8 @@ function streakNow(){const D=PREF.daily;if(!D.streakDay)return 0;return dayNum(t
 
 /* ---- Lucky Spin: one free spin a day. Every slice has the same 1 in 8 chance. Spins can't be bought. ---- */
 const WHEEL=[['50 '+COIN,{c:50},'#ffc61a'],['100 XP',{x:100},'#12884a'],['100 '+COIN,{c:100},'#c2185b'],['2× XP',{boost:1},'#2e6fd6'],['150 '+COIN,{c:150},'#f08a1c'],['250 XP',{x:250},'#7b1fa2'],['300 '+COIN,{c:300},'#1e9a53'],['1000 '+COIN,{c:1000},'#e23b2e']];
-const wheelReady=()=>PREF.daily.spun!==today()&&!(PREF.daily.spun&&dayNum(PREF.daily.spun)>dayNum(today()));
-async function openWheel(){initAudio();const ready=wheelReady();let spun=false;
+const wheelReady=()=>false;
+async function openWheel(){return;initAudio();const ready=wheelReady();let spun=false;
   await modal({cls:'wide',html:`<div class="mh">Lucky Spin</div><div class="mtxt muted">One free spin every day. Every prize has the same 1 in 8 chance.</div>
     <div class="wheelwrap"><div class="wheel" id="wh">${WHEEL.map((w,i)=>`<span style="transform:rotate(${i*45+22.5}deg)"><b>${w[0]}</b></span>`).join('')}</div><div class="wpin"></div><button class="btn pri" id="wSpin"${ready?'':' disabled'}>${ready?'Spin':'Come back tomorrow'}</button><div class="mtxt" id="wRes"></div></div>`,
     btns:[{k:'x',label:'Close'}],onMount:(pn)=>{const wh=pn.querySelector('#wh');wh.style.background=`conic-gradient(${WHEEL.map((w,i)=>`${w[2]} ${i*45}deg ${(i+1)*45}deg`).join(',')})`;
@@ -5231,7 +5231,7 @@ const IAP={ready:false,store:null,
 /* Coin packs are offered only when the App Store purchase path is live (never on web, and not in builds
    released without in-app purchases). Earning and spending coins in play is unaffected. */
 const COIN_SALES=()=>!!window.SkylineCloud?.purchasesReady?.();
-const EARN_COINS='Earn coins by winning games, levelling up, daily missions, the free Lucky Spin, season tiers and league promotions.';
+const EARN_COINS='Earn coins by winning games, levelling up, daily missions, season tiers and league promotions.';
 function earnCoinsInfo(need){return modal({html:`<div class="mh">${COIN} Earn coins</div><div class="mtxt">${need?`You need ${nfmt(need)} more coins. `:''}${EARN_COINS}</div>`,btns:[{k:'x',label:'OK',primary:true}]})}
 /* ---- name filter for names shown to other people (online and leaderboards) ---- */
 const BAD_WORDS=['fuck','shit','cunt','bitch','nigg','fag','whore','slut','dick','cock','pussy','rape','nazi','hitler','retard','bastard','wank','twat','porn','sex'];
@@ -5400,11 +5400,11 @@ function paneLearn(T){
     <h3>GAME MODES</h3><div class="learn">${MODES.map(m=>`<div class="lcard"><i>${m[0]==='classic'?'♟️':m[0]==='quick'?'⚡':'⏱️'}</i><div><b>${m[1]}</b><p>${esc(m[2])}</p></div></div>`).join('')}</div>
     <h3>HOUSE RULES</h3><div class="learn">${RULE_INFO.map(r=>`<div class="lcard"><i>⚙️</i><div><b>${r[1]}</b><p>${esc(loc(r[2]))}</p></div></div>`).join('')}<div class="lcard"><i>⏱️</i><div><b>Turn timer</b><p>Optional 90 seconds per turn. When time runs out the game finishes the turn for that player.</p></div></div></div>
     <h3>PROGRESS</h3><div class="learn"><div class="lcard"><i>🌍</i><div><b>World</b><p>18 countries and 31 cities, each with its own board, landscape and 15 achievements. Level up to open new countries; play in a country to open its other cities.</p></div></div>
-    <div class="lcard"><i>${COIN}</i><div><b>Coins</b><p>Earn coins from wins, level-ups, achievements, missions, the Lucky Spin, season tiers and league promotions. Spend them on tokens, upgrades, finishes, dice, board surrounds and early unlocks.</p></div></div>
+    <div class="lcard"><i>${COIN}</i><div><b>Coins</b><p>Earn coins from wins, level-ups, achievements, missions, season tiers and league promotions. Spend them on tokens, upgrades, finishes, dice, board surrounds and early unlocks.</p></div></div>
     <div class="lcard"><i>⬆️</i><div><b>Token upgrades</b><p>Upgrade a token from Common to Rare, Epic, Legendary, Mythic and Chaotic. Each tier repaints it (blue, purple, gold, crimson, then a shifting rainbow) and adds a bigger payday, re-rolls and Lucky Passes. Each token has a distinct power path. Rarity upgrades cost saved coins and require wins with that token. Token XP records play; upgrades are manual and apply to future games. Previously unlocked rarities are kept. Hosts can switch collection perks off.</p></div></div>
     <div class="lcard"><i>📅</i><div><b>Seasons</b><p>Every 45 days a new season starts with 40 tiers of rewards and weekly challenges. All XP counts toward the season.</p></div></div>
     <div class="lcard"><i>🏆</i><div><b>Leagues</b><p>Win trophies to climb from Bronze to Legend and earn promotion rewards. The global leaderboard shows the top players each season.</p></div></div>
-    <div class="lcard"><i>🎯</i><div><b>Daily missions and Lucky Spin</b><p>Three new missions every day pay XP and coins, with a bonus for finishing all three. Missions on back-to-back days build a streak. The Lucky Spin is free once a day.</p></div></div>
+    <div class="lcard"><i>🎯</i><div><b>Daily missions</b><p>Three new missions every day pay XP and coins, with a bonus for finishing all three. Missions on back-to-back days build a streak.</p></div></div>
     <div class="lcard"><i>👑</i><div><b>City Champion and frames</b><p>Earn all 15 awards in a city to become its Champion: coins, XP and an animated avatar frame. Five Champion cities add the Prism frame, all of them the Skyline Crown. Season frames come from the premium track.</p></div></div>
     <div class="lcard"><i>🎨</i><div><b>Collection and cosmetics</b><p>Characters, tokens, frames, board styles, dice and finishes change how you look, never the rules. Finishes recolour your token, board styles change the scenery round the board, and dice sets change the dice you roll.</p></div></div>
     <div class="lcard"><i>🎁</i><div><b>New players</b><p>Your first launch includes a 500-coin welcome gift, this tutorial and a few tips during your first game. Replay the tutorial any time from the button at the top of this page.</p></div></div></div>`;
@@ -5562,7 +5562,7 @@ function paneShop(T){let tab=setup.shopTab||'daily';if(tab==='surr'&&!setup.shop
     const bp=B.querySelector('#bPrem');if(bp)bp.onclick=async()=>{if(await confirmBuy(`Season ${seasonDisplay(S.n)} premium pass`,PREM_PRICE,`Unlocks the premium reward on all ${TIERS} tiers this season, including tiers you’ve already reached.`)){S.prem=true;savePref();railProfile();redraw()}};
     B.querySelector('#bXP').onclick=async()=>{if(await confirmBuy('Double XP × 3',300)){PREF.boostGames+=3;savePref();railProfile();redraw()}}}
   else if(tab==='coins'){B.innerHTML=`<div class="igrid">${IAP_PACKS.map((p,i)=>`<article class="icard" style="--rc:${['#2F7FE0','#2F7FE0','#8F3FD8','#E2B13C'][i]||'#2F7FE0'}">${p.tag?`<em class="ideal">${esc(p.tag)}</em>`:''}<div class="iwrap"><span class="iart coins n${i}"></span></div><b>${nfmt(p.coins)} coins</b><small class="itier">Coin pack</small><button class="ibuy cash" data-i="${i}">${esc(IAP.price(p))}</button></article>`).join('')}</div>
-      <div class="small shopnote">${window.SkylineCloud?.purchasesReady?.()?'Purchases are handled by the App Store and saved to your Skyline account.':'Coin packs are sold in the Skyline Estates app for iPhone and Android.'} You also earn coins from wins, level-ups, missions, the Lucky Spin, season tiers and league promotions.</div>`;
+      <div class="small shopnote">${window.SkylineCloud?.purchasesReady?.()?'Purchases are handled by the App Store and saved to your Skyline account.':'Coin packs are sold in the Skyline Estates app for iPhone and Android.'} You also earn coins from wins, level-ups, missions, season tiers and league promotions.</div>`;
     B.querySelectorAll('[data-i]').forEach(b=>b.onclick=()=>IAP.buy(IAP_PACKS[+b.dataset.i]))}
   bindCards(B,redraw)}
 
