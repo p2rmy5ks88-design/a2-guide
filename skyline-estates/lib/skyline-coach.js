@@ -13,22 +13,23 @@
    - No HUD, captions or indicators. The only UI is a "Skyline Coach" section in Settings → Sound. */
 (()=>{'use strict';
 if(window.SkylineCoach)return;
-const DEF={on:false,voice:'',vol:.8,rate:1,mode:'important'};
-const cfg=()=>{const c=PREF.coach=Object.assign({},DEF,PREF.coach||{});c.vol=Math.min(1,Math.max(0,+c.vol||0));c.rate=Math.min(1.4,Math.max(.7,+c.rate||1));if(!['important','mine'].includes(c.mode))c.mode='important';return c};
+const DEF={on:false,voice:'',vol:.8,rate:1,mode:'important',style:'standard'};
+const cfg=()=>{const c=PREF.coach=Object.assign({},DEF,PREF.coach||{});c.vol=Math.min(1,Math.max(0,+c.vol||0));c.rate=Math.min(1.4,Math.max(.7,+c.rate||1));if(!['important','mine'].includes(c.mode))c.mode='important';if(!['standard','pidgin'].includes(c.style))c.style='standard';return c};
 const saveCfg=()=>{try{savePref()}catch(e){}};
+const tx=(en,pg)=>cfg().style==='pidgin'?pg:en; // Standard English or Naija Pidgin wording
 /* ---------- engine adapters ---------- */
 const NOVELTY=/^(Albert|Bad News|Bahh|Bells|Boing|Bubbles|Cellos|Good News|Jester|Organ|Superstar|Trinoids|Whisper|Wobble|Zarvox|Junior|Ralph|Fred|Kathy|Eddy|Flo|Grandma|Grandpa|Reed|Rocko|Sandy|Shelley|Deranged|Hysterical|Pipe Organ)( \(|$)/i;
 // Curated voice slots: the game offers American, British and Indian English, female and male. Each slot is filled at
 // run time with the best working installed voice of that accent and gender (enhanced/premium/neural first).
-const SLOTS=[['us-f','American English · Female','us','f'],['us-m','American English · Male','us','m'],['gb-f','British English · Female','gb','f'],['gb-m','British English · Male','gb','m'],['in-f','Indian English · Female','in','f'],['in-m','Indian English · Male','in','m']];
-const FEMALE=/\b(female|woman|samantha|allison|ava|susan|zoe|joelle|noelle|nicky|victoria|karen|moira|tessa|kate|serena|stephanie|martha|fiona|veena|isha|sangeeta|lekha|aria|jenny|michelle|ana|emma|libby|sonia|maisie|hollie|mia|neerja|heera|swara|kalpana|catherine|natasha|clara|salli|joanna|kendra|kimberly|ivy|amy|raveena|aditi|siri female)\b/i;
-const MALE=/\b(male|man|alex|tom|evan|nathan|aaron|fred|daniel|oliver|arthur|jamie|rishi|guy|davis|christopher|eric|roger|steffan|ryan|thomas|elliot|prabhat|ravi|hemant|matthew|justin|joey|brian|siri male)\b/i;
+const SLOTS=[['us-f','American English · Female','us','f'],['us-m','American English · Male','us','m'],['gb-f','British English · Female','gb','f'],['gb-m','British English · Male','gb','m'],['in-f','Indian English · Female','in','f'],['in-m','Indian English · Male','in','m'],['ng-f','Nigerian English · Female','ng','f'],['ng-m','Nigerian English · Male','ng','m']];
+const FEMALE=/\b(female|woman|samantha|allison|ava|susan|zoe|joelle|noelle|nicky|victoria|karen|moira|tessa|kate|serena|stephanie|martha|fiona|veena|isha|sangeeta|lekha|aria|jenny|michelle|ana|emma|libby|sonia|maisie|hollie|mia|neerja|heera|ezinne|swara|kalpana|catherine|natasha|clara|salli|joanna|kendra|kimberly|ivy|amy|raveena|aditi|siri female)\b/i;
+const MALE=/\b(male|man|alex|tom|evan|nathan|aaron|fred|daniel|oliver|arthur|jamie|rishi|guy|davis|christopher|eric|roger|steffan|ryan|thomas|elliot|prabhat|ravi|abeo|hemant|matthew|justin|joey|brian|siri male)\b/i;
 // Android/Google network voice ids carry a code instead of a name.
 const ANDROID_G={'en-us-x-sfg':'f','en-us-x-tpc':'f','en-us-x-tpf':'f','en-us-x-iob':'f','en-us-x-iog':'f','en-us-x-iol':'m','en-us-x-iom':'m','en-us-x-tpd':'m','en-gb-x-gba':'f','en-gb-x-gbc':'f','en-gb-x-gbb':'m','en-gb-x-gbd':'m','en-gb-x-gbg':'m','en-gb-x-rjs':'m','en-in-x-ahp':'f','en-in-x-cxx':'f','en-in-x-ene':'f','en-in-x-end':'m'};
 const genderOf=v=>{const n=(v.name||'')+' '+(v.voiceURI||'');const a=Object.keys(ANDROID_G).find(k=>n.toLowerCase().includes(k));if(a)return ANDROID_G[a];if(/\bfemale\b/i.test(n))return'f';if(/\bmale\b/i.test(n))return'm';return FEMALE.test(n)?'f':MALE.test(n)?'m':''};
-const accentOf=v=>{const l=String(v.lang||'').toLowerCase().replace('_','-');return /^en-us/.test(l)?'us':/^en-gb/.test(l)?'gb':/^en-in/.test(l)?'in':''};
+const accentOf=v=>{const l=String(v.lang||'').toLowerCase().replace('_','-');return /^en-us/.test(l)?'us':/^en-gb/.test(l)?'gb':/^en-in/.test(l)?'in':/^en-ng/.test(l)?'ng':''};
 const quality=v=>{const id=(v.name+' '+(v.voiceURI||'')).toLowerCase();return(/premium|enhanced|neural|natural|online/.test(id)?4:0)+(/compact|espeak|robot/.test(id)?-3:0)+(v.localService!==false?1:0)};
-function slotVoices(vs){const out={};for(const acc of ['us','gb','in']){const list=vs.filter(v=>accentOf(v)===acc).sort((a,b)=>quality(b)-quality(a));const used=new Set();
+function slotVoices(vs){const out={};for(const acc of ['us','gb','in','ng']){const list=vs.filter(v=>accentOf(v)===acc).sort((a,b)=>quality(b)-quality(a));const used=new Set();
     for(const g of ['f','m']){const v=list.find(x=>!used.has(x.name)&&genderOf(x)===g);if(v){out[acc+'-'+g]=v;used.add(v.name)}}
     for(const g of ['f','m'])if(!out[acc+'-'+g]){const v=list.find(x=>!used.has(x.name)&&!genderOf(x));if(v){out[acc+'-'+g]=v;used.add(v.name)}}}
   return out}
@@ -43,7 +44,7 @@ const webEngine={
   // Automatic ('' / unknown name): the device's default English voice; otherwise the most natural-sounding English
   // voice installed (enhanced/premium/neural before compact), matching the device language when it is English.
   // No country or accent is preferred. An explicitly chosen installed voice always wins.
-  pick(name){const vs=this.voices();if(!vs.length)return null;if(name){const v=/^(us|gb|in)-[fm]$/.test(name)?slotVoices(vs)[name]:vs.find(x=>x.name===name);if(v)return v}
+  pick(name){const vs=this.voices();if(!vs.length)return null;if(!name&&cfg().style==='pidgin'){const sv=slotVoices(vs),v=sv['ng-f']||sv['ng-m'];if(v)return v}if(name){const v=/^(us|gb|in|ng)-[fm]$/.test(name)?slotVoices(vs)[name]:vs.find(x=>x.name===name);if(v)return v}
     const def=vs.find(v=>v.default);if(def)return def;
     const nav=(navigator.languages||[navigator.language||'']).map(l=>String(l).toLowerCase()).filter(l=>l.startsWith('en'));
     const q=v=>{const id=(v.name+' '+(v.voiceURI||'')).toLowerCase();return(/premium|enhanced|neural|natural/.test(id)?4:0)+(/compact|espeak|robot/.test(id)?-3:0)+(v.localService!==false?1:0)+(nav.includes(String(v.lang).toLowerCase().replace('_','-'))?2:0)};
@@ -96,6 +97,10 @@ function start(item){const c=cfg();const maxAge=item.pri===1?10000:item.pri===2?
   try{engine.speak(item.text,{voice:c.voice,volume:c.vol,rate:c.rate,onstart(){},onend:done})}catch(e){done()}
   setTimeout(done,Math.min(14000,3000+item.text.length*130/c.rate))}
 function pump(){const n=Q.next;Q.next=null;if(n&&!quiet())start(n);else unduck()}
+// Settings speech (preview / "Coach is on") goes through the same one-at-a-time slot, so game lines wait for it.
+function speakNow(text,extra){stop(false);const c=cfg(),id=++Q.seq;Q.cur={text,pri:0,key:'direct:'+id,at:Date.now(),id};duck(Math.min(12000,3000+text.length*110/c.rate));
+  const done=()=>{if(Q.cur&&Q.cur.id===id){Q.cur=null;pump()}};setTimeout(done,Math.min(14000,4500+text.length*130/c.rate));
+  try{engine.speak(text,{voice:c.voice,volume:c.vol,rate:c.rate,onstart(){},onend:done,...(extra||{})})}catch(e){done()}}
 function stop(restore=true){Q.next=null;Q.cur=null;engine.cancel();if(restore)unduck()}
 /* ---------- wording ---------- */
 function meId(){if(!G)return null;if(G.lcNet)return G.lcMe;if(G.online)return(G.players.find(p=>p.uid===NET.me)||{}).id??null;
@@ -112,41 +117,41 @@ function check(){if(!G||!G.players||!G.own)return;const k=keyOf(),now=Date.now()
   const a=W.s,b=snap();W.s=b;W.at=now;if(quiet())return;
   const me=meId(),you=id=>me!=null&&id===me,mode=cfg().mode,allow=(pri,mine)=>pri===1||mode==='important'||mine;
   const S=(t,pri,mine,key)=>{if(allow(pri,mine))say(t,pri,key||t)};
-  if(b.over&&!a.over){const w=standings()[0];S(you(w.id)?'Congratulations! You’ve won the match!':`${nm(w)} wins the match.`,1,true,'over:'+k);return}
-  b.bk.forEach((v,i)=>{if(v&&!a.bk[i])S(you(i)?'You’re bankrupt. Better luck next game.':`${nm(G.players[i])} is bankrupt!`,you(i)?1:2,you(i))});
-  b.cr.forEach((v,i)=>{if(v&&!a.cr[i])S(you(i)?'Civic Review! Your rent income is temporarily suspended.':`${nm(G.players[i])} is under Civic Review.`,you(i)?1:3,you(i));
-    else if(!v&&a.cr[i]&&you(i))S('Your planning restriction has ended.',2,true)});
+  if(b.over&&!a.over){const w=standings()[0];S(you(w.id)?tx('Congratulations! You’ve won the match!','Congratulations! You don win the match!'):tx(`${nm(w)} wins the match.`,`${nm(w)} don win the match.`),1,true,'over:'+k);return}
+  b.bk.forEach((v,i)=>{if(v&&!a.bk[i])S(you(i)?tx('You’re bankrupt. Better luck next game.','Ah! You don go bankrupt. Next game go better.'):tx(`${nm(G.players[i])} is bankrupt!`,`${nm(G.players[i])} don go bankrupt!`),you(i)?1:2,you(i))});
+  b.cr.forEach((v,i)=>{if(v&&!a.cr[i])S(you(i)?tx('Civic Review! Your rent income is temporarily suspended.','Wahala! Civic Review don hold your rent for now.'):tx(`${nm(G.players[i])} is under Civic Review.`,`${nm(G.players[i])} dey under Civic Review.`),you(i)?1:3,you(i));
+    else if(!v&&a.cr[i]&&you(i))S(tx('Your planning restriction has ended.','Your Civic Review don clear!'),2,true)});
   if(b.ev!==a.ev&&G.ev2){const e=G.ev2,name=e.name||'A city event';
-    S(e.kind==='rent'?`${name} is live! ${e.area} rents are up ${e.pct} percent.`:`${name}! Building ${e.group?'in '+e.area:'everywhere'} costs ${e.pct} percent less.`,2,false,'ev:'+b.ev)}
+    S(e.kind==='rent'?tx(`${name} is live! ${e.area} rents are up ${e.pct} percent.`,`${name} don start! ${e.area} rent don go up ${e.pct} percent.`):tx(`${name}! Building ${e.group?'in '+e.area:'everywhere'} costs ${e.pct} percent less.`,`${name}! To build ${e.group?'for '+e.area:'everywhere'} don cheap by ${e.pct} percent.`),2,false,'ev:'+b.ev)}
   if(b.lm!==a.lm){let A={},B={};try{A=JSON.parse(a.lm);B=JSON.parse(b.lm)}catch(e){}
-    for(const g of Object.keys(B))if(!A[g]||A[g].i!==B[g].i){const L=B[g];S(you(L.pid)?`${SQ[L.i].n} is now your Landmark!`:`A new Landmark has been designated: ${SQ[L.i].n}.`,2,you(L.pid),'lm:'+g+':'+L.i)}}
+    for(const g of Object.keys(B))if(!A[g]||A[g].i!==B[g].i){const L=B[g];S(you(L.pid)?tx(`${SQ[L.i].n} is now your Landmark!`,`${SQ[L.i].n} na your Landmark now!`):tx(`A new Landmark has been designated: ${SQ[L.i].n}.`,`New Landmark don land: ${SQ[L.i].n}.`),2,you(L.pid),'lm:'+g+':'+L.i)}}
   const done=new Set();
   b.o.forEach((o,i)=>{if(o===a.o[i]||o<0||a.o[i]>=0)return;const p=G.players[o];
-    S(you(o)?`You’ve acquired ${SQ[i].n}!`:`${nm(p)} bought ${SQ[i].n}.`,you(o)?2:3,you(o));
+    S(you(o)?tx(`You’ve acquired ${SQ[i].n}!`,`${SQ[i].n} don be your own!`):tx(`${nm(p)} bought ${SQ[i].n}.`,`${nm(p)} don buy ${SQ[i].n}.`),you(o)?2:3,you(o));
     const g=SQ[i].g;if(g&&!done.has(g)&&ownsAll(o,g)){done.add(g);const land=typeof lc==='function'&&lc();
-      S(you(o)?(land?'You’ve completed a district! It’s ready for a Landmark.':'You’ve completed a district!'):`${nm(p)} completed the ${GNAME[g]} district.`,2,you(o),'set:'+o+':'+g)}});
+      S(you(o)?(land?tx('You’ve completed a district! It’s ready for a Landmark.','You don complete the district! E ready for Landmark.'):tx('You’ve completed a district!','You don complete the district!')):tx(`${nm(p)} completed the ${GNAME[g]} district.`,`${nm(p)} don complete ${GNAME[g]}.`),2,you(o),'set:'+o+':'+g)}});
   let best=null;b.h.forEach((h,i)=>{if(h>a.h[i]&&b.o[i]>=0&&b.o[i]===a.o[i]&&(!best||h>best.h))best={i,h,o:b.o[i]}});
   if(best){const n=stageName(best.i,best.h),big=best.h>=5;
-    if(you(best.o))S(big?`${n} construction complete!`:`${n} development complete!`,big?2:3,true,'bld:'+best.i+':'+best.h);
-    else if(big)S(`${nm(G.players[best.o])} built a ${n} on ${SQ[best.i].n}.`,2,false,'bld:'+best.i+':'+best.h)}
+    if(you(best.o))S(big?tx(`${n} construction complete!`,`${n} don stand gidigba!`):tx(`${n} development complete!`,`${n} don finish!`),big?2:3,true,'bld:'+best.i+':'+best.h);
+    else if(big)S(tx(`${nm(G.players[best.o])} built a ${n} on ${SQ[best.i].n}.`,`${nm(G.players[best.o])} don build ${n} for ${SQ[best.i].n}.`),2,false,'bld:'+best.i+':'+best.h)}
   const fresh=Math.min(10,b.logN-a.logN);
   for(let k2=fresh-1;k2>=0;k2--)line(G.log[k2]||'',you,S);
 }
 function line(t,you,S){const P0=G.players.slice().sort((x,y)=>y.name.length-x.name.length),pre=t=>P0.find(p=>t.startsWith(p.name+' '));
   const A=pre(t);if(!A)return;const r=t.slice(A.name.length+1);let m;
-  if(r.startsWith('paid for a Fast-Track Permit')){if(you(A.id))S('Fast-Track Permit approved!',2,true);return}
+  if(r.startsWith('paid for a Fast-Track Permit')){if(you(A.id))S(tx('Fast-Track Permit approved!','Fast-Track Permit don approve!'),2,true);return}
   if(r.startsWith('paid ')){const rest=r.slice(5),B=P0.find(p=>rest.startsWith(p.name+' '));
-    if(B){const amt=rest.slice(B.name.length+1);if(you(A.id))S(`Pay ${spoken(amt)} to ${B.name}.`,big(amt)?2:3,true);else if(you(B.id))S(`${A.name} pays you ${spoken(amt)}.`,3,true)}
+    if(B){const amt=rest.slice(B.name.length+1);if(you(A.id))S(tx(`Pay ${spoken(amt)} to ${B.name}.`,`Pay ${spoken(amt)} give ${B.name}.`),big(amt)?2:3,true);else if(you(B.id))S(tx(`${A.name} pays you ${spoken(amt)}.`,`${A.name} don pay you ${spoken(amt)}.`),3,true)}
     else if(you(A.id)&&/\d/.test(rest)&&rest.length<16)S(`Pay ${spoken(rest)}.`,3,true);return}
-  if(/^(passed|landed on) Start, \+/.test(r)){if(you(A.id))S('Payday!',3,true,'pay:'+G.round+':'+A.id);return}
-  if(r==='was sent to the Lockup'){S(you(A.id)?'You’re going to the Lockup.':`${A.name} is going to the Lockup.`,you(A.id)?2:3,you(A.id));return}
+  if(/^(passed|landed on) Start, \+/.test(r)){if(you(A.id))S(tx('Payday!','Payday! Alert don land!'),3,true,'pay:'+G.round+':'+A.id);return}
+  if(r==='was sent to the Lockup'){S(you(A.id)?tx('You’re going to the Lockup.','You dey go Lockup o!'):tx(`${A.name} is going to the Lockup.`,`${A.name} dey go Lockup.`),you(A.id)?2:3,you(A.id));return}
   if(m=/^drew: (.+)$/.exec(r)){if(you(A.id)){const c=m[1].split(/[.!]/)[0].trim();if(c&&c.length<=70)S(c+'.',3,true)}}}
 const spoken=s=>{const m=/([\d.,]+)\s*([KMB])\b/.exec(s);return m?`${m[1]} ${{K:'thousand',M:'million',B:'billion'}[m[2]]} Skyline Cash`:s};
 const big=s=>{const m=/([\d.,]+)\s*([KMB])\b/.exec(s);if(!m)return false;const v=parseFloat(m[1].replace(/,/g,''))*({K:1e-3,M:1,B:1000}[m[2]]);return v>=300};
 function turnSay(p){try{check()}catch(e){}if(quiet()||!p||p.bankrupt||G.over||W.key!==keyOf())return;const me=meId(),you=me!=null&&p.id===me,mode=cfg().mode,now=Date.now();
-  if(you)say('Your turn. Ready to roll?',2,'turn:'+G.round+':'+p.id);
-  else if(!p.ai){if(mode==='important'||me==null)say(`${nm(p)}’s turn.`,3,'turn:'+G.round+':'+p.id)}
-  else if(mode==='important'&&now-W.aiSaid>20000&&!Q.cur){W.aiSaid=now;say('The computer is making its move.',3,'ai:'+G.round)}}
+  if(you)say(tx('Your turn. Ready to roll?','Na your turn o! Roll am!'),2,'turn:'+G.round+':'+p.id);
+  else if(!p.ai){if(mode==='important'||me==null)say(tx(`${nm(p)}’s turn.`,`Na ${nm(p)} turn now.`),3,'turn:'+G.round+':'+p.id)}
+  else if(mode==='important'&&now-W.aiSaid>20000&&!Q.cur){W.aiSaid=now;say(tx('The computer is making its move.','Computer don dey move.'),3,'ai:'+G.round)}}
 {const _b=banner;banner=function(p){try{turnSay(p)}catch(e){}return _b.apply(this,arguments)}}
 /* hooks: re-check after committed renders; light poll while a game is open */
 {const _r=renderRoster;renderRoster=function(){const r=_r.apply(this,arguments);try{check()}catch(e){}return r}}
@@ -170,16 +175,18 @@ function draw(box){const c=cfg(),ok=engine.supported(),vs=ok?engine.voices():[],
    <span>Voice</span><select aria-label="Coach voice" ${ok?'':'disabled'}><option value="" ${chosen?'':'selected'}>System English (Automatic)</option>${slots.map(x=>`<option value="${x[0]}" ${chosen===x[0]?'selected':''}>${x[1]}</option>`).join('')}</select>
    <span>Coach volume</span><input type="range" min="0" max="1" step="0.05" value="${c.vol}" aria-label="Coach volume" data-k="vol">
    <span>Speaking speed</span><input type="range" min="0.7" max="1.4" step="0.05" value="${c.rate}" aria-label="Speaking speed" data-k="rate">
+   <span>Style</span><div class="seg2"><button data-s="standard" class="${c.style==='standard'?'on':''}">Standard English</button><button data-s="pidgin" class="${c.style==='pidgin'?'on':''}">Naija Pidgin</button></div>
    <span>Commentary</span><div class="seg2"><button data-m="important" class="${c.mode==='important'?'on':''}">Important events</button><button data-m="mine" class="${c.mode==='mine'?'on':''}">My turn + major events</button></div>
    <span></span><div class="seg2"><button class="cbtn" data-prev>▶ Preview voice</button><button class="cbtn" data-chk>Check voices</button></div></div>
    <div class="cmsg" data-note>${(c.bad||[]).length?`${c.bad.length} voice${c.bad.length>1?'s':''} didn’t work on this device and ${c.bad.length>1?'are':'is'} hidden.`:''}</div>
    <div class="cmsg">${ok?'Spoken announcements only — nothing appears on screen. Music and city sounds fade while the Coach speaks.':'This device or browser has no built-in speech voice, so the Coach is unavailable here.'}</div>`;
-  box.querySelectorAll('[data-on]').forEach(b=>b.onclick=()=>{const on=b.dataset.on==='1';cfg().on=on;saveCfg();if(!on)stop();else{unlocked=true;try{engine.unlock&&engine.unlock('Skyline Coach is on.')}catch(e){}W.key=null}draw(box)});
+  box.querySelectorAll('[data-on]').forEach(b=>b.onclick=()=>{const on=b.dataset.on==='1';cfg().on=on;saveCfg();if(!on)stop();else{unlocked=true;try{engine.unlock&&speakNow(tx('Skyline Coach is on.','Skyline Coach don land!'))}catch(e){}W.key=null}draw(box)});
   const sel=box.querySelector('select');sel.onchange=()=>{cfg().voice=sel.value;saveCfg()};
   box.querySelectorAll('input[data-k]').forEach(r=>r.oninput=()=>{cfg()[r.dataset.k]=+r.value;saveCfg()});
   box.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{cfg().mode=b.dataset.m;saveCfg();draw(box)});
+  box.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{cfg().style=b.dataset.s;saveCfg();draw(box)});
   const note=box.querySelector('[data-note]');
-  box.querySelector('[data-prev]').onclick=()=>{if(!ok)return;stop(false);const c2=cfg();duck(6000);try{engine.speak('Welcome to Skyline Estates. It’s your turn. Ready to roll?',{voice:c2.voice,volume:c2.vol,rate:c2.rate,onstart(){},onend(){unduck()},onfail(n){setTimeout(()=>{const nb=box.querySelector('[data-note]');if(nb)nb.textContent=`“${n}” didn’t work on this device, so it’s hidden and Automatic is used instead.`},50)}})}catch(e){unduck()}};
+  box.querySelector('[data-prev]').onclick=()=>{if(!ok)return;speakNow(tx('Welcome to Skyline Estates. It’s your turn. Ready to roll?','Welcome to Skyline Estates. Na your turn o, roll am!'),{onfail(n){setTimeout(()=>{const nb=box.querySelector('[data-note]');if(nb)nb.textContent=`“${n}” didn’t work on this device, so it’s hidden and Automatic is used instead.`},50)}})};
   const ck=box.querySelector('[data-chk]');if(ck)ck.onclick=async()=>{if(!ok||!engine.check)return;stop();ck.disabled=true;
     const r=await engine.check((k,n)=>{note.textContent=`Checking voices… ${k} of ${n}`});draw(box);const nb=box.querySelector('[data-note]');
     if(nb)nb.textContent=r.total?`${r.working} of ${r.total} English voices work on this device${r.bad.length?'; the others are hidden':''}.`:'No English voices were found on this device.'};
@@ -189,8 +196,8 @@ function mount(container){if(!container||container.querySelector('.coachbox'))re
 {const _ps=paneSettings;paneSettings=function(T){const r=_ps.apply(this,arguments);try{const v=T.querySelector('#stVol'),ch=T.querySelector('#sChips');mount(v?v.closest('.stp'):ch&&ch.closest('.card'))}catch(e){}return r}}
 // In-game menu → Sound dialog.
 {const _m=modal;modal=function(o){try{if(o&&typeof o.html==='string'&&G&&!G.over&&cfg().on){const h=o.html;let m;
-    if(/<div class="mh">For sale<\/div>/.test(h)&&(m=/<div class="dh"[^>]*><small>[^<]*<\/small><b>([^<]+)<\/b>/.exec(h))){const name=m[1].replace(/&amp;/g,'&').replace(/^[^A-Za-z0-9]+/,'').trim();say(`Do you want to acquire ${name}?`,1,'buy:'+name+':'+G.round)}
-    else if((m=/Choose a Landmark · ([^<]+)</.exec(h)))say(`Choose a Landmark for ${m[1].replace(/&amp;/g,'&').trim()}.`,1,'lmq:'+m[1]+':'+G.round)}}catch(e){}
+    if(/<div class="mh">For sale<\/div>/.test(h)&&(m=/<div class="dh"[^>]*><small>[^<]*<\/small><b>([^<]+)<\/b>/.exec(h))){const name=m[1].replace(/&amp;/g,'&').replace(/^[^A-Za-z0-9]+/,'').trim();say(tx(`Do you want to acquire ${name}?`,`You wan buy ${name}?`),1,'buy:'+name+':'+G.round)}
+    else if((m=/Choose a Landmark · ([^<]+)</.exec(h)))say(tx(`Choose a Landmark for ${m[1].replace(/&amp;/g,'&').trim()}.`,`Choose Landmark for ${m[1].replace(/&amp;/g,'&').trim()}!`),1,'lmq:'+m[1]+':'+G.round)}}catch(e){}
   if(o&&typeof o.html==='string'&&o.html.includes('id="sndChips"')){const om=o.onMount;o={...o,onMount(pn,close){const r=om&&om(pn,close);try{mount(pn.querySelector('#sndChips').parentElement)}catch(e){}return r}}}return _m.call(this,o)}}
 window.SkylineCoach=Object.freeze({version:1,voice:n=>{try{const v=engine.pick&&engine.pick(n||'');return v?v.name:null}catch(e){return null}},useEngine(e){if(e&&typeof e.speak==='function'&&typeof e.supported==='function'){stop();engine=e;renderAll()}},
   say:(t,p)=>say(t,p||2),stop,check,_state:{Q,W,D}});
