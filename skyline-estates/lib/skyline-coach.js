@@ -18,6 +18,20 @@ const cfg=()=>{const c=PREF.coach=Object.assign({},DEF,PREF.coach||{});c.vol=Mat
 const saveCfg=()=>{try{savePref()}catch(e){}};
 /* ---------- engine adapters ---------- */
 const NOVELTY=/^(Albert|Bad News|Bahh|Bells|Boing|Bubbles|Cellos|Good News|Jester|Organ|Superstar|Trinoids|Whisper|Wobble|Zarvox|Junior|Ralph|Fred|Kathy|Eddy|Flo|Grandma|Grandpa|Reed|Rocko|Sandy|Shelley|Deranged|Hysterical|Pipe Organ)( \(|$)/i;
+// Curated voice slots: the game offers American, British and Indian English, female and male. Each slot is filled at
+// run time with the best working installed voice of that accent and gender (enhanced/premium/neural first).
+const SLOTS=[['us-f','American English · Female','us','f'],['us-m','American English · Male','us','m'],['gb-f','British English · Female','gb','f'],['gb-m','British English · Male','gb','m'],['in-f','Indian English · Female','in','f'],['in-m','Indian English · Male','in','m']];
+const FEMALE=/\b(female|woman|samantha|allison|ava|susan|zoe|joelle|noelle|nicky|victoria|karen|moira|tessa|kate|serena|stephanie|martha|fiona|veena|isha|sangeeta|lekha|aria|jenny|michelle|ana|emma|libby|sonia|maisie|hollie|mia|neerja|heera|swara|kalpana|catherine|natasha|clara|salli|joanna|kendra|kimberly|ivy|amy|raveena|aditi|siri female)\b/i;
+const MALE=/\b(male|man|alex|tom|evan|nathan|aaron|fred|daniel|oliver|arthur|jamie|rishi|guy|davis|christopher|eric|roger|steffan|ryan|thomas|elliot|prabhat|ravi|hemant|matthew|justin|joey|brian|siri male)\b/i;
+// Android/Google network voice ids carry a code instead of a name.
+const ANDROID_G={'en-us-x-sfg':'f','en-us-x-tpc':'f','en-us-x-tpf':'f','en-us-x-iob':'f','en-us-x-iog':'f','en-us-x-iol':'m','en-us-x-iom':'m','en-us-x-tpd':'m','en-gb-x-gba':'f','en-gb-x-gbc':'f','en-gb-x-gbb':'m','en-gb-x-gbd':'m','en-gb-x-gbg':'m','en-gb-x-rjs':'m','en-in-x-ahp':'f','en-in-x-cxx':'f','en-in-x-ene':'f','en-in-x-end':'m'};
+const genderOf=v=>{const n=(v.name||'')+' '+(v.voiceURI||'');const a=Object.keys(ANDROID_G).find(k=>n.toLowerCase().includes(k));if(a)return ANDROID_G[a];if(/\bfemale\b/i.test(n))return'f';if(/\bmale\b/i.test(n))return'm';return FEMALE.test(n)?'f':MALE.test(n)?'m':''};
+const accentOf=v=>{const l=String(v.lang||'').toLowerCase().replace('_','-');return /^en-us/.test(l)?'us':/^en-gb/.test(l)?'gb':/^en-in/.test(l)?'in':''};
+const quality=v=>{const id=(v.name+' '+(v.voiceURI||'')).toLowerCase();return(/premium|enhanced|neural|natural|online/.test(id)?4:0)+(/compact|espeak|robot/.test(id)?-3:0)+(v.localService!==false?1:0)};
+function slotVoices(vs){const out={};for(const acc of ['us','gb','in']){const list=vs.filter(v=>accentOf(v)===acc).sort((a,b)=>quality(b)-quality(a));const used=new Set();
+    for(const g of ['f','m']){const v=list.find(x=>!used.has(x.name)&&genderOf(x)===g);if(v){out[acc+'-'+g]=v;used.add(v.name)}}
+    for(const g of ['f','m'])if(!out[acc+'-'+g]){const v=list.find(x=>!used.has(x.name)&&!genderOf(x));if(v){out[acc+'-'+g]=v;used.add(v.name)}}}
+  return out}
 function markBad(name){const c=cfg();c.bad=[...new Set([...(c.bad||[]),name])].slice(-40);if(c.voice===name)c.voice='';saveCfg();try{renderAll()}catch(e){}}
 const webEngine={
   name:'web',
@@ -29,7 +43,7 @@ const webEngine={
   // Automatic ('' / unknown name): the device's default English voice; otherwise the most natural-sounding English
   // voice installed (enhanced/premium/neural before compact), matching the device language when it is English.
   // No country or accent is preferred. An explicitly chosen installed voice always wins.
-  pick(name){const vs=this.voices();if(!vs.length)return null;if(name){const v=vs.find(x=>x.name===name);if(v)return v}
+  pick(name){const vs=this.voices();if(!vs.length)return null;if(name){const v=/^(us|gb|in)-[fm]$/.test(name)?slotVoices(vs)[name]:vs.find(x=>x.name===name);if(v)return v}
     const def=vs.find(v=>v.default);if(def)return def;
     const nav=(navigator.languages||[navigator.language||'']).map(l=>String(l).toLowerCase()).filter(l=>l.startsWith('en'));
     const q=v=>{const id=(v.name+' '+(v.voiceURI||'')).toLowerCase();return(/premium|enhanced|neural|natural/.test(id)?4:0)+(/compact|espeak|robot/.test(id)?-3:0)+(v.localService!==false?1:0)+(nav.includes(String(v.lang).toLowerCase().replace('_','-'))?2:0)};
@@ -150,10 +164,10 @@ const CSS=`.coachbox{margin-top:10px;border-top:1px solid var(--ln,#0002);paddin
 (()=>{const s=document.createElement('style');s.textContent=CSS;document.head.append(s)})();
 const boxes=new Set();
 function renderAll(){boxes.forEach(b=>{if(b.isConnected)draw(b);else boxes.delete(b)})}
-function draw(box){const c=cfg(),ok=engine.supported(),vs=ok?engine.voices():[],cur=ok?engine.pick(''):null,chosen=c.voice?vs.find(v=>v.name===c.voice):null;
+function draw(box){const c=cfg(),ok=engine.supported(),vs=ok?engine.voices():[],sv=slotVoices(vs),slots=SLOTS.filter(x=>sv[x[0]]);if(c.voice&&!sv[c.voice]){c.voice='';saveCfg()}const chosen=c.voice||'';
   box.innerHTML=`<h4>Skyline Coach</h4>
    <div class="cg"><span>Coach voice</span><div class="seg2"><button data-on="1" class="${c.on?'on':''}" aria-pressed="${c.on}">On</button><button data-on="0" class="${c.on?'':'on'}" aria-pressed="${!c.on}">Off</button></div>
-   <span>Voice</span><select aria-label="Coach voice" ${ok?'':'disabled'}><option value="" ${chosen?'':'selected'}>System English (Automatic)${!chosen&&cur?' · '+esc(cur.name):''}</option>${vs.map(v=>`<option value="${esc(v.name)}" ${chosen&&chosen.name===v.name?'selected':''}>${esc(v.name)} (${esc(v.lang)})</option>`).join('')}</select>
+   <span>Voice</span><select aria-label="Coach voice" ${ok?'':'disabled'}><option value="" ${chosen?'':'selected'}>System English (Automatic)</option>${slots.map(x=>`<option value="${x[0]}" ${chosen===x[0]?'selected':''}>${x[1]}</option>`).join('')}</select>
    <span>Coach volume</span><input type="range" min="0" max="1" step="0.05" value="${c.vol}" aria-label="Coach volume" data-k="vol">
    <span>Speaking speed</span><input type="range" min="0.7" max="1.4" step="0.05" value="${c.rate}" aria-label="Speaking speed" data-k="rate">
    <span>Commentary</span><div class="seg2"><button data-m="important" class="${c.mode==='important'?'on':''}">Important events</button><button data-m="mine" class="${c.mode==='mine'?'on':''}">My turn + major events</button></div>
