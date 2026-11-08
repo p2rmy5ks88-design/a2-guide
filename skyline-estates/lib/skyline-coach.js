@@ -13,10 +13,11 @@
    - No HUD, captions or indicators. The only UI is a "Skyline Coach" section in Settings → Sound. */
 (()=>{'use strict';
 if(window.SkylineCoach)return;
-const DEF={on:false,voice:'',vol:.8,rate:1,mode:'important',style:'standard'};
-const cfg=()=>{const c=PREF.coach=Object.assign({},DEF,PREF.coach||{});c.vol=Math.min(1,Math.max(0,+c.vol||0));c.rate=Math.min(1.4,Math.max(.7,+c.rate||1));if(!['important','mine'].includes(c.mode))c.mode='important';if(!['standard','pidgin'].includes(c.style))c.style='standard';return c};
+const DEF={on:false,voice:'natural',vol:.8,rate:1,mode:'important',style:'standard'};
+const cfg=()=>{const c=PREF.coach=Object.assign({},DEF,PREF.coach||{});if(!c.v2){c.v2=1;c.voice='natural'}c.vol=Math.min(1,Math.max(0,+c.vol||0));c.rate=Math.min(1.4,Math.max(.7,+c.rate||1));if(!['important','mine'].includes(c.mode))c.mode='important';if(!['standard','pidgin'].includes(c.style))c.style='standard';return c};
 const saveCfg=()=>{try{savePref()}catch(e){}};
-const tx=(en,pg)=>cfg().style==='pidgin'?pg:en; // Standard English or Naija Pidgin wording
+const natural=()=>cfg().voice==='natural';
+const tx=(en,pg)=>cfg().style==='pidgin'&&!natural()?pg:en; // Standard English or Naija Pidgin wording
 /* ---------- engine adapters ---------- */
 const NOVELTY=/^(Albert|Bad News|Bahh|Bells|Boing|Bubbles|Cellos|Good News|Jester|Organ|Superstar|Trinoids|Whisper|Wobble|Zarvox|Junior|Ralph|Fred|Kathy|Eddy|Flo|Grandma|Grandpa|Reed|Rocko|Sandy|Shelley|Deranged|Hysterical|Pipe Organ)( \(|$)/i;
 // Curated voice slots: the game offers American, British and Indian English, female and male. Each slot is filled at
@@ -82,9 +83,38 @@ function recover(){try{if(AC&&AC.state!=='running'&&!document.hidden)AC.resume()
 function unduck(){clearTimeout(D.timer);if(!D.ducked)return;D.ducked=false;recover();busTargets(false);setTimeout(()=>{if(!D.ducked){recover();busTargets(false)}},700);setTimeout(()=>{if(!D.ducked)recover()},2000)}
 // If the audio engine is interrupted while nothing is speaking (e.g. by the system voice), bring it back.
 setInterval(()=>{try{if(!D.ducked&&!Q.cur&&AC&&AC.state!=='running'&&!document.hidden&&cfg().on)recover()}catch(e){}},2000);
+/* ---------- natural voice pack (pre-recorded clips; Kokoro af_heart, Apache-2.0) ----------
+   Clips are fetched on demand (and kept in the Cache API) or downloaded once for offline play from Settings.
+   They play through the game's own audio engine, never through system speech, so the natural voice is never
+   mixed with robotic narration: a line without a recorded clip (names, amounts, card text) is simply skipped. */
+const NAT={base:'coach/natural-en-f/',cache:'skyline-coach-natural-en-f-v1',man:null,buf:new Map(),src:null};
+async function natCacheGet(url){try{if(window.caches){const c=await caches.open(NAT.cache);const r=await c.match(url);if(r)return r}}catch(e){}return null}
+async function natManifest(){if(NAT.man)return NAT.man;const url=NAT.base+'manifest.json';let r=await natCacheGet(url);
+  if(!r){r=await fetch(url,{cache:'no-cache'});if(!r.ok)throw Error('manifest');try{if(window.caches)(await caches.open(NAT.cache)).put(url,r.clone())}catch(e){}}NAT.man=await r.json();return NAT.man}
+async function natBuffer(id){if(NAT.buf.has(id))return NAT.buf.get(id);const m=await natManifest(),f=m.files[id];if(!f)throw Error('no clip '+id);const url=NAT.base+f;
+  let r=await natCacheGet(url);if(!r){r=await fetch(url);if(!r.ok)throw Error('clip');try{if(window.caches)(await caches.open(NAT.cache)).put(url,r.clone())}catch(e){}}
+  const ab=await r.arrayBuffer();const b=await new Promise((res,rej)=>AC.decodeAudioData(ab,res,rej));if(NAT.buf.size>80)NAT.buf.delete(NAT.buf.keys().next().value);NAT.buf.set(id,b);return b}
+function natPlay(ids,vol,onend){NAT.last=ids.slice();NAT.plays=(NAT.plays||0)+1;let stopped=false,ended=false;const fin=()=>{if(ended)return;ended=true;onend()};
+  (async()=>{try{if(!AC)initAudio();if(!AC)throw Error('no audio');if(AC.state!=='running')await AC.resume().catch(()=>{});
+    for(let k=0;k<ids.length;k++){if(stopped)return;const b=await natBuffer(ids[k]);if(stopped)return;
+      await new Promise(res=>{const src=AC.createBufferSource(),g=AC.createGain();g.gain.value=vol;src.buffer=b;src.connect(g).connect(AC.destination);src.onended=res;NAT.src=src;src.start();setTimeout(res,b.duration*1000+800)});
+      NAT.src=null;if(k<ids.length-1)await new Promise(r=>setTimeout(r,140))}}catch(e){}finally{NAT.src=null;fin()}})();
+  return()=>{stopped=true;try{NAT.src&&NAT.src.stop()}catch(e){}NAT.src=null;fin()}}
+const CLIP=[[/^Your turn\. Ready to roll\?$/,'turn_me'],[/^The computer is making its move\.$/,'turn_ai'],[/’s turn\.$/,'turn_other'],[/^You’ve acquired /,'buy_me'],[/ bought .+\.$/,'buy_other'],
+  [/^You’ve completed a district! It’s ready/,'set_me_lm'],[/^You’ve completed a district!$/,'set_me'],[/ completed the .+ district\.$/,'set_other'],[/^Low-rise development complete!$/,'build_me_1'],[/^Mid-rise development complete!$/,'build_me_2'],
+  [/^High-rise development complete!$/,'build_me_3'],[/^Skyscraper construction complete!$/,'build_me_sky'],[/(house|houses|Tower) (development|construction) complete!$/,'build_me_house'],[/ built a Skyscraper on /,'build_other_sky'],
+  [/ is now your Landmark!$/,'lm_me'],[/^A new Landmark has been designated/,'lm_other'],[/^Choose a Landmark for /,'lm_ask'],[/^Civic Review! /,'cr_me'],[/ is under Civic Review\.$/,'cr_other'],[/^Your planning restriction has ended\.$/,'cr_end'],
+  [/^Fast-Track Permit approved!$/,'fasttrack'],[/^You’re bankrupt\./,'bk_me'],[/ is bankrupt!$/,'bk_other'],[/^Congratulations! You’ve won/,'win_me'],[/ wins the match\.$/,'win_other'],[/^Pay .+ to .+\.$/,'pay_rent'],[/^Pay .+\.$/,'pay_fee'],
+  [/ pays you /,'recv_rent'],[/^Payday!$/,'payday'],[/^You’re going to the Lockup\.$/,'lockup_me']];
+function clipsFor(text){const ix=NAT.man&&NAT.man.index||{buy:{},ev:{}};let m;
+  if(m=/^Do you want to acquire (.+)\?$/.exec(text))return[ix.buy[m[1]]||'buy_ask'];
+  if(m=/^(.+) is live! .+ rents are (up|down) \d+ percent\.$/.exec(text)){const e=ix.ev[m[1]];return(e?[e]:[]).concat(m[2]==='down'?'ev_rent_down':'ev_rent_up')}
+  if(m=/^(.+)! Building .+ costs \d+ percent less\.$/.exec(text)){const e=ix.ev[m[1]];return(e?[e]:[]).concat('ev_dev')}
+  for(const [r,id] of CLIP)if(r.test(text))return[id];return null}
+const natPreload=()=>{if(natural())natManifest().catch(()=>{})};setTimeout(natPreload,1500);
 /* ---------- queue ---------- */
 const Q={cur:null,next:null,recent:new Map(),seq:0};
-const quiet=()=>{const c=cfg();return !c.on||!engine.supported()||document.hidden||typeof FAST!=='undefined'&&FAST||!G||G.sim};
+const quiet=()=>{const c=cfg();return !c.on||!natural()&&!engine.supported()||document.hidden||typeof FAST!=='undefined'&&FAST||!G||G.sim};
 function say(text,pri=3,key=text){if(quiet()||!text)return;const now=Date.now();
   for(const [k,t] of Q.recent)if(now-t>12000)Q.recent.delete(k);if(Q.recent.has(key))return;Q.recent.set(key,now);
   const item={text,pri,key,at:now,id:++Q.seq};
@@ -92,16 +122,20 @@ function say(text,pri=3,key=text){if(quiet()||!text)return;const now=Date.now();
     if(!Q.next||pri<=Q.next.pri)Q.next=item;return}
   start(item)}
 function start(item){const c=cfg();const maxAge=item.pri===1?10000:item.pri===2?6000:3500;if(Date.now()-item.at>maxAge){Q.cur=null;pump();return}
+  const done0=()=>{if(!Q.cur||Q.cur.id!==item.id)return;Q.cur=null;pump()};
+  if(natural()){Q.cur=item;const go=()=>{if(Q.cur!==item)return;const ids=clipsFor(item.text);if(!ids){Q.cur=null;pump();return}duck(15000);item.cancel=natPlay(ids,c.vol,done0)};
+    if(NAT.man)go();else{item.cancel=()=>{};natManifest().catch(()=>{}).then(go)}return}
   Q.cur=item;const id=item.id;duck(Math.min(12000,2500+item.text.length*110/c.rate));
   const done=()=>{if(!Q.cur||Q.cur.id!==id)return;Q.cur=null;pump()};
   try{engine.speak(item.text,{voice:c.voice,volume:c.vol,rate:c.rate,onstart(){},onend:done})}catch(e){done()}
   setTimeout(done,Math.min(14000,3000+item.text.length*130/c.rate))}
 function pump(){const n=Q.next;Q.next=null;if(n&&!quiet())start(n);else unduck()}
 // Settings speech (preview / "Coach is on") goes through the same one-at-a-time slot, so game lines wait for it.
-function speakNow(text,extra){stop(false);const c=cfg(),id=++Q.seq;Q.cur={text,pri:0,key:'direct:'+id,at:Date.now(),id};duck(Math.min(12000,3000+text.length*110/c.rate));
+function speakNow(text,extra,clip){stop(false);const c=cfg(),id=++Q.seq;Q.cur={text,pri:0,key:'direct:'+id,at:Date.now(),id};
+  if(natural()&&clip){duck(15000);Q.cur.cancel=natPlay([clip],c.vol,()=>{if(Q.cur&&Q.cur.id===id){Q.cur=null;pump()}});return}duck(Math.min(12000,3000+text.length*110/c.rate));
   const done=()=>{if(Q.cur&&Q.cur.id===id){Q.cur=null;pump()}};setTimeout(done,Math.min(14000,4500+text.length*130/c.rate));
   try{engine.speak(text,{voice:c.voice,volume:c.vol,rate:c.rate,onstart(){},onend:done,...(extra||{})})}catch(e){done()}}
-function stop(restore=true){Q.next=null;Q.cur=null;engine.cancel();if(restore)unduck()}
+function stop(restore=true){const cur=Q.cur;Q.next=null;Q.cur=null;engine.cancel();try{cur&&cur.cancel&&cur.cancel()}catch(e){}if(restore)unduck()}
 /* ---------- wording ---------- */
 function meId(){if(!G)return null;if(G.lcNet)return G.lcMe;if(G.online)return(G.players.find(p=>p.uid===NET.me)||{}).id??null;
   const h=G.players.filter(p=>!p.ai);return h.length===1?h[0].id:null}
@@ -122,7 +156,7 @@ function check(){if(!G||!G.players||!G.own)return;const k=keyOf(),now=Date.now()
   b.cr.forEach((v,i)=>{if(v&&!a.cr[i])S(you(i)?tx('Civic Review! Your rent income is temporarily suspended.','Wahala! Civic Review don hold your rent for now.'):tx(`${nm(G.players[i])} is under Civic Review.`,`${nm(G.players[i])} dey under Civic Review.`),you(i)?1:3,you(i));
     else if(!v&&a.cr[i]&&you(i))S(tx('Your planning restriction has ended.','Your Civic Review don clear!'),2,true)});
   if(b.ev!==a.ev&&G.ev2){const e=G.ev2,name=e.name||'A city event';
-    S(e.kind==='rent'?tx(`${name} is live! ${e.area} rents are up ${e.pct} percent.`,`${name} don start! ${e.area} rent don go up ${e.pct} percent.`):tx(`${name}! Building ${e.group?'in '+e.area:'everywhere'} costs ${e.pct} percent less.`,`${name}! To build ${e.group?'for '+e.area:'everywhere'} don cheap by ${e.pct} percent.`),2,false,'ev:'+b.ev)}
+    S(e.kind==='rent'?tx(`${name} is live! ${e.area} rents are ${e.pct<0?'down':'up'} ${Math.abs(e.pct)} percent.`,`${name} don start! ${e.area} rent don go up ${e.pct} percent.`):tx(`${name}! Building ${e.group?'in '+e.area:'everywhere'} costs ${e.pct} percent less.`,`${name}! To build ${e.group?'for '+e.area:'everywhere'} don cheap by ${e.pct} percent.`),2,false,'ev:'+b.ev)}
   if(b.lm!==a.lm){let A={},B={};try{A=JSON.parse(a.lm);B=JSON.parse(b.lm)}catch(e){}
     for(const g of Object.keys(B))if(!A[g]||A[g].i!==B[g].i){const L=B[g];S(you(L.pid)?tx(`${SQ[L.i].n} is now your Landmark!`,`${SQ[L.i].n} na your Landmark now!`):tx(`A new Landmark has been designated: ${SQ[L.i].n}.`,`New Landmark don land: ${SQ[L.i].n}.`),2,you(L.pid),'lm:'+g+':'+L.i)}}
   const done=new Set();
@@ -169,28 +203,43 @@ const CSS=`.coachbox{margin-top:10px;border-top:1px solid var(--ln,#0002);paddin
 (()=>{const s=document.createElement('style');s.textContent=CSS;document.head.append(s)})();
 const boxes=new Set();
 function renderAll(){boxes.forEach(b=>{if(b.isConnected)draw(b);else boxes.delete(b)})}
-function draw(box){const c=cfg(),ok=engine.supported(),vs=ok?engine.voices():[],sv=slotVoices(vs),slots=SLOTS.filter(x=>sv[x[0]]);if(c.voice&&!sv[c.voice]){c.voice='';saveCfg()}const chosen=c.voice||'';
+async function packInfo(){let man=null;try{man=await natManifest()}catch(e){}const n=man?Object.keys(man.files).length:0;let have=0;
+  try{if(window.caches&&man){const c=await caches.open(NAT.cache),keys=await c.keys();have=keys.filter(k=>!/manifest\.json$/.test(k.url)).length}}catch(e){}
+  return{man,n,have,mb:man?(man.bytes/1048576).toFixed(1):'?',cacheOk:!!window.caches}}
+async function packDownload(onp){const man=await natManifest(),ids=Object.keys(man.files),c=await caches.open(NAT.cache);let done=0,fail=0,k=0;
+  const work=async()=>{while(k<ids.length){const id=ids[k++],url=NAT.base+man.files[id];try{if(!await c.match(url)){const r=await fetch(url);if(!r.ok)throw 0;await c.put(url,r)}}catch(e){fail++}done++;onp(done,ids.length)}};
+  await Promise.all([1,2,3,4,5,6].map(work));return{done,fail}}
+async function packRemove(){try{await caches.delete(NAT.cache)}catch(e){}NAT.man=null;NAT.buf.clear()}
+function draw(box){const c=cfg(),nat=c.voice==='natural',sys=engine.supported(),vs=sys?engine.voices():[],sv=slotVoices(vs),slots=SLOTS.filter(x=>sv[x[0]]);
+  if(c.voice&&!nat&&!sv[c.voice]){c.voice='';saveCfg()}const chosen=c.voice||'';const ok=nat||sys;
   box.innerHTML=`<h4>Skyline Coach</h4>
    <div class="cg"><span>Coach voice</span><div class="seg2"><button data-on="1" class="${c.on?'on':''}" aria-pressed="${c.on}">On</button><button data-on="0" class="${c.on?'':'on'}" aria-pressed="${!c.on}">Off</button></div>
-   <span>Voice</span><select aria-label="Coach voice" ${ok?'':'disabled'}><option value="" ${chosen?'':'selected'}>System English (Automatic)</option>${slots.map(x=>`<option value="${x[0]}" ${chosen===x[0]?'selected':''}>${x[1]}</option>`).join('')}</select>
+   <span>Voice</span><select aria-label="Coach voice"><option value="natural" ${nat?'selected':''}>Natural voice · Female (recommended)</option>${sys?`<optgroup label="Device voices"><option value="" ${chosen===''?'selected':''}>System English (Automatic)</option>${slots.map(x=>`<option value="${x[0]}" ${chosen===x[0]?'selected':''}>${x[1]}</option>`).join('')}</optgroup>`:''}</select>
+   ${nat?`<span>Voice pack</span><div><div class="seg2" data-pack><span class="cmsg" style="margin:0">Checking…</span></div></div>`:''}
    <span>Coach volume</span><input type="range" min="0" max="1" step="0.05" value="${c.vol}" aria-label="Coach volume" data-k="vol">
-   <span>Speaking speed</span><input type="range" min="0.7" max="1.4" step="0.05" value="${c.rate}" aria-label="Speaking speed" data-k="rate">
-   <span>Style</span><div class="seg2"><button data-s="standard" class="${c.style==='standard'?'on':''}">Standard English</button><button data-s="pidgin" class="${c.style==='pidgin'?'on':''}">Naija Pidgin</button></div>
+   ${nat?'':`<span>Speaking speed</span><input type="range" min="0.7" max="1.4" step="0.05" value="${c.rate}" aria-label="Speaking speed" data-k="rate">
+   <span>Style</span><div class="seg2"><button data-s="standard" class="${c.style==='standard'?'on':''}">Standard English</button><button data-s="pidgin" class="${c.style==='pidgin'?'on':''}">Naija Pidgin</button></div>`}
    <span>Commentary</span><div class="seg2"><button data-m="important" class="${c.mode==='important'?'on':''}">Important events</button><button data-m="mine" class="${c.mode==='mine'?'on':''}">My turn + major events</button></div>
-   <span></span><div class="seg2"><button class="cbtn" data-prev>▶ Preview voice</button><button class="cbtn" data-chk>Check voices</button></div></div>
-   <div class="cmsg" data-note>${(c.bad||[]).length?`${c.bad.length} voice${c.bad.length>1?'s':''} didn’t work on this device and ${c.bad.length>1?'are':'is'} hidden.`:''}</div>
-   <div class="cmsg">${ok?'Spoken announcements only — nothing appears on screen. Music and city sounds fade while the Coach speaks.':'This device or browser has no built-in speech voice, so the Coach is unavailable here.'}</div>`;
-  box.querySelectorAll('[data-on]').forEach(b=>b.onclick=()=>{const on=b.dataset.on==='1';cfg().on=on;saveCfg();if(!on)stop();else{unlocked=true;try{engine.unlock&&speakNow(tx('Skyline Coach is on.','Skyline Coach don land!'))}catch(e){}W.key=null}draw(box)});
-  const sel=box.querySelector('select');sel.onchange=()=>{cfg().voice=sel.value;saveCfg()};
+   <span></span><div class="seg2"><button class="cbtn" data-prev>▶ Preview voice</button>${nat?'':'<button class="cbtn" data-chk>Check voices</button>'}</div></div>
+   <div class="cmsg" data-note>${!nat&&(c.bad||[]).length?`${c.bad.length} voice${c.bad.length>1?'s':''} didn’t work on this device and ${c.bad.length>1?'are':'is'} hidden.`:''}</div>
+   <div class="cmsg">${nat?'A recorded natural voice. Lines are fetched as needed; download the pack to use it offline. Speed and Naija Pidgin apply to device voices.':ok?'Spoken announcements only — nothing appears on screen. Music and city sounds fade while the Coach speaks.':'This device or browser has no built-in speech voice. Choose the Natural voice instead.'}</div>`;
+  box.querySelectorAll('[data-on]').forEach(b=>b.onclick=()=>{const on=b.dataset.on==='1';cfg().on=on;saveCfg();if(!on)stop();else{unlocked=true;try{initAudio()}catch(e){}try{speakNow(tx('Skyline Coach is on.','Skyline Coach don land!'),null,'coach_on')}catch(e){}W.key=null}draw(box)});
+  const sel=box.querySelector('select');sel.onchange=()=>{cfg().voice=sel.value;saveCfg();stop();natPreload();draw(box)};
   box.querySelectorAll('input[data-k]').forEach(r=>r.oninput=()=>{cfg()[r.dataset.k]=+r.value;saveCfg()});
   box.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{cfg().mode=b.dataset.m;saveCfg();draw(box)});
   box.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{cfg().style=b.dataset.s;saveCfg();draw(box)});
   const note=box.querySelector('[data-note]');
-  box.querySelector('[data-prev]').onclick=()=>{if(!ok)return;speakNow(tx('Welcome to Skyline Estates. It’s your turn. Ready to roll?','Welcome to Skyline Estates. Na your turn o, roll am!'),{onfail(n){setTimeout(()=>{const nb=box.querySelector('[data-note]');if(nb)nb.textContent=`“${n}” didn’t work on this device, so it’s hidden and Automatic is used instead.`},50)}})};
-  const ck=box.querySelector('[data-chk]');if(ck)ck.onclick=async()=>{if(!ok||!engine.check)return;stop();ck.disabled=true;
+  box.querySelector('[data-prev]').onclick=()=>{if(!ok)return;try{initAudio()}catch(e){}speakNow(tx('Welcome to Skyline Estates. It’s your turn. Ready to roll?','Welcome to Skyline Estates. Na your turn o, roll am!'),{onfail(n){setTimeout(()=>{const nb=box.querySelector('[data-note]');if(nb)nb.textContent=`“${n}” didn’t work on this device, so it’s hidden and Automatic is used instead.`},50)}},'preview')};
+  const ck=box.querySelector('[data-chk]');if(ck)ck.onclick=async()=>{if(!sys||!engine.check)return;stop();ck.disabled=true;
     const r=await engine.check((k,n)=>{note.textContent=`Checking voices… ${k} of ${n}`});draw(box);const nb=box.querySelector('[data-note]');
     if(nb)nb.textContent=r.total?`${r.working} of ${r.total} English voices work on this device${r.bad.length?'; the others are hidden':''}.`:'No English voices were found on this device.'};
-  box.querySelectorAll('button,select,input').forEach(e=>e.disabled=e.disabled||(!ok&&!e.dataset.on));}
+  const pk=box.querySelector('[data-pack]');if(pk)(async()=>{const inf=await packInfo();if(!pk.isConnected)return;
+    if(!inf.man){pk.innerHTML='<span class="cmsg" style="margin:0">Voice pack unavailable offline. Connect to the internet once to use the natural voice.</span>';return}
+    if(!inf.cacheOk){pk.innerHTML=`<span class="cmsg" style="margin:0">Streams as needed (${inf.mb} MB in total).</span>`;return}
+    const full=inf.have>=inf.n;
+    pk.innerHTML=full?`<span class="cmsg" style="margin:0">✓ Downloaded · ${inf.mb} MB · works offline</span><button class="cbtn" data-rm>Remove</button>`:`<span class="cmsg" style="margin:0">${inf.mb} MB${inf.have?` · ${Math.round(inf.have/inf.n*100)}% saved`:''}</span><button class="cbtn" data-dl>⬇ Download</button>`;
+    const dl=pk.querySelector('[data-dl]');if(dl)dl.onclick=async()=>{dl.disabled=true;const msg=pk.querySelector('.cmsg');const r=await packDownload((d,n)=>{msg.textContent=`Downloading… ${Math.round(d/n*100)}%`});draw(box);if(r.fail){const nb=box.querySelector('[data-note]');if(nb)nb.textContent=`${r.fail} clips couldn’t be saved. Check your connection and try again.`}};
+    const rm=pk.querySelector('[data-rm]');if(rm)rm.onclick=async()=>{stop();await packRemove();draw(box)}})();}
 function mount(container){if(!container||container.querySelector('.coachbox'))return;const b=document.createElement('div');b.className='coachbox';container.append(b);boxes.add(b);draw(b)}
 // Home → Settings → Audio (and the older Sound card layout).
 {const _ps=paneSettings;paneSettings=function(T){const r=_ps.apply(this,arguments);try{const v=T.querySelector('#stVol'),ch=T.querySelector('#sChips');mount(v?v.closest('.stp'):ch&&ch.closest('.card'))}catch(e){}return r}}
@@ -200,5 +249,5 @@ function mount(container){if(!container||container.querySelector('.coachbox'))re
     else if((m=/Choose a Landmark · ([^<]+)</.exec(h)))say(tx(`Choose a Landmark for ${m[1].replace(/&amp;/g,'&').trim()}.`,`Choose Landmark for ${m[1].replace(/&amp;/g,'&').trim()}!`),1,'lmq:'+m[1]+':'+G.round)}}catch(e){}
   if(o&&typeof o.html==='string'&&o.html.includes('id="sndChips"')){const om=o.onMount;o={...o,onMount(pn,close){const r=om&&om(pn,close);try{mount(pn.querySelector('#sndChips').parentElement)}catch(e){}return r}}}return _m.call(this,o)}}
 window.SkylineCoach=Object.freeze({version:1,voice:n=>{try{const v=engine.pick&&engine.pick(n||'');return v?v.name:null}catch(e){return null}},useEngine(e){if(e&&typeof e.speak==='function'&&typeof e.supported==='function'){stop();engine=e;renderAll()}},
-  say:(t,p)=>say(t,p||2),stop,check,_state:{Q,W,D}});
+  say:(t,p)=>say(t,p||2),stop,check,_state:{Q,W,D,NAT}});
 })();
