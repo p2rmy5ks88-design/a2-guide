@@ -111,7 +111,7 @@ function clipsFor(text){const ix=NAT.man&&NAT.man.index||{buy:{},ev:{}};let m;
   if(m=/^(.+) is live! .+ rents are (up|down) \d+ percent\.$/.exec(text)){const e=ix.ev[m[1]];return(e?[e]:[]).concat(m[2]==='down'?'ev_rent_down':'ev_rent_up')}
   if(m=/^(.+)! Building .+ costs \d+ percent less\.$/.exec(text)){const e=ix.ev[m[1]];return(e?[e]:[]).concat('ev_dev')}
   for(const [r,id] of CLIP)if(r.test(text))return[id];return null}
-const natPreload=()=>{if(natural())natManifest().catch(()=>{})};setTimeout(natPreload,1500);
+const natPreload=()=>{if(natural()&&cfg().on)natManifest().catch(()=>{})};setTimeout(natPreload,1500);
 /* ---------- queue ---------- */
 const Q={cur:null,next:null,recent:new Map(),seq:0};
 const quiet=()=>{const c=cfg();return !c.on||!natural()&&!engine.supported()||document.hidden||typeof FAST!=='undefined'&&FAST||!G||G.sim};
