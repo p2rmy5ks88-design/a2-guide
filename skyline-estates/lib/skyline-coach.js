@@ -17,10 +17,15 @@ const DEF={on:false,voice:'',vol:.8,rate:1,mode:'important'};
 const cfg=()=>{const c=PREF.coach=Object.assign({},DEF,PREF.coach||{});c.vol=Math.min(1,Math.max(0,+c.vol||0));c.rate=Math.min(1.4,Math.max(.7,+c.rate||1));if(!['important','mine'].includes(c.mode))c.mode='important';return c};
 const saveCfg=()=>{try{savePref()}catch(e){}};
 /* ---------- engine adapters ---------- */
+const NOVELTY=/^(Albert|Bad News|Bahh|Bells|Boing|Bubbles|Cellos|Good News|Jester|Organ|Superstar|Trinoids|Whisper|Wobble|Zarvox|Junior|Ralph|Fred|Kathy|Eddy|Flo|Grandma|Grandpa|Reed|Rocko|Sandy|Shelley|Deranged|Hysterical|Pipe Organ)( \(|$)/i;
+function markBad(name){const c=cfg();c.bad=[...new Set([...(c.bad||[]),name])].slice(-40);if(c.voice===name)c.voice='';saveCfg();try{renderAll()}catch(e){}}
 const webEngine={
   name:'web',
   supported:()=>typeof window.speechSynthesis!=='undefined'&&typeof window.SpeechSynthesisUtterance==='function',
-  voices(){try{return speechSynthesis.getVoices().filter(v=>/^en([-_]|$)/i.test(v.lang||''))}catch(e){return[]}},
+  // English voices that can be used here: Apple/Google novelty and robotic legacy voices are left out, duplicates
+  // removed, and any voice that failed to start speaking on this device is hidden (see markBad).
+  voices(){try{const seen=new Set(),bad=new Set(cfg().bad||[]);return speechSynthesis.getVoices().filter(v=>/^en([-_]|$)/i.test(v.lang||'')&&!NOVELTY.test(v.name||'')&&!bad.has(v.name)&&!seen.has(v.name)&&seen.add(v.name))}catch(e){return[]}},
+  allVoices(){try{return speechSynthesis.getVoices().filter(v=>/^en([-_]|$)/i.test(v.lang||'')&&!NOVELTY.test(v.name||''))}catch(e){return[]}},
   // Automatic ('' / unknown name): the device's default English voice; otherwise the most natural-sounding English
   // voice installed (enhanced/premium/neural before compact), matching the device language when it is English.
   // No country or accent is preferred. An explicitly chosen installed voice always wins.
@@ -31,10 +36,22 @@ const webEngine={
     return vs.slice().sort((a,b)=>q(b)-q(a))[0]},
   lang(){const l=(navigator.languages||[navigator.language||'']).find(l=>/^en/i.test(l||''));return l||'en'},
   speak(text,o){try{if(speechSynthesis.paused)speechSynthesis.resume();if(speechSynthesis.speaking&&!this.keep)speechSynthesis.cancel()}catch(e){}const u=new SpeechSynthesisUtterance(text),v=this.pick(o.voice);this.keep=u;if(v){u.voice=v;u.lang=v.lang}else u.lang=this.lang();
-    u.volume=o.volume;u.rate=o.rate;u.pitch=1;u.onstart=o.onstart;u.onend=()=>{if(this.keep===u)this.keep=null;o.onend&&o.onend()};u.onerror=u.onend;speechSynthesis.speak(u);return u},
+    u.volume=o.volume;u.rate=o.rate;u.pitch=1;let started=false,over=false;
+    const end=()=>{if(over)return;over=true;clearTimeout(wd);if(this.keep===u)this.keep=null;o.onend&&o.onend()};
+    const fail=()=>{if(started||over)return;over=true;clearTimeout(wd);if(this.keep===u)this.keep=null;try{speechSynthesis.cancel()}catch(e){}
+      if(v&&!o.retried){markBad(v.name);o.onfail&&o.onfail(v.name);setTimeout(()=>this.speak(text,{...o,voice:'',retried:true}),60)}else o.onend&&o.onend()};
+    u.onstart=()=>{started=true;o.onstart&&o.onstart()};u.onend=end;u.onerror=()=>started?end():fail();
+    const wd=setTimeout(fail,4000);speechSynthesis.speak(u);return u},
   cancel(){try{speechSynthesis.cancel()}catch(e){}},
   unlock(text){try{if(speechSynthesis.paused)speechSynthesis.resume();const u=new SpeechSynthesisUtterance(text||' ');u.volume=text?cfg().vol:0;const v=this.pick(cfg().voice);if(v){u.voice=v;u.lang=v.lang}speechSynthesis.speak(u);this.keep=u}catch(e){}}
 };
+webEngine.check=async function(onProgress){const all=this.allVoices(),bad=[];
+  for(let k=0;k<all.length;k++){const v=all[k];onProgress&&onProgress(k+1,all.length);
+    const okv=await new Promise(res=>{let done=false;const fin=r=>{if(done)return;done=true;clearTimeout(t);try{speechSynthesis.cancel()}catch(e){}res(r)};
+      try{const u=new SpeechSynthesisUtterance('Skyline');u.voice=v;u.lang=v.lang;u.volume=0;u.onstart=()=>fin(true);u.onend=()=>fin(true);u.onerror=()=>fin(false);speechSynthesis.speak(u)}catch(e){fin(false)}
+      const t=setTimeout(()=>fin(false),2500)});
+    if(!okv)bad.push(v.name);await new Promise(r=>setTimeout(r,80))}
+  const c=cfg();c.bad=bad;if(bad.includes(c.voice))c.voice='';saveCfg();return{total:all.length,working:all.length-bad.length,bad}};
 let engine=webEngine;
 try{if(webEngine.supported())speechSynthesis.addEventListener('voiceschanged',()=>{try{renderAll()}catch(e){}})}catch(e){}
 /* ---------- audio ducking via the existing buses ---------- */
@@ -45,7 +62,11 @@ function busTargets(duck){const b=AUD&&AUD.buses;if(!b||!AC)return;const t=AC.cu
   // Radio slots that could not be routed through Web Audio fall back to element volume.
   try{FMS.slots.forEach(s=>{if(!s.g&&s.a)s.a.volume=duck?0:(s===FMS.slots[FMS.cur]&&AUD.radioOn?Math.min(1,PREF.audio.vol):s.a.volume)})}catch(e){}}
 function duck(maxMs){clearTimeout(D.timer);D.timer=setTimeout(unduck,maxMs);if(D.ducked)return;D.ducked=true;busTargets(true)}
-function unduck(){clearTimeout(D.timer);if(!D.ducked)return;D.ducked=false;busTargets(false)}
+function recover(){try{if(AC&&AC.state!=='running'&&!document.hidden)AC.resume().catch(()=>{})}catch(e){}
+  try{const s=FMS.slots[FMS.cur];if(AUD.radioOn&&s&&s.a&&s.a.src&&s.a.paused&&!s.a.ended){const p=s.a.play();if(p&&p.catch)p.catch(()=>{})}}catch(e){}}
+function unduck(){clearTimeout(D.timer);if(!D.ducked)return;D.ducked=false;recover();busTargets(false);setTimeout(()=>{if(!D.ducked){recover();busTargets(false)}},700);setTimeout(()=>{if(!D.ducked)recover()},2000)}
+// If the audio engine is interrupted while nothing is speaking (e.g. by the system voice), bring it back.
+setInterval(()=>{try{if(!D.ducked&&!Q.cur&&AC&&AC.state!=='running'&&!document.hidden&&cfg().on)recover()}catch(e){}},2000);
 /* ---------- queue ---------- */
 const Q={cur:null,next:null,recent:new Map(),seq:0};
 const quiet=()=>{const c=cfg();return !c.on||!engine.supported()||document.hidden||typeof FAST!=='undefined'&&FAST||!G||G.sim};
@@ -136,13 +157,18 @@ function draw(box){const c=cfg(),ok=engine.supported(),vs=ok?engine.voices():[],
    <span>Coach volume</span><input type="range" min="0" max="1" step="0.05" value="${c.vol}" aria-label="Coach volume" data-k="vol">
    <span>Speaking speed</span><input type="range" min="0.7" max="1.4" step="0.05" value="${c.rate}" aria-label="Speaking speed" data-k="rate">
    <span>Commentary</span><div class="seg2"><button data-m="important" class="${c.mode==='important'?'on':''}">Important events</button><button data-m="mine" class="${c.mode==='mine'?'on':''}">My turn + major events</button></div>
-   <span></span><div><button class="cbtn" data-prev>▶ Preview voice</button></div></div>
+   <span></span><div class="seg2"><button class="cbtn" data-prev>▶ Preview voice</button><button class="cbtn" data-chk>Check voices</button></div></div>
+   <div class="cmsg" data-note>${(c.bad||[]).length?`${c.bad.length} voice${c.bad.length>1?'s':''} didn’t work on this device and ${c.bad.length>1?'are':'is'} hidden.`:''}</div>
    <div class="cmsg">${ok?'Spoken announcements only — nothing appears on screen. Music and city sounds fade while the Coach speaks.':'This device or browser has no built-in speech voice, so the Coach is unavailable here.'}</div>`;
   box.querySelectorAll('[data-on]').forEach(b=>b.onclick=()=>{const on=b.dataset.on==='1';cfg().on=on;saveCfg();if(!on)stop();else{unlocked=true;try{engine.unlock&&engine.unlock('Skyline Coach is on.')}catch(e){}W.key=null}draw(box)});
   const sel=box.querySelector('select');sel.onchange=()=>{cfg().voice=sel.value;saveCfg()};
   box.querySelectorAll('input[data-k]').forEach(r=>r.oninput=()=>{cfg()[r.dataset.k]=+r.value;saveCfg()});
   box.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{cfg().mode=b.dataset.m;saveCfg();draw(box)});
-  box.querySelector('[data-prev]').onclick=()=>{if(!ok)return;stop(false);const c2=cfg();duck(5000);try{engine.speak('Welcome to Skyline Estates. It’s your turn. Ready to roll?',{voice:c2.voice,volume:c2.vol,rate:c2.rate,onstart(){},onend(){unduck()}})}catch(e){unduck()}};
+  const note=box.querySelector('[data-note]');
+  box.querySelector('[data-prev]').onclick=()=>{if(!ok)return;stop(false);const c2=cfg();duck(6000);try{engine.speak('Welcome to Skyline Estates. It’s your turn. Ready to roll?',{voice:c2.voice,volume:c2.vol,rate:c2.rate,onstart(){},onend(){unduck()},onfail(n){setTimeout(()=>{const nb=box.querySelector('[data-note]');if(nb)nb.textContent=`“${n}” didn’t work on this device, so it’s hidden and Automatic is used instead.`},50)}})}catch(e){unduck()}};
+  const ck=box.querySelector('[data-chk]');if(ck)ck.onclick=async()=>{if(!ok||!engine.check)return;stop();ck.disabled=true;
+    const r=await engine.check((k,n)=>{note.textContent=`Checking voices… ${k} of ${n}`});draw(box);const nb=box.querySelector('[data-note]');
+    if(nb)nb.textContent=r.total?`${r.working} of ${r.total} English voices work on this device${r.bad.length?'; the others are hidden':''}.`:'No English voices were found on this device.'};
   box.querySelectorAll('button,select,input').forEach(e=>e.disabled=e.disabled||(!ok&&!e.dataset.on));}
 function mount(container){if(!container||container.querySelector('.coachbox'))return;const b=document.createElement('div');b.className='coachbox';container.append(b);boxes.add(b);draw(b)}
 // Home → Settings → Audio (and the older Sound card layout).
