@@ -128,6 +128,14 @@ const STUB=()=>{const log=window.__speech=[];let cur=null;
     return{a,b,extra:N.plays-before,last:N.last,sys:__speech.filter(x=>x.text).length}});
   assert.match(nat.a[0],/^buy_eko-atlantic-city-/);assert.match(nat.b[0],/^ev_eyo-festival-/);assert.equal(nat.b[1],'ev_rent_up');assert.equal(nat.extra,1);assert.deepEqual(nat.last,['recv_rent']);assert.equal(nat.sys,0);
   ok('natural voice in game: "Do you want to acquire Eko Atlantic City?", "Eyo Festival is here!" + rents rising; card text without a recording is skipped; never mixed with system speech');
+  const cards=await p.evaluate(async()=>{const N=SkylineCoach._state.NAT;SkylineCoach._state.Q.recent.clear();G.players[0].ai=false;
+    const i=LC_CHANCE.findIndex(c=>c&&c.id==='sponsor');const c=lcCard('chance',i);LCUI.decide('card',G.players[0],{deck:'chance',c,ch:c.ask(G.players[0])}).catch(()=>{});await new Promise(r=>setTimeout(r,4500));const a=N.last.slice();
+    document.querySelectorAll('#modals .ov').forEach(x=>x.remove());
+    LCUI.decide('corner',G.players[0],{icon:'investment',title:'Investment Forum',text:'',choices:[{k:'net',label:'Network'}]}).catch(()=>{});await new Promise(r=>setTimeout(r,4000));const b=N.last.slice();
+    document.querySelectorAll('#modals .ov').forEach(x=>x.remove());const man=await fetch('coach/natural-en-f/manifest.json').then(r=>r.json());
+    return{a,b,ta:Object.entries(man.index.text).find(([t,id])=>id===a[0]),tb:Object.entries(man.index.text).find(([t,id])=>id===b[0])}});
+  assert.ok(cards.ta&&/^Lucky Break! Sponsor Eyo Festival\. Make your choice\.$/.test(cards.ta[0]),JSON.stringify(cards));assert.equal(cards.b[0],'corner_if');
+  ok('popup cards and corners: "'+cards.ta[0]+'" and "'+cards.tb[0]+'"');
   await p.evaluate(()=>{PREF.coach.on=false;SkylineCoach.stop()});
   // 8. no visible UI during play
   assert.equal(await p.evaluate(()=>document.querySelectorAll('#ui .coachbox, #ui [class*="coach"]').length),0);ok('no Coach elements in the game screen (background audio only)');

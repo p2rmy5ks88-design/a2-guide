@@ -89,8 +89,10 @@ setInterval(()=>{try{if(!D.ducked&&!Q.cur&&AC&&AC.state!=='running'&&!document.h
    mixed with robotic narration: a line without a recorded clip (names, amounts, card text) is simply skipped. */
 const NAT={base:'coach/natural-en-f/',cache:'skyline-coach-natural-en-f-v1',man:null,buf:new Map(),src:null};
 async function natCacheGet(url){try{if(window.caches){const c=await caches.open(NAT.cache);const r=await c.match(url);if(r)return r}}catch(e){}return null}
-async function natManifest(){if(NAT.man)return NAT.man;const url=NAT.base+'manifest.json';let r=await natCacheGet(url);
-  if(!r){r=await fetch(url,{cache:'no-cache'});if(!r.ok)throw Error('manifest');try{if(window.caches)(await caches.open(NAT.cache)).put(url,r.clone())}catch(e){}}NAT.man=await r.json();return NAT.man}
+async function natManifest(){if(NAT.man)return NAT.man;const url=NAT.base+'manifest.json';let r=null;
+  // Prefer the live index (new lines appear after an update); fall back to the stored copy when offline.
+  try{const ac=new AbortController(),to=setTimeout(()=>ac.abort(),4000);const n=await fetch(url,{cache:'no-cache',signal:ac.signal});clearTimeout(to);if(n.ok){r=n;try{if(window.caches)(await caches.open(NAT.cache)).put(url,n.clone())}catch(e){}}}catch(e){}
+  if(!r)r=await natCacheGet(url);if(!r)throw Error('manifest');NAT.man=await r.json();return NAT.man}
 async function natBuffer(id){if(NAT.buf.has(id))return NAT.buf.get(id);const m=await natManifest(),f=m.files[id];if(!f)throw Error('no clip '+id);const url=NAT.base+f;
   let r=await natCacheGet(url);if(!r){r=await fetch(url);if(!r.ok)throw Error('clip');try{if(window.caches)(await caches.open(NAT.cache)).put(url,r.clone())}catch(e){}}
   const ab=await r.arrayBuffer();const b=await new Promise((res,rej)=>AC.decodeAudioData(ab,res,rej));if(NAT.buf.size>80)NAT.buf.delete(NAT.buf.keys().next().value);NAT.buf.set(id,b);return b}
@@ -106,7 +108,7 @@ const CLIP=[[/^Your turn\. Ready to roll\?$/,'turn_me'],[/^The computer is makin
   [/ is now your Landmark!$/,'lm_me'],[/^A new Landmark has been designated/,'lm_other'],[/^Choose a Landmark for /,'lm_ask'],[/^Civic Review! /,'cr_me'],[/ is under Civic Review\.$/,'cr_other'],[/^Your planning restriction has ended\.$/,'cr_end'],
   [/^Fast-Track Permit approved!$/,'fasttrack'],[/^You’re bankrupt\./,'bk_me'],[/ is bankrupt!$/,'bk_other'],[/^Congratulations! You’ve won/,'win_me'],[/ wins the match\.$/,'win_other'],[/^Pay .+ to .+\.$/,'pay_rent'],[/^Pay .+\.$/,'pay_fee'],
   [/ pays you /,'recv_rent'],[/^Payday!$/,'payday'],[/^You’re going to the Lockup\.$/,'lockup_me']];
-function clipsFor(text){const ix=NAT.man&&NAT.man.index||{buy:{},ev:{}};let m;
+function clipsFor(text){const ix=NAT.man&&NAT.man.index||{buy:{},ev:{}};let m;if(ix.text&&ix.text[text])return[ix.text[text]];
   if(m=/^Do you want to acquire (.+)\?$/.exec(text))return[ix.buy[m[1]]||'buy_ask'];
   if(m=/^(.+) is live! .+ rents are (up|down) \d+ percent\.$/.exec(text)){const e=ix.ev[m[1]];return(e?[e]:[]).concat(m[2]==='down'?'ev_rent_down':'ev_rent_up')}
   if(m=/^(.+)! Building .+ costs \d+ percent less\.$/.exec(text)){const e=ix.ev[m[1]];return(e?[e]:[]).concat('ev_dev')}
@@ -179,7 +181,7 @@ function line(t,you,S){const P0=G.players.slice().sort((x,y)=>y.name.length-x.na
     else if(you(A.id)&&/\d/.test(rest)&&rest.length<16)S(`Pay ${spoken(rest)}.`,3,true);return}
   if(/^(passed|landed on) Start, \+/.test(r)){if(you(A.id))S(tx('Payday!','Payday! Alert don land!'),3,true,'pay:'+G.round+':'+A.id);return}
   if(r==='was sent to the Lockup'){S(you(A.id)?tx('You’re going to the Lockup.','You dey go Lockup o!'):tx(`${A.name} is going to the Lockup.`,`${A.name} dey go Lockup.`),you(A.id)?2:3,you(A.id));return}
-  if(m=/^drew: (.+)$/.exec(r)){if(you(A.id)){const c=m[1].split(/[.!]/)[0].trim();if(c&&c.length<=70)S(c+'.',3,true)}}}
+  if(m=/^drew: (.+)$/.exec(r)){if(you(A.id)&&!(typeof lc==='function'&&lc())){const c=m[1].split(/[.!]/)[0].trim();if(c&&c.length<=70)S(c+'.',3,true)}}}
 const spoken=s=>{const m=/([\d.,]+)\s*([KMB])\b/.exec(s);return m?`${m[1]} ${{K:'thousand',M:'million',B:'billion'}[m[2]]} Skyline Cash`:s};
 const big=s=>{const m=/([\d.,]+)\s*([KMB])\b/.exec(s);if(!m)return false;const v=parseFloat(m[1].replace(/,/g,''))*({K:1e-3,M:1,B:1000}[m[2]]);return v>=300};
 function turnSay(p){try{check()}catch(e){}if(quiet()||!p||p.bankrupt||G.over||W.key!==keyOf())return;const me=meId(),you=me!=null&&p.id===me,mode=cfg().mode,now=Date.now();
@@ -187,6 +189,18 @@ function turnSay(p){try{check()}catch(e){}if(quiet()||!p||p.bankrupt||G.over||W.
   else if(!p.ai){if(mode==='important'||me==null)say(tx(`${nm(p)}’s turn.`,`Na ${nm(p)} turn now.`),3,'turn:'+G.round+':'+p.id)}
   else if(mode==='important'&&now-W.aiSaid>20000&&!Q.cur){W.aiSaid=now;say(tx('The computer is making its move.','Computer don dey move.'),3,'ai:'+G.round)}}
 {const _b=banner;banner=function(p){try{turnSay(p)}catch(e){}return _b.apply(this,arguments)}}
+/* popup cards and city corners: title + short hint (same wording as the recorded lines; see tools/coach-voice) */
+const DECKN={chance:'Lucky Break',esusu:'City Hall'};
+const CORNERS={'Skyline HQ':'Skyline HQ! Pick your head-office bonus.','Planning Office':'Planning Office! A Pre-approval is on offer.','Transit Exchange':'Transit Exchange! Ride to any transit hub for a fare.','Investment Forum':'Investment Forum! Buy a street, or network for a stipend.'};
+function classicLine(t){return String(t||'').replace(/[Cc]ollect \{m\d+\} for every street you own/g,'collect a bonus for every street you own').replace(/Collect \{m\d+\}/g,'Collect your reward').replace(/Pay \{m\d+\}/g,'Pay the fee').replace('{festival}','the festival').trim()}
+function cardLine(deck,c,choice){const d=DECKN[deck];if(!d||!c)return null;
+  if(c.classic||!c.id){const t=classicLine(c.t);return t&&!/[{}]/.test(t)?`${d}! ${t}`:null}
+  let title=c.title;try{if(typeof title==='function')title=title()}catch(e){title=null}return title?`${d}! ${title}.`+(choice?' Make your choice.':''):null}
+const decider=p=>{const me=meId();return p&&!p.ai&&(me==null||p.id===me)};
+try{const _dec=LCUI.decide;LCUI.decide=function(kind,p,sp){try{if(sp&&decider(p)&&!quiet()){
+    if(kind==='card'){const t=cardLine(sp.deck,sp.c,!!sp.ch);if(t)say(t,2,'card:'+G.round+':'+t)}
+    else if(kind==='corner'&&CORNERS[sp.title])say(CORNERS[sp.title],2,'corner:'+G.round+':'+sp.title)}}catch(e){}
+  return _dec.apply(this,arguments)}}catch(e){}
 /* hooks: re-check after committed renders; light poll while a game is open */
 {const _r=renderRoster;renderRoster=function(){const r=_r.apply(this,arguments);try{check()}catch(e){}return r}}
 setInterval(()=>{try{if(cfg().on&&G&&!document.hidden)check()}catch(e){}},700);

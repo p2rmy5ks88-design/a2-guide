@@ -34,7 +34,7 @@ Optional background voice commentary. **OFF by default.** Turn it on in Settings
 
 - **Default voice** is "Natural voice · Female": pre-recorded clips (`coach/natural-en-f/`, mono MP3 at 48 kbps, about 770 clips).
   - **Source:** generated offline with Kokoro-82M v1.0, voice `af_heart`. The model and voices are Apache-2.0, so commercial use is allowed. No paid service or account is involved, and no data leaves the machine.
-  - **Content:** core lines, "Do you want to acquire …?" for every property name in all 31 cities, every city festival and Strategic/Market event, plus rent up/down and building-cost lines.
+  - **Content:** popup cards (Lucky Break and City Hall titles with "Make your choice."), the four city corners, core lines, "Do you want to acquire …?" for every property name in all 31 cities, every city festival and Strategic/Market event, plus rent up/down and building-cost lines.
 - **Playback:** clips are fetched on demand and kept in the Cache API (`skyline-coach-natural-en-f-v1`). Settings → Audio → Skyline Coach → Voice pack **Download** stores them all for offline play, and **Remove** frees the space.
   - Clips play through the game's AudioContext, so priorities, cancellation and Skyline FM ducking are unchanged.
 - **No robotic mixing:** with the natural voice selected, lines without a recording (player names, amounts, card titles) are skipped, never sent to system speech.
