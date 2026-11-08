@@ -48,5 +48,21 @@ index = {'buy': {}, 'ev': {}}
 for n in names['fest']: lines['ev_' + slug(n)] = f"{n} is here! The city is coming alive!"; index['ev'][n] = 'ev_' + slug(n)
 for n in names['ev'] + ['District Demand', 'Permit Window', 'Quiet Market']: lines['ev_' + slug(n)] = f"{n}! Here we go."; index['ev'][n] = 'ev_' + slug(n)
 for n in names['props']: lines['buy_' + slug(n)] = f"Do you want to acquire {n}?"; index['buy'][n] = 'buy_' + slug(n)
+# Popup cards and city corners (optional 3rd argument: cards.json). Text must match lib/skyline-coach.js cardLine().
+DECK = {'chance': 'Lucky Break', 'esusu': 'City Hall'}
+def classic(t):
+    t = re.sub(r'[Cc]ollect \{m\d+\} for every street you own', 'collect a bonus for every street you own', t)
+    t = re.sub(r'Collect \{m\d+\}', 'Collect your reward', t); t = re.sub(r'Pay \{m\d+\}', 'Pay the fee', t)
+    return t.replace('{festival}', 'the festival').strip()
+if len(sys.argv) > 3:
+    for c in json.load(open(sys.argv[3])):
+        if c['kind'] == 'lc' and c.get('title'):
+            lines['card_' + slug(c['deck'] + c['title'])] = f"{DECK[c['deck']]}! {c['title']}." + (" Make your choice." if c['choice'] else '')
+        elif c['kind'] == 'classic' and c.get('t') and '{' not in classic(c['t']):
+            for d in DECK: lines['card_' + slug(d + c['t'])] = f"{DECK[d]}! {classic(c['t'])}"
+CORNERS = {'corner_hq': "Skyline HQ! Pick your head-office bonus.", 'corner_po': "Planning Office! A Pre-approval is on offer.",
+           'corner_tx': "Transit Exchange! Ride to any transit hub for a fare.", 'corner_if': "Investment Forum! Buy a street, or network for a stipend."}
+lines.update(CORNERS)
+index['text'] = {v: k for k, v in lines.items()}
 json.dump({'voice': 'natural-en-f', 'lines': lines, 'index': index}, open(sys.argv[2], 'w'), ensure_ascii=False, indent=0)
 print(len(lines), 'lines')
