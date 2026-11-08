@@ -14,7 +14,7 @@ const STUB=()=>{const log=window.__speech=[];let cur=null;
 (async()=>{
   const server=http.createServer((req,res)=>{const f=path.resolve(root,'.'+decodeURIComponent(req.url.split('?')[0]));if(!f.startsWith(root)){res.writeHead(403).end();return}fs.readFile(f,(e,b)=>{res.writeHead(e?404:200,{'Content-Type':({'.html':'text/html','.js':'text/javascript','.css':'text/css','.json':'application/json','.svg':'image/svg+xml','.png':'image/png','.webp':'image/webp','.mp3':'audio/mpeg'})[path.extname(f)]||'application/octet-stream'});res.end(b)})});
   await new Promise(r=>server.listen(0,'127.0.0.1',r));const origin=`http://127.0.0.1:${server.address().port}`;
-  const b=await chromium.launch({args:['--disable-webgl','--autoplay-policy=no-user-gesture-required']});
+  const b=await chromium.launch({args:['--disable-webgl','--autoplay-policy=no-user-gesture-required'],...(process.env.CHROME_PATH?{executablePath:process.env.CHROME_PATH}:{})});
   const ctx=await b.newContext({viewport:{width:932,height:430},deviceScaleFactor:2});await ctx.route('**/*',r=>r.request().url().startsWith(origin)?r.continue():r.abort());
   const p=await ctx.newPage();const errs=[];p.on('pageerror',e=>errs.push(String(e)));
   await p.addInitScript(STUB);

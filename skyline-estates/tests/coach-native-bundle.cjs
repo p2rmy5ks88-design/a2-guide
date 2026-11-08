@@ -17,7 +17,7 @@ const TYPES={'.html':'text/html','.js':'text/javascript','.mjs':'text/javascript
   const server=http.createServer((req,res)=>{const u=decodeURIComponent(req.url.split('?')[0]);const f=path.resolve(www,'.'+(u==='/'?'/index.html':u));if(!f.startsWith(www)){res.writeHead(403).end();return}
     if(/\/coach\//.test(u))served.push(u);fs.readFile(f,(e,b)=>{res.writeHead(e?404:200,{'Content-Type':TYPES[path.extname(f)]||'application/octet-stream'});res.end(e?'':b)})});
   await new Promise(r=>server.listen(0,'127.0.0.1',r));const origin=`http://127.0.0.1:${server.address().port}`;
-  const b=await chromium.launch({args:['--disable-webgl','--autoplay-policy=no-user-gesture-required']});
+  const b=await chromium.launch({args:['--disable-webgl','--autoplay-policy=no-user-gesture-required'],...(process.env.CHROME_PATH?{executablePath:process.env.CHROME_PATH}:{})});
   const ctx=await b.newContext({viewport:{width:932,height:430}});
   let external=0;await ctx.route('**/*',r=>{if(r.request().url().startsWith(origin))return r.continue();external++;return r.abort()}); // offline: only the bundle
   await ctx.addInitScript(()=>{window.Capacitor={isNativePlatform:()=>true,getPlatform:()=>'ios',Plugins:{},isPluginAvailable:()=>false};
