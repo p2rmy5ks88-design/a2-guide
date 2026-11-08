@@ -21,6 +21,8 @@ if(native){
  for(const f of ['skyline-showcase.js','skyline-showcase.css','challenges.js','challenges.css','social.js','social.css','verified.js','verified-config.js'])identical(path.join(src,'web',f),path.join(www,'web',f));
  for(const f of fs.readdirSync(path.join(src,'security','service')).filter(f=>f.endsWith('.mjs')))identical(path.join(src,'security','service',f),path.join(www,'security','service',f));
  assert.deepEqual(fs.readdirSync(path.join(www,'security','service')).sort(),fs.readdirSync(path.join(src,'security','service')).filter(f=>f.endsWith('.mjs')).sort(),'only public client modules are packaged');
+ // Skyline Coach Voice A: every recording ships inside the app so it plays offline without a download.
+ tree(path.join(src,'coach'),path.join(www,'coach'));{const m=JSON.parse(fs.readFileSync(path.join(www,'coach/natural-en-f/manifest.json'),'utf8'));assert.ok(Object.keys(m.files).length>=853,'Voice A recordings bundled');for(const f of Object.values(m.files))assert.ok(fs.existsSync(path.join(www,'coach/natural-en-f',f)),'bundled clip '+f)}
  for(const f of ['skyline-currency','skyline-earned-cash','market-pulse'])assert(html.includes('lib/'+f+'.js'),'native feature '+f);
 }
 tree(path.join(shared,'audio'),path.join(www,'audio'));identical(path.join(shared,'firebase-config.js'),path.join(www,'firebase-config.js'));
