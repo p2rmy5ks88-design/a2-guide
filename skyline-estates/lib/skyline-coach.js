@@ -30,10 +30,10 @@ const webEngine={
     const q=v=>{const id=(v.name+' '+(v.voiceURI||'')).toLowerCase();return(/premium|enhanced|neural|natural/.test(id)?4:0)+(/compact|espeak|robot/.test(id)?-3:0)+(v.localService!==false?1:0)+(nav.includes(String(v.lang).toLowerCase().replace('_','-'))?2:0)};
     return vs.slice().sort((a,b)=>q(b)-q(a))[0]},
   lang(){const l=(navigator.languages||[navigator.language||'']).find(l=>/^en/i.test(l||''));return l||'en'},
-  speak(text,o){const u=new SpeechSynthesisUtterance(text),v=this.pick(o.voice);if(v){u.voice=v;u.lang=v.lang}else u.lang=this.lang();
-    u.volume=o.volume;u.rate=o.rate;u.pitch=1;u.onstart=o.onstart;u.onend=o.onend;u.onerror=o.onend;speechSynthesis.speak(u);return u},
+  speak(text,o){try{if(speechSynthesis.paused)speechSynthesis.resume();if(speechSynthesis.speaking&&!this.keep)speechSynthesis.cancel()}catch(e){}const u=new SpeechSynthesisUtterance(text),v=this.pick(o.voice);this.keep=u;if(v){u.voice=v;u.lang=v.lang}else u.lang=this.lang();
+    u.volume=o.volume;u.rate=o.rate;u.pitch=1;u.onstart=o.onstart;u.onend=()=>{if(this.keep===u)this.keep=null;o.onend&&o.onend()};u.onerror=u.onend;speechSynthesis.speak(u);return u},
   cancel(){try{speechSynthesis.cancel()}catch(e){}},
-  unlock(){try{const u=new SpeechSynthesisUtterance(' ');u.volume=0;speechSynthesis.speak(u)}catch(e){}}
+  unlock(text){try{if(speechSynthesis.paused)speechSynthesis.resume();const u=new SpeechSynthesisUtterance(text||' ');u.volume=text?cfg().vol:0;const v=this.pick(cfg().voice);if(v){u.voice=v;u.lang=v.lang}speechSynthesis.speak(u);this.keep=u}catch(e){}}
 };
 let engine=webEngine;
 try{if(webEngine.supported())speechSynthesis.addEventListener('voiceschanged',()=>{try{renderAll()}catch(e){}})}catch(e){}
@@ -41,9 +41,9 @@ try{if(webEngine.supported())speechSynthesis.addEventListener('voiceschanged',()
 const D={ducked:false,timer:0};
 function busTargets(duck){const b=AUD&&AUD.buses;if(!b||!AC)return;const t=AC.currentTime,rad=AUD.radioOn?1:0,amb=AUD.ambOn?1:0;
   const set=(g,v,tc)=>{try{g.gain.cancelScheduledValues(t);g.gain.setValueAtTime(g.gain.value,t);g.gain.setTargetAtTime(v,t,tc)}catch(e){}};
-  if(duck){set(b.rad,rad*.18,.12);set(b.amb,amb*.25,.12);set(b.sfx,.45,.08)}else{set(b.rad,rad,.35);set(b.amb,amb,.35);set(b.sfx,1,.2)}
+  if(duck){set(b.rad,0,.08);set(b.amb,amb*.1,.1);set(b.sfx,.45,.08)}else{set(b.rad,rad,.35);set(b.amb,amb,.35);set(b.sfx,1,.2)}
   // Radio slots that could not be routed through Web Audio fall back to element volume.
-  try{FMS.slots.forEach(s=>{if(!s.g&&s.a)s.a.volume=duck?Math.min(1,PREF.audio.vol)*.2:(s===FMS.slots[FMS.cur]&&AUD.radioOn?Math.min(1,PREF.audio.vol):s.a.volume)})}catch(e){}}
+  try{FMS.slots.forEach(s=>{if(!s.g&&s.a)s.a.volume=duck?0:(s===FMS.slots[FMS.cur]&&AUD.radioOn?Math.min(1,PREF.audio.vol):s.a.volume)})}catch(e){}}
 function duck(maxMs){clearTimeout(D.timer);D.timer=setTimeout(unduck,maxMs);if(D.ducked)return;D.ducked=true;busTargets(true)}
 function unduck(){clearTimeout(D.timer);if(!D.ducked)return;D.ducked=false;busTargets(false)}
 /* ---------- queue ---------- */
@@ -138,7 +138,7 @@ function draw(box){const c=cfg(),ok=engine.supported(),vs=ok?engine.voices():[],
    <span>Commentary</span><div class="seg2"><button data-m="important" class="${c.mode==='important'?'on':''}">Important events</button><button data-m="mine" class="${c.mode==='mine'?'on':''}">My turn + major events</button></div>
    <span></span><div><button class="cbtn" data-prev>▶ Preview voice</button></div></div>
    <div class="cmsg">${ok?'Spoken announcements only — nothing appears on screen. Music and city sounds fade while the Coach speaks.':'This device or browser has no built-in speech voice, so the Coach is unavailable here.'}</div>`;
-  box.querySelectorAll('[data-on]').forEach(b=>b.onclick=()=>{const on=b.dataset.on==='1';cfg().on=on;saveCfg();if(!on)stop();else{unlocked=true;try{engine.unlock&&engine.unlock()}catch(e){}W.key=null}draw(box)});
+  box.querySelectorAll('[data-on]').forEach(b=>b.onclick=()=>{const on=b.dataset.on==='1';cfg().on=on;saveCfg();if(!on)stop();else{unlocked=true;try{engine.unlock&&engine.unlock('Skyline Coach is on.')}catch(e){}W.key=null}draw(box)});
   const sel=box.querySelector('select');sel.onchange=()=>{cfg().voice=sel.value;saveCfg()};
   box.querySelectorAll('input[data-k]').forEach(r=>r.oninput=()=>{cfg()[r.dataset.k]=+r.value;saveCfg()});
   box.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{cfg().mode=b.dataset.m;saveCfg();draw(box)});
@@ -148,7 +148,10 @@ function mount(container){if(!container||container.querySelector('.coachbox'))re
 // Home → Settings → Audio (and the older Sound card layout).
 {const _ps=paneSettings;paneSettings=function(T){const r=_ps.apply(this,arguments);try{const v=T.querySelector('#stVol'),ch=T.querySelector('#sChips');mount(v?v.closest('.stp'):ch&&ch.closest('.card'))}catch(e){}return r}}
 // In-game menu → Sound dialog.
-{const _m=modal;modal=function(o){if(o&&typeof o.html==='string'&&o.html.includes('id="sndChips"')){const om=o.onMount;o={...o,onMount(pn,close){const r=om&&om(pn,close);try{mount(pn.querySelector('#sndChips').parentElement)}catch(e){}return r}}}return _m.call(this,o)}}
+{const _m=modal;modal=function(o){try{if(o&&typeof o.html==='string'&&G&&!G.over&&cfg().on){const h=o.html;let m;
+    if(/<div class="mh">For sale<\/div>/.test(h)&&(m=/<div class="dh"[^>]*><small>[^<]*<\/small><b>([^<]+)<\/b>/.exec(h))){const name=m[1].replace(/&amp;/g,'&').replace(/^[^A-Za-z0-9]+/,'').trim();say(`Do you want to acquire ${name}?`,1,'buy:'+name+':'+G.round)}
+    else if((m=/Choose a Landmark · ([^<]+)</.exec(h)))say(`Choose a Landmark for ${m[1].replace(/&amp;/g,'&').trim()}.`,1,'lmq:'+m[1]+':'+G.round)}}catch(e){}
+  if(o&&typeof o.html==='string'&&o.html.includes('id="sndChips"')){const om=o.onMount;o={...o,onMount(pn,close){const r=om&&om(pn,close);try{mount(pn.querySelector('#sndChips').parentElement)}catch(e){}return r}}}return _m.call(this,o)}}
 window.SkylineCoach=Object.freeze({version:1,voice:n=>{try{const v=engine.pick&&engine.pick(n||'');return v?v.name:null}catch(e){return null}},useEngine(e){if(e&&typeof e.speak==='function'&&typeof e.supported==='function'){stop();engine=e;renderAll()}},
   say:(t,p)=>say(t,p||2),stop,check,_state:{Q,W,D}});
 })();

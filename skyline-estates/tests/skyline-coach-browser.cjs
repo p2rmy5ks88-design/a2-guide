@@ -49,11 +49,12 @@ const STUB=()=>{const log=window.__speech=[];let cur=null;
   const drive=()=>p.evaluate(()=>{if(!G)return'none';if(G.over)return'over';const ovs=[...document.querySelectorAll('#modals .ov:not(.bye)')],ov=ovs[ovs.length-1];
     if(ov){if(/landlord of/.test(ov.textContent))return'over';const bs=[...ov.querySelectorAll('button')].filter(b=>!b.disabled&&b.offsetParent!==null);const bb=ov.querySelector('.lc-lmm')?bs[0]:bs.find(b=>/\bpri\b/.test(b.className))||bs[bs.length-1];if(bb){bb.click();return'modal'}return'wait'}
     const a=[...document.querySelectorAll('#acts button')].filter(b=>!b.disabled);if(a.length){if(a.some(b=>/END/i.test(b.textContent))&&!window.__built){const me=G.players[0],i=G.own.findIndex((o,i)=>o.o===0&&canBuild(0,i));if(i>=0){build(0,i);renderRoster();window.__built=1}}a[0].click();return'act'}return'wait'});
-  let duckSeen=false;const t0=Date.now();
-  while(Date.now()-t0<70000){const r=await drive();if(r==='over')break;const st=await p.evaluate(()=>({sp:!!SkylineCoach._state.Q.cur,ducked:SkylineCoach._state.D.ducked}));if(st.sp&&st.ducked)duckSeen=true;await p.waitForTimeout(40)}
+  let duckSeen=false,radMin=1;const t0=Date.now();
+  while(Date.now()-t0<70000){const r=await drive();if(r==='over')break;const st=await p.evaluate(()=>({sp:!!SkylineCoach._state.Q.cur,ducked:SkylineCoach._state.D.ducked,rad:AUD.buses?AUD.buses.rad.gain.value:1}));if(st.sp&&st.ducked){duckSeen=true;radMin=Math.min(radMin,st.rad)}await p.waitForTimeout(40)}
   await p.waitForTimeout(2500);
   const said=await p.evaluate(()=>__speech);const texts=said.filter(x=>x.text).map(x=>x.text);
   console.log('SPOKEN ('+texts.length+'):\n  '+[...new Set(texts)].slice(0,40).join('\n  '));
+  assert.ok(texts.some(t=>/^Do you want to acquire [A-Z]/.test(t)),'purchase prompt');ok('purchase offer asks: "'+texts.find(t=>/^Do you want/.test(t))+'"');
   assert.ok(!said.some(x=>x.overlap),'never speaks over itself');assert.ok(texts.length>=5,'announcements made');
   assert.ok(texts.some(t=>/^Your turn/.test(t)),'my turn');  ok(`real Living City match: ${texts.length} announcements, never overlapping (${[...new Set(texts.map(t=>t.split(/[ !.]/)[0]))].slice(0,12).join(', ')})`);
   const rounds=await p.evaluate(()=>G.round);const per=texts.length/rounds;assert.ok(per<=4,'not excessive: '+per.toFixed(1)+' per round');ok(`pace ${per.toFixed(1)} announcements per round (3 players, game sped up ~10×): one at a time, at most one waiting`);
@@ -64,8 +65,8 @@ const STUB=()=>{const log=window.__speech=[];let cur=null;
   assert.deepEqual(cr,['Civic Review! Your rent income is temporarily suspended.','Your planning restriction has ended.']);ok('Civic Review start and end announced');
   // 3. ducking and restore
   await p.waitForTimeout(2500);const after=await p.evaluate(()=>({rad:+AUD.buses.rad.gain.value.toFixed(2),amb:+AUD.buses.amb.gain.value.toFixed(2),sfx:+AUD.buses.sfx.gain.value.toFixed(2),radioOn:AUD.radioOn,ambOn:AUD.ambOn,radioPref:PREF.audio.radio,vol:PREF.audio.vol,ducked:SkylineCoach._state.D.ducked}));
-  assert.ok(duckSeen,'ducked while speaking');assert.equal(after.ducked,false);assert.equal(after.sfx,1);assert.equal(after.rad,after.radioOn?1:0);assert.equal(after.amb,after.ambOn?1:0);assert.equal(after.vol,.8);assert.equal(after.radioPref,true);
-  ok('Skyline FM and ambience fade while the Coach speaks and return to their live levels afterwards; saved audio preferences untouched');
+  assert.ok(duckSeen,'ducked while speaking');assert.ok(radMin<.05,'FM silent while speaking: '+radMin);assert.equal(after.ducked,false);assert.equal(after.sfx,1);assert.equal(after.rad,after.radioOn?1:0);assert.equal(after.amb,after.ambOn?1:0);assert.equal(after.vol,.8);assert.equal(after.radioPref,true);
+  ok('Skyline FM goes silent and ambience fades while the Coach speaks and return to their live levels afterwards; saved audio preferences untouched');
   // 4. critical speech overrides routine; duplicates suppressed; stale dropped
   const pr=await p.evaluate(async()=>{__speech.length=0;SkylineCoach.say('Routine line one.',3);SkylineCoach.say('Critical line!',1);SkylineCoach.say('Critical line!',1);await new Promise(r=>setTimeout(r,2500));return __speech.map(x=>x.cancel?'<cancel>':x.text)});
   assert.deepEqual(pr.filter(x=>x!=='<cancel>'),['Routine line one.','Critical line!']);assert.ok(pr.includes('<cancel>'));ok('critical speech cuts off routine speech; repeated lines are suppressed');
@@ -79,6 +80,14 @@ const STUB=()=>{const log=window.__speech=[];let cur=null;
   // 7. off: immediate stop
   await p.evaluate(()=>{homeTab&&0});const off=await p.evaluate(async()=>{__speech.length=0;SkylineCoach.say('Long announcement that gets switched off.',2);PREF.coach.on=false;SkylineCoach.stop();SkylineCoach.say('Should not speak.',1);return{cancel:__speech.some(x=>x.cancel),spoke:__speech.some(x=>x.text==='Should not speak.'),ducked:SkylineCoach._state.D.ducked}});
   assert.deepEqual(off,{cancel:true,spoke:false,ducked:false});ok('turning Coach off stops speech immediately and restores audio');
+  // 8b. Declare bankruptcy from the in-game menu (local game)
+  const bk=await p.evaluate(async()=>{applyCity('lagos');newGame({lc:true,cash:1600,set:{ai:'normal',speed:'fast',pot:false,maxRounds:300,city:'lagos',perks:false},players:[{name:'Kelvin',tok:TOKENS[0],col:PCOL[0],ai:false,tl:1},{name:'Kofi',tok:TOKENS[1],col:PCOL[1],ai:true,tl:1},{name:'Mei',tok:TOKENS[2],col:PCOL[2],ai:true,tl:1}]});G.own[1].o=0;startWith(G);
+    await new Promise(r=>setTimeout(r,1500));document.querySelectorAll('#modals .ov').forEach(x=>x.remove());G.turn=0;const w=openMenu();await new Promise(r=>setTimeout(r,300));
+    const b=[...document.querySelectorAll('#modals button')].find(x=>x.textContent==='Declare bankruptcy');if(!b)return'no button';b.click();await new Promise(r=>setTimeout(r,400));
+    const y=[...document.querySelectorAll('#modals button')].find(x=>x.textContent==='Declare bankruptcy');y.click();await new Promise(r=>setTimeout(r,800));
+    return{bankrupt:G.players[0].bankrupt,owner:G.own[1].o,moved:G.turn!==0,over:!!G.over}});
+  assert.deepEqual(bk,{bankrupt:true,owner:-1,moved:true,over:false});ok('in-game menu: Declare bankruptcy (with confirmation) removes the player, returns property to the bank and play continues');
+  const onl=await p.evaluate(()=>{const o=G.online;G.online=true;const a=SkylineDeclareBankruptcy.allowed();G.online=o;return a});assert.equal(onl,false);ok('Declare bankruptcy is not offered in online rooms');
   // 8. no visible UI during play
   assert.equal(await p.evaluate(()=>document.querySelectorAll('#ui .coachbox, #ui [class*="coach"]').length),0);ok('no Coach elements in the game screen (background audio only)');
   assert.deepEqual(errs.filter(e=>!/Abort/.test(e)),[]);await b.close();server.close();console.log(`SKYLINE COACH ${n} checks`);
