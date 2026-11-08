@@ -8,6 +8,11 @@ on:
         type: choice
         options: [both, ios, android]
         default: both
+      scenes:
+        description: 'living-city scenes, or coach (Skyline Coach audio report)'
+        type: choice
+        options: [living-city, coach]
+        default: living-city
 permissions:
   contents: read
 jobs:
@@ -29,7 +34,7 @@ jobs:
           for a in 1 2 3; do npm install --no-audit --no-fund && break; sleep 20; done
           npm run build:web
           node ../skyline-estates/tests/verify-bundle.cjs .
-          bash scripts/inject-native-probe.sh
+          bash scripts/inject-native-probe.sh "${{ inputs.scenes }}"
           npx cap add ios
           npm run assets -- --ios
           bash scripts/patch-ios.sh
@@ -80,7 +85,7 @@ jobs:
           npm install --no-audit --no-fund
           npm run build:web
           node ../skyline-estates/tests/verify-bundle.cjs .
-          bash scripts/inject-native-probe.sh
+          bash scripts/inject-native-probe.sh "${{ inputs.scenes }}"
           npx cap add android
           npm run assets -- --android
           bash scripts/patch-android.sh

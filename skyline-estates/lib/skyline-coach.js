@@ -88,13 +88,16 @@ setInterval(()=>{try{if(!D.ducked&&!Q.cur&&AC&&AC.state!=='running'&&!document.h
    They play through the game's own audio engine, never through system speech, so the natural voice is never
    mixed with robotic narration: a line without a recorded clip (names, amounts, card text) is simply skipped. */
 const NAT={base:'coach/natural-en-f/',cache:'skyline-coach-natural-en-f-v1',man:null,buf:new Map(),src:null};
+// In the iPhone/Android app the clips ship inside the app bundle (copied by build-web.mjs), so they are local files: no download, always offline.
+NAT.bundled=(()=>{try{return !!(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform())}catch(e){return false}})();
 async function natCacheGet(url){try{if(window.caches){const c=await caches.open(NAT.cache);const r=await c.match(url);if(r)return r}}catch(e){}return null}
 async function natManifest(){if(NAT.man)return NAT.man;const url=NAT.base+'manifest.json';let r=null;
+  if(NAT.bundled){const b=await fetch(url);if(!b.ok)throw Error('bundled manifest');NAT.man=await b.json();return NAT.man}
   // Prefer the live index (new lines appear after an update); fall back to the stored copy when offline.
   try{const ac=new AbortController(),to=setTimeout(()=>ac.abort(),4000);const n=await fetch(url,{cache:'no-cache',signal:ac.signal});clearTimeout(to);if(n.ok){r=n;try{if(window.caches)(await caches.open(NAT.cache)).put(url,n.clone())}catch(e){}}}catch(e){}
   if(!r)r=await natCacheGet(url);if(!r)throw Error('manifest');NAT.man=await r.json();return NAT.man}
 async function natBuffer(id){if(NAT.buf.has(id))return NAT.buf.get(id);const m=await natManifest(),f=m.files[id];if(!f)throw Error('no clip '+id);const url=NAT.base+f;
-  let r=await natCacheGet(url);if(!r){r=await fetch(url);if(!r.ok)throw Error('clip');try{if(window.caches)(await caches.open(NAT.cache)).put(url,r.clone())}catch(e){}}
+  let r=NAT.bundled?await fetch(url):await natCacheGet(url);if(!r||!r.ok)r=null;if(!r){r=await fetch(url);if(!r.ok)throw Error('clip');try{if(window.caches)(await caches.open(NAT.cache)).put(url,r.clone())}catch(e){}}
   const ab=await r.arrayBuffer();const b=await new Promise((res,rej)=>AC.decodeAudioData(ab,res,rej));if(NAT.buf.size>80)NAT.buf.delete(NAT.buf.keys().next().value);NAT.buf.set(id,b);return b}
 function natPlay(ids,vol,onend){NAT.last=ids.slice();NAT.plays=(NAT.plays||0)+1;let stopped=false,ended=false;const fin=()=>{if(ended)return;ended=true;onend()};
   (async()=>{try{if(!AC)initAudio();if(!AC)throw Error('no audio');if(AC.state!=='running')await AC.resume().catch(()=>{});
@@ -236,7 +239,7 @@ function draw(box){const c=cfg(),nat=c.voice==='natural',sys=engine.supported(),
    <span>Commentary</span><div class="seg2"><button data-m="important" class="${c.mode==='important'?'on':''}">Important events</button><button data-m="mine" class="${c.mode==='mine'?'on':''}">My turn + major events</button></div>
    <span></span><div class="seg2"><button class="cbtn" data-prev>▶ Preview voice</button>${nat?'':'<button class="cbtn" data-chk>Check voices</button>'}</div></div>
    <div class="cmsg" data-note>${!nat&&(c.bad||[]).length?`${c.bad.length} voice${c.bad.length>1?'s':''} didn’t work on this device and ${c.bad.length>1?'are':'is'} hidden.`:''}</div>
-   <div class="cmsg">${nat?'A recorded natural voice. Lines are fetched as needed; download the pack to use it offline. Speed and Naija Pidgin apply to device voices.':ok?'Spoken announcements only — nothing appears on screen. Music and city sounds fade while the Coach speaks.':'This device or browser has no built-in speech voice. Choose the Natural voice instead.'}</div>`;
+   <div class="cmsg">${nat?(NAT.bundled?'A recorded natural voice, built into the app. Speed and Naija Pidgin apply to device voices.':'A recorded natural voice. Lines are fetched as needed; download the pack to use it offline. Speed and Naija Pidgin apply to device voices.'):ok?'Spoken announcements only — nothing appears on screen. Music and city sounds fade while the Coach speaks.':'This device or browser has no built-in speech voice. Choose the Natural voice instead.'}</div>`;
   box.querySelectorAll('[data-on]').forEach(b=>b.onclick=()=>{const on=b.dataset.on==='1';cfg().on=on;saveCfg();if(!on)stop();else{unlocked=true;try{initAudio()}catch(e){}try{speakNow(tx('Skyline Coach is on.','Skyline Coach don land!'),null,'coach_on')}catch(e){}W.key=null}draw(box)});
   const sel=box.querySelector('select');sel.onchange=()=>{cfg().voice=sel.value;saveCfg();stop();natPreload();draw(box)};
   box.querySelectorAll('input[data-k]').forEach(r=>r.oninput=()=>{cfg()[r.dataset.k]=+r.value;saveCfg()});
@@ -249,6 +252,7 @@ function draw(box){const c=cfg(),nat=c.voice==='natural',sys=engine.supported(),
     if(nb)nb.textContent=r.total?`${r.working} of ${r.total} English voices work on this device${r.bad.length?'; the others are hidden':''}.`:'No English voices were found on this device.'};
   const pk=box.querySelector('[data-pack]');if(pk)(async()=>{const inf=await packInfo();if(!pk.isConnected)return;
     if(!inf.man){pk.innerHTML='<span class="cmsg" style="margin:0">Voice pack unavailable offline. Connect to the internet once to use the natural voice.</span>';return}
+    if(NAT.bundled){pk.innerHTML=`<span class="cmsg" style="margin:0">✓ Included in the app · ${inf.mb} MB · works offline</span>`;return}
     if(!inf.cacheOk){pk.innerHTML=`<span class="cmsg" style="margin:0">Streams as needed (${inf.mb} MB in total).</span>`;return}
     const full=inf.have>=inf.n;
     pk.innerHTML=full?`<span class="cmsg" style="margin:0">✓ Downloaded · ${inf.mb} MB · works offline</span><button class="cbtn" data-rm>Remove</button>`:`<span class="cmsg" style="margin:0">${inf.mb} MB${inf.have?` · ${Math.round(inf.have/inf.n*100)}% saved`:''}</span><button class="cbtn" data-dl>⬇ Download</button>`;
