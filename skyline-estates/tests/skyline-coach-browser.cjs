@@ -7,8 +7,8 @@ const root=path.resolve(__dirname,'../..'),OUT=process.argv[2]||'';let n=0;const
 const STUB=()=>{const log=window.__speech=[];let cur=null;
   class U{constructor(t){this.text=t;this.volume=1;this.rate=1}}
   window.SpeechSynthesisUtterance=U;
-  Object.defineProperty(window,'speechSynthesis',{configurable:true,value:{speaking:false,getVoices:()=>window.__voices||[{name:'Stub Voice NG',lang:'en-NG',default:false},{name:'Stub Voice US',lang:'en-US',default:true},{name:'Stub Voice GB Enhanced',lang:'en-GB',default:false},{name:'Stub Voice FR',lang:'fr-FR',default:false},{name:'Zarvox',lang:'en-US',default:false},{name:'Stub Voice Broken',lang:'en-AU',default:false}],addEventListener(){},
-    speak(u){if(!u.text.trim())return;if(u.voice&&u.voice.name==='Stub Voice Broken'){log.push({silentFail:u.voice.name});return}if(u.volume===0&&u.text==='Skyline'){setTimeout(()=>u.onstart&&u.onstart(),5);return}setTimeout(()=>u.onstart&&u.onstart(),5);if(cur)log.push({overlap:true,text:u.text});cur=u;log.push({text:u.text,at:Date.now(),voice:u.voice&&u.voice.name,vol:u.volume,rate:u.rate,rad:window.AUD&&AUD.buses?+AUD.buses.rad.gain.value.toFixed(2):null});
+  Object.defineProperty(window,'speechSynthesis',{configurable:true,value:{speaking:false,getVoices:()=>window.__voices||[{name:'Samantha',lang:'en-US',default:true},{name:'Alex',lang:'en-US'},{name:'Kate',lang:'en-GB'},{name:'Daniel (Enhanced)',lang:'en-GB'},{name:'Serena (Premium)',lang:'en-GB'},{name:'Rishi',lang:'en-IN'},{name:'Veena',lang:'en-IN'},{name:'Stub Voice NG',lang:'en-NG'},{name:'Zarvox',lang:'en-US'},{name:'Amelie',lang:'fr-FR'}],addEventListener(){},
+    speak(u){if(!u.text.trim())return;if(u.voice&&u.voice.name==='Serena (Premium)'){log.push({silentFail:u.voice.name});return}if(u.volume===0&&u.text==='Skyline'){setTimeout(()=>u.onstart&&u.onstart(),5);return}setTimeout(()=>u.onstart&&u.onstart(),5);if(cur)log.push({overlap:true,text:u.text});cur=u;log.push({text:u.text,at:Date.now(),voice:u.voice&&u.voice.name,vol:u.volume,rate:u.rate,rad:window.AUD&&AUD.buses?+AUD.buses.rad.gain.value.toFixed(2):null});
       setTimeout(()=>{if(cur===u){cur=null;u.onend&&u.onend()}},Math.min(1500,u.text.length*25))},
     cancel(){log.push({cancel:true});const u=cur;cur=null;u&&u.onend&&u.onend()}}})};
 (async()=>{
@@ -26,32 +26,31 @@ const STUB=()=>{const log=window.__speech=[];let cur=null;
   await p.evaluate(()=>(setup.stCat='audio',homeTab('settings')));await p.locator('.coachbox').waitFor();
   assert.equal(await p.locator('.coachbox [data-on="0"].on').count(),1);ok('Coach is OFF by default; Skyline Coach section appears inside Settings → Sound');
   if(OUT){for(const ui of ['dark','light']){await p.evaluate(u=>{PREF.ui=u;applyUI();(setup.stCat='audio',homeTab('settings'))},ui);await p.locator('.coachbox').waitFor();await p.locator('.coachbox').scrollIntoViewIfNeeded();await p.waitForTimeout(300);await p.screenshot({path:`${OUT}/coach-settings-${ui}.png`})}await p.evaluate(()=>{PREF.ui='dark';applyUI();(setup.stCat='audio',homeTab('settings'))})}
-  // Automatic default: the device default English voice (no country preference); non-English voices never listed
+  // Voice list: Automatic + American, British and Indian English (female/male) slots mapped to installed voices
   const opts=await p.locator('.coachbox select option').allTextContents();
-  assert.match(opts[0],/^System English \(Automatic\)/);assert.ok(!opts.some(o=>/fr-FR/.test(o)));assert.equal(await p.locator('.coachbox select').inputValue(),'');
+  assert.deepEqual(opts,['System English (Automatic)','American English · Female','American English · Male','British English · Female','British English · Male','Indian English · Female','Indian English · Male']);
+  assert.equal(await p.locator('.coachbox select').inputValue(),'');ok('voice list: System English (Automatic) plus American, British and Indian English, female and male');
   await p.locator('.coachbox [data-on="1"]').click();await p.locator('.coachbox [data-prev]').click();await p.waitForTimeout(150);
-  let last=await p.evaluate(()=>__speech.filter(x=>x.text).slice(-1)[0]);assert.equal(last.voice,'Stub Voice US');
-  assert.ok(!opts.some(o=>/Zarvox/.test(o)),'novelty voices hidden');
-  const fb=await p.evaluate(()=>{const vs=speechSynthesis.getVoices().filter(v=>!/Broken|Zarvox/.test(v.name)).map(v=>({...v,default:false}));window.__voices=vs;const a=SkylineCoach.voice('');window.__voices=[{name:'Plain en-ZA',lang:'en-ZA'}];const b=SkylineCoach.voice('');window.__voices=[];const c=SkylineCoach.voice('');delete window.__voices;return[a,b,c]});
-  assert.deepEqual(fb,['Stub Voice GB Enhanced','Plain en-ZA',null]);
-  ok('Automatic = device default English voice; without one, the most natural installed English voice (enhanced first, no accent preference); none → device language');
-  // a voice that never starts speaking: the line is retried with Automatic, the voice is hidden, and the player is told
-  await p.locator('.coachbox select').selectOption('Stub Voice Broken');await p.locator('.coachbox [data-prev]').click();await p.waitForTimeout(4700);
-  const br=await p.evaluate(()=>({last:__speech.filter(x=>x.text).slice(-1)[0],bad:PREF.coach.bad,voice:PREF.coach.voice,note:document.querySelector('.coachbox [data-note]').textContent,listed:[...document.querySelectorAll('.coachbox option')].some(o=>/Broken/.test(o.textContent))}));
-  assert.equal(br.last.voice,'Stub Voice US');assert.deepEqual(br.bad,['Stub Voice Broken']);assert.equal(br.voice,'');assert.match(br.note,/didn’t work on this device/);assert.equal(br.listed,false);
-  ok('a voice that does not work on the device: the line is spoken again with Automatic, the voice is hidden and the player is told');
+  let last=await p.evaluate(()=>__speech.filter(x=>x.text).slice(-1)[0]);assert.equal(last.voice,'Samantha');
+  const map=await p.evaluate(()=>['us-f','us-m','gb-f','gb-m','in-f','in-m'].map(k=>SkylineCoach.voice(k)));assert.deepEqual(map,['Samantha','Alex','Serena (Premium)','Daniel (Enhanced)','Veena','Rishi']);
+  const fb=await p.evaluate(()=>{window.__voices=[{name:'Kate',lang:'en-GB'},{name:'Daniel (Enhanced)',lang:'en-GB'},{name:'Alex',lang:'en-US'}];const a=SkylineCoach.voice('');window.__voices=[{name:'Plain en-ZA',lang:'en-ZA'}];const b=SkylineCoach.voice('');window.__voices=[];const c=SkylineCoach.voice('');delete window.__voices;return[a,b,c]});
+  assert.deepEqual(fb,['Daniel (Enhanced)','Plain en-ZA',null]);ok('Automatic = device default English voice (else most natural installed voice, else device language); each slot uses the best installed voice of that accent and gender');
+  await p.locator('.coachbox select').selectOption('gb-f');await p.locator('.coachbox [data-prev]').click();await p.waitForTimeout(4700);
+  const br=await p.evaluate(()=>({last:__speech.filter(x=>x.text).slice(-1)[0],bad:PREF.coach.bad,voice:PREF.coach.voice,note:document.querySelector('.coachbox [data-note]').textContent,now:SkylineCoach.voice('gb-f')}));
+  assert.equal(br.last.voice,'Samantha');assert.deepEqual(br.bad,['Serena (Premium)']);assert.equal(br.voice,'gb-f');assert.match(br.note,/didn’t work on this device/);assert.equal(br.now,'Kate');
+  ok('a voice that cannot speak here: the line is repeated with Automatic, that voice is skipped and British · Female now uses the next installed voice (Kate)');
   await p.evaluate(()=>{PREF.coach.bad=[];SkylineCoach.stop()});await p.evaluate(()=>{setup.stCat='audio';homeTab('settings')});await p.locator('.coachbox [data-chk]').click();
-  await p.waitForFunction(()=>/English voices work/.test(document.querySelector('.coachbox [data-note]')?.textContent||''),null,{timeout:15000});
-  const chk=await p.evaluate(()=>({note:document.querySelector('.coachbox [data-note]').textContent,bad:PREF.coach.bad}));assert.match(chk.note,/^3 of 4 English voices work/);assert.deepEqual(chk.bad,['Stub Voice Broken']);
+  await p.waitForFunction(()=>/English voices work/.test(document.querySelector('.coachbox [data-note]')?.textContent||''),null,{timeout:20000});
+  const chk=await p.evaluate(()=>({note:document.querySelector('.coachbox [data-note]').textContent,bad:PREF.coach.bad}));assert.match(chk.note,/^7 of 8 English voices work/);assert.deepEqual(chk.bad,['Serena (Premium)']);
   ok('Check voices silently tests every English voice: "'+chk.note+'"');
-  await p.locator('.coachbox select').selectOption('Stub Voice NG');await p.locator('.coachbox input[data-k="rate"]').fill('1.1');await p.locator('.coachbox [data-m="important"]').click();
+  await p.locator('.coachbox select').selectOption('in-m');await p.locator('.coachbox input[data-k="rate"]').fill('1.1');await p.locator('.coachbox [data-m="important"]').click();
   await p.locator('.coachbox [data-prev]').click();await p.waitForTimeout(150);
-  last=await p.evaluate(()=>__speech.filter(x=>x.text).slice(-1)[0]);assert.match(last.text,/Ready to roll/);assert.equal(last.voice,'Stub Voice NG');assert.equal(last.rate,1.1);ok('a manually chosen accent is used; Preview voice works');
+  last=await p.evaluate(()=>__speech.filter(x=>x.text).slice(-1)[0]);assert.match(last.text,/Ready to roll/);assert.equal(last.voice,'Rishi');assert.equal(last.rate,1.1);ok('Indian English · Male speaks with Rishi; Preview voice works');
   await p.reload();await p.locator('#boot').waitFor({state:'detached',timeout:25000});
-  assert.deepEqual(await p.evaluate(()=>[PREF.coach.on,PREF.coach.voice,PREF.coach.rate,PREF.coach.mode]),[true,'Stub Voice NG',1.1,'important']);
-  await p.evaluate(()=>{setup.stCat='audio';homeTab('settings')});await p.locator('.coachbox').waitFor();assert.equal(await p.locator('.coachbox select').inputValue(),'Stub Voice NG');
+  assert.deepEqual(await p.evaluate(()=>[PREF.coach.on,PREF.coach.voice,PREF.coach.rate,PREF.coach.mode]),[true,'in-m',1.1,'important']);
+  await p.evaluate(()=>{setup.stCat='audio';homeTab('settings')});await p.locator('.coachbox').waitFor();assert.equal(await p.locator('.coachbox select').inputValue(),'in-m');
   await p.locator('.coachbox select').selectOption('');assert.equal(await p.evaluate(()=>PREF.coach.voice),'');
-  await p.locator('.coachbox select').selectOption('Stub Voice NG');ok('choices survive reload; players can switch back to Automatic');
+  await p.locator('.coachbox select').selectOption('us-m');ok('voice choice survives reload; switching back to Automatic works');
   // 2. play a short Living City game: 1 human + 2 AI, auto-answering every prompt
   await p.evaluate(()=>{sleep=ms=>new Promise(r=>setTimeout(r,Math.min(ms||0,40)));initAudio();PREF.audio.radio=true;syncAudio()});
   await p.evaluate(()=>{applyCity('lagos');newGame({lc:true,cash:1600,set:{ai:'normal',speed:'fast',pot:false,maxRounds:300,city:'lagos',perks:false,mode:'timed',rounds:8},players:[{name:'Kelvin',tok:TOKENS[0],col:PCOL[0],ai:false,tl:1},{name:'Kofi',tok:TOKENS[1],col:PCOL[1],ai:true,tl:1},{name:'Mei',tok:TOKENS[2],col:PCOL[2],ai:true,tl:1}]});

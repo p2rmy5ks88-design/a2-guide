@@ -7,7 +7,7 @@ Optional background voice commentary. **OFF by default.** Turn it on in Settings
   - No change to rules, money, saves, accounts or the network.
   - Not in App Store build 195.
 - **Engine:** the browser's `speechSynthesis`.
-  - Uses English voices only. Default is "System English (Automatic)": the device default English voice; without one, the most natural-sounding installed English voice (enhanced, premium or neural first). No accent is preferred, and every installed English voice can be chosen manually.
+  - Voice choices: System English (Automatic) plus American, British and Indian English, female and male. Each choice is mapped on the device to the best working installed voice of that accent and gender; a choice with no matching voice is not shown.
   - Falls back gracefully when no voice exists.
   - A native adapter can be registered with `SkylineCoach.useEngine({supported, voices, pick, speak, cancel})`.
 - **Events** come from committed game state:
