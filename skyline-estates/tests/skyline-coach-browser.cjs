@@ -7,7 +7,7 @@ const root=path.resolve(__dirname,'../..'),OUT=process.argv[2]||'';let n=0;const
 const STUB=()=>{const log=window.__speech=[];let cur=null;
   class U{constructor(t){this.text=t;this.volume=1;this.rate=1}}
   window.SpeechSynthesisUtterance=U;
-  Object.defineProperty(window,'speechSynthesis',{configurable:true,value:{speaking:false,getVoices:()=>[{name:'Test English (Nigeria)',lang:'en-NG',default:false},{name:'Test English (UK)',lang:'en-GB',default:true}],addEventListener(){},
+  Object.defineProperty(window,'speechSynthesis',{configurable:true,value:{speaking:false,getVoices:()=>window.__voices||[{name:'Stub Voice NG',lang:'en-NG',default:false},{name:'Stub Voice US',lang:'en-US',default:true},{name:'Stub Voice GB Enhanced',lang:'en-GB',default:false},{name:'Stub Voice FR',lang:'fr-FR',default:false}],addEventListener(){},
     speak(u){if(!u.text.trim())return;if(cur)log.push({overlap:true,text:u.text});cur=u;log.push({text:u.text,at:Date.now(),voice:u.voice&&u.voice.name,vol:u.volume,rate:u.rate,rad:window.AUD&&AUD.buses?+AUD.buses.rad.gain.value.toFixed(2):null});
       setTimeout(()=>{if(cur===u){cur=null;u.onend&&u.onend()}},Math.min(1500,u.text.length*25))},
     cancel(){log.push({cancel:true});const u=cur;cur=null;u&&u.onend&&u.onend()}}})};
@@ -26,12 +26,22 @@ const STUB=()=>{const log=window.__speech=[];let cur=null;
   await p.evaluate(()=>(setup.stCat='audio',homeTab('settings')));await p.locator('.coachbox').waitFor();
   assert.equal(await p.locator('.coachbox [data-on="0"].on').count(),1);ok('Coach is OFF by default; Skyline Coach section appears inside Settings → Sound');
   if(OUT){for(const ui of ['dark','light']){await p.evaluate(u=>{PREF.ui=u;applyUI();(setup.stCat='audio',homeTab('settings'))},ui);await p.locator('.coachbox').waitFor();await p.locator('.coachbox').scrollIntoViewIfNeeded();await p.waitForTimeout(300);await p.screenshot({path:`${OUT}/coach-settings-${ui}.png`})}await p.evaluate(()=>{PREF.ui='dark';applyUI();(setup.stCat='audio',homeTab('settings'))})}
-  await p.locator('.coachbox [data-on="1"]').click();await p.locator('.coachbox select').selectOption('Test English (Nigeria)');
-  await p.locator('.coachbox input[data-k="rate"]').fill('1.1');await p.locator('.coachbox [data-m="important"]').click();
-  await p.locator('.coachbox [data-prev]').click();await p.waitForTimeout(200);
-  const prev=await p.evaluate(()=>__speech.filter(x=>x.text).slice(-1)[0]);assert.match(prev.text,/Ready to roll/);assert.equal(prev.voice,'Test English (Nigeria)');assert.equal(prev.rate,1.1);ok('turning Coach on, choosing a voice and speed, and Preview voice work');
+  // Automatic default: the device default English voice (no country preference); non-English voices never listed
+  const opts=await p.locator('.coachbox select option').allTextContents();
+  assert.match(opts[0],/^System English \(Automatic\)/);assert.ok(!opts.some(o=>/fr-FR/.test(o)));assert.equal(await p.locator('.coachbox select').inputValue(),'');
+  await p.locator('.coachbox [data-on="1"]').click();await p.locator('.coachbox [data-prev]').click();await p.waitForTimeout(150);
+  let last=await p.evaluate(()=>__speech.filter(x=>x.text).slice(-1)[0]);assert.equal(last.voice,'Stub Voice US');
+  const fb=await p.evaluate(()=>{const vs=speechSynthesis.getVoices().map(v=>({...v,default:false}));window.__voices=vs;const a=SkylineCoach.voice('');window.__voices=[{name:'Plain en-ZA',lang:'en-ZA'}];const b=SkylineCoach.voice('');window.__voices=[];const c=SkylineCoach.voice('');delete window.__voices;return[a,b,c]});
+  assert.deepEqual(fb,['Stub Voice GB Enhanced','Plain en-ZA',null]);
+  ok('Automatic = device default English voice; without one, the most natural installed English voice (enhanced first, no accent preference); none → device language');
+  await p.locator('.coachbox select').selectOption('Stub Voice NG');await p.locator('.coachbox input[data-k="rate"]').fill('1.1');await p.locator('.coachbox [data-m="important"]').click();
+  await p.locator('.coachbox [data-prev]').click();await p.waitForTimeout(150);
+  last=await p.evaluate(()=>__speech.filter(x=>x.text).slice(-1)[0]);assert.match(last.text,/Ready to roll/);assert.equal(last.voice,'Stub Voice NG');assert.equal(last.rate,1.1);ok('a manually chosen accent is used; Preview voice works');
   await p.reload();await p.locator('#boot').waitFor({state:'detached',timeout:25000});
-  assert.deepEqual(await p.evaluate(()=>[PREF.coach.on,PREF.coach.voice,PREF.coach.rate,PREF.coach.mode]),[true,'Test English (Nigeria)',1.1,'important']);ok('Coach settings persist after reload (stored with preferences, not match saves)');
+  assert.deepEqual(await p.evaluate(()=>[PREF.coach.on,PREF.coach.voice,PREF.coach.rate,PREF.coach.mode]),[true,'Stub Voice NG',1.1,'important']);
+  await p.evaluate(()=>{setup.stCat='audio';homeTab('settings')});await p.locator('.coachbox').waitFor();assert.equal(await p.locator('.coachbox select').inputValue(),'Stub Voice NG');
+  await p.locator('.coachbox select').selectOption('');assert.equal(await p.evaluate(()=>PREF.coach.voice),'');
+  await p.locator('.coachbox select').selectOption('Stub Voice NG');ok('choices survive reload; players can switch back to Automatic');
   // 2. play a short Living City game: 1 human + 2 AI, auto-answering every prompt
   await p.evaluate(()=>{sleep=ms=>new Promise(r=>setTimeout(r,Math.min(ms||0,40)));initAudio();PREF.audio.radio=true;syncAudio()});
   await p.evaluate(()=>{applyCity('lagos');newGame({lc:true,cash:1600,set:{ai:'normal',speed:'fast',pot:false,maxRounds:300,city:'lagos',perks:false,mode:'timed',rounds:8},players:[{name:'Kelvin',tok:TOKENS[0],col:PCOL[0],ai:false,tl:1},{name:'Kofi',tok:TOKENS[1],col:PCOL[1],ai:true,tl:1},{name:'Mei',tok:TOKENS[2],col:PCOL[2],ai:true,tl:1}]});
@@ -50,7 +60,7 @@ const STUB=()=>{const log=window.__speech=[];let cur=null;
   const bl=await p.evaluate(async()=>{await new Promise(r=>setTimeout(r,1600));__speech.length=0;const i=G.own.findIndex((o,i)=>SQ[i].t==='prop'&&o.o===0);G.own[i].h=Math.min(4,G.own[i].h+1);renderRoster();
     await new Promise(r=>setTimeout(r,200));return __speech.filter(x=>x.text).map(x=>x.text)});
   assert.ok(bl.some(t=>/development complete|construction complete/.test(t)),JSON.stringify(bl));ok('building upgrade announced from committed state: "'+bl[0]+'"');
-  const cr=await p.evaluate(async()=>{await new Promise(r=>setTimeout(r,1600));__speech.length=0;G.players[0].cr={from:G.round,why:'audit'};renderRoster();await new Promise(r=>setTimeout(r,1500));G.players[0].cr=null;renderRoster();await new Promise(r=>setTimeout(r,1500));return __speech.filter(x=>x.text).map(x=>x.text)});
+  const cr=await p.evaluate(async()=>{await new Promise(r=>setTimeout(r,1600));G.players[0].cr=null;renderRoster();SkylineCoach._state.Q.recent.clear();__speech.length=0;G.players[0].cr={from:G.round,why:'audit'};renderRoster();await new Promise(r=>setTimeout(r,1500));G.players[0].cr=null;renderRoster();await new Promise(r=>setTimeout(r,1500));return __speech.filter(x=>x.text).map(x=>x.text)});
   assert.deepEqual(cr,['Civic Review! Your rent income is temporarily suspended.','Your planning restriction has ended.']);ok('Civic Review start and end announced');
   // 3. ducking and restore
   await p.waitForTimeout(2500);const after=await p.evaluate(()=>({rad:+AUD.buses.rad.gain.value.toFixed(2),amb:+AUD.buses.amb.gain.value.toFixed(2),sfx:+AUD.buses.sfx.gain.value.toFixed(2),radioOn:AUD.radioOn,ambOn:AUD.ambOn,radioPref:PREF.audio.radio,vol:PREF.audio.vol,ducked:SkylineCoach._state.D.ducked}));
