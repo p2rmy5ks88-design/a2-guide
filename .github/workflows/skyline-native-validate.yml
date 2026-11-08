@@ -53,7 +53,7 @@ jobs:
           echo "Runtime $RT device $DT"
           T(){ perl -e 'alarm shift; exec @ARGV' "$@"; }
           UDID=$(xcrun simctl create skyline-probe "$DT" "$RT"); xcrun simctl boot "$UDID"; T 300 xcrun simctl bootstatus "$UDID" -b || echo "bootstatus timed out"
-          T 180 xcrun simctl install "$UDID" "$APP"
+          for a in 1 2 3; do T 240 xcrun simctl install "$UDID" "$APP" && break; echo "install attempt $a timed out"; sleep 15; done
           T(){ perl -e 'alarm shift; exec @ARGV' "$@"; }   # bounded simctl calls (no hangs)
           for n in 1 2 3 4; do
             T 60 xcrun simctl launch --terminate-running-process "$UDID" com.kenstylez.skylineestates >/dev/null || echo "launch $n timed out"; sleep 75
