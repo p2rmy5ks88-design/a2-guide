@@ -7,8 +7,8 @@ const root=path.resolve(__dirname,'../..'),OUT=process.argv[2]||'';let n=0;const
 const STUB=()=>{const log=window.__speech=[];let cur=null;
   class U{constructor(t){this.text=t;this.volume=1;this.rate=1}}
   window.SpeechSynthesisUtterance=U;
-  Object.defineProperty(window,'speechSynthesis',{configurable:true,value:{speaking:false,getVoices:()=>window.__voices||[{name:'Stub Voice NG',lang:'en-NG',default:false},{name:'Stub Voice US',lang:'en-US',default:true},{name:'Stub Voice GB Enhanced',lang:'en-GB',default:false},{name:'Stub Voice FR',lang:'fr-FR',default:false}],addEventListener(){},
-    speak(u){if(!u.text.trim())return;if(cur)log.push({overlap:true,text:u.text});cur=u;log.push({text:u.text,at:Date.now(),voice:u.voice&&u.voice.name,vol:u.volume,rate:u.rate,rad:window.AUD&&AUD.buses?+AUD.buses.rad.gain.value.toFixed(2):null});
+  Object.defineProperty(window,'speechSynthesis',{configurable:true,value:{speaking:false,getVoices:()=>window.__voices||[{name:'Stub Voice NG',lang:'en-NG',default:false},{name:'Stub Voice US',lang:'en-US',default:true},{name:'Stub Voice GB Enhanced',lang:'en-GB',default:false},{name:'Stub Voice FR',lang:'fr-FR',default:false},{name:'Zarvox',lang:'en-US',default:false},{name:'Stub Voice Broken',lang:'en-AU',default:false}],addEventListener(){},
+    speak(u){if(!u.text.trim())return;if(u.voice&&u.voice.name==='Stub Voice Broken'){log.push({silentFail:u.voice.name});return}if(u.volume===0&&u.text==='Skyline'){setTimeout(()=>u.onstart&&u.onstart(),5);return}setTimeout(()=>u.onstart&&u.onstart(),5);if(cur)log.push({overlap:true,text:u.text});cur=u;log.push({text:u.text,at:Date.now(),voice:u.voice&&u.voice.name,vol:u.volume,rate:u.rate,rad:window.AUD&&AUD.buses?+AUD.buses.rad.gain.value.toFixed(2):null});
       setTimeout(()=>{if(cur===u){cur=null;u.onend&&u.onend()}},Math.min(1500,u.text.length*25))},
     cancel(){log.push({cancel:true});const u=cur;cur=null;u&&u.onend&&u.onend()}}})};
 (async()=>{
@@ -31,9 +31,19 @@ const STUB=()=>{const log=window.__speech=[];let cur=null;
   assert.match(opts[0],/^System English \(Automatic\)/);assert.ok(!opts.some(o=>/fr-FR/.test(o)));assert.equal(await p.locator('.coachbox select').inputValue(),'');
   await p.locator('.coachbox [data-on="1"]').click();await p.locator('.coachbox [data-prev]').click();await p.waitForTimeout(150);
   let last=await p.evaluate(()=>__speech.filter(x=>x.text).slice(-1)[0]);assert.equal(last.voice,'Stub Voice US');
-  const fb=await p.evaluate(()=>{const vs=speechSynthesis.getVoices().map(v=>({...v,default:false}));window.__voices=vs;const a=SkylineCoach.voice('');window.__voices=[{name:'Plain en-ZA',lang:'en-ZA'}];const b=SkylineCoach.voice('');window.__voices=[];const c=SkylineCoach.voice('');delete window.__voices;return[a,b,c]});
+  assert.ok(!opts.some(o=>/Zarvox/.test(o)),'novelty voices hidden');
+  const fb=await p.evaluate(()=>{const vs=speechSynthesis.getVoices().filter(v=>!/Broken|Zarvox/.test(v.name)).map(v=>({...v,default:false}));window.__voices=vs;const a=SkylineCoach.voice('');window.__voices=[{name:'Plain en-ZA',lang:'en-ZA'}];const b=SkylineCoach.voice('');window.__voices=[];const c=SkylineCoach.voice('');delete window.__voices;return[a,b,c]});
   assert.deepEqual(fb,['Stub Voice GB Enhanced','Plain en-ZA',null]);
   ok('Automatic = device default English voice; without one, the most natural installed English voice (enhanced first, no accent preference); none → device language');
+  // a voice that never starts speaking: the line is retried with Automatic, the voice is hidden, and the player is told
+  await p.locator('.coachbox select').selectOption('Stub Voice Broken');await p.locator('.coachbox [data-prev]').click();await p.waitForTimeout(4700);
+  const br=await p.evaluate(()=>({last:__speech.filter(x=>x.text).slice(-1)[0],bad:PREF.coach.bad,voice:PREF.coach.voice,note:document.querySelector('.coachbox [data-note]').textContent,listed:[...document.querySelectorAll('.coachbox option')].some(o=>/Broken/.test(o.textContent))}));
+  assert.equal(br.last.voice,'Stub Voice US');assert.deepEqual(br.bad,['Stub Voice Broken']);assert.equal(br.voice,'');assert.match(br.note,/didn’t work on this device/);assert.equal(br.listed,false);
+  ok('a voice that does not work on the device: the line is spoken again with Automatic, the voice is hidden and the player is told');
+  await p.evaluate(()=>{PREF.coach.bad=[];SkylineCoach.stop()});await p.evaluate(()=>{setup.stCat='audio';homeTab('settings')});await p.locator('.coachbox [data-chk]').click();
+  await p.waitForFunction(()=>/English voices work/.test(document.querySelector('.coachbox [data-note]')?.textContent||''),null,{timeout:15000});
+  const chk=await p.evaluate(()=>({note:document.querySelector('.coachbox [data-note]').textContent,bad:PREF.coach.bad}));assert.match(chk.note,/^3 of 4 English voices work/);assert.deepEqual(chk.bad,['Stub Voice Broken']);
+  ok('Check voices silently tests every English voice: "'+chk.note+'"');
   await p.locator('.coachbox select').selectOption('Stub Voice NG');await p.locator('.coachbox input[data-k="rate"]').fill('1.1');await p.locator('.coachbox [data-m="important"]').click();
   await p.locator('.coachbox [data-prev]').click();await p.waitForTimeout(150);
   last=await p.evaluate(()=>__speech.filter(x=>x.text).slice(-1)[0]);assert.match(last.text,/Ready to roll/);assert.equal(last.voice,'Stub Voice NG');assert.equal(last.rate,1.1);ok('a manually chosen accent is used; Preview voice works');
@@ -67,6 +77,10 @@ const STUB=()=>{const log=window.__speech=[];let cur=null;
   await p.waitForTimeout(2500);const after=await p.evaluate(()=>({rad:+AUD.buses.rad.gain.value.toFixed(2),amb:+AUD.buses.amb.gain.value.toFixed(2),sfx:+AUD.buses.sfx.gain.value.toFixed(2),radioOn:AUD.radioOn,ambOn:AUD.ambOn,radioPref:PREF.audio.radio,vol:PREF.audio.vol,ducked:SkylineCoach._state.D.ducked}));
   assert.ok(duckSeen,'ducked while speaking');assert.ok(radMin<.05,'FM silent while speaking: '+radMin);assert.equal(after.ducked,false);assert.equal(after.sfx,1);assert.equal(after.rad,after.radioOn?1:0);assert.equal(after.amb,after.ambOn?1:0);assert.equal(after.vol,.8);assert.equal(after.radioPref,true);
   ok('Skyline FM goes silent and ambience fades while the Coach speaks and return to their live levels afterwards; saved audio preferences untouched');
+  // 3b. FM recovery: if the system voice suspends the audio engine and pauses the radio, both come back afterwards
+  const fmr=await p.evaluate(async()=>{const s=FMS.slots[FMS.cur];SkylineCoach._state.Q.recent.clear();SkylineCoach.say('Recovery check line.',2);await new Promise(r=>setTimeout(r,100));
+    await AC.suspend();if(s)s.a.pause();await new Promise(r=>setTimeout(r,3500));return{ac:AC.state,paused:s?s.a.paused:'no-slot',rad:+AUD.buses.rad.gain.value.toFixed(2),radioOn:AUD.radioOn}});
+  assert.equal(fmr.ac,'running');assert.notEqual(fmr.paused,true);assert.equal(fmr.rad,fmr.radioOn?1:0);ok('after speech the audio engine is resumed and a paused Skyline FM track plays again at full level ('+JSON.stringify(fmr)+')');
   // 4. critical speech overrides routine; duplicates suppressed; stale dropped
   const pr=await p.evaluate(async()=>{__speech.length=0;SkylineCoach.say('Routine line one.',3);SkylineCoach.say('Critical line!',1);SkylineCoach.say('Critical line!',1);await new Promise(r=>setTimeout(r,2500));return __speech.map(x=>x.cancel?'<cancel>':x.text)});
   assert.deepEqual(pr.filter(x=>x!=='<cancel>'),['Routine line one.','Critical line!']);assert.ok(pr.includes('<cancel>'));ok('critical speech cuts off routine speech; repeated lines are suppressed');
