@@ -21,9 +21,16 @@ const webEngine={
   name:'web',
   supported:()=>typeof window.speechSynthesis!=='undefined'&&typeof window.SpeechSynthesisUtterance==='function',
   voices(){try{return speechSynthesis.getVoices().filter(v=>/^en([-_]|$)/i.test(v.lang||''))}catch(e){return[]}},
-  pick(name){const vs=this.voices();if(!vs.length)return null;const by=n=>vs.find(v=>v.name===n);
-    return by(name)||vs.find(v=>/en[-_]NG/i.test(v.lang))||vs.find(v=>v.default)||vs.find(v=>/en[-_]GB/i.test(v.lang))||vs.find(v=>/en[-_]US/i.test(v.lang))||vs[0]},
-  speak(text,o){const u=new SpeechSynthesisUtterance(text),v=this.pick(o.voice);if(v){u.voice=v;u.lang=v.lang}else u.lang='en-GB';
+  // Automatic ('' / unknown name): the device's default English voice; otherwise the most natural-sounding English
+  // voice installed (enhanced/premium/neural before compact), matching the device language when it is English.
+  // No country or accent is preferred. An explicitly chosen installed voice always wins.
+  pick(name){const vs=this.voices();if(!vs.length)return null;if(name){const v=vs.find(x=>x.name===name);if(v)return v}
+    const def=vs.find(v=>v.default);if(def)return def;
+    const nav=(navigator.languages||[navigator.language||'']).map(l=>String(l).toLowerCase()).filter(l=>l.startsWith('en'));
+    const q=v=>{const id=(v.name+' '+(v.voiceURI||'')).toLowerCase();return(/premium|enhanced|neural|natural/.test(id)?4:0)+(/compact|espeak|robot/.test(id)?-3:0)+(v.localService!==false?1:0)+(nav.includes(String(v.lang).toLowerCase().replace('_','-'))?2:0)};
+    return vs.slice().sort((a,b)=>q(b)-q(a))[0]},
+  lang(){const l=(navigator.languages||[navigator.language||'']).find(l=>/^en/i.test(l||''));return l||'en'},
+  speak(text,o){const u=new SpeechSynthesisUtterance(text),v=this.pick(o.voice);if(v){u.voice=v;u.lang=v.lang}else u.lang=this.lang();
     u.volume=o.volume;u.rate=o.rate;u.pitch=1;u.onstart=o.onstart;u.onend=o.onend;u.onerror=o.onend;speechSynthesis.speak(u);return u},
   cancel(){try{speechSynthesis.cancel()}catch(e){}},
   unlock(){try{const u=new SpeechSynthesisUtterance(' ');u.volume=0;speechSynthesis.speak(u)}catch(e){}}
@@ -122,10 +129,10 @@ const CSS=`.coachbox{margin-top:10px;border-top:1px solid var(--ln,#0002);paddin
 (()=>{const s=document.createElement('style');s.textContent=CSS;document.head.append(s)})();
 const boxes=new Set();
 function renderAll(){boxes.forEach(b=>{if(b.isConnected)draw(b);else boxes.delete(b)})}
-function draw(box){const c=cfg(),ok=engine.supported(),vs=ok?engine.voices():[],cur=ok?engine.pick(c.voice):null;
+function draw(box){const c=cfg(),ok=engine.supported(),vs=ok?engine.voices():[],cur=ok?engine.pick(''):null,chosen=c.voice?vs.find(v=>v.name===c.voice):null;
   box.innerHTML=`<h4>Skyline Coach</h4>
    <div class="cg"><span>Coach voice</span><div class="seg2"><button data-on="1" class="${c.on?'on':''}" aria-pressed="${c.on}">On</button><button data-on="0" class="${c.on?'':'on'}" aria-pressed="${!c.on}">Off</button></div>
-   <span>Voice</span><select aria-label="Coach voice" ${vs.length?'':'disabled'}>${vs.length?vs.map(v=>`<option value="${esc(v.name)}" ${cur&&cur.name===v.name?'selected':''}>${esc(v.name)} (${esc(v.lang)})</option>`).join(''):'<option>Default voice</option>'}</select>
+   <span>Voice</span><select aria-label="Coach voice" ${ok?'':'disabled'}><option value="" ${chosen?'':'selected'}>System English (Automatic)${!chosen&&cur?' · '+esc(cur.name):''}</option>${vs.map(v=>`<option value="${esc(v.name)}" ${chosen&&chosen.name===v.name?'selected':''}>${esc(v.name)} (${esc(v.lang)})</option>`).join('')}</select>
    <span>Coach volume</span><input type="range" min="0" max="1" step="0.05" value="${c.vol}" aria-label="Coach volume" data-k="vol">
    <span>Speaking speed</span><input type="range" min="0.7" max="1.4" step="0.05" value="${c.rate}" aria-label="Speaking speed" data-k="rate">
    <span>Commentary</span><div class="seg2"><button data-m="important" class="${c.mode==='important'?'on':''}">Important events</button><button data-m="mine" class="${c.mode==='mine'?'on':''}">My turn + major events</button></div>
@@ -142,6 +149,6 @@ function mount(container){if(!container||container.querySelector('.coachbox'))re
 {const _ps=paneSettings;paneSettings=function(T){const r=_ps.apply(this,arguments);try{const v=T.querySelector('#stVol'),ch=T.querySelector('#sChips');mount(v?v.closest('.stp'):ch&&ch.closest('.card'))}catch(e){}return r}}
 // In-game menu → Sound dialog.
 {const _m=modal;modal=function(o){if(o&&typeof o.html==='string'&&o.html.includes('id="sndChips"')){const om=o.onMount;o={...o,onMount(pn,close){const r=om&&om(pn,close);try{mount(pn.querySelector('#sndChips').parentElement)}catch(e){}return r}}}return _m.call(this,o)}}
-window.SkylineCoach=Object.freeze({version:1,useEngine(e){if(e&&typeof e.speak==='function'&&typeof e.supported==='function'){stop();engine=e;renderAll()}},
+window.SkylineCoach=Object.freeze({version:1,voice:n=>{try{const v=engine.pick&&engine.pick(n||'');return v?v.name:null}catch(e){return null}},useEngine(e){if(e&&typeof e.speak==='function'&&typeof e.supported==='function'){stop();engine=e;renderAll()}},
   say:(t,p)=>say(t,p||2),stop,check,_state:{Q,W,D}});
 })();
