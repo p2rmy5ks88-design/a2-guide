@@ -123,7 +123,8 @@ function say(text,pri=3,key=text){if(quiet()||!text)return;const now=Date.now();
   start(item)}
 function start(item){const c=cfg();const maxAge=item.pri===1?10000:item.pri===2?6000:3500;if(Date.now()-item.at>maxAge){Q.cur=null;pump();return}
   const done0=()=>{if(!Q.cur||Q.cur.id!==item.id)return;Q.cur=null;pump()};
-  if(natural()){const ids=clipsFor(item.text);if(!ids){Q.cur=null;pump();return}Q.cur=item;duck(15000);item.cancel=natPlay(ids,c.vol,done0);return}
+  if(natural()){Q.cur=item;const go=()=>{if(Q.cur!==item)return;const ids=clipsFor(item.text);if(!ids){Q.cur=null;pump();return}duck(15000);item.cancel=natPlay(ids,c.vol,done0)};
+    if(NAT.man)go();else{item.cancel=()=>{};natManifest().catch(()=>{}).then(go)}return}
   Q.cur=item;const id=item.id;duck(Math.min(12000,2500+item.text.length*110/c.rate));
   const done=()=>{if(!Q.cur||Q.cur.id!==id)return;Q.cur=null;pump()};
   try{engine.speak(item.text,{voice:c.voice,volume:c.vol,rate:c.rate,onstart(){},onend:done})}catch(e){done()}

@@ -121,7 +121,7 @@ const STUB=()=>{const log=window.__speech=[];let cur=null;
   assert.deepEqual(bk,{bankrupt:true,owner:-1,moved:true,over:false});ok('in-game menu: Declare bankruptcy (with confirmation) removes the player, returns property to the bank and play continues');
   const onl=await p.evaluate(()=>{const o=G.online;G.online=true;const a=SkylineDeclareBankruptcy.allowed();G.online=o;return a});assert.equal(onl,false);ok('Declare bankruptcy is not offered in online rooms');
   // 9. natural voice in game: recorded clips for known lines (incl. property and festival names); nothing else is voiced
-  const nat=await p.evaluate(async()=>{PREF.coach.on=true;PREF.coach.voice='natural';SkylineCoach.stop();SkylineCoach._state.Q.recent.clear();__speech.length=0;G.over=false;
+  const nat=await p.evaluate(async()=>{GEN++;document.querySelectorAll('#modals .ov').forEach(x=>x.remove());await new Promise(r=>setTimeout(r,2500));PREF.coach.on=true;PREF.coach.voice='natural';SkylineCoach.stop();SkylineCoach._state.Q.recent.clear();__speech.length=0;G.over=false;
     const N=SkylineCoach._state.NAT;SkylineCoach.say('Do you want to acquire Eko Atlantic City?',1);await new Promise(r=>setTimeout(r,3500));const a=N.last.slice();
     SkylineCoach.say('Eyo Festival is live! Lagos Island rents are up 50 percent.',2);await new Promise(r=>setTimeout(r,6000));const b=N.last.slice();
     const before=N.plays;SkylineCoach.say('Bail Pass: clears one Civic Review at once.',3);SkylineCoach.say('Kofi pays you 11 million Skyline Cash.',3);await new Promise(r=>setTimeout(r,2500));
