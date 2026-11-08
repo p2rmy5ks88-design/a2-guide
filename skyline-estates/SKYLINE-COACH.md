@@ -7,7 +7,8 @@ Optional background voice commentary. **OFF by default.** Turn it on in Settings
   - No change to rules, money, saves, accounts or the network.
   - Not in App Store build 195.
 - **Engine:** the browser's `speechSynthesis`.
-  - Voice choices: System English (Automatic) plus American, British and Indian English, female and male. Each choice is mapped on the device to the best working installed voice of that accent and gender; a choice with no matching voice is not shown.
+  - Voice choices: System English (Automatic) plus American, British, Indian and Nigerian English, female and male, each mapped to the best working installed voice of that accent and gender (choices with no matching voice are hidden).
+  - Style: Standard English or Naija Pidgin wording for every announcement. With Pidgin and Automatic, a Nigerian English voice is used when the device has one.
   - Falls back gracefully when no voice exists.
   - A native adapter can be registered with `SkylineCoach.useEngine({supported, voices, pick, speak, cancel})`.
 - **Events** come from committed game state:

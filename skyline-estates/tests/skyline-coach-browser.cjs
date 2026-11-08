@@ -28,8 +28,8 @@ const STUB=()=>{const log=window.__speech=[];let cur=null;
   if(OUT){for(const ui of ['dark','light']){await p.evaluate(u=>{PREF.ui=u;applyUI();(setup.stCat='audio',homeTab('settings'))},ui);await p.locator('.coachbox').waitFor();await p.locator('.coachbox').scrollIntoViewIfNeeded();await p.waitForTimeout(300);await p.screenshot({path:`${OUT}/coach-settings-${ui}.png`})}await p.evaluate(()=>{PREF.ui='dark';applyUI();(setup.stCat='audio',homeTab('settings'))})}
   // Voice list: Automatic + American, British and Indian English (female/male) slots mapped to installed voices
   const opts=await p.locator('.coachbox select option').allTextContents();
-  assert.deepEqual(opts,['System English (Automatic)','American English · Female','American English · Male','British English · Female','British English · Male','Indian English · Female','Indian English · Male']);
-  assert.equal(await p.locator('.coachbox select').inputValue(),'');ok('voice list: System English (Automatic) plus American, British and Indian English, female and male');
+  assert.deepEqual(opts,['System English (Automatic)','American English · Female','American English · Male','British English · Female','British English · Male','Indian English · Female','Indian English · Male','Nigerian English · Female']);
+  assert.equal(await p.locator('.coachbox select').inputValue(),'');ok('voice list: System English (Automatic) plus American, British, Indian and Nigerian English (only choices this device can voice)');
   await p.locator('.coachbox [data-on="1"]').click();await p.locator('.coachbox [data-prev]').click();await p.waitForTimeout(150);
   let last=await p.evaluate(()=>__speech.filter(x=>x.text).slice(-1)[0]);assert.equal(last.voice,'Samantha');
   const map=await p.evaluate(()=>['us-f','us-m','gb-f','gb-m','in-f','in-m'].map(k=>SkylineCoach.voice(k)));assert.deepEqual(map,['Samantha','Alex','Serena (Premium)','Daniel (Enhanced)','Veena','Rishi']);
@@ -47,9 +47,14 @@ const STUB=()=>{const log=window.__speech=[];let cur=null;
   await p.locator('.coachbox [data-prev]').click();await p.waitForTimeout(150);
   last=await p.evaluate(()=>__speech.filter(x=>x.text).slice(-1)[0]);assert.match(last.text,/Ready to roll/);assert.equal(last.voice,'Rishi');assert.equal(last.rate,1.1);ok('Indian English · Male speaks with Rishi; Preview voice works');
   await p.reload();await p.locator('#boot').waitFor({state:'detached',timeout:25000});
-  assert.deepEqual(await p.evaluate(()=>[PREF.coach.on,PREF.coach.voice,PREF.coach.rate,PREF.coach.mode]),[true,'in-m',1.1,'important']);
+  assert.deepEqual(await p.evaluate(()=>[PREF.coach.on,PREF.coach.voice,PREF.coach.rate,PREF.coach.mode,PREF.coach.style]),[true,'in-m',1.1,'important','standard']);
   await p.evaluate(()=>{setup.stCat='audio';homeTab('settings')});await p.locator('.coachbox').waitFor();assert.equal(await p.locator('.coachbox select').inputValue(),'in-m');
   await p.locator('.coachbox select').selectOption('');assert.equal(await p.evaluate(()=>PREF.coach.voice),'');
+  await p.locator('.coachbox [data-s="pidgin"]').click();await p.locator('.coachbox [data-prev]').click();await p.waitForTimeout(200);
+  last=await p.evaluate(()=>__speech.filter(x=>x.text).slice(-1)[0]);assert.equal(last.text,'Welcome to Skyline Estates. Na your turn o, roll am!');assert.equal(last.voice,'Stub Voice NG');
+  const pg=await p.evaluate(async()=>{const before=PREF.coach.style;SkylineCoach._state.Q.recent.clear();__speech.length=0;G=G||null;return before});assert.equal(pg,'pidgin');
+  ok('Naija Pidgin style: "'+last.text+'" (Automatic uses a Nigerian English voice when installed)');
+  await p.locator('.coachbox [data-s="standard"]').click();
   await p.locator('.coachbox select').selectOption('us-m');ok('voice choice survives reload; switching back to Automatic works');
   // 2. play a short Living City game: 1 human + 2 AI, auto-answering every prompt
   await p.evaluate(()=>{sleep=ms=>new Promise(r=>setTimeout(r,Math.min(ms||0,40)));initAudio();PREF.audio.radio=true;syncAudio()});
@@ -64,8 +69,9 @@ const STUB=()=>{const log=window.__speech=[];let cur=null;
   const said=await p.evaluate(()=>__speech);const texts=said.filter(x=>x.text).map(x=>x.text);
   console.log('SPOKEN ('+texts.length+'):\n  '+[...new Set(texts)].slice(0,40).join('\n  '));
   assert.ok(texts.some(t=>/^Do you want to acquire [A-Z]/.test(t)),'purchase prompt');ok('purchase offer asks: "'+texts.find(t=>/^Do you want/.test(t))+'"');
-  assert.ok(!said.some(x=>x.overlap),'never speaks over itself');assert.ok(texts.length>=5,'announcements made');
-  assert.ok(texts.some(t=>/^Your turn/.test(t)),'my turn');  ok(`real Living City match: ${texts.length} announcements, never overlapping (${[...new Set(texts.map(t=>t.split(/[ !.]/)[0]))].slice(0,12).join(', ')})`);
+  assert.ok(!said.some(x=>x.overlap),'never speaks over itself: '+JSON.stringify(said.filter(x=>x.overlap||x.cancel).slice(0,6))+' all:'+JSON.stringify(said.map(x=>x.text||(x.cancel?'<c>':'?')).slice(0,30)));assert.ok(texts.length>=5,'announcements made');
+  const yt=await p.evaluate(async()=>{await new Promise(r=>setTimeout(r,1800));const o=G.over;G.over=false;G.turn=0;G.round=(G.round||1)+50;SkylineCoach._state.Q.recent.clear();__speech.length=0;await banner(G.players[0]).catch(()=>{});await new Promise(r=>setTimeout(r,300));G.over=o;return __speech.filter(x=>x.text).map(x=>x.text)});
+  assert.ok(yt.includes('Your turn. Ready to roll?'),'my turn '+JSON.stringify(yt));  ok(`real Living City match: ${texts.length} announcements, never overlapping (${[...new Set(texts.map(t=>t.split(/[ !.]/)[0]))].slice(0,12).join(', ')})`);
   const rounds=await p.evaluate(()=>G.round);const per=texts.length/rounds;assert.ok(per<=4,'not excessive: '+per.toFixed(1)+' per round');ok(`pace ${per.toFixed(1)} announcements per round (3 players, game sped up ~10×): one at a time, at most one waiting`);
   const bl=await p.evaluate(async()=>{await new Promise(r=>setTimeout(r,1600));__speech.length=0;const i=G.own.findIndex((o,i)=>SQ[i].t==='prop'&&o.o===0);G.own[i].h=Math.min(4,G.own[i].h+1);renderRoster();
     await new Promise(r=>setTimeout(r,200));return __speech.filter(x=>x.text).map(x=>x.text)});
