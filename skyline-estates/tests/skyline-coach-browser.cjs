@@ -26,10 +26,23 @@ const STUB=()=>{const log=window.__speech=[];let cur=null;
   await p.evaluate(()=>(setup.stCat='audio',homeTab('settings')));await p.locator('.coachbox').waitFor();
   assert.equal(await p.locator('.coachbox [data-on="0"].on').count(),1);ok('Coach is OFF by default; Skyline Coach section appears inside Settings → Sound');
   if(OUT){for(const ui of ['dark','light']){await p.evaluate(u=>{PREF.ui=u;applyUI();(setup.stCat='audio',homeTab('settings'))},ui);await p.locator('.coachbox').waitFor();await p.locator('.coachbox').scrollIntoViewIfNeeded();await p.waitForTimeout(300);await p.screenshot({path:`${OUT}/coach-settings-${ui}.png`})}await p.evaluate(()=>{PREF.ui='dark';applyUI();(setup.stCat='audio',homeTab('settings'))})}
+  // V2 natural voice: the default for new players; recorded clips only (never system speech)
+  assert.equal(await p.locator('.coachbox select').inputValue(),'natural');
+  await p.locator('.coachbox [data-pack] button').waitFor({timeout:15000});const packTxt=await p.locator('.coachbox [data-pack]').innerText();assert.match(packTxt,/MB/);
+  await p.locator('.coachbox [data-on="1"]').click();await p.waitForTimeout(1500);
+  await p.locator('.coachbox [data-prev]').click();await p.waitForTimeout(2500);
+  const np=await p.evaluate(()=>({last:SkylineCoach._state.NAT.last,plays:SkylineCoach._state.NAT.plays,sys:__speech.filter(x=>x.text).length,ac:AC&&AC.state}));
+  assert.deepEqual(np.last,['preview']);assert.equal(np.sys,0);ok('Natural voice is the default: Preview plays the recorded clip, no system speech ('+packTxt.replace(/\s+/g,' ')+')');
+  const nm=await p.evaluate(async()=>{const man=await fetch('coach/natural-en-f/manifest.json').then(r=>r.json());window.G=window.G||{players:[],own:[]};return{buy:man.index.buy['Eko Atlantic City'],ev:man.index.ev['Eyo Festival'],n:Object.keys(man.files).length}});
+  assert.ok(nm.buy&&nm.ev&&nm.n>700);
+  await p.locator('.coachbox [data-dl]').click();await p.waitForFunction(()=>/Downloaded/.test(document.querySelector('.coachbox [data-pack]')?.textContent||''),null,{timeout:120000});
+  const cached=await p.evaluate(async()=>(await (await caches.open('skyline-coach-natural-en-f-v1')).keys()).length);assert.ok(cached>=nm.n);ok(`voice pack download: ${nm.n} clips saved for offline play (${cached} cache entries)`);
+  await p.locator('.coachbox [data-rm]').click();await p.locator('.coachbox [data-dl]').waitFor();ok('voice pack can be removed again');
+  await p.locator('.coachbox [data-on="0"]').click();await p.locator('.coachbox select').selectOption('');
   // Voice list: Automatic + American, British and Indian English (female/male) slots mapped to installed voices
   const opts=await p.locator('.coachbox select option').allTextContents();
-  assert.deepEqual(opts,['System English (Automatic)','American English · Female','American English · Male','British English · Female','British English · Male','Indian English · Female','Indian English · Male','Nigerian English · Female']);
-  assert.equal(await p.locator('.coachbox select').inputValue(),'');ok('voice list: System English (Automatic) plus American, British, Indian and Nigerian English (only choices this device can voice)');
+  assert.deepEqual(opts,['Natural voice · Female (recommended)','System English (Automatic)','American English · Female','American English · Male','British English · Female','British English · Male','Indian English · Female','Indian English · Male','Nigerian English · Female']);
+  ok('voice list: System English (Automatic) plus American, British, Indian and Nigerian English (only choices this device can voice)');
   await p.locator('.coachbox [data-on="1"]').click();await p.locator('.coachbox [data-prev]').click();await p.waitForTimeout(150);
   let last=await p.evaluate(()=>__speech.filter(x=>x.text).slice(-1)[0]);assert.equal(last.voice,'Samantha');
   const map=await p.evaluate(()=>['us-f','us-m','gb-f','gb-m','in-f','in-m'].map(k=>SkylineCoach.voice(k)));assert.deepEqual(map,['Samantha','Alex','Serena (Premium)','Daniel (Enhanced)','Veena','Rishi']);
@@ -107,6 +120,15 @@ const STUB=()=>{const log=window.__speech=[];let cur=null;
     return{bankrupt:G.players[0].bankrupt,owner:G.own[1].o,moved:G.turn!==0,over:!!G.over}});
   assert.deepEqual(bk,{bankrupt:true,owner:-1,moved:true,over:false});ok('in-game menu: Declare bankruptcy (with confirmation) removes the player, returns property to the bank and play continues');
   const onl=await p.evaluate(()=>{const o=G.online;G.online=true;const a=SkylineDeclareBankruptcy.allowed();G.online=o;return a});assert.equal(onl,false);ok('Declare bankruptcy is not offered in online rooms');
+  // 9. natural voice in game: recorded clips for known lines (incl. property and festival names); nothing else is voiced
+  const nat=await p.evaluate(async()=>{PREF.coach.on=true;PREF.coach.voice='natural';SkylineCoach.stop();SkylineCoach._state.Q.recent.clear();__speech.length=0;G.over=false;
+    const N=SkylineCoach._state.NAT;SkylineCoach.say('Do you want to acquire Eko Atlantic City?',1);await new Promise(r=>setTimeout(r,3500));const a=N.last.slice();
+    SkylineCoach.say('Eyo Festival is live! Lagos Island rents are up 50 percent.',2);await new Promise(r=>setTimeout(r,6000));const b=N.last.slice();
+    const before=N.plays;SkylineCoach.say('Bail Pass: clears one Civic Review at once.',3);SkylineCoach.say('Kofi pays you 11 million Skyline Cash.',3);await new Promise(r=>setTimeout(r,2500));
+    return{a,b,extra:N.plays-before,last:N.last,sys:__speech.filter(x=>x.text).length}});
+  assert.match(nat.a[0],/^buy_eko-atlantic-city-/);assert.match(nat.b[0],/^ev_eyo-festival-/);assert.equal(nat.b[1],'ev_rent_up');assert.equal(nat.extra,1);assert.deepEqual(nat.last,['recv_rent']);assert.equal(nat.sys,0);
+  ok('natural voice in game: "Do you want to acquire Eko Atlantic City?", "Eyo Festival is here!" + rents rising; card text without a recording is skipped; never mixed with system speech');
+  await p.evaluate(()=>{PREF.coach.on=false;SkylineCoach.stop()});
   // 8. no visible UI during play
   assert.equal(await p.evaluate(()=>document.querySelectorAll('#ui .coachbox, #ui [class*="coach"]').length),0);ok('no Coach elements in the game screen (background audio only)');
   assert.deepEqual(errs.filter(e=>!/Abort/.test(e)),[]);await b.close();server.close();console.log(`SKYLINE COACH ${n} checks`);
