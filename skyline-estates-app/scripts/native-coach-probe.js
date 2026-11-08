@@ -18,19 +18,20 @@
  var wait=function(ms){return new Promise(function(r){setTimeout(r,ms)})};
  function fm(){try{return AUD&&AUD.buses?(+AUD.buses.rad.gain.value).toFixed(2):'n/a'}catch(e){return 'n/a'}}
  async function idle(St){for(var i=0;i<80&&(St.Q.cur||St.D.ducked);i++)await wait(100)}
- async function line(text,label){var C=SkylineCoach,St=C._state,N=St.NAT,minFm=9,ducked=false;await idle(St);await wait(300);var before=fm();St.Q.recent.clear();N.last=null;C.say(text,1);
+ async function line(text,label){var C=SkylineCoach,St=C._state,N=St.NAT,minFm=9,ducked=false;await idle(St);await wait(300);var before=fm();St.Q.recent.clear();N.last=null;var t0=Date.now();C.say(text,1);
    for(var i=0;i<120;i++){await wait(100);var g=+fm();if(!isNaN(g))minFm=Math.min(minFm,g);if(St.D.ducked)ducked=true;if(N.last&&!St.Q.cur&&!St.D.ducked)break}
-   var got=N.last?N.last.join('+'):'';await wait(2500);
-   out(label+': '+(got?'played '+got:'NOT played')+' · FM '+before+' → '+(ducked?minFm.toFixed(2):'not ducked')+' → '+fm()+' after · audio '+(typeof AC!=='undefined'&&AC?AC.state:'none'))}
+   var got=N.last?N.last.join('+'):'';var el=Date.now()-t0;await wait(2500);
+   out(label+': '+(got?'played '+got:'NOT played')+' · FM '+before+' → '+(ducked?minFm.toFixed(2):'not ducked')+' → '+fm()+' after · '+(el/1000).toFixed(1)+'s · audio '+(typeof AC!=='undefined'&&AC?AC.state:'none'))}
  async function run(){var C=window.SkylineCoach;if(!C){out('Coach module missing');return}var St=C._state,N=St.NAT;
    out('bundled pack: '+N.bundled+' · Coach '+(PREF.coach&&PREF.coach.on?'ON':'OFF')+' · voice '+(PREF.coach&&PREF.coach.voice)+(first?'':' (kept from earlier launch)'));
+   if(typeof AC!=='undefined'&&AC){var c0=AC.currentTime;await wait(1000);out('audio clock: '+AC.state+' · advanced '+(AC.currentTime-c0).toFixed(2)+'s in 1s · '+AC.sampleRate+' Hz')}
    var m=await (await fetch('coach/natural-en-f/manifest.json')).json(),ids=Object.keys(m.files);
-   if(n%4===0){var okc=0,bad=0,secs=0,ac=new (window.AudioContext||window.webkitAudioContext)();
+   out('recordings in manifest: '+ids.length);
+   async function decodeAll(){var okc=0,bad=0,secs=0,ac=new (window.AudioContext||window.webkitAudioContext)();
      for(var i=0;i<ids.length;i++){try{var ab=await (await fetch('coach/natural-en-f/'+m.files[ids[i]])).arrayBuffer();var b=await new Promise(function(res,rej){ac.decodeAudioData(ab,res,rej)});secs+=b.duration;okc++}catch(e){bad++}}
      try{ac.close()}catch(e){}out('recordings: '+ids.length+' in manifest · '+okc+' decoded by WebKit · '+bad+' failed · '+Math.round(secs/60)+' min')}
-   else out('recordings in manifest: '+ids.length);
    var sv=localStorage.getItem('skylineSave');out('saved game: '+(sv?'present ('+Math.round(sv.length/1024)+' KB)':'none')+' · cash/coins prefs kept: '+(P.stats?'yes':'?'));
-   if(S[1]!=='game'){out('Coach settings after restart: '+(PREF.coach.on?'ON':'OFF')+' · '+PREF.coach.voice+' · volume '+PREF.coach.vol);return}
+   if(S[1]!=='game'){out('Coach settings after restart: '+(PREF.coach.on?'ON':'OFF')+' · '+PREF.coach.voice+' · volume '+PREF.coach.vol);out('decoding every recording…');await decodeAll();return}
    await line('Do you want to acquire Eko Atlantic City?','purchase');
    await line('Lucky Break! Sponsor Eyo Festival. Make your choice.','card');
    await line('Investment Forum! Buy a street, or network for a stipend.','corner');
