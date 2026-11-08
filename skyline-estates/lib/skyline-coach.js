@@ -99,12 +99,35 @@ async function natManifest(){if(NAT.man)return NAT.man;const url=NAT.base+'manif
 async function natBuffer(id){if(NAT.buf.has(id))return NAT.buf.get(id);const m=await natManifest(),f=m.files[id];if(!f)throw Error('no clip '+id);const url=NAT.base+f;
   let r=NAT.bundled?await fetch(url):await natCacheGet(url);if(!r||!r.ok)r=null;if(!r){r=await fetch(url);if(!r.ok)throw Error('clip');try{if(window.caches)(await caches.open(NAT.cache)).put(url,r.clone())}catch(e){}}
   const ab=await r.arrayBuffer();const b=await new Promise((res,rej)=>AC.decodeAudioData(ab,res,rej));if(NAT.buf.size>80)NAT.buf.delete(NAT.buf.keys().next().value);NAT.buf.set(id,b);return b}
+// Playback: the game's Web Audio engine first (volume control, exact timing). If WebKit can't decode a clip or the
+// audio clock isn't running (iOS can leave a context suspended/interrupted outside a tap), the same recording plays
+// through one reusable <audio> element instead, so the natural voice is never silently lost.
+function natEl(){if(!NAT.el){const a=new Audio();a.preload='auto';a.setAttribute('playsinline','');NAT.el=a}return NAT.el}
+function natUnlock(){try{if(typeof AC!=='undefined'&&AC&&AC.state!=='running')AC.resume().catch(()=>{})}catch(e){}
+  try{if(NAT.unlocked||!NAT.man)return;const a=natEl(),f=NAT.man.files.coach_on||Object.values(NAT.man.files)[0];if(!f||NAT.src||NAT.stopEl)return;a.src=NAT.base+f;a.muted=true;
+    const p=a.play();if(p&&p.then)p.then(()=>{NAT.unlocked=true;if(!NAT.stopEl){a.pause();a.muted=false}}).catch(()=>{})}catch(e){}}
+// A tap anywhere (inside the user gesture) wakes the audio engine and the fallback player for later Coach lines.
+['pointerdown','touchend','keydown'].forEach(t=>document.addEventListener(t,()=>{if(cfg().on&&natural())natUnlock()},{capture:true,passive:true}));
+function natNote(k,e){NAT.diag=NAT.diag||{};NAT.diag[k]=(NAT.diag[k]||0)+1;if(e)NAT.err=String(e&&e.message||e).slice(0,120)}
+function natElPlay(id,vol,isStopped){return new Promise(async res=>{let done=false;const end=()=>{if(done)return;done=true;clearTimeout(t);a.onended=a.onerror=null;res()};
+  const m=await natManifest().catch(()=>null);const f=m&&m.files[id];if(!f){natNote('elMissing');return res()}
+  const a=natEl();a.onended=end;a.onerror=()=>{natNote('elError',a.error&&a.error.code);end()};a.muted=false;a.volume=Math.max(0,Math.min(1,vol));a.src=NAT.base+f;
+  const t=setTimeout(end,15000);NAT.stopEl=()=>{try{a.pause()}catch(e){}end()};
+  try{await a.play();natNote('elPlayed')}catch(e){natNote('elBlocked',e);end()}
+  if(isStopped())NAT.stopEl()})}
 function natPlay(ids,vol,onend){NAT.last=ids.slice();NAT.plays=(NAT.plays||0)+1;let stopped=false,ended=false;const fin=()=>{if(ended)return;ended=true;onend()};
-  (async()=>{try{if(!AC)initAudio();if(!AC)throw Error('no audio');if(AC.state!=='running')await AC.resume().catch(()=>{});
-    for(let k=0;k<ids.length;k++){if(stopped)return;const b=await natBuffer(ids[k]);if(stopped)return;
-      await new Promise(res=>{const src=AC.createBufferSource(),g=AC.createGain();g.gain.value=vol;src.buffer=b;src.connect(g).connect(AC.destination);src.onended=res;NAT.src=src;src.start();setTimeout(res,b.duration*1000+800)});
-      NAT.src=null;if(k<ids.length-1)await new Promise(r=>setTimeout(r,140))}}catch(e){}finally{NAT.src=null;fin()}})();
-  return()=>{stopped=true;try{NAT.src&&NAT.src.stop()}catch(e){}NAT.src=null;fin()}}
+  (async()=>{try{try{if(!AC)initAudio()}catch(e){}if(AC&&AC.state!=='running')await Promise.race([AC.resume().catch(()=>{}),new Promise(r=>setTimeout(r,400))]);
+    for(let k=0;k<ids.length;k++){if(stopped)return;let b=null;
+      if(AC&&AC.state==='running'&&!NAT.useEl){try{b=await natBuffer(ids[k])}catch(e){natNote('decodeFail',e)}}
+      if(stopped)return;
+      if(b){const okRun=await new Promise(res=>{const src=AC.createBufferSource(),g=AC.createGain();g.gain.value=vol;src.buffer=b;src.connect(g).connect(AC.destination);
+          let fired=false;src.onended=()=>{fired=true;res(true)};NAT.src=src;const t0=AC.currentTime;src.start();
+          setTimeout(()=>{if(!fired&&AC.currentTime-t0<0.05){try{src.stop()}catch(e){}natNote('clockStuck');res(false)}},500);
+          setTimeout(()=>res(true),b.duration*1000+800)});
+        NAT.src=null;if(okRun){natNote('webAudio')}else if(!stopped){await natElPlay(ids[k],vol,()=>stopped)}}
+      else await natElPlay(ids[k],vol,()=>stopped);
+      NAT.stopEl=null;if(k<ids.length-1)await new Promise(r=>setTimeout(r,140))}}catch(e){natNote('playFail',e)}finally{NAT.src=null;fin()}})();
+  return()=>{stopped=true;try{NAT.src&&NAT.src.stop()}catch(e){}NAT.src=null;try{NAT.stopEl&&NAT.stopEl()}catch(e){}fin()}}
 const CLIP=[[/^Your turn\. Ready to roll\?$/,'turn_me'],[/^The computer is making its move\.$/,'turn_ai'],[/’s turn\.$/,'turn_other'],[/^You’ve acquired /,'buy_me'],[/ bought .+\.$/,'buy_other'],
   [/^You’ve completed a district! It’s ready/,'set_me_lm'],[/^You’ve completed a district!$/,'set_me'],[/ completed the .+ district\.$/,'set_other'],[/^Low-rise development complete!$/,'build_me_1'],[/^Mid-rise development complete!$/,'build_me_2'],
   [/^High-rise development complete!$/,'build_me_3'],[/^Skyscraper construction complete!$/,'build_me_sky'],[/(house|houses|Tower) (development|construction) complete!$/,'build_me_house'],[/ built a Skyscraper on /,'build_other_sky'],
@@ -240,13 +263,13 @@ function draw(box){const c=cfg(),nat=c.voice==='natural',sys=engine.supported(),
    <span></span><div class="seg2"><button class="cbtn" data-prev>▶ Preview voice</button>${nat?'':'<button class="cbtn" data-chk>Check voices</button>'}</div></div>
    <div class="cmsg" data-note>${!nat&&(c.bad||[]).length?`${c.bad.length} voice${c.bad.length>1?'s':''} didn’t work on this device and ${c.bad.length>1?'are':'is'} hidden.`:''}</div>
    <div class="cmsg">${nat?(NAT.bundled?'A recorded natural voice, built into the app. Speed and Naija Pidgin apply to device voices.':'A recorded natural voice. Lines are fetched as needed; download the pack to use it offline. Speed and Naija Pidgin apply to device voices.'):ok?'Spoken announcements only — nothing appears on screen. Music and city sounds fade while the Coach speaks.':'This device or browser has no built-in speech voice. Choose the Natural voice instead.'}</div>`;
-  box.querySelectorAll('[data-on]').forEach(b=>b.onclick=()=>{const on=b.dataset.on==='1';cfg().on=on;saveCfg();if(!on)stop();else{unlocked=true;try{initAudio()}catch(e){}try{speakNow(tx('Skyline Coach is on.','Skyline Coach don land!'),null,'coach_on')}catch(e){}W.key=null}draw(box)});
+  box.querySelectorAll('[data-on]').forEach(b=>b.onclick=()=>{const on=b.dataset.on==='1';cfg().on=on;saveCfg();if(!on)stop();else{unlocked=true;try{initAudio()}catch(e){}natUnlock();try{speakNow(tx('Skyline Coach is on.','Skyline Coach don land!'),null,'coach_on')}catch(e){}W.key=null}draw(box)});
   const sel=box.querySelector('select');sel.onchange=()=>{cfg().voice=sel.value;saveCfg();stop();natPreload();draw(box)};
   box.querySelectorAll('input[data-k]').forEach(r=>r.oninput=()=>{cfg()[r.dataset.k]=+r.value;saveCfg()});
   box.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{cfg().mode=b.dataset.m;saveCfg();draw(box)});
   box.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{cfg().style=b.dataset.s;saveCfg();draw(box)});
   const note=box.querySelector('[data-note]');
-  box.querySelector('[data-prev]').onclick=()=>{if(!ok)return;try{initAudio()}catch(e){}speakNow(tx('Welcome to Skyline Estates. It’s your turn. Ready to roll?','Welcome to Skyline Estates. Na your turn o, roll am!'),{onfail(n){setTimeout(()=>{const nb=box.querySelector('[data-note]');if(nb)nb.textContent=`“${n}” didn’t work on this device, so it’s hidden and Automatic is used instead.`},50)}},'preview')};
+  box.querySelector('[data-prev]').onclick=()=>{if(!ok)return;try{initAudio()}catch(e){}natUnlock();if(natural()){const d0=Object.assign({},NAT.diag||{}),played=()=>{const d=NAT.diag||{};return (d.webAudio||0)>(d0.webAudio||0)||(d.elPlayed||0)>(d0.elPlayed||0)};setTimeout(()=>{const nb=box.querySelector('[data-note]');if(nb&&!played())nb.textContent='The natural voice couldn’t play on this device'+(NAT.err?` (${NAT.err})`:'')+'. Check the volume and that the phone isn’t muted, then try again.'},6000)}speakNow(tx('Welcome to Skyline Estates. It’s your turn. Ready to roll?','Welcome to Skyline Estates. Na your turn o, roll am!'),{onfail(n){setTimeout(()=>{const nb=box.querySelector('[data-note]');if(nb)nb.textContent=`“${n}” didn’t work on this device, so it’s hidden and Automatic is used instead.`},50)}},'preview')};
   const ck=box.querySelector('[data-chk]');if(ck)ck.onclick=async()=>{if(!sys||!engine.check)return;stop();ck.disabled=true;
     const r=await engine.check((k,n)=>{note.textContent=`Checking voices… ${k} of ${n}`});draw(box);const nb=box.querySelector('[data-note]');
     if(nb)nb.textContent=r.total?`${r.working} of ${r.total} English voices work on this device${r.bad.length?'; the others are hidden':''}.`:'No English voices were found on this device.'};

@@ -46,6 +46,14 @@ const TYPES={'.html':'text/html','.js':'text/javascript','.mjs':'text/javascript
     return{played:(S.NAT.plays||0)-plays,last:heard,ducked,undone,sys:__speech.length}});
   let r=await play();assert.ok(r.played>=1,"played "+r.played);assert.equal(r.sys,0);assert.ok(r.ducked&&r.undone,'FM/ambience ducked during speech and restored');
   ok(`offline in-app playback: "${r.last.join(' + ')}" played from the bundle, music ducked then restored, no system speech`);
+  // iPhone fallback: if WebKit can't decode a clip (or the audio clock is stuck), the recording plays through an <audio> element instead
+  const fb=await p.evaluate(async()=>{const orig=AC.decodeAudioData.bind(AC);AC.decodeAudioData=(ab,ok,bad)=>{bad(new Error('EncodingError'))};SkylineCoach._state.NAT.buf.clear();
+    const d0=Object.assign({},SkylineCoach._state.NAT.diag||{});const S=SkylineCoach._state;S.Q.recent.clear();SkylineCoach.say('Investment Forum! Buy a street, or network for a stipend.',1);
+    for(let i=0;i<80&&!((S.NAT.diag||{}).elPlayed>(d0.elPlayed||0));i++)await new Promise(r=>setTimeout(r,100));
+    for(let i=0;i<80&&S.Q.cur;i++)await new Promise(r=>setTimeout(r,100));AC.decodeAudioData=orig;const d=S.NAT.diag||{};
+    return{el:(d.elPlayed||0)-(d0.elPlayed||0),decodeFail:(d.decodeFail||0)-(d0.decodeFail||0),src:S.NAT.el&&S.NAT.el.src.split('/').pop(),sys:__speech.length}});
+  assert.ok(fb.el>=1&&fb.decodeFail>=1,JSON.stringify(fb));assert.equal(fb.sys,0);
+  ok(`if WebKit can't decode a clip, the same recording plays through the audio-element fallback (${fb.src}), never robotic speech`);
   // restart the app: settings and recordings are still there without any network
   await p.reload();await p.locator('#boot').waitFor({state:'detached',timeout:30000});
   assert.equal(await p.evaluate(()=>PREF.coach.on&&PREF.coach.voice),'natural');
