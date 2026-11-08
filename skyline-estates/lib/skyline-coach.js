@@ -89,8 +89,10 @@ setInterval(()=>{try{if(!D.ducked&&!Q.cur&&AC&&AC.state!=='running'&&!document.h
    mixed with robotic narration: a line without a recorded clip (names, amounts, card text) is simply skipped. */
 const NAT={base:'coach/natural-en-f/',cache:'skyline-coach-natural-en-f-v1',man:null,buf:new Map(),src:null};
 async function natCacheGet(url){try{if(window.caches){const c=await caches.open(NAT.cache);const r=await c.match(url);if(r)return r}}catch(e){}return null}
-async function natManifest(){if(NAT.man)return NAT.man;const url=NAT.base+'manifest.json';let r=await natCacheGet(url);
-  if(!r){r=await fetch(url,{cache:'no-cache'});if(!r.ok)throw Error('manifest');try{if(window.caches)(await caches.open(NAT.cache)).put(url,r.clone())}catch(e){}}NAT.man=await r.json();return NAT.man}
+async function natManifest(){if(NAT.man)return NAT.man;const url=NAT.base+'manifest.json';let r=null;
+  // Prefer the live index (new lines appear after an update); fall back to the stored copy when offline.
+  try{const ac=new AbortController(),to=setTimeout(()=>ac.abort(),4000);const n=await fetch(url,{cache:'no-cache',signal:ac.signal});clearTimeout(to);if(n.ok){r=n;try{if(window.caches)(await caches.open(NAT.cache)).put(url,n.clone())}catch(e){}}}catch(e){}
+  if(!r)r=await natCacheGet(url);if(!r)throw Error('manifest');NAT.man=await r.json();return NAT.man}
 async function natBuffer(id){if(NAT.buf.has(id))return NAT.buf.get(id);const m=await natManifest(),f=m.files[id];if(!f)throw Error('no clip '+id);const url=NAT.base+f;
   let r=await natCacheGet(url);if(!r){r=await fetch(url);if(!r.ok)throw Error('clip');try{if(window.caches)(await caches.open(NAT.cache)).put(url,r.clone())}catch(e){}}
   const ab=await r.arrayBuffer();const b=await new Promise((res,rej)=>AC.decodeAudioData(ab,res,rej));if(NAT.buf.size>80)NAT.buf.delete(NAT.buf.keys().next().value);NAT.buf.set(id,b);return b}
