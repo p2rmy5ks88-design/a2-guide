@@ -69,6 +69,7 @@ jobs:
           t 'node skyline-estates/tests/landmarks-browser.cjs'
           t 'node skyline-estates/tests/avatars-browser.cjs'
           t 'node skyline-estates/tests/living-city-browser.cjs'
+          t 'node skyline-estates/tests/skyline-coach-browser.cjs'
           t 'node skyline-estates/tests/living-city-parity.cjs 6 2'
           t 'node skyline-estates/tests/lc-engine.cjs'
           t 'node skyline-estates/tests/lc-online-service.cjs'
