@@ -86,6 +86,7 @@ jobs:
           t 'node skyline-estates/tests/avatars-browser.cjs'
           t 'node skyline-estates/tests/living-city-browser.cjs'
           t 'node skyline-estates/tests/skyline-coach-browser.cjs'
+          t 'node skyline-estates/tests/problem-report-browser.cjs'
           t 'node skyline-estates/tests/living-city-parity.cjs 6 2'
           t 'node skyline-estates/tests/lc-engine.cjs'
           t 'node skyline-estates/tests/lc-online-service.cjs'
@@ -272,6 +273,7 @@ jobs:
           npm run --prefix skyline-estates-app build:web
           node skyline-estates/tests/verify-bundle.cjs skyline-estates-app
           node skyline-estates/tests/coach-native-bundle.cjs
+          NATIVE_WWW=skyline-estates-app/www node skyline-estates/tests/performance-budget.cjs
       - name: Check generated assets and visual geometry
         run: |
           python3 skyline-estates/build.py --check

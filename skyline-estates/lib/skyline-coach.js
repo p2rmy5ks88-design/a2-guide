@@ -108,7 +108,7 @@ function natUnlock(){try{if(typeof AC!=='undefined'&&AC&&AC.state!=='running')AC
     const p=a.play();if(p&&p.then)p.then(()=>{NAT.unlocked=true;if(!NAT.stopEl){a.pause();a.muted=false}}).catch(()=>{})}catch(e){}}
 // A tap anywhere (inside the user gesture) wakes the audio engine and the fallback player for later Coach lines.
 ['pointerdown','touchend','keydown'].forEach(t=>document.addEventListener(t,()=>{if(cfg().on&&natural())natUnlock()},{capture:true,passive:true}));
-function natNote(k,e){NAT.diag=NAT.diag||{};NAT.diag[k]=(NAT.diag[k]||0)+1;if(e)NAT.err=String(e&&e.message||e).slice(0,120)}
+function natNote(k,e){NAT.diag=NAT.diag||{};NAT.diag[k]=(NAT.diag[k]||0)+1;if(e)NAT.err=String(e&&e.message||e).slice(0,120);if(e&&['decodeFail','elError','elBlocked','playFail'].includes(k))try{window.SkylineProblems&&SkylineProblems.note('coach','Coach voice '+k+': '+NAT.err)}catch(x){}}
 function natElPlay(id,vol,isStopped){return new Promise(async res=>{let done=false;const end=()=>{if(done)return;done=true;clearTimeout(t);a.onended=a.onerror=null;res()};
   const m=await natManifest().catch(()=>null);const f=m&&m.files[id];if(!f){natNote('elMissing');return res()}
   const a=natEl();a.onended=end;a.onerror=()=>{natNote('elError',a.error&&a.error.code);end()};a.muted=false;a.volume=Math.max(0,Math.min(1,vol));a.src=NAT.base+f;
