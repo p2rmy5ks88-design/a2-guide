@@ -1,8 +1,6 @@
 import hashlib, json, pathlib, re, sys
 here = pathlib.Path(__file__).resolve().parent
 body = (here/'game.html').read_text(encoding='utf-8')
-from release_hotfixes import apply as apply_release_hotfixes
-body = apply_release_hotfixes(body)
 # Web-only optional economy extension. Native/server game source stays unchanged.
 body = body.replace("delete s.events2;", "delete s.events2;delete s.marketPulse;")
 toggle = "${toggleRow('events2',EV2_RULE[0],loc(EV2_RULE[1]),setup.rules.events2)}"
