@@ -1,6 +1,6 @@
 # IP originality / trade-dress audit (Task 02, 5 Nov 2026)
 
-**Scope:** what players can see in the web game and the native bundle (both are built from `game.html` plus `release_hotfixes.py`). This is an engineering audit, not legal advice. Items marked LEGAL REVIEW are store-release blockers until counsel signs off.
+**Scope:** what players can see in the web game and the native bundle (both are built from `game.html`; the former `release_hotfixes.py` patches were folded into it on 9 Nov 2026). This is an engineering audit, not legal advice. Items marked LEGAL REVIEW are store-release blockers until counsel signs off.
 
 ## Wording audit
 

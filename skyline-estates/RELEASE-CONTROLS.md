@@ -3,8 +3,7 @@
 ## Build flow
 
 ```
-game.html (hash-pinned in security/service/audited-rules.cjs)
-  + release_hotfixes.py patches
+game.html (hash-pinned in security/service/audited-rules.cjs; edit it directly, then update the pin)
   + lib/*.js, home-redesign.js, reference-redesign.js, web/*
         │  python3 build.py
         ▼

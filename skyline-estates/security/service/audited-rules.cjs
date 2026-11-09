@@ -1,14 +1,10 @@
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
 const source=fs.readFileSync(path.resolve(__dirname,'../../game.html'),'utf8').replace(/\r\n/g,'\n');
-const expectedSourceHash='2723b0769eb35b2f4acfbedfc0e391957cfe2a416bbbd1df1a8778fd45b0aebc';
+const expectedSourceHash='e5b908fe6cf02910ef261881b425e43e23312835aa80e35bff27191a6ea50a66';
 const sourceHash=crypto.createHash('sha256').update(source).digest('hex');
 if(sourceHash!==expectedSourceHash)throw Error('Game source changed: audit property hooks and rerun browser parity before updating the pinned hash');
-// Player-visible renames that release_hotfixes.py applies to the shipped game must also apply here, so the
-// online service writes the same names into game logs as the client shows (Task 02 IP audit: utility names).
-const SHIPPED_RENAMES=[["const GENERIC_UTILS=[['Power Company','⚡'],['Water Works','💧']];","const GENERIC_UTILS=[['City Power Grid','⚡'],['Lagoon Water Board','💧']];"]];
-const shipped=SHIPPED_RENAMES.reduce((s,[a,b])=>{if(!s.includes(a))throw Error('Shipped rename no longer matches the game source: '+a.slice(0,40));return s.replace(a,b)},source);
-function section(start,end){const a=shipped.indexOf(start),b=shipped.indexOf(end,a);if(a<0||b<=a)throw Error('Missing audited game section');return shipped.slice(a,b)}
-function line(prefix){const rows=shipped.split('\n').filter(s=>s.startsWith(prefix));if(rows.length!==1)throw Error('Missing or ambiguous game hook: '+prefix);return rows[0]}
+function section(start,end){const a=source.indexOf(start),b=source.indexOf(end,a);if(a<0||b<=a)throw Error('Missing audited game section');return source.slice(a,b)}
+function line(prefix){const rows=source.split('\n').filter(s=>s.startsWith(prefix));if(rows.length!==1)throw Error('Missing or ambiguous game hook: '+prefix);return rows[0]}
 const cityRaw=JSON.parse(line('const CITY_RAW=').slice('const CITY_RAW='.length).replace(/;\s*$/,''));
 function validIdentities(players){if(!Array.isArray(players))return false;const ids=[];for(const p of players){if(p.uid===null){if(!p.ai)return false;continue}if(typeof p.uid!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(p.uid)||['__proto__','constructor','prototype'].includes(p.uid))return false;ids.push(p.uid)}return ids.length>0&&new Set(ids).size===ids.length}
 module.exports={source,sourceHash,section,line,cityRaw,validIdentities};
