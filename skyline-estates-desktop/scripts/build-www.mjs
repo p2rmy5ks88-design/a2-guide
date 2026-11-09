@@ -16,6 +16,6 @@ fs.copyFileSync(path.join(shared, 'firebase-config.js'), path.join(www, 'firebas
 // The Collection/Portfolio UI is a required local runtime module.
 fs.copyFileSync(path.join(src,'reference-redesign.js'),path.join(www,'reference-redesign.js'));
 fs.copyFileSync(path.join(src,'home-redesign.js'),path.join(www,'home-redesign.js'));
-for (const d of ['lib', 'riders', 'photos', 'art', 'items'].filter(d => fs.existsSync(path.join(src, d)))) fs.cpSync(path.join(src, d), path.join(www, d), { recursive: true });
+for (const d of ['lib', 'riders', 'photos', 'art', 'items', 'avatars', 'living', 'coach'].filter(d => fs.existsSync(path.join(src, d)))) fs.cpSync(path.join(src, d), path.join(www, d), { recursive: true });
 fs.copyFileSync(path.join(src, 'icon-512.png'), path.join(www, 'icon-512.png'));
 console.log('www built:', fs.readdirSync(www).join(', '), '| fonts:', faces.length);

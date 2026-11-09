@@ -70,6 +70,6 @@ const check=(n,v)=>{assert.ok(v,n);report.checks.push(n);console.log('PASS',n)};
  for(let n=0;n<2;n++){await p.getByRole('button',{name:'View My Skyline',exact:true}).click();await p.locator('#skyline-showcase [data-share]:not(:disabled)').waitFor();await p.locator('#skyline-showcase [data-save-record]').click();await p.locator('#skyline-showcase [data-close]').click();}
  check('real results stay open and reward processing runs exactly once',await p.evaluate(()=>showCompletionCalls===1)&&await p.locator('.endgrid').count()===1);
  check('repeat opening and saving cannot change rewards, final game or cleared saves',resultBefore===await p.evaluate(()=>JSON.stringify({coins:PREF.coins,xp:PREF.xp,trophies:PREF.trophies,stats:PREF.stats,sc:SkylineEarnedCash.balance(),calls:showCompletionCalls,game:G,save:localStorage.getItem(SKEY)})));
- await p.getByRole('button',{name:'New game',exact:true}).click();await p.evaluate(()=>window.realFinish);
+ await p.getByRole('button',{name:'Home',exact:true}).click();await p.evaluate(()=>window.realFinish);
  check('no browser exceptions',report.errors.length===0);await context.close();
 })().catch(e=>{report.failure=String(e.stack||e);console.error(e);process.exitCode=1}).finally(async()=>{fs.writeFileSync(path.join(out,`showcase-${engine}.json`),JSON.stringify(report,null,2));if(browser)await browser.close();if(server)await new Promise(r=>server.close(r));console.log('SHOWCASE',engine,report.checks.length,'checks')});
