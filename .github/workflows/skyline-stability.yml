@@ -3,10 +3,9 @@ name: Skyline stability tests
 on:
   push:
     branches: [skyline-gameplay-ux]
+  # Runs on every pull request; the 'changes' job skips the browser suites when no game files changed,
+  # and the 'Stability gate' job is the single required check for merging into main.
   pull_request:
-    paths:
-      - 'skyline-estates/**'
-      - '.github/workflows/skyline-stability.yml'
   workflow_dispatch:
 
 # Superseded commits should not compete with the release candidate's full browser suite.
@@ -19,8 +18,25 @@ permissions:
 
 
 jobs:
+  changes:
+    name: Detect game changes
+    runs-on: ubuntu-latest
+    outputs:
+      game: ${{ steps.d.outputs.game }}
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - id: d
+        run: |
+          if [ "${{ github.event_name }}" != "pull_request" ]; then echo "game=true" >> "$GITHUB_OUTPUT"; exit 0; fi
+          files=$(git diff --name-only "${{ github.event.pull_request.base.sha }}" "${{ github.sha }}")
+          echo "$files"
+          if echo "$files" | grep -qE '^(skyline-estates/|skyline-estates-app/|skyline-estates-desktop/|eko-estates/|\.github/workflows/skyline-stability\.yml)'; then echo "game=true" >> "$GITHUB_OUTPUT"; else echo "game=false" >> "$GITHUB_OUTPUT"; fi
+
   stability:
     name: Core gameplay and menus
+    needs: changes
+    if: needs.changes.outputs.game == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 35
     steps:
@@ -86,6 +102,8 @@ jobs:
           if-no-files-found: ignore
   management:
     name: Persistent management and trade browser
+    needs: changes
+    if: needs.changes.outputs.game == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 35
     steps:
@@ -113,6 +131,8 @@ jobs:
           if-no-files-found: ignore
   rules_a:
     name: Online game-control and trade parity
+    needs: changes
+    if: needs.changes.outputs.game == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 35
     steps:
@@ -146,6 +166,8 @@ jobs:
           if-no-files-found: ignore
   rules_b:
     name: Card, turn and asset parity
+    needs: changes
+    if: needs.changes.outputs.game == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 35
     steps:
@@ -179,6 +201,8 @@ jobs:
           if-no-files-found: ignore
   offline_matches:
     name: Offline recovery and complete matches
+    needs: changes
+    if: needs.changes.outputs.game == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 35
     steps:
@@ -217,6 +241,8 @@ jobs:
 
   visual_correction:
     name: Visual geometry (${{ matrix.engine }})
+    needs: changes
+    if: needs.changes.outputs.game == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     strategy:
@@ -295,3 +321,17 @@ jobs:
             ${{ runner.temp }}/verified-*.json
             ${{ runner.temp }}/skyline-competition-*.json
           if-no-files-found: ignore
+
+  gate:
+    name: Stability gate
+    if: always()
+    needs: [changes, stability, management, rules_a, rules_b, offline_matches, visual_correction]
+    runs-on: ubuntu-latest
+    steps:
+      - name: All stability suites passed or were not needed
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "Job results: $RESULTS"
+          for r in $RESULTS; do case "$r" in success|skipped) ;; *) echo "A required suite did not pass ($r)"; exit 1;; esac; done
+          if [ "${{ needs.changes.result }}" != "success" ]; then echo "change detection failed"; exit 1; fi
