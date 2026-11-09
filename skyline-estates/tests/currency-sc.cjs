@@ -66,6 +66,7 @@ for(const name of ['index','web-play','web-correction','web-follow','web-board',
   const tag='src="./lib/'+file+'.js"';assert.equal(page.split(tag).length,2);assert.ok(page.indexOf(tag)<boot);
  }
 }
-assert.ok(!fs.readFileSync(path.join(root,'game.html'),'utf8').includes('skyline-earned-cash'));
+// game.html is the single game source (build patches folded in on 9 Nov 2026); the wallet scripts load once, before boot.
+{const g=fs.readFileSync(path.join(root,'game.html'),'utf8');assert.equal(g.split('src="./lib/skyline-earned-cash.js"').length,2);assert.ok(g.indexOf('src="./lib/skyline-earned-cash.js"')<g.indexOf('try{const h=window.claude?.hot;'))}
 require('./sc-wallet.cjs');
 console.log('SC formatter, generated startup and wallet checks passed');

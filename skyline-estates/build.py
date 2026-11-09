@@ -1,50 +1,15 @@
 import hashlib, json, pathlib, re, sys
 here = pathlib.Path(__file__).resolve().parent
 body = (here/'game.html').read_text(encoding='utf-8')
-# Web-only optional economy extension. Native/server game source stays unchanged.
-body = body.replace("delete s.events2;", "delete s.events2;delete s.marketPulse;")
-toggle = "${toggleRow('events2',EV2_RULE[0],loc(EV2_RULE[1]),setup.rules.events2)}"
-assert body.count(toggle) == 1
-body = body.replace(toggle, toggle + "${toggleRow('marketPulse',MP_RULE[0],MP_RULE[1],setup.rules.marketPulse)}")
-mutual = "if(setup.rules[k]&&k==='events2')setup.rules.events=false;if(setup.rules[k]&&k==='events')setup.rules.events2=false;"
-assert body.count(mutual) == 1
-body = body.replace(mutual, "if(setup.rules[k]&&['events','events2','marketPulse'].includes(k))for(const other of ['events','events2','marketPulse'])if(other!==k)setup.rules[other]=false;")
-review = "${setup.rules.events2?`<span class=\"se-chip good\">✓ ${EV2_RULE[0]}</span>`:''}"
-assert body.count(review) == 1
-body = body.replace(review, review + "${setup.rules.marketPulse?`<span class=\"se-chip good\">✓ ${MP_RULE[0]}</span>`:''}")
-# Spotlight's explicit Standard / Strategic choice must override saved Pulse prefs.
-spot = "k==='ev'?{events2:true,events:false}:{events2:false}"
-assert body.count(spot) == 1
-body = body.replace(spot, "k==='ev'?{events2:true,events:false,marketPulse:false}:{events2:false,marketPulse:false}")
-# Append options before the wallet initializes the weekly selection. Saved lists stay intact.
-weekly_tail = "{id:'online2',n:'Finish 2 online games',g:2,k:'online'}];"
-assert body.count(weekly_tail) == 1
-body = body.replace(weekly_tail, weekly_tail[:-2] + ",{id:'strategic2-v1',n:'Finish 2 qualifying Strategic Event matches',g:2,k:'qualifiedStrategic'},{id:'pulse2-v1',n:'Finish 2 qualifying Market Pulse matches',g:2,k:'qualifiedPulse'}];")
-# Casual challenge randomness is independent of animation/sound timing. Ordinary
-# matches fall back to their existing RNG; the native source remains untouched.
+# Web/app-only: casual challenge randomness is independent of animation/sound timing. Ordinary matches fall
+# back to their existing RNG. The online service audits the plain Math.random() calls in game.html and
+# substitutes its own seeded draws, so these hooks must stay out of the shared rules source.
 body = body.replace('const j=Math.floor(Math.random()*(i+1))', "const j=Math.floor((window.SkylineSocial?.random('shuffle')??Math.random())*(i+1))")
 a, b = body.index('async function rollDice(){'), body.index('  if(FAST||!S3)return d;')
 body = body[:a] + body[a:b].replace('Math.random()', "(window.SkylineSocial?.random('dice')??Math.random())") + body[b:]
 a, b = body.index('function aiWantsBuy('), body.index('/* ================= TURN FLOW')
 assert body[a:b].count('Math.random()') == 4
 body = body[:a] + body[a:b].replace('Math.random()', "(window.SkylineSocial?.random('ai')??Math.random())") + body[b:]
-# Preserve the latest Season if the device clock moves backwards.
-body = body.replace('if(!S||S.n!==n)', 'if(!S||S.n<n)')
-# Add an optional nested Showcase without resolving/reopening the results modal.
-results = "btns:[{k:'home',label:'Home'},{k:'season',label:'Season'},{k:'new',label:G.online?'New game':'Play again',primary:true}]"
-assert body.count(results) == 1
-body = body.replace(results, "onMount:panel=>window.SkylineShowcase?.attachResults(panel)," + results)
-# Install web currency after core declarations but before boot draws the first board.
-# Keep game.html (the native/server source) byte-for-byte unchanged.
-boot = 'try{const h=window.claude?.hot;'
-assert body.count(boot) == 1
-body = body.replace(boot, '</script><script src="./lib/skyline-sc-wallet.js"></script><script src="./lib/skyline-currency.js"></script><script src="./lib/skyline-earned-cash.js"></script><script src="./lib/market-pulse.js"></script><script src="./lib/city-event-advice.js"></script><script src="./lib/ai-styles.js"></script><script src="./lib/first-session.js"></script><script src="./lib/rot-media.js"></script><script src="./lib/a11y-dialogs.js"></script><script src="./lib/native-lifecycle.js"></script><script src="./lib/beta-diary.js"></script><script src="./lib/avatars.js"></script><script src="./web/challenges.js"></script><script src="./web/social.js"></script><script src="./web/verified-config.js"></script><script src="./web/verified.js"></script><script>\n' + boot)
-# The native wrapper reuses these reviewed optional features without copying the
-# browser wrapper, changing the pinned rules source, or replacing native accounts.
-body = body.replace('<script src="./home-redesign.js"></script>', '<script src="./home-redesign.js"></script><script src="./lib/landmarks.js"></script><script src="./lib/collection-tokens.js"></script>')
-body = body.replace('<script src="./web/challenges.js">', '<script src="./lib/estate-sc.js"></script><script src="./lib/portfolio-manage.js"></script><script src="./lib/results-trophies.js"></script><script src="./lib/season-rewards.js"></script><script src="./web/challenges.js">')
-# Living City V2 rules (offline rule version 2) wrap the final gameplay functions, so they load last.
-body = body.replace('<script src="./lib/season-rewards.js"></script>', '<script src="./lib/season-rewards.js"></script><script src="./lib/living-city-rules.js"></script><script src="./lib/living-city.js"></script><script src="./lib/living-city-online.js"></script><script src="./lib/menu-bankruptcy.js"></script><script src="./lib/skyline-coach.js"></script>', 1)
 if '--emit-app-body' in sys.argv:
     sys.stdout.buffer.write(body.encode('utf-8'))
     sys.exit(0)
