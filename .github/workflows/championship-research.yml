@@ -1,0 +1,56 @@
+name: Championship research (feature branch only)
+
+on:
+  push:
+    branches:
+      - feat/championship-endgame
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: skyline-championship-research-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  endgame:
+    name: Endgame balance and permit audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check simulator syntax
+        run: node --check skyline-estates/tests/endgame-sim.cjs
+      - name: Simulate finite Championship against guarded player
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/championship-results
+          printf 'mode,players,guarded,summary\n' > /tmp/championship-results/index.csv
+          for players in 2 3 4; do
+            for mode in lc_r20 lc_r30 lc_r40; do
+              echo "RUN $mode players=$players guarded human"
+              SIM_PLAYERS="$players" SIM_HUMAN=1 node skyline-estates/tests/endgame-sim.cjs "$mode" 100 90000 | tee "/tmp/championship-results/${mode}-${players}p-guarded.log"
+            done
+          done
+      - name: Audit Classic and Living City long matches
+        shell: bash
+        run: |
+          set -euo pipefail
+          for players in 2 3 4; do
+            for guarded in 0 1; do
+              echo "AUDIT classic living-city players=$players guarded=$guarded"
+              SIM_PLAYERS="$players" SIM_HUMAN="$guarded" node skyline-estates/tests/endgame-sim.cjs lc_classic 100 91000 | tee "/tmp/championship-results/lc-classic-${players}p-guarded${guarded}.log"
+            done
+          done
+      - name: Upload simulation summaries
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: championship-endgame-research
+          path: /tmp/championship-results/
+          if-no-files-found: warn
