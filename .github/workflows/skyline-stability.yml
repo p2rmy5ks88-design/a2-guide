@@ -281,7 +281,8 @@ jobs:
         timeout-minutes: 5
         run: python3 skyline-estates/build.py --check
       - name: "Visual: market-pulse"
-        timeout-minutes: 5
+        # Includes 95 full-match simulations; WebKit baseline is about 6.5 minutes.
+        timeout-minutes: 10
         run: node skyline-estates/tests/market-pulse.cjs
       - name: "Visual: showcase-browser"
         timeout-minutes: 5
@@ -372,3 +373,4 @@ jobs:
           echo "Job results: $RESULTS"
           for r in $RESULTS; do case "$r" in success|skipped) ;; *) echo "A required suite did not pass ($r)"; exit 1;; esac; done
           if [ "${{ needs.changes.result }}" != "success" ]; then echo "change detection failed"; exit 1; fi
+
