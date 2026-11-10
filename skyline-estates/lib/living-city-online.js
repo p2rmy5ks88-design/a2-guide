@@ -75,7 +75,7 @@ function send(answer,keepPrompt){const ep=S.epoch;
     try{const r=await api('/v3/lc/act',{code:S.code,revision:S.view.revision,answer});if(ep!==S.epoch)return;S.view=r.game;await show(r.game,false)}
     catch(e){toast(T(e.code));await refresh(ep);return}
     if(!keepPrompt)S.shownKey=null;pump()}).catch(()=>{})}
-async function refresh(ep=S.epoch){try{const r=await api('/v3/lc/state',{code:S.code});if(ep!==S.epoch||!r.game)return;duelClock(r);const changed=!S.view||r.game.revision!==S.view.revision;S.view=r.game;if(changed){await show(r.game,false);pump()}}catch(e){}}
+async function refresh(ep=S.epoch){try{const r=await api('/v3/lc/state',{code:S.code});if(ep!==S.epoch||!r.game)return;duelClock(r);duelClaim(r);const changed=!S.view||r.game.revision!==S.view.revision;S.view=r.game;if(changed){await show(r.game,false);pump()}}catch(e){}}
 function startLoop(){if(S.poll)return;const ep=S.epoch;S.poll=setInterval(()=>{if(!live()||ep!==S.epoch){stopLoop();return}if(!document.hidden)S.queue=S.queue.then(()=>refresh(ep))},POLL_MS)}
 function stopLoop(){if(S.poll){clearInterval(S.poll);S.poll=0}}
 addEventListener('visibilitychange',()=>{if(!document.hidden&&live())S.queue=S.queue.then(()=>refresh())});
@@ -115,13 +115,13 @@ async function join(code){try{const r=await api('/v3/lc/state',{code}).catch(()=
 async function menu(){const last=PREF.lcRoom&&Date.now()-PREF.lcRoom.at<2*864e5?PREF.lcRoom.code:null;
   const k=await modal({cls:'wide',html:`<div class="mh">Living City online</div><div class="mtxt muted">Play the new rules with friends. The server runs the game, so every move is checked. Casual only.</div>
     <div class="olgrid"><div class="olcard"><h4>Host a room</h4><div class="mtxt muted">You choose computer players and mode before starting.</div><button class="btn pri" id="lcNew">Create room</button></div>
-    <div class="olcard"><h4>Skyline Duel</h4><div class="mtxt muted">1 v 1 · 15 rounds · about 12 minutes. 25 seconds per move.</div><div class="olrow"><button class="btn pri" id="lcDuelQ">Find a match</button><button class="btn" id="lcDuelP">Practice</button></div><div class="mtxt muted">Challenge a friend: create a room and choose Skyline Duel.</div></div><div class="olcard"><h4>Join a room</h4><div class="olrow"><input id="lcCode" maxlength="5" placeholder="Code" aria-label="Room code" autocapitalize="characters"><button class="btn" id="lcJoin">Join</button></div>${last?`<h4>Your last room</h4><div class="olrow"><b>${esc(last)}</b><button class="btn" id="lcRe">Rejoin</button></div>`:''}<div class="mtxt muted" id="lcErr"></div></div></div>`,
+    <div class="olcard"><h4>Skyline Duel</h4><div class="mtxt muted">1 v 1 · 15 rounds · about 12 minutes. 25 seconds per move.</div><div class="olrow"><button class="btn pri" id="lcDuelQ">Find a match</button><button class="btn" id="lcDuelP">Practice</button><button class="btn" id="lcDuelB">Leaderboard</button></div><div class="mtxt muted">Challenge a friend: create a room and choose Skyline Duel.</div></div><div class="olcard"><h4>Join a room</h4><div class="olrow"><input id="lcCode" maxlength="5" placeholder="Code" aria-label="Room code" autocapitalize="characters"><button class="btn" id="lcJoin">Join</button></div>${last?`<h4>Your last room</h4><div class="olrow"><b>${esc(last)}</b><button class="btn" id="lcRe">Rejoin</button></div>`:''}<div class="mtxt muted" id="lcErr"></div></div></div>`,
     btns:[{k:'x',label:'Close'}],onMount:(pn,close)=>{const err=pn.querySelector('#lcErr');
       const need=()=>{if((myName()||'').trim())return true;err.textContent='Set your player name in Play online first.';return false};
       pn.querySelector('#lcNew').onclick=async()=>{if(!need())return;try{const r=await api('/v3/lc/create',{name:cleanName(myName()),city:setup.city,client:CLIENT,test:S.cap==='test'});close('x');remember(r.code);lobby(r.code,r)}catch(e){err.textContent=T(e.code)}};
       pn.querySelector('#lcJoin').onclick=()=>{const c=(pn.querySelector('#lcCode').value||'').trim().toUpperCase();if(!/^[A-Z0-9]{5}$/.test(c)){err.textContent='Enter the 5-character room code.';return}if(!need())return;close('x');join(c)};
       const re=pn.querySelector('#lcRe');if(re)re.onclick=()=>{close('x');join(last)};
-      pn.querySelector('#lcDuelQ').onclick=()=>{if(!need())return;close('x');duelQueue()};pn.querySelector('#lcDuelP').onclick=()=>{close('x');duelPractice()}}});
+      pn.querySelector('#lcDuelQ').onclick=()=>{if(!need())return;close('x');duelQueue()};pn.querySelector('#lcDuelP').onclick=()=>{close('x');duelPractice()};pn.querySelector('#lcDuelB').onclick=()=>{close('x');duelBoardShow()}}});
   return k}
 {const _oo=openOnline;openOnline=async function(pre){const mode=pre?false:await available();if(mode){
     const k=await modal({html:`<div class="mh">Play online</div><div class="mtxt">Choose the rules for your online room.</div><ul class="lc-ch"><li><b>Classic</b><span>The online rooms you know.</span></li><li><b>Living City</b><span>New rules, checked by the server. Casual only.</span></li></ul>`,
@@ -129,6 +129,19 @@ async function menu(){const last=PREF.lcRoom&&Date.now()-PREF.lcRoom.at<2*864e5?
     if(k==='lc')return menu().catch(()=>{});if(k!=='classic')return}
   return _oo.apply(this,arguments)}}
 /* ---------- Skyline Duel: matchmaking, practice and the turn timer ---------- */
+// Ranked Duel rewards are granted by the server and claimed once per match (friend rooms return nothing).
+const claimed=new Set();
+async function duelClaim(r){const g=r&&r.game;if(!g||!g.over||!g.G||!g.G.set||g.G.set.duel!==1||claimed.has(r.code))return;claimed.add(r.code);
+  try{const c=await api('/v3/duel/claim',{code:r.code});const rw=c.reward||{};if(rw.coins)addCoins(rw.coins,'Skyline Duel');if(rw.xp)addXP(rw.xp,'Skyline Duel');
+    const me=await api('/v3/duel/me',{}).catch(()=>null);const d=c.rated?` · rating ${c.before} → ${c.after}`:' · unrated rematch';
+    toast(`${c.won?'Duel won':'Duel lost'}${rw.coins?` · +${rw.coins} coins · +${rw.xp} XP`:rw.capped?' · daily reward limit reached':''}${d}${me&&me.rec?` · ${me.rec.tier}`:''}`)}catch(e){}}
+async function duelBoardShow(){let b=null,me=null;try{[b,me]=await Promise.all([api('/v3/duel/leaderboard',{}),api('/v3/duel/me',{})])}catch(e){toast(T(e.code));return}
+  const row=x=>`<div class="olitem${x.you?' on':''}"><b>${x.rank}. ${esc(x.name)}</b><span>${esc(x.tier)} · ${x.rating} · ${x.wins} wins</span></div>`;
+  const days=Math.max(0,Math.ceil((b.endsAt-Date.now())/864e5)),r=me&&me.rec;
+  await modal({cls:'wide',html:`<div class="mh">Skyline Duel · Season ${b.season}</div><div class="mtxt muted">Ends in ${days} day${days===1?'':'s'} · ${b.players} ranked player${b.players===1?'':'s'}</div>
+    <div class="mtxt">${r&&r.games?`You: <b>${esc(r.tier)}</b>${r.placementLeft?` · ${r.placementLeft} placement game${r.placementLeft===1?'':'s'} left`:` · ${r.wins}–${r.losses}`}`:'Play 5 ranked Duels to get your tier.'}</div>
+    <div class="ollist">${b.top.length?b.top.map(row).join(''):'<div class="mtxt muted">No ranked players yet this season.</div>'}${b.you&&!b.top.some(x=>x.you)?row(b.you):''}</div>`,btns:[{k:'x',label:'Close',primary:true}]})}
+
 function duelPractice(){try{if(window.SkylineDuel){homeTab('play');setTimeout(()=>{const T=document.querySelector('#tabBody')||document.body;SkylineDuel.start(T)},50)}}catch(e){toast('Practice is not available right now.')}}
 async function duelQueue(){let t0=Date.now(),timer=0,stop=false;
   const k=await modal({html:`<div class="mh">Skyline Duel</div><div class="mtxt">Finding a rival… <b id="dqS">0 s</b></div><div class="mtxt muted" id="dqMsg">You’ll be matched with the next player who searches.</div><div class="mtxt muted" id="lcErr"></div>`,
@@ -145,5 +158,5 @@ function duelRing(on){if(!on){if(DT.el){DT.el.remove();DT.el=null}clearInterval(
   if(!DT.timer)DT.timer=setInterval(()=>{if(!S.view||!live()){duelRing(false);return}const left=Math.max(0,DT.at-Date.now()),sec=Math.ceil(left/1000);
     if(Date.now()-(DT.sync||0)>4000){DT.sync=Date.now();S.queue=S.queue.then(()=>refresh())}DT.el.textContent=sec;DT.el.style.setProperty('--p',Math.round(left/250)+'%');DT.el.style.opacity=DT.mine?1:.7;
     if(left<=0&&DT.asked!==DT.rev){DT.asked=DT.rev;api('/v3/lc/timeout',{code:S.code,revision:DT.rev}).then(r=>{if(r.forfeit!=null)toast('A player ran out of time three times: the Duel is over.');S.queue=S.queue.then(()=>refresh())}).catch(()=>{})}},250)}
-window.SkylineLivingCityOnline={version:1,client:CLIENT,available,join,menu,duelQueue,duelPractice,_state:S};
+window.SkylineLivingCityOnline={version:1,client:CLIENT,available,join,menu,duelQueue,duelPractice,duelBoardShow,_state:S};
 })();

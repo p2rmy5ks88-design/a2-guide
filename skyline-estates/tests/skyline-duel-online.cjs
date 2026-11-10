@@ -57,5 +57,25 @@ const pick=b=>{const o=b.options||{};if(b.type==='actions')return o.keys.include
   r=await call('queue','tA',{name:'Alice',client});assert.ok(r.body.waiting);now+=61000;r=await call('queue','tB',{name:'Bob',client});assert.ok(r.body.waiting,'an expired wait is not paired');
   await call('queueCancel','tB',{});r=await call('queue','tA',{name:'Alice',client});assert.ok(r.body.waiting,'cancel removes you from the queue');
   ok('queue entries expire after 60 s, and Cancel removes you');
+  // Ranked ladder: matchmade Duels are rated once, rewards are claimed once, the 3rd same-day rematch is unrated.
+  const DR=require('../competition/duel-rating.cjs');
+  const g1=DR.glicko2({r:1500,rd:350,vol:.06},{r:1500,rd:350,vol:.06},1);assert.ok(g1.r>1600&&g1.r<1700&&g1.rd<350,'glicko2 '+JSON.stringify(g1));
+  const g2=DR.glicko2({r:1500,rd:200,vol:.06},{r:1400,rd:30,vol:.06},0);assert.ok(g2.r<1500);assert.equal(DR.tierOf({games:4,r:2000}),'Placement');assert.equal(DR.tierOf({games:5,r:1560}),'Gold');
+  assert.deepEqual(DR.carry({r:1900,rd:60,vol:.06}),{r:1700,rd:200,vol:.06});ok('Glicko-2 rating, tiers after 5 placement games, soft season reset');
+  const quickDuel=async(loserTok)=>{await call('queueCancel','tA',{});await call('queueCancel','tB',{});now+=1000;await call('queue','tA',{name:'Alice',client});const m=(await call('queue','tB',{name:'Bob',client})).body;const c=m.code;
+    for(let k=0;k<200;k++){const v=(await call('state','tA',{code:c})).body.game;if(v.over)break;const who=v.G.players[v.waitingFor].uid;now+=DUEL_TURN_MS+1;
+      if(tok[who]===loserTok){await call('timeout',loserTok==='tA'?'tB':'tA',{code:c,revision:v.revision})}else{const vv=(await call('state',tok[who],{code:c})).body.game;await call('act',tok[who],{code:c,revision:vv.revision,answer:{value:pick(vv.decision)}})}}
+    return c};
+  const d1=await quickDuel('tB');let cl=(await call('duelClaim','tA',{code:d1})).body;assert.equal(cl.won,true);assert.equal(cl.rated,true);assert.ok(cl.after>cl.before);assert.equal(cl.reward.coins,300);
+  let cl2=(await call('duelClaim','tA',{code:d1})).body;assert.equal(cl2.alreadyClaimed,true);assert.equal(cl2.reward.coins,0);
+  const lb=(await call('duelClaim','tB',{code:d1})).body;assert.equal(lb.won,false);assert.equal(lb.reward.coins,80);assert.ok(lb.after<lb.before);
+  ok(`ranked result recorded once: winner ${cl.before}→${cl.after} (+300 coins, +600 XP), loser ${lb.before}→${lb.after} (+80 coins); a second claim pays nothing`);
+  r=await call('duelClaim','tA',{code:c2});assert.equal(r.status,404);ok('friend and unranked rooms give no ranked rewards');
+  const d2=await quickDuel('tB'),d3=await quickDuel('tB');const c3r=(await call('duelClaim','tA',{code:d3})).body;assert.equal(c3r.rated,false);assert.equal(c3r.after,c3r.before);
+  ok('the third match against the same opponent on the same day does not change ratings');
+  let me=(await call('duelMe','tA',{})).body;assert.equal(me.rec.games,3);assert.equal(me.rec.tier,'Placement');assert.equal(me.rec.placementLeft,2);
+  await quickDuel('tB');await quickDuel('tB');me=(await call('duelMe','tA',{})).body;assert.equal(me.rec.games,5);assert.notEqual(me.rec.tier,'Placement');
+  const board=(await call('duelBoard','tB',{})).body;assert.equal(board.players,2);assert.equal(board.top[0].name,'Alice');assert.equal(board.you.name,'Bob');assert.ok(board.top[0].rating%25===0);
+  ok(`season ${board.season} leaderboard: ${board.top.map(x=>x.name+' '+x.tier+' '+x.rating).join(', ')} (ratings shown in bands of 25; your own row always included)`);
   console.log(`SKYLINE DUEL ONLINE ${n} checks`);
 })().catch(e=>{console.error(e);process.exit(1)});

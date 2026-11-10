@@ -9,6 +9,7 @@ const {ServiceError,identityVerifier}=require('../security/service/admission.cjs
 // listed signed-in accounts (verified email, not anonymous) may create or join, rooms are marked test, and access
 // expires by itself at 'until' (max 24 h after it is set). The list is never exposed; capabilities say only test:true.
 const {createEngine,EngineError}=require('../online/lc-engine.cjs');
+const DR=require('./duel-rating.cjs');
 const fail=(s,c)=>{throw new ServiceError(s,c)};
 const CODE=/^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{5}$/,LC_CLIENT_MIN=1,MAX_SEATS=4;
 const plain=x=>x&&typeof x==='object'&&!Array.isArray(x);
@@ -36,6 +37,23 @@ function createLivingCityService({db,verifyIdToken,root=path.resolve(__dirname,'
     if(Array.isArray(assets))for(const o of assets){const ak='asset_'+String(o&&o.kind).replace(/[^a-z]/g,'').slice(0,10);a[kind][ak]=(a[kind][ak]||0)+1}return a}
   async function bump(code,kind,key){try{await db.ref(roomPath(code)).transaction(cur=>{if(!cur)return cur;return{...cur,audit:tally(cur.audit,kind,key)}})}catch{}}
   async function member(code,uid){if(typeof code!=='string'||!CODE.test(code))fail(400,'invalid-code');const r=await read(roomPath(code));if(!r)fail(404,'room-not-found');if(!r.seats.some(s=>s.uid===uid))fail(403,'not-a-member');return r}
+  // Ranked Skyline Duel (matchmade rooms only): rating, season record and rewards, written once per match.
+  const duelBase=(test,season)=>'skylineV2/duel/'+(test?'test':'live')+'/s'+season;
+  const today=()=>new Date(clock()).toISOString().slice(0,10);
+  async function settleDuel(room,st){if(!room.queued||!st.over)return;const season=DR.seasonOf(room.created||clock()),base=duelBase(!!room.test,season);
+    const res=eng().result(st),humans=room.seats.map(s=>s.uid);if(humans.length!==2)return;
+    let first=false;await db.ref(base+'/m/'+room.code).transaction(cur=>{if(cur){first=false;return cur}first=true;return{at:clock(),uids:humans,winner:res.winner,forfeit:st.forfeit??null}});if(!first)return;
+    const pairKey=[...humans].sort().join('~').replace(/[^A-Za-z0-9_~-]/g,'_');let pairCount=0;
+    await db.ref(base+'/p/'+pairKey+'/'+today()).transaction(cur=>{pairCount=(cur||0)+1;return pairCount});
+    const rated=pairCount<=2;   // a third or later match against the same opponent on the same day does not change ratings
+    const prevSeason=season>1?duelBase(!!room.test,season-1):null;
+    const recs={};for(const u of humans){let cur=await read(base+'/r/'+u);if(!cur){const prev=prevSeason?await read(prevSeason+'/r/'+u):null;cur={...DR.carry(prev),games:0,wins:0,losses:0,streak:0,day:{date:today(),n:0}}}recs[u]=cur}
+    const out={};for(const u of humans){const me=recs[u],opp=recs[humans.find(x=>x!==u)],won=res.winner===u,day=me.day&&me.day.date===today()?me.day:{date:today(),n:0};
+      const next=rated?DR.glicko2(me,opp,won?1:0):{r:me.r,rd:me.rd,vol:me.vol},streak=won?(me.streak||0)+1:0,rw=DR.reward(won,streak,day);
+      out[u]={before:me.r,after:next.r,rated,won,reward:rw,rec:{...me,...next,games:me.games+1,wins:me.wins+(won?1:0),losses:me.losses+(won?0:1),streak,day:{date:day.date,n:day.n+(rw.capped?0:1)},
+        name:room.seats.find(x=>x.uid===u).name,updated:clock()}}}
+    for(const u of humans)await db.ref(base+'/r/'+u).transaction(()=>out[u].rec);
+    await db.ref(base+'/m/'+room.code).transaction(cur=>({...cur,result:Object.fromEntries(humans.map(u=>[u,{before:out[u].before,after:out[u].after,rated,won:out[u].won,reward:out[u].reward}]))}))}
   return{
     async capabilities(){const f=await flags();return{livingCity:{version:2,online:f.on,test:!!f.test,minClient:LC_CLIENT_MIN,ranked:false}}},
     async me(token){const f=await flags();if(!f.test)return{tester:false,on:f.on};const {c}=await claims(token);const h=emailHash(c);return{tester:!!(h&&f.test.testers.includes(h)),on:f.on}},
@@ -62,7 +80,7 @@ function createLivingCityService({db,verifyIdToken,root=path.resolve(__dirname,'
       const prev=JSON.parse(r.match);
       try{st=await eng().act(prev,uid,{revision:b.revision,answer:b.answer})}catch(e){if(e instanceof EngineError){if(r.test)await bump(r.code,'rejected',e.code);fail(e.status,e.code)}throw e}
       const audit=r.test?tally(r.audit,'answered',prev.boundary&&prev.boundary.type,b.answer.assets):r.audit;
-      const next={...r,match:JSON.stringify(st),status:st.over?'finished':'playing',revision:r.revision+1,...(audit?{audit}:{}),...(r.duel?{deadline:clock()+DUEL_TURN_MS}:{})};await commit(r.code,r.revision,next);return{game:eng().view(st,uid)}},
+      const next={...r,match:JSON.stringify(st),status:st.over?'finished':'playing',revision:r.revision+1,...(audit?{audit}:{}),...(r.duel?{deadline:clock()+DUEL_TURN_MS}:{})};await commit(r.code,r.revision,next);await settleDuel(next,st);return{game:eng().view(st,uid)}},
     // Skyline Duel matchmaking (Stage 4, first come first served; ratings come in Stage 5). One waiting slot per pool
     // (test or live). Calling again refreshes your place and returns your match once paired. Entries expire after 60 s.
     async queue(token,b){requireClient(b&&b.client);const {uid,test}=await admit(token,false);const name=cleanName(b.name),pool='skylineV2/lcq/'+(test?'test':'live');
@@ -79,11 +97,22 @@ function createLivingCityService({db,verifyIdToken,root=path.resolve(__dirname,'
       await commit(code,null,{v:1,rules:2,code,host:decision.pair.uid,city:'lagos',status:'playing',seats,created:clock(),revision:2,duel:true,queued:true,deadline:clock()+DUEL_TURN_MS,match:JSON.stringify(st),...(test?{test:true}:{})});
       return{matched:true,code}},
     async queueCancel(token){const uid=await identity(token);for(const pool of ['test','live'])await db.ref('skylineV2/lcq/'+pool).transaction(cur=>{if(!cur)return cur;const q={...cur,m:{...(cur.m||{})}};if(q.w&&q.w.uid===uid)q.w=null;delete q.m[uid];return q});return{ok:true}},
+    // Ranked ladder: your record, the season leaderboard (top 50 plus your own row) and one-time reward claims.
+    async duelMe(token){const {uid,test}=await admit(token,false);const season=DR.seasonOf(clock()),rec=await read(duelBase(test,season)+'/r/'+uid);
+      return{season,endsAt:DR.seasonEnds(season),placement:DR.PLACEMENT,rec:rec?{r:rec.r,games:rec.games,wins:rec.wins,losses:rec.losses,streak:rec.streak,tier:DR.tierOf(rec),placementLeft:Math.max(0,DR.PLACEMENT-rec.games)}:{games:0,tier:'Placement',placementLeft:DR.PLACEMENT}}},
+    async duelBoard(token){const {uid,test}=await admit(token,false);const season=DR.seasonOf(clock()),all=await read(duelBase(test,season)+'/r')||{};
+      const rows=Object.entries(all).filter(([,v])=>v&&v.games>=DR.PLACEMENT).map(([u,v])=>({u,name:v.name,r:v.r,wins:v.wins,games:v.games,tier:DR.tierOf(v)})).sort((a,b)=>b.r-a.r||b.wins-a.wins);
+      const view=(x,i)=>({rank:i+1,name:x.name,tier:x.tier,rating:Math.round(x.r/25)*25,wins:x.wins,games:x.games,you:x.u===uid});const mine=rows.findIndex(x=>x.u===uid);
+      return{season,endsAt:DR.seasonEnds(season),top:rows.slice(0,50).map(view),you:mine>=0?view(rows[mine],mine):null,players:rows.length}},
+    async duelClaim(token,b){const {uid,test}=await admit(token,false);if(typeof b.code!=='string'||!CODE.test(b.code))fail(400,'invalid-code');
+      const r=await read(roomPath(b.code));if(!r||!r.queued||!r.seats.some(s=>s.uid===uid))fail(404,'not-a-ranked-duel');const path=duelBase(!!r.test,DR.seasonOf(r.created||clock()))+'/m/'+b.code;
+      let got=null;await db.ref(path).transaction(cur=>{got=null;if(!cur||!cur.result||!cur.result[uid])return cur;if(cur.claimed&&cur.claimed[uid]){got={already:true,...cur.result[uid]};return cur}got=cur.result[uid];return{...cur,claimed:{...(cur.claimed||{}),[uid]:clock()}}});
+      if(!got)fail(409,'not-finished');return got.already?{...got,reward:{coins:0,xp:0},alreadyClaimed:true}:got},
     // Skyline Duel turn timer: once the deadline has passed, either player may ask the server to let the AI play the idle
     // player's turn; the third timeout in a row forfeits. The server's clock decides, never the caller's.
     async timeout(token,b){const uid=await identity(token);const r=await member(b&&b.code,uid);if(!r.duel)fail(400,'not-a-duel');if(r.status!=='playing')fail(409,'not-playing');
       if(!Number.isSafeInteger(b.revision))fail(400,'invalid-action');const prev=JSON.parse(r.match);if(b.revision!==prev.revision)fail(409,'stale-revision');
       if(clock()<r.deadline)fail(409,'not-yet');let st;try{st=await eng().timeout(prev)}catch(e){if(e instanceof EngineError)fail(e.status,e.code);throw e}
-      const next={...r,match:JSON.stringify(st),status:st.over?'finished':'playing',revision:r.revision+1,deadline:clock()+DUEL_TURN_MS};await commit(r.code,r.revision,next);return{game:eng().view(st,uid),forfeit:st.forfeit??null}},
+      const next={...r,match:JSON.stringify(st),status:st.over?'finished':'playing',revision:r.revision+1,deadline:clock()+DUEL_TURN_MS};await commit(r.code,r.revision,next);await settleDuel(next,st);return{game:eng().view(st,uid),forfeit:st.forfeit??null}},
     async state(token,b){const uid=await identity(token);const r=await member(b&&b.code,uid);return{...lobbyView(r,uid),game:r.match?eng().view(JSON.parse(r.match),uid):null,...(r.duel&&r.status==='playing'?{duel:true,turnMsLeft:Math.max(0,r.deadline-clock())}:{})}}}}
 module.exports={createLivingCityService,LC_CLIENT_MIN,DUEL_TURN_MS};

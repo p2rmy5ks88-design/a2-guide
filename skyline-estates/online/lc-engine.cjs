@@ -84,5 +84,7 @@ function createEngine(root){
         return{...state,strikes,turnStart:rt.run('JSON.stringify(G)'),tape:[],G:JSON.parse(rt.run('JSON.stringify(G)')),boundary:null,over:true,forfeit:b.pid,revision:state.revision+1}}
       const g0=JSON.parse(state.turnStart);g0.players[b.pid].ai=true;g0.players[b.pid].tmo=1;
       const next={...state,strikes,turnStart:JSON.stringify(g0),tape:[]};await load(next);return settle(next)},
+    // Final result of a finished match: winner (bankruptcy first, then net worth, as on the results screen).
+    result(state){rt.ctx.__in=JSON.stringify(state.G);return JSON.parse(rt.run(`(()=>{G=JSON.parse(__in);const st=standings();return JSON.stringify({winner:st[0].uid||null,order:st.map(p=>({uid:p.uid,worth:p.bankrupt?0:netWorth(p),bankrupt:!!p.bankrupt}))})})()`))},
     view(state,uid){const me=state.G.players.findIndex(p=>p.uid===uid);return{revision:state.revision,rules:state.rules,over:state.over,G:state.G,me,decision:state.boundary&&state.boundary.pid===me?state.boundary:null,waitingFor:state.boundary?state.boundary.pid:null}}}}
 module.exports={createEngine,EngineError};

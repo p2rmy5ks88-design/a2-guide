@@ -111,3 +111,22 @@ The two-phone test needs the Stage 4 app screens (queue, timer ring, Duel lobby)
   - in a Duel, a small ring above the Roll button counts down the 25 seconds; at zero, the app asks the server to play the turn.
 - **Tests:** `tests/skyline-duel-client.cjs` covers two app instances matched through the queue, the timer ring, the timeout, practice, and no errors. `tests/skyline-duel-online.cjs` covers the queue, expiry and cancel. Both run in the Stability gate.
 - **Ready for the two-phone test:** run the owner deployment steps above, switch on test access for both accounts, then on each phone go to Play online → Living City rooms (test) → Skyline Duel → Find a match.
+
+## Stage 5 status (ranked ladder, done)
+- **Rating module** (`competition/duel-rating.cjs`): Glicko-2; tiers Bronze, Silver, Gold, Platinum and Skyline Elite after 5 placement games; 4-week seasons with a soft reset (halfway to 1500, uncertainty at least 200).
+- **Settling a match:**
+  - only matchmade Duels are ranked; friend challenges and practice are not;
+  - each finished match is written once to `skylineV2/duel/<live|test>/s<season>/` (`r/<uid>` records, `m/<code>` results, `p/<pair>/<day>` rematch counts);
+  - a third or later match against the same opponent on the same day is unrated.
+- **Rewards:**
+  - win: 300 Coins + 600 XP; loss: 80 Coins + 200 XP;
+  - win-streak bonus: +100 at 3 wins, +250 at 5;
+  - 10 rewarded Duels per day.
+  - Claimed once per match through `/v3/duel/claim`; the app adds them to the local wallet. They are earned only, never sold.
+- **Leaderboard:**
+  - `/v3/duel/leaderboard` returns the top 50 plus your own row, with ratings rounded to 25;
+  - `/v3/duel/me` returns your tier and placement games left;
+  - in the app: Skyline Duel card → **Leaderboard**.
+- **Not built yet:** Friends and Country tabs. The game has no friend list or country data today, so they need a later stage. Cosmetic season rewards come with the season-end job in Stage 6.
+- **Privacy:** `privacy.html` has a "Skyline Duel ranked leaderboard" section. In the stores, the App Store answer "Gameplay Content" and the Play Data safety answer "App activity → Other user-generated content" already cover usernames and game results, so no new data types are needed.
+- **Tests:** `tests/skyline-duel-online.cjs` (14 checks) covers rating maths, settle-once, claim-once, unranked friend rooms, the rematch rule, placement, tiers and leaderboard ordering. `tests/skyline-duel-client.cjs` (7 checks) covers the leaderboard screen.

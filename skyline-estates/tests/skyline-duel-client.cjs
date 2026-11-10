@@ -49,6 +49,9 @@ function memoryDb(){const data={};const get=p=>p.split('/').reduce((o,k)=>o&&o[k
   const rev0=await A.evaluate(()=>SkylineLivingCityOnline._state.view.revision);skew=30000;
   await A.waitForFunction(r=>SkylineLivingCityOnline._state.view&&SkylineLivingCityOnline._state.view.revision>r,rev0,{timeout:20000});
   ok('when the timer runs out the server plays that turn and both apps move on');
+  A.evaluate(()=>SkylineLivingCityOnline.duelBoardShow()).catch(()=>{});await A.locator('#modals .mh').filter({hasText:'Skyline Duel · Season'}).waitFor({timeout:8000});
+  assert.match(await A.locator('#modals').innerText(),/Play 5 ranked Duels|placement/i);if(OUT)await A.screenshot({path:path.join(OUT,'duel-leaderboard.png')});await A.evaluate(()=>{$('#modals').innerHTML=''});
+  ok('Leaderboard shows the season, days left and your placement status');
   // Practice: a labelled offline Duel against the computer.
   await B.evaluate(()=>{showTitle()});await delay(300);await B.evaluate(()=>SkylineLivingCityOnline.duelPractice());
   await B.waitForFunction(()=>{try{return G&&!G.lcNet&&G.set.duel===1&&G.players[1].ai}catch(e){return false}},null,{timeout:10000});
