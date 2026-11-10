@@ -17,7 +17,7 @@ const cfg=CONFIGS[name];if(!cfg)throw Error('unknown config '+name+'; one of '+O
 const extra=process.env.SIM_SET?JSON.parse(process.env.SIM_SET):{};
 const MATCH=`(async(seed,lc,set,players,human)=>{let s=seed;Math.random=()=>{s=(Math.imul(s,1664525)+1013904223)>>>0;return s/4294967296};FAST=true;GEN++;applyCity('lagos');
  newGame({lc,cash:1600,set:Object.assign({ai:'normal',speed:'fast',pot:false,maxRounds:300,city:'lagos',perks:false},set),players:[...Array(players)].map((_,i)=>({name:NAMES[i],tok:TOKENS[i],col:PCOL[i],ai:true,tl:1}))});G.sim=true;
- const M={zeroFrom:null,zeroRounds:0,lastRound:0,leaders:{},builds:0,sells:0,trades:0,auctions:0,levelsAt:{},cashShareAt:{}};
+ const M={zeroFrom:null,zeroRounds:0,homeBlockedRounds:0,homeBlockedOpportunities:0,lastRound:0,leaders:{},builds:0,sells:0,trades:0,auctions:0,levelsAt:{},cashShareAt:{}};
  if(!globalThis.__simHooked){globalThis.__simHooked=1;
    const b0=build;build=function(){globalThis.__M.builds++;return b0.apply(this,arguments)};
    const s0=sell;sell=function(){globalThis.__M.sells++;return s0.apply(this,arguments)};
@@ -27,7 +27,16 @@ const MATCH=`(async(seed,lc,set,players,human)=>{let s=seed;Math.random=()=>{s=(
    const ac0=aiAccept;aiAccept=function(t){if(globalThis.__human&&t.to===0)return false;return ac0.apply(this,arguments)};
    const pr0=aiProposeTrade;aiProposeTrade=function(p){if(globalThis.__human&&p.id===0)return null;return pr0.apply(this,arguments)};
    const p0=playTurn;playTurn=function(p){const M=globalThis.__M;if(G.round!==M.lastRound){M.lastRound=G.round;
-       if(G.houses<=0){M.zeroRounds++;if(M.zeroFrom==null)M.zeroFrom=G.round}
+       if(G.houses<=0){
+         M.zeroRounds++;if(M.zeroFrom==null)M.zeroFrom=G.round;
+         // Distinguish an empty bank from a real development block. Test legal builds
+         // with one temporary home permit, then restore state before the real turn.
+         const saved=G.houses;let opportunities=0;
+         try{G.houses=1;for(let i=0;i<SQ.length;i++){
+           const o=G.own[i];if(o.o>=0&&!P(o.o).bankrupt&&o.h<3&&canBuild(o.o,i))opportunities++
+         }}finally{G.houses=saved}
+         if(opportunities){M.homeBlockedRounds++;M.homeBlockedOpportunities+=opportunities}
+       }
        const st=standings();M.leaders[G.round]=st[0].id;
        if([10,20,30,40,60,100,150].includes(G.round)){M.levelsAt[G.round]=G.own.reduce((n,o)=>n+(o.o>=0?o.h:0),0);
          const nw=alive().reduce((n,q)=>n+netWorth(q),0),cs=alive().reduce((n,q)=>n+Math.max(0,q.cash),0);M.cashShareAt[G.round]=nw?+(cs/nw).toFixed(2):0}}
@@ -37,7 +46,7 @@ const MATCH=`(async(seed,lc,set,players,human)=>{let s=seed;Math.random=()=>{s=(
  const nw=G.players.map(p=>p.bankrupt?0:netWorth(p)),cash=G.players.map(p=>p.bankrupt?0:Math.max(0,p.cash));
  const half=Math.max(1,Math.floor(G.round/2)),leaderHalf=M.leaders[half];
  return JSON.stringify({seed,err:err&&String(err),rounds:G.round,outcome:alive().length<=1?'bankruptcy':(G.set.mode==='timed'?'round-limit':'stalled'),bankrupt:bank,
-   winner:w.id,first:G.first||0,comeback:leaderHalf!=null&&leaderHalf!==w.id?1:0,houses:G.houses,towers:G.hotels,zeroFrom:M.zeroFrom,zeroRounds:M.zeroRounds,levels:lv,
+   winner:w.id,first:G.first||0,comeback:leaderHalf!=null&&leaderHalf!==w.id?1:0,houses:G.houses,towers:G.hotels,zeroFrom:M.zeroFrom,zeroRounds:M.zeroRounds,homeBlockedRounds:M.homeBlockedRounds,homeBlockedOpportunities:M.homeBlockedOpportunities,levels:lv,
    landmarks:Object.keys(G.lm||{}).length,builds:M.builds,sells:M.sells,trades:M.trades,auctions:M.auctions,levelsAt:M.levelsAt,cashShareAt:M.cashShareAt,
    netWorth:nw,cash,gap:(()=>{const a=[...nw].sort((x,y)=>y-x);return a[0]?+((a[0]-(a[1]||0))/a[0]).toFixed(2):0})(),
    owned:G.own.filter((o,i)=>o.o>=0&&SQ[i].t==='prop').length,monopolies:Object.keys(GROUPS).filter(g=>G.players.some(p=>!p.bankrupt&&ownsAll(p.id,g))).length})})`;
@@ -50,8 +59,8 @@ const MATCH=`(async(seed,lc,set,players,human)=>{let s=seed;Math.random=()=>{s=(
   const summary={config:name,human:!!process.env.SIM_HUMAN,extra,players:PLAYERS,matches:rows.length,errors:rows.filter(r=>r.err).length,
     avgRounds:avg(r=>r.rounds),medianRounds:med(rows.map(r=>r.rounds)),bankruptcyEnd:pct(r=>r.outcome==='bankruptcy'),stalledAtCap:pct(r=>r.outcome==='stalled'),roundLimitEnd:pct(r=>r.outcome==='round-limit'),
     houseBankEmptyPct:pct(r=>r.zeroFrom!=null),avgFirstEmptyRound:avg(r=>r.zeroFrom??0)&&+(rows.filter(r=>r.zeroFrom!=null).reduce((n,r)=>n+r.zeroFrom,0)/Math.max(1,rows.filter(r=>r.zeroFrom!=null).length)).toFixed(1),
-    avgRoundsWithEmptyBank:avg(r=>r.zeroRounds),avgSkyscrapers:avg(r=>r.levels[5]),avgHighRise:avg(r=>r.levels[3]),avgLandmarks:avg(r=>r.landmarks),avgBuildingLevels:avg(r=>r.levels[1]+2*r.levels[2]+3*r.levels[3]+5*r.levels[5]),
+    avgRoundsWithEmptyBank:avg(r=>r.zeroRounds),bankBlockedBuildPct:pct(r=>r.homeBlockedRounds>0),avgBankBlockedRounds:avg(r=>r.homeBlockedRounds),avgBankBlockedOpportunities:avg(r=>r.homeBlockedOpportunities),avgSkyscrapers:avg(r=>r.levels[5]),avgHighRise:avg(r=>r.levels[3]),avgLandmarks:avg(r=>r.landmarks),avgBuildingLevels:avg(r=>r.levels[1]+2*r.levels[2]+3*r.levels[3]+5*r.levels[5]),
     avgCashShareEnd:avg(r=>{const nw=r.netWorth.reduce((a,b)=>a+b,0);return nw?r.cash.reduce((a,b)=>a+b,0)/nw:0}),avgWinnerGap:avg(r=>r.gap),closeFinishPct:pct(r=>r.gap<0.15),comebackPct:pct(r=>r.comeback),
-    winsBySeat:wins,avgTrades:avg(r=>r.trades),avgSells:avg(r=>r.sells),avgMonopolies:avg(r=>r.monopolies),seconds:Math.round((Date.now()-t0)/1000)};
+    winsBySeat:wins,cashLeaderAlsoWinnerPct:pct(r=>{const max=Math.max(...r.cash);return r.cash[r.winner]===max}),avgTrades:avg(r=>r.trades),avgSells:avg(r=>r.sells),avgMonopolies:avg(r=>r.monopolies),seconds:Math.round((Date.now()-t0)/1000)};
   console.log('SUMMARY '+JSON.stringify(summary));
 })().catch(e=>{console.error(e);process.exit(1)});
