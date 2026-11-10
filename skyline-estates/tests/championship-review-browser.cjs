@@ -21,6 +21,14 @@ async function open(browser,vp,ui){
  for(const vp of [{width:667,height:375},{width:844,height:390}]){
    for(const ui of ['dark','light']){
      const page=await open(browser,vp,ui);
+     await page.evaluate(()=>{setup.mode='timed';homeTab('custom')});
+     await page.locator('[data-step="1"]').click();
+     assert.deepEqual(await page.locator('#seRounds button').allTextContents(),['20','30','40','45'],'active Custom screen Championship choices');
+     await page.locator('#seRounds button').filter({hasText:/^40$/}).click();
+     assert.equal(await page.evaluate(()=>setup.rounds),40,'40-round option updates live setup');
+     assert.match(await page.locator('[data-mode="classic"]').innerText(),/Unlimited rounds/);
+     assert.match(await page.evaluate(()=>onlineCfgSummary({mode:'timed',rounds:30,cash:1600})),/^Round limit/,'online timed mode retains legacy name');
+     await page.screenshot({path:path.join(out,'custom-'+vp.width+'-'+ui+'.png'),fullPage:false});
      await page.evaluate(ui=>{
        FAST=true;GEN++;newGame({cash:1600,set:{ai:'normal',speed:'fast',city:'lagos',mode:'timed',rounds:30,championship:1,lc:true},
          players:[{name:'QA',tok:TOKENS[0],col:PCOL[0],ai:false},{name:'Mei',tok:TOKENS[1],col:PCOL[1],ai:true}]});

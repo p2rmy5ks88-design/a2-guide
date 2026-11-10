@@ -77,3 +77,16 @@ is the authority for whether these checks passed.
 City Boom remains excluded: finite Championship already resolves indefinite
 matches, and the audit does not establish a benefit from extra rent pressure.
 No main merge, production deployment or native upload is part of this audit.
+
+The final source audit found that the active Custom Game screen overrides the
+older screen. Its round selector now also offers 20/30/40/45; the browser review
+checks the actual visible buttons and selects 40. Online summaries retain their
+legacy "Round limit" / "Classic" labels. Living City authoritative online views
+(`G.lcNet`) are explicitly excluded from Championship scoring, with a ranking
+regression. The source pin and all generated pages were rebuilt together.
+
+The normal-speed browser review passed four phone/theme scenarios and six
+2/3/4-player timing samples before these final Custom screen assertions were
+added. Screenshots and the full timing JSON are retained in the Card/turn/asset
+parity workflow artifact on subsequent runs. The latest full Stability gate,
+including the added Custom screen assertions, must pass before preview approval.
