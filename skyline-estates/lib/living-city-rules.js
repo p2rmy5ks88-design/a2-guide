@@ -325,3 +325,12 @@ LC_RULES.push(['investment','City corners','Skyline HQ (landing: bonus payday or
 
 
 window.SkylineLivingCityRules={lc,LC_RV,LCUI,LC_RULES,version:1};
+/* ---------- Skyline Duel (1 vs 1, set.duel===1): shared by the app and the authoritative online engine ----------
+   Each player is dealt 3 streets of balanced value; both start with the same cash (start + SC 100M: the opener's
+   bonus matches the second player's late-start bonus); no trades. Approved spec: SKYLINE-DUEL.md. */
+const DUEL={rounds:15,deal:3,bonus:100};
+function lcDuelSetup(){if(!G||!G.set||G.set.duel!==1||G.players.length!==2||G.duelDealt)return false;
+  const pool=shuffle(SQ.map((_,i)=>i).filter(i=>SQ[i].t==='prop'&&G.own[i].o<0)),v=[0,0];
+  const n=[0,0];for(let k=0;k<DUEL.deal*2;k++){const pid=n[1]>=DUEL.deal||n[0]<DUEL.deal&&v[0]<=v[1]?0:1,i=pool.pop();G.own[i].o=pid;v[pid]+=SQ[i].p;n[pid]++}
+  const base=Math.min(...G.players.map(p=>p.cash));G.players.forEach(p=>{p.cash=base+DUEL.bonus});G.duelDealt=1;return true}
+{const _ap=aiProposeTrade;aiProposeTrade=function(){if(G&&G.set&&G.set.duel===1)return null;return _ap.apply(this,arguments)}}

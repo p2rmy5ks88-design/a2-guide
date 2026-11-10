@@ -14,6 +14,7 @@ const CODE=/^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{5}$/,LC_CLIENT_MIN=1,MAX_SEATS=4
 const plain=x=>x&&typeof x==='object'&&!Array.isArray(x);
 function cleanName(v){if(typeof v!=='string')fail(400,'invalid-name');const s=v.trim();if(!s||s.length>12||/[<>\x00-\x1f\x7f]/.test(s))fail(400,'invalid-name');return s}
 function requireClient(c){if(!plain(c)||!Array.isArray(c.rules)||!c.rules.includes(2)||!Number.isInteger(c.lc)||c.lc<LC_CLIENT_MIN)fail(426,'client-upgrade-required')}
+const DUEL_TURN_MS=25000;
 function createLivingCityService({db,verifyIdToken,root=path.resolve(__dirname,'..'),clock=Date.now,randomBytes=crypto.randomBytes,flagTtlMs=15000}){
   if(!db||typeof verifyIdToken!=='function')throw Error('Privileged store and verified auth required');
   const identity=identityVerifier(verifyIdToken);
@@ -52,14 +53,21 @@ function createLivingCityService({db,verifyIdToken,root=path.resolve(__dirname,'
     async start(token,b){const uid=await identity(token);const r=await member(b&&b.code,uid);if(r.host!==uid)fail(403,'host-only');if(r.status!=='lobby')fail(409,'already-started');
       const ai=Number.isInteger(b.ai)?b.ai:0;if(ai<0||r.seats.length+ai>MAX_SEATS||r.seats.length+ai<2)fail(400,'invalid-seat-count');
       const seats=r.seats.map(s=>({uid:s.uid,name:s.name})).concat([...Array(ai)].map((_,k)=>({ai:true,name:['Kofi','Mei','Lucas'][k]})));
-      let st;try{const timed=b.mode==='timed'&&[10,20,30].includes(b.rounds)?{mode:'timed',rounds:b.rounds}:{mode:'classic'};
+      const duel=b.mode==='duel';if(duel&&(r.seats.length!==2||ai!==0))fail(400,'duel-needs-two-players');
+      let st;try{const timed=duel?{mode:'timed',rounds:15,duel:1}:b.mode==='timed'&&[10,20,30].includes(b.rounds)?{mode:'timed',rounds:b.rounds}:{mode:'classic'};
       st=await eng().create({seats,set:{city:r.city,...timed},seed:crypto.randomBytes(12).toString('hex'),scenario:r.test&&b.scenario==='lc-test'?'lc-test':null})}catch(e){if(e instanceof EngineError)fail(e.status,e.code);throw e}
-      const next={...r,status:'playing',match:JSON.stringify(st),revision:r.revision+1};await commit(r.code,r.revision,next);return{...lobbyView(next,uid),game:eng().view(st,uid)}},
+      const next={...r,status:'playing',match:JSON.stringify(st),revision:r.revision+1,...(duel?{duel:true,deadline:clock()+DUEL_TURN_MS}:{})};await commit(r.code,r.revision,next);return{...lobbyView(next,uid),game:eng().view(st,uid)}},
     async act(token,b){const uid=await identity(token);const r=await member(b&&b.code,uid);if(r.status!=='playing')fail(409,'not-playing');
       if(!plain(b.answer)||!Number.isSafeInteger(b.revision))fail(400,'invalid-action');let st;
       const prev=JSON.parse(r.match);
       try{st=await eng().act(prev,uid,{revision:b.revision,answer:b.answer})}catch(e){if(e instanceof EngineError){if(r.test)await bump(r.code,'rejected',e.code);fail(e.status,e.code)}throw e}
       const audit=r.test?tally(r.audit,'answered',prev.boundary&&prev.boundary.type,b.answer.assets):r.audit;
-      const next={...r,match:JSON.stringify(st),status:st.over?'finished':'playing',revision:r.revision+1,...(audit?{audit}:{})};await commit(r.code,r.revision,next);return{game:eng().view(st,uid)}},
+      const next={...r,match:JSON.stringify(st),status:st.over?'finished':'playing',revision:r.revision+1,...(audit?{audit}:{}),...(r.duel?{deadline:clock()+DUEL_TURN_MS}:{})};await commit(r.code,r.revision,next);return{game:eng().view(st,uid)}},
+    // Skyline Duel turn timer: once the deadline has passed, either player may ask the server to let the AI play the idle
+    // player's turn; the third timeout in a row forfeits. The server's clock decides, never the caller's.
+    async timeout(token,b){const uid=await identity(token);const r=await member(b&&b.code,uid);if(!r.duel)fail(400,'not-a-duel');if(r.status!=='playing')fail(409,'not-playing');
+      if(!Number.isSafeInteger(b.revision))fail(400,'invalid-action');const prev=JSON.parse(r.match);if(b.revision!==prev.revision)fail(409,'stale-revision');
+      if(clock()<r.deadline)fail(409,'not-yet');let st;try{st=await eng().timeout(prev)}catch(e){if(e instanceof EngineError)fail(e.status,e.code);throw e}
+      const next={...r,match:JSON.stringify(st),status:st.over?'finished':'playing',revision:r.revision+1,deadline:clock()+DUEL_TURN_MS};await commit(r.code,r.revision,next);return{game:eng().view(st,uid),forfeit:st.forfeit??null}},
     async state(token,b){const uid=await identity(token);const r=await member(b&&b.code,uid);return{...lobbyView(r,uid),game:r.match?eng().view(JSON.parse(r.match),uid):null}}}}
-module.exports={createLivingCityService,LC_CLIENT_MIN};
+module.exports={createLivingCityService,LC_CLIENT_MIN,DUEL_TURN_MS};
