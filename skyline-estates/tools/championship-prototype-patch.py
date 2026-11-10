@@ -37,8 +37,7 @@ function skylineChampionshipScore(p){
     if(landmark&&landmark.pid===p.id&&G.own[landmark.i].o===p.id)
       sc.landmarks+=Math.round(SQ[landmark.i].p*.25/5)*5}
   sc.total=Math.round(sc.cash+sc.properties+sc.buildings+sc.districts+sc.landmarks);return sc}
-function standings(){if(!skylineChampionshipActive())return [...G.players].sort((a,b)=>(a.bankrupt-b.bankrupt)||netWorth(b)-netWorth(a));
-  return [...G.players].sort((a,b)=>(a.bankrupt-b.bankrupt)||skylineChampionshipScore(b).total-skylineChampionshipScore(a).total||netWorth(b)-netWorth(a)||a.id-b.id)}""")
+function standings(){return typeof skylineChampionshipActive!=='function'||!skylineChampionshipActive()?[...G.players].sort((a,b)=>(a.bankrupt-b.bankrupt)||netWorth(b)-netWorth(a)):[...G.players].sort((a,b)=>(a.bankrupt-b.bankrupt)||skylineChampionshipScore(b).total-skylineChampionshipScore(a).total||netWorth(b)-netWorth(a)||a.id-b.id)}""")
 change("return Math.max(lvl().reserve,Math.min(threat*.55,650))}",
        "const reserve=Math.max(lvl().reserve,Math.min(threat*.55,650));const left=skylineChampionshipActive()?G.set.rounds-G.round+1:Infinity;return p.ai&&left>=1&&left<=5?Math.round(reserve*.75):reserve}")
 change("if(G.round-p.lastOffer>=3&&Math.random()<.5){const t=aiProposeTrade(p);",
