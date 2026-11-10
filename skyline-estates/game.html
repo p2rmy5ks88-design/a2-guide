@@ -2990,7 +2990,7 @@ async function run(){
     G.over=true;await finish();
   }catch(e){if(!(e instanceof Abort)){console.error(e);if(window.__onErr)window.__onErr(e)}}
 }
-function skylineChampionshipActive(){return !!(G&&G.set&&G.set.mode==='timed'&&G.set.championship===1&&!G.online)}
+function skylineChampionshipActive(){return !!(G&&G.set&&G.set.mode==='timed'&&G.set.championship===1&&!G.online&&!G.lcNet)}
 function skylineChampionshipScore(p){
   const sc={cash:Math.round(p.cash),properties:0,buildings:0,districts:0,landmarks:0,total:0};
   if(p.bankrupt)return sc;

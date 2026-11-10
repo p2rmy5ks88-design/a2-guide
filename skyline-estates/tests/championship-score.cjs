@@ -25,12 +25,12 @@ assert.equal(score.developed.properties,score.price-score.mortgagePrice/2,'mortg
 assert.equal(score.developed.total,Object.entries(score.developed).filter(([k])=>k!=='total').reduce((n,[,v])=>n+v,0));
 assert.equal(score.bankrupt.total,0);
 // Force a case where Championship and legacy ranking disagree; a type-only check cannot catch leakage.
-for(const mode of ['championship','legacy','online','classic']){
+for(const mode of ['championship','legacy','online','lcOnline','classic']){
  start();
  const result=check(`const ids=Object.values(GROUPS).find(ids=>ids.length===3&&ids.every(i=>SQ[i].t==='prop'));
  const price=ids.reduce((n,i)=>n+SQ[i].p,0);ids.forEach(i=>G.own[i].o=0);
  P(0).cash=5000-price;P(1).cash=5001;P(2).cash=1;
- ${mode==='legacy'?'delete G.set.championship;':mode==='online'?'G.online=true;':mode==='classic'?"G.set.mode='classic';":''}
+ ${mode==='legacy'?'delete G.set.championship;':mode==='online'?'G.online=true;':mode==='lcOnline'?"G.lcNet={code:'TEST'};":mode==='classic'?"G.set.mode='classic';":''}
  return {active:skylineChampionshipActive(),winner:standings()[0].id};`);
  assert.equal(result.active,mode==='championship',mode+' scoring gate');
  assert.equal(result.winner,mode==='championship'?0:1,mode+' ranking');
