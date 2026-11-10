@@ -1,0 +1,81 @@
+name: Championship web prototype
+
+on:
+  push:
+    branches:
+      - feat/championship-endgame
+    paths:
+      - .github/workflows/championship-prototype.yml
+      - skyline-estates/tools/championship-prototype-patch.py
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: skyline-championship-prototype
+  cancel-in-progress: false
+
+jobs:
+  preview:
+    name: Build and validate offline Championship
+    if: github.ref == 'refs/heads/feat/championship-endgame'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Apply prototype and update audited hash in the same working tree
+        run: python3 skyline-estates/tools/championship-prototype-patch.py
+      - name: Verify regenerated source and tested module syntax
+        run: |
+          python3 skyline-estates/build.py --check
+          node --check skyline-estates/tests/championship-score.cjs
+          node --check skyline-estates/tests/endgame-sim.cjs
+      - name: Validate Championship scoring and Living City permit accounting
+        run: |
+          node skyline-estates/tests/championship-score.cjs
+          node skyline-estates/tests/endgame-permits.cjs
+      - name: Existing security kernel tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          for f in skyline-estates/security/service/*kernel.test.cjs; do node "$f"; done
+      - name: Install browser test dependencies
+        run: npm install --prefix skyline-estates/tests --no-audit --no-fund
+      - name: Configure Chrome
+        run: echo "CHROME_PATH=$(command -v google-chrome)" >> "$GITHUB_ENV"
+      - name: Offline and headless engine parity
+        run: node skyline-estates/tests/living-city-parity.cjs 4 2
+      - name: Check new solo and existing game UI workflows
+        run: |
+          node skyline-estates/tests/first-session-browser.cjs
+          node skyline-estates/tests/gameplay-ux-browser.cjs
+      - name: Save validated changes only on the isolated feature branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "skyline-preview-bot"
+          git config user.email "skyline-preview-bot@users.noreply.github.com"
+          git add skyline-estates/game.html skyline-estates/security/service/audited-rules.cjs
+          git add skyline-estates/index.html skyline-estates/web-play.html skyline-estates/web-correction.html skyline-estates/web-follow.html skyline-estates/web-board.html skyline-estates/web-menus.html skyline-estates/offline-assets.js skyline-estates/sw.js
+          if git diff --cached --quiet; then echo "Prototype already committed"; exit 0; fi
+          git commit -m "Prototype new-offline Skyline Championship and Final Bell"
+          git push origin HEAD:refs/heads/feat/championship-endgame
+      - name: Package reviewable web preview
+        if: success()
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/championship-web-preview"
+          rsync -a --exclude=tests --exclude=security --exclude=tools --exclude=balance --exclude=online --exclude=node_modules --exclude=competition-functions skyline-estates/ "$RUNNER_TEMP/championship-web-preview/skyline-estates/"
+          tar -czf "$RUNNER_TEMP/skyline-championship-preview.tar.gz" -C "$RUNNER_TEMP/championship-web-preview" .
+      - name: Upload web preview artifact
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: skyline-championship-web-preview
+          path: ${{ runner.temp }}/skyline-championship-preview.tar.gz
+          if-no-files-found: warn
