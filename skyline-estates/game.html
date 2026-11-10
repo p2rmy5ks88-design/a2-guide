@@ -2983,6 +2983,7 @@ async function run(){
   try{
     while(!G.over){
       if(G.set.maxRounds&&G.round>G.set.maxRounds)break;
+      if(skylineChampionshipActive()&&G.round>G.set.rounds)break;
       const p=P(G.turn);if(!p.bankrupt)await playTurn(p);guard(g);
       if(endCheck())break;
       advanceTurn();save();if(G.set.mode==='timed'&&G.round>G.set.rounds)break;

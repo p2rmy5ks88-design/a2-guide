@@ -37,15 +37,15 @@ for(const mode of ['championship','legacy','online','lcOnline','classic']){
 }
 // Exercise the actual offline driver with deterministic turns, including a nonzero first seat.
 (async()=>{
- for(const first of [0,1,2]){
+ for(const first of [0,1,2])for(const startRound of [29,31]){
   start();
   const result=JSON.parse(await rt.run(`(async()=>{
-    G.first=${first};G.turn=G.first;G.round=29;G.set.rounds=30;
+    G.first=${first};G.turn=G.first;G.round=${startRound};G.set.rounds=30;
     const played=[];playTurn=async p=>{played.push([G.round,p.id]);G.phase='busy'};
     finish=async()=>{};save=()=>{};await run();return JSON.stringify({played,over:G.over,round:G.round});
   })()`));
   assert.equal(result.over,true);assert.equal(result.round,31);
-  assert.deepEqual(result.played,[29,30].flatMap(round=>[0,1,2].map(offset=>[round,(first+offset)%3])),'every player completes exactly two rounds');
+  assert.deepEqual(result.played,(startRound===31?[]:[29,30]).flatMap(round=>[0,1,2].map(offset=>[round,(first+offset)%3])),'every player completes exactly two rounds');
  }
  console.log('PASS Championship component totals, legacy/online isolation and exact final-turn completion');
 })().catch(e=>{console.error(e);process.exitCode=1});
