@@ -3180,7 +3180,7 @@ function renderRoster(){
     const me=G.online&&p.uid&&p.uid===NET.me;
     d.innerHTML=`${cur?'<span class="nowtag">PLAYING</span>':''}<div class="pt">${p.tok}</div><div class="pinfo"><div class="pn">${esc(p.name)}${me?'<span class="tag you">You</span>':''}${lh?`<span class="tag lv">Lv ${lvlOf(PREF.xp)}</span>`:''}${p.ai?'<span class="tag">AI</span>':''}${p.inJail?'<span class="tag jail">Lockup</span>':''}${p.bankrupt?'<span class="tag">Out</span>':''}</div><div class="pc">${fmt(p.cash)}</div>${props?`<div class="pg">${props}</div>`:''}</div>`;
     d.onclick=()=>badgeTap(p);R.append(d)});
-  {const e=evDef();$('#round').textContent='Round '+(skylineChampionshipActive()?Math.min(G.round,G.set.rounds):G.round)+(G.set.mode==='timed'?' of '+G.set.rounds+(skylineChampionshipActive()&&G.round<=G.set.rounds&&G.set.rounds-G.round<5?' · 🔔 '+(G.set.rounds-G.round===0?'FINAL ROUND':(G.set.rounds-G.round+1)+' ROUNDS LEFT'):''):'')+(G.set.pot&&G.pot?' · Jackpot '+fmt(G.pot):'')+` · 🏠 ${G.houses} · 🏙️ ${G.hotels} · 🏷️ ${forSale()}`+(e?' · '+evText(e,'t'):'')}
+  {const e=evDef();$('#round').textContent='Round '+(skylineChampionshipActive()?Math.min(G.round,G.set.rounds):G.round)+(G.set.mode==='timed'?(skylineChampionshipActive()?'/':' of ')+G.set.rounds+(skylineChampionshipActive()&&G.round<=G.set.rounds&&G.set.rounds-G.round<5?' · 🔔'+(G.set.rounds-G.round+1)+' left':''):'')+(G.set.pot&&G.pot?' · Jackpot '+fmt(G.pot):'')+` · 🏠 ${G.houses} · 🏙️ ${G.hotels} · 🏷️ ${forSale()}`+(e?' · '+evText(e,'t'):'')}
   tok3.forEach((t,i)=>{t.visible=!P(i).bankrupt});
   $('#ui').style.setProperty('--turn',G.over?'transparent':P(G.turn).col);
   pushState();achScan();
