@@ -46,5 +46,16 @@ const pick=b=>{const o=b.options||{};if(b.type==='actions')return o.keys.include
   // Ordinary rooms are unchanged: no timer endpoint.
   r=await call('create','tA',{name:'Alice',client});const c3=r.body.code;await call('join','tB',{code:c3,name:'Bob',client});await call('start','tA',{code:c3,mode:'timed',rounds:10});
   const v3=await state('tA');r=await call('timeout','tB',{code:c3,revision:v3.revision});assert.deepEqual([r.status,r.body.error],[400,'not-a-duel']);ok('ordinary Living City rooms have no turn timer');
+  // Matchmaking queue: the first player waits, the second is paired into a started Duel, the first collects the same code.
+  r=await call('queue','tA',{name:'Alice',client});assert.deepEqual(r.body,{waiting:true,seconds:60});
+  r=await call('queue','tA',{name:'Alice',client});assert.ok(r.body.waiting,'calling again keeps your place');
+  r=await call('queue','tB',{name:'Bob',client});assert.ok(r.body.matched&&r.body.code,JSON.stringify(r.body));const qc=r.body.code;
+  r=await call('queue','tA',{name:'Alice',client});assert.deepEqual(r.body,{matched:true,code:qc});
+  const qa=(await call('state','tA',{code:qc})).body,qb=(await call('state','tB',{code:qc})).body;
+  assert.equal(qa.status,'playing');assert.equal(qa.game.G.set.duel,1);assert.deepEqual(qa.seats.map(x=>x.you),[true,false]);assert.deepEqual(qb.seats.map(x=>x.you),[false,true]);
+  ok('matchmaking: first player waits, second is paired into a started Duel, both see the same room');
+  r=await call('queue','tA',{name:'Alice',client});assert.ok(r.body.waiting);now+=61000;r=await call('queue','tB',{name:'Bob',client});assert.ok(r.body.waiting,'an expired wait is not paired');
+  await call('queueCancel','tB',{});r=await call('queue','tA',{name:'Alice',client});assert.ok(r.body.waiting,'cancel removes you from the queue');
+  ok('queue entries expire after 60 s, and Cancel removes you');
   console.log(`SKYLINE DUEL ONLINE ${n} checks`);
 })().catch(e=>{console.error(e);process.exit(1)});

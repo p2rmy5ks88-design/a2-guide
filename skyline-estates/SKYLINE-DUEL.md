@@ -98,3 +98,16 @@ firebase deploy --project eko-estates --config firebase.json --only functions:sk
 bash lc-test-access.sh on 3        # two test accounts, 3 hours; global Living City online stays off
 ```
 The two-phone test needs the Stage 4 app screens (queue, timer ring, Duel lobby). Do it after Stage 4.
+
+## Stage 4 status (matchmaking and app screens, done)
+- **Server:**
+  - `/v3/lc/queue` is first come, first served: one waiting place per pool (test or live). Calling again keeps your place or collects your match.
+  - Waits expire after 60 seconds; `/v3/lc/queue-cancel` removes you from the queue.
+  - A paired match starts at once as a Duel room.
+  - The `state` response now includes `turnMsLeft` for Duel rooms.
+- **App, Play online → Living City:**
+  - a new **Skyline Duel** card with **Find a match** (search screen with a timer, Cancel, and "Practice instead" after 45 seconds) and **Practice** (offline Duel against the computer);
+  - friend challenge: create a room and choose **Skyline Duel** as the mode;
+  - in a Duel, a small ring above the Roll button counts down the 25 seconds; at zero, the app asks the server to play the turn.
+- **Tests:** `tests/skyline-duel-client.cjs` covers two app instances matched through the queue, the timer ring, the timeout, practice, and no errors. `tests/skyline-duel-online.cjs` covers the queue, expiry and cancel. Both run in the Stability gate.
+- **Ready for the two-phone test:** run the owner deployment steps above, switch on test access for both accounts, then on each phone go to Play online → Living City rooms (test) → Skyline Duel → Find a match.

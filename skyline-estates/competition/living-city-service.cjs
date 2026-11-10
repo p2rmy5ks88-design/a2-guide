@@ -63,11 +63,27 @@ function createLivingCityService({db,verifyIdToken,root=path.resolve(__dirname,'
       try{st=await eng().act(prev,uid,{revision:b.revision,answer:b.answer})}catch(e){if(e instanceof EngineError){if(r.test)await bump(r.code,'rejected',e.code);fail(e.status,e.code)}throw e}
       const audit=r.test?tally(r.audit,'answered',prev.boundary&&prev.boundary.type,b.answer.assets):r.audit;
       const next={...r,match:JSON.stringify(st),status:st.over?'finished':'playing',revision:r.revision+1,...(audit?{audit}:{}),...(r.duel?{deadline:clock()+DUEL_TURN_MS}:{})};await commit(r.code,r.revision,next);return{game:eng().view(st,uid)}},
+    // Skyline Duel matchmaking (Stage 4, first come first served; ratings come in Stage 5). One waiting slot per pool
+    // (test or live). Calling again refreshes your place and returns your match once paired. Entries expire after 60 s.
+    async queue(token,b){requireClient(b&&b.client);const {uid,test}=await admit(token,false);const name=cleanName(b.name),pool='skylineV2/lcq/'+(test?'test':'live');
+      const code=code5();let decision=null;
+      await db.ref(pool).transaction(cur=>{const q={w:null,m:{},...(cur||{})};q.m={...(q.m||{})};decision=null;
+        for(const k of Object.keys(q.m))if(clock()-q.m[k].at>120000)delete q.m[k];
+        if(q.m[uid]){decision={matched:q.m[uid].code};delete q.m[uid];return q}
+        if(q.w&&q.w.uid!==uid&&clock()-q.w.at<60000){decision={pair:q.w};q.m[q.w.uid]={code,at:clock()};q.w=null;return q}
+        q.w={uid,name,at:clock()};decision={waiting:true};return q});
+      if(decision.matched)return{matched:true,code:decision.matched};
+      if(decision.waiting)return{waiting:true,seconds:60};
+      const seats=[{uid:decision.pair.uid,name:decision.pair.name},{uid,name}];let st;
+      try{st=await eng().create({seats,set:{city:'lagos',mode:'timed',rounds:15,duel:1},seed:crypto.randomBytes(12).toString('hex')})}catch(e){if(e instanceof EngineError)fail(e.status,e.code);throw e}
+      await commit(code,null,{v:1,rules:2,code,host:decision.pair.uid,city:'lagos',status:'playing',seats,created:clock(),revision:2,duel:true,queued:true,deadline:clock()+DUEL_TURN_MS,match:JSON.stringify(st),...(test?{test:true}:{})});
+      return{matched:true,code}},
+    async queueCancel(token){const uid=await identity(token);for(const pool of ['test','live'])await db.ref('skylineV2/lcq/'+pool).transaction(cur=>{if(!cur)return cur;const q={...cur,m:{...(cur.m||{})}};if(q.w&&q.w.uid===uid)q.w=null;delete q.m[uid];return q});return{ok:true}},
     // Skyline Duel turn timer: once the deadline has passed, either player may ask the server to let the AI play the idle
     // player's turn; the third timeout in a row forfeits. The server's clock decides, never the caller's.
     async timeout(token,b){const uid=await identity(token);const r=await member(b&&b.code,uid);if(!r.duel)fail(400,'not-a-duel');if(r.status!=='playing')fail(409,'not-playing');
       if(!Number.isSafeInteger(b.revision))fail(400,'invalid-action');const prev=JSON.parse(r.match);if(b.revision!==prev.revision)fail(409,'stale-revision');
       if(clock()<r.deadline)fail(409,'not-yet');let st;try{st=await eng().timeout(prev)}catch(e){if(e instanceof EngineError)fail(e.status,e.code);throw e}
       const next={...r,match:JSON.stringify(st),status:st.over?'finished':'playing',revision:r.revision+1,deadline:clock()+DUEL_TURN_MS};await commit(r.code,r.revision,next);return{game:eng().view(st,uid),forfeit:st.forfeit??null}},
-    async state(token,b){const uid=await identity(token);const r=await member(b&&b.code,uid);return{...lobbyView(r,uid),game:r.match?eng().view(JSON.parse(r.match),uid):null}}}}
+    async state(token,b){const uid=await identity(token);const r=await member(b&&b.code,uid);return{...lobbyView(r,uid),game:r.match?eng().view(JSON.parse(r.match),uid):null,...(r.duel&&r.status==='playing'?{duel:true,turnMsLeft:Math.max(0,r.deadline-clock())}:{})}}}}
 module.exports={createLivingCityService,LC_CLIENT_MIN,DUEL_TURN_MS};
