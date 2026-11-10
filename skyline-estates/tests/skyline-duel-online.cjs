@@ -66,6 +66,10 @@ const pick=b=>{const o=b.options||{};if(b.type==='actions')return o.keys.include
     for(let k=0;k<200;k++){const v=(await call('state','tA',{code:c})).body.game;if(v.over)break;const who=v.G.players[v.waitingFor].uid;now+=DUEL_TURN_MS+1;
       if(tok[who]===loserTok){await call('timeout',loserTok==='tA'?'tB':'tA',{code:c,revision:v.revision})}else{const vv=(await call('state',tok[who],{code:c})).body.game;await call('act',tok[who],{code:c,revision:vv.revision,answer:{value:pick(vv.decision)}})}}
     return c};
+  // Live (non-test) rooms are only ranked once the owner switches skylineV2/flags/duelRanked on.
+  const dOff=await quickDuel('tB');r=await call('duelClaim','tA',{code:dOff});assert.deepEqual([r.status,r.body.error],[409,'not-finished']);
+  ok('ranked switch off (default): matchmade Duels are played but not rated or rewarded');
+  db.set('skylineV2/flags',{lcOnline:true,duelRanked:true});now+=20000;
   const d1=await quickDuel('tB');let cl=(await call('duelClaim','tA',{code:d1})).body;assert.equal(cl.won,true);assert.equal(cl.rated,true);assert.ok(cl.after>cl.before);assert.equal(cl.reward.coins,300);
   let cl2=(await call('duelClaim','tA',{code:d1})).body;assert.equal(cl2.alreadyClaimed,true);assert.equal(cl2.reward.coins,0);
   const lb=(await call('duelClaim','tB',{code:d1})).body;assert.equal(lb.won,false);assert.equal(lb.reward.coins,80);assert.ok(lb.after<lb.before);

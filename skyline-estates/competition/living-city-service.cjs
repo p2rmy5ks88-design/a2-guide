@@ -21,11 +21,11 @@ function createLivingCityService({db,verifyIdToken,root=path.resolve(__dirname,'
   const identity=identityVerifier(verifyIdToken);
   async function claims(token){const uid=await identity(token);let c={};try{c=await verifyIdToken(token,true)||{}}catch{}return{uid,c}}
   const emailHash=c=>{const prov=c.firebase&&c.firebase.sign_in_provider;if(!c.email||prov==='anonymous'||prov==='custom')return null;if(prov==='password'&&c.email_verified!==true)return null;return crypto.createHash('sha256').update(String(c.email).trim().toLowerCase()).digest('hex')};let engine=null;const eng=()=>engine||(engine=createEngine(root));
-  let flagCache={at:-1e12,on:false,test:null};
+  let flagCache={at:-1e12,on:false,test:null,ranked:false};
   async function read(p){let v=null;await db.ref(p).transaction(cur=>{v=cur;return cur});return v}
-  async function flags(){if(clock()-flagCache.at<flagTtlMs)return flagCache;let on=false,test=null;try{const f=await read('skylineV2/flags');on=!!(f&&f.lcOnline===true);const t=f&&f.lcTest;
+  async function flags(){if(clock()-flagCache.at<flagTtlMs)return flagCache;let on=false,test=null,ranked=false;try{const f=await read('skylineV2/flags');on=!!(f&&f.lcOnline===true);ranked=!!(f&&f.duelRanked===true);const t=f&&f.lcTest;
       if(plain(t)&&t.on===true&&Number.isSafeInteger(t.until)&&t.until>clock()&&t.until-clock()<=864e5&&plain(t.testers))test={until:t.until,testers:Object.keys(t.testers).filter(k=>t.testers[k]===true&&/^[0-9a-f]{64}$/.test(k))}}catch{on=false;test=null}
-    flagCache={at:clock(),on,test};return flagCache}
+    flagCache={at:clock(),on,test,ranked};return flagCache}
   async function flag(){return(await flags()).on}
   async function admit(token,roomTest){const f=await flags();if(f.on&&!roomTest)return{uid:await identity(token),test:false};
     if(!f.test)fail(403,'living-city-online-disabled');const {uid,c}=await claims(token);const h=emailHash(c);if(!h||!f.test.testers.includes(h))fail(403,'living-city-online-disabled');return{uid,test:true}}
@@ -40,7 +40,8 @@ function createLivingCityService({db,verifyIdToken,root=path.resolve(__dirname,'
   // Ranked Skyline Duel (matchmade rooms only): rating, season record and rewards, written once per match.
   const duelBase=(test,season)=>'skylineV2/duel/'+(test?'test':'live')+'/s'+season;
   const today=()=>new Date(clock()).toISOString().slice(0,10);
-  async function settleDuel(room,st){if(!room.queued||!st.over)return;const season=DR.seasonOf(room.created||clock()),base=duelBase(!!room.test,season);
+  async function settleDuel(room,st){if(!room.queued||!st.over)return;if(!room.test&&!(await flags()).ranked)return;   // live ranking waits for the owner's switch: skylineV2/flags/duelRanked
+    const season=DR.seasonOf(room.created||clock()),base=duelBase(!!room.test,season);
     const res=eng().result(st),humans=room.seats.map(s=>s.uid);if(humans.length!==2)return;
     let first=false;await db.ref(base+'/m/'+room.code).transaction(cur=>{if(cur){first=false;return cur}first=true;return{at:clock(),uids:humans,winner:res.winner,forfeit:st.forfeit??null}});if(!first)return;
     const pairKey=[...humans].sort().join('~').replace(/[^A-Za-z0-9_~-]/g,'_');let pairCount=0;
