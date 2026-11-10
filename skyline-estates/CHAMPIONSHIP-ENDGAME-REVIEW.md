@@ -33,3 +33,47 @@ The 36-home-permit regression reproduces a possible 2-player shortage and verifi
 - **City Boom not implemented:** rent/Payday escalation remains experimental only.
 - No production deployment, main merge or native release until owner review.
 - Human playtesting should decide whether the 30-round default is best, and should listen to the recorded voice on a phone.
+
+## Follow-up completion audit
+
+The full Stability workflow exposed an obsolete native Coach manifest assertion
+(853 rather than 858 recordings). The branch now checks all five exact phrase
+mappings as well as bundle presence. Championship component scoring, legacy and
+online ranking isolation, permit exhaustion, mobile layouts and final-turn
+completion are now included in the required Stability gate.
+
+The scoring regression now checks actual rankings with a fixture where the
+Championship and legacy winners differ. It also runs the real offline driver
+with each of three possible starting seats and verifies that every player gets
+exactly the scheduled final turns.
+
+### Score-weight sensitivity (300 matches per player count, seeds 93000–93299)
+
+These are alternative rankings of the **same final portfolios**, not AI agents
+retrained for alternative rules. The trade-resistant seat remains seat 0.
+
+| Players | Cash leader wins, current | Winners changed, no district premium | Winners changed, double district premium | Winners changed, +20% building value |
+|---|---:|---:|---:|---:|
+| 2 | 61.0% | 0.7% | 0.7% | 1.7% |
+| 3 | 55.0% | 2.7% | 0.3% | 1.7% |
+| 4 | 53.3% | 1.3% | 0.7% | 1.7% |
+
+No tested alternative provides a clear reason to change the pilot formula.
+Cash leadership alone is not a test of an intentional cash-hoarding strategy.
+All 900 matches finished without simulator errors or round-cap stalls.
+
+The guarded two-player sample favored the last mover (61.7% of wins). In a
+separate **1,000 all-AI two-player matches** (seeds 93000–93999), first/last-mover
+wins were **45.7% / 54.3%**, with seat 0/1 wins **52.9% / 47.1%**. This deserves
+human testing; the proxy player and the existing last-player starting bonus
+are confounders. The audit does not establish that turn order is unbiased.
+
+Normal-speed rendered timing checks now cover desktop and phone-sized layouts,
+2/3/4 players, and count actual completed turns rather than reporting only the
+configured round limit. These remain automated AI timing samples; human decision
+time and real-device performance remain unmeasured. The latest workflow result
+is the authority for whether these checks passed.
+
+City Boom remains excluded: finite Championship already resolves indefinite
+matches, and the audit does not establish a benefit from extra rent pressure.
+No main merge, production deployment or native upload is part of this audit.

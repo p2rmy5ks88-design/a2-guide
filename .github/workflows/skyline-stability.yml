@@ -53,7 +53,7 @@ jobs:
       - name: Core gameplay and menus
         run: |
           # Keep the previously audited test commands, but identify failing checks.
-          t(){ local log="$RUNNER_TEMP/last-test.log"; local cap=300; case "$1" in *complete-matches.cjs*|*security/service/*-browser.test.cjs*) cap=900;; esac; echo "RUNNING: $1"; if ! timeout --signal=TERM --kill-after=10s "${cap}s" bash -c "$1" >"$log" 2>&1; then cat "$log"; msg=$(grep -v '^\s\{3,\}' "$log" | tail -c 3500 | sed -e 's/%/%25/g' -e 's/\r/%0D/g' -e ':a;N;$!ba;s/\n/%0A/g'); ttl=$(printf %s "${1:0:120}" | sed "s/[:,]/ /g"); echo "::error title=Failed $ttl::$msg"; exit 1; fi; tail -n 3 "$log"; }
+          t(){ local log="$RUNNER_TEMP/last-test.log"; local cap=300; case "$1" in *complete-matches.cjs*|*championship-review-browser.cjs*|*security/service/*-browser.test.cjs*) cap=900;; esac; echo "RUNNING: $1"; if ! timeout --signal=TERM --kill-after=10s "${cap}s" bash -c "$1" >"$log" 2>&1; then cat "$log"; msg=$(grep -v '^\s\{3,\}' "$log" | tail -c 3500 | sed -e 's/%/%25/g' -e 's/\r/%0D/g' -e ':a;N;$!ba;s/\n/%0A/g'); ttl=$(printf %s "${1:0:120}" | sed "s/[:,]/ /g"); echo "::error title=Failed $ttl::$msg"; exit 1; fi; tail -n 3 "$log"; }
           t 'node skyline-estates/security/service/room-entry-browser.test.cjs "$RUNNER_TEMP/skyline-room-entry-browser.json"'
           t 'node skyline-estates/security/service/lobby-browser.test.cjs "$RUNNER_TEMP/skyline-lobby-browser.json"'
           t 'node skyline-estates/tests/accounts-browser.cjs "$RUNNER_TEMP/skyline-accounts-browser.json"'
@@ -121,7 +121,7 @@ jobs:
       - name: Persistent management and trade browser
         run: |
           # Keep the previously audited test commands, but identify failing checks.
-          t(){ local log="$RUNNER_TEMP/last-test.log"; local cap=300; case "$1" in *complete-matches.cjs*|*security/service/*-browser.test.cjs*) cap=900;; esac; echo "RUNNING: $1"; if ! timeout --signal=TERM --kill-after=10s "${cap}s" bash -c "$1" >"$log" 2>&1; then cat "$log"; msg=$(grep -v '^\s\{3,\}' "$log" | tail -c 3500 | sed -e 's/%/%25/g' -e 's/\r/%0D/g' -e ':a;N;$!ba;s/\n/%0A/g'); ttl=$(printf %s "${1:0:120}" | sed "s/[:,]/ /g"); echo "::error title=Failed $ttl::$msg"; exit 1; fi; tail -n 3 "$log"; }
+          t(){ local log="$RUNNER_TEMP/last-test.log"; local cap=300; case "$1" in *complete-matches.cjs*|*championship-review-browser.cjs*|*security/service/*-browser.test.cjs*) cap=900;; esac; echo "RUNNING: $1"; if ! timeout --signal=TERM --kill-after=10s "${cap}s" bash -c "$1" >"$log" 2>&1; then cat "$log"; msg=$(grep -v '^\s\{3,\}' "$log" | tail -c 3500 | sed -e 's/%/%25/g' -e 's/\r/%0D/g' -e ':a;N;$!ba;s/\n/%0A/g'); ttl=$(printf %s "${1:0:120}" | sed "s/[:,]/ /g"); echo "::error title=Failed $ttl::$msg"; exit 1; fi; tail -n 3 "$log"; }
           t 'node skyline-estates/security/service/management-browser.test.cjs "$RUNNER_TEMP/skyline-management-browser.json"'
       - name: Upload test diagnostics
         if: always()
@@ -150,7 +150,7 @@ jobs:
       - name: Online game-control and trade parity
         run: |
           # Keep the previously audited test commands, but identify failing checks.
-          t(){ local log="$RUNNER_TEMP/last-test.log"; local cap=300; case "$1" in *complete-matches.cjs*|*security/service/*-browser.test.cjs*) cap=900;; esac; echo "RUNNING: $1"; if ! timeout --signal=TERM --kill-after=10s "${cap}s" bash -c "$1" >"$log" 2>&1; then cat "$log"; msg=$(grep -v '^\s\{3,\}' "$log" | tail -c 3500 | sed -e 's/%/%25/g' -e 's/\r/%0D/g' -e ':a;N;$!ba;s/\n/%0A/g'); ttl=$(printf %s "${1:0:120}" | sed "s/[:,]/ /g"); echo "::error title=Failed $ttl::$msg"; exit 1; fi; tail -n 3 "$log"; }
+          t(){ local log="$RUNNER_TEMP/last-test.log"; local cap=300; case "$1" in *complete-matches.cjs*|*championship-review-browser.cjs*|*security/service/*-browser.test.cjs*) cap=900;; esac; echo "RUNNING: $1"; if ! timeout --signal=TERM --kill-after=10s "${cap}s" bash -c "$1" >"$log" 2>&1; then cat "$log"; msg=$(grep -v '^\s\{3,\}' "$log" | tail -c 3500 | sed -e 's/%/%25/g' -e 's/\r/%0D/g' -e ':a;N;$!ba;s/\n/%0A/g'); ttl=$(printf %s "${1:0:120}" | sed "s/[:,]/ /g"); echo "::error title=Failed $ttl::$msg"; exit 1; fi; tail -n 3 "$log"; }
           t 'node skyline-estates/security/service/game-controls-browser.test.cjs "$RUNNER_TEMP/skyline-controls-browser.json"'
           t 'node skyline-estates/security/service/web-connection-browser.test.cjs "$RUNNER_TEMP/skyline-web-connection-browser.json"'
           t 'node skyline-estates/security/service/ai-browser.test.cjs "$RUNNER_TEMP/skyline-ai-browser.json"'
@@ -185,13 +185,13 @@ jobs:
       - name: Card, turn and asset parity
         run: |
           # Keep the previously audited test commands, but identify failing checks.
-          t(){ local log="$RUNNER_TEMP/last-test.log"; local cap=300; case "$1" in *complete-matches.cjs*|*security/service/*-browser.test.cjs*) cap=900;; esac; echo "RUNNING: $1"; if ! timeout --signal=TERM --kill-after=10s "${cap}s" bash -c "$1" >"$log" 2>&1; then cat "$log"; msg=$(grep -v '^\s\{3,\}' "$log" | tail -c 3500 | sed -e 's/%/%25/g' -e 's/\r/%0D/g' -e ':a;N;$!ba;s/\n/%0A/g'); ttl=$(printf %s "${1:0:120}" | sed "s/[:,]/ /g"); echo "::error title=Failed $ttl::$msg"; exit 1; fi; tail -n 3 "$log"; }
+          t(){ local log="$RUNNER_TEMP/last-test.log"; local cap=300; case "$1" in *complete-matches.cjs*|*championship-review-browser.cjs*|*security/service/*-browser.test.cjs*) cap=900;; esac; echo "RUNNING: $1"; if ! timeout --signal=TERM --kill-after=10s "${cap}s" bash -c "$1" >"$log" 2>&1; then cat "$log"; msg=$(grep -v '^\s\{3,\}' "$log" | tail -c 3500 | sed -e 's/%/%25/g' -e 's/\r/%0D/g' -e ':a;N;$!ba;s/\n/%0A/g'); ttl=$(printf %s "${1:0:120}" | sed "s/[:,]/ /g"); echo "::error title=Failed $ttl::$msg"; exit 1; fi; tail -n 3 "$log"; }
           t 'node skyline-estates/security/service/card-browser.test.cjs "$RUNNER_TEMP/skyline-card-browser.json"'
           t 'node skyline-estates/security/service/jail-browser.test.cjs "$RUNNER_TEMP/skyline-jail-browser.json"'
           t 'node skyline-estates/tests/timed-finish.cjs'
           t 'node skyline-estates/tests/championship-score.cjs'
           t 'node skyline-estates/tests/endgame-permits.cjs'
-          t 'CHAMP_SCREENS_ONLY=1 node skyline-estates/tests/championship-review-browser.cjs'
+          t 'CHAMP_SPEED=normal node skyline-estates/tests/championship-review-browser.cjs'
           t 'node skyline-estates/security/service/end-browser.test.cjs "$RUNNER_TEMP/skyline-end-browser.json"'
           t 'node skyline-estates/security/service/turn-browser.test.cjs "$RUNNER_TEMP/skyline-turn-browser.json"'
           t 'node skyline-estates/security/service/setup-browser.test.cjs "$RUNNER_TEMP/skyline-setup-browser.json"'
@@ -223,7 +223,7 @@ jobs:
       - name: Offline recovery and complete matches
         run: |
           # Keep the previously audited test commands, but identify failing checks.
-          t(){ local log="$RUNNER_TEMP/last-test.log"; local cap=300; case "$1" in *complete-matches.cjs*|*security/service/*-browser.test.cjs*) cap=900;; esac; echo "RUNNING: $1"; if ! timeout --signal=TERM --kill-after=10s "${cap}s" bash -c "$1" >"$log" 2>&1; then cat "$log"; msg=$(grep -v '^\s\{3,\}' "$log" | tail -c 3500 | sed -e 's/%/%25/g' -e 's/\r/%0D/g' -e ':a;N;$!ba;s/\n/%0A/g'); ttl=$(printf %s "${1:0:120}" | sed "s/[:,]/ /g"); echo "::error title=Failed $ttl::$msg"; exit 1; fi; tail -n 3 "$log"; }
+          t(){ local log="$RUNNER_TEMP/last-test.log"; local cap=300; case "$1" in *complete-matches.cjs*|*championship-review-browser.cjs*|*security/service/*-browser.test.cjs*) cap=900;; esac; echo "RUNNING: $1"; if ! timeout --signal=TERM --kill-after=10s "${cap}s" bash -c "$1" >"$log" 2>&1; then cat "$log"; msg=$(grep -v '^\s\{3,\}' "$log" | tail -c 3500 | sed -e 's/%/%25/g' -e 's/\r/%0D/g' -e ':a;N;$!ba;s/\n/%0A/g'); ttl=$(printf %s "${1:0:120}" | sed "s/[:,]/ /g"); echo "::error title=Failed $ttl::$msg"; exit 1; fi; tail -n 3 "$log"; }
           t 'node skyline-estates/tests/offline-worker.cjs'
           t 'node skyline-estates/tests/offline-startup.cjs "$RUNNER_TEMP/skyline-offline-startup.json"'
           t 'node skyline-estates/tests/session-lifecycle.cjs'

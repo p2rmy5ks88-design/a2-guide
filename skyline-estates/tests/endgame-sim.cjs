@@ -50,7 +50,7 @@ const MATCH=`(async(seed,lc,set,players,human)=>{let s=seed;Math.random=()=>{s=(
  return JSON.stringify({seed,err:err&&String(err),rounds:G.round,outcome:alive().length<=1?'bankruptcy':(G.set.mode==='timed'?'round-limit':'stalled'),bankrupt:bank,
    winner:w.id,first:G.first||0,comeback:leaderHalf!=null&&leaderHalf!==w.id?1:0,houses:G.houses,towers:G.hotels,zeroFrom:M.zeroFrom,zeroRounds:M.zeroRounds,homeBlockedRounds:M.homeBlockedRounds,homeBlockedOpportunities:M.homeBlockedOpportunities,levels:lv,
    landmarks:Object.keys(G.lm||{}).length,builds:M.builds,sells:M.sells,trades:M.trades,auctions:M.auctions,levelsAt:M.levelsAt,cashShareAt:M.cashShareAt,
-   netWorth:nw,cash,gap:(()=>{const a=[...nw].sort((x,y)=>y-x);return a[0]?+((a[0]-(a[1]||0))/a[0]).toFixed(2):0})(),
+   scores:G.players.map(p=>skylineChampionshipScore(p)),bankruptSeats:G.players.map(p=>!!p.bankrupt),netWorth:nw,cash,gap:(()=>{const a=[...nw].sort((x,y)=>y-x);return a[0]?+((a[0]-(a[1]||0))/a[0]).toFixed(2):0})(),
    owned:G.own.filter((o,i)=>o.o>=0&&SQ[i].t==='prop').length,monopolies:Object.keys(GROUPS).filter(g=>G.players.some(p=>!p.bankrupt&&ownsAll(p.id,g))).length})})`;
 (async()=>{
   const rt=createRuntime(readSources(ROOT));const play=rt.run(MATCH);const rows=[];const t0=Date.now();

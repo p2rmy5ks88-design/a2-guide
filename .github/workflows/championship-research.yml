@@ -39,6 +39,8 @@ jobs:
               SIM_PLAYERS="$players" SIM_HUMAN=1 node skyline-estates/tests/endgame-sim.cjs "$mode" 100 90000 | tee "/tmp/championship-results/${mode}-${players}p-guarded.log"
             done
           done
+      - name: Compare score weights and turn-order outcomes on identical trajectories
+        run: node skyline-estates/tests/championship-balance-audit.cjs | tee /tmp/championship-results/score-weight-audit.log
       - name: Audit Classic and Living City long matches
         shell: bash
         run: |

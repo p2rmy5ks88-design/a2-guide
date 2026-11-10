@@ -58,20 +58,21 @@ async function open(browser,vp,ui){
    }
  }
  // Fast speed with real browser async flow and AI moves: measured, NOT simulated rounds.
- for(const seats of (process.env.CHAMP_SCREENS_ONLY==='1'?[]:[2,3,4])){
-   const page=await open(browser,{width:844,height:390},'dark');
-   await page.evaluate(seats=>{
+ for(const width of (process.env.CHAMP_SCREENS_ONLY==='1'?[]:[844,1366]))for(const seats of [2,3,4]){
+   const page=await open(browser,{width,height:width===844?390:768},'dark');
+   await page.evaluate(({seats,speed})=>{
      FAST=true;GEN++;
-     newGame({cash:1600,set:{ai:'normal',speed:'fast',city:'lagos',mode:'timed',rounds:4,championship:1,lc:true,pot:false},
+     newGame({cash:1600,set:{ai:'normal',speed,city:'lagos',mode:'timed',rounds:4,championship:1,lc:true,pot:false},
        players:Array.from({length:seats},(_,i)=>({name:NAMES[i],tok:TOKENS[i],col:PCOL[i],ai:true,tl:1}))});
      FAST=false;document.querySelector('#title').hidden=true;document.querySelector('#ui').hidden=false;
+     window.__champTurns=0;const original=playTurn;playTurn=async function(p){window.__champTurns++;return original(p)};
      window.__champStarted=performance.now();void run();
-   },seats);
+   },{seats,speed:process.env.CHAMP_SPEED||'normal'});
    await page.waitForFunction(()=>G&&G.over,null,{timeout:210000});
    const d=await page.evaluate(()=>({seconds:+((performance.now()-window.__champStarted)/1000).toFixed(2),
-     roundsCompleted:G.set.rounds,turns:G.set.rounds*G.players.length,players:G.players.length}));
+     roundsCompleted:G.round-1,turns:window.__champTurns,players:G.players.length,speed:G.set.speed,viewport:innerWidth}));
    assert.equal(d.roundsCompleted,4,'all scheduled rounds should be completed');
-   assert.equal(d.players,seats);
+   assert.equal(d.players,seats);assert.equal(d.turns,4*seats,'all players take every scheduled turn');
    report.duration.push(d);
    console.log('BROWSER DURATION '+JSON.stringify(d));
    await page.close();
