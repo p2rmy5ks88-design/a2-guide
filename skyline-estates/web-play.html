@@ -2879,7 +2879,7 @@ function executeTrade(t){
 
 /* ================= AI ================= */
 function aiReserve(p){let threat=0;for(let i=0;i<40;i++){const o=G.own[i];if(o.o>=0&&o.o!==p.id&&!o.m&&SQ[i].t==='prop'&&!P(o.o).bankrupt)threat=Math.max(threat,o.h?SQ[i].r[o.h]:ownsAll(o.o,SQ[i].g)?SQ[i].r[0]*2:0)}
-  return Math.max(lvl().reserve,Math.min(threat*.55,650))}
+  const reserve=Math.max(lvl().reserve,Math.min(threat*.55,650));const left=typeof skylineChampionshipActive==='function'&&skylineChampionshipActive()?G.set.rounds-G.round+1:Infinity;return p.ai&&left>=1&&left<=5?Math.round(reserve*.75):reserve}
 function aiValue(p,i){const s=SQ[i];let v=s.p;
   if(s.t==='prop'){const gr=GROUPS[s.g],mine=gr.filter(j=>G.own[j].o===p.id).length,others=new Set(gr.map(j=>G.own[j].o).filter(o=>o>=0&&o!==p.id));
     if(others.size===0&&mine===gr.length-1)v*=1.9;else if(others.size===0&&mine>0)v*=1.3;
@@ -2930,7 +2930,7 @@ async function aiPostTurn(p){
     if(G.set.ai==='easy'&&(window.SkylineSocial?.random('ai')??Math.random())<.4)break;
     c.sort((a,b)=>G.own[a].h-G.own[b].h||SQ[b].p-SQ[a].p);
     build(p.id,c[0]);renderRoster();if(!FAST){toast(`${p.name} builds on ${SQ[c[0]].n}`);camFollow(c[0],500)}await sleep(450)}
-  if(G.round-p.lastOffer>=3&&(window.SkylineSocial?.random('ai')??Math.random())<.5){const t=aiProposeTrade(p);if(t){p.lastOffer=G.round;
+  const finalFive=skylineChampionshipActive()&&G.set.rounds-G.round+1<=5;if(G.round-p.lastOffer>=(finalFive?1:3)&&(window.SkylineSocial?.random('ai')??Math.random())<(finalFive?.8:.5)){const t=aiProposeTrade(p);if(t){p.lastOffer=G.round;
     if(!FAST)toast(`${p.name} wants to make a deal with ${P(t.to).name}`);await sleep(600);
     const ok=await resolveTrade(t);if(!ok)p.declined[t.key]=G.round}}
 }
@@ -2990,7 +2990,19 @@ async function run(){
     G.over=true;await finish();
   }catch(e){if(!(e instanceof Abort)){console.error(e);if(window.__onErr)window.__onErr(e)}}
 }
-function standings(){return [...G.players].sort((a,b)=>(a.bankrupt-b.bankrupt)||netWorth(b)-netWorth(a))}
+function skylineChampionshipActive(){return !!(G&&G.set&&G.set.mode==='timed'&&G.set.championship===1&&!G.online)}
+function skylineChampionshipScore(p){
+  const sc={cash:Math.round(p.cash),properties:0,buildings:0,districts:0,landmarks:0,total:0};
+  if(p.bankrupt)return sc;
+  for(const i of propsOf(p.id)){const o=G.own[i],s=SQ[i];
+    sc.properties+=o.m?s.p/2:s.p;sc.buildings+=o.h*(s.h||0)}
+  for(const g of Object.keys(GROUPS)){if(!ownsAll(p.id,g))continue;
+    sc.districts+=Math.round(GROUPS[g].reduce((t,i)=>t+SQ[i].p,0)*.10);
+    const landmark=G.lm&&G.lm[g];
+    if(landmark&&landmark.pid===p.id&&G.own[landmark.i].o===p.id)
+      sc.landmarks+=Math.round(SQ[landmark.i].p*.25/5)*5}
+  sc.total=Math.round(sc.cash+sc.properties+sc.buildings+sc.districts+sc.landmarks);return sc}
+function standings(){return typeof skylineChampionshipActive!=='function'||!skylineChampionshipActive()?[...G.players].sort((a,b)=>(a.bankrupt-b.bankrupt)||netWorth(b)-netWorth(a)):[...G.players].sort((a,b)=>(a.bankrupt-b.bankrupt)||skylineChampionshipScore(b).total-skylineChampionshipScore(a).total||netWorth(b)-netWorth(a)||a.id-b.id)}
 async function finishOld(){
   G.over=true;clearSave();if(G.online&&NET.on){NET.ref.update({status:'over',at:Date.now()}).catch(()=>{});if(G.code&&NET.backend==='firebase'&&FIRE){const c=G.code;FIRE.forget(c);setTimeout(()=>FIRE.purge(c),20000)}}if(FAST)return;renderRoster();updateTools();setPrompt('Game over.');$('#acts').innerHTML='';
   const st=standings(),w=st[0];achGameEnd(w);sfx('win');if(S3)S3.marker.visible=false;confetti();camOverview(w.pos,1200);
@@ -3167,7 +3179,7 @@ function renderRoster(){
     const me=G.online&&p.uid&&p.uid===NET.me;
     d.innerHTML=`${cur?'<span class="nowtag">PLAYING</span>':''}<div class="pt">${p.tok}</div><div class="pinfo"><div class="pn">${esc(p.name)}${me?'<span class="tag you">You</span>':''}${lh?`<span class="tag lv">Lv ${lvlOf(PREF.xp)}</span>`:''}${p.ai?'<span class="tag">AI</span>':''}${p.inJail?'<span class="tag jail">Lockup</span>':''}${p.bankrupt?'<span class="tag">Out</span>':''}</div><div class="pc">${fmt(p.cash)}</div>${props?`<div class="pg">${props}</div>`:''}</div>`;
     d.onclick=()=>badgeTap(p);R.append(d)});
-  {const e=evDef();$('#round').textContent='Round '+G.round+(G.set.mode==='timed'?' of '+G.set.rounds:'')+(G.set.pot&&G.pot?' · Jackpot '+fmt(G.pot):'')+` · 🏠 ${G.houses} · 🏙️ ${G.hotels} · 🏷️ ${forSale()}`+(e?' · '+evText(e,'t'):'')}
+  {const e=evDef();$('#round').textContent='Round '+G.round+(G.set.mode==='timed'?' of '+G.set.rounds+(skylineChampionshipActive()&&G.round<=G.set.rounds&&G.set.rounds-G.round<5?' · 🔔 '+(G.set.rounds-G.round===0?'FINAL ROUND':(G.set.rounds-G.round+1)+' ROUNDS LEFT'):''):'')+(G.set.pot&&G.pot?' · Jackpot '+fmt(G.pot):'')+` · 🏠 ${G.houses} · 🏙️ ${G.hotels} · 🏷️ ${forSale()}`+(e?' · '+evText(e,'t'):'')}
   tok3.forEach((t,i)=>{t.visible=!P(i).bankrupt});
   $('#ui').style.setProperty('--turn',G.over?'transparent':P(G.turn).col);
   pushState();achScan();
@@ -3490,7 +3502,7 @@ const RULE_INFO=[['minigames','Mini-games','A quiz about the country you’re pl
 const CASH_OPTS=[1200,1600,2000];
 const SUPPORT_EMAIL=(window.SKYLINE_CONFIG&&window.SKYLINE_CONFIG.supportEmail)||'';
 const PRIVACY_URL='https://p2rmy5ks88-design.github.io/a2-guide/skyline-estates/privacy.html';
-const MODES=[['classic','Classic','Play until one landlord is left standing.'],['quick','Quick deal','Everyone starts with 2 random properties. The first bankruptcy ends the game and the richest wins.'],['timed','Round limit','Play a set number of rounds. The richest landlord wins.']];
+const MODES=[['classic','Classic Endurance','Unlimited rounds. Play until one landlord is left standing.'],['quick','Quick deal','Everyone starts with 2 random properties. The first bankruptcy ends the game and the richest wins.'],['timed','Skyline Championship','Play a fixed number of rounds. Best portfolio wins unless bankruptcy comes first.']];
 /* the player's own name, shared by the first home-screen slot and online play */
 function myName(){const n=(PREF.nick||'').trim()||(PREF.slots&&PREF.slots[0]&&PREF.slots[0].name||'').trim();return n&&!NAMES.includes(n)?n:(PREF.nickSet?n:'')}
 function keepName(n,tok){n=(n||'').trim().slice(0,12);PREF.nick=n;PREF.nickSet=true;PREF.tok=tok;setup.slots[0].name=n;if(tok&&TOKENS.includes(tok))setup.slots[0].tok=tok;saveSlot(0,setup.slots[0]);savePref()}
@@ -4955,7 +4967,7 @@ async function finish(){
   const sts=standings(),w=sts[0];achGameEnd(w);const res=progressGameEnd(w);sfx('win');if(S3)S3.marker.visible=false;confetti();if(hasLvl(15))setTimeout(confetti,700);fireworks();camOverview(w.pos,1200);
   const hl=highlights(),lv=lvlOf(PREF.xp),a=xpFor(lv),b=xpFor(lv+1),L=LEAGUES[leagueIdx()],S=season(),tier=seasonTierNow();
   const k=await modal({cls:'wide',html:`<div class="mh">${esc(w.name)} is the landlord of ${esc(CITY.name)}!</div>
-    <div class="endgrid"><div><div class="mtxt muted">Final standings</div><div class="stand">${sts.map((p,i)=>`<div><em>${i+1}</em><i style="--pc:${p.col}">${p.tok}</i><span>${esc(p.name)}${p.bankrupt?' · bankrupt':''}</span><span>${fmt(p.bankrupt?0:netWorth(p))}</span></div>`).join('')}</div></div>
+    <div class="endgrid"><div><div class="mtxt muted">${skylineChampionshipActive()?'Final Championship Score':'Final standings'}</div><div class="stand">${sts.map((p,i)=>`<div><em>${i+1}</em><i style="--pc:${p.col}">${p.tok}</i><span>${esc(p.name)}${p.bankrupt?' · bankrupt':''}</span><span>${fmt(p.bankrupt?0:skylineChampionshipActive()?skylineChampionshipScore(p).total:netWorth(p))}</span></div>`).join('')}</div></div>
     <div>${hl.length?`<div class="mtxt muted">Highlights</div><div class="hls">${hl.map(h=>`<div><i>${h[0]}</i><span><b>${esc(h[1])}</b><small>${esc(h[2])}</small></span></div>`).join('')}</div>`:''}
     ${res?`<div class="xpcard"><div class="rewrow"><span class="rew"><b>+${XPGAME}</b><small>XP</small></span><span class="rew coin"><b>+${res.coins}</b><small>${COIN} coins</small></span><span class="rew"><b>${res.tr>0?'+':''}${res.tr}</b><small>🏆 trophies</small></span></div>
       <div class="xprow"><span>Level ${lv} · ${rankOf(lv)}</span><span>${L.icon} ${L.name} · ${PREF.trophies} 🏆</span></div><div class="xpbar"><i style="width:${Math.min(100,(PREF.xp-a)/(b-a)*100)}%"></i></div>
@@ -5291,7 +5303,7 @@ function paneP(T){const saved=loadSave(),c=CITY_DATA[setup.city],C=countryOf(set
   T.querySelector('#pCity').onclick=()=>homeTab('world');
   if(saved)T.querySelector('#tCont').onclick=()=>{initAudio();startWith(saved)};
   const on=T.querySelector('#tOnline');if(on)on.onclick=()=>{initAudio();openOnline()};
-  T.querySelector('#qAI').onclick=()=>{const me=setup.slots[0];startFromSetup(T,setup.slots.map((s,i)=>({...s,type:i===0?'human':i<4?'ai':'off',tok:i===0?me.tok:s.tok})))};
+  T.querySelector('#qAI').onclick=()=>{const me=setup.slots[0];startFromSetup(T,setup.slots.map((s,i)=>({...s,type:i===0?'human':i<4?'ai':'off',tok:i===0?me.tok:s.tok})),{mode:'timed',rounds:30,championship:1})};
   T.querySelector('#qPP').onclick=()=>{setup.slots.forEach((s,i)=>s.type=i<2?'human':s.type==='human'?'off':s.type);homeTab('custom');toast('Set each friend to Human, then tap Start game')};
   T.querySelector('#qCustom').onclick=()=>homeTab('custom');T.querySelector('#qSeason').onclick=()=>homeTab('season')}
 const segIn=(T,id,opts,get,set)=>{const E=T.querySelector(id);E.innerHTML='';opts.forEach(([v,l])=>{const b=el('button',get()===v?'on':'',l);b.onclick=()=>{set(v);segIn(T,id,opts,get,set)};E.append(b)})};
@@ -5304,10 +5316,10 @@ function requestGameFullscreen(){
   if(IS_APP)return;
   try{document.documentElement.requestFullscreen?.().then(()=>screen.orientation?.lock?.('landscape')).catch(()=>{})}catch(e){}
 }
-function startFromSetup(T,slots){const act=slotPlayers(slots||setup.slots);
+function startFromSetup(T,slots,overrideSet){const act=slotPlayers(slots||setup.slots);
   if(act.length<2){const m=T.querySelector('#tMsg');if(m)m.textContent='Pick at least two players.';return}
   const toks=new Set();act.forEach(s=>{if(toks.has(s.tok))s.tok=unlockedTokens().find(t=>!toks.has(t)&&!act.some(a=>a.tok===t))||s.tok;toks.add(s.tok)});
-  initAudio();newGame({cash:setup.cash,set:cfgSet(),players:act.map(s=>({name:(s.name||'').trim()||NAMES[s.i],tok:s.tok,col:PCOL[s.i],ai:s.type==='ai',tl:s.i===0&&s.type==='human'?tokLv(s.tok):1,estate:s.i===0&&s.type==='human'?estateForCity(setup.city):{},fin:s.i===0&&s.type==='human'?myFinish():null,roof:s.i===0&&s.type==='human'?myRoof():null,owner:s.i===0&&s.type==='human',ch:pickChar(s,act)}))});
+  initAudio();const gameSet=Object.assign(cfgSet(),overrideSet||{});if(gameSet.mode==='timed')gameSet.championship=1;newGame({cash:setup.cash,set:gameSet,players:act.map(s=>({name:(s.name||'').trim()||NAMES[s.i],tok:s.tok,col:PCOL[s.i],ai:s.type==='ai',tl:s.i===0&&s.type==='human'?tokLv(s.tok):1,estate:s.i===0&&s.type==='human'?estateForCity(setup.city):{},fin:s.i===0&&s.type==='human'?myFinish():null,roof:s.i===0&&s.type==='human'?myRoof():null,owner:s.i===0&&s.type==='human',ch:pickChar(s,act)}))});
   requestGameFullscreen();
   startWith(G)}
 const myFinish=()=>PREF.eq.fin&&itemOwned('fin',PREF.eq.fin)?PREF.eq.fin:null;
@@ -5325,7 +5337,7 @@ function paneCustom(T){const saved=loadSave(),c=CITY_DATA[setup.city],m=MODES.fi
     d.querySelector('input').oninput=e=>{s.name=e.target.value;saveSlot(i,s)};
     d.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{s.type=b.dataset.t;drawSlots()});S.append(d)})};
   const drawMode=()=>{segIn(T,'#oMode',MODES.map(m=>[m[0],m[1]]),()=>setup.mode,v=>{setup.mode=v;drawMode()});T.querySelector('#oModeTxt').textContent=MODES.find(m=>m[0]===setup.mode)[2];
-    const R=T.querySelector('#oRounds');R.innerHTML=setup.mode==='timed'?'<span>Rounds</span><div class="seg" id="oRn"></div>':'';if(setup.mode==='timed')segIn(T,'#oRn',[[10,'10'],[20,'20'],[30,'30'],[45,'45']],()=>setup.rounds,v=>setup.rounds=v)};
+    const R=T.querySelector('#oRounds');R.innerHTML=setup.mode==='timed'?'<span>Rounds</span><div class="seg" id="oRn"></div>':'';if(setup.mode==='timed')segIn(T,'#oRn',[[20,'20'],[30,'30'],[40,'40'],[45,'45']],()=>setup.rounds,v=>setup.rounds=v)};
   const drawRules=()=>{const E=T.querySelector('#oRules');E.innerHTML='';RULE_INFO.forEach(([k,l,d])=>{const b=el('button','rchip'+(setup.rules[k]?' on':''),`<b>${l}</b><small>${esc(loc(d))}</small>`);b.setAttribute('aria-pressed',setup.rules[k]?'true':'false');b.onclick=()=>{setup.rules[k]=!setup.rules[k];PREF.rules=setup.rules;savePref();drawRules()};E.append(b)})};
   drawSlots();drawMode();drawRules();
   segIn(T,'#oCash',CASH_OPTS.map(v=>[v,fmt(v)]),()=>setup.cash,v=>{setup.cash=v;PREF.cash=v;savePref()});segIn(T,'#oAi',[['easy','Easy'],['normal','Normal'],['hard','Hard']],()=>setup.ai,v=>{setup.ai=v;PREF.ai=v;savePref()});segIn(T,'#oSpd',[['normal','Normal'],['fast','Fast']],()=>setup.speed,v=>{setup.speed=v;PREF.speed=v;savePref()});segIn(T,'#oTimer',[[0,'Off'],[90,'90 sec']],()=>setup.timer,v=>{setup.timer=v;PREF.timer=v;savePref()});
