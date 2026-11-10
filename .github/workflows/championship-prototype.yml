@@ -7,6 +7,7 @@ on:
     paths:
       - .github/workflows/championship-prototype.yml
       - skyline-estates/tools/championship-prototype-patch.py
+      - skyline-estates/tests/championship-score.cjs
   workflow_dispatch:
 
 permissions:
