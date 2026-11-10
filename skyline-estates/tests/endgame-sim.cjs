@@ -15,6 +15,7 @@ const CONFIGS={
 const name=process.argv[2]||'lc_classic',N=+(process.argv[3]||60),SEED=+(process.argv[4]||50000),PLAYERS=+(process.env.SIM_PLAYERS||3);
 const cfg=CONFIGS[name];if(!cfg)throw Error('unknown config '+name+'; one of '+Object.keys(CONFIGS).join(', '));
 const extra=process.env.SIM_SET?JSON.parse(process.env.SIM_SET):{};
+const HUMAN=['1','true','yes'].includes((process.env.SIM_HUMAN||'').toLowerCase());
 const MATCH=`(async(seed,lc,set,players,human)=>{let s=seed;Math.random=()=>{s=(Math.imul(s,1664525)+1013904223)>>>0;return s/4294967296};FAST=true;GEN++;applyCity('lagos');
  newGame({lc,cash:1600,set:Object.assign({ai:'normal',speed:'fast',pot:false,maxRounds:300,city:'lagos',perks:false},set),players:[...Array(players)].map((_,i)=>({name:NAMES[i],tok:TOKENS[i],col:PCOL[i],ai:true,tl:1}))});G.sim=true;
  const M={zeroFrom:null,zeroRounds:0,homeBlockedRounds:0,homeBlockedOpportunities:0,lastRound:0,leaders:{},builds:0,sells:0,trades:0,auctions:0,levelsAt:{},cashShareAt:{}};
@@ -52,11 +53,11 @@ const MATCH=`(async(seed,lc,set,players,human)=>{let s=seed;Math.random=()=>{s=(
    owned:G.own.filter((o,i)=>o.o>=0&&SQ[i].t==='prop').length,monopolies:Object.keys(GROUPS).filter(g=>G.players.some(p=>!p.bankrupt&&ownsAll(p.id,g))).length})})`;
 (async()=>{
   const rt=createRuntime(readSources(ROOT));const play=rt.run(MATCH);const rows=[];const t0=Date.now();
-  for(let k=0;k<N;k++){const r=JSON.parse(await play(SEED+k,cfg.lc,Object.assign({},cfg.set,extra),PLAYERS,!!process.env.SIM_HUMAN));rows.push(r);if(process.env.SIM_ROWS)console.log(JSON.stringify(r))}
+  for(let k=0;k<N;k++){const r=JSON.parse(await play(SEED+k,cfg.lc,Object.assign({},cfg.set,extra),PLAYERS,HUMAN));rows.push(r);if(process.env.SIM_ROWS)console.log(JSON.stringify(r))}
   const avg=f=>+(rows.reduce((n,r)=>n+f(r),0)/rows.length).toFixed(2),pct=f=>Math.round(rows.filter(f).length/rows.length*100);
   const med=a=>{const s=[...a].sort((x,y)=>x-y);return s[Math.floor(s.length/2)]};
   const wins=[...Array(PLAYERS)].map((_,i)=>pct(r=>r.winner===i));
-  const summary={config:name,human:!!process.env.SIM_HUMAN,extra,players:PLAYERS,matches:rows.length,errors:rows.filter(r=>r.err).length,
+  const summary={config:name,human:HUMAN,extra,players:PLAYERS,matches:rows.length,errors:rows.filter(r=>r.err).length,
     avgRounds:avg(r=>r.rounds),medianRounds:med(rows.map(r=>r.rounds)),bankruptcyEnd:pct(r=>r.outcome==='bankruptcy'),stalledAtCap:pct(r=>r.outcome==='stalled'),roundLimitEnd:pct(r=>r.outcome==='round-limit'),
     houseBankEmptyPct:pct(r=>r.zeroFrom!=null),avgFirstEmptyRound:avg(r=>r.zeroFrom??0)&&+(rows.filter(r=>r.zeroFrom!=null).reduce((n,r)=>n+r.zeroFrom,0)/Math.max(1,rows.filter(r=>r.zeroFrom!=null).length)).toFixed(1),
     avgRoundsWithEmptyBank:avg(r=>r.zeroRounds),bankBlockedBuildPct:pct(r=>r.homeBlockedRounds>0),avgBankBlockedRounds:avg(r=>r.homeBlockedRounds),avgBankBlockedOpportunities:avg(r=>r.homeBlockedOpportunities),avgSkyscrapers:avg(r=>r.levels[5]),avgHighRise:avg(r=>r.levels[3]),avgLandmarks:avg(r=>r.landmarks),avgBuildingLevels:avg(r=>r.levels[1]+2*r.levels[2]+3*r.levels[3]+5*r.levels[5]),
