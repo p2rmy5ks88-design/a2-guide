@@ -6,6 +6,7 @@ tools/coach-voice/generate.py. Do not ship an unrecorded or robotic substitute.
 import json, os, subprocess, sys, tempfile
 from pathlib import Path
 import soundfile as sf
+import imageio_ffmpeg
 from kokoro_onnx import Kokoro
 
 ROOT=Path(__file__).resolve().parents[1]
@@ -28,12 +29,11 @@ for key,phrase in lines.items():
         wave,sr=k.create(phrase,voice="af_heart",speed=1.0,lang="en-us")
         with tempfile.NamedTemporaryFile(suffix=".wav") as temp:
             sf.write(temp.name,wave,sr)
-            subprocess.run(["ffmpeg","-loglevel","error","-y","-i",temp.name,
+            subprocess.run([imageio_ffmpeg.get_ffmpeg_exe(),"-loglevel","error","-y","-i",temp.name,
                 "-af","silenceremove=start_periods=1:start_threshold=-50dB,areverse,silenceremove=start_periods=1:start_threshold=-50dB,areverse,loudnorm=I=-16:TP=-1.5",
                 "-ac","1","-ar","24000","-b:a","48k",str(dst)],check=True)
     assert dst.stat().st_size>6000, f"Audio is unexpectedly small: {dst}"
-    subprocess.run(["ffprobe","-v","error","-show_entries","format=duration","-of","csv=p=0",str(dst)],check=True,
-        stdout=subprocess.DEVNULL)
+    subprocess.run([imageio_ffmpeg.get_ffmpeg_exe(),"-loglevel","error","-i",str(dst),"-f","null","-"],check=True)
     manifest["files"][key]=dst.name
     manifest.setdefault("index",{}).setdefault("text",{})[phrase]=key
 manifest["bytes"]=sum((DEST/name).stat().st_size for name in manifest["files"].values())
