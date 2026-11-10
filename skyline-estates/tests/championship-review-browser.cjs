@@ -1,7 +1,7 @@
 // Run on the isolated Championship feature branch. Creates actual mobile screenshots
 // and times rendered AI matches (rather than using a zero-delay headless simulator).
 'use strict';
-const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
+const {chromium,webkit}=require(process.env.PLAYWRIGHT_MODULE||'playwright');const engine=process.env.VISUAL_ENGINE||'chromium';
 const assert=require('node:assert/strict'),path=require('node:path'),fs=require('node:fs');
 const root=path.resolve(__dirname,'..'),out=process.argv[2]||'/tmp/skyline-championship-review';
 fs.mkdirSync(out,{recursive:true});
@@ -17,7 +17,7 @@ async function open(browser,vp,ui){
   return page;
 }
 (async()=>{
- const browser=await chromium.launch({headless:true,args:['--disable-webgl','--autoplay-policy=no-user-gesture-required'],...(process.env.CHROME_PATH?{executablePath:process.env.CHROME_PATH}:{})});
+ const browser=engine==='webkit'?await webkit.launch({headless:true}):await chromium.launch({headless:true,args:['--disable-webgl','--autoplay-policy=no-user-gesture-required'],...(process.env.CHROME_PATH?{executablePath:process.env.CHROME_PATH}:{})});
  for(const vp of [{width:667,height:375},{width:844,height:390}]){
    for(const ui of ['dark','light']){
      const page=await open(browser,vp,ui);
@@ -28,7 +28,7 @@ async function open(browser,vp,ui){
      assert.equal(await page.evaluate(()=>setup.rounds),40,'40-round option updates live setup');
      assert.match(await page.locator('[data-mode="classic"]').innerText(),/Unlimited rounds/);
      assert.match(await page.evaluate(()=>onlineCfgSummary({mode:'timed',rounds:30,cash:1600})),/^Round limit/,'online timed mode retains legacy name');
-     await page.screenshot({path:path.join(out,'custom-'+vp.width+'-'+ui+'.png'),fullPage:false});
+     await page.screenshot({path:path.join(out,engine+'-custom-'+vp.width+'-'+ui+'.png'),fullPage:false});
      await page.evaluate(ui=>{
        FAST=true;GEN++;newGame({cash:1600,set:{ai:'normal',speed:'fast',city:'lagos',mode:'timed',rounds:30,championship:1,lc:true},
          players:[{name:'QA',tok:TOKENS[0],col:PCOL[0],ai:false},{name:'Mei',tok:TOKENS[1],col:PCOL[1],ai:true}]});
@@ -41,21 +41,21 @@ async function open(browser,vp,ui){
      assert.match(round,/Round 28\/30.*🔔3 left/,'compact round countdown '+ui);
      const dims=await page.locator('#round').evaluate(e=>{const r=e.getBoundingClientRect();return {x:r.x,y:r.y,w:r.width,h:r.height,screen:innerWidth}});
      assert.ok(dims.h>0&&dims.h<88&&dims.w>0&&dims.x<dims.screen,'round badge compact and visible '+JSON.stringify(dims));
-     await page.screenshot({path:path.join(out,'round-'+vp.width+'-'+ui+'.png'),fullPage:false});
+     await page.screenshot({path:path.join(out,engine+'-round-'+vp.width+'-'+ui+'.png'),fullPage:false});
      await page.evaluate(()=>{G.round=31;renderRoster()});
      const finalRound=await page.locator('#round').innerText();
      assert.match(finalRound,/Round 30\/30/,'post-finish round must be clamped');
      await page.evaluate(()=>{G.round=30;G.phase='post';void finish()});
      await page.locator('.endgrid .stand').waitFor({state:'visible',timeout:15000});
      await page.waitForTimeout(3500);
-     await page.screenshot({path:path.join(out,'results-overview-'+vp.width+'-'+ui+'.png'),fullPage:false});
+     await page.screenshot({path:path.join(out,engine+'-results-overview-'+vp.width+'-'+ui+'.png'),fullPage:false});
      const detail=page.locator('.champ-score-details summary');
      assert.equal(await detail.count(),1,'Championship breakdown must be discoverable');
      await detail.click();
      assert.match(await page.locator('.champ-score-details').innerText(),/Landmark investment/);
      const canScroll=await page.evaluate(()=>{const p=document.querySelector('#modals .mp');if(!p)return null;const scrollable=p.scrollHeight>p.clientHeight+5;if(scrollable)p.scrollTop=p.scrollHeight;return {scrollable,scrollTop:p.scrollTop,max:p.scrollHeight-p.clientHeight}});
      assert.ok(canScroll&&(!canScroll.scrollable||canScroll.scrollTop>0),'Score breakdown must remain scrollable '+JSON.stringify(canScroll));
-     await page.screenshot({path:path.join(out,'results-'+vp.width+'-'+ui+'.png'),fullPage:false});
+     await page.screenshot({path:path.join(out,engine+'-results-'+vp.width+'-'+ui+'.png'),fullPage:false});
      const layout=await page.evaluate(()=>{
        const el=document.querySelector('.endgrid'),r=el.getBoundingClientRect();
        return{x:r.x,right:r.right,viewport:innerWidth,detail:document.querySelector('.champ-score-details')?.open};

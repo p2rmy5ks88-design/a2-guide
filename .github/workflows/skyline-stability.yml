@@ -327,6 +327,10 @@ jobs:
       - name: "Visual: currency-browser"
         timeout-minutes: 5
         run: node skyline-estates/tests/currency-browser.cjs
+      - name: "Visual: Championship screens (Safari)"
+        if: matrix.engine == 'webkit'
+        timeout-minutes: 6
+        run: VISUAL_ENGINE=webkit CHAMP_SCREENS_ONLY=1 node skyline-estates/tests/championship-review-browser.cjs "$RUNNER_TEMP/champ-webkit"
       - name: "Visual: visual-correction-browser"
         timeout-minutes: 5
         run: node skyline-estates/tests/visual-correction-browser.cjs
@@ -351,6 +355,7 @@ jobs:
             ${{ runner.temp }}/market-*.png
             ${{ runner.temp }}/market-*.json
             ${{ runner.temp }}/showcase-*.png
+            ${{ runner.temp }}/champ-webkit/*.png
             ${{ runner.temp }}/showcase-*.json
             ${{ runner.temp }}/challenges-*.png
             ${{ runner.temp }}/challenges-*.json
