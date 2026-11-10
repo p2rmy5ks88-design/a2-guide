@@ -24,6 +24,7 @@ const test = [
 "})()"
 ].join('\n');
 const result=JSON.parse(rt.run(test));
+console.log('CHAMPIONSHIP DIAGNOSTIC '+JSON.stringify(result));
 assert.equal(result.before.total>result.other.total,true,'complete district must have a visible score bonus');
 assert.equal(result.winningWithoutBankruptcy,true);
 assert.equal(result.feeRestored,true,'Landmark investment must not create an instant scoring windfall');
