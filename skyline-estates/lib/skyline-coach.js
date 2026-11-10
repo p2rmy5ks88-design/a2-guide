@@ -210,7 +210,17 @@ function line(t,you,S){const P0=G.players.slice().sort((x,y)=>y.name.length-x.na
   if(m=/^drew: (.+)$/.exec(r)){if(you(A.id)&&!(typeof lc==='function'&&lc())){const c=m[1].split(/[.!]/)[0].trim();if(c&&c.length<=70)S(c+'.',3,true)}}}
 const spoken=s=>{const m=/([\d.,]+)\s*([KMB])\b/.exec(s);return m?`${m[1]} ${{K:'thousand',M:'million',B:'billion'}[m[2]]} Skyline Cash`:s};
 const big=s=>{const m=/([\d.,]+)\s*([KMB])\b/.exec(s);if(!m)return false;const v=parseFloat(m[1].replace(/,/g,''))*({K:1e-3,M:1,B:1000}[m[2]]);return v>=300};
+const CHAMP_BELL={
+  5:'Skyline Championship! Five rounds remaining.',
+  4:'Four rounds left. Make every move count.',
+  3:'Three rounds to go. It is getting close!',
+  2:'Two rounds remain. Time to make your move.',
+  1:'Final round! This is your last chance to build your skyline!'
+};
 function turnSay(p){try{check()}catch(e){}if(quiet()||!p||p.bankrupt||G.over||W.key!==keyOf())return;const me=meId(),you=me!=null&&p.id===me,mode=cfg().mode,now=Date.now();
+  const champ=typeof skylineChampionshipActive==='function'&&skylineChampionshipActive()&&G.players.filter(x=>!x.ai).length===1;
+  const left=champ?G.set.rounds-G.round+1:0;
+  if(you&&left>=1&&left<=5&&W.bell!==G.round){W.bell=G.round;say(CHAMP_BELL[left],1,'champ-bell:'+keyOf()+':'+G.round);return}
   if(you)say(tx('Your turn. Ready to roll?','Na your turn o! Roll am!'),2,'turn:'+G.round+':'+p.id);
   else if(!p.ai){if(mode==='important'||me==null)say(tx(`${nm(p)}’s turn.`,`Na ${nm(p)} turn now.`),3,'turn:'+G.round+':'+p.id)}
   else if(mode==='important'&&now-W.aiSaid>20000&&!Q.cur){W.aiSaid=now;say(tx('The computer is making its move.','Computer don dey move.'),3,'ai:'+G.round)}}

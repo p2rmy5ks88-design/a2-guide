@@ -1,0 +1,137 @@
+name: Complete Championship review (no merge)
+
+on:
+  push:
+    branches:
+      - feat/championship-endgame
+    paths:
+      - .github/workflows/championship-finish.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: skyline-championship-finish
+  cancel-in-progress: false
+
+jobs:
+  finish:
+    name: Record Voice A, inspect mobile, time games
+    if: github.ref == 'refs/heads/feat/championship-endgame'
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Detect recorded Voice A clips
+        id: voice-pack
+        shell: bash
+        run: |
+          if test -s skyline-estates/coach/natural-en-f/champ_5.mp3              && test -s skyline-estates/coach/natural-en-f/champ_4.mp3              && test -s skyline-estates/coach/natural-en-f/champ_3.mp3              && test -s skyline-estates/coach/natural-en-f/champ_2.mp3              && test -s skyline-estates/coach/natural-en-f/champ_1.mp3; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Install original natural voice recorder
+        if: steps.voice-pack.outputs.present != 'true'
+        run: pip install 'kokoro-onnx==0.6.0' soundfile imageio-ffmpeg
+      - name: Download verified public Kokoro voice model (never commit model)
+        if: steps.voice-pack.outputs.present != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/kokoro"
+          curl -fLSs --retry 3 --retry-delay 5 \
+            -o "$RUNNER_TEMP/kokoro/kokoro-v1.0.onnx" \
+            "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.1/kokoro-v1.0.onnx"
+          curl -fLSs --retry 3 --retry-delay 5 \
+            -o "$RUNNER_TEMP/kokoro/voices-v1.0.bin" \
+            "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.1/voices-v1.0.bin"
+          cd "$RUNNER_TEMP/kokoro"
+          printf '%s  %s\n' \
+            'beb0d1848dee9a49da392cc3df26958d46cfa35d321edf434f52949153f0df3a' 'kokoro-v1.0.onnx' \
+            'bca610b8308e8d99f32e6fe4197e7ec01679264efed0cac9140fe9c29f1fbf7d' 'voices-v1.0.bin' \
+            | sha256sum --check
+      - name: Record five natural Voice A finale announcements
+        if: steps.voice-pack.outputs.present != 'true'
+        run: python skyline-estates/tools/championship-audio.py "$RUNNER_TEMP/kokoro"
+      - name: Refresh audited game-source hash and rebuild generated web files
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib,re
+          base=Path('skyline-estates')
+          src=(base/'game.html').read_bytes().replace(b'\r\n',b'\n')
+          h=hashlib.sha256(src).hexdigest()
+          target=base/'security/service/audited-rules.cjs'
+          text=target.read_text()
+          text,num=re.subn(r"(const expectedSourceHash=')[0-9a-f]{64}(';)",lambda m:m[1]+h+m[2],text)
+          assert num==1,'Could not update audited game source pin'
+          target.write_text(text)
+          print('Pinned offline Championship game:',h)
+          PY
+          python3 skyline-estates/build.py
+          python3 skyline-estates/build.py --check
+      - name: Validate original security kernels and Championship score/permits
+        shell: bash
+        run: |
+          set -euo pipefail
+          for f in skyline-estates/security/service/*kernel.test.cjs; do node "$f"; done
+          node skyline-estates/tests/championship-score.cjs
+          node skyline-estates/tests/endgame-permits.cjs
+      - name: Browser dependencies
+        run: npm install --prefix skyline-estates/tests --no-audit --no-fund
+      - name: Set browser executable
+        run: echo "CHROME_PATH=$(command -v google-chrome)" >> "$GITHUB_ENV"
+      - name: Offline/online rule parity
+        run: node skyline-estates/tests/living-city-parity.cjs 4 2
+      - name: Game and Coach regression
+        shell: bash
+        run: |
+          node skyline-estates/tests/first-session-browser.cjs
+          node skyline-estates/tests/gameplay-ux-browser.cjs
+      - name: Recheck mobile Championship UI (prior AI timings retained)
+        env:
+          CHAMP_SCREENS_ONLY: '1'
+        run: node skyline-estates/tests/championship-review-browser.cjs "$RUNNER_TEMP/skyline-championship-qa"
+      - name: Commit validated prototype to feature branch only
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "skyline-preview-bot"
+          git config user.email "skyline-preview-bot@users.noreply.github.com"
+          git add skyline-estates/game.html skyline-estates/security/service/audited-rules.cjs
+          git add skyline-estates/coach/natural-en-f/ skyline-estates/lib/skyline-coach.js
+          git add skyline-estates/index.html skyline-estates/web-play.html skyline-estates/web-correction.html skyline-estates/web-follow.html skyline-estates/web-board.html skyline-estates/web-menus.html skyline-estates/offline-assets.js skyline-estates/sw.js
+          if ! git diff --cached --quiet; then
+            git commit -m "Finish offline Championship scoreboard, Voice A and final-round QA"
+            git push origin HEAD:refs/heads/feat/championship-endgame
+          fi
+      - name: Package downloadable local-only web preview
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/skyline-championship-preview"
+          rsync -a --exclude=tests --exclude=security --exclude=tools --exclude=balance --exclude=online --exclude=node_modules --exclude=competition-functions \
+            skyline-estates/ "$RUNNER_TEMP/skyline-championship-preview/skyline-estates/"
+          tar -czf "$RUNNER_TEMP/skyline-championship-preview.tar.gz" -C "$RUNNER_TEMP/skyline-championship-preview" .
+      - name: Upload QA report and image captures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: skyline-championship-mobile-qa
+          path: ${{ runner.temp }}/skyline-championship-qa/
+          if-no-files-found: warn
+      - name: Upload finished web preview (not deployed)
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: skyline-championship-final-preview
+          path: ${{ runner.temp }}/skyline-championship-preview.tar.gz
+          if-no-files-found: error
