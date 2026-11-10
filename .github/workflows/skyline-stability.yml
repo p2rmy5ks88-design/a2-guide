@@ -276,7 +276,8 @@ jobs:
           npm run --prefix skyline-estates-app build:web
           node skyline-estates/tests/verify-bundle.cjs skyline-estates-app
           node skyline-estates/tests/coach-native-bundle.cjs
-          NATIVE_WWW=skyline-estates-app/www node skyline-estates/tests/performance-budget.cjs
+          # The budget is measured in Chromium, so run it once (in the Chromium job), not again in the Safari job.
+          if [ "${{ matrix.engine }}" = chromium ]; then NATIVE_WWW=skyline-estates-app/www node skyline-estates/tests/performance-budget.cjs; fi
       - name: "Visual: generated assets"
         timeout-minutes: 5
         run: python3 skyline-estates/build.py --check
