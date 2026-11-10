@@ -30,19 +30,23 @@ async function open(browser,vp,ui){
      },ui);
      await page.waitForTimeout(700);
      const round=await page.locator('#round').innerText();
-     assert.match(round,/28 of 30.*3 ROUNDS LEFT/,'round countdown '+ui);
+     assert.match(round,/Round 28\/30.*🔔3 left/,'compact round countdown '+ui);
      const dims=await page.locator('#round').evaluate(e=>{const r=e.getBoundingClientRect();return {x:r.x,y:r.y,w:r.width,h:r.height,screen:innerWidth}});
-     assert.ok(dims.h>0&&dims.w>0&&dims.x<dims.screen,'round badge visible '+JSON.stringify(dims));
+     assert.ok(dims.h>0&&dims.h<88&&dims.w>0&&dims.x<dims.screen,'round badge compact and visible '+JSON.stringify(dims));
      await page.screenshot({path:path.join(out,'round-'+vp.width+'-'+ui+'.png'),fullPage:false});
      await page.evaluate(()=>{G.round=31;renderRoster()});
      const finalRound=await page.locator('#round').innerText();
-     assert.match(finalRound,/Round 30 of 30/,'post-finish round must be clamped');
+     assert.match(finalRound,/Round 30\/30/,'post-finish round must be clamped');
      await page.evaluate(()=>{G.round=30;G.phase='post';void finish()});
      await page.locator('.endgrid .stand').waitFor({state:'visible',timeout:15000});
+     await page.waitForTimeout(3500);
+     await page.screenshot({path:path.join(out,'results-overview-'+vp.width+'-'+ui+'.png'),fullPage:false});
      const detail=page.locator('.champ-score-details summary');
      assert.equal(await detail.count(),1,'Championship breakdown must be discoverable');
      await detail.click();
      assert.match(await page.locator('.champ-score-details').innerText(),/Landmark investment/);
+     const canScroll=await page.evaluate(()=>{const p=document.querySelector('#modals .mp');if(!p)return null;const scrollable=p.scrollHeight>p.clientHeight+5;if(scrollable)p.scrollTop=p.scrollHeight;return {scrollable,scrollTop:p.scrollTop,max:p.scrollHeight-p.clientHeight}});
+     assert.ok(canScroll&&(!canScroll.scrollable||canScroll.scrollTop>0),'Score breakdown must remain scrollable '+JSON.stringify(canScroll));
      await page.screenshot({path:path.join(out,'results-'+vp.width+'-'+ui+'.png'),fullPage:false});
      const layout=await page.evaluate(()=>{
        const el=document.querySelector('.endgrid'),r=el.getBoundingClientRect();
@@ -54,7 +58,7 @@ async function open(browser,vp,ui){
    }
  }
  // Fast speed with real browser async flow and AI moves: measured, NOT simulated rounds.
- for(const seats of [2,3,4]){
+ for(const seats of (process.env.CHAMP_SCREENS_ONLY==='1'?[]:[2,3,4])){
    const page=await open(browser,{width:844,height:390},'dark');
    await page.evaluate(seats=>{
      FAST=true;GEN++;
