@@ -51,7 +51,7 @@ start=src.index("async function finish(){")
 old='<div class="mtxt muted">Final standings</div><div class="stand">'
 assert src[start:].count(old)==1
 src=src[:start]+src[start:].replace(old,
-  '<div class="mtxt muted">@{skylineChampionshipActive()?\\'Final Championship Score\\':\\'Final standings\\'}</div><div class="stand">'.replace("@{",chr(36)+"{"),1)
+  """<div class="mtxt muted">@{skylineChampionshipActive()?'Final Championship Score':'Final standings'}</div><div class="stand">""".replace("@{",chr(36)+"{"),1)
 start=src.index("async function finish(){")
 old="fmt(p.bankrupt?0:netWorth(p))"
 assert src[start:].count(old)==1
