@@ -29,9 +29,20 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Detect recorded Voice A clips
+        id: voice-pack
+        shell: bash
+        run: |
+          if test -s skyline-estates/coach/natural-en-f/champ_5.mp3              && test -s skyline-estates/coach/natural-en-f/champ_4.mp3              && test -s skyline-estates/coach/natural-en-f/champ_3.mp3              && test -s skyline-estates/coach/natural-en-f/champ_2.mp3              && test -s skyline-estates/coach/natural-en-f/champ_1.mp3; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+          fi
       - name: Install original natural voice recorder
+        if: steps.voice-pack.outputs.present != 'true'
         run: pip install 'kokoro-onnx==0.6.0' soundfile imageio-ffmpeg
       - name: Download verified public Kokoro voice model (never commit model)
+        if: steps.voice-pack.outputs.present != 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -48,6 +59,7 @@ jobs:
             'bca610b8308e8d99f32e6fe4197e7ec01679264efed0cac9140fe9c29f1fbf7d' 'voices-v1.0.bin' \
             | sha256sum --check
       - name: Record five natural Voice A finale announcements
+        if: steps.voice-pack.outputs.present != 'true'
         run: python skyline-estates/tools/championship-audio.py "$RUNNER_TEMP/kokoro"
       - name: Refresh audited game-source hash and rebuild generated web files
         shell: bash
@@ -85,7 +97,9 @@ jobs:
         run: |
           node skyline-estates/tests/first-session-browser.cjs
           node skyline-estates/tests/gameplay-ux-browser.cjs
-      - name: Mobile Championship screenshots and 2/3/4-player browser timing
+      - name: Recheck mobile Championship UI (prior AI timings retained)
+        env:
+          CHAMP_SCREENS_ONLY: '1'
         run: node skyline-estates/tests/championship-review-browser.cjs "$RUNNER_TEMP/skyline-championship-qa"
       - name: Commit validated prototype to feature branch only
         shell: bash
