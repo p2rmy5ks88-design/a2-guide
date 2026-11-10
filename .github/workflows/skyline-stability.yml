@@ -277,25 +277,57 @@ jobs:
           node skyline-estates/tests/verify-bundle.cjs skyline-estates-app
           node skyline-estates/tests/coach-native-bundle.cjs
           NATIVE_WWW=skyline-estates-app/www node skyline-estates/tests/performance-budget.cjs
-      - name: Check generated assets and visual geometry
-        run: |
-          python3 skyline-estates/build.py --check
-          node skyline-estates/tests/market-pulse.cjs
-          node skyline-estates/tests/showcase-browser.cjs
-          node skyline-estates/tests/challenges-browser.cjs
-          node skyline-estates/tests/cloud-restore.cjs
-          node skyline-estates/tests/native-roadmap-browser.cjs
-          node skyline-estates/tests/collection-vault-browser.cjs
-          COLLECTION_BASE=skyline-estates-app/www node skyline-estates/tests/collection-vault-browser.cjs
-          node skyline-estates/tests/testflight-hotfix-browser.cjs
-          HOTFIX_NATIVE=1 node skyline-estates/tests/testflight-hotfix-browser.cjs
-          node skyline-estates/tests/social-browser.cjs
-          node skyline-estates/tests/verified-browser.cjs
-          node skyline-estates/tests/competition-transactions.cjs
-          node skyline-estates/tests/competition-service.cjs
-          node skyline-estates/tests/competition-match.cjs
-          node skyline-estates/tests/currency-browser.cjs
-          node skyline-estates/tests/visual-correction-browser.cjs
+      - name: "Visual: generated assets"
+        timeout-minutes: 5
+        run: python3 skyline-estates/build.py --check
+      - name: "Visual: market-pulse"
+        timeout-minutes: 5
+        run: node skyline-estates/tests/market-pulse.cjs
+      - name: "Visual: showcase-browser"
+        timeout-minutes: 5
+        run: node skyline-estates/tests/showcase-browser.cjs
+      - name: "Visual: challenges-browser"
+        timeout-minutes: 5
+        run: node skyline-estates/tests/challenges-browser.cjs
+      - name: "Visual: cloud-restore"
+        timeout-minutes: 5
+        run: node skyline-estates/tests/cloud-restore.cjs
+      - name: "Visual: native-roadmap-browser"
+        timeout-minutes: 5
+        run: node skyline-estates/tests/native-roadmap-browser.cjs
+      - name: "Visual: collection-vault-browser"
+        timeout-minutes: 5
+        run: node skyline-estates/tests/collection-vault-browser.cjs
+      - name: "Visual: native collection-vault-browser"
+        timeout-minutes: 5
+        run: COLLECTION_BASE=skyline-estates-app/www node skyline-estates/tests/collection-vault-browser.cjs
+      - name: "Visual: testflight-hotfix-browser"
+        timeout-minutes: 5
+        run: node skyline-estates/tests/testflight-hotfix-browser.cjs
+      - name: "Visual: native testflight-hotfix-browser"
+        timeout-minutes: 5
+        run: HOTFIX_NATIVE=1 node skyline-estates/tests/testflight-hotfix-browser.cjs
+      - name: "Visual: social-browser"
+        timeout-minutes: 5
+        run: node skyline-estates/tests/social-browser.cjs
+      - name: "Visual: verified-browser"
+        timeout-minutes: 5
+        run: node skyline-estates/tests/verified-browser.cjs
+      - name: "Visual: competition-transactions"
+        timeout-minutes: 5
+        run: node skyline-estates/tests/competition-transactions.cjs
+      - name: "Visual: competition-service"
+        timeout-minutes: 5
+        run: node skyline-estates/tests/competition-service.cjs
+      - name: "Visual: competition-match"
+        timeout-minutes: 5
+        run: node skyline-estates/tests/competition-match.cjs
+      - name: "Visual: currency-browser"
+        timeout-minutes: 5
+        run: node skyline-estates/tests/currency-browser.cjs
+      - name: "Visual: visual-correction-browser"
+        timeout-minutes: 5
+        run: node skyline-estates/tests/visual-correction-browser.cjs
       - name: Verify already-published assets on explicit production acceptance
         if: github.event_name == 'workflow_dispatch'
         run: node skyline-estates/tests/published-web.cjs
