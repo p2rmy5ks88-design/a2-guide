@@ -25,6 +25,8 @@ jobs:
           node-version: '22'
       - name: Check simulator syntax
         run: node --check skyline-estates/tests/endgame-sim.cjs
+      - name: Verify synthetic two-player home-permit exhaustion
+        run: node skyline-estates/tests/endgame-permits.cjs
       - name: Simulate finite Championship against guarded player
         shell: bash
         run: |
