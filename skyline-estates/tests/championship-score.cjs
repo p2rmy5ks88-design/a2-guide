@@ -10,7 +10,7 @@ const test = [
 "   players:[0,1].map(i=>({name:NAMES[i],tok:TOKENS[i],col:PCOL[i],ai:true,tl:1}))});",
 " const ids=Object.values(GROUPS).find(ids=>ids.length===3&&ids.every(i=>SQ[i].t==='prop'));",
 " const price=ids.reduce((n,i)=>n+SQ[i].p,0);",
-" ids.forEach(i=>G.own[i].o=0);P(0).cash-=price;",
+" ids.forEach(i=>G.own[i].o=0);P(0).cash=5000-price;P(1).cash=5000;",
 " const before=skylineChampionshipScore(P(0)),other=skylineChampionshipScore(P(1));",
 " const winningWithoutBankruptcy=standings()[0].id===0;",
 " const lm=ids[0],fee=Math.round(SQ[lm].p*.25/5)*5;",
