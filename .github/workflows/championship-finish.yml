@@ -30,7 +30,7 @@ jobs:
         with:
           node-version: '22'
       - name: Install original natural voice recorder
-        run: pip install 'kokoro-onnx==0.6.0' soundfile
+        run: pip install 'kokoro-onnx==0.6.0' soundfile imageio-ffmpeg
       - name: Download verified public Kokoro voice model (never commit model)
         shell: bash
         run: |
