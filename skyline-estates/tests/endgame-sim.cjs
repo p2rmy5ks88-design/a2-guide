@@ -10,7 +10,8 @@ const CONFIGS={
   // Living City, bankruptcy only (today's Classic) with a 300-round safety cap so stalls are measurable
   lc_classic:{lc:true,set:{maxRounds:300}},
   classic_classic:{lc:false,set:{maxRounds:300}},
-  lc_r20:{lc:true,set:{mode:'timed',rounds:20}},lc_r30:{lc:true,set:{mode:'timed',rounds:30}},lc_r40:{lc:true,set:{mode:'timed',rounds:40}},
+  lc_r20:{lc:true,set:{mode:'timed',rounds:20,championship:1}},lc_r30:{lc:true,set:{mode:'timed',rounds:30,championship:1}},lc_r40:{lc:true,set:{mode:'timed',rounds:40,championship:1}},
+  lc_plain_r30:{lc:true,set:{mode:'timed',rounds:30}},
 };
 const name=process.argv[2]||'lc_classic',N=+(process.argv[3]||60),SEED=+(process.argv[4]||50000),PLAYERS=+(process.env.SIM_PLAYERS||3);
 const cfg=CONFIGS[name];if(!cfg)throw Error('unknown config '+name+'; one of '+Object.keys(CONFIGS).join(', '));
