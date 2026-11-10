@@ -13,9 +13,9 @@ const TYPES={'.html':'text/html','.js':'text/javascript','.mjs':'text/javascript
   await ctx.addInitScript(()=>{if(!localStorage.getItem('skylinePrefs'))localStorage.setItem('skylinePrefs',JSON.stringify({flat2d:true,nickSet:true,nick:'Ada',welcomed:1,tutDone:1,lc:true,stats:{games:9}}))});
   const p=await ctx.newPage();const errs=[];p.on('pageerror',e=>errs.push(String(e)));
   await p.goto(origin+'/skyline-estates/index.html');await p.locator('#boot').waitFor({state:'detached',timeout:30000});
-  await p.evaluate(()=>homeTab('play'));await p.waitForTimeout(400);assert.equal(await p.locator('#qDuel').count(),0);ok('Duel stays hidden without the preview flag');
-  await p.goto(origin+'/skyline-estates/index.html?duel=1');await p.locator('#boot').waitFor({state:'detached',timeout:30000});
-  await p.evaluate(()=>homeTab('play'));await p.locator('#qDuel').waitFor();ok('?duel=1 shows the Skyline Duel button beside Play');
+  await p.evaluate(()=>homeTab('play'));await p.locator('#qDuel').waitFor();ok('the Skyline Duel card is on the home screen for everyone');
+  await p.goto(origin+'/skyline-estates/index.html');await p.locator('#boot').waitFor({state:'detached',timeout:30000});
+  await p.evaluate(()=>homeTab('play'));await p.locator('#qDuel').waitFor();ok('Skyline Duel sits beside the other game modes');
   await p.locator('#qDuel').click();await p.waitForFunction(()=>{try{return G&&G.set.duel===1}catch(e){return false}});
   const st=await p.evaluate(()=>({n:G.players.length,ai:G.players.map(x=>!!x.ai),rounds:G.set.rounds,champ:G.set.championship,mode:G.set.mode,
     dealt:[0,1].map(id=>G.own.filter((o,i)=>o.o===id&&SQ[i].t==='prop').map(i=>0).length),value:[0,1].map(id=>G.own.reduce((a,o,i)=>a+(o.o===id?SQ[i].p:0),0)),
