@@ -28,6 +28,25 @@ const TYPES={'.html':'text/html','.js':'text/javascript','.css':'text/css','.jso
   assert.deepEqual(board.tiles.slice().sort((a,b)=>a-b),Array.from({length:24},(_,i)=>i));assert.equal(new Set(board.pos).size,24);
   assert.equal(board.cities,8);assert.equal(board.props,16);assert.deepEqual(board.prices.slice(0,4),board.prices.slice(4));
   ok('24 unique numbered spaces on a 9 × 5 ring, 16 streets from 8 different cities, mirrored prices');
+
+  const harbour=await p.evaluate(()=>{
+    const sky=document.querySelector('#hr .hr-sky');
+    return {plots:sky?sky.querySelectorAll('[data-plot]').length:0,boats:sky?sky.querySelectorAll('.hr-boat').length:0,svg:!!sky?.querySelector('svg')};
+  });
+  assert.equal(harbour.plots,16);assert.equal(harbour.boats,2);assert.ok(harbour.svg);
+  ok('Living Harbour contains 16 state-linked development plots and two boats');
+
+  await p.emulateMedia({reducedMotion:'reduce'});
+  const reduced=await p.evaluate(()=>({
+    boat:getComputedStyle(document.querySelector('#hr .hr-boat')).animationName,
+    water:getComputedStyle(document.querySelector('#hr .hr-sky'),'::before').animationName,
+    hidden:getComputedStyle(document.querySelector('#hr .hr-boat')).opacity
+  }));
+  assert.equal(reduced.boat,'none');assert.equal(reduced.water,'none');assert.equal(reduced.hidden,'0');
+  await p.emulateMedia({reducedMotion:'no-preference'});
+  ok('reduced-motion accessibility disables moving boats and water');
+
+
   const mv=await p.evaluate(()=>{const s=HarbourRing.state();return{opts:s.options.map(o=>o.target).sort((a,b)=>a-b),hi:[...document.querySelectorAll('#hr .hr-t.tg')].map(t=>+t.dataset.i).sort((a,b)=>a-b),btn:document.querySelectorAll('#hr [data-move]').length}});
   assert.deepEqual(mv.hi,mv.opts);assert.equal(mv.btn,mv.opts.length);ok(`move choices match the highlighted tiles (${mv.hi.join(', ')})`);
   if(OUT)for(const ui of ['dark','light']){await p.evaluate(u=>{PREF.ui=u;applyUI()},ui);await p.waitForTimeout(250);await p.screenshot({path:path.join(OUT,`ring-844-${ui}.png`)})}
@@ -50,6 +69,14 @@ const TYPES={'.html':'text/html','.js':'text/javascript','.css':'text/css','.jso
   await p.click('#qRing');await p.locator('#hr .hr-board').waitFor();
   const back=await p.evaluate(()=>({round:HarbourRing.state().round,moves:HarbourRing.state().moves,cash:HarbourRing.state().players.map(x=>x.cash)}));
   assert.deepEqual(back,mid);ok('Save & leave keeps the match; Game Modes shows Continue and resumes at the same point');
+  const resumeSky=await p.evaluate(()=>{
+    const tiles=HarbourRing.state().tiles.filter(t=>t.k==='prop'&&t.lv>0&&(t.o===0||t.o===1));
+    const visible=[...document.querySelectorAll('#hr .hr-sky .hr-bld.rise')].length;
+    return {built:tiles.length,unexpectedRise:visible};
+  });
+  assert.equal(resumeSky.unexpectedRise,0,'resuming must not replay construction animations');
+  assert.equal(await p.locator('#hr .hr-plot.changed').count(),0,'resuming must not replay property-claim animations');
+  ok('resuming a match preserves existing buildings without replaying construction');
   // Turn timer: when it runs out the computer chooses for you.
   await p.evaluate(()=>HarbourRing.setTurnSeconds(1));await p.evaluate(()=>{HarbourRing.close();HarbourRing.start({resume:HarbourRing.saved()})});
   assert.ok(await p.locator('#hr .hr-timer').count()>=0);
@@ -61,6 +88,24 @@ const TYPES={'.html':'text/html','.js':'text/javascript','.css':'text/css','.jso
   assert.ok(end.round===15||end.final.some(x=>x<0),JSON.stringify(end));ok(`full match ends on the result screen after round 15 (${end.h})`);
   const sky=await p.evaluate(()=>{const s=HarbourRing.state();const want=[0,1].reduce((n,q)=>n+Math.min(8,s.tiles.filter(t=>t.k==='prop'&&t.o===q&&t.lv>0).length),0);return{want,have:document.querySelectorAll('#hr .hr-bld').length}});
   assert.equal(sky.have,sky.want);ok(`the centre skyline shows one building per built street (${sky.have})`);
+  const plots=await p.evaluate(()=>{
+    const state=HarbourRing.state(),tiles=state.tiles.filter(t=>t.k==='prop');
+    return [...document.querySelectorAll('#hr .hr-sky [data-plot]')].map(el=>{
+      const tile=tiles.find(t=>t.i===Number(el.dataset.plot));
+      return {id:Number(el.dataset.plot),owner:el.dataset.owner,level:Number(el.dataset.level),
+        expectedOwner:tile.o===0?'a':tile.o===1?'b':'neutral',
+        expectedLevel:tile.o===0||tile.o===1?tile.lv||0:0,
+        buildings:el.querySelectorAll('.hr-bld').length};
+    });
+  });
+  assert.equal(plots.length,16);
+  assert.equal(new Set(plots.map(x=>x.id)).size,16);
+  for(const plot of plots){
+    assert.equal(plot.owner,plot.expectedOwner,`plot ${plot.id} owner`);
+    assert.equal(plot.level,plot.expectedLevel,`plot ${plot.id} level`);
+    assert.equal(plot.buildings,plot.expectedLevel>0?1:0,`plot ${plot.id} building`);
+  }
+  ok('all 16 harbour plots exactly match actual street ownership and construction levels');
   if(OUT){await p.evaluate(()=>{const s=HarbourRing.state();s.tiles.filter(t=>t.k==='prop').slice(0,8).forEach((t,k)=>{t.o=k%2;t.lv=1+k%4});document.querySelector('#hr [data-a="close"]')})}
   if(OUT)await p.screenshot({path:path.join(OUT,'ring-844-result.png')});
   const saved=await p.evaluate(()=>HarbourRing.saved());assert.equal(saved,null);ok('a finished match leaves no save behind');
