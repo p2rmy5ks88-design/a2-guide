@@ -273,7 +273,7 @@ function towersHTML(){
     const w=level?SHAPE[level][0]:0;
     const b=level?building(-w/2,level,side,built.size&&!built.has(key)?' rise':''):'';
     const foundation=side&&!level?'<path d="M-12 76 L0 71 L12 76 L0 81Z" fill="'+fill+'" opacity=".8"/>':'';
-    plots.push('<g transform="translate('+x+' '+(y-78)+')">'+pad+foundation+b+'</g>');
+    plots.push('<g data-plot="'+t.i+'" data-owner="'+(side||'neutral')+'" data-level="'+level+'" transform="translate('+x+' '+(y-78)+')">'+pad+foundation+b+'</g>');
   });
   built=now;
   const boatPhase=(Date.now()%22000)/1000,boatPhase2=(Date.now()%30000)/1000;
