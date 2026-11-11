@@ -22,8 +22,8 @@ const die=n=>`<span class="hr-die" role="img" aria-label="Die showing ${n}"><svg
 const css=`
 #hr{position:fixed;inset:0;z-index:9000;display:grid;grid-template-rows:auto minmax(0,1fr) auto;gap:5px;box-sizing:border-box;
  padding:max(6px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(4px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));
- font-family:var(--body,'Manrope',system-ui,sans-serif);color:#fff;background:#0a1230 url(art/home-lagos.jpg) center 42%/cover;overflow:hidden;-webkit-user-select:none;user-select:none}
-#hr:before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(5,9,24,.55),rgba(5,9,24,.35) 40%,rgba(5,9,24,.75));pointer-events:none}
+ font-family:var(--body,'Manrope',system-ui,sans-serif);color:#fff;background:#0a1230 url(art/ring-golden.jpg) center 40%/cover;overflow:hidden;-webkit-user-select:none;user-select:none}
+#hr:before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(5,9,24,.45),rgba(5,9,24,.2) 40%,rgba(5,9,24,.6));pointer-events:none}
 #hr>*:not(.hr-scrim):not(.hr-sheet){position:relative}
 #hr button{font-family:inherit;color:inherit;cursor:pointer}
 #hr button:focus-visible{outline:3px solid #fff3c4;outline-offset:2px}
@@ -73,7 +73,7 @@ const css=`
 .hr-centre{grid-row:2/5;grid-column:2/9;position:relative;border-radius:12px;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;padding:8px 10px;min-height:0}
 .hr-centre:before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(5,9,24,0),rgba(5,9,24,.15) 45%,rgba(5,9,24,.78));pointer-events:none}
 .hr-centre>*{position:relative}
-.hr-title{display:flex;flex-direction:column;align-items:center;gap:1px;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.8)}
+.hr-title{align-self:center;display:flex;flex-direction:column;align-items:center;gap:2px;padding:5px 14px 6px;border-radius:12px;background:rgba(5,9,24,.55);color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.8)}
 .hr-title b{font:700 18px/1 'Cinzel',Georgia,serif;letter-spacing:.06em}.hr-title small{font:700 8.5px/1 var(--body,'Manrope',sans-serif);letter-spacing:.3em;color:#f6e2a8}
 .hr-sky{position:absolute;left:0;right:0;bottom:52px;height:78px;pointer-events:none}
 .hr-sky svg{position:absolute;left:0;bottom:0;width:100%;height:100%;overflow:visible}
@@ -136,13 +136,15 @@ html.light .hr-timer.low{background:radial-gradient(circle,#fff 0 15px,transpare
 .hr-res .row{display:flex;gap:10px;width:100%}
 .hr-list{display:flex;flex-direction:column;gap:6px;margin-top:8px}
 .hr-list .hr-b{flex:none;flex-direction:row;justify-content:space-between;padding:0 12px}
-html.light #hr{color:#13284a}
-html.light #hr:before{background:linear-gradient(180deg,rgba(214,234,250,.55),rgba(255,244,222,.25) 45%,rgba(240,246,252,.7))}
+html.light #hr{color:#13284a;background-color:#bfdcf2;background-image:url(art/ring-day.jpg)}
+html.light #hr:before{background:linear-gradient(180deg,rgba(235,244,252,.35),rgba(235,244,252,0) 40%,rgba(235,244,252,.45))}
 html.light .hr-card,html.light .hr-round,html.light .hr-who,html.light .hr-score,html.light .hr-ib,html.light .hr-b{background:rgba(255,255,255,.95);color:#13284a;border-color:rgba(19,40,74,.2)}
 html.light .hr-card{border-color:#d9a23a}html.light .hr-card.r{border-color:#d63b4a}
 html.light .hr-card small{color:#8a5a10}html.light .hr-card.r small{color:#a8243a}
 html.light .hr-round b em{color:#5b6a88}html.light .hr-round b i{color:#b3263a}
-html.light .hr-segs i{background:rgba(19,40,74,.15)}html.light .hr-segs i.n{background:#13284a}
+html.light .hr-segs i{background:rgba(19,40,74,.15)}html.light .hr-segs i.d{background:#d9a23a}html.light .hr-segs i.b{background:rgba(214,59,74,.35)}html.light .hr-segs i.b.d{background:#d63b4a}html.light .hr-segs i.n{background:#13284a}
+html.light .hr-centre:before{background:linear-gradient(180deg,rgba(255,255,255,0),rgba(255,255,255,0) 45%,rgba(235,244,252,.55))}
+html.light .hr-b.g{background:linear-gradient(180deg,#ffe7a3,#d9a23a);border-color:#b9832b;color:#241703}html.light .hr-b.g small{color:#4a3208}
 html.light .hr-t{background:rgba(255,255,255,.95);border-color:rgba(19,40,74,.18);color:#13284a}
 html.light .hr-t b{color:#3d4d6b}
 html.light .hr-t.y{border:2.5px solid #d9a23a;background:linear-gradient(180deg,#fff6dc,#fff)}
