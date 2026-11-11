@@ -79,9 +79,9 @@ const css=`
 .hr-sky:before{content:'';position:absolute;inset:20% 0 0;background:linear-gradient(180deg,transparent,rgba(17,78,102,.23) 70%,rgba(10,37,58,.55));border-radius:50% 50% 0 0;animation:hrWater 7s ease-in-out infinite alternate}
 @keyframes hrWater{from{opacity:.45;transform:translateY(1px)}to{opacity:.8;transform:translateY(-2px)}}
 .hr-boat{animation:hrSail 22s linear infinite;opacity:.8;transform:translate(-32px,81px)}
-.hr-boat-2{animation-duration:30s;animation-delay:-14s;opacity:.55}
+.hr-boat-2{animation-duration:30s;opacity:.55}
 @keyframes hrSail{from{transform:translate(-32px,81px)}to{transform:translate(590px,81px)}}
-@media(prefers-reduced-motion:reduce){.hr-sky:before,.hr-boat{animation:none}.hr-boat{opacity:0}}
+@media(prefers-reduced-motion:reduce){.hr-sky:before,.hr-boat,.hr-bld.rise{animation:none}.hr-boat{opacity:0}}
 
 .hr-sky svg{position:absolute;left:0;bottom:0;width:100%;height:100%;overflow:visible}
 .hr-bld{transform-box:fill-box;transform-origin:50% 100%}
@@ -151,6 +151,7 @@ html.light .hr-card{border-color:#d9a23a}html.light .hr-card.r{border-color:#d63
 html.light .hr-card small{color:#8a5a10}html.light .hr-card.r small{color:#a8243a}
 html.light .hr-round b em{color:#5b6a88}html.light .hr-round b i{color:#b3263a}
 html.light .hr-segs i{background:rgba(19,40,74,.15)}html.light .hr-segs i.d{background:#d9a23a}html.light .hr-segs i.b{background:rgba(214,59,74,.35)}html.light .hr-segs i.b.d{background:#d63b4a}html.light .hr-segs i.n{background:#13284a}
+html.light .hr-sky:before{background:linear-gradient(180deg,transparent,rgba(100,194,226,.20) 70%,rgba(42,128,170,.32))}
 html.light .hr-centre:before{background:linear-gradient(180deg,rgba(255,255,255,0),rgba(255,255,255,0) 45%,rgba(235,244,252,.55))}
 html.light .hr-b.g{background:linear-gradient(180deg,#ffe7a3,#d9a23a);border-color:#b9832b;color:#241703}html.light .hr-b.g small{color:#4a3208}
 html.light .hr-t{background:rgba(255,255,255,.95);border-color:rgba(19,40,74,.18);color:#13284a}
@@ -240,11 +241,22 @@ function actHTML(){const d=D();if(!d)return '';
 // The skyline in the centre: one building per built street, gold for you on the left, red for the rival on the right.
 // House 1 is a low-rise, 2 a mid-rise, 3 a high-rise, a tower gets a crown and a spire. New buildings rise into place.
 const SHAPE=[null,[18,20],[18,34],[22,48],[24,62]];
-function building(x,lv,c,cls){const [w,h]=SHAPE[lv],y=78-h,win=[];
-  for(let r=y+6;r<74;r+=7)for(let q=x+4;q<x+w-4;q+=5)win.push(`<rect x="${q}" y="${r}" width="2.4" height="3" rx=".5"/>`);
-  let top='';if(lv===3)top=`<rect x="${x+4}" y="${y-6}" width="${w-8}" height="7" rx="1" fill="url(#hr-${c})"/>`;
-  if(lv===4)top=`<rect x="${x+5}" y="${y-8}" width="${w-10}" height="9" rx="1" fill="url(#hr-${c})"/><rect x="${x+w/2-1}" y="${y-20}" width="2" height="13" fill="url(#hr-${c})"/><circle cx="${x+w/2}" cy="${y-21}" r="2" fill="${c==='a'?'#fff4c8':'#ffd6d8'}"/>`;
-  return `<g class="hr-bld${cls}" filter="url(#hr-glow-${c})">${top}<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="2" fill="url(#hr-${c})"/><g fill="${c==='a'?'#fff7d6':'#ffe2e3'}" opacity=".85">${win.join('')}</g></g>`}
+function building(x,lv,c,cls){
+  const [w,h]=SHAPE[lv],y=78-h,accent=c==='a'?'#f2c457':'#ff777d';
+  const windows=[];
+  for(let r=y+8;r<75;r+=8)for(let q=x+4;q<x+w-4;q+=6)
+    windows.push('<rect x="'+q+'" y="'+r+'" width="2.5" height="3.5" rx=".5" opacity="'+(((r+q)%3)===0?'.35':'.85')+'"/>');
+  const roof=lv===4
+    ?'<path d="M'+(x+4)+' '+y+' l'+(w/2-4)+' -10 l'+(w/2-4)+' 10" fill="none" stroke="'+accent+'" stroke-width="2"/><path d="M'+(x+w/2)+' '+(y-10)+' v-10" stroke="'+accent+'" stroke-width="2"/>'
+    :lv===3?'<rect x="'+(x+4)+'" y="'+(y-5)+'" width="'+(w-8)+'" height="5" fill="'+accent+'"/>':'';
+  return '<g class="hr-bld'+cls+'" filter="url(#hr-glow-'+c+')">'+
+    '<path d="M'+x+' '+y+' l7 -5 h'+w+' l-7 5Z" fill="#c6d7df"/>'+
+    '<path d="M'+(x+w)+' '+y+' l7 -5 v'+h+' l-7 5Z" fill="#314b63"/>'+
+    '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="1" fill="url(#hr-'+c+')"/>'+
+    '<path d="M'+(x+2)+' '+(y+2)+' v'+(h-4)+'" stroke="#fff4d2" stroke-opacity=".55"/>'+
+    roof+'<g fill="'+(c==='a'?'#fff5ce':'#ffe3e6')+'">'+windows.join('')+'</g>'+
+    '<path d="M'+x+' 78 h'+w+'" stroke="'+accent+'" stroke-width="2"/></g>';
+}
 function towersHTML(){
   // Stable physical plot locations: each of the sixteen street tiles owns one skyline plot.
   // No random placement or independent visual state; the rules engine remains authoritative.
@@ -264,6 +276,7 @@ function towersHTML(){
     plots.push('<g transform="translate('+x+' '+(y-78)+')">'+pad+foundation+b+'</g>');
   });
   built=now;
+  const boatPhase=(Date.now()%22000)/1000,boatPhase2=(Date.now()%30000)/1000;
   return '<svg viewBox="0 0 560 92" preserveAspectRatio="xMidYMax meet" aria-hidden="true"><defs>'+
     '<linearGradient id="hr-a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe7a3"/><stop offset="1" stop-color="#a8721f"/></linearGradient>'+
     '<linearGradient id="hr-b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffb3b5"/><stop offset="1" stop-color="#8f1d2f"/></linearGradient>'+
@@ -272,8 +285,8 @@ function towersHTML(){
     '<path d="M0 66 Q140 52 280 66 T560 66 L560 92 H0Z" fill="#0c3650" opacity=".42"/>'+
     '<path d="M0 83 Q140 76 280 83 T560 83" fill="none" stroke="#a3d7df" stroke-opacity=".4"/>'+
     plots.join('')+
-    '<g class="hr-boat"><path d="M0 0h26l-5 6H6Z" fill="#e5ebec"/><path d="M13 -15v15h11Z" fill="#f5e7c3"/></g>'+
-    '<g class="hr-boat hr-boat-2"><path d="M0 0h19l-4 5H3Z" fill="#f0f5f6"/></g></svg>';
+    '<g class="hr-boat" style="animation-delay:-'+boatPhase+'s"><path d="M0 0h26l-5 6H6Z" fill="#e5ebec"/><path d="M13 -15v15h11Z" fill="#f5e7c3"/></g>'+
+    '<g class="hr-boat hr-boat-2" style="animation-delay:-'+boatPhase2+'s"><path d="M0 0h19l-4 5H3Z" fill="#f0f5f6"/></g></svg>';
 }
 
 function timerHTML(turnP){const left=view.deadline?Math.max(0,Math.ceil((view.deadline-Date.now())/1000)):0;
