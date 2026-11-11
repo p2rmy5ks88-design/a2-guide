@@ -75,7 +75,14 @@ const css=`
 .hr-centre>*{position:relative}
 .hr-title{align-self:center;display:flex;flex-direction:column;align-items:center;gap:2px;padding:5px 14px 6px;border-radius:12px;background:rgba(5,9,24,.55);color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.8)}
 .hr-title b{font:700 18px/1 'Cinzel',Georgia,serif;letter-spacing:.06em}.hr-title small{font:700 8.5px/1 var(--body,'Manrope',sans-serif);letter-spacing:.3em;color:#f6e2a8}
-.hr-sky{position:absolute;left:0;right:0;bottom:52px;height:78px;pointer-events:none}
+.hr-sky{position:absolute;left:0;right:0;bottom:52px;height:clamp(72px,26vh,130px);pointer-events:none;isolation:isolate}
+.hr-sky:before{content:'';position:absolute;inset:20% 0 0;background:linear-gradient(180deg,transparent,rgba(17,78,102,.23) 70%,rgba(10,37,58,.55));border-radius:50% 50% 0 0;animation:hrWater 7s ease-in-out infinite alternate}
+@keyframes hrWater{from{opacity:.45;transform:translateY(1px)}to{opacity:.8;transform:translateY(-2px)}}
+.hr-boat{animation:hrSail 22s linear infinite;opacity:.8;transform:translate(-32px,81px)}
+.hr-boat-2{animation-duration:30s;animation-delay:-14s;opacity:.55}
+@keyframes hrSail{from{transform:translate(-32px,81px)}to{transform:translate(590px,81px)}}
+@media(prefers-reduced-motion:reduce){.hr-sky:before,.hr-boat{animation:none}.hr-boat{opacity:0}}
+
 .hr-sky svg{position:absolute;left:0;bottom:0;width:100%;height:100%;overflow:visible}
 .hr-bld{transform-box:fill-box;transform-origin:50% 100%}
 .hr-bld.rise{animation:hrRise .7s cubic-bezier(.2,.9,.3,1.2)}
@@ -238,15 +245,36 @@ function building(x,lv,c,cls){const [w,h]=SHAPE[lv],y=78-h,win=[];
   let top='';if(lv===3)top=`<rect x="${x+4}" y="${y-6}" width="${w-8}" height="7" rx="1" fill="url(#hr-${c})"/>`;
   if(lv===4)top=`<rect x="${x+5}" y="${y-8}" width="${w-10}" height="9" rx="1" fill="url(#hr-${c})"/><rect x="${x+w/2-1}" y="${y-20}" width="2" height="13" fill="url(#hr-${c})"/><circle cx="${x+w/2}" cy="${y-21}" r="2" fill="${c==='a'?'#fff4c8':'#ffd6d8'}"/>`;
   return `<g class="hr-bld${cls}" filter="url(#hr-glow-${c})">${top}<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="2" fill="url(#hr-${c})"/><g fill="${c==='a'?'#fff7d6':'#ffe2e3'}" opacity=".85">${win.join('')}</g></g>`}
-function towersHTML(){const now=new Set(),out=[];
-  [me,ai].forEach(p=>{const ts=HR.tilesOf(s,p).filter(t=>t.lv>0).sort((a,b)=>b.lv-a.lv||b.p-a.p).slice(0,8);let x=p===me?24:536;
-    ts.forEach(t=>{const w=SHAPE[t.lv][0],key=t.i+':'+t.lv;now.add(key);if(p!==me)x-=w;out.push(building(x,t.lv,p===me?'a':'b',built.size&&!built.has(key)?' rise':''));if(p===me)x+=w+6;else x-=6})});
+function towersHTML(){
+  // Stable physical plot locations: each of the sixteen street tiles owns one skyline plot.
+  // No random placement or independent visual state; the rules engine remains authoritative.
+  const now=new Set(),plots=[];
+  const owned=s.tiles.filter(t=>t.k==='prop');
+  owned.forEach((t,i)=>{
+    const x=24+(i%8)*65, row=Math.floor(i/8), y=row===0?59:78;
+    const p=t.o,lv=t.lv||0, key=t.i+':'+lv+':'+p;
+    const side=p===me?'a':p===ai?'b':null;
+    if(side)now.add(key);
+    const fill=side==='a'?'#e5b74f':side==='b'?'#e66a72':'#7993a1';
+    const pad='<path d="M-19 0 L0 -8 L19 0 L0 8Z" fill="'+fill+'" fill-opacity="'+(side?'.65':'.25')+'" stroke="'+fill+'" stroke-opacity=".8"/>';
+    const level=side?Math.max(0,Math.min(4,lv)):0;
+    const w=level?SHAPE[level][0]:0;
+    const b=level?building(-w/2,level,side,built.size&&!built.has(key)?' rise':''):'';
+    const foundation=side&&!level?'<path d="M-12 -2 L0 -7 L12 -2 L0 3Z" fill="'+fill+'" opacity=".8"/>':'';
+    plots.push('<g transform="translate('+x+' '+y+')">'+pad+foundation+b+'</g>');
+  });
   built=now;
-  return `<svg viewBox="0 0 560 78" preserveAspectRatio="xMidYMax meet" aria-hidden="true"><defs>
-    <linearGradient id="hr-a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe7a3"/><stop offset="1" stop-color="#a8721f"/></linearGradient>
-    <linearGradient id="hr-b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffb3b5"/><stop offset="1" stop-color="#8f1d2f"/></linearGradient>
-    <filter id="hr-glow-a" x="-50%" y="-50%" width="200%" height="200%"><feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="#f2c457" flood-opacity=".7"/></filter>
-    <filter id="hr-glow-b" x="-50%" y="-50%" width="200%" height="200%"><feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="#ff5a5f" flood-opacity=".7"/></filter></defs>${out.join('')}</svg>`}
+  return '<svg viewBox="0 0 560 92" preserveAspectRatio="xMidYMax meet" aria-hidden="true"><defs>'+
+    '<linearGradient id="hr-a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe7a3"/><stop offset="1" stop-color="#a8721f"/></linearGradient>'+
+    '<linearGradient id="hr-b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffb3b5"/><stop offset="1" stop-color="#8f1d2f"/></linearGradient>'+
+    '<filter id="hr-glow-a" x="-50%" y="-50%" width="200%" height="200%"><feDropShadow dx="0" dy="0" stdDeviation="2" flood-color="#f2c457" flood-opacity=".55"/></filter>'+
+    '<filter id="hr-glow-b" x="-50%" y="-50%" width="200%" height="200%"><feDropShadow dx="0" dy="0" stdDeviation="2" flood-color="#ff5a5f" flood-opacity=".55"/></filter></defs>'+
+    '<path d="M0 66 Q140 52 280 66 T560 66 L560 92 H0Z" fill="#0c3650" opacity=".42"/>'+
+    '<path d="M0 83 Q140 76 280 83 T560 83" fill="none" stroke="#a3d7df" stroke-opacity=".4"/>'+
+    plots.join('')+
+    '<g class="hr-boat"><path d="M0 0h26l-5 6H6Z" fill="#e5ebec"/><path d="M13 -15v15h11Z" fill="#f5e7c3"/></g>'+
+    '<g class="hr-boat hr-boat-2"><path d="M0 0h19l-4 5H3Z" fill="#f0f5f6"/></g></svg>';
+}
 
 function timerHTML(turnP){const left=view.deadline?Math.max(0,Math.ceil((view.deadline-Date.now())/1000)):0;
   if(!s.over&&turnP===me&&view.deadline&&!view.auto){const pct=Math.round(100*Math.min(1,(view.deadline-Date.now())/TURN_MS));return `<span class="hr-timer${left<=5?' low':''}" role="timer" aria-label="Your turn, ${left} seconds left" style="--p:${pct}%">${left}</span>`}
