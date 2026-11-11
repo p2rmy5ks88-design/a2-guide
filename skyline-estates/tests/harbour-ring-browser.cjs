@@ -64,6 +64,7 @@ const TYPES={'.html':'text/html','.js':'text/javascript','.css':'text/css','.jso
     return {built:tiles.length,unexpectedRise:visible};
   });
   assert.equal(resumeSky.unexpectedRise,0,'resuming must not replay construction animations');
+  assert.equal(await p.locator('#hr .hr-plot.changed').count(),0,'resuming must not replay property-claim animations');
   ok('resuming a match preserves existing buildings without replaying construction');
   // Turn timer: when it runs out the computer chooses for you.
   await p.evaluate(()=>HarbourRing.setTurnSeconds(1));await p.evaluate(()=>{HarbourRing.close();HarbourRing.start({resume:HarbourRing.saved()})});
