@@ -395,7 +395,7 @@ function onKey(e){if(e.key==='Escape'&&view.sheet&&view.sheet.k!=='end'){view.sh
 
 function cities(){return CITY_ORDER.map(k=>({key:k,name:CITY_DATA[k].name,country:(countryOf(k)||{}).name||'',props:CITY_DATA[k].props}))}
 function myAvatar(){const i=document.querySelector('#tbWho .rav img');return i&&i.getAttribute('src')||'avatars/small/skyline_avatar_02_96.png'}
-function start(opts={}){clearTimeout(timer);if(opts.resume){s=opts.resume;built=new Set(s.tiles.filter(t=>t.lv>0).map(t=>t.i+':'+t.lv));view={tok:null,sheet:null,tab:'feed',seen:s.log.length,auto:!!opts.auto,speed:opts.speed!=null?opts.speed:1};mount();after();return s}
+function start(opts={}){clearTimeout(timer);if(opts.resume){s=opts.resume;built=new Set(s.tiles.filter(t=>t.k==='prop'&&t.lv>0&&(t.o===me||t.o===ai)).map(t=>t.i+':'+t.lv+':'+t.o));view={tok:null,sheet:null,tab:'feed',seen:s.log.length,auto:!!opts.auto,speed:opts.speed!=null?opts.speed:1};mount();after();return s}
   const seed=opts.seed||((Date.now()^Math.floor(Math.random()*1e9))>>>0);built=new Set();
   let rv=1+(seed%20);const mineAv=myAvatar();if(mineAv.includes(`_${String(rv).padStart(2,'0')}_`))rv=rv%20+1;
   const first=opts.first!=null?opts.first:seed&1;
