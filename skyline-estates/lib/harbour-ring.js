@@ -288,7 +288,7 @@ function towersHTML(){
   for(const [id,at] of plotClaims)if(clock-at>=650)plotClaims.delete(id);
   for(const [id,at] of buildingRises)if(clock-at>=700)buildingRises.delete(id);
   const boatPhase=(Date.now()%22000)/1000,boatPhase2=(Date.now()%30000)/1000;
-  return '<svg viewBox="0 0 560 92" preserveAspectRatio="xMidYMax meet" aria-hidden="true"><defs>'+
+  return '<svg viewBox="0 -26 560 118" preserveAspectRatio="xMidYMax meet" aria-hidden="true"><defs>'+
     '<linearGradient id="hr-a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe7a3"/><stop offset="1" stop-color="#a8721f"/></linearGradient>'+
     '<linearGradient id="hr-b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffb3b5"/><stop offset="1" stop-color="#8f1d2f"/></linearGradient>'+
     '<filter id="hr-glow-a" x="-50%" y="-50%" width="200%" height="200%"><feDropShadow dx="0" dy="0" stdDeviation="2" flood-color="#f2c457" flood-opacity=".55"/></filter>'+
