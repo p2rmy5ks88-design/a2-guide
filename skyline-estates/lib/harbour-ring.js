@@ -256,12 +256,12 @@ function towersHTML(){
     const side=p===me?'a':p===ai?'b':null;
     if(side)now.add(key);
     const fill=side==='a'?'#e5b74f':side==='b'?'#e66a72':'#7993a1';
-    const pad='<path d="M-19 0 L0 -8 L19 0 L0 8Z" fill="'+fill+'" fill-opacity="'+(side?'.65':'.25')+'" stroke="'+fill+'" stroke-opacity=".8"/>';
+    const pad='<path d="M-19 78 L0 70 L19 78 L0 86Z" fill="'+fill+'" fill-opacity="'+(side?'.65':'.25')+'" stroke="'+fill+'" stroke-opacity=".8"/>';
     const level=side?Math.max(0,Math.min(4,lv)):0;
     const w=level?SHAPE[level][0]:0;
     const b=level?building(-w/2,level,side,built.size&&!built.has(key)?' rise':''):'';
-    const foundation=side&&!level?'<path d="M-12 -2 L0 -7 L12 -2 L0 3Z" fill="'+fill+'" opacity=".8"/>':'';
-    plots.push('<g transform="translate('+x+' '+y+')">'+pad+foundation+b+'</g>');
+    const foundation=side&&!level?'<path d="M-12 76 L0 71 L12 76 L0 81Z" fill="'+fill+'" opacity=".8"/>':'';
+    plots.push('<g transform="translate('+x+' '+(y-78)+')">'+pad+foundation+b+'</g>');
   });
   built=now;
   return '<svg viewBox="0 0 560 92" preserveAspectRatio="xMidYMax meet" aria-hidden="true"><defs>'+
