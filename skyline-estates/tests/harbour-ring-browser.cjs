@@ -36,6 +36,17 @@ const TYPES={'.html':'text/html','.js':'text/javascript','.css':'text/css','.jso
   assert.equal(harbour.plots,16);assert.equal(harbour.boats,2);assert.ok(harbour.svg);
   ok('Living Harbour contains 16 state-linked development plots and two boats');
 
+  await p.emulateMedia({reducedMotion:'reduce'});
+  const reduced=await p.evaluate(()=>({
+    boat:getComputedStyle(document.querySelector('#hr .hr-boat')).animationName,
+    water:getComputedStyle(document.querySelector('#hr .hr-sky'),'::before').animationName,
+    hidden:getComputedStyle(document.querySelector('#hr .hr-boat')).opacity
+  }));
+  assert.equal(reduced.boat,'none');assert.equal(reduced.water,'none');assert.equal(reduced.hidden,'0');
+  await p.emulateMedia({reducedMotion:'no-preference'});
+  ok('reduced-motion accessibility disables moving boats and water');
+
+
   const mv=await p.evaluate(()=>{const s=HarbourRing.state();return{opts:s.options.map(o=>o.target).sort((a,b)=>a-b),hi:[...document.querySelectorAll('#hr .hr-t.tg')].map(t=>+t.dataset.i).sort((a,b)=>a-b),btn:document.querySelectorAll('#hr [data-move]').length}});
   assert.deepEqual(mv.hi,mv.opts);assert.equal(mv.btn,mv.opts.length);ok(`move choices match the highlighted tiles (${mv.hi.join(', ')})`);
   if(OUT)for(const ui of ['dark','light']){await p.evaluate(u=>{PREF.ui=u;applyUI()},ui);await p.waitForTimeout(250);await p.screenshot({path:path.join(OUT,`ring-844-${ui}.png`)})}
