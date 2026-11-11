@@ -42,11 +42,28 @@ const TYPES={'.html':'text/html','.js':'text/javascript','.css':'text/css','.jso
   // Play my first move by hand, then let the computer play both seats quickly to the end.
   const steps=await p.evaluate(()=>HarbourRing.state().options[0].steps);await p.click(`#hr [data-move="${steps}"]`);
   await p.waitForFunction(()=>{const s=HarbourRing.state();return s.moves>=1||(s.decision&&s.decision.type!=='move')},null,{timeout:10000});ok('a move button moves your token and resolves the landing');
+  // Save & leave from the menu, then continue from Game Modes at the same point.
+  await p.waitForFunction(()=>{const s=HarbourRing.state();const d=s.decision;return d&&(d.p===0||d.type==='bid')},null,{timeout:15000});
+  const mid=await p.evaluate(()=>({round:HarbourRing.state().round,moves:HarbourRing.state().moves,cash:HarbourRing.state().players.map(x=>x.cash)}));
+  await p.click('#hr [data-a="menu"]');await p.click('#hr [data-a="leave"]');await p.locator('#hr').waitFor({state:'detached'});
+  assert.ok(await p.evaluate(()=>!!HarbourRing.saved()));await p.click('#hdModes');assert.match(await p.locator('#qRing').textContent(),/Continue · round \d+/);
+  await p.click('#qRing');await p.locator('#hr .hr-board').waitFor();
+  const back=await p.evaluate(()=>({round:HarbourRing.state().round,moves:HarbourRing.state().moves,cash:HarbourRing.state().players.map(x=>x.cash)}));
+  assert.deepEqual(back,mid);ok('Save & leave keeps the match; Game Modes shows Continue and resumes at the same point');
+  // Turn timer: when it runs out the computer chooses for you.
+  await p.evaluate(()=>HarbourRing.setTurnSeconds(1));await p.evaluate(()=>{HarbourRing.close();HarbourRing.start({resume:HarbourRing.saved()})});
+  assert.ok(await p.locator('#hr .hr-timer').count()>=0);
+  await p.waitForFunction(()=>HarbourRing.state().log.some(l=>/Time ran out/.test(l.txt)),null,{timeout:15000});ok('the turn timer runs out and the computer moves for you');
+  await p.evaluate(()=>HarbourRing.setTurnSeconds(25));
   await p.evaluate(()=>{HarbourRing.setSpeed(0);HarbourRing.setAuto(true)});
   await p.waitForFunction(()=>{const s=HarbourRing.state();return s&&s.over},null,{timeout:120000});await p.locator('#hr .hr-res h2').waitFor();
   const end=await p.evaluate(()=>{const s=HarbourRing.state();return{round:s.round,winner:s.winner,final:s.final,h:document.querySelector('#hr .hr-res h2').textContent}});
   assert.ok(end.round===15||end.final.some(x=>x<0),JSON.stringify(end));ok(`full match ends on the result screen after round 15 (${end.h})`);
+  const sky=await p.evaluate(()=>{const s=HarbourRing.state();const want=[0,1].reduce((n,q)=>n+Math.min(8,s.tiles.filter(t=>t.k==='prop'&&t.o===q&&t.lv>0).length),0);return{want,have:document.querySelectorAll('#hr .hr-bld').length}});
+  assert.equal(sky.have,sky.want);ok(`the centre skyline shows one building per built street (${sky.have})`);
+  if(OUT){await p.evaluate(()=>{const s=HarbourRing.state();s.tiles.filter(t=>t.k==='prop').slice(0,8).forEach((t,k)=>{t.o=k%2;t.lv=1+k%4});document.querySelector('#hr [data-a="close"]')})}
   if(OUT)await p.screenshot({path:path.join(OUT,'ring-844-result.png')});
+  const saved=await p.evaluate(()=>HarbourRing.saved());assert.equal(saved,null);ok('a finished match leaves no save behind');
   await p.click('#hr [data-a="home"]');await p.locator('#hr').waitFor({state:'detached'});
   const after=await p.evaluate(()=>({coins:PREF.coins,save:localStorage.getItem('skylineSave'),home:!!document.querySelector('#title .hd-stage'),active:HarbourRing.active()}));
   assert.equal(after.coins,before.coins);assert.equal(after.save,before.save);assert.ok(after.home&&!after.active);ok('leaving returns home; coins and saved games are untouched');

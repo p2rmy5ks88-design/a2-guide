@@ -75,9 +75,16 @@ const css=`
 .hr-centre>*{position:relative}
 .hr-title{display:flex;flex-direction:column;align-items:center;gap:1px;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.8)}
 .hr-title b{font:700 18px/1 'Cinzel',Georgia,serif;letter-spacing:.06em}.hr-title small{font:700 8.5px/1 var(--body,'Manrope',sans-serif);letter-spacing:.3em;color:#f6e2a8}
-.hr-sky{position:absolute;left:0;right:0;bottom:52px;height:70px;pointer-events:none}
-.hr-tw{position:absolute;bottom:0;border-radius:3px 3px 0 0;background:repeating-linear-gradient(180deg,transparent 0 5px,rgba(255,255,255,.55) 5px 7px),linear-gradient(180deg,var(--c1),var(--c2));box-shadow:0 0 14px var(--gl);transition:height .4s}
-.hr-tw.a{--c1:#ffe39b;--c2:#b9832b;--gl:rgba(242,196,87,.7)}.hr-tw.b{--c1:#ffb3b5;--c2:#a8243a;--gl:rgba(255,90,95,.7)}
+.hr-sky{position:absolute;left:0;right:0;bottom:52px;height:78px;pointer-events:none}
+.hr-sky svg{position:absolute;left:0;bottom:0;width:100%;height:100%;overflow:visible}
+.hr-bld{transform-box:fill-box;transform-origin:50% 100%}
+.hr-bld.rise{animation:hrRise .7s cubic-bezier(.2,.9,.3,1.2)}
+@keyframes hrRise{from{transform:scaleY(.05);opacity:.4}to{transform:scaleY(1);opacity:1}}
+.hr-timer{width:40px;height:40px;flex:none;border-radius:50%;display:grid;place-items:center;font:800 13px var(--display,'Outfit',sans-serif);color:#fff;
+ background:radial-gradient(circle,#0b1633 0 15px,transparent 16px),conic-gradient(#f2c457 var(--p),rgba(255,255,255,.18) 0)}
+.hr-timer.low{background:radial-gradient(circle,#0b1633 0 15px,transparent 16px),conic-gradient(#ff5a5f var(--p),rgba(255,255,255,.18) 0)}
+html.light .hr-timer{color:#13284a;background:radial-gradient(circle,#fff 0 15px,transparent 16px),conic-gradient(#d9a23a var(--p),rgba(19,40,74,.15) 0)}
+html.light .hr-timer.low{background:radial-gradient(circle,#fff 0 15px,transparent 16px),conic-gradient(#d63b4a var(--p),rgba(19,40,74,.15) 0)}
 .hr-act{display:flex;align-items:center;gap:8px;min-height:44px}
 .hr-act p{flex:1;margin:0;font:600 11.5px/1.3 var(--body,'Manrope',sans-serif);color:#eef2fb;text-shadow:0 1px 4px rgba(0,0,0,.8)}
 .hr-act p b{color:#fff}
@@ -148,10 +155,16 @@ html.light .hr-t.tg{box-shadow:0 0 0 2.5px #13284a,0 0 14px rgba(19,40,74,.45)}h
 html.light .hr-b small{color:#3d4d6b}html.light .hr-b.g{color:#241703}html.light .hr-b.bad b{color:#b3263a}
 html.light .hr-score b.a{color:#8a5a10}html.light .hr-score b.b{color:#b3263a}
 @media (max-height:360px){.hr-t em{font-size:11px}.hr-title{display:none}}
-@media (prefers-reduced-motion:reduce){.hr-tw,.hr-score span i,.hr-tok{transition:none}}
+@media (prefers-reduced-motion:reduce){.hr-score span i,.hr-tok{transition:none}.hr-bld.rise{animation:none}}
 `;
 
-let s=null,root=null,me=0,ai=1,view={tok:null,sheet:null,tab:'feed',seen:0,auto:false,speed:1},timer=null;
+let s=null,root=null,me=0,ai=1,view={tok:null,sheet:null,tab:'feed',seen:0,auto:false,speed:1},timer=null,tick=null,built=new Set();
+const SAVE_KEY='skylineRingSave',TIMER_KEY='skylineRingTimer';let TURN_MS=25000;
+const timerOn=()=>{try{return localStorage.getItem(TIMER_KEY)!=='off'}catch(e){return true}};
+// The match is saved after every step (its own key; the classic save is never touched) and resumes from Game Modes.
+function persist(){try{if(s&&!s.over)localStorage.setItem(SAVE_KEY,JSON.stringify({v:1,at:Date.now(),s}));else localStorage.removeItem(SAVE_KEY)}catch(e){}}
+function loadRing(){try{const o=JSON.parse(localStorage.getItem(SAVE_KEY)||'null');if(o&&o.v===1&&o.s&&o.s.v===1&&Array.isArray(o.s.tiles)&&o.s.tiles.length===24&&!o.s.over&&o.s.decision)return o.s}catch(e){}return null}
+function dropSave(){try{localStorage.removeItem(SAVE_KEY)}catch(e){}}
 const D=()=>s&&HR.pending(s);
 const name=p=>s.players[p].name;
 const fmt=HR.fmt;
@@ -195,10 +208,27 @@ function actHTML(){const d=D();if(!d)return '';
     case 'ferry':return `<p><b>Ferry:</b> sail to a corner.</p>`+HR.CORNERS.filter(c=>c!==P.pos).map(c=>`<button class="hr-b" data-ferry="${c}"><b>${E(s.tiles[c].n)}</b></button>`).join('')+`<button class="hr-b" data-a="skip" style="flex:none;width:64px"><b>Stay</b></button>`;
   }return ''}
 
-function towersHTML(){const out=[];[me,ai].forEach(p=>{const ts=HR.tilesOf(s,p).filter(t=>t.lv>0).sort((a,b)=>b.lv-a.lv).slice(0,5);
-  ts.forEach((t,k)=>{const h=14+t.lv*12,w=t.lv===4?16:12,x=10+k*(w+5);out.push(`<span class="hr-tw ${p===me?'a':'b'}" style="${p===me?'left':'right'}:${x+20}px;width:${w}px;height:${h}px"></span>`)})});
-  return out.join('')}
+// The skyline in the centre: one building per built street, gold for you on the left, red for the rival on the right.
+// House 1 is a low-rise, 2 a mid-rise, 3 a high-rise, a tower gets a crown and a spire. New buildings rise into place.
+const SHAPE=[null,[18,20],[18,34],[22,48],[24,62]];
+function building(x,lv,c,cls){const [w,h]=SHAPE[lv],y=78-h,win=[];
+  for(let r=y+6;r<74;r+=7)for(let q=x+4;q<x+w-4;q+=5)win.push(`<rect x="${q}" y="${r}" width="2.4" height="3" rx=".5"/>`);
+  let top='';if(lv===3)top=`<rect x="${x+4}" y="${y-6}" width="${w-8}" height="7" rx="1" fill="url(#hr-${c})"/>`;
+  if(lv===4)top=`<rect x="${x+5}" y="${y-8}" width="${w-10}" height="9" rx="1" fill="url(#hr-${c})"/><rect x="${x+w/2-1}" y="${y-20}" width="2" height="13" fill="url(#hr-${c})"/><circle cx="${x+w/2}" cy="${y-21}" r="2" fill="${c==='a'?'#fff4c8':'#ffd6d8'}"/>`;
+  return `<g class="hr-bld${cls}" filter="url(#hr-glow-${c})">${top}<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="2" fill="url(#hr-${c})"/><g fill="${c==='a'?'#fff7d6':'#ffe2e3'}" opacity=".85">${win.join('')}</g></g>`}
+function towersHTML(){const now=new Set(),out=[];
+  [me,ai].forEach(p=>{const ts=HR.tilesOf(s,p).filter(t=>t.lv>0).sort((a,b)=>b.lv-a.lv||b.p-a.p).slice(0,8);let x=p===me?24:536;
+    ts.forEach(t=>{const w=SHAPE[t.lv][0],key=t.i+':'+t.lv;now.add(key);if(p!==me)x-=w;out.push(building(x,t.lv,p===me?'a':'b',built.size&&!built.has(key)?' rise':''));if(p===me)x+=w+6;else x-=6})});
+  built=now;
+  return `<svg viewBox="0 0 560 78" preserveAspectRatio="xMidYMax meet" aria-hidden="true"><defs>
+    <linearGradient id="hr-a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe7a3"/><stop offset="1" stop-color="#a8721f"/></linearGradient>
+    <linearGradient id="hr-b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffb3b5"/><stop offset="1" stop-color="#8f1d2f"/></linearGradient>
+    <filter id="hr-glow-a" x="-50%" y="-50%" width="200%" height="200%"><feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="#f2c457" flood-opacity=".7"/></filter>
+    <filter id="hr-glow-b" x="-50%" y="-50%" width="200%" height="200%"><feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="#ff5a5f" flood-opacity=".7"/></filter></defs>${out.join('')}</svg>`}
 
+function timerHTML(turnP){const left=view.deadline?Math.max(0,Math.ceil((view.deadline-Date.now())/1000)):0;
+  if(!s.over&&turnP===me&&view.deadline&&!view.auto){const pct=Math.round(100*Math.min(1,(view.deadline-Date.now())/TURN_MS));return `<span class="hr-timer${left<=5?' low':''}" role="timer" aria-label="Your turn, ${left} seconds left" style="--p:${pct}%">${left}</span>`}
+  return `<span class="hr-who">${s.over?'Final':turnP===me?'Your turn':E(name(ai))+"'s turn"}</span>`}
 function render(){if(!root||!s)return;const d=D(),P=s.players;
   view.targets=null;if(d&&d.type==='move'&&d.p===me&&!view.auto&&!view.tok){view.targets={};s.options.forEach(o=>{view.targets[o.target]=o.steps})}
   const segs=Array.from({length:HR.CFG.rounds},(_,k)=>{const r=k+1;return `<i class="${r<s.round?'d':r===s.round?'n':''}${r>=HR.CFG.bell?' b':''}"></i>`}).join('');
@@ -209,7 +239,7 @@ function render(){if(!root||!s)return;const d=D(),P=s.players;
   <header class="hr-top">
     <button class="hr-card${turnP===me?' turn':''}" data-a="stats" aria-label="Your stats"><img src="${E(P[me].avatar)}" alt=""><span><b>${E(P[me].name)}</b><small>${fmt(P[me].cash)} cash</small></span></button>
     <div class="hr-mid"><div class="hr-round"><b>Round ${Math.min(s.round,HR.CFG.rounds)} <em>of ${HR.CFG.rounds}</em><i>${bell}</i></b><span class="hr-segs" aria-hidden="true">${segs}</span></div>
-      <span class="hr-who">${s.over?'Final':turnP===me?'Your turn':E(name(ai))+"'s turn"}</span></div>
+      ${timerHTML(turnP)}</div>
     <button class="hr-card r${turnP===ai?' turn':''}" data-a="stats" aria-label="${E(name(ai))} stats"><img src="${E(P[ai].avatar)}" alt=""><span><b>${E(P[ai].name)}</b><small>${fmt(P[ai].cash)} cash</small></span></button>
   </header>
   <div class="hr-board">${s.tiles.map(tileHTML).join('')}
@@ -240,9 +270,10 @@ function sheetHTML(){const v=view.sheet;if(!v)return '';
       :`<div class="hr-stats">${[me,ai].map(p=>{const ds=s.districts.filter(dd=>s.tiles.some(t=>t.k==='prop'&&t.d===dd.d&&t.o===p&&HR.complete(s,t)));
         return `<div><b style="color:${p===me?'#f2c457':'#ff9da0'}">${E(name(p))}</b><span>Net worth ${fmt(HR.netWorth(s,p))}</span><span>Cash ${fmt(s.players[p].cash)}</span><span>Streets ${HR.tilesOf(s,p).length} · towers ${HR.towers(s,p)}</span><span>Complete: ${ds.map(x=>E(x.name)).join(', ')||'none'}</span><span>Laps ${s.players[p].laps}</span></div>`}).join('')}</div>`;
     return `<div class="hr-scrim" data-a="close"></div><section class="hr-sheet up" role="dialog" aria-label="Match feed and stats"><div style="display:flex;align-items:center;gap:8px"><div class="hr-tabs" role="tablist"><button role="tab" data-tab="feed" aria-selected="${view.tab==='feed'}">Match feed</button><button role="tab" data-tab="stats" aria-selected="${view.tab==='stats'}">Stats</button></div><div style="flex:1"></div><button class="hr-x" data-a="close" aria-label="Close panel" style="margin-top:8px">${ICON.x}</button></div>${body}</section>`}
-  if(v.k==='menu')return `<div class="hr-scrim" data-a="close"></div><section class="hr-sheet mid" role="dialog" aria-label="Match menu"><div class="hr-sh" style="padding:0 0 8px"><div><small style="color:#f6e2a8">PREVIEW</small><b>Harbour Ring</b><span>1 vs computer · 15 rounds · nothing is saved or rewarded yet</span></div><button class="hr-x" data-a="close" aria-label="Close">${ICON.x}</button></div>
+  if(v.k==='menu')return `<div class="hr-scrim" data-a="close"></div><section class="hr-sheet mid" role="dialog" aria-label="Match menu"><div class="hr-sh" style="padding:0 0 8px"><div><small style="color:#f6e2a8">PREVIEW</small><b>Harbour Ring</b><span>1 vs computer · 15 rounds · saved as you play · no rewards yet</span></div><button class="hr-x" data-a="close" aria-label="Close">${ICON.x}</button></div>
       <p class="hr-rows" style="margin:4px 0 10px;line-height:1.45">Roll two dice, then move by either die or the total. Buy streets or let them go to a sealed bid. Own both streets of a city to build. Land on a lone rival street to offer a takeover; the owner can take the money or block it. Most net worth after round 15 wins; each tower adds ${fmt(HR.CFG.towerBonus)}.</p>
-      <div class="hr-res"><div class="row"><button class="hr-b" data-a="close"><b>Resume</b></button><button class="hr-b bad" data-a="leave"><b>Leave match</b></button></div></div></section>`;
+      <div class="hr-res"><div class="row"><button class="hr-b g" data-a="close"><b>Resume</b></button><button class="hr-b" data-a="timer"><b>Turn timer: ${timerOn()?'On':'Off'}</b><small>${TURN_MS/1000} seconds, then the computer moves for you</small></button></div>
+        <div class="row"><button class="hr-b" data-a="leave"><b>Save &amp; leave</b><small>Continue later from Game Modes</small></button><button class="hr-b bad" data-a="abandon"><b>Abandon match</b></button></div></div></section>`;
   if(v.k==='exchange'){const d=D();return `<div class="hr-scrim" data-a="close-ex"></div><section class="hr-sheet mid" role="dialog" aria-label="Choose a swap"><div class="hr-sh" style="padding:0"><div><small style="color:#f6e2a8">EXCHANGE</small><b>Choose a swap</b></div><button class="hr-x" data-a="close-ex" aria-label="Close">${ICON.x}</button></div>
       <div class="hr-list">${d.choices.slice(0,6).map((c,k)=>`<button class="hr-b" data-ex="${k}"><b>${E(s.tiles[c.give].n)} → ${E(s.tiles[c.take].n)}</b><small>${fmt(c.cost)}</small></button>`).join('')}</div></section>`}
   if(v.k==='end'){const w=s.winner,[fa,fb]=[HR.score(s,me),HR.score(s,ai)];
@@ -251,12 +282,21 @@ function sheetHTML(){const v=view.sheet;if(!v)return '';
       <div class="row"><button class="hr-b g" data-a="again"><b>Play again</b></button><button class="hr-b" data-a="home"><b>Home</b></button></div></section>`}
   return ''}
 
-function after(){if(!s)return;render();clearTimeout(timer);if(s.over){view.sheet={k:'end'};render();return}
+function after(){if(!s)return;persist();clearTimeout(timer);
+  const d0=D(),mine0=d0&&!s.over&&(d0.type==='bid'?s.bids&&s.bids[me]==null:d0.p===me),key=d0?s.moves+':'+d0.type+':'+(d0.tile!=null?d0.tile:'')+':'+(d0.p):'';
+  if(mine0&&timerOn()&&!view.auto){if(view.dkey!==key){view.dkey=key;view.deadline=Date.now()+TURN_MS}}else{view.deadline=0;view.dkey=key}
+  render();if(s.over){view.sheet={k:'end'};render();return}
   const d=D();
   if(d.type==='bid'){if(s.bids[ai]==null){HR.act(s,ai,HR.ai(s,ai));if(!s.over&&D()!==d)return after()}
     if(view.auto&&s.bids&&s.bids[me]==null){timer=setTimeout(()=>{HR.act(s,me,HR.ai(s,me));after()},delay(300))}return}
   if(d.p===ai||view.auto)timer=setTimeout(()=>runFor(d.p),delay(d.type==='move'?650:550))}
 const delay=ms=>Math.max(0,Math.round(ms*view.speed));
+function onTick(){if(!s||!root)return;if(!view.deadline||view.tok)return;
+  if(view.sheet&&view.sheet.k==='menu'){view.deadline+=250;return}
+  const el=root.querySelector('.hr-timer');const left=view.deadline-Date.now();
+  if(left<=0){view.deadline=0;view.sheet=null;const d=D();if(!d||s.over)return;s.log.push({round:s.round,p:me,txt:'Time ran out: the computer chose for you'});
+    const a=HR.ai(s,me);if(d.type==='move')return animate(me,a.steps,()=>{HR.act(s,me,a);after()});HR.act(s,me,a);view.bid=null;return after()}
+  if(el){const sec=Math.ceil(left/1000);el.textContent=sec;el.style.setProperty('--p',Math.round(100*left/TURN_MS)+'%');el.classList.toggle('low',sec<=5);el.setAttribute('aria-label',`Your turn, ${sec} seconds left`)}}
 function runFor(p){if(!s||s.over)return;const d=D();if(!d||d.p!==p)return after();const a=HR.ai(s,p);
   if(d.type==='move')return animate(p,a.steps,()=>{HR.act(s,p,a);after()});
   HR.act(s,p,a);after()}
@@ -271,8 +311,10 @@ function onClick(e){const b=e.target.closest('button,[data-a]');if(!b||!s)return
   if(a.a==='feed'){tap();view.sheet={k:'feed'};view.seen=s.log.length;return render()}
   if(a.a==='stats'){tap();view.sheet={k:'feed'};view.tab='stats';return render()}
   if(a.a==='menu'){tap();view.sheet={k:'menu'};return render()}
-  if(a.a==='leave'||a.a==='home'){tap();return close()}
-  if(a.a==='again'){tap();return start()}
+  if(a.a==='leave'){tap();persist();return close()}
+  if(a.a==='abandon'||a.a==='home'){tap();dropSave();return close()}
+  if(a.a==='again'){tap();dropSave();return start()}
+  if(a.a==='timer'){try{localStorage.setItem(TIMER_KEY,timerOn()?'off':'on')}catch(e){}view.dkey=null;view.sheet=null;return after()}
   const d=D();if(!d||s.over||view.tok)return;
   const mine=d.type==='bid'?s.bids&&s.bids[me]==null:d.p===me;if(!mine)return;
   const go=act=>{tap();view.sheet=null;HR.act(s,me,act);view.bid=null;after()};
@@ -288,24 +330,28 @@ function onKey(e){if(e.key==='Escape'&&view.sheet&&view.sheet.k!=='end'){view.sh
 
 function cities(){return CITY_ORDER.map(k=>({key:k,name:CITY_DATA[k].name,country:(countryOf(k)||{}).name||'',props:CITY_DATA[k].props}))}
 function myAvatar(){const i=document.querySelector('#tbWho .rav img');return i&&i.getAttribute('src')||'avatars/small/skyline_avatar_02_96.png'}
-function start(opts={}){clearTimeout(timer);const seed=opts.seed||((Date.now()^Math.floor(Math.random()*1e9))>>>0);
+function start(opts={}){clearTimeout(timer);if(opts.resume){s=opts.resume;built=new Set(s.tiles.filter(t=>t.lv>0).map(t=>t.i+':'+t.lv));view={tok:null,sheet:null,tab:'feed',seen:s.log.length,auto:!!opts.auto,speed:opts.speed!=null?opts.speed:1};mount();after();return s}
+  const seed=opts.seed||((Date.now()^Math.floor(Math.random()*1e9))>>>0);built=new Set();
   let rv=1+(seed%20);const mineAv=myAvatar();if(mineAv.includes(`_${String(rv).padStart(2,'0')}_`))rv=rv%20+1;
   const first=opts.first!=null?opts.first:seed&1;
   s=HR.newMatch({seed,first,cities:cities(),players:[{name:(typeof PREF==='object'&&PREF.nick)||'You',avatar:mineAv},{name:RIVALS[seed%RIVALS.length],ai:true,avatar:`avatars/small/skyline_avatar_${String(rv).padStart(2,'0')}_96.png`}]});
   view={tok:null,sheet:null,tab:'feed',seen:0,auto:!!opts.auto,speed:opts.speed!=null?opts.speed:1};
-  if(!root){root=document.createElement('div');root.id='hr';root.setAttribute('role','application');root.setAttribute('aria-label','Harbour Ring match');document.body.append(root);root.addEventListener('click',onClick);document.addEventListener('keydown',onKey)}
-  try{if(window.SkylineKeepAwake)SkylineKeepAwake.set(true)}catch(e){}
-  after();return s}
-function close(){clearTimeout(timer);if(root){root.removeEventListener('click',onClick);document.removeEventListener('keydown',onKey);root.remove();root=null}s=null;
+  mount();after();return s}
+function onHide(){if(document.hidden)persist()}
+function mount(){if(!root){root=document.createElement('div');root.id='hr';root.setAttribute('role','application');root.setAttribute('aria-label','Harbour Ring match');document.body.append(root);root.addEventListener('click',onClick);document.addEventListener('keydown',onKey);document.addEventListener('visibilitychange',onHide)}
+  clearInterval(tick);tick=setInterval(onTick,250);
+  try{if(window.SkylineKeepAwake)SkylineKeepAwake.set(true)}catch(e){}}
+function close(){clearTimeout(timer);clearInterval(tick);if(root){root.removeEventListener('click',onClick);document.removeEventListener('keydown',onKey);document.removeEventListener('visibilitychange',onHide);root.remove();root=null}s=null;
   try{if(window.SkylineKeepAwake)SkylineKeepAwake.set(false)}catch(e){}
   try{homeTab('play')}catch(e){}}
 
 {const st=document.createElement('style');st.id='hr-style';st.textContent=css;document.head.append(st)}
 // Entry in the Game Modes panel of the home screen.
 function addEntry(T){try{const box=T.querySelector('.hd-gm-list');if(!box||box.querySelector('#qRing'))return;const b=document.createElement('button');b.id='qRing';b.type='button';b.className='hd-gm-item';
-  b.innerHTML=`<span class="ic">${I('<rect x="3" y="5" width="18" height="14" rx="2"/><rect x="7.5" y="9" width="9" height="6" rx="1"/>')}</span><span class="tx"><b>Harbour Ring</b><small>1 vs 1 · new board · preview</small></span>`;
-  b.onclick=()=>{try{initAudio()}catch(e){}start()};box.append(b)}catch(e){}}
+  const saved=loadRing();
+  b.innerHTML=`<span class="ic">${I('<rect x="3" y="5" width="18" height="14" rx="2"/><rect x="7.5" y="9" width="9" height="6" rx="1"/>')}</span><span class="tx"><b>Harbour Ring</b><small>${saved?`Continue · round ${saved.round} of ${HR.CFG.rounds}`:'1 vs 1 · new board · preview'}</small></span>`;
+  b.onclick=()=>{try{initAudio()}catch(e){}const sv=loadRing();sv?start({resume:sv}):start()};box.append(b)}catch(e){}}
 function install(){const _pp=paneP;paneP=function(T){const r=_pp.apply(this,arguments);addEntry(T);return r};try{const T=document.querySelector('.hd-stage')?.parentElement;if(T)addEntry(T)}catch(e){}}
 if(document.readyState==='complete')install();else addEventListener('load',install,{once:true});
-window.HarbourRing=Object.freeze({start,close,active:()=>!!s,state:()=>s,setAuto:on=>{view.auto=!!on;after()},setSpeed:x=>{view.speed=x}});
+window.HarbourRing=Object.freeze({start,close,active:()=>!!s,state:()=>s,saved:loadRing,setAuto:on=>{view.auto=!!on;after()},setSpeed:x=>{view.speed=x},setTurnSeconds:n=>{TURN_MS=n*1000;view.dkey=null}});
 })();
