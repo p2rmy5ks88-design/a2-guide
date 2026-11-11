@@ -58,6 +58,13 @@ const TYPES={'.html':'text/html','.js':'text/javascript','.css':'text/css','.jso
   await p.click('#qRing');await p.locator('#hr .hr-board').waitFor();
   const back=await p.evaluate(()=>({round:HarbourRing.state().round,moves:HarbourRing.state().moves,cash:HarbourRing.state().players.map(x=>x.cash)}));
   assert.deepEqual(back,mid);ok('Save & leave keeps the match; Game Modes shows Continue and resumes at the same point');
+  const resumeSky=await p.evaluate(()=>{
+    const tiles=HarbourRing.state().tiles.filter(t=>t.k==='prop'&&t.lv>0&&(t.o===0||t.o===1));
+    const visible=[...document.querySelectorAll('#hr .hr-sky .hr-bld.rise')].length;
+    return {built:tiles.length,unexpectedRise:visible};
+  });
+  assert.equal(resumeSky.unexpectedRise,0,'resuming must not replay construction animations');
+  ok('resuming a match preserves existing buildings without replaying construction');
   // Turn timer: when it runs out the computer chooses for you.
   await p.evaluate(()=>HarbourRing.setTurnSeconds(1));await p.evaluate(()=>{HarbourRing.close();HarbourRing.start({resume:HarbourRing.saved()})});
   assert.ok(await p.locator('#hr .hr-timer').count()>=0);
