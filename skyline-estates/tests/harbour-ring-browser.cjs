@@ -28,6 +28,14 @@ const TYPES={'.html':'text/html','.js':'text/javascript','.css':'text/css','.jso
   assert.deepEqual(board.tiles.slice().sort((a,b)=>a-b),Array.from({length:24},(_,i)=>i));assert.equal(new Set(board.pos).size,24);
   assert.equal(board.cities,8);assert.equal(board.props,16);assert.deepEqual(board.prices.slice(0,4),board.prices.slice(4));
   ok('24 unique numbered spaces on a 9 × 5 ring, 16 streets from 8 different cities, mirrored prices');
+
+  const harbour=await p.evaluate(()=>{
+    const sky=document.querySelector('#hr .hr-sky');
+    return {plots:sky?sky.querySelectorAll('[data-plot]').length:0,boats:sky?sky.querySelectorAll('.hr-boat').length:0,svg:!!sky?.querySelector('svg')};
+  });
+  assert.equal(harbour.plots,16);assert.equal(harbour.boats,2);assert.ok(harbour.svg);
+  ok('Living Harbour contains 16 state-linked development plots and two boats');
+
   const mv=await p.evaluate(()=>{const s=HarbourRing.state();return{opts:s.options.map(o=>o.target).sort((a,b)=>a-b),hi:[...document.querySelectorAll('#hr .hr-t.tg')].map(t=>+t.dataset.i).sort((a,b)=>a-b),btn:document.querySelectorAll('#hr [data-move]').length}});
   assert.deepEqual(mv.hi,mv.opts);assert.equal(mv.btn,mv.opts.length);ok(`move choices match the highlighted tiles (${mv.hi.join(', ')})`);
   if(OUT)for(const ui of ['dark','light']){await p.evaluate(u=>{PREF.ui=u;applyUI()},ui);await p.waitForTimeout(250);await p.screenshot({path:path.join(OUT,`ring-844-${ui}.png`)})}
