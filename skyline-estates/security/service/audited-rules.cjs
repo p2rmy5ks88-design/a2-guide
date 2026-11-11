@@ -1,6 +1,6 @@
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
 const source=fs.readFileSync(path.resolve(__dirname,'../../game.html'),'utf8').replace(/\r\n/g,'\n');
-const expectedSourceHash='ac6b3f001a365ad1ca9e71418009f035e468d21507f4be262ce3cdc34a762c8b';
+const expectedSourceHash='c176235b51fd73aef555359e989d1f6ce076769d8366cfdf84be9dba720945f6';
 const sourceHash=crypto.createHash('sha256').update(source).digest('hex');
 if(sourceHash!==expectedSourceHash)throw Error('Game source changed: audit property hooks and rerun browser parity before updating the pinned hash');
 function section(start,end){const a=source.indexOf(start),b=source.indexOf(end,a);if(a<0||b<=a)throw Error('Missing audited game section');return source.slice(a,b)}

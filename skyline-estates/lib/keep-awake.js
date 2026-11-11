@@ -9,7 +9,7 @@ async function apply(){const pl=plugin();
     else if((!want||document.hidden)&&lock){await lock.release();lock=null}}catch(e){lock=null}}
 function set(on){if(want===on)return;want=on;apply()}
 document.addEventListener('visibilitychange',apply);
-const inMatch=()=>{try{return !!(G&&!G.over&&!G.sim&&document.getElementById('title')?.hidden)}catch(e){return false}};
+const inMatch=()=>{try{if(window.HarbourRing&&HarbourRing.active())return true;return !!(G&&!G.over&&!G.sim&&document.getElementById('title')?.hidden)}catch(e){return false}};
 {const _sw=startWith;startWith=function(){const r=_sw.apply(this,arguments);set(inMatch());return r}}
 {const _st=showTitle;showTitle=function(){set(false);return _st.apply(this,arguments)}}
 {const _fin=finish;finish=async function(){set(false);return _fin.apply(this,arguments)}}
