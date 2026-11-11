@@ -351,7 +351,7 @@ function close(){clearTimeout(timer);clearInterval(tick);if(root){root.removeEve
 // Entry in the Game Modes panel of the home screen.
 function addEntry(T){try{const box=T.querySelector('.hd-gm-list');if(!box||box.querySelector('#qRing'))return;const b=document.createElement('button');b.id='qRing';b.type='button';b.className='hd-gm-item';
   const saved=loadRing();
-  b.innerHTML=`<span class="ic">${I('<rect x="3" y="5" width="18" height="14" rx="2"/><rect x="7.5" y="9" width="9" height="6" rx="1"/>')}</span><span class="tx"><b>Harbour Ring</b><small>${saved?`Continue · round ${saved.round} of ${HR.CFG.rounds}`:'1 vs 1 · new board'}</small></span>`;
+  b.innerHTML=`<span class="ic" style="padding:0;overflow:hidden;background:none"><img src="art/ring-icon.png" alt="" width="34" height="34" style="width:100%;height:100%;object-fit:cover;border-radius:inherit"></span><span class="tx"><b>Harbour Ring</b><small>${saved?`Continue · round ${saved.round} of ${HR.CFG.rounds}`:'1 vs 1 · new board'}</small></span>`;
   b.onclick=()=>{try{initAudio()}catch(e){}const sv=loadRing();sv?start({resume:sv}):start()};box.append(b)}catch(e){}}
 function install(){const _pp=paneP;paneP=function(T){const r=_pp.apply(this,arguments);addEntry(T);return r};try{const T=document.querySelector('.hd-stage')?.parentElement;if(T)addEntry(T)}catch(e){}}
 if(document.readyState==='complete')install();else addEventListener('load',install,{once:true});
