@@ -1,4 +1,4 @@
-// Task 11: 4-slide welcome tour, full Menu tour with Replay tips, Skip tips, no tips for returning players.
+// Task 11 + tutorial v2: 4-slide welcome and Menu tour with Replay tips, Skip tips, no tips for returning players.
 const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
 const assert=require('node:assert/strict'),path=require('node:path');
 const url='file://'+path.resolve(__dirname,'../index.html');
@@ -16,7 +16,7 @@ const start=()=>{GEN++;newGame({cash:1500,set:{ai:'normal',speed:'fast',city:'la
  assert.equal(await p.locator('#tReplay').count(),0,'no Replay button in the welcome tour');
  await p.locator('#tSkip').click();await p.waitForTimeout(300);
  await p.evaluate(()=>{openTutorial(false)});await p.waitForTimeout(400);
- assert.equal(await p.locator('.ttx small').innerText(),'STEP 1 OF 8','Menu tour keeps all 8 slides');
+ assert.equal(await p.locator('.ttx small').innerText(),'STEP 1 OF 4','Menu tour is the same 4 slides (tutorial v2)');
  await p.locator('#tSkip').click();await p.waitForTimeout(300);
  await p.evaluate(start);await p.locator('#coach .cskip').waitFor({state:'visible',timeout:5000});
  assert.match(await p.locator('#coach .ctx').innerText(),/Roll/);

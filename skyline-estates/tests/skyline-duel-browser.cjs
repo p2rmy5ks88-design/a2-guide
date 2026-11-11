@@ -10,7 +10,7 @@ const TYPES={'.html':'text/html','.js':'text/javascript','.mjs':'text/javascript
   await new Promise(r=>server.listen(0,'127.0.0.1',r));const origin=`http://127.0.0.1:${server.address().port}`;
   const b=engine==='webkit'?await webkit.launch():await chromium.launch({args:['--disable-webgl'],...(process.env.CHROME_PATH?{executablePath:process.env.CHROME_PATH}:{})});
   const ctx=await b.newContext({viewport:{width:844,height:390},serviceWorkers:'block'});await ctx.route('**/*',r=>r.request().url().startsWith(origin)?r.continue():r.abort());
-  await ctx.addInitScript(()=>{if(!localStorage.getItem('skylinePrefs'))localStorage.setItem('skylinePrefs',JSON.stringify({flat2d:true,nickSet:true,nick:'Ada',welcomed:1,tutDone:1,lc:true,stats:{games:9}}))});
+  await ctx.addInitScript(()=>{localStorage.setItem('skylineIntroDuel','1');if(!localStorage.getItem('skylinePrefs'))localStorage.setItem('skylinePrefs',JSON.stringify({flat2d:true,nickSet:true,nick:'Ada',welcomed:1,tutDone:1,lc:true,stats:{games:9}}))});
   const p=await ctx.newPage();const errs=[];p.on('pageerror',e=>errs.push(String(e)));
   await p.goto(origin+'/skyline-estates/index.html');await p.locator('#boot').waitFor({state:'detached',timeout:30000});
   await p.evaluate(()=>homeTab('play'));await p.locator('#hdModes').click();await p.locator('#qDuel').waitFor();ok('Skyline Duel is in the Game Modes panel for everyone');
