@@ -51,4 +51,23 @@ const playOut=s=>{let g=0;while(!s.over&&g++<5000){const D=HR.pending(s);if(D.ty
   assert.ok(pair[0].lv<2||HR.tilesOf(s,0).length<before||s.players[0].bankrupt);ok('build only on a complete district; rent rises; a broke player sells buildings then streets')}
 {let fin=0,errs=0;for(let k=0;k<300;k++){try{const s=playOut(fresh(500+k,k&1));if(s.over&&s.round===15)fin++}catch(e){errs++}}assert.equal(errs,0);assert.ok(fin>=290);
   ok(`300 computer matches finish cleanly (${fin} after round 15)`)}
+// Stress the rules with independent deterministic fixtures, including property-state invariants.
+{const cities=Array.from({length:12},(_,i)=>({key:'stress-'+i,name:'City '+i,country:'X',
+  props:Array.from({length:24},(_,j)=>['Street '+j,'District'])}));
+  let maxSteps=0;
+  for(let k=0;k<1000;k++){
+    const s=HR.newMatch({seed:11000+k,first:k%2,cities,players:[{name:'Human'},{name:'AI',ai:true}]});
+    let steps=0;
+    while(!s.over&&steps++<5000){
+      const d=HR.pending(s);assert.ok(d,'decision must exist');
+      if(d.type==='bid'){HR.act(s,0,HR.ai(s,0));if(!s.over&&HR.pending(s)===d)HR.act(s,1,HR.ai(s,1))}
+      else HR.act(s,d.p,HR.ai(s,d.p));
+      assert.equal(s.tiles.length,24);
+      const props=s.tiles.filter(t=>t.k==='prop');assert.equal(props.length,16);
+      for(const t of props){assert.ok([-1,0,1].includes(t.o));assert.ok(Number.isInteger(t.lv)&&t.lv>=0&&t.lv<=4)}
+    }
+    assert.ok(s.over&&s.round===15,'match must finish in round 15');maxSteps=Math.max(maxSteps,steps);
+  }
+  ok('1,000 deterministic matches finish with valid board, ownership and building states (max '+maxSteps+' steps)');
+}
 console.log(`HARBOUR RING RULES ${n} checks`);
