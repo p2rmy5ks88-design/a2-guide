@@ -172,7 +172,7 @@ html.light .hr-score b.a{color:#8a5a10}html.light .hr-score b.b{color:#b3263a}
 @media (prefers-reduced-motion:reduce){.hr-score span i,.hr-tok{transition:none}.hr-bld.rise{animation:none}}
 `;
 
-let s=null,root=null,me=0,ai=1,view={tok:null,sheet:null,tab:'feed',seen:0,auto:false,speed:1},timer=null,tick=null,built=new Set(),plotOwners=new Map();
+let s=null,root=null,me=0,ai=1,view={tok:null,sheet:null,tab:'feed',seen:0,auto:false,speed:1},timer=null,tick=null,built=new Set(),plotOwners=new Map(),plotClaims=new Map(),buildingRises=new Map();
 const SAVE_KEY='skylineRingSave',TIMER_KEY='skylineRingTimer';let TURN_MS=25000;
 /* Rewards (owner decision 11 Nov 2026: live, same scale as an offline 1 vs computer match).
    Paid once per finished match: XP (game + win + rent), Coins (400 win / 175 loss), trophies (+30 win / -8 loss),
@@ -244,7 +244,7 @@ function actHTML(){const d=D();if(!d)return '';
 // The skyline in the centre: one building per built street, gold for you on the left, red for the rival on the right.
 // House 1 is a low-rise, 2 a mid-rise, 3 a high-rise, a tower gets a crown and a spire. New buildings rise into place.
 const SHAPE=[null,[18,20],[18,34],[22,48],[24,62]];
-function building(x,lv,c,cls){
+function building(x,lv,c,cls,elapsed=0){
   const [w,h]=SHAPE[lv],y=78-h,accent=c==='a'?'#f2c457':'#ff777d';
   const windows=[];
   for(let r=y+8;r<75;r+=8)for(let q=x+4;q<x+w-4;q+=6)
@@ -252,7 +252,7 @@ function building(x,lv,c,cls){
   const roof=lv===4
     ?'<path d="M'+(x+4)+' '+y+' l'+(w/2-4)+' -10 l'+(w/2-4)+' 10" fill="none" stroke="'+accent+'" stroke-width="2"/><path d="M'+(x+w/2)+' '+(y-10)+' v-10" stroke="'+accent+'" stroke-width="2"/>'
     :lv===3?'<rect x="'+(x+4)+'" y="'+(y-5)+'" width="'+(w-8)+'" height="5" fill="'+accent+'"/>':'';
-  return '<g class="hr-bld'+cls+'" filter="url(#hr-glow-'+c+')">'+
+  return '<g class="hr-bld'+cls+'" style="'+(cls?'animation-delay:-'+elapsed+'ms':'')+'" filter="url(#hr-glow-'+c+')">'+
     '<path d="M'+x+' '+y+' l7 -5 h'+w+' l-7 5Z" fill="#c6d7df"/>'+
     '<path d="M'+(x+w)+' '+y+' l7 -5 v'+h+' l-7 5Z" fill="#314b63"/>'+
     '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="1" fill="url(#hr-'+c+')"/>'+
@@ -263,7 +263,7 @@ function building(x,lv,c,cls){
 function towersHTML(){
   // Stable physical plot locations: each of the sixteen street tiles owns one skyline plot.
   // No random placement or independent visual state; the rules engine remains authoritative.
-  const now=new Set(),plots=[],nextOwners=new Map();
+  const now=new Set(),plots=[],nextOwners=new Map(),clock=Date.now();
   const owned=s.tiles.filter(t=>t.k==='prop');
   owned.forEach((t,i)=>{
     const x=24+(i%8)*65, row=Math.floor(i/8), y=row===0?59:78;
@@ -272,15 +272,21 @@ function towersHTML(){
     if(side)now.add(key);
     nextOwners.set(t.i,side||'neutral');
     const changed=plotOwners.has(t.i)&&plotOwners.get(t.i)!==(side||'neutral');
+    if(changed)plotClaims.set(t.i,clock);
+    const claimAge=clock-(plotClaims.get(t.i)||0),claimActive=claimAge>=0&&claimAge<650;
     const fill=side==='a'?'#e5b74f':side==='b'?'#e66a72':'#7993a1';
     const pad='<path d="M-19 78 L0 70 L19 78 L0 86Z" fill="'+fill+'" fill-opacity="'+(side?'.65':'.25')+'" stroke="'+fill+'" stroke-opacity=".8"/>';
     const level=side?Math.max(0,Math.min(4,lv)):0;
     const w=level?SHAPE[level][0]:0;
-    const b=level?building(-w/2,level,side,built.size&&!built.has(key)?' rise':''):'';
+    if(level&&!built.has(key))buildingRises.set(key,clock);
+    const riseAge=clock-(buildingRises.get(key)||0),riseActive=level&&riseAge>=0&&riseAge<700;
+    const b=level?building(-w/2,level,side,riseActive?' rise':'',riseActive?riseAge:0):'';
     const foundation=side&&!level?'<path d="M-12 76 L0 71 L12 76 L0 81Z" fill="'+fill+'" opacity=".8"/>':'';
-    plots.push('<g class="hr-plot'+(changed?' changed':'')+'" data-plot="'+t.i+'" data-owner="'+(side||'neutral')+'" data-level="'+level+'" transform="translate('+x+' '+(y-78)+')">'+pad+foundation+b+'</g>');
+    plots.push('<g class="hr-plot'+(claimActive?' changed':'')+'" style="'+(claimActive?'animation-delay:-'+claimAge+'ms':'')+'" data-plot="'+t.i+'" data-owner="'+(side||'neutral')+'" data-level="'+level+'" transform="translate('+x+' '+(y-78)+')">'+pad+foundation+b+'</g>');
   });
   built=now;plotOwners=nextOwners;
+  for(const [id,at] of plotClaims)if(clock-at>=650)plotClaims.delete(id);
+  for(const [id,at] of buildingRises)if(clock-at>=700)buildingRises.delete(id);
   const boatPhase=(Date.now()%22000)/1000,boatPhase2=(Date.now()%30000)/1000;
   return '<svg viewBox="0 0 560 92" preserveAspectRatio="xMidYMax meet" aria-hidden="true"><defs>'+
     '<linearGradient id="hr-a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe7a3"/><stop offset="1" stop-color="#a8721f"/></linearGradient>'+
@@ -400,8 +406,8 @@ function onKey(e){if(e.key==='Escape'&&view.sheet&&view.sheet.k!=='end'){view.sh
 
 function cities(){return CITY_ORDER.map(k=>({key:k,name:CITY_DATA[k].name,country:(countryOf(k)||{}).name||'',props:CITY_DATA[k].props}))}
 function myAvatar(){const i=document.querySelector('#tbWho .rav img');return i&&i.getAttribute('src')||'avatars/small/skyline_avatar_02_96.png'}
-function start(opts={}){clearTimeout(timer);if(opts.resume){s=opts.resume;plotOwners=new Map(s.tiles.filter(t=>t.k==='prop').map(t=>[t.i,t.o===me?'a':t.o===ai?'b':'neutral']));built=new Set(s.tiles.filter(t=>t.k==='prop'&&t.lv>0&&(t.o===me||t.o===ai)).map(t=>t.i+':'+t.lv+':'+t.o));view={tok:null,sheet:null,tab:'feed',seen:s.log.length,auto:!!opts.auto,speed:opts.speed!=null?opts.speed:1};mount();after();return s}
-  const seed=opts.seed||((Date.now()^Math.floor(Math.random()*1e9))>>>0);built=new Set();plotOwners=new Map();
+function start(opts={}){clearTimeout(timer);if(opts.resume){s=opts.resume;plotClaims=new Map();buildingRises=new Map();plotOwners=new Map(s.tiles.filter(t=>t.k==='prop').map(t=>[t.i,t.o===me?'a':t.o===ai?'b':'neutral']));built=new Set(s.tiles.filter(t=>t.k==='prop'&&t.lv>0&&(t.o===me||t.o===ai)).map(t=>t.i+':'+t.lv+':'+t.o));view={tok:null,sheet:null,tab:'feed',seen:s.log.length,auto:!!opts.auto,speed:opts.speed!=null?opts.speed:1};mount();after();return s}
+  const seed=opts.seed||((Date.now()^Math.floor(Math.random()*1e9))>>>0);built=new Set();plotOwners=new Map();plotClaims=new Map();buildingRises=new Map();
   let rv=1+(seed%20);const mineAv=myAvatar();if(mineAv.includes(`_${String(rv).padStart(2,'0')}_`))rv=rv%20+1;
   const first=opts.first!=null?opts.first:seed&1;
   s=HR.newMatch({seed,first,cities:cities(),players:[{name:(typeof PREF==='object'&&PREF.nick)||'You',avatar:mineAv},{name:RIVALS[seed%RIVALS.length],ai:true,avatar:`avatars/small/skyline_avatar_${String(rv).padStart(2,'0')}_96.png`}]});
