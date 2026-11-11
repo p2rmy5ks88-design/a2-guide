@@ -81,9 +81,12 @@ const css=`
 .hr-boat{animation:hrSail 22s linear infinite;opacity:.8;transform:translate(-32px,81px)}
 .hr-boat-2{animation-duration:30s;opacity:.55}
 @keyframes hrSail{from{transform:translate(-32px,81px)}to{transform:translate(590px,81px)}}
-@media(prefers-reduced-motion:reduce){.hr-sky:before,.hr-boat,.hr-bld.rise{animation:none}.hr-boat{opacity:0}}
+@media(prefers-reduced-motion:reduce){.hr-sky:before,.hr-boat,.hr-bld.rise,.hr-plot.changed{animation:none}.hr-boat{opacity:0}}
 
 .hr-sky svg{position:absolute;left:0;bottom:0;width:100%;height:100%;overflow:visible}
+.hr-plot{transform-box:fill-box;transform-origin:center bottom}
+.hr-plot.changed{animation:hrPlotClaim .65s ease-out}
+@keyframes hrPlotClaim{0%{opacity:.35;filter:brightness(2)}45%{opacity:1;filter:brightness(1.65)}100%{filter:brightness(1)}}
 .hr-bld{transform-box:fill-box;transform-origin:50% 100%}
 .hr-bld.rise{animation:hrRise .7s cubic-bezier(.2,.9,.3,1.2)}
 @keyframes hrRise{from{transform:scaleY(.05);opacity:.4}to{transform:scaleY(1);opacity:1}}
@@ -169,7 +172,7 @@ html.light .hr-score b.a{color:#8a5a10}html.light .hr-score b.b{color:#b3263a}
 @media (prefers-reduced-motion:reduce){.hr-score span i,.hr-tok{transition:none}.hr-bld.rise{animation:none}}
 `;
 
-let s=null,root=null,me=0,ai=1,view={tok:null,sheet:null,tab:'feed',seen:0,auto:false,speed:1},timer=null,tick=null,built=new Set();
+let s=null,root=null,me=0,ai=1,view={tok:null,sheet:null,tab:'feed',seen:0,auto:false,speed:1},timer=null,tick=null,built=new Set(),plotOwners=new Map();
 const SAVE_KEY='skylineRingSave',TIMER_KEY='skylineRingTimer';let TURN_MS=25000;
 /* Rewards (owner decision 11 Nov 2026: live, same scale as an offline 1 vs computer match).
    Paid once per finished match: XP (game + win + rent), Coins (400 win / 175 loss), trophies (+30 win / -8 loss),
@@ -260,22 +263,24 @@ function building(x,lv,c,cls){
 function towersHTML(){
   // Stable physical plot locations: each of the sixteen street tiles owns one skyline plot.
   // No random placement or independent visual state; the rules engine remains authoritative.
-  const now=new Set(),plots=[];
+  const now=new Set(),plots=[],nextOwners=new Map();
   const owned=s.tiles.filter(t=>t.k==='prop');
   owned.forEach((t,i)=>{
     const x=24+(i%8)*65, row=Math.floor(i/8), y=row===0?59:78;
     const p=t.o,lv=t.lv||0, key=t.i+':'+lv+':'+p;
     const side=p===me?'a':p===ai?'b':null;
     if(side)now.add(key);
+    nextOwners.set(t.i,side||'neutral');
+    const changed=plotOwners.has(t.i)&&plotOwners.get(t.i)!==(side||'neutral');
     const fill=side==='a'?'#e5b74f':side==='b'?'#e66a72':'#7993a1';
     const pad='<path d="M-19 78 L0 70 L19 78 L0 86Z" fill="'+fill+'" fill-opacity="'+(side?'.65':'.25')+'" stroke="'+fill+'" stroke-opacity=".8"/>';
     const level=side?Math.max(0,Math.min(4,lv)):0;
     const w=level?SHAPE[level][0]:0;
     const b=level?building(-w/2,level,side,built.size&&!built.has(key)?' rise':''):'';
     const foundation=side&&!level?'<path d="M-12 76 L0 71 L12 76 L0 81Z" fill="'+fill+'" opacity=".8"/>':'';
-    plots.push('<g data-plot="'+t.i+'" data-owner="'+(side||'neutral')+'" data-level="'+level+'" transform="translate('+x+' '+(y-78)+')">'+pad+foundation+b+'</g>');
+    plots.push('<g class="hr-plot'+(changed?' changed':'')+'" data-plot="'+t.i+'" data-owner="'+(side||'neutral')+'" data-level="'+level+'" transform="translate('+x+' '+(y-78)+')">'+pad+foundation+b+'</g>');
   });
-  built=now;
+  built=now;plotOwners=nextOwners;
   const boatPhase=(Date.now()%22000)/1000,boatPhase2=(Date.now()%30000)/1000;
   return '<svg viewBox="0 0 560 92" preserveAspectRatio="xMidYMax meet" aria-hidden="true"><defs>'+
     '<linearGradient id="hr-a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe7a3"/><stop offset="1" stop-color="#a8721f"/></linearGradient>'+
@@ -395,8 +400,8 @@ function onKey(e){if(e.key==='Escape'&&view.sheet&&view.sheet.k!=='end'){view.sh
 
 function cities(){return CITY_ORDER.map(k=>({key:k,name:CITY_DATA[k].name,country:(countryOf(k)||{}).name||'',props:CITY_DATA[k].props}))}
 function myAvatar(){const i=document.querySelector('#tbWho .rav img');return i&&i.getAttribute('src')||'avatars/small/skyline_avatar_02_96.png'}
-function start(opts={}){clearTimeout(timer);if(opts.resume){s=opts.resume;built=new Set(s.tiles.filter(t=>t.k==='prop'&&t.lv>0&&(t.o===me||t.o===ai)).map(t=>t.i+':'+t.lv+':'+t.o));view={tok:null,sheet:null,tab:'feed',seen:s.log.length,auto:!!opts.auto,speed:opts.speed!=null?opts.speed:1};mount();after();return s}
-  const seed=opts.seed||((Date.now()^Math.floor(Math.random()*1e9))>>>0);built=new Set();
+function start(opts={}){clearTimeout(timer);if(opts.resume){s=opts.resume;plotOwners=new Map(s.tiles.filter(t=>t.k==='prop').map(t=>[t.i,t.o===me?'a':t.o===ai?'b':'neutral']));built=new Set(s.tiles.filter(t=>t.k==='prop'&&t.lv>0&&(t.o===me||t.o===ai)).map(t=>t.i+':'+t.lv+':'+t.o));view={tok:null,sheet:null,tab:'feed',seen:s.log.length,auto:!!opts.auto,speed:opts.speed!=null?opts.speed:1};mount();after();return s}
+  const seed=opts.seed||((Date.now()^Math.floor(Math.random()*1e9))>>>0);built=new Set();plotOwners=new Map();
   let rv=1+(seed%20);const mineAv=myAvatar();if(mineAv.includes(`_${String(rv).padStart(2,'0')}_`))rv=rv%20+1;
   const first=opts.first!=null?opts.first:seed&1;
   s=HR.newMatch({seed,first,cities:cities(),players:[{name:(typeof PREF==='object'&&PREF.nick)||'You',avatar:mineAv},{name:RIVALS[seed%RIVALS.length],ai:true,avatar:`avatars/small/skyline_avatar_${String(rv).padStart(2,'0')}_96.png`}]});
