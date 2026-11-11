@@ -205,6 +205,7 @@ const css=`
 #title .hd-stage.v2 .hd-card .go svg{width:55%;height:55%}
 #title .hd-stage.v2 .hd-gm{--gl:calc(8.5*var(--hd-u) + max(272px,calc(29*var(--hd-u))));left:var(--gl);top:calc(12*var(--hd-u));width:min(calc(47*var(--hd-u)),calc(98*var(--hd-u) - var(--gl)));z-index:3;box-sizing:border-box;padding:calc(1*var(--hd-u)) calc(1.2*var(--hd-u)) calc(1.3*var(--hd-u));border-radius:calc(1.8*var(--hd-u));
  border:1.5px solid rgba(242,196,87,.7);background:linear-gradient(180deg,rgba(14,24,54,.97),rgba(6,11,28,.98));box-shadow:0 18px 50px rgba(0,0,0,.6);color:#fff;animation:hdgm .18s ease-out}
+#title .hd-stage.v2 .hd-gm{max-height:calc(100vh - var(--hd-oy) - 12*var(--hd-u) - var(--hd-dockh) - max(8px,env(safe-area-inset-bottom,0px)) - 10px);overflow-y:auto;overscroll-behavior:contain}
 #title .hd-stage.v2 .hd-gm[hidden]{display:none}
 @keyframes hdgm{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 #title .hd-stage.v2 .hd-gm-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:calc(.6*var(--hd-u))}
