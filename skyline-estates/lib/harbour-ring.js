@@ -135,6 +135,7 @@ html.light .hr-timer.low{background:radial-gradient(circle,#fff 0 15px,transpare
 .hr-res h2{margin:0;font:800 26px/1 var(--display,'Outfit',sans-serif)}
 .hr-res .row{display:flex;gap:10px;width:100%}
 .hr-list{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.hr-rew{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;width:100%}.hr-rew span{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px;border-radius:12px;background:rgba(242,196,87,.12);border:1px solid rgba(242,196,87,.35)}.hr-rew b{font:800 16px var(--display,'Outfit',sans-serif);color:#ffe39b}.hr-rew small{font:700 10px var(--body,'Manrope',sans-serif);color:#dfe6f4}
 .hr-list .hr-b{flex:none;flex-direction:row;justify-content:space-between;padding:0 12px}
 html.light #hr{color:#13284a;background-color:#bfdcf2;background-image:url(art/ring-day.jpg)}
 html.light #hr:before{background:linear-gradient(180deg,rgba(235,244,252,.35),rgba(235,244,252,0) 40%,rgba(235,244,252,.45))}
@@ -162,6 +163,25 @@ html.light .hr-score b.a{color:#8a5a10}html.light .hr-score b.b{color:#b3263a}
 
 let s=null,root=null,me=0,ai=1,view={tok:null,sheet:null,tab:'feed',seen:0,auto:false,speed:1},timer=null,tick=null,built=new Set();
 const SAVE_KEY='skylineRingSave',TIMER_KEY='skylineRingTimer';let TURN_MS=25000;
+/* Rewards (owner decision 11 Nov 2026: live, same scale as an offline 1 vs computer match).
+   Paid once per finished match: XP (game + win + rent), Coins (400 win / 175 loss), trophies (+30 win / -8 loss),
+   games and wins in stats and weekly challenges, and saved SC through the same wallet rules and anti-farming
+   limits as other offline matches (minimum rounds, activity and minutes, 3 paid matches a day).
+   Abandoned matches pay nothing. */
+let scWallet=null;const walletApi=()=>{try{return scWallet||(scWallet=window.SkylineSCWallet&&SkylineSCWallet.create(localStorage))}catch(e){return null}};
+const T=f=>{try{return f()}catch(e){return undefined}};
+function payRewards(){if(!s||!s.over||s.rewarded)return null;s.rewarded=true;const P=s.players[me],won=s.winner===me&&!P.bankrupt,st=P.st||{};
+  const r={won,xp:50+(won?200:0)+Math.min(200,Math.round((st.rentIn||0)/10)),coins:T(()=>gameCoinReward(won,won?0:1))||(won?400:175),tr:won?30:-8,sc:0};
+  T(()=>addXP(r.xp,won?'Harbour Ring win':'Harbour Ring match'));
+  T(()=>{PREF.coins=(PREF.coins||0)+r.coins;if(typeof COINLOG!=='undefined')COINLOG.push([won?'Harbour Ring win':'Harbour Ring',r.coins]);refreshCoins()});
+  T(()=>addTrophies(r.tr));
+  T(()=>{const S=PREF.stats;S.games=(S.games||0)+1;if(won)S.wins=(S.wins||0)+1});
+  T(()=>{weeklyAdd('games',1);if(won)weeklyAdd('wins',1);weeklyAdd('rent',st.rentIn||0);weeklyAdd('auctions',st.aucWins||0)});
+  const before=T(()=>SkylineEarnedCash.balance())||0,W=walletApi();
+  if(W&&s.id)T(()=>W.complete(s.id,{rounds:Math.min(s.round,HR.CFG.rounds),activity:(st.buys||0)+(st.builds||0)+(st.aucWins||0)+(st.takeovers||0)+(P.laps||0),won,season:season().n}));
+  r.sc=Math.max(0,(T(()=>SkylineEarnedCash.balance())||0)-before);
+  T(()=>savePref());T(()=>railProfile());T(()=>{if(typeof achBump==='function')achBump()});
+  s.reward=r;return r}
 const timerOn=()=>{try{return localStorage.getItem(TIMER_KEY)!=='off'}catch(e){return true}};
 // The match is saved after every step (its own key; the classic save is never touched) and resumes from Game Modes.
 function persist(){try{if(s&&!s.over)localStorage.setItem(SAVE_KEY,JSON.stringify({v:1,at:Date.now(),s}));else localStorage.removeItem(SAVE_KEY)}catch(e){}}
@@ -272,7 +292,7 @@ function sheetHTML(){const v=view.sheet;if(!v)return '';
       :`<div class="hr-stats">${[me,ai].map(p=>{const ds=s.districts.filter(dd=>s.tiles.some(t=>t.k==='prop'&&t.d===dd.d&&t.o===p&&HR.complete(s,t)));
         return `<div><b style="color:${p===me?'#f2c457':'#ff9da0'}">${E(name(p))}</b><span>Net worth ${fmt(HR.netWorth(s,p))}</span><span>Cash ${fmt(s.players[p].cash)}</span><span>Streets ${HR.tilesOf(s,p).length} · towers ${HR.towers(s,p)}</span><span>Complete: ${ds.map(x=>E(x.name)).join(', ')||'none'}</span><span>Laps ${s.players[p].laps}</span></div>`}).join('')}</div>`;
     return `<div class="hr-scrim" data-a="close"></div><section class="hr-sheet up" role="dialog" aria-label="Match feed and stats"><div style="display:flex;align-items:center;gap:8px"><div class="hr-tabs" role="tablist"><button role="tab" data-tab="feed" aria-selected="${view.tab==='feed'}">Match feed</button><button role="tab" data-tab="stats" aria-selected="${view.tab==='stats'}">Stats</button></div><div style="flex:1"></div><button class="hr-x" data-a="close" aria-label="Close panel" style="margin-top:8px">${ICON.x}</button></div>${body}</section>`}
-  if(v.k==='menu')return `<div class="hr-scrim" data-a="close"></div><section class="hr-sheet mid" role="dialog" aria-label="Match menu"><div class="hr-sh" style="padding:0 0 8px"><div><small style="color:#f6e2a8">PREVIEW</small><b>Harbour Ring</b><span>1 vs computer · 15 rounds · saved as you play · no rewards yet</span></div><button class="hr-x" data-a="close" aria-label="Close">${ICON.x}</button></div>
+  if(v.k==='menu')return `<div class="hr-scrim" data-a="close"></div><section class="hr-sheet mid" role="dialog" aria-label="Match menu"><div class="hr-sh" style="padding:0 0 8px"><div><small style="color:#f6e2a8">PREVIEW</small><b>Harbour Ring</b><span>1 vs computer · 15 rounds · saved as you play · earns XP, Coins, trophies and saved SC</span></div><button class="hr-x" data-a="close" aria-label="Close">${ICON.x}</button></div>
       <p class="hr-rows" style="margin:4px 0 10px;line-height:1.45">Roll two dice, then move by either die or the total. Buy streets or let them go to a sealed bid. Own both streets of a city to build. Land on a lone rival street to offer a takeover; the owner can take the money or block it. Most net worth after round 15 wins; each tower adds ${fmt(HR.CFG.towerBonus)}.</p>
       <div class="hr-res"><div class="row"><button class="hr-b g" data-a="close"><b>Resume</b></button><button class="hr-b" data-a="timer"><b>Turn timer: ${timerOn()?'On':'Off'}</b><small>${TURN_MS/1000} seconds, then the computer moves for you</small></button></div>
         <div class="row"><button class="hr-b" data-a="leave"><b>Save &amp; leave</b><small>Continue later from Game Modes</small></button><button class="hr-b bad" data-a="abandon"><b>Abandon match</b></button></div></div></section>`;
@@ -281,12 +301,14 @@ function sheetHTML(){const v=view.sheet;if(!v)return '';
   if(v.k==='end'){const w=s.winner,[fa,fb]=[HR.score(s,me),HR.score(s,ai)];
     return `<div class="hr-scrim"></div><section class="hr-sheet mid hr-res" role="dialog" aria-label="Match result"><small style="font:800 10px Manrope,sans-serif;letter-spacing:.2em;color:#f6e2a8">HARBOUR RING · RESULT</small><h2>${w===me?'You win!':E(name(ai))+' wins'}</h2>
       <div class="hr-stats" style="width:100%;text-align:left">${[[me,fa],[ai,fb]].map(([p,sc])=>`<div><b style="color:${p===me?'#f2c457':'#ff9da0'}">${E(name(p))}${s.players[p].bankrupt?' · bankrupt':''}</b><span>Score ${fmt(sc)}</span><span>Cash ${fmt(s.players[p].cash)} · streets ${HR.tilesOf(s,p).length} · towers ${HR.towers(s,p)}</span></div>`).join('')}</div>
+      ${s.reward?`<div class="hr-rew" aria-label="Rewards"><span><b>+${s.reward.xp}</b><small>XP</small></span><span><b>+${s.reward.coins}</b><small>Coins</small></span><span><b>${s.reward.tr>0?'+':''}${s.reward.tr}</b><small>Trophies</small></span><span><b>+${s.reward.sc}</b><small>Saved SC</small></span></div>${s.reward.sc?'':'<small style="font:600 10.5px Manrope,sans-serif;color:#c9d3e6">Saved SC is paid for up to 3 qualifying matches a day.</small>'}`:''}
       <div class="row"><button class="hr-b g" data-a="again"><b>Play again</b></button><button class="hr-b" data-a="home"><b>Home</b></button></div></section>`}
   return ''}
 
 function after(){if(!s)return;persist();clearTimeout(timer);
   const d0=D(),mine0=d0&&!s.over&&(d0.type==='bid'?s.bids&&s.bids[me]==null:d0.p===me),key=d0?s.moves+':'+d0.type+':'+(d0.tile!=null?d0.tile:'')+':'+(d0.p):'';
   if(mine0&&timerOn()&&!view.auto){if(view.dkey!==key){view.dkey=key;view.deadline=Date.now()+TURN_MS}}else{view.deadline=0;view.dkey=key}
+  if(s.over)payRewards();
   render();if(s.over){view.sheet={k:'end'};render();return}
   const d=D();
   if(d.type==='bid'){if(s.bids[ai]==null){HR.act(s,ai,HR.ai(s,ai));if(!s.over&&D()!==d)return after()}
@@ -337,6 +359,7 @@ function start(opts={}){clearTimeout(timer);if(opts.resume){s=opts.resume;built=
   let rv=1+(seed%20);const mineAv=myAvatar();if(mineAv.includes(`_${String(rv).padStart(2,'0')}_`))rv=rv%20+1;
   const first=opts.first!=null?opts.first:seed&1;
   s=HR.newMatch({seed,first,cities:cities(),players:[{name:(typeof PREF==='object'&&PREF.nick)||'You',avatar:mineAv},{name:RIVALS[seed%RIVALS.length],ai:true,avatar:`avatars/small/skyline_avatar_${String(rv).padStart(2,'0')}_96.png`}]});
+  s.id='ring-'+(T(()=>crypto.randomUUID())||(seed+'-'+Date.now()));T(()=>{const W=walletApi();if(W)W.start(s.id,{city:'harbour-ring'})});
   view={tok:null,sheet:null,tab:'feed',seen:0,auto:!!opts.auto,speed:opts.speed!=null?opts.speed:1};
   mount();after();return s}
 function onHide(){if(document.hidden)persist()}

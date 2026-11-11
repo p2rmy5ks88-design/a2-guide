@@ -48,7 +48,7 @@ function newMatch(o){
       Object.assign(t,{d:L.d,n:st?st[0]:'Street '+i,area:st?st[1]:'',city:D.name,p:D.price,o:-1,lv:0,lock:0})}
     else Object.assign(t,{id:L.id,n:L.n});return t});
   s.players=(o.players||[{name:'You'},{name:'Rival',ai:true}]).slice(0,2).map((p,i)=>({i,name:p.name||('Player '+(i+1)),ai:!!p.ai,avatar:p.avatar||null,
-    cash:CFG.startCash+(i!==s.first?CFG.secondBonus:0),pos:i===s.first?0:12,home:i===s.first?0:12,laps:0,bankrupt:false}));
+    cash:CFG.startCash+(i!==s.first?CFG.secondBonus:0),pos:i===s.first?0:12,home:i===s.first?0:12,laps:0,bankrupt:false,st:{buys:0,builds:0,rentIn:0,aucWins:0,takeovers:0}}));
   startTurn(s);return s}
 
 const other=p=>1-p;
@@ -87,7 +87,7 @@ function land(s,p){const P=s.players[p],t=s.tiles[P.pos];s.decision=null;
   if(t.k==='prop'){
     if(t.o<0){if(P.cash>=t.p)s.decision={type:'buy',p,tile:t.i,price:t.p};else startAuction(s,t,p);return}
     if(t.o===p){if(canBuild(s,t,p)&&P.cash>=buildCost(t)){s.decision={type:'build',p,tile:t.i,cost:buildCost(t)};return}return endTurn(s)}
-    const r=rent(s,t);pay(s,p,r,t.o);say(s,p,`${P.name} paid ${fmt(r)} rent on ${t.n}`);if(s.over)return;
+    const r=rent(s,t);pay(s,p,r,t.o);s.players[t.o].st.rentIn+=r;say(s,p,`${P.name} paid ${fmt(r)} rent on ${t.n}`);if(s.over)return;
     if(!complete(s,t)&&t.lv===0&&!(t.lock>s.round)){const price=Math.round(t.p*CFG.takeover);
       if(P.cash>=price){s.decision={type:'takeover',p,tile:t.i,price};return}}
     return endTurn(s)}
@@ -110,7 +110,7 @@ function startAuction(s,t,declinedBy){s.bids=[null,null];s.decision={type:'bid',
 function resolveAuction(s){const t=s.tiles[s.decision.tile],[a,b]=s.bids.map(x=>Math.max(0,x|0));s.bids=null;
   const w=a===b?-1:a>b?0:1,amt=Math.max(a,b);
   if(w<0||amt<10){say(s,-1,`No sale on ${t.n}${a===b&&a>=10?' (tied bids)':''}`)}
-  else{pay(s,w,amt,-1);if(!s.over){t.o=w;say(s,w,`${s.players[w].name} won ${t.n} in a sealed bid: ${fmt(amt)} vs ${fmt(Math.min(a,b))}`)}}
+  else{pay(s,w,amt,-1);if(!s.over){t.o=w;s.players[w].st.aucWins++;say(s,w,`${s.players[w].name} won ${t.n} in a sealed bid: ${fmt(amt)} vs ${fmt(Math.min(a,b))}`)}}
   if(!s.over)endTurn(s)}
 
 function endTurn(s){if(s.over)return;s.decision=null;s.moves++;
@@ -127,12 +127,12 @@ function act(s,p,a){const D=s.decision;if(!D||s.over)throw new Error('no decisio
   if(D.p!==p)throw new Error('not your decision');const P=s.players[p];
   switch(D.type){
     case 'move':{const o=s.options.find(x=>x.steps===a.steps);if(!o)throw new Error('bad move');s.options=null;s.lastMove={p,steps:o.steps,from:P.pos};moveBy(s,p,o.steps);break}
-    case 'buy':{const t=s.tiles[D.tile];if(a.yes){pay(s,p,t.p,-1);t.o=p;say(s,p,`${P.name} bought ${t.n} for ${fmt(t.p)}${complete(s,t)?' · '+t.city+' complete':''}`);endTurn(s)}else startAuction(s,t,p);break}
-    case 'build':{const t=s.tiles[D.tile];if(a.yes){pay(s,p,D.cost,-1);t.lv++;say(s,p,`${P.name} built ${t.lv===4?'a tower':'house '+t.lv} on ${t.n}`)}endTurn(s);break}
+    case 'buy':{const t=s.tiles[D.tile];if(a.yes){pay(s,p,t.p,-1);t.o=p;P.st.buys++;say(s,p,`${P.name} bought ${t.n} for ${fmt(t.p)}${complete(s,t)?' · '+t.city+' complete':''}`);endTurn(s)}else startAuction(s,t,p);break}
+    case 'build':{const t=s.tiles[D.tile];if(a.yes){pay(s,p,D.cost,-1);t.lv++;P.st.builds++;say(s,p,`${P.name} built ${t.lv===4?'a tower':'house '+t.lv} on ${t.n}`)}endTurn(s);break}
     case 'takeover':{const t=s.tiles[D.tile];if(a.yes){s.decision={type:'defend',p:t.o,attacker:p,tile:t.i,price:D.price,block:Math.round(t.p*CFG.block)};break}endTurn(s);break}
     case 'defend':{const t=s.tiles[D.tile],att=D.attacker;
       if(a.block&&P.cash>=D.block){pay(s,p,D.block,-1);t.lock=s.round+CFG.lockRounds;say(s,p,`${P.name} blocked the takeover of ${t.n} (${fmt(D.block)}), locked for ${CFG.lockRounds} rounds`)}
-      else{pay(s,att,D.price,p);t.o=att;t.lock=0;say(s,att,`${s.players[att].name} took over ${t.n}: ${P.name} received ${fmt(D.price)}`)}
+      else{pay(s,att,D.price,p);t.o=att;t.lock=0;s.players[att].st.takeovers++;say(s,att,`${s.players[att].name} took over ${t.n}: ${P.name} received ${fmt(D.price)}`)}
       if(!s.over){s.turn=att;endTurn(s)}break}
     case 'permit':{if(a.tile!=null&&D.choices.includes(a.tile)){const t=s.tiles[a.tile];t.lv++;say(s,p,`Permit Office: free ${t.lv===4?'tower':'house'} on ${t.n}`)}endTurn(s);break}
     case 'exchange':{const c=a.give!=null&&D.choices.find(x=>x.give===a.give&&x.take===a.take);

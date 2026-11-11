@@ -18,7 +18,7 @@ const TYPES={'.html':'text/html','.js':'text/javascript','.css':'text/css','.jso
     await p.evaluate(()=>{document.querySelectorAll('#modals .ov').forEach(x=>x.remove());homeTab('play')});return{ctx,p}}
 
   let {ctx,p}=await open({width:844,height:390},'dark');
-  const before=await p.evaluate(()=>({coins:PREF.coins,save:localStorage.getItem('skylineSave')}));
+  const before=await p.evaluate(()=>({coins:PREF.coins,games:PREF.stats.games||0,save:localStorage.getItem('skylineSave')}));
   await p.click('#hdModes');await p.locator('#qRing').waitFor();ok('Harbour Ring is listed in the Game Modes panel');
   await p.click('#qRing');await p.locator('#hr .hr-board').waitFor();
   await p.evaluate(()=>{HarbourRing.close();HarbourRing.start({seed:424242,first:0})});await p.locator('#hr .hr-board').waitFor();
@@ -64,9 +64,12 @@ const TYPES={'.html':'text/html','.js':'text/javascript','.css':'text/css','.jso
   if(OUT){await p.evaluate(()=>{const s=HarbourRing.state();s.tiles.filter(t=>t.k==='prop').slice(0,8).forEach((t,k)=>{t.o=k%2;t.lv=1+k%4});document.querySelector('#hr [data-a="close"]')})}
   if(OUT)await p.screenshot({path:path.join(OUT,'ring-844-result.png')});
   const saved=await p.evaluate(()=>HarbourRing.saved());assert.equal(saved,null);ok('a finished match leaves no save behind');
+  const rw=await p.evaluate(b=>{const s=HarbourRing.state(),r=s.reward;return{r,coins:PREF.coins-b.coins,games:PREF.stats.games-b.games,shown:!!document.querySelector('#hr .hr-rew'),again:(()=>{const x=s.rewarded;return x})()}},before);
+  assert.ok(rw.r&&rw.r.xp>=50&&rw.coins>=rw.r.coins&&rw.r.coins>=175&&rw.games===1&&rw.shown,JSON.stringify(rw));
+  ok(`a finished match pays once: +${rw.r.xp} XP, +${rw.r.coins} Coins, ${rw.r.tr>0?'+':''}${rw.r.tr} trophies, shown on the result screen`);
   await p.click('#hr [data-a="home"]');await p.locator('#hr').waitFor({state:'detached'});
   const after=await p.evaluate(()=>({coins:PREF.coins,save:localStorage.getItem('skylineSave'),home:!!document.querySelector('#title .hd-stage'),active:HarbourRing.active()}));
-  assert.equal(after.coins,before.coins);assert.equal(after.save,before.save);assert.ok(after.home&&!after.active);ok('leaving returns home; coins and saved games are untouched');
+  assert.equal(after.save,before.save);assert.ok(after.home&&!after.active);ok('leaving returns home; the classic saved game is untouched');
   await ctx.close();
 
   // Layout at phone sizes, both themes: everything inside the window, nothing overlapping, touch targets ≥ 44 px.
