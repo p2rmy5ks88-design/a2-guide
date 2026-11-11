@@ -5,6 +5,7 @@
 #   bash lc-test-access.sh status       shows on/off, expiry and how many accounts are listed
 #   bash lc-test-access.sh report CODE  prints the server's record of a test room (no names, emails or account IDs)
 #   bash lc-test-access.sh off          switches test access off immediately
+#   bash lc-test-access.sh ranked on|off  Skyline Duel ranked ladder for live (non-test) players (default off)
 # It never touches the global switch (lcOnline), ranked play, classic rooms, saves, wallets or purchases.
 set -euo pipefail
 DB=https://eko-estates-default-rtdb.europe-west1.firebasedatabase.app
@@ -24,9 +25,11 @@ case "${1:-}" in
   off)
     req PUT skylineV2/flags/lcTest '{"on":false}' >/dev/null; echo "Living City test access OFF."
     echo "Now: $(req GET skylineV2/flags)";;
+  ranked)
+    case "${2:-}" in on) req PUT skylineV2/flags/duelRanked 'true' >/dev/null; echo "Skyline Duel ranked ladder ON for live players.";; off) req PUT skylineV2/flags/duelRanked 'false' >/dev/null; echo "Skyline Duel ranked ladder OFF (matches still play, unrated).";; *) echo 'usage: ranked on|off'; exit 1;; esac;;
   status)
     req GET skylineV2/flags | python3 -c 'import json,sys,time;f=json.load(sys.stdin) or {};t=f.get("lcTest") or {};u=t.get("until",0)
-print("global lcOnline:",f.get("lcOnline",False));print("test access:","ON" if t.get("on") and u>time.time()*1000 else "off",("until "+time.ctime(u/1000)) if u else "","accounts listed:",len(t.get("testers") or {}))';;
+print("global lcOnline:",f.get("lcOnline",False),"· duelRanked:",f.get("duelRanked",False));print("test access:","ON" if t.get("on") and u>time.time()*1000 else "off",("until "+time.ctime(u/1000)) if u else "","accounts listed:",len(t.get("testers") or {}))';;
   report)
     [[ "${2:-}" =~ ^[A-Z0-9]{5}$ ]] || { echo "usage: report CODE"; exit 1; }
     req GET "skylineV2/lc/$2" | python3 -c 'import json,sys
@@ -42,5 +45,5 @@ if m:
   print("landmarks",len(G.get("lm") or {}),"built streets",sum(1 for o in G["own"] if o["o"]>=0 and o["h"]>0),"event",(G.get("ev2") or {}).get("id"))
   print("living city stats:",json.dumps(G.get("lcStats") or {}))'
     ;;
-  *) sed -n 2,8p "$0";;
+  *) sed -n 2,9p "$0";;
 esac

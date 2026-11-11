@@ -42,6 +42,7 @@ async function __step(){
     const p=P(G.turn);if(p.bankrupt){advanceTurn();__E.turnNo++;__E.turnStart=JSON.stringify(G);__E.tape=[];continue}
     __seed();__E.cursor=0;
     try{await playTurn(p)}catch(e){if(e instanceof __Stop)return{boundary:e.boundary};throw e}
+    if(p.tmo){p.ai=false;delete p.tmo}   // Duel timeout: the AI played this one turn for an idle player
     if(__E.cursor<__E.tape.length)throw Error('unused-answer');
     if(endCheck()){G.over=true;return{over:true}}
     advanceTurn();__E.turnNo++;__E.turnStart=JSON.stringify(G);__E.tape=[];__E.cursor=0}
@@ -60,7 +61,7 @@ function createEngine(root){
       if(!Array.isArray(seats)||seats.length<2||seats.length>6)throw new EngineError('invalid-seats',400);
       const ids=seats.filter(s=>!s.ai).map(s=>s.uid);if(!ids.length||ids.some(u=>typeof u!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(u))||new Set(ids).size!==ids.length)throw new EngineError('invalid-seats',400);
       rt.run('FAST=true;GEN++');rt.ctx.__cfg={seats,set:{ai:'normal',speed:'fast',pot:false,maxRounds:300,city:'lagos',perks:false,...set,online:false},seed};
-      rt.run(`applyCity(__cfg.set.city);newGame({lc:true,cash:1600,set:__cfg.set,players:__cfg.seats.map((s,i)=>({name:s.name,tok:s.tok||TOKENS[i],col:PCOL[i],ai:!!s.ai,tl:1,uid:s.ai?null:s.uid}))});G.first=0;G.turn=0;G.players.forEach((p,i)=>{p.uid=__cfg.seats[i].ai?null:__cfg.seats[i].uid})`);
+      rt.run(`applyCity(__cfg.set.city);newGame({lc:true,cash:1600,set:__cfg.set,players:__cfg.seats.map((s,i)=>({name:s.name,tok:s.tok||TOKENS[i],col:PCOL[i],ai:!!s.ai,tl:1,uid:s.ai?null:s.uid}))});G.first=0;G.turn=0;G.players.forEach((p,i)=>{p.uid=__cfg.seats[i].ai?null:__cfg.seats[i].uid});if(G.set.duel===1)lcDuelSetup()`);
       if(rt.run('G.rv')!==2)throw new EngineError('living-city-unavailable',500);
       // Test rooms only: the first human holds one whole district (Landmark + development) and the second human opens
       // the match under Civic Review. Everything after this is ordinary server play.
@@ -72,6 +73,18 @@ function createEngine(root){
       const b=state.boundary;if(!b)throw new EngineError('no-decision-pending');const seat=state.G.players[b.pid];if(!seat||seat.uid!==uid)throw new EngineError('not-your-decision',403);
       const ops=Array.isArray(answer&&answer.assets)?answer.assets:[];if(ops.length>20)throw new EngineError('too-many-assets',400);
       const entries=ops.map(o=>({type:'asset',pid:b.pid,value:{kind:o.kind,square:o.square}}));if('value' in (answer||{}))entries.push({type:b.type,pid:b.pid,value:answer.value});else if(!entries.length||b.type!=='actions')throw new EngineError('missing-answer',400);
-      await load({...state,tape:state.tape.concat(entries)});return settle(state)},
+      const strikes=state.strikes&&state.strikes[b.pid]?{...state.strikes,[b.pid]:0}:state.strikes;
+      await load({...state,tape:state.tape.concat(entries)});return settle({...state,...(strikes?{strikes}:{})})},
+    // Skyline Duel turn timer: an idle player's whole current turn is played by the AI. Three timeouts in a row forfeit
+    // the match (the idle player goes bankrupt to the bank). The service decides when the deadline has passed.
+    async timeout(state){
+      if(state.over)throw new EngineError('match-over');const b=state.boundary;if(!b)throw new EngineError('no-decision-pending');
+      const strikes={...(state.strikes||{})};strikes[b.pid]=(strikes[b.pid]||0)+1;
+      if(strikes[b.pid]>=3){await load({...state,tape:[]});rt.ctx.__pid=b.pid;rt.run('bankrupt(P(__pid),null);G.over=true');
+        return{...state,strikes,turnStart:rt.run('JSON.stringify(G)'),tape:[],G:JSON.parse(rt.run('JSON.stringify(G)')),boundary:null,over:true,forfeit:b.pid,revision:state.revision+1}}
+      const g0=JSON.parse(state.turnStart);g0.players[b.pid].ai=true;g0.players[b.pid].tmo=1;
+      const next={...state,strikes,turnStart:JSON.stringify(g0),tape:[]};await load(next);return settle(next)},
+    // Final result of a finished match: winner (bankruptcy first, then net worth, as on the results screen).
+    result(state){rt.ctx.__in=JSON.stringify(state.G);return JSON.parse(rt.run(`(()=>{G=JSON.parse(__in);const st=standings();return JSON.stringify({winner:st[0].uid||null,order:st.map(p=>({uid:p.uid,worth:p.bankrupt?0:netWorth(p),bankrupt:!!p.bankrupt}))})})()`))},
     view(state,uid){const me=state.G.players.findIndex(p=>p.uid===uid);return{revision:state.revision,rules:state.rules,over:state.over,G:state.G,me,decision:state.boundary&&state.boundary.pid===me?state.boundary:null,waitingFor:state.boundary?state.boundary.pid:null}}}}
 module.exports={createEngine,EngineError};

@@ -9,7 +9,7 @@ const www=path.resolve(__dirname,'../../skyline-estates-app/www');let n=0;const 
 const TYPES={'.html':'text/html','.js':'text/javascript','.mjs':'text/javascript','.css':'text/css','.json':'application/json','.svg':'image/svg+xml','.png':'image/png','.webp':'image/webp','.jpg':'image/jpeg','.mp3':'audio/mpeg','.woff2':'font/woff2','.glb':'model/gltf-binary'};
 (async()=>{
   const man=JSON.parse(fs.readFileSync(path.join(www,'coach/natural-en-f/manifest.json'),'utf8'));
-  const ids=Object.keys(man.files);assert.equal(ids.length,858,'853 original recordings plus five final-round announcements');
+  const ids=Object.keys(man.files);assert.equal(ids.length,862,'853 original recordings, five final-round and four Skyline Duel announcements');
   const bellPhrases=['Skyline Championship! Five rounds remaining.','Four rounds left. Make every move count.','Three rounds to go. It is getting close!','Two rounds remain. Time to make your move.','Final round! This is your last chance to build your skyline!'];
   for(let left=5;left>=1;left--){const id='champ_'+left;assert.equal(man.files[id],id+'.mp3','Voice A bell clip present');assert.equal(man.index.text[bellPhrases[5-left]],id,'recorded announcement maps to correct file')}
   const missing=ids.filter(id=>!fs.existsSync(path.join(www,'coach/natural-en-f',man.files[id])));assert.deepEqual(missing,[]);
