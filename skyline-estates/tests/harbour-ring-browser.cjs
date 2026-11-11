@@ -69,6 +69,24 @@ const TYPES={'.html':'text/html','.js':'text/javascript','.css':'text/css','.jso
   assert.ok(end.round===15||end.final.some(x=>x<0),JSON.stringify(end));ok(`full match ends on the result screen after round 15 (${end.h})`);
   const sky=await p.evaluate(()=>{const s=HarbourRing.state();const want=[0,1].reduce((n,q)=>n+Math.min(8,s.tiles.filter(t=>t.k==='prop'&&t.o===q&&t.lv>0).length),0);return{want,have:document.querySelectorAll('#hr .hr-bld').length}});
   assert.equal(sky.have,sky.want);ok(`the centre skyline shows one building per built street (${sky.have})`);
+  const plots=await p.evaluate(()=>{
+    const state=HarbourRing.state(),tiles=state.tiles.filter(t=>t.k==='prop');
+    return [...document.querySelectorAll('#hr .hr-sky [data-plot]')].map(el=>{
+      const tile=tiles.find(t=>t.i===Number(el.dataset.plot));
+      return {id:Number(el.dataset.plot),owner:el.dataset.owner,level:Number(el.dataset.level),
+        expectedOwner:tile.o===0?'a':tile.o===1?'b':'neutral',
+        expectedLevel:tile.o===0||tile.o===1?tile.lv||0:0,
+        buildings:el.querySelectorAll('.hr-bld').length};
+    });
+  });
+  assert.equal(plots.length,16);
+  assert.equal(new Set(plots.map(x=>x.id)).size,16);
+  for(const plot of plots){
+    assert.equal(plot.owner,plot.expectedOwner,`plot ${plot.id} owner`);
+    assert.equal(plot.level,plot.expectedLevel,`plot ${plot.id} level`);
+    assert.equal(plot.buildings,plot.expectedLevel>0?1:0,`plot ${plot.id} building`);
+  }
+  ok('all 16 harbour plots exactly match actual street ownership and construction levels');
   if(OUT){await p.evaluate(()=>{const s=HarbourRing.state();s.tiles.filter(t=>t.k==='prop').slice(0,8).forEach((t,k)=>{t.o=k%2;t.lv=1+k%4});document.querySelector('#hr [data-a="close"]')})}
   if(OUT)await p.screenshot({path:path.join(OUT,'ring-844-result.png')});
   const saved=await p.evaluate(()=>HarbourRing.saved());assert.equal(saved,null);ok('a finished match leaves no save behind');
