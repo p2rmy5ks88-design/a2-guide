@@ -209,7 +209,7 @@ const css=`
 @keyframes hdgm{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 #title .hd-stage.v2 .hd-gm-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:calc(.6*var(--hd-u))}
 #title .hd-stage.v2 .hd-gm-head b{padding-left:calc(.4*var(--hd-u));font:800 max(15px,calc(1.9*var(--hd-u)))/1 var(--display,'Outfit',system-ui,sans-serif)}
-#title .hd-stage.v2 .hd-gm-x{display:grid;place-items:center;width:44px;height:44px;margin:-6px -6px -6px 0;border:0;border-radius:50%;background:none;color:#dfe5f3;cursor:pointer}
+#title .hd-stage.v2 .hd-gm-x{flex:none;display:grid;place-items:center;width:44px;height:44px;margin:-6px -6px -6px 0;border:0;border-radius:50%;background:none;color:#dfe5f3;cursor:pointer}
 #title .hd-stage.v2 .hd-gm-x svg{width:20px;height:20px}#title .hd-stage.v2 .hd-gm-x:hover{background:rgba(255,255,255,.08)}
 #title .hd-stage.v2 .hd-gm-list{display:grid;grid-template-columns:1fr 1fr;gap:calc(.8*var(--hd-u))}
 #title .hd-stage.v2 .hd-gm-item{display:flex;align-items:center;gap:calc(1*var(--hd-u));min-height:max(52px,calc(6.6*var(--hd-u)));min-width:0;padding:calc(.6*var(--hd-u)) calc(1*var(--hd-u));border-radius:calc(1.2*var(--hd-u));border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.05);color:#fff;text-align:left;cursor:pointer;transition:background .15s,border-color .15s}
