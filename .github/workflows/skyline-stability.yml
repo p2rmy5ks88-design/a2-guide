@@ -90,6 +90,7 @@ jobs:
           t 'node skyline-estates/tests/skyline-duel-browser.cjs'
           t 'node skyline-estates/tests/skyline-duel-online.cjs'
           t 'node skyline-estates/tests/skyline-duel-client.cjs'
+          t 'node skyline-estates/tests/keep-awake-browser.cjs'
           t 'node skyline-estates/tests/living-city-parity.cjs 6 2'
           t 'node skyline-estates/tests/lc-engine.cjs'
           t 'node skyline-estates/tests/lc-online-service.cjs'

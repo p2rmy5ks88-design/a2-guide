@@ -5,6 +5,7 @@ import UIKit
 @objc(SkylineBridgeViewController)
 class SkylineBridgeViewController: CAPBridgeViewController {
     override open func capacitorDidLoad() {
+        bridge?.registerPluginInstance(SkylineAwakePlugin())
         if #available(iOS 15.0, *) {
             bridge?.registerPluginInstance(SkylineStoreKitPlugin())
             bridge?.registerPluginInstance(SkylineSharePlugin())
@@ -47,6 +48,23 @@ public class SkylineSharePlugin: CAPPlugin, CAPBridgedPlugin {
                 else { call.resolve(["completed": completed]) }
             }
             owner.present(sheet, animated: true)
+        }
+    }
+}
+
+// Keeps the screen on while a match is in progress, so the phone does not dim and lock mid-game.
+// The game turns it on when a match starts and off on the menus, at the results screen and when the app leaves.
+@objc(SkylineAwakePlugin)
+public class SkylineAwakePlugin: CAPPlugin, CAPBridgedPlugin {
+    public let identifier = "SkylineAwakePlugin"
+    public let jsName = "SkylineAwake"
+    public let pluginMethods: [CAPPluginMethod] = [CAPPluginMethod(name: "set", returnType: CAPPluginReturnPromise)]
+
+    @objc func set(_ call: CAPPluginCall) {
+        let on = call.getBool("on") ?? false
+        DispatchQueue.main.async {
+            UIApplication.shared.isIdleTimerDisabled = on
+            call.resolve(["on": on])
         }
     }
 }
