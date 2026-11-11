@@ -19,9 +19,10 @@ const say=t=>{try{window.SkylineCoach&&SkylineCoach.say(t,1)}catch(e){}};
 
 // Entry: a "Skyline Duel" button beside Play, only while the preview flag is on.
 function startDuel(T){const me=setup.slots[0];startFromSetup(T,setup.slots.map((s,i)=>({...s,type:i===0?'human':i===1?'ai':'off',tok:i===0?me.tok:s.tok})),{mode:'timed',rounds:ROUNDS,championship:1,duel:1})}
-function addEntry(T){try{if(T.querySelector('#qDuel'))return;const box=T.querySelector('.hd-modes')||T.querySelector('.herobtns');if(!box)return;
+function addEntry(T){try{if(T.querySelector('#qDuel'))return;const box=T.querySelector('.hd-gm-list')||T.querySelector('.hd-modes')||T.querySelector('.herobtns');if(!box)return;
   const b=document.createElement('button');b.id='qDuel';b.type='button';
-  if(box.classList.contains('hd-modes')){b.className='hd-mode m2 duel';b.innerHTML='<span class="art" style="background-image:url(art/hd-pawns.png)"></span><b>Skyline Duel</b><small>1 vs 1 · 15 rounds</small><span class="pb"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4l13 8-13 8z" fill="currentColor"/></svg></span>'}else{b.className='ghostbtn';b.textContent='⚔ Skyline Duel'}
+  if(box.classList.contains('hd-gm-list')){b.className='hd-gm-item duel';b.innerHTML=`<span class="ic">${(window.SkylineHomeIcons||{}).duel||''}</span><span class="tx"><b>Skyline Duel</b><small>1 vs 1 · 15 rounds</small></span>`}
+  else if(box.classList.contains('hd-modes')){b.className='hd-mode m2 duel';b.innerHTML='<span class="art" style="background-image:url(art/hd-pawns.png)"></span><b>Skyline Duel</b><small>1 vs 1 · 15 rounds</small><span class="pb"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4l13 8-13 8z" fill="currentColor"/></svg></span>'}else{b.className='ghostbtn';b.textContent='⚔ Skyline Duel'}
   b.onclick=()=>startDuel(T);box.append(b)}catch(e){}}
 // Installed after every script has loaded, so it wraps the final home screen (home-redesign replaces paneP).
 function install(){const _pp=paneP;paneP=function(T){const r=_pp.apply(this,arguments);addEntry(T);return r};try{const T=document.querySelector('#tabBody,.hd-stage')?.parentElement;if(T)addEntry(T)}catch(e){}}
