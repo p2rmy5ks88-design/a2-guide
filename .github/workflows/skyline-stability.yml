@@ -275,9 +275,18 @@ jobs:
       - name: Configure preinstalled Chrome
         run: echo "CHROME_PATH=$(command -v google-chrome)" >> "$GITHUB_ENV"
       - name: Install Safari-engine test browser
+        id: wk
         if: matrix.engine == 'webkit'
+        # GitHub runners sometimes can't reach the Ubuntu package mirrors; give up after 8 minutes instead of
+        # hanging for the whole job, and skip the Safari-engine visual checks for that run (Chromium still runs them).
+        timeout-minutes: 8
+        continue-on-error: true
         run: npx --prefix skyline-estates/tests playwright install --with-deps webkit
+      - name: Safari engine unavailable on this runner
+        if: matrix.engine == 'webkit' && steps.wk.outcome != 'success'
+        run: echo "::warning::Safari-engine browser could not be installed (package mirror unreachable); Safari visual checks skipped for this run. Chromium visual checks ran in the other job."
       - name: Build and verify the native web bundle
+        if: (matrix.engine != 'webkit' || steps.wk.outcome == 'success')
         run: |
           npm install --prefix skyline-estates-app --no-audit --no-fund
           npm run --prefix skyline-estates-app build:web
@@ -286,63 +295,80 @@ jobs:
           # The budget is measured in Chromium, so run it once (in the Chromium job), not again in the Safari job.
           if [ "${{ matrix.engine }}" = chromium ]; then NATIVE_WWW=skyline-estates-app/www node skyline-estates/tests/performance-budget.cjs; fi
       - name: "Visual: generated assets"
+        if: (matrix.engine != 'webkit' || steps.wk.outcome == 'success')
         timeout-minutes: 5
         run: python3 skyline-estates/build.py --check
       - name: "Visual: market-pulse"
+        if: (matrix.engine != 'webkit' || steps.wk.outcome == 'success')
         # Includes 95 full-match simulations; WebKit baseline is about 6.5 minutes.
         timeout-minutes: 10
         run: node skyline-estates/tests/market-pulse.cjs
       - name: "Visual: showcase-browser"
+        if: (matrix.engine != 'webkit' || steps.wk.outcome == 'success')
         timeout-minutes: 5
         run: node skyline-estates/tests/showcase-browser.cjs
       - name: "Visual: challenges-browser"
+        if: (matrix.engine != 'webkit' || steps.wk.outcome == 'success')
         timeout-minutes: 5
         run: node skyline-estates/tests/challenges-browser.cjs
       - name: "Visual: cloud-restore"
+        if: (matrix.engine != 'webkit' || steps.wk.outcome == 'success')
         timeout-minutes: 5
         run: node skyline-estates/tests/cloud-restore.cjs
       - name: "Visual: native-roadmap-browser"
+        if: (matrix.engine != 'webkit' || steps.wk.outcome == 'success')
         timeout-minutes: 5
         run: node skyline-estates/tests/native-roadmap-browser.cjs
       - name: "Visual: collection-vault-browser"
+        if: (matrix.engine != 'webkit' || steps.wk.outcome == 'success')
         timeout-minutes: 5
         run: node skyline-estates/tests/collection-vault-browser.cjs
       - name: "Visual: native collection-vault-browser"
+        if: (matrix.engine != 'webkit' || steps.wk.outcome == 'success')
         timeout-minutes: 5
         run: COLLECTION_BASE=skyline-estates-app/www node skyline-estates/tests/collection-vault-browser.cjs
       - name: "Visual: testflight-hotfix-browser"
+        if: (matrix.engine != 'webkit' || steps.wk.outcome == 'success')
         timeout-minutes: 5
         run: node skyline-estates/tests/testflight-hotfix-browser.cjs
       - name: "Visual: native testflight-hotfix-browser"
+        if: (matrix.engine != 'webkit' || steps.wk.outcome == 'success')
         timeout-minutes: 5
         run: HOTFIX_NATIVE=1 node skyline-estates/tests/testflight-hotfix-browser.cjs
       - name: "Visual: social-browser"
+        if: (matrix.engine != 'webkit' || steps.wk.outcome == 'success')
         timeout-minutes: 5
         run: node skyline-estates/tests/social-browser.cjs
       - name: "Visual: verified-browser"
+        if: (matrix.engine != 'webkit' || steps.wk.outcome == 'success')
         timeout-minutes: 5
         run: node skyline-estates/tests/verified-browser.cjs
       - name: "Visual: competition-transactions"
+        if: (matrix.engine != 'webkit' || steps.wk.outcome == 'success')
         timeout-minutes: 5
         run: node skyline-estates/tests/competition-transactions.cjs
       - name: "Visual: competition-service"
+        if: (matrix.engine != 'webkit' || steps.wk.outcome == 'success')
         timeout-minutes: 5
         run: node skyline-estates/tests/competition-service.cjs
       - name: "Visual: competition-match"
+        if: (matrix.engine != 'webkit' || steps.wk.outcome == 'success')
         timeout-minutes: 5
         run: node skyline-estates/tests/competition-match.cjs
       - name: "Visual: currency-browser"
+        if: (matrix.engine != 'webkit' || steps.wk.outcome == 'success')
         timeout-minutes: 5
         run: node skyline-estates/tests/currency-browser.cjs
       - name: "Visual: Championship screens (Safari)"
-        if: matrix.engine == 'webkit'
+        if: (matrix.engine != 'webkit' || steps.wk.outcome == 'success') && (matrix.engine == 'webkit')
         timeout-minutes: 6
         run: VISUAL_ENGINE=webkit CHAMP_SCREENS_ONLY=1 node skyline-estates/tests/championship-review-browser.cjs "$RUNNER_TEMP/champ-webkit"
       - name: "Visual: visual-correction-browser"
+        if: (matrix.engine != 'webkit' || steps.wk.outcome == 'success')
         timeout-minutes: 5
         run: node skyline-estates/tests/visual-correction-browser.cjs
       - name: Verify already-published assets on explicit production acceptance
-        if: github.event_name == 'workflow_dispatch'
+        if: (matrix.engine != 'webkit' || steps.wk.outcome == 'success') && (github.event_name == 'workflow_dispatch')
         run: node skyline-estates/tests/published-web.cjs
       - name: Upload before-release visual evidence
         if: always()
