@@ -13,7 +13,7 @@ const TYPES={'.html':'text/html','.js':'text/javascript','.css':'text/css','.jso
   const b=await chromium.launch({args:['--disable-webgl'],...(process.env.CHROME_PATH?{executablePath:process.env.CHROME_PATH}:{})});
   const errs=[];
   async function open(vp,ui){const ctx=await b.newContext({viewport:vp,hasTouch:true,serviceWorkers:'block'});await ctx.route('**/*',r=>r.request().url().startsWith(origin)?r.continue():r.abort());
-    await ctx.addInitScript(u=>localStorage.setItem('skylinePrefs',JSON.stringify({flat2d:true,nickSet:true,nick:'Ada',welcomed:1,tutDone:1,lastOpen:Date.now(),ui:u,coins:4205,stats:{games:9}})),ui);
+    await ctx.addInitScript(u=>{localStorage.setItem('skylineIntroRing','1');localStorage.setItem('skylinePrefs',JSON.stringify({flat2d:true,nickSet:true,nick:'Ada',welcomed:1,tutDone:1,lastOpen:Date.now(),ui:u,coins:4205,stats:{games:9}}))},ui);
     const p=await ctx.newPage();p.on('pageerror',e=>errs.push(String(e)));await p.goto(origin+'/skyline-estates/index.html');await p.locator('#boot').waitFor({state:'detached',timeout:30000});
     await p.evaluate(()=>{document.querySelectorAll('#modals .ov').forEach(x=>x.remove());homeTab('play')});return{ctx,p}}
 

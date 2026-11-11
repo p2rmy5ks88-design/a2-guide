@@ -301,7 +301,8 @@ function hdCityPane(T){const saved=loadSave(),c=CITY_DATA[setup.city],C=countryO
  q('#pCity').onclick=()=>{sfx('tap');homeTab('world')};
  if(saved)q('#tCont').onclick=()=>{initAudio();startWith(saved)};
  if(q('#tOnline'))q('#tOnline').onclick=()=>{initAudio();openOnline()};
- q('#qAI').onclick=()=>{const me=setup.slots[0];startFromSetup(T,setup.slots.map((s,i)=>({...s,type:i===0?'human':i<4?'ai':'off',tok:i===0?me.tok:s.tok})))};
+ // Play Solo is the 30-round Championship (as approved with the Championship work); Custom Game keeps its own settings.
+ q('#qAI').onclick=()=>{const me=setup.slots[0];startFromSetup(T,setup.slots.map((s,i)=>({...s,type:i===0?'human':i<4?'ai':'off',tok:i===0?me.tok:s.tok})),{mode:'timed',rounds:30,championship:1})};
  q('#qPP').onclick=()=>{setup.slots.forEach((s,i)=>s.type=i<2?'human':s.type==='human'?'off':s.type);homeTab('custom');toast('Set each friend to Human, then tap Start game')};
  q('#qCustom').onclick=()=>homeTab('custom');
  if(q('#qSeason'))q('#qSeason').onclick=()=>homeTab('season');if(q('#hdSpot'))q('#hdSpot').onclick=()=>homeTab('spotlight')}
