@@ -18,7 +18,7 @@ async function open(browser,vp,ui){
 }
 (async()=>{
  const browser=engine==='webkit'?await webkit.launch({headless:true}):await chromium.launch({headless:true,args:['--disable-webgl','--autoplay-policy=no-user-gesture-required'],...(process.env.CHROME_PATH?{executablePath:process.env.CHROME_PATH}:{})});
- for(const vp of [{width:667,height:375},{width:844,height:390}]){
+ for(const vp of [{width:667,height:375},{width:844,height:390},{width:915,height:412},{width:780,height:360}]){
    for(const ui of ['dark','light']){
      const page=await open(browser,vp,ui);
      await page.evaluate(()=>{setup.mode='timed';homeTab('custom')});
@@ -45,16 +45,23 @@ async function open(browser,vp,ui){
      await page.evaluate(()=>{G.round=31;renderRoster()});
      const finalRound=await page.locator('#round').innerText();
      assert.match(finalRound,/Round 30\/30/,'post-finish round must be clamped');
-     await page.evaluate(()=>{G.round=30;G.phase='post';void finish()});
+     await page.evaluate(ui=>{G.round=30;G.phase='post';if(ui==='dark'){G.rv=LC_RV;G.lcv=1}const s0=st(G.players[0]);s0.houses=6;s0.hotels=1;void finish()},ui);
      await page.locator('.endgrid .stand').waitFor({state:'visible',timeout:15000});
      await page.waitForTimeout(3500);
      await page.screenshot({path:path.join(out,engine+'-results-overview-'+vp.width+'-'+ui+'.png'),fullPage:false});
+     const barCheck=async when=>{const b=await page.evaluate(()=>{const bar=document.querySelector('#modals .mp.endres>.mbar');if(!bar)return null;const r=bar.getBoundingClientRect();
+       const hits=[...bar.querySelectorAll('button')].map(x=>{const q=x.getBoundingClientRect(),t=document.elementFromPoint(q.x+q.width/2,q.y+q.height/2);return q.height>=40&&(t===x||x.contains(t))});return{top:r.top,bottom:r.bottom,h:innerHeight,hits}});
+       assert.ok(b&&b.top>=0&&b.bottom<=b.h+1&&b.hits.length>=3&&b.hits.every(Boolean),'results buttons visible and tappable '+when+' '+JSON.stringify({vp,ui,b}))};
+     await barCheck('before scrolling');
+     const mb=await page.evaluate(()=>[...document.querySelectorAll('#modals .hls small')].map(e=>e.textContent).find(t=>/upgrade|houses/.test(t))||'');
+     assert.match(mb,ui==='dark'?/made 7 building upgrades and topped out 1 Skyscraper/:/built 6 houses and 1 towers/,'Master builder wording (Living City in dark run, classic in light run): '+mb);
      const detail=page.locator('.champ-score-details summary');
      assert.equal(await detail.count(),1,'Championship breakdown must be discoverable');
      await detail.click();
      assert.match(await page.locator('.champ-score-details').innerText(),/Landmark investment/);
      const canScroll=await page.evaluate(()=>{const p=document.querySelector('#modals .mp');if(!p)return null;const scrollable=p.scrollHeight>p.clientHeight+5;if(scrollable)p.scrollTop=p.scrollHeight;return {scrollable,scrollTop:p.scrollTop,max:p.scrollHeight-p.clientHeight}});
      assert.ok(canScroll&&(!canScroll.scrollable||canScroll.scrollTop>0),'Score breakdown must remain scrollable '+JSON.stringify(canScroll));
+     await page.waitForTimeout(200);await barCheck('after scrolling');
      await page.screenshot({path:path.join(out,engine+'-results-'+vp.width+'-'+ui+'.png'),fullPage:false});
      const layout=await page.evaluate(()=>{
        const el=document.querySelector('.endgrid'),r=el.getBoundingClientRect();
