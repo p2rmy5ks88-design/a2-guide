@@ -88,6 +88,7 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--navy);outline-o
 @keyframes fade{from{opacity:0}}
 .mp{background:#fff;color:var(--text);border-radius:22px;padding:14px 16px;max-width:min(440px,100%);width:100%;max-height:100%;overflow:auto;display:flex;flex-direction:column;gap:10px;box-shadow:0 8px 0 rgba(19,40,74,.18),0 18px 40px rgba(19,40,74,.3);animation:rise .32s var(--ease)}
 .mp.wide{max-width:min(760px,100%)}
+.mp.endres>.mbar{position:sticky;bottom:-14px;z-index:3;margin:0 -16px -14px;padding:10px 16px max(12px,env(safe-area-inset-bottom,0px));background:inherit;border-radius:0 0 22px 22px;box-shadow:0 -10px 16px -12px rgba(0,0,0,.45)}
 @keyframes rise{from{transform:translateY(18px) scale(.95)}}
 .mbar{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
 .mbar .btn{flex:1 1 auto}
@@ -4961,14 +4962,14 @@ function progressGameEnd(w){if(!trackable()||G.progDone)return null;G.progDone=t
 function highlights(){const pl=G.players,best=(f)=>pl.reduce((b,p)=>(f(p)>(b?f(b):-1)?p:b),null);const out=[];
   const r=best(p=>st(p).maxRent);if(r&&st(r).maxRent)out.push(['💸','Biggest rent',`${r.name} collected ${fmt(st(r).maxRent)} in one go`]);
   const b=best(p=>st(p).buys);if(b&&st(b).buys)out.push(['🏘️','Top buyer',`${b.name} bought ${st(b).buys} propert${st(b).buys===1?'y':'ies'}`]);
-  const h=best(p=>st(p).hotels*5+st(p).houses);if(h&&(st(h).houses+st(h).hotels))out.push(['🏙️','Master builder',`${h.name} built ${st(h).houses} houses and ${st(h).hotels} towers`]);
+  const h=best(p=>st(p).hotels*5+st(p).houses);if(h&&(st(h).houses+st(h).hotels))out.push(['🏙️','Master builder',(typeof LC_RV!=='undefined'&&G.rv===LC_RV)?`${h.name} made ${st(h).houses+st(h).hotels} building upgrade${st(h).houses+st(h).hotels===1?'':'s'}${st(h).hotels?` and topped out ${st(h).hotels} Skyscraper${st(h).hotels===1?'':'s'}`:''}`:`${h.name} built ${st(h).houses} houses and ${st(h).hotels} towers`]);
   const j=best(p=>st(p).jail);if(j&&st(j).jail)out.push(['🚔','Lockup regular',`${j.name} went to the Lockup ${st(j).jail} time${st(j).jail>1?'s':''}`]);
   const t=best(p=>st(p).trades);if(t&&st(t).trades)out.push(['🤝','Deal maker',`${t.name} closed ${st(t).trades} trade${st(t).trades>1?'s':''}`]);return out}
 async function finish(){
   G.over=true;clearSave();if(G.online&&NET.on){NET.ref.update({status:'over',at:Date.now()}).catch(()=>{});if(G.code&&NET.backend==='firebase'&&FIRE){const c=G.code;FIRE.forget(c);setTimeout(()=>FIRE.purge(c),20000)}}if(FAST)return;renderRoster();updateTools();setPrompt('Game over.');$('#acts').innerHTML='';
   const sts=standings(),w=sts[0];achGameEnd(w);const res=progressGameEnd(w);sfx('win');if(S3)S3.marker.visible=false;confetti();if(hasLvl(15))setTimeout(confetti,700);fireworks();camOverview(w.pos,1200);
   const hl=highlights(),lv=lvlOf(PREF.xp),a=xpFor(lv),b=xpFor(lv+1),L=LEAGUES[leagueIdx()],S=season(),tier=seasonTierNow();
-  const k=await modal({cls:'wide',html:`<div class="mh">${esc(w.name)} is the landlord of ${esc(CITY.name)}!</div>
+  const k=await modal({cls:'wide endres',html:`<div class="mh">${esc(w.name)} is the landlord of ${esc(CITY.name)}!</div>
     <div class="endgrid"><div><div class="mtxt muted">${skylineChampionshipActive()?'Final Championship Score':'Final standings'}</div><div class="stand">${sts.map((p,i)=>`<div><em>${i+1}</em><i style="--pc:${p.col}">${p.tok}</i><span>${esc(p.name)}${p.bankrupt?' · bankrupt':''}</span><span>${fmt(p.bankrupt?0:skylineChampionshipActive()?skylineChampionshipScore(p).total:netWorth(p))}</span></div>`).join('')}</div>${skylineChampionshipActive()?skylineChampionshipBreakdownHTML(sts):''}</div>
     <div>${hl.length?`<div class="mtxt muted">Highlights</div><div class="hls">${hl.map(h=>`<div><i>${h[0]}</i><span><b>${esc(h[1])}</b><small>${esc(h[2])}</small></span></div>`).join('')}</div>`:''}
     ${res?`<div class="xpcard"><div class="rewrow"><span class="rew"><b>+${XPGAME}</b><small>XP</small></span><span class="rew coin"><b>+${res.coins}</b><small>${COIN} coins</small></span><span class="rew"><b>${res.tr>0?'+':''}${res.tr}</b><small>🏆 trophies</small></span></div>
