@@ -49,6 +49,6 @@ jobs:
         with:
           name: living-board-pixel-comparison
           path: |
-            ${{ runner.temp }}/living-board-lagos-*.png
+            ${{ runner.temp }}/living-board-*.png
             ${{ runner.temp }}/living-board-pixel-metrics.json
           if-no-files-found: warn
