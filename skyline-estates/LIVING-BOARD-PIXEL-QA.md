@@ -29,3 +29,9 @@ Status: **experimental; not approved for merge or release**.
 
 ## Release boundary
 Do not merge this draft or publish a new TestFlight/App Store/Android build based on the experiment. The Harbour Ring 24-space board is a separate later workstream.
+
+## Texture-resolution finding (source inspection, 2026-11-15)
+
+The main 40-space board labels and artwork are rasterized once into a **2048 × 2048 canvas** in the protected `game.html` initialization (`const bc=cnv(2048,2048,drawBoard)`). The canvas is mapped onto the board plane as a WebGL texture. The renderer's device-pixel-ratio setting controls framebuffer resolution, **not the source detail available in this board texture**. Therefore raising DPR to 3× cannot reconstruct lettering already limited by the 2048-pixel texture. This is a confirmed code-level constraint, not proof that increasing the texture will improve legibility on physical devices.
+
+**Next isolated experiment:** compare 2048 versus 4096 board-texture variants in disposable generated QA pages, holding camera, viewport and render scale constant. Record GPU maximum texture size, approximate RGBA source memory (16 MiB versus 64 MiB before mipmaps), label crops and browser errors. Avoid shipping 4096 as a universal default: older mobile GPUs and texture memory limits require validation. Preserve `game.html`, security hash, native builds and production pages unchanged.
