@@ -43,6 +43,15 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--navy);outline-o
 .pc{font:18px/1.05 var(--display);color:var(--navy);font-variant-numeric:tabular-nums;letter-spacing:.01em}
 .pg{display:flex;flex-wrap:wrap;gap:2px;margin-top:2px;max-width:118px}
 .pg i{width:6px;height:6px;border-radius:2px;display:block}
+/* Living Board: compact player roster for landscape touch screens.
+   Preserve card actions, current-turn indicator, names, cash and ownership chips. */
+@media (pointer:coarse) and (orientation:landscape) and (max-height:500px){
+  #roster{gap:3px;max-width:190px;padding-right:6px}
+  #roster .pcard{padding:3px 9px 3px 3px;gap:7px}
+  #roster .pt{width:33px;height:33px;font-size:19px}
+  #roster .pn{max-width:113px;font-size:11px}
+  #roster .pg{display:flex;max-width:113px;overflow:hidden}
+}
 
 #tools{position:absolute;right:max(16px,env(safe-area-inset-right,0px));top:max(10px,env(safe-area-inset-top,0px));display:flex;gap:8px}
 .tb{width:46px;height:46px;border-radius:50%;border:none;background:rgba(255,255,255,.95);box-shadow:0 3px 0 rgba(19,40,74,.2);display:grid;place-items:center;color:var(--navy)}
