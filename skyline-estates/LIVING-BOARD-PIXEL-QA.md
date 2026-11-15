@@ -1,13 +1,13 @@
 # Living Board V1 — Pixel Foundation QA gate
 
-Status: **experimental; not approved for merge or release**.
+Status (2026-11-15): **compact landscape player-roster CSS merged into `main` via PR #200**. Adaptive render scale, board texture variants, and other visual experiments remain **QA-only, not shipped**. The merged source `game.html` changed only for the compact roster; generated web pages were synchronized and audited.
 
 ## Scope
 - Source: `game.html`, the main 40-square custom WebGL renderer.
 - The optional `skylineRenderScale` URL parameter changes only the renderer's effective pixel ratio.
 - Without the parameter, touch devices retain the 1.5× cap and other devices retain the 2× cap.
 - The value is bounded to 1–3 and further capped by the device's actual pixel ratio.
-- This is **not** a resolution upgrade in production. The generated `index.html` and other entry pages have not yet been regenerated on this branch.
+- This is **not** a resolution upgrade in production. QA-only render-scale overrides are injected into disposable generated pages; production web pages were regenerated for the compact roster CSS, not the render-scale experiment.
 
 ## Required verification, in order
 
@@ -25,10 +25,10 @@ Status: **experimental; not approved for merge or release**.
 - No altered 40-square geometry, tile names/prices, token paths, game rules, currency, saves or multiplayer.
 - No persistent text/board clipping or touch target regressions.
 - Prefer a measured adaptive policy to a universal 3× setting.
-- Record side-by-side images and performance data in PR #200. If evidence is incomplete, keep the PR draft.
+- Historical A/B results were recorded in PR #200; further adaptive-resolution experiments require a new PR and performance evidence before merging.
 
 ## Release boundary
-Do not merge this draft or publish a new TestFlight/App Store/Android build based on the experiment. The Harbour Ring 24-space board is a separate later workstream.
+PR #200 was merged for compact landscape roster CSS only. Do not treat the QA-only resolution experiments as shipped or publish a new TestFlight/App Store/Android build based on them. The Harbour Ring 24-space board remains a separate workstream.
 
 ## Texture-resolution finding (source inspection, 2026-11-15)
 
