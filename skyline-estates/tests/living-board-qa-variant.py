@@ -22,6 +22,13 @@ hierarchy_new=("const qaHierarchy=new URLSearchParams(location.search).get('skyl
 name_old='const f=fitText(ctx,t.toUpperCase(),w-10,sz,800,FB,max);'
 name_new=("const qaHierarchy=new URLSearchParams(location.search).get('skylineLabelHierarchy')==='large';"
           "const f=fitText(ctx,t.toUpperCase(),w-10,qaHierarchy?sz*1.1:sz,800,FB,max);")
+roster_old='#roster{position:absolute;'
+roster_new=("body:has(#ui:not([hidden])):has(#roster) #roster.qa-compact{gap:3px;max-width:148px;padding-right:3px;}"
+            "#roster.qa-compact .pcard{padding:2px 7px 2px 2px;gap:5px;}"
+            "#roster.qa-compact .pt{width:28px;height:28px;font-size:17px;}"
+            "#roster.qa-compact .pn{max-width:80px;font-size:10px;}"
+            "#roster.qa-compact .pg{display:none;}"
+            +roster_old)
 pages=['index.html','web-play.html','web-board.html','web-follow.html','web-correction.html','web-menus.html']
 for name in pages:
     p=root/name
@@ -34,5 +41,7 @@ for name in pages:
         sys.exit(f'Unexpected label signature in {name}: {s.count(label_old)}')
     if s.count(hierarchy_old)!=1 or s.count(name_old)!=1:
         sys.exit(f'Unexpected label hierarchy signatures in {name}: {s.count(hierarchy_old)}, {s.count(name_old)}')
-    p.write_text(s.replace(old,new).replace(texture_old,texture_new).replace(label_old,label_new).replace(hierarchy_old,hierarchy_new).replace(name_old,name_new),encoding='utf-8')
+    if s.count(roster_old)!=1:
+        sys.exit(f'Unexpected roster signature in {name}: {s.count(roster_old)}')
+    p.write_text(s.replace(old,new).replace(texture_old,texture_new).replace(label_old,label_new).replace(hierarchy_old,hierarchy_new).replace(name_old,name_new).replace(roster_old,roster_new),encoding='utf-8')
 print('Patched generated pages for isolated rendering experiment; game.html unchanged')
