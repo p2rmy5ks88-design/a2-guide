@@ -2343,7 +2343,7 @@ function N(geo,m,x=0,y=0,z=0){return new Node(geo,m).at(x,y,z)}
 const ROOT=new Node();
 const env={sky:hex('#a9c9e6'),gnd:hex('#77705a'),sun:hex('#ffe9c8').map(v=>v*.62),L:(()=>{const l=[.45,.8,.38],n=Math.hypot(...l);return l.map(v=>v/n)})(),fogC:hex('#bfe4fa'),fog:[26,58]};
 function drawScene(time){
-  const gl=GL,cv=gl.canvas;const dpr=Math.min(devicePixelRatio||1,COARSE?1.5:2),w=Math.round(cv.clientWidth*dpr),h=Math.round(cv.clientHeight*dpr);
+  const gl=GL,cv=gl.canvas;const requestedScale=(()=>{try{const v=new URLSearchParams(location.search).get('skylineRenderScale');return v===null?null:Number(v)}catch(e){return null}})();const safeScale=Number.isFinite(requestedScale)&&requestedScale>=1&&requestedScale<=3?requestedScale:null;const dpr=Math.min(devicePixelRatio||1,safeScale===null?(COARSE?1.5:2):safeScale),w=Math.round(cv.clientWidth*dpr),h=Math.round(cv.clientHeight*dpr);
   if(cv.width!==w||cv.height!==h){cv.width=w;cv.height=h}
   gl.viewport(0,0,w,h);gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
   const proj=M4.persp(CAMV.fov*Math.PI/180,w/h,.1,200),view=M4.lookAt(CAMV.pos,CAMV.look,[0,1,0]);
