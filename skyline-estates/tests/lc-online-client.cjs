@@ -72,7 +72,7 @@ function memoryDb(){const data={};const get=p=>p.split('/').reduce((o,k)=>o&&o[k
       assert.equal(await B.evaluate(()=>PREF.lcRoom&&PREF.lcRoom.code),code);B.evaluate(c=>SkylineLivingCityOnline.join(c),code).catch(()=>{});
       await B.waitForFunction(()=>G&&G.lcNet&&G.rv===2,null,{timeout:8000});reconnected=true;ok('Bob closes the app mid-match and rejoins from his saved room code; the match continues')}
     assert.ok(Date.now()-last<30000,'progress stalled');await delay(60)}
-  const srv=JSON.parse(db.data.skylineV2.lc[code].match);assert.ok(srv.over,'match finished');const SQN=await A.evaluate(()=>SQ.map(s=>s.n));
+  const srv=JSON.parse(db.data.skylineV2.lc[code].match);if(!srv.over)console.error('LC MATCH TIMEOUT DIAGNOSTIC',JSON.stringify({elapsedMs:Date.now()-t0,steps,lastProgressMs:Date.now()-last,round:srv.G?.round,turn:srv.G?.turn,revision:srv.revision,decision:srv.decision||null,clientDecision:await A.evaluate(()=>SkylineLivingCityOnline._state.view?.decision||null),seenDecisions:[...kinds],reconnected,built:!!built}));assert.ok(srv.over,'match finished');const SQN=await A.evaluate(()=>SQ.map(s=>s.n));
   await A.locator('#modals').filter({hasText:'landlord of'}).waitFor({timeout:15000});
   ok(`complete casual Living City match in the app: ${srv.G.round} rounds, revision ${srv.revision}, decisions seen ${[...kinds].join(', ')}`);
   assert.ok(built,'development action exercised');assert.ok(seenLc.has('lc:review')&&seenLc.has('lc:landmark'),'Civic Review and Landmark decisions exercised');

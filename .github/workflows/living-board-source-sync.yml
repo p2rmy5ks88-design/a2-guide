@@ -1,0 +1,67 @@
+name: Living Board source/build sync
+on:
+  push:
+    branches: [feat/living-board-v1-pixel-foundation]
+    paths:
+      - '.github/workflows/living-board-source-sync.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Audit scope before updating the pinned source hash
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import subprocess
+          p='skyline-estates/game.html'
+          baseline='af8d82bde4bf459b40ca7c76abdf6ed97fac3b05'
+          original=subprocess.check_output(['git','show',baseline+':'+p]).decode()
+          current=Path(p).read_text()
+          marker='.pg i{width:6px;height:6px;border-radius:2px;display:block}'
+          block=chr(10)+chr(10).join(["/* Living Board: compact player roster for landscape touch screens.","   Preserve card actions, current-turn indicator, names, cash and ownership chips. */","@media (pointer:coarse) and (orientation:landscape) and (max-height:500px){","  #roster{gap:3px;max-width:190px;padding-right:6px}","  #roster .pcard{padding:3px 9px 3px 3px;gap:7px}","  #roster .pt{width:33px;height:33px;font-size:19px}","  #roster .pn{max-width:113px;font-size:11px}","  #roster .pg{display:flex;max-width:113px;overflow:hidden}","}"])
+          assert original.count(marker)==1
+          assert current==original.replace(marker,marker+block), 'Non-CSS game changes detected; manual audit required'
+          print('PASS: only the approved compact-roster CSS block differs from audited baseline')
+          PY
+      - name: Refresh pinned hash after verified CSS-only audit
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib,re
+          p=Path('skyline-estates/security/service/audited-rules.cjs')
+          s=p.read_text()
+          h=hashlib.sha256(Path('skyline-estates/game.html').read_bytes().replace(b'\r\n',b'\n')).hexdigest()
+          s,n=re.subn(r"const expectedSourceHash='[0-9a-f]{64}';",f"const expectedSourceHash='{h}';",s)
+          assert n==1
+          p.write_text(s)
+          print('Audited source hash:',h)
+          PY
+      - name: Rebuild and verify web/offline files
+        run: |
+          python3 skyline-estates/build.py
+          python3 skyline-estates/build.py --check
+      - name: Verify audited rule loader and syntax
+        run: |
+          node --check skyline-estates/security/service/audited-rules.cjs
+          node -e "require('./skyline-estates/security/service/audited-rules.cjs'); console.log('PASS: audited source hash')"
+      - name: Commit only generated files and audited hash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add skyline-estates/security/service/audited-rules.cjs skyline-estates/index.html skyline-estates/web-play.html skyline-estates/web-board.html skyline-estates/web-follow.html skyline-estates/web-correction.html skyline-estates/web-menus.html skyline-estates/offline-assets.js skyline-estates/sw.js
+          git diff --cached --check
+          if ! git diff --cached --quiet; then
+            git commit -m 'Sync audited CSS hash and generated Living Board web assets'
+            git push origin HEAD:feat/living-board-v1-pixel-foundation
+          fi
