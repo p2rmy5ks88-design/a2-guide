@@ -38,7 +38,7 @@ jobs:
       - name: Confirm generated changes remain isolated to runner
         run: git status --short
       - name: Install browser QA dependencies
-        run: npm ci --prefix skyline-estates/tests --no-audit --no-fund
+        run: npm install --prefix skyline-estates/tests --no-audit --no-fund
       - name: Capture identical Lagos states at four rendering scales
         env:
           CHROME_PATH: /usr/bin/google-chrome
