@@ -38,6 +38,15 @@ const server=http.createServer((req,res)=>{const p=path.resolve(root,'.'+decodeU
    if(roster==='compact'&&hud.cards.some(c=>!c.centerUnobstructed))errors.push('Compact HUD card center obstructed by another overlay');
    if(roster==='compact'&&hud.cards.some(c=>c.hitSamples.filter(Boolean).length<2))errors.push('Compact HUD card hit area mostly obstructed');
   }
+  if(roster==='compact'&&scale===2&&textureSize===2048&&labelContrast==='standard'&&labelHierarchy==='standard'){
+    // Exercise the real player-card click handler, not just its geometric hit area.
+    const card=page.locator('#roster .pcard').first();
+    await card.click({position:{x:Math.min(25,Math.max(8,(await card.boundingBox()).width/4)),y:18},timeout:10000});
+    const modal=await page.evaluate(()=>({visible:[...document.querySelectorAll('#modals .ov:not(.bye)')].some(e=>e.getBoundingClientRect().width>0),text:document.querySelector('#modals')?.innerText?.slice(0,180)||''}));
+    fs.writeFileSync(path.join(out,'living-board-hud-tap-metrics.json'),JSON.stringify(modal,null,2));
+    if(!modal.visible)errors.push('Compact HUD player card tap did not open player detail overlay');
+    await page.evaluate(()=>document.querySelector('#modals').innerHTML='');
+  }
   const filename='living-board-lagos-'+String(scale).replace('.','_')+'x-tex'+textureSize+'-'+labelContrast+'-'+labelHierarchy+'-'+roster+'.png';
   await page.screenshot({path:path.join(out,filename)});
   // Keep source-pixel crops unscaled, so reviewers can inspect fine geometry and label antialiasing.
