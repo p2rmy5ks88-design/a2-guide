@@ -1,18 +1,18 @@
 # Living Board V1 — Pixel Foundation QA gate
 
-Status (2026-11-15): **PR #200's compact landscape roster CSS is merged on main**. Phase 1 adaptive resolution, final-cascade HUD fixes and Harbour Ring water-band reduction are **in draft PR #202, not yet shipped**. The draft has source-level QA coverage but generated web files, offline manifest, protected source-hash verification, browser regressions and physical iPhone testing are **not complete**.
+Status (2026-11-15): **Phase 1 (PR #202) verified in simulated Chromium and merged to main for the web game**: adaptive touch resolution (2× start, 2.5× when sustained smooth, down to 1.5× under sustained load, with a session ceiling so a borderline device settles), the final-cascade compact HUD and the reduced Harbour Ring water band. Generated pages, offline manifest and the protected source hash were rebuilt and audited. **Not yet tested on a physical iPhone or Android phone**; no native build includes it.
 
 ## Draft PR #202 behavior
 - The 40-space WebGL renderer starts at a 2× effective scale on high-DPR touch devices, can increase to 2.5× after sustained smooth frames, and steps down to 1.5× under sustained frame pressure; the actual DPR is always an upper bound. Desktop stays capped at 2×.
 - The small-phone roster CSS is applied after the more specific `#ui #roster` override, keeping a minimum 44px player-card touch target and allowing ownership chips to scroll horizontally.
 - The Harbour Ring 24-space board's synthetic water-band overlay is removed and its SVG water strip is made subtler. The photographic background remains unchanged.
-- The source-based adaptive/HUD test has 18 assertions. These are not equivalent to a Chromium/WebKit run, performance benchmark or physical-phone acceptance.
+- The source-based adaptive/HUD test has 20 assertions, including a borderline-device case (smooth at 2×, slow at 2.5×) that must settle with at most two changes. These are not equivalent to a physical-phone benchmark.
 
 ## Scope
 - Source: `game.html`, the main 40-square custom WebGL renderer.
-- Draft PR #202 uses an adaptive effective pixel ratio, bounded by the physical device DPR. It is not yet production behavior.
+- PR #202 uses an adaptive effective pixel ratio, bounded by the physical device DPR. It ships in the web game; native apps get it only with a future, separately approved build.
 - Older QA-only `skylineRenderScale` URL variants belong to historical pixel experiments and are not the active draft implementation.
-- The adaptive policy must be measured on physical phones before shipping.
+- The adaptive policy should still be measured on physical phones; if a device class misbehaves, lower the starting level or the 2.5× ceiling rather than removing adaptation.
 
 ## Required verification, in order
 
@@ -70,3 +70,12 @@ Corrected stage QA run **43710238119 passed** at commit `74553992`. The fixture 
 5. Only after passing visual review and full stability checks should a separate production change be proposed; do not merge this QA branch or modify the protected source hash as a shortcut.
 
 The baseline compact landscape roster CSS **was merged in PR #200**. The further 9px chip/short-height corrections and adaptive resolution are **draft PR #202**, not shipped. The Harbour Ring artificial water-band reduction is likewise draft-only. Source-hash synchronization, generated pages/offline manifest, browser stability and physical-phone visual acceptance remain required before merge.
+
+## Phase 1 verification (2026-11-15, before merging PR #202)
+
+- `tests/phase1-verify.sh`: pass (20 adaptive/HUD assertions, 9 water assertions, build check, Harbour Ring rules and 24 browser checks).
+- Adaptive controller simulation: steady 60 Hz and 120 Hz rise to 2.5× after about 7–10 s; sustained 25–30 fps (including iOS Low Power Mode's 30 fps cap) drops to 1.5× after about 8 s; a single long pause changes nothing. **Fixed during review:** a device smooth at 2× but slow at 2.5× used to flip between them every ~8 s (27 changes in 3 minutes). A level that proves too slow is now the session ceiling (2 changes, then stable).
+- Canvas backing on a simulated iPhone 15 Pro (852×393 @3×): 1704×786 at the 2× start (was 1278×590).
+- Four-player roster fits with no clipped content at 667×375, 780×360, 844×390, 852×393, 915×412 and 932×430; ownership chips 9 px (were 6 px); cards at least 44 px tall. Squares covered by HUD in the overview: 0 at every size except 667×375 (3, was 8).
+- Harbour Ring daylight water band is now faint; Phase 2 continues the waterfront work.
+- Not done: physical iPhone Safari/TestFlight and Android device tests, real GPU frame timing.

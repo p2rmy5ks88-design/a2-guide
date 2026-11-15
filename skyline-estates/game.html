@@ -2385,7 +2385,7 @@ const env={sky:hex('#a9c9e6'),gnd:hex('#77705a'),sun:hex('#ffe9c8').map(v=>v*.62
 /* Adaptive touch resolution: start at 2x; sustained active-frame pressure lowers it.
    Idle/modal throttling is excluded; hysteresis prevents rapid resolution oscillation.
    The setting is session-only and never changes board geometry or saved games. */
-const BOARD_RES={level:2,history:[],lastSample:0,lastChange:0,slowWindows:0,fastWindows:0};
+const BOARD_RES={level:2,ceiling:2.5,history:[],lastSample:0,lastChange:0,slowWindows:0,fastWindows:0};
 function boardRenderScale(now,active){
   if(!COARSE)return Math.min(devicePixelRatio||1,2);
   if(!active){BOARD_RES.lastSample=0;BOARD_RES.history.length=0;BOARD_RES.slowWindows=0;BOARD_RES.fastWindows=0;return Math.min(devicePixelRatio||1,BOARD_RES.level)}
@@ -2402,9 +2402,11 @@ function boardRenderScale(now,active){
     else if(p75<17){BOARD_RES.fastWindows++;BOARD_RES.slowWindows=0}
     else{BOARD_RES.fastWindows=0;BOARD_RES.slowWindows=0}
     if(BOARD_RES.slowWindows>=2&&BOARD_RES.level>1.5){
+      // A level that proved too slow becomes this session's ceiling, so a borderline device settles instead of flipping sharp/soft.
+      BOARD_RES.ceiling=Math.min(BOARD_RES.ceiling,BOARD_RES.level===2.5?2:1.5);
       BOARD_RES.level=BOARD_RES.level===2.5?2:1.5;
       BOARD_RES.lastChange=now;BOARD_RES.slowWindows=0;
-    }else if(BOARD_RES.fastWindows>=4&&BOARD_RES.level<2.5){
+    }else if(BOARD_RES.fastWindows>=4&&BOARD_RES.level<BOARD_RES.ceiling){
       BOARD_RES.level=BOARD_RES.level===1.5?2:2.5;
       BOARD_RES.lastChange=now;BOARD_RES.fastWindows=0;
     }

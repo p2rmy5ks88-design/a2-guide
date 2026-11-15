@@ -42,6 +42,11 @@ feed(interrupted,1,16,80);
 interrupted.boardRenderScale(6000,true);
 assert.equal(interrupted.BOARD_RES.history.length,0,'long frame gap is not treated as active load');
 assert.equal(interrupted.BOARD_RES.level,2,'a single pause must not change resolution');
+{// Borderline device: smooth at 2x, slow at 2.5x. It must settle at 2x instead of oscillating.
+  const b=harness(true,3);let t=1,switches=0,last=b.boardRenderScale(t,true);
+  for(let i=0;i<12000;i++){t+=b.BOARD_RES.level>=2.5?28:15;const s=b.boardRenderScale(t,true);if(s!==last){switches++;last=s}}
+  assert.ok(switches<=2,'borderline device settles (switches='+switches+')');
+  assert.equal(b.BOARD_RES.level,2,'borderline device stays at the last smooth level');}
 const style=source.slice(0,source.indexOf('</style>'));
 const earlier=style.indexOf('#ui #roster{top:calc(max(8px,env(safe-area-inset-top,0px)) + 54px)');
 const compact=style.indexOf('/* Phase 1 small-phone roster: final-cascade correction.');
@@ -49,4 +54,4 @@ assert.ok(earlier>0&&compact>earlier,'compact rules follow the higher-specificit
 assert.match(style.slice(compact),/max-height:380px/,'very small landscape layout retained');
 assert.match(style.slice(compact),/#ui #roster \.pcard\{min-height:44px\}/,'keep 44px touch targets');
 assert.match(style.slice(compact),/overflow-x:auto/,'ownership strips remain reachable');
-console.log('PASS adaptive board resolution and small-phone HUD source checks (18 assertions)');
+console.log('PASS adaptive board resolution and small-phone HUD source checks (20 assertions)');

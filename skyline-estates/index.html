@@ -50,7 +50,18 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--navy);outline-o
   #roster .pcard{padding:3px 9px 3px 3px;gap:7px}
   #roster .pt{width:33px;height:33px;font-size:19px}
   #roster .pn{max-width:113px;font-size:11px}
-  #roster .pg{display:flex;max-width:113px;overflow:hidden}
+  #roster .pg{display:flex;max-width:113px;overflow:hidden;gap:3px}
+  #roster .pg i{width:9px;height:9px;min-width:9px;font-size:9px;line-height:9px;text-align:center}
+}
+/* Short landscape viewports: keep all four players reachable without obscuring the board. */
+@media (pointer:coarse) and (orientation:landscape) and (max-height:380px){
+  #roster{top:max(4px,env(safe-area-inset-top,0px));gap:2px;max-height:calc(100% - 12px);max-width:170px}
+  #roster .pcard{padding:2px 7px 2px 2px;gap:5px}
+  #roster .pt{width:29px;height:29px;font-size:17px}
+  #roster .pn{font-size:10px;max-width:105px}
+  #roster .pc{font-size:16px}
+  #roster .pg{margin-top:1px;max-width:105px}
+  #roster .pg i{width:9px;height:9px;min-width:9px}
 }
 
 #tools{position:absolute;right:max(16px,env(safe-area-inset-right,0px));top:max(10px,env(safe-area-inset-top,0px));display:flex;gap:8px}
@@ -1911,6 +1922,26 @@ img.mdl.ipic{display:block;object-fit:cover;border-radius:14px;aspect-ratio:1/1;
 #ui #prompt .sub{font-size:11px}
 #ui #prompt .pav{width:28px;height:28px;font-size:15px}
 #ui #roster{top:calc(max(8px,env(safe-area-inset-top,0px)) + 54px);max-height:calc(100% - 170px)}
+/* Phase 1 small-phone roster: final-cascade correction.
+   This must follow the two-ID #ui #roster override above: earlier media rules
+   are otherwise superseded, leaving four-player rosters clipped on iPhones. */
+@media (pointer:coarse) and (orientation:landscape) and (max-height:500px){
+  #ui #roster{top:calc(max(8px,env(safe-area-inset-top,0px)) + 50px);max-height:calc(100% - 110px);gap:3px;padding-top:10px;max-width:190px}
+  #ui #roster .pcard{min-height:44px}
+  #ui #roster .pg{display:flex;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;overscroll-behavior-inline:contain;scrollbar-width:none;max-width:113px;gap:3px;min-height:11px;touch-action:pan-x}
+  #ui #roster .pg::-webkit-scrollbar{display:none}
+  #ui #roster .pg i{flex:0 0 9px;width:9px;height:9px;min-width:9px;line-height:9px;font-size:9px;text-align:center}
+}
+@media (pointer:coarse) and (orientation:landscape) and (max-height:380px){
+  #ui #roster{top:calc(max(8px,env(safe-area-inset-top,0px)) + 45px);max-height:calc(100% - 92px);max-width:175px;gap:2px;padding-right:5px}
+  #ui #roster .pcard{min-height:44px;padding:2px 7px 2px 2px;gap:5px}
+  #ui #roster .pt{width:29px;height:29px;font-size:17px}
+  #ui #roster .pn{font-size:10px;max-width:105px}
+  #ui #roster .pc{font-size:16px}
+  #ui #roster .pg{max-width:105px}
+  #ui #roster .nowtag{top:-7px;left:32px;font-size:9px;line-height:12px}
+}
+
 /* Skyline Gala season frame: champagne gold and royal violet */
 .avf.fr-gala::before{background:conic-gradient(#FFE9A8,#E2B13C,#7A3FD8,#FF5FA2,#E2B13C,#FFE9A8);animation-duration:3.2s}
 .avf.fr-gala{filter:drop-shadow(0 0 7px rgba(226,177,60,.7))}
@@ -2351,8 +2382,39 @@ function mat(c,o={}){return Object.assign({c:typeof c==='string'?hex(c):c,a:1,te
 function N(geo,m,x=0,y=0,z=0){return new Node(geo,m).at(x,y,z)}
 const ROOT=new Node();
 const env={sky:hex('#a9c9e6'),gnd:hex('#77705a'),sun:hex('#ffe9c8').map(v=>v*.62),L:(()=>{const l=[.45,.8,.38],n=Math.hypot(...l);return l.map(v=>v/n)})(),fogC:hex('#bfe4fa'),fog:[26,58]};
+/* Adaptive touch resolution: start at 2x; sustained active-frame pressure lowers it.
+   Idle/modal throttling is excluded; hysteresis prevents rapid resolution oscillation.
+   The setting is session-only and never changes board geometry or saved games. */
+const BOARD_RES={level:2,ceiling:2.5,history:[],lastSample:0,lastChange:0,slowWindows:0,fastWindows:0};
+function boardRenderScale(now,active){
+  if(!COARSE)return Math.min(devicePixelRatio||1,2);
+  if(!active){BOARD_RES.lastSample=0;BOARD_RES.history.length=0;BOARD_RES.slowWindows=0;BOARD_RES.fastWindows=0;return Math.min(devicePixelRatio||1,BOARD_RES.level)}
+  if(BOARD_RES.lastSample){
+    const elapsed=now-BOARD_RES.lastSample;
+    if(elapsed>0&&elapsed<120)BOARD_RES.history.push(elapsed);
+    else BOARD_RES.history.length=0;
+  }
+  BOARD_RES.lastSample=now;
+  if(BOARD_RES.history.length>=90&&now-BOARD_RES.lastChange>5000){
+    const samples=BOARD_RES.history.splice(0).sort((a,b)=>a-b);
+    const p75=samples[Math.floor(samples.length*.75)];
+    if(p75>25){BOARD_RES.slowWindows++;BOARD_RES.fastWindows=0}
+    else if(p75<17){BOARD_RES.fastWindows++;BOARD_RES.slowWindows=0}
+    else{BOARD_RES.fastWindows=0;BOARD_RES.slowWindows=0}
+    if(BOARD_RES.slowWindows>=2&&BOARD_RES.level>1.5){
+      // A level that proved too slow becomes this session's ceiling, so a borderline device settles instead of flipping sharp/soft.
+      BOARD_RES.ceiling=Math.min(BOARD_RES.ceiling,BOARD_RES.level===2.5?2:1.5);
+      BOARD_RES.level=BOARD_RES.level===2.5?2:1.5;
+      BOARD_RES.lastChange=now;BOARD_RES.slowWindows=0;
+    }else if(BOARD_RES.fastWindows>=4&&BOARD_RES.level<BOARD_RES.ceiling){
+      BOARD_RES.level=BOARD_RES.level===1.5?2:2.5;
+      BOARD_RES.lastChange=now;BOARD_RES.fastWindows=0;
+    }
+  }
+  return Math.min(devicePixelRatio||1,BOARD_RES.level);
+}
 function drawScene(time){
-  const gl=GL,cv=gl.canvas;const dpr=Math.min(devicePixelRatio||1,COARSE?1.5:2),w=Math.round(cv.clientWidth*dpr),h=Math.round(cv.clientHeight*dpr);
+  const gl=GL,cv=gl.canvas;const dpr=boardRenderScale(performance.now(),!document.hidden&&$('#title').hidden&&!$('#modals').children.length),w=Math.round(cv.clientWidth*dpr),h=Math.round(cv.clientHeight*dpr);
   if(cv.width!==w||cv.height!==h){cv.width=w;cv.height=h}
   gl.viewport(0,0,w,h);gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
   const proj=M4.persp(CAMV.fov*Math.PI/180,w/h,.1,200),view=M4.lookAt(CAMV.pos,CAMV.look,[0,1,0]);
