@@ -2362,8 +2362,37 @@ function mat(c,o={}){return Object.assign({c:typeof c==='string'?hex(c):c,a:1,te
 function N(geo,m,x=0,y=0,z=0){return new Node(geo,m).at(x,y,z)}
 const ROOT=new Node();
 const env={sky:hex('#a9c9e6'),gnd:hex('#77705a'),sun:hex('#ffe9c8').map(v=>v*.62),L:(()=>{const l=[.45,.8,.38],n=Math.hypot(...l);return l.map(v=>v/n)})(),fogC:hex('#bfe4fa'),fog:[26,58]};
+/* Adaptive touch resolution: start at 2x; sustained active-frame pressure lowers it.
+   Idle/modal throttling is excluded; hysteresis prevents rapid resolution oscillation.
+   The setting is session-only and never changes board geometry or saved games. */
+const BOARD_RES={level:2,history:[],lastSample:0,lastChange:0,slowWindows:0,fastWindows:0};
+function boardRenderScale(now,active){
+  if(!COARSE)return Math.min(devicePixelRatio||1,2);
+  if(!active){BOARD_RES.lastSample=0;BOARD_RES.history.length=0;return Math.min(devicePixelRatio||1,BOARD_RES.level)}
+  if(BOARD_RES.lastSample){
+    const elapsed=now-BOARD_RES.lastSample;
+    if(elapsed>0&&elapsed<120)BOARD_RES.history.push(elapsed);
+    else BOARD_RES.history.length=0;
+  }
+  BOARD_RES.lastSample=now;
+  if(BOARD_RES.history.length>=90&&now-BOARD_RES.lastChange>5000){
+    const samples=BOARD_RES.history.splice(0).sort((a,b)=>a-b);
+    const p75=samples[Math.floor(samples.length*.75)];
+    if(p75>25){BOARD_RES.slowWindows++;BOARD_RES.fastWindows=0}
+    else if(p75<17){BOARD_RES.fastWindows++;BOARD_RES.slowWindows=0}
+    else{BOARD_RES.fastWindows=0;BOARD_RES.slowWindows=0}
+    if(BOARD_RES.slowWindows>=2&&BOARD_RES.level>1.5){
+      BOARD_RES.level=BOARD_RES.level===2.5?2:1.5;
+      BOARD_RES.lastChange=now;BOARD_RES.slowWindows=0;
+    }else if(BOARD_RES.fastWindows>=4&&BOARD_RES.level<2.5){
+      BOARD_RES.level=BOARD_RES.level===1.5?2:2.5;
+      BOARD_RES.lastChange=now;BOARD_RES.fastWindows=0;
+    }
+  }
+  return Math.min(devicePixelRatio||1,BOARD_RES.level);
+}
 function drawScene(time){
-  const gl=GL,cv=gl.canvas;const dpr=Math.min(devicePixelRatio||1,COARSE?1.5:2),w=Math.round(cv.clientWidth*dpr),h=Math.round(cv.clientHeight*dpr);
+  const gl=GL,cv=gl.canvas;const dpr=boardRenderScale(performance.now(),!document.hidden&&$('#title').hidden&&!$('#modals').children.length),w=Math.round(cv.clientWidth*dpr),h=Math.round(cv.clientHeight*dpr);
   if(cv.width!==w||cv.height!==h){cv.width=w;cv.height=h}
   gl.viewport(0,0,w,h);gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
   const proj=M4.persp(CAMV.fov*Math.PI/180,w/h,.1,200),view=M4.lookAt(CAMV.pos,CAMV.look,[0,1,0]);
