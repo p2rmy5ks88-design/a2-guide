@@ -54,6 +54,7 @@ const server=http.createServer((req,res)=>{const p=path.resolve(root,'.'+decodeU
    const stageFile='living-board-building-stages-baseline.png';
    await page.screenshot({path:path.join(out,stageFile)});
    fs.writeFileSync(path.join(out,'living-board-building-stages-metrics.json'),JSON.stringify({environment:'QA-only simulated mobile; not physical iPhone',stages,stageFile},null,2));
+   console.log('BUILDING_STAGE_AUDIT '+JSON.stringify(stages));
    if(stages.some(x=>x.actualFloors!==x.expectedFloors))errors.push('Building stage floor-count mismatch');
   }
   results.push({scale,textureSize,labelContrast,labelHierarchy,roster,filename,cropFiles,metrics,errors});
