@@ -20,6 +20,22 @@ const server=http.createServer((req,res)=>{const p=path.resolve(root,'.'+decodeU
   await page.locator('#boot').waitFor({state:'detached',timeout:60000});
   await page.evaluate(()=>{FAST=true;GEN++;achScan=()=>{};achBump=()=>{};achShow=()=>{};coachTip=()=>{};trackable=()=>false;applyCity('lagos');newGame({cash:5000,set:{city:'lagos',mode:'classic',even:true,perks:false,events2:false,ai:'normal',speed:'fast'},players:[{name:'PixelQA',tok:TOKENS[0],col:PCOL[0],ai:false},{name:'Kofi',tok:TOKENS[1],col:PCOL[1],ai:true},{name:'Mei',tok:TOKENS[2],col:PCOL[2],ai:true},{name:'Lucas',tok:TOKENS[3],col:PCOL[3],ai:true}]});G.turn=0;G.phase='post';G.keysShown=true;Object.values(GROUPS).forEach((ids,k)=>ids.forEach(i=>G.own[i]={o:k%2,h:[0,1,2,3,4,5,0,1][k],m:false}));FAST=false;document.querySelector('#title').hidden=true;document.querySelector('#ui').hidden=false;document.querySelector('#modals').innerHTML='';buildBoard();renderRoster();camOverview(0,0)});
   if(roster==='compact')await page.evaluate(()=>document.querySelector('#roster')?.classList.add('qa-compact'));
+  // Production CSS must compact the roster automatically on a landscape touch device.
+  // This check intentionally runs BEFORE the QA-only .qa-compact class is applied.
+  if(roster==='standard'&&scale===2&&textureSize===2048&&labelContrast==='standard'&&labelHierarchy==='standard'){
+    const productionHud=await page.evaluate(()=>{
+      const r=document.querySelector('#roster'),c=r?.querySelector('.pcard'),token=c?.querySelector('.pt');
+      const style=c&&getComputedStyle(c),rs=r&&getComputedStyle(r),ts=token&&getComputedStyle(token);
+      return {landscape:matchMedia('(orientation: landscape)').matches,coarse:matchMedia('(pointer: coarse)').matches,
+        rosterMaxWidth:rs?.maxWidth,rosterGap:rs?.gap,cardPaddingTop:style?.paddingTop,tokenWidth:ts?.width,
+        cards:r?.querySelectorAll('.pcard').length};
+    });
+    fs.writeFileSync(path.join(out,'living-board-hud-production-css-metrics.json'),JSON.stringify(productionHud,null,2));
+    if(!productionHud.landscape||!productionHud.coarse||productionHud.rosterMaxWidth!=='190px'||
+       productionHud.rosterGap!=='3px'||productionHud.cardPaddingTop!=='3px'||
+       productionHud.tokenWidth!=='33px'||productionHud.cards!==4)
+      errors.push('Production landscape touch roster CSS not applied: '+JSON.stringify(productionHud));
+  }
   // Stabilize camera and animation clock for comparable crops.
   await page.waitForFunction(()=>typeof camS!=='undefined'&&typeof camT!=='undefined'&&Math.abs(camS.L-camT.L)<.005&&Math.abs(camS.pitch-camT.pitch)<.0005&&Math.abs(camS.yaw-camT.yaw)<.0005&&camS.look.every((v,i)=>Math.abs(v-camT.look[i])<.005),null,{timeout:45000});
   await page.waitForTimeout(600);
