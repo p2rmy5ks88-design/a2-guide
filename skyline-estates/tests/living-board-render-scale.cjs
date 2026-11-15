@@ -49,4 +49,4 @@ assert.ok(earlier>0&&compact>earlier,'compact rules follow the higher-specificit
 assert.match(style.slice(compact),/max-height:380px/,'very small landscape layout retained');
 assert.match(style.slice(compact),/#ui #roster \.pcard\{min-height:44px\}/,'keep 44px touch targets');
 assert.match(style.slice(compact),/overflow-x:auto/,'ownership strips remain reachable');
-console.log('PASS adaptive board resolution and small-phone HUD source checks (15 assertions)');
+console.log('PASS adaptive board resolution and small-phone HUD source checks (18 assertions)');
