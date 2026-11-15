@@ -51,8 +51,24 @@ const server=http.createServer((req,res)=>{const p=path.resolve(root,'.'+decodeU
    });
    await page.waitForFunction(()=>Math.abs(camS.L-camT.L)<.005&&Math.abs(camS.pitch-camT.pitch)<.0005&&camS.look.every((v,i)=>Math.abs(v-camT.look[i])<.005),null,{timeout:45000});
    await page.waitForTimeout(500);
+   // A second camera angle tests whether the architectural silhouettes remain
+   // distinguishable when the player rotates the board. QA capture only.
+   const stageGeometry=await page.evaluate(()=>{
+    const ids=SQ.map((q,i)=>q.t==='prop'&&i>0&&i<10?i:-1).filter(i=>i>=0);
+    const count=n=>n?1+(n.kids||[]).reduce((sum,k)=>sum+count(k),0):0;
+    return ids.map(i=>({index:i,stage:G.own[i].h,sceneNodes:count(S3.plots[i].floors[0]),markerNodes:count(S3.houses[i]),height:S3.plots[i].top}));
+   });
+   const geometryFile='living-board-building-stage-geometry.json';
+   fs.writeFileSync(path.join(out,geometryFile),JSON.stringify({environment:'QA-only simulated mobile',stageGeometry},null,2));
    const stageFile='living-board-building-stages-baseline.png';
    await page.screenshot({path:path.join(out,stageFile)});
+   await page.evaluate(()=>{camT.yaw+=Math.PI/5});
+   await page.waitForFunction(()=>Math.abs(camS.yaw-camT.yaw)<.0005,null,{timeout:45000});
+   await page.waitForTimeout(350);
+   const rotatedFile='living-board-building-stages-rotated.png';
+   await page.screenshot({path:path.join(out,rotatedFile)});
+   if(stageGeometry.some(x=>x.sceneNodes<2||x.height<=0))errors.push('Missing building geometry or height');
+
    fs.writeFileSync(path.join(out,'living-board-building-stages-metrics.json'),JSON.stringify({environment:'QA-only simulated mobile; not physical iPhone',stages,stageFile},null,2));
    console.log('BUILDING_STAGE_AUDIT '+JSON.stringify(stages));
    if(stages.some(x=>x.actualFloors!==x.expectedFloors))errors.push('Building stage scene-node count mismatch');
