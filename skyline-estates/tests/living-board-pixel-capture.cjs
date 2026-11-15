@@ -42,6 +42,7 @@ const server=http.createServer((req,res)=>{const p=path.resolve(root,'.'+decodeU
     // Exercise the real player-card click handler, not just its geometric hit area.
     const card=page.locator('#roster .pcard').first();
     await card.click({position:{x:Math.min(25,Math.max(8,(await card.boundingBox()).width/4)),y:18},timeout:10000});
+    await page.waitForTimeout(450); // badgeTap intentionally waits 350ms to distinguish double-tap camera focus
     const modal=await page.evaluate(()=>({visible:[...document.querySelectorAll('#modals .ov:not(.bye)')].some(e=>e.getBoundingClientRect().width>0),text:document.querySelector('#modals')?.innerText?.slice(0,180)||''}));
     fs.writeFileSync(path.join(out,'living-board-hud-tap-metrics.json'),JSON.stringify(modal,null,2));
     if(!modal.visible)errors.push('Compact HUD player card tap did not open player detail overlay');
