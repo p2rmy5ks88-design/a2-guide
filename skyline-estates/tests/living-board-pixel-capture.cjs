@@ -25,7 +25,19 @@ const server=http.createServer((req,res)=>{const p=path.resolve(root,'.'+decodeU
   const metrics=await page.evaluate(()=>{const canvases=[...document.querySelectorAll('canvas')].map(c=>({width:c.width,height:c.height,cssWidth:c.clientWidth,cssHeight:c.clientHeight,visible:c.getBoundingClientRect().width>100&&c.getBoundingClientRect().height>100}));return {dpr:devicePixelRatio,canvases}});
   const filename='living-board-lagos-'+String(scale).replace('.','_')+'x.png';
   await page.screenshot({path:path.join(out,filename)});
-  results.push({scale,filename,metrics,errors});
+  // Keep source-pixel crops unscaled, so reviewers can inspect fine geometry and label antialiasing.
+  // These fixed viewport regions are diagnostic only; no game UI is modified.
+  const crops=[
+   {name:'center',clip:{x:270,y:95,width:304,height:210}},
+   {name:'lower',clip:{x:205,y:235,width:434,height:140}}
+  ];
+  const cropFiles=[];
+  for(const crop of crops){
+   const cropName='living-board-'+crop.name+'-'+String(scale).replace('.','_')+'x.png';
+   await page.screenshot({path:path.join(out,cropName),clip:crop.clip});
+   cropFiles.push(cropName);
+  }
+  results.push({scale,filename,cropFiles,metrics,errors});
   await context.close();
  }
  }finally{await browser.close()}
