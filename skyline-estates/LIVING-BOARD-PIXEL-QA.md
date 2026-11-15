@@ -64,4 +64,4 @@ Corrected stage QA run **43710238119 passed** at commit `74553992`. The fixture 
 4. Confirm that mortgaged-property appearance, owner colors, token occlusion, street names, camera rotation and save/load behavior remain intact.
 5. Only after passing visual review and full stability checks should a separate production change be proposed; do not merge this QA branch or modify the protected source hash as a shortcut.
 
-The compact roster with ownership chips remains a **QA candidate**, not a shipped feature. Full stability test status must be checked separately before approval.
+The baseline compact landscape roster CSS **was merged in PR #200**. The further 9px chip/short-height corrections and adaptive resolution are **draft PR #202**, not shipped. The Harbour Ring artificial water-band reduction is likewise draft-only. Source-hash synchronization, generated pages/offline manifest, browser stability and physical-phone visual acceptance remain required before merge.
