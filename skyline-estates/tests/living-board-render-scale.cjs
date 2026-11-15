@@ -26,10 +26,13 @@ for(const [search,dpr,coarse,expected] of [
  ['?skylineRenderScale=NaN',3,true,1.5],
  ['?skylineRenderScale=garbage',3,true,1.5],
  ['?skylineRenderScale=',3,true,1.5],
+ ['?skylineRenderScale=Infinity',3,true,1.5],
+ ['?skylineRenderScale=-1',3,true,1.5],
+ ['?skylineRenderScale=2.5',1,true,1],
  ]){
  const result=evaluate(search,dpr,coarse);
  assert.equal(result.dpr,expected,search||'default');
  assert.equal(result.w,Math.round(400*expected));
  assert.equal(result.h,Math.round(200*expected));
 }
-console.log('PASS Living Board opt-in render-scale QA (11 cases)');
+console.log('PASS Living Board opt-in render-scale QA (14 cases)');
