@@ -49,3 +49,19 @@ CI run 43706508487 completed successfully on commit a5739e2b. This verifies that
 ## Visual review of label hierarchy (2026-11-15)
 
 Reviewed full-board screenshot pair from successful run 43706508487: `living-board-lagos-2x-tex2048-high-standard.png` vs `living-board-lagos-2x-tex2048-high-large.png`. At the fixed 844×390 CSS viewport / DPR 3 simulated mobile, the larger labels offer a modest change, not a decisive normal-distance readability improvement. The 3D camera angle and limited tile footprint remain primary constraints. The left player roster/HUD occupies substantial space beside/over the board composition. This is a visual judgment on simulated Chromium screenshots, not physical-device verification. Do not ship the 10% font increase automatically. Next QA experiment should evaluate a contextual selected-property detail affordance and/or camera-aware safe-area layout, rather than increasing all labels again. Do not modify production game or protected hash without explicit review.
+
+## Verified active building architecture and next visual gate (2026-11-15)
+
+Corrected stage QA run **43710238119 passed** at commit `74553992`. The fixture confirms six owned-property stages use one composed scene node each, and plot height increases across stages. The test is simulated Chromium SwiftShader, not real iPhone Safari.
+
+**Source of truth:** the final `updateCell=function(i,anim)` override in `game.html` uses `FAM=[famGarden,famHome,famTown,famApts,famBoutique,famSkyline]`. Earlier `updateCell` definitions using stacked `floorGeo` blocks are superseded and must not be treated as active rendering. The final renderer uses `famBase` for dark slate/brass ownership plinths, with limestone, terracotta, teal glass, planting and roof decoration. Each stage already has distinct architectural details: garden planting, courtyard home, townhouse, three-level apartments, boutique midrise, and a glass/stone skyline tower. The board tile itself retains a small marker so street labels remain legible.
+
+**Visual QA priorities, without replacing the existing architecture:**
+
+1. Compare the six current stage silhouettes at equal camera and apparent scale; assess whether home/townhouse/apartments/boutique read as distinct on a real landscape phone.
+2. Preserve the existing `FAM` shapes, ownership plate, roof selection and low street markers. Prioritize contrast, lighting, framing and silhouette clarity over introducing unrelated building types.
+3. Measure scene-node and render cost before proposing additional façade or foliage geometry. Prefer material/lighting refinements and modest roofline improvements.
+4. Confirm that mortgaged-property appearance, owner colors, token occlusion, street names, camera rotation and save/load behavior remain intact.
+5. Only after passing visual review and full stability checks should a separate production change be proposed; do not merge this QA branch or modify the protected source hash as a shortcut.
+
+The compact roster with ownership chips remains a **QA candidate**, not a shipped feature. Full stability test status must be checked separately before approval.
