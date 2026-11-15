@@ -17,12 +17,14 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Verify renderer-scale boundary cases
-        run: node skyline-estates/tests/living-board-render-scale.cjs
       - name: Generate isolated web pages for QA (no commit, no deploy)
         run: python3 skyline-estates/build.py
       - name: Verify deterministic generated pages
         run: python3 skyline-estates/build.py --check
+      - name: Inject QA-only renderer into disposable generated pages
+        run: python3 skyline-estates/tests/living-board-qa-variant.py
+      - name: Verify renderer-scale boundary cases
+        run: node skyline-estates/tests/living-board-render-scale.cjs
       - name: Verify generated entry point carries opt-in renderer
         run: |
           python3 - <<'PY'
