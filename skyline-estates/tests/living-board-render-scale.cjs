@@ -1,38 +1,52 @@
-// Living Board V1: isolate the renderer's optional pixel-density experiment.
-// This tests the exact expression in game.html, not a duplicate implementation.
+// Phase 1: exercise the exact adaptive-resolution controller in game.html.
+// Browser/render performance and physical iPhone acceptance remain separate gates.
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const vm=require('node:vm');
 const path=require('node:path');
-const source=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');
-const start=source.indexOf('const requestedScale=(()=>{');
-const end=source.indexOf('gl.viewport(0,0,w,h);',start);
-assert.ok(start>0&&end>start,'expected opt-in renderer block');
-const expression=source.slice(start,end);
-function evaluate(search,devicePixelRatio,coarse,width=400,height=200){
- const canvas={clientWidth:width,clientHeight:height,width:0,height:0};
- const ctx={location:{search},devicePixelRatio,COARSE:coarse,cv:canvas,URLSearchParams,Number,Math,GL:{viewport(){}}};
- const output=vm.runInNewContext(expression+';({dpr,w,h})',ctx);
- return {...output};
+const source=fs.readFileSync(path.join(__dirname,'..','game.html'),'utf8');
+const start=source.indexOf('const BOARD_RES=');
+const end=source.indexOf('function drawScene(time)',start);
+assert.ok(start>0&&end>start,'adaptive controller exists in the source game');
+const controller=source.slice(start,end);
+function harness(coarse,dpr){
+  return vm.runInNewContext(controller+';({BOARD_RES,boardRenderScale})',{
+    COARSE:coarse,devicePixelRatio:dpr,Math
+  });
 }
-for(const [search,dpr,coarse,expected] of [
- ['',3,true,1.5],['',3,false,2],
- ['?skylineRenderScale=2',3,true,2],
- ['?skylineRenderScale=2.5',3,true,2.5],
- ['?skylineRenderScale=3',3,true,3],
- ['?skylineRenderScale=3',2,true,2],
- ['?skylineRenderScale=0',3,true,1.5],
- ['?skylineRenderScale=4',3,true,1.5],
- ['?skylineRenderScale=NaN',3,true,1.5],
- ['?skylineRenderScale=garbage',3,true,1.5],
- ['?skylineRenderScale=',3,true,1.5],
- ['?skylineRenderScale=Infinity',3,true,1.5],
- ['?skylineRenderScale=-1',3,true,1.5],
- ['?skylineRenderScale=2.5',1,true,1],
- ]){
- const result=evaluate(search,dpr,coarse);
- assert.equal(result.dpr,expected,search||'default');
- assert.equal(result.w,Math.round(400*expected));
- assert.equal(result.h,Math.round(200*expected));
+function feed(h,from,step,count){
+  let now=from;
+  for(let i=0;i<count;i++,now+=step)h.boardRenderScale(now,true);
+  return now;
 }
-console.log('PASS Living Board opt-in render-scale QA (14 cases)');
+assert.equal(harness(true,3).boardRenderScale(1,true),2,'touch starts at a 2x cap');
+assert.equal(harness(true,1.5).boardRenderScale(1,true),1.5,'never exceed device DPR');
+assert.equal(harness(false,3).boardRenderScale(1,true),2,'desktop remains capped at 2x');
+assert.equal(harness(false,1).boardRenderScale(1,true),1,'low-DPR desktop unchanged');
+const fast=harness(true,3);
+let now=feed(fast,1,16,1100);
+assert.equal(fast.BOARD_RES.level,2.5,'sustained fast active frames may increase detail');
+assert.equal(fast.boardRenderScale(now,true),2.5);
+now=feed(fast,now+40,40,800);
+assert.equal(fast.BOARD_RES.level,1.5,'sustained pressure progressively reduces rendering cost');
+assert.equal(fast.boardRenderScale(now,true),1.5);
+fast.BOARD_RES.slowWindows=1;
+fast.BOARD_RES.fastWindows=1;
+fast.BOARD_RES.history.push(24);
+fast.boardRenderScale(now+200,false);
+assert.equal(fast.BOARD_RES.history.length,0,'idle/modal sampling clears pending frames');
+assert.equal(fast.BOARD_RES.slowWindows,0,'idle clears slow-frame votes');
+assert.equal(fast.BOARD_RES.fastWindows,0,'idle clears fast-frame votes');
+const interrupted=harness(true,3);
+feed(interrupted,1,16,80);
+interrupted.boardRenderScale(6000,true);
+assert.equal(interrupted.BOARD_RES.history.length,0,'long frame gap is not treated as active load');
+assert.equal(interrupted.BOARD_RES.level,2,'a single pause must not change resolution');
+const style=source.slice(0,source.indexOf('</style>'));
+const earlier=style.indexOf('#ui #roster{top:calc(max(8px,env(safe-area-inset-top,0px)) + 54px)');
+const compact=style.indexOf('/* Phase 1 small-phone roster: final-cascade correction.');
+assert.ok(earlier>0&&compact>earlier,'compact rules follow the higher-specificity roster override');
+assert.match(style.slice(compact),/max-height:380px/,'very small landscape layout retained');
+assert.match(style.slice(compact),/#ui #roster \.pcard\{min-height:44px\}/,'keep 44px touch targets');
+assert.match(style.slice(compact),/overflow-x:auto/,'ownership strips remain reachable');
+console.log('PASS adaptive board resolution and small-phone HUD source checks (15 assertions)');
