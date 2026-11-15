@@ -55,9 +55,10 @@ function memoryDb(){const data={};const get=p=>p.split('/').reduce((o,k)=>o&&o[k
   const notMe=await A.evaluate(()=>G.turn!==G.lcMe)?A:B;const before=await notMe.evaluate(()=>JSON.stringify(G.own));
   await notMe.evaluate(()=>{const i=SQ.findIndex(s=>s.t==='prop');build(G.lcMe,i)});assert.equal(await notMe.evaluate(()=>JSON.stringify(G.own)),before);ok('building out of turn is refused in the app');
   const drive=page=>page.evaluate(()=>{if(!G||!G.lcNet)return'none';if(G.over)return'over';
+    // When a street can't be afforded the Buy button is disabled; choose Auction rather than looping through Raise cash.
     const ovs=[...document.querySelectorAll('#modals .ov:not(.bye)')],ov=ovs[ovs.length-1];
     if(ov){if(/landlord of/.test(ov.textContent))return'over';const bs=[...ov.querySelectorAll('button')].filter(b=>!b.disabled&&b.offsetParent!==null&&!/olx/.test(b.className));
-      const b=ov.querySelector('.lc-lmm')?bs[0]:bs.find(b=>/\bpri\b/.test(b.className))||bs[bs.length-1];if(b){b.click();return'modal:'+(ov.querySelector('.mp')||ov).className}return'wait'}
+      const b=ov.querySelector('.lc-lmm')?bs[0]:bs.find(b=>/\bpri\b/.test(b.className))||bs.find(b=>/^(Auction|Don’t buy)$/.test(b.textContent.trim()))||bs[bs.length-1];if(b){b.click();return'modal:'+(ov.querySelector('.mp')||ov).className}return'wait'}
     const a=[...document.querySelectorAll('#acts button')].filter(b=>!b.disabled);if(a.length){a[0].click();return'act'}return'wait'});
   const events=new Set();let steps=0,built=null,reconnected=false,kinds=new Set(),last=Date.now(),seenLc=new Set();const t0=Date.now();
   while(Date.now()-t0<420000){steps++;
