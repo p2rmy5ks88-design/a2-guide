@@ -1922,6 +1922,26 @@ img.mdl.ipic{display:block;object-fit:cover;border-radius:14px;aspect-ratio:1/1;
 #ui #prompt .sub{font-size:11px}
 #ui #prompt .pav{width:28px;height:28px;font-size:15px}
 #ui #roster{top:calc(max(8px,env(safe-area-inset-top,0px)) + 54px);max-height:calc(100% - 170px)}
+/* Phase 1 small-phone roster: final-cascade correction.
+   This must follow the two-ID #ui #roster override above: earlier media rules
+   are otherwise superseded, leaving four-player rosters clipped on iPhones. */
+@media (pointer:coarse) and (orientation:landscape) and (max-height:500px){
+  #ui #roster{top:calc(max(8px,env(safe-area-inset-top,0px)) + 50px);max-height:calc(100% - 110px);gap:3px;padding-top:10px;max-width:190px}
+  #ui #roster .pcard{min-height:44px}
+  #ui #roster .pg{display:flex;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;overscroll-behavior-inline:contain;scrollbar-width:none;max-width:113px;gap:3px;min-height:11px;touch-action:pan-x}
+  #ui #roster .pg::-webkit-scrollbar{display:none}
+  #ui #roster .pg i{flex:0 0 9px;width:9px;height:9px;min-width:9px;line-height:9px;font-size:9px;text-align:center}
+}
+@media (pointer:coarse) and (orientation:landscape) and (max-height:380px){
+  #ui #roster{top:calc(max(8px,env(safe-area-inset-top,0px)) + 45px);max-height:calc(100% - 92px);max-width:175px;gap:2px;padding-right:5px}
+  #ui #roster .pcard{min-height:44px;padding:2px 7px 2px 2px;gap:5px}
+  #ui #roster .pt{width:29px;height:29px;font-size:17px}
+  #ui #roster .pn{font-size:10px;max-width:105px}
+  #ui #roster .pc{font-size:16px}
+  #ui #roster .pg{max-width:105px}
+  #ui #roster .nowtag{top:-7px;left:32px;font-size:9px;line-height:12px}
+}
+
 /* Skyline Gala season frame: champagne gold and royal violet */
 .avf.fr-gala::before{background:conic-gradient(#FFE9A8,#E2B13C,#7A3FD8,#FF5FA2,#E2B13C,#FFE9A8);animation-duration:3.2s}
 .avf.fr-gala{filter:drop-shadow(0 0 7px rgba(226,177,60,.7))}
@@ -2368,7 +2388,7 @@ const env={sky:hex('#a9c9e6'),gnd:hex('#77705a'),sun:hex('#ffe9c8').map(v=>v*.62
 const BOARD_RES={level:2,history:[],lastSample:0,lastChange:0,slowWindows:0,fastWindows:0};
 function boardRenderScale(now,active){
   if(!COARSE)return Math.min(devicePixelRatio||1,2);
-  if(!active){BOARD_RES.lastSample=0;BOARD_RES.history.length=0;return Math.min(devicePixelRatio||1,BOARD_RES.level)}
+  if(!active){BOARD_RES.lastSample=0;BOARD_RES.history.length=0;BOARD_RES.slowWindows=0;BOARD_RES.fastWindows=0;return Math.min(devicePixelRatio||1,BOARD_RES.level)}
   if(BOARD_RES.lastSample){
     const elapsed=now-BOARD_RES.lastSample;
     if(elapsed>0&&elapsed<120)BOARD_RES.history.push(elapsed);
