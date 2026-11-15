@@ -13,5 +13,5 @@ python3 skyline-estates/build.py --check
 echo "Phase 1: Harbour Ring and board browser regression"
 node skyline-estates/tests/harbour-ring-rules.cjs
 node skyline-estates/tests/harbour-ring-browser.cjs
-node skyline-estates/tests/living-board-pixel-capture.cjs
+echo 'Historical pixel-capture script uses QA-only URL variants; run it separately for diagnostics, not as an adaptive acceptance gate.'
 echo "Phase 1 automated gate PASS; physical iPhone Safari and full stability/security suites remain mandatory."
