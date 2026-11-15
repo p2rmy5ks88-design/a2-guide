@@ -28,15 +28,7 @@ jobs:
           original=subprocess.check_output(['git','show',baseline+':'+p]).decode()
           current=Path(p).read_text()
           marker='.pg i{width:6px;height:6px;border-radius:2px;display:block}'
-          block="""\n/* Living Board: compact player roster for landscape touch screens.
-   Preserve card actions, current-turn indicator, names, cash and ownership chips. */
-@media (pointer:coarse) and (orientation:landscape) and (max-height:500px){
-  #roster{gap:3px;max-width:190px;padding-right:6px}
-  #roster .pcard{padding:3px 9px 3px 3px;gap:7px}
-  #roster .pt{width:33px;height:33px;font-size:19px}
-  #roster .pn{max-width:113px;font-size:11px}
-  #roster .pg{display:flex;max-width:113px;overflow:hidden}
-}"""
+          block=chr(10)+chr(10).join(["/* Living Board: compact player roster for landscape touch screens.","   Preserve card actions, current-turn indicator, names, cash and ownership chips. */","@media (pointer:coarse) and (orientation:landscape) and (max-height:500px){","  #roster{gap:3px;max-width:190px;padding-right:6px}","  #roster .pcard{padding:3px 9px 3px 3px;gap:7px}","  #roster .pt{width:33px;height:33px;font-size:19px}","  #roster .pn{max-width:113px;font-size:11px}","  #roster .pg{display:flex;max-width:113px;overflow:hidden}","}"])
           assert original.count(marker)==1
           assert current==original.replace(marker,marker+block), 'Non-CSS game changes detected; manual audit required'
           print('PASS: only the approved compact-roster CSS block differs from audited baseline')
