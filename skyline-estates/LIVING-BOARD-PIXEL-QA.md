@@ -1,19 +1,24 @@
 # Living Board V1 — Pixel Foundation QA gate
 
-Status (2026-11-15): **compact landscape player-roster CSS merged into `main` via PR #200**. Adaptive render scale, board texture variants, and other visual experiments remain **QA-only, not shipped**. The merged source `game.html` changed only for the compact roster; generated web pages were synchronized and audited.
+Status (2026-11-15): **PR #200's compact landscape roster CSS is merged on main**. Phase 1 adaptive resolution, final-cascade HUD fixes and Harbour Ring water-band reduction are **in draft PR #202, not yet shipped**. The draft has source-level QA coverage but generated web files, offline manifest, protected source-hash verification, browser regressions and physical iPhone testing are **not complete**.
+
+## Draft PR #202 behavior
+- The 40-space WebGL renderer starts at a 2× effective scale on high-DPR touch devices, can increase to 2.5× after sustained smooth frames, and steps down to 1.5× under sustained frame pressure; the actual DPR is always an upper bound. Desktop stays capped at 2×.
+- The small-phone roster CSS is applied after the more specific `#ui #roster` override, keeping a minimum 44px player-card touch target and allowing ownership chips to scroll horizontally.
+- The Harbour Ring 24-space board's synthetic water-band overlay is removed and its SVG water strip is made subtler. The photographic background remains unchanged.
+- The source-based adaptive/HUD test has 18 assertions. These are not equivalent to a Chromium/WebKit run, performance benchmark or physical-phone acceptance.
 
 ## Scope
 - Source: `game.html`, the main 40-square custom WebGL renderer.
-- The optional `skylineRenderScale` URL parameter changes only the renderer's effective pixel ratio.
-- Without the parameter, touch devices retain the 1.5× cap and other devices retain the 2× cap.
-- The value is bounded to 1–3 and further capped by the device's actual pixel ratio.
-- This is **not** a resolution upgrade in production. QA-only render-scale overrides are injected into disposable generated pages; production web pages were regenerated for the compact roster CSS, not the render-scale experiment.
+- Draft PR #202 uses an adaptive effective pixel ratio, bounded by the physical device DPR. It is not yet production behavior.
+- Older QA-only `skylineRenderScale` URL variants belong to historical pixel experiments and are not the active draft implementation.
+- The adaptive policy must be measured on physical phones before shipping.
 
 ## Required verification, in order
 
-1. Run `node skyline-estates/tests/living-board-render-scale.cjs` against this branch. Test default behavior, 1.5×/2×/2.5×/3×, malformed inputs and devices with DPR below the requested cap.
+1. Run `node skyline-estates/tests/living-board-render-scale.cjs` against this branch. Test 1.5×/2×/2.5×, device DPR caps, idle resets, frame gaps and small-phone CSS cascade.
 2. Run `python3 skyline-estates/build.py` on a clean branch checkout, then `python3 skyline-estates/build.py --check`. Inspect all generated changes before committing; do not modify the game-source hash pin or unrelated native release files without the established release process.
-3. Serve the generated branch **privately**; do not use the public Pages URL to judge the experiment. For the same viewport and game fixture, compare `?skylineRenderScale=1.5`, `=2`, `=2.5`, and `=3`.
+3. Serve the generated branch **privately**; do not use the public Pages URL to judge the experiment. For the same viewport and game fixture, compare the actual adaptive framebuffer scale under smooth and sustained-load scenarios.
 4. Capture the main 40-square Lagos board in Overview and Follow, including all four corners, small property labels, ownership strips, moving tokens, a fully developed district, Daylight and Night.
 5. Record **canvas backing dimensions**, CSS dimensions, effective DPR, frame intervals (median/p95), device pixel ratio, WebGL version, GPU/renderer identification if available, and memory/thermal behavior when measurable. Do not infer GPU frame rate from software WebGL.
 6. Compare 100% screenshot crops of top/far-side labels, district colors, diagonal edges, thin gold frame, token silhouettes and development plots. Check for antialiasing, shimmering, texture blur and readability.
@@ -21,14 +26,14 @@ Status (2026-11-15): **compact landscape player-roster CSS merged into `main` vi
 8. Run full existing visual-correction, board, gameplay, save/offline and security checks before marking ready to merge.
 
 ## Acceptance
-- No change to default production behavior until actual evidence supports a selected scale.
+- No change to production behavior until actual evidence supports the adaptive policy.
 - No altered 40-square geometry, tile names/prices, token paths, game rules, currency, saves or multiplayer.
 - No persistent text/board clipping or touch target regressions.
 - Prefer a measured adaptive policy to a universal 3× setting.
-- Historical A/B results were recorded in PR #200; further adaptive-resolution experiments require a new PR and performance evidence before merging.
+- Historical A/B results were recorded in PR #200; PR #202 is the separate adaptive-resolution candidate and requires performance evidence before merging.
 
 ## Release boundary
-PR #200 was merged for compact landscape roster CSS only. Do not treat the QA-only resolution experiments as shipped or publish a new TestFlight/App Store/Android build based on them. The Harbour Ring 24-space board remains a separate workstream.
+PR #200 was merged for compact landscape roster CSS only. Do not treat PR #202 as shipped or publish a new TestFlight/App Store/Android build based on it. Harbour Ring is a separate 24-space gameplay workstream; only its cosmetic water-band correction is in PR #202.
 
 ## Texture-resolution finding (source inspection, 2026-11-15)
 
