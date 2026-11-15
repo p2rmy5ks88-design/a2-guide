@@ -34,7 +34,7 @@ const server=http.createServer((req,res)=>{const p=path.resolve(root,'.'+decodeU
   ];
   const cropFiles=[];
   for(const crop of crops){
-   const cropName='living-board-'+crop.name+'-'+String(scale).replace('.','_')+'x-tex'+textureSize+'-'+labelContrast+'.png';
+   const cropName='living-board-'+crop.name+'-'+String(scale).replace('.','_')+'x-tex'+textureSize+'-'+labelContrast+'-'+labelHierarchy+'-'+roster+'.png';
    await page.screenshot({path:path.join(out,cropName),clip:crop.clip});
    cropFiles.push(cropName);
   }
