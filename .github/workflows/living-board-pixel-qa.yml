@@ -39,7 +39,7 @@ jobs:
         run: git status --short
       - name: Install browser QA dependencies
         run: npm install --prefix skyline-estates/tests --no-audit --no-fund
-      - name: Capture identical Lagos states at four rendering scales
+      - name: Capture Lagos rendering scales and 2048/4096 texture A/B
         env:
           CHROME_PATH: /usr/bin/google-chrome
         run: node skyline-estates/tests/living-board-pixel-capture.cjs
