@@ -51,6 +51,14 @@ const css=`
 .hr-t>i.st{position:absolute;left:0;right:0;top:0;height:6px}
 .hr-t em{font:800 clamp(11px,3.4vh,14px)/1 var(--display,'Outfit',system-ui,sans-serif);font-style:normal}
 .hr-t b{font:700 clamp(9px,2.6vh,10.5px)/1.1 var(--body,'Manrope',system-ui,sans-serif);color:#dfe6f4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hr-t:not(.c):not(.s) b{font:800 clamp(9.5px,2.8vh,11.5px)/1.12 var(--display,'Outfit',system-ui,sans-serif);color:#fff;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow-wrap:break-word;hyphens:manual;-webkit-hyphens:manual;padding-right:2px}
+.hr-t:not(.c):not(.s) b.lg{font-size:clamp(8.5px,2.4vh,10px)}
+.hr-t .ct{font:700 clamp(8px,2.2vh,9.5px)/1.1 var(--body,'Manrope',system-ui,sans-serif);color:#b8c3da;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:2px}
+.hr-t .ct .own{position:static;display:inline-block;width:8px;height:8px;margin-right:3px;vertical-align:-1px}
+.hr-t .ct .lvp{display:inline-flex;gap:1px;margin-left:3px;vertical-align:-1px;align-items:flex-end}.hr-t .ct .lvp span{width:3px;height:7px;border-radius:1px 1px 0 0}.hr-t .ct .lvp span.tw{width:4px;height:9px}
+.hr-t.y .lvp span{background:#ffe39b}.hr-t.r .lvp span{background:#ffb3b5}html.light .hr-t.y .lvp span{background:#b9832b}html.light .hr-t.r .lvp span{background:#c22d3d}
+.hr-t .ct em{font:inherit;color:inherit;opacity:.85}
+html.light .hr-t:not(.c):not(.s) b{color:#13284a}html.light .hr-t .ct{color:#4b5a76}
 .hr-t.y{border:2px solid #f2c457;background:linear-gradient(180deg,rgba(78,60,18,.96),rgba(26,22,24,.96))}
 .hr-t.r{border:2px solid #ff5a5f;background:linear-gradient(180deg,rgba(88,20,32,.96),rgba(28,12,22,.96))}
 .hr-t .own{position:absolute;left:4px;bottom:3px;width:9px;height:9px}
@@ -76,7 +84,7 @@ const css=`
 .hr-centre>*{position:relative}
 .hr-title{align-self:center;display:flex;flex-direction:column;align-items:center;gap:2px;padding:5px 14px 6px;border-radius:12px;background:rgba(5,9,24,.55);color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.8)}
 .hr-title b{font:700 18px/1 'Cinzel',Georgia,serif;letter-spacing:.06em}.hr-title small{font:700 8.5px/1 var(--body,'Manrope',sans-serif);letter-spacing:.3em;color:#f6e2a8}
-.hr-sky{position:absolute;left:0;right:0;bottom:52px;height:clamp(72px,26vh,130px);pointer-events:none;isolation:isolate}
+.hr-sky{position:absolute;left:0;right:0;bottom:58px;height:clamp(86px,32vh,160px);pointer-events:none;isolation:isolate}
 .hr-sky:before{content:none}/* Do not paint an opaque horizontal water band over the harbour photo. */
 .hr-boat{animation:hrSail 22s linear infinite;opacity:.8;transform:translate(-32px,81px)}
 .hr-boat-2{animation-duration:30s;opacity:.55}
@@ -84,6 +92,8 @@ const css=`
 @media(prefers-reduced-motion:reduce){.hr-sky:before,.hr-boat,.hr-bld.rise,.hr-plot.changed{animation:none}.hr-boat{opacity:0}}
 
 .hr-sky svg{position:absolute;left:0;bottom:0;width:100%;height:100%;overflow:visible}
+.hr-sky svg.hr-pl{left:auto;width:auto;height:100%;aspect-ratio:60/140;transform:translateX(-50%)}
+.hr-sky .hr-pn{font:800 10px var(--display,'Outfit',system-ui,sans-serif);fill:#fff;fill-opacity:.8;paint-order:stroke;stroke:rgba(5,9,24,.55);stroke-width:2.5px}html.light .hr-sky .hr-pn{fill:#13284a;stroke:rgba(255,255,255,.7)}
 .hr-plot{transform-box:fill-box;transform-origin:center bottom}
 .hr-plot.changed{animation:hrPlotClaim .65s ease-out}
 @keyframes hrPlotClaim{0%{opacity:.35;filter:brightness(2)}45%{opacity:1;filter:brightness(1.65)}100%{filter:brightness(1)}}
@@ -203,11 +213,18 @@ const name=p=>s.players[p].name;
 const fmt=HR.fmt;
 
 function districtOf(t){return s.districts[t.d]}
+// Long single words (Kungsängsgatan, Commissioner) get a soft hyphen at a natural joint, so a two-line street name
+// breaks as "Kungsängs-gatan" rather than at a random letter.
+const SUFFIX=/(gatan|vägen|gasse|strasse|straße|allee|platz|plein|laan|weg|street|avenue|road|boulevard|bulevar|dori|kade|gracht|stræde|torget|museum|park|markt|torg|bron|hamn|plads|straat|kanal|brücke|damm|ufer)$/i;
+// Without a known suffix, break between two consonants nearest the middle (Indepen-dence, Commis-sioner).
+function joint(w){const V=/[aeiouyåäöüéèáíóú]/i,mid=Math.round(w.length/2);for(let d=0;d<mid-3;d++)for(const i of[mid+d,mid-d])if(i>3&&i<w.length-3&&!V.test(w[i-1])&&!V.test(w[i]))return i;return mid}
+function softBreak(name){return name.split(/(\s+)/).map(w=>{if(w.length<=8||/\s/.test(w)||w.includes('-'))return E(w);const m=w.match(SUFFIX);
+  if(!m&&w.length<=11)return E(w);if(m&&w[m.index-1]==='-')return E(w);const at=m&&m.index>=4?m.index:joint(w);return E(w.slice(0,at))+'&shy;'+E(w.slice(at))}).join('')}
 function tileHTML(t){const [r,c]=POS(t.i),tg=view.targets&&view.targets[t.i];let cls='hr-t',inner='';
   if(t.k==='prop'){cls+=t.o===me?' y':t.o===ai?' r':'';const Dd=districtOf(t);
-    inner=`<i class="st" style="background:${Dd.color}"></i><em>${t.i}</em><b>${E(Dd.name)}</b>`;
-    if(t.o>=0)inner+=`<i class="own" aria-hidden="true"></i>`;
-    if(t.lv)inner+=`<span class="pp" aria-hidden="true">${t.lv===4?'<span class="tw"></span>':'<span></span>'.repeat(t.lv)}</span>`;
+    // Top line: owner mark, square number, building level, city. Street name below, up to two lines.
+    const pips=t.lv?`<span class="lvp" aria-hidden="true">${t.lv===4?'<span class="tw"></span>':'<span></span>'.repeat(t.lv)}</span>`:'';
+    inner=`<i class="st" style="background:${Dd.color}"></i><small class="ct">${t.o>=0?'<i class="own" aria-hidden="true"></i>':''}<em>${t.i}</em>${pips} · ${E(Dd.name)}</small><b${t.n.split(/\s+/).some(w=>w.length>7)?' class="lg"':''}>${softBreak(t.n)}</b>`;
     if(t.lock>s.round)inner+=`<span class="lk">${ICON.lock}</span>`}
   else{cls+=t.k==='corner'?' c':' s';inner=`<em>${t.i}</em>${ICON[t.id]||''}<b>${E(t.n)}</b>`}
   if(tg){cls+=' tg';inner+=`<span class="n">${tg}</span>`}
@@ -263,10 +280,15 @@ function building(x,lv,c,cls,elapsed=0){
 function towersHTML(){
   // Stable physical plot locations: each of the sixteen street tiles owns one skyline plot.
   // No random placement or independent visual state; the rules engine remains authoritative.
-  const now=new Set(),plots=[],nextOwners=new Map(),clock=Date.now();
+  const now=new Set(),plots=[],plotsBack=[],nextOwners=new Map(),clock=Date.now();
   const owned=s.tiles.filter(t=>t.k==='prop');
   owned.forEach((t,i)=>{
-    const x=24+(i%8)*65, row=Math.floor(i/8), y=row===0?59:78;
+    // Each plot sits under its own street: top-row streets in the back row, bottom-row streets in the front row,
+    // the two side columns at the left and right edges. Same column as the street on screen.
+    // Side columns hold two streets each: the upper one goes in the back row.
+    const [pr,pc]=POS(t.i),back=pr===1||(pc===1&&pr===2)||(pc===9&&pr===3);
+    // Horizontal position as a share of the centre width (the centre spans board columns 2–8).
+    const xp=pc===1?2.2:pc===9?97.8:((pc-2)+.5)/7*100, y=back?59:78;
     const p=t.o,lv=t.lv||0, key=t.i+':'+lv+':'+p;
     const side=p===me?'a':p===ai?'b':null;
     if(side)now.add(key);
@@ -275,14 +297,14 @@ function towersHTML(){
     if(changed)plotClaims.set(t.i,clock);
     const claimAge=clock-(plotClaims.get(t.i)||0),claimActive=claimAge>=0&&claimAge<650;
     const fill=side==='a'?'#e5b74f':side==='b'?'#e66a72':'#7993a1';
-    const pad='<path d="M-19 78 L0 70 L19 78 L0 86Z" fill="'+fill+'" fill-opacity="'+(side?'.65':'.25')+'" stroke="'+fill+'" stroke-opacity=".8"/>';
+    const pad='<path d="M-15 78 L0 71.5 L15 78 L0 84.5Z" fill="'+fill+'" fill-opacity="'+(side?'.7':'.25')+'" stroke="'+fill+'" stroke-opacity=".85"/><text x="0" y="95" text-anchor="middle" class="hr-pn">'+t.i+'</text>';
     const level=side?Math.max(0,Math.min(4,lv)):0;
     const w=level?SHAPE[level][0]:0;
     if(level&&!built.has(key))buildingRises.set(key,clock);
     const riseAge=clock-(buildingRises.get(key)||0),riseActive=level&&riseAge>=0&&riseAge<700;
-    const b=level?building(-w/2,level,side,riseActive?' rise':'',riseActive?riseAge:0):'';
+    const b=level?'<g transform="translate(0 78) scale(1.3) translate(0 -78)">'+building(-w/2,level,side,riseActive?' rise':'',riseActive?riseAge:0)+'</g>':'';
     const foundation=side&&!level?'<path d="M-12 76 L0 71 L12 76 L0 81Z" fill="'+fill+'" opacity=".8"/>':'';
-    plots.push('<g class="hr-plot'+(claimActive?' changed':'')+'" style="'+(claimActive?'animation-delay:-'+claimAge+'ms':'')+'" data-plot="'+t.i+'" data-owner="'+(side||'neutral')+'" data-level="'+level+'" transform="translate('+x+' '+(y-78)+')">'+pad+foundation+b+'</g>');
+    (back?plotsBack:plots).push('<svg class="hr-pl'+(back?' bk':'')+'" viewBox="-30 -40 60 140" preserveAspectRatio="xMidYMax meet" style="left:'+xp.toFixed(2)+'%" aria-hidden="true"><g class="hr-plot'+(claimActive?' changed':'')+'" style="'+(claimActive?'animation-delay:-'+claimAge+'ms':'')+'" data-plot="'+t.i+'" data-owner="'+(side||'neutral')+'" data-level="'+level+'" transform="translate(0 '+(y-78)+')">'+pad+foundation+b+'</g></svg>');
   });
   built=now;plotOwners=nextOwners;
   for(const [id,at] of plotClaims)if(clock-at>=650)plotClaims.delete(id);
@@ -295,9 +317,8 @@ function towersHTML(){
     '<filter id="hr-glow-b" x="-50%" y="-50%" width="200%" height="200%"><feDropShadow dx="0" dy="0" stdDeviation="2" flood-color="#ff5a5f" flood-opacity=".55"/></filter></defs>'+
     '<path d="M0 66 Q140 52 280 66 T560 66 L560 92 H0Z" fill="#0c3650" opacity=".14"/>'+
     '<path d="M0 83 Q140 76 280 83 T560 83" fill="none" stroke="#a3d7df" stroke-opacity=".22"/>'+
-    plots.join('')+
     '<g class="hr-boat" style="animation-delay:-'+boatPhase+'s"><path d="M0 0h26l-5 6H6Z" fill="#e5ebec"/><path d="M13 -15v15h11Z" fill="#f5e7c3"/></g>'+
-    '<g class="hr-boat hr-boat-2" style="animation-delay:-'+boatPhase2+'s"><path d="M0 0h19l-4 5H3Z" fill="#f0f5f6"/></g></svg>';
+    '<g class="hr-boat hr-boat-2" style="animation-delay:-'+boatPhase2+'s"><path d="M0 0h19l-4 5H3Z" fill="#f0f5f6"/></g></svg>'+plotsBack.join('')+plots.join('');
 }
 
 function timerHTML(turnP){const left=view.deadline?Math.max(0,Math.ceil((view.deadline-Date.now())/1000)):0;
