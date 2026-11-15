@@ -38,6 +38,24 @@ const server=http.createServer((req,res)=>{const p=path.resolve(root,'.'+decodeU
    await page.screenshot({path:path.join(out,cropName),clip:crop.clip});
    cropFiles.push(cropName);
   }
+  // Building-stage geometry audit: isolated fixture in the disposable browser only.
+  // Inspect real scene-node counts and a close camera; never alters game.html or saves.
+  if(scale===2&&textureSize===2048&&labelContrast==='standard'&&roster==='standard'){
+   const stages=await page.evaluate(()=>{
+    const ids=SQ.map((q,i)=>q.t==='prop'&&i>0&&i<10?i:-1).filter(i=>i>=0);
+    if(ids.length<4)throw Error('Insufficient first-side properties for stage audit');
+    ids.forEach((i,k)=>{G.own[i]={o:0,h:k%6,m:false};updateCell(i,false)});
+    const inspected=ids.map(i=>({index:i,stage:G.own[i].h,expectedFloors:G.own[i].h===5?7:1+G.own[i].h,actualFloors:S3.plots[i].floors.length,plotTop:S3.plots[i].top,houseParts:S3.houses[i].kids.length}));
+    camGoal([0,0,2.5],0,10,.72,60);
+    return inspected;
+   });
+   await page.waitForFunction(()=>Math.abs(camS.L-camT.L)<.005&&Math.abs(camS.pitch-camT.pitch)<.0005&&camS.look.every((v,i)=>Math.abs(v-camT.look[i])<.005),null,{timeout:45000});
+   await page.waitForTimeout(500);
+   const stageFile='living-board-building-stages-baseline.png';
+   await page.screenshot({path:path.join(out,stageFile)});
+   fs.writeFileSync(path.join(out,'living-board-building-stages-metrics.json'),JSON.stringify({environment:'QA-only simulated mobile; not physical iPhone',stages,stageFile},null,2));
+   if(stages.some(x=>x.actualFloors!==x.expectedFloors))errors.push('Building stage floor-count mismatch');
+  }
   results.push({scale,textureSize,labelContrast,labelHierarchy,roster,filename,cropFiles,metrics,errors});
   await context.close();
  }
