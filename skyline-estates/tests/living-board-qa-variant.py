@@ -23,10 +23,10 @@ name_old='const f=fitText(ctx,t.toUpperCase(),w-10,sz,800,FB,max);'
 name_new=("const qaHierarchy=new URLSearchParams(location.search).get('skylineLabelHierarchy')==='large';"
           "const f=fitText(ctx,t.toUpperCase(),w-10,qaHierarchy?sz*1.1:sz,800,FB,max);")
 roster_old='#roster{position:absolute;'
-roster_new=("body:has(#ui:not([hidden])):has(#roster) #roster.qa-compact{gap:3px;max-width:148px;padding-right:3px;}"
-            "#roster.qa-compact .pcard{padding:2px 7px 2px 2px;gap:5px;}"
-            "#roster.qa-compact .pt{width:28px;height:28px;font-size:17px;}"
-            "#roster.qa-compact .pn{max-width:80px;font-size:10px;}"
+roster_new=("body:has(#ui:not([hidden])):has(#roster) #roster.qa-compact{gap:3px;max-width:190px;padding-right:6px;}"
+            "#roster.qa-compact .pcard{padding:3px 9px 3px 3px;gap:7px;}"
+            "#roster.qa-compact .pt{width:33px;height:33px;font-size:19px;}"
+            "#roster.qa-compact .pn{max-width:113px;font-size:11px;}"
             "#roster.qa-compact .pg{display:none;}"
             +roster_old)
 pages=['index.html','web-play.html','web-board.html','web-follow.html','web-correction.html','web-menus.html']
