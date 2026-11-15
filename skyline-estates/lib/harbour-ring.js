@@ -76,8 +76,7 @@ const css=`
 .hr-title{align-self:center;display:flex;flex-direction:column;align-items:center;gap:2px;padding:5px 14px 6px;border-radius:12px;background:rgba(5,9,24,.55);color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.8)}
 .hr-title b{font:700 18px/1 'Cinzel',Georgia,serif;letter-spacing:.06em}.hr-title small{font:700 8.5px/1 var(--body,'Manrope',sans-serif);letter-spacing:.3em;color:#f6e2a8}
 .hr-sky{position:absolute;left:0;right:0;bottom:52px;height:clamp(72px,26vh,130px);pointer-events:none;isolation:isolate}
-.hr-sky:before{content:'';position:absolute;inset:20% 0 0;background:linear-gradient(180deg,transparent,rgba(17,78,102,.23) 70%,rgba(10,37,58,.55));border-radius:50% 50% 0 0;animation:hrWater 7s ease-in-out infinite alternate}
-@keyframes hrWater{from{opacity:.45;transform:translateY(1px)}to{opacity:.8;transform:translateY(-2px)}}
+.hr-sky:before{content:none}/* Do not paint an opaque horizontal water band over the harbour photo. */
 .hr-boat{animation:hrSail 22s linear infinite;opacity:.8;transform:translate(-32px,81px)}
 .hr-boat-2{animation-duration:30s;opacity:.55}
 @keyframes hrSail{from{transform:translate(-32px,81px)}to{transform:translate(590px,81px)}}
@@ -154,7 +153,7 @@ html.light .hr-card{border-color:#d9a23a}html.light .hr-card.r{border-color:#d63
 html.light .hr-card small{color:#8a5a10}html.light .hr-card.r small{color:#a8243a}
 html.light .hr-round b em{color:#5b6a88}html.light .hr-round b i{color:#b3263a}
 html.light .hr-segs i{background:rgba(19,40,74,.15)}html.light .hr-segs i.d{background:#d9a23a}html.light .hr-segs i.b{background:rgba(214,59,74,.35)}html.light .hr-segs i.b.d{background:#d63b4a}html.light .hr-segs i.n{background:#13284a}
-html.light .hr-sky:before{background:linear-gradient(180deg,transparent,rgba(100,194,226,.20) 70%,rgba(42,128,170,.32))}
+html.light .hr-sky:before{content:none}
 html.light .hr-centre:before{background:linear-gradient(180deg,rgba(255,255,255,0),rgba(255,255,255,0) 45%,rgba(235,244,252,.55))}
 html.light .hr-b.g{background:linear-gradient(180deg,#ffe7a3,#d9a23a);border-color:#b9832b;color:#241703}html.light .hr-b.g small{color:#4a3208}
 html.light .hr-t{background:rgba(255,255,255,.95);border-color:rgba(19,40,74,.18);color:#13284a}
@@ -293,8 +292,8 @@ function towersHTML(){
     '<linearGradient id="hr-b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffb3b5"/><stop offset="1" stop-color="#8f1d2f"/></linearGradient>'+
     '<filter id="hr-glow-a" x="-50%" y="-50%" width="200%" height="200%"><feDropShadow dx="0" dy="0" stdDeviation="2" flood-color="#f2c457" flood-opacity=".55"/></filter>'+
     '<filter id="hr-glow-b" x="-50%" y="-50%" width="200%" height="200%"><feDropShadow dx="0" dy="0" stdDeviation="2" flood-color="#ff5a5f" flood-opacity=".55"/></filter></defs>'+
-    '<path d="M0 66 Q140 52 280 66 T560 66 L560 92 H0Z" fill="#0c3650" opacity=".42"/>'+
-    '<path d="M0 83 Q140 76 280 83 T560 83" fill="none" stroke="#a3d7df" stroke-opacity=".4"/>'+
+    '<path d="M0 66 Q140 52 280 66 T560 66 L560 92 H0Z" fill="#0c3650" opacity=".14"/>'+
+    '<path d="M0 83 Q140 76 280 83 T560 83" fill="none" stroke="#a3d7df" stroke-opacity=".22"/>'+
     plots.join('')+
     '<g class="hr-boat" style="animation-delay:-'+boatPhase+'s"><path d="M0 0h26l-5 6H6Z" fill="#e5ebec"/><path d="M13 -15v15h11Z" fill="#f5e7c3"/></g>'+
     '<g class="hr-boat hr-boat-2" style="animation-delay:-'+boatPhase2+'s"><path d="M0 0h19l-4 5H3Z" fill="#f0f5f6"/></g></svg>';
