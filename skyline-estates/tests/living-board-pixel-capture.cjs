@@ -45,7 +45,7 @@ const server=http.createServer((req,res)=>{const p=path.resolve(root,'.'+decodeU
     const ids=SQ.map((q,i)=>q.t==='prop'&&i>0&&i<10?i:-1).filter(i=>i>=0);
     if(ids.length<4)throw Error('Insufficient first-side properties for stage audit');
     ids.forEach((i,k)=>{G.own[i]={o:0,h:k%6,m:false};updateCell(i,false)});
-    const inspected=ids.map(i=>({index:i,stage:G.own[i].h,expectedFloors:G.own[i].h===5?7:1+G.own[i].h,actualFloors:S3.plots[i].floors.length,plotTop:S3.plots[i].top,houseParts:S3.houses[i].kids.length}));
+    const inspected=ids.map(i=>({index:i,stage:G.own[i].h,expectedFloors:1,actualFloors:S3.plots[i].floors.length,plotTop:S3.plots[i].top,houseParts:S3.houses[i].kids.length}));
     camGoal([0,0,2.5],0,10,.72,60);
     return inspected;
    });
@@ -55,7 +55,8 @@ const server=http.createServer((req,res)=>{const p=path.resolve(root,'.'+decodeU
    await page.screenshot({path:path.join(out,stageFile)});
    fs.writeFileSync(path.join(out,'living-board-building-stages-metrics.json'),JSON.stringify({environment:'QA-only simulated mobile; not physical iPhone',stages,stageFile},null,2));
    console.log('BUILDING_STAGE_AUDIT '+JSON.stringify(stages));
-   if(stages.some(x=>x.actualFloors!==x.expectedFloors))errors.push('Building stage floor-count mismatch');
+   if(stages.some(x=>x.actualFloors!==x.expectedFloors))errors.push('Building stage scene-node count mismatch');
+   if(stages.some((x,i)=>i>0&&x.plotTop<=stages[i-1].plotTop))errors.push('Building stage height progression mismatch');
   }
   results.push({scale,textureSize,labelContrast,labelHierarchy,roster,filename,cropFiles,metrics,errors});
   await context.close();
