@@ -1,0 +1,37 @@
+name: Living Board pixel foundation QA
+on:
+  push:
+    branches:
+      - feat/living-board-v1-pixel-foundation
+  workflow_dispatch:
+jobs:
+  pixel-foundation:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify renderer-scale boundary cases
+        run: node skyline-estates/tests/living-board-render-scale.cjs
+      - name: Generate isolated web pages for QA (no commit, no deploy)
+        run: python3 skyline-estates/build.py
+      - name: Verify deterministic generated pages
+        run: python3 skyline-estates/build.py --check
+      - name: Verify generated entry point carries opt-in renderer
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          root=Path('skyline-estates')
+          for name in ['index.html','web-play.html','web-board.html']:
+              page=(root/name).read_text()
+              assert 'skylineRenderScale' in page, name
+          print('PASS: optional render-scale control present in generated pages')
+          PY
+      - name: Confirm generated changes remain isolated to runner
+        run: git status --short
