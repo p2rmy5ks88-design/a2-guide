@@ -13,6 +13,9 @@ new=("const requestedScale=(()=>{try{const v=new URLSearchParams(location.search
 texture_old='const bc=cnv(2048,2048,drawBoard);'
 texture_new=("const qaTextureSize=new URLSearchParams(location.search).get('skylineBoardTexture')==='4096'?4096:2048;"
              "const bc=cnv(qaTextureSize,qaTextureSize,drawBoard);")
+label_old='ctx.globalAlpha=.7;f.lines.forEach((l,k)=>ctx.fillText(l,0,y+k*f.s*1.1));ctx.globalAlpha=1'
+label_new=("ctx.globalAlpha=new URLSearchParams(location.search).get('skylineLabelContrast')==='high'?1:.7;"
+           "f.lines.forEach((l,k)=>ctx.fillText(l,0,y+k*f.s*1.1));ctx.globalAlpha=1")
 pages=['index.html','web-play.html','web-board.html','web-follow.html','web-correction.html','web-menus.html']
 for name in pages:
     p=root/name
@@ -21,5 +24,7 @@ for name in pages:
         sys.exit(f'Unexpected renderer signature in {name}: {s.count(old)}')
     if s.count(texture_old)!=1:
         sys.exit(f'Unexpected board texture signature in {name}: {s.count(texture_old)}')
-    p.write_text(s.replace(old,new).replace(texture_old,texture_new),encoding='utf-8')
+    if s.count(label_old)!=1:
+        sys.exit(f'Unexpected label signature in {name}: {s.count(label_old)}')
+    p.write_text(s.replace(old,new).replace(texture_old,texture_new).replace(label_old,label_new),encoding='utf-8')
 print('Patched generated pages for isolated rendering experiment; game.html unchanged')
