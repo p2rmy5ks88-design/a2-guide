@@ -29,11 +29,12 @@ const server=http.createServer((req,res)=>{const p=path.resolve(root,'.'+decodeU
     const roster=document.querySelector('#roster');
     const cards=[...roster.querySelectorAll('.pcard')];
     const box=e=>{const r=e.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height,right:r.right,bottom:r.bottom}};
-    return {variant:roster.classList.contains('qa-compact')?'compact':'standard',viewport:{width:innerWidth,height:innerHeight},roster:box(roster),cards:cards.map(c=>({bounds:box(c),name:box(c.querySelector('.pn')||c),nameClipped:!!c.querySelector('.pn')&&c.querySelector('.pn').scrollWidth>c.querySelector('.pn').clientWidth,propertyChips:[...c.querySelectorAll('.pg')].map(box),visible:c.getBoundingClientRect().width>0&&c.getBoundingClientRect().height>0}))};
+    return {variant:roster.classList.contains('qa-compact')?'compact':'standard',viewport:{width:innerWidth,height:innerHeight},roster:box(roster),cards:cards.map(c=>({bounds:box(c),name:box(c.querySelector('.pn')||c),nameClipped:!!c.querySelector('.pn')&&c.querySelector('.pn').scrollWidth>c.querySelector('.pn').clientWidth,propertyChips:[...c.querySelectorAll('.pg')].map(p=>({bounds:box(p),scrollWidth:p.scrollWidth,clientWidth:p.clientWidth,chipCount:p.children.length,visibleChildren:[...p.children].filter(ch=>{const r=ch.getBoundingClientRect(),pr=p.getBoundingClientRect();return r.width>0&&r.height>0&&r.left<pr.right&&r.right>pr.left}).length})),visible:c.getBoundingClientRect().width>0&&c.getBoundingClientRect().height>0}))};
    });
    fs.writeFileSync(path.join(out,'living-board-hud-'+roster+'-metrics.json'),JSON.stringify(hud,null,2));
    if(hud.cards.length!==4||hud.cards.some(c=>!c.visible||c.bounds.right>hud.viewport.width||c.bounds.bottom>hud.viewport.height))errors.push('HUD roster card visibility/viewport mismatch');
    if(roster==='compact'&&hud.cards.some(c=>c.nameClipped))errors.push('Compact HUD player name clipped');
+   if(roster==='compact'&&hud.cards.some(c=>c.propertyChips.some(p=>p.chipCount>0&&(p.bounds.width<12||p.bounds.height<4||p.visibleChildren===0))))errors.push('Compact HUD property ownership chips hidden');
   }
   const filename='living-board-lagos-'+String(scale).replace('.','_')+'x-tex'+textureSize+'-'+labelContrast+'-'+labelHierarchy+'-'+roster+'.png';
   await page.screenshot({path:path.join(out,filename)});
