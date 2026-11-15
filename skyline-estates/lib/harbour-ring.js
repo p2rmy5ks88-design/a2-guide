@@ -1,6 +1,7 @@
 /* Skyline Duel · Harbour Ring (preview): 1 vs computer on a 24-space ring, iPhone landscape first.
    Rules live in lib/harbour-ring-rules.js. This file is the screen: a full-window overlay that never touches the
-   classic match (G), saves, the economy or ranked play. It awards nothing. Entry: Game Modes → Harbour Ring. */
+   classic match (G), classic saves or ranked play. Completed matches award offline rewards via the existing
+   progression and wallet paths; unfinished matches award nothing. Entry: Game Modes → Harbour Ring. */
 (function(){'use strict';
 const HR=window.HarbourRingRules;if(!HR)return;
 const E=s=>(typeof esc==='function'?esc(s):String(s).replace(/[&<>"']/g,c=>'&#'+c.charCodeAt(0)+';'));
