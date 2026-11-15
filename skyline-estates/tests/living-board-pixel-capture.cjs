@@ -22,7 +22,7 @@ const server=http.createServer((req,res)=>{const p=path.resolve(root,'.'+decodeU
   // Stabilize camera and animation clock for comparable crops.
   await page.waitForFunction(()=>typeof camS!=='undefined'&&typeof camT!=='undefined'&&Math.abs(camS.L-camT.L)<.005&&Math.abs(camS.pitch-camT.pitch)<.0005&&Math.abs(camS.yaw-camT.yaw)<.0005&&camS.look.every((v,i)=>Math.abs(v-camT.look[i])<.005),null,{timeout:45000});
   await page.waitForTimeout(600);
-  const metrics=await page.evaluate(()=>{const maxTextureSize=GL?.getParameter(GL.MAX_TEXTURE_SIZE)||null;const boardTexture={width:G0?.boardCanvas?.width||null,height:G0?.boardCanvas?.height||null};const canvases=[...document.querySelectorAll('canvas')].map(c=>({width:c.width,height:c.height,cssWidth:c.clientWidth,cssHeight:c.clientHeight,visible:c.getBoundingClientRect().width>100&&c.getBoundingClientRect().height>100}));return {dpr:devicePixelRatio,maxTextureSize,boardTexture,canvases}});
+  const metrics=await page.evaluate(()=>{const maxTextureSize=GL?.getParameter(GL.MAX_TEXTURE_SIZE)||null;const boardTexture={width:S3?.boardCanvas?.width||null,height:S3?.boardCanvas?.height||null};const canvases=[...document.querySelectorAll('canvas')].map(c=>({width:c.width,height:c.height,cssWidth:c.clientWidth,cssHeight:c.clientHeight,visible:c.getBoundingClientRect().width>100&&c.getBoundingClientRect().height>100}));return {dpr:devicePixelRatio,maxTextureSize,boardTexture,canvases}});
   const filename='living-board-lagos-'+String(scale).replace('.','_')+'x-tex'+textureSize+'.png';
   await page.screenshot({path:path.join(out,filename)});
   // Keep source-pixel crops unscaled, so reviewers can inspect fine geometry and label antialiasing.
