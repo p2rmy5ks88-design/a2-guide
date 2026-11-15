@@ -37,3 +37,18 @@ jobs:
           PY
       - name: Confirm generated changes remain isolated to runner
         run: git status --short
+      - name: Install browser QA dependencies
+        run: npm ci --prefix skyline-estates/tests --no-audit --no-fund
+      - name: Capture identical Lagos states at four rendering scales
+        env:
+          CHROME_PATH: /usr/bin/google-chrome
+        run: node skyline-estates/tests/living-board-pixel-capture.cjs
+      - name: Upload diagnostic screenshots and metrics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: living-board-pixel-comparison
+          path: |
+            ${{ runner.temp }}/living-board-lagos-*.png
+            ${{ runner.temp }}/living-board-pixel-metrics.json
+          if-no-files-found: warn
