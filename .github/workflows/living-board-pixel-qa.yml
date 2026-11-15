@@ -54,4 +54,5 @@ jobs:
             ${{ runner.temp }}/living-board-building-stage-geometry.json
             ${{ runner.temp }}/living-board-building-stages-metrics.json
             ${{ runner.temp }}/living-board-hud-*-metrics.json
+            ${{ runner.temp }}/living-board-hud-tap-metrics.json
           if-no-files-found: warn
