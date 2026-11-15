@@ -24,6 +24,17 @@ const server=http.createServer((req,res)=>{const p=path.resolve(root,'.'+decodeU
   await page.waitForFunction(()=>typeof camS!=='undefined'&&typeof camT!=='undefined'&&Math.abs(camS.L-camT.L)<.005&&Math.abs(camS.pitch-camT.pitch)<.0005&&Math.abs(camS.yaw-camT.yaw)<.0005&&camS.look.every((v,i)=>Math.abs(v-camT.look[i])<.005),null,{timeout:45000});
   await page.waitForTimeout(600);
   const metrics=await page.evaluate(()=>{const maxTextureSize=GL?.getParameter(GL.MAX_TEXTURE_SIZE)||null;const boardTexture={width:S3?.boardCanvas?.width||null,height:S3?.boardCanvas?.height||null};const canvases=[...document.querySelectorAll('canvas')].map(c=>({width:c.width,height:c.height,cssWidth:c.clientWidth,cssHeight:c.clientHeight,visible:c.getBoundingClientRect().width>100&&c.getBoundingClientRect().height>100}));return {dpr:devicePixelRatio,maxTextureSize,boardTexture,canvases}});
+  if(scale===2&&textureSize===2048&&labelContrast==='standard'&&labelHierarchy==='standard'){
+   const hud=await page.evaluate(()=>{
+    const roster=document.querySelector('#roster');
+    const cards=[...roster.querySelectorAll('.pcard')];
+    const box=e=>{const r=e.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height,right:r.right,bottom:r.bottom}};
+    return {variant:roster.classList.contains('qa-compact')?'compact':'standard',viewport:{width:innerWidth,height:innerHeight},roster:box(roster),cards:cards.map(c=>({bounds:box(c),name:box(c.querySelector('.pn')||c),nameClipped:!!c.querySelector('.pn')&&c.querySelector('.pn').scrollWidth>c.querySelector('.pn').clientWidth,propertyChips:[...c.querySelectorAll('.pg')].map(box),visible:c.getBoundingClientRect().width>0&&c.getBoundingClientRect().height>0}))};
+   });
+   fs.writeFileSync(path.join(out,'living-board-hud-'+roster+'-metrics.json'),JSON.stringify(hud,null,2));
+   if(hud.cards.length!==4||hud.cards.some(c=>!c.visible||c.bounds.right>hud.viewport.width||c.bounds.bottom>hud.viewport.height))errors.push('HUD roster card visibility/viewport mismatch');
+   if(roster==='compact'&&hud.cards.some(c=>c.nameClipped))errors.push('Compact HUD player name clipped');
+  }
   const filename='living-board-lagos-'+String(scale).replace('.','_')+'x-tex'+textureSize+'-'+labelContrast+'-'+labelHierarchy+'-'+roster+'.png';
   await page.screenshot({path:path.join(out,filename)});
   // Keep source-pixel crops unscaled, so reviewers can inspect fine geometry and label antialiasing.
