@@ -16,6 +16,12 @@ texture_new=("const qaTextureSize=new URLSearchParams(location.search).get('skyl
 label_old='ctx.globalAlpha=.7;f.lines.forEach((l,k)=>ctx.fillText(l,0,y+k*f.s*1.1));ctx.globalAlpha=1'
 label_new=("ctx.globalAlpha=new URLSearchParams(location.search).get('skylineLabelContrast')==='high'?1:.7;"
            "f.lines.forEach((l,k)=>ctx.fillText(l,0,y+k*f.s*1.1));ctx.globalAlpha=1")
+hierarchy_old='const f=fitText(ctx,t,w-10,10.5,600,FB,2);'
+hierarchy_new=("const qaHierarchy=new URLSearchParams(location.search).get('skylineLabelHierarchy')==='large';"
+               "const f=fitText(ctx,t,w-10,qaHierarchy?12:10.5,qaHierarchy?700:600,FB,2);")
+name_old='const f=fitText(ctx,t.toUpperCase(),w-10,sz,800,FB,max);'
+name_new=("const qaHierarchy=new URLSearchParams(location.search).get('skylineLabelHierarchy')==='large';"
+          "const f=fitText(ctx,t.toUpperCase(),w-10,qaHierarchy?sz*1.1:sz,800,FB,max);")
 pages=['index.html','web-play.html','web-board.html','web-follow.html','web-correction.html','web-menus.html']
 for name in pages:
     p=root/name
@@ -26,5 +32,7 @@ for name in pages:
         sys.exit(f'Unexpected board texture signature in {name}: {s.count(texture_old)}')
     if s.count(label_old)!=1:
         sys.exit(f'Unexpected label signature in {name}: {s.count(label_old)}')
-    p.write_text(s.replace(old,new).replace(texture_old,texture_new).replace(label_old,label_new),encoding='utf-8')
+    if s.count(hierarchy_old)!=1 or s.count(name_old)!=1:
+        sys.exit(f'Unexpected label hierarchy signatures in {name}: {s.count(hierarchy_old)}, {s.count(name_old)}')
+    p.write_text(s.replace(old,new).replace(texture_old,texture_new).replace(label_old,label_new).replace(hierarchy_old,hierarchy_new).replace(name_old,name_new),encoding='utf-8')
 print('Patched generated pages for isolated rendering experiment; game.html unchanged')
