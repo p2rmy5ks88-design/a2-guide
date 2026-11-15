@@ -4,7 +4,7 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const vm=require('node:vm');
 const path=require('node:path');
-const source=fs.readFileSync(path.join(__dirname,'..','game.html'),'utf8');
+const source=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');
 const start=source.indexOf('const requestedScale=(()=>{');
 const end=source.indexOf('gl.viewport(0,0,w,h);',start);
 assert.ok(start>0&&end>start,'expected opt-in renderer block');
