@@ -27,7 +27,7 @@ roster_new=("body:has(#ui:not([hidden])):has(#roster) #roster.qa-compact{gap:3px
             "#roster.qa-compact .pcard{padding:3px 9px 3px 3px;gap:7px;}"
             "#roster.qa-compact .pt{width:33px;height:33px;font-size:19px;}"
             "#roster.qa-compact .pn{max-width:113px;font-size:11px;}"
-            "#roster.qa-compact .pg{display:none;}"
+            "#roster.qa-compact .pg{display:flex;max-width:113px;overflow:hidden;}"
             +roster_old)
 pages=['index.html','web-play.html','web-board.html','web-follow.html','web-correction.html','web-menus.html']
 for name in pages:
