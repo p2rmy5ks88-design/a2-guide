@@ -50,7 +50,18 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--navy);outline-o
   #roster .pcard{padding:3px 9px 3px 3px;gap:7px}
   #roster .pt{width:33px;height:33px;font-size:19px}
   #roster .pn{max-width:113px;font-size:11px}
-  #roster .pg{display:flex;max-width:113px;overflow:hidden}
+  #roster .pg{display:flex;max-width:113px;overflow:hidden;gap:3px}
+  #roster .pg i{width:9px;height:9px;min-width:9px;font-size:9px;line-height:9px;text-align:center}
+}
+/* Short landscape viewports: keep all four players reachable without obscuring the board. */
+@media (pointer:coarse) and (orientation:landscape) and (max-height:380px){
+  #roster{top:max(4px,env(safe-area-inset-top,0px));gap:2px;max-height:calc(100% - 12px);max-width:170px}
+  #roster .pcard{padding:2px 7px 2px 2px;gap:5px}
+  #roster .pt{width:29px;height:29px;font-size:17px}
+  #roster .pn{font-size:10px;max-width:105px}
+  #roster .pc{font-size:16px}
+  #roster .pg{margin-top:1px;max-width:105px}
+  #roster .pg i{width:9px;height:9px;min-width:9px}
 }
 
 #tools{position:absolute;right:max(16px,env(safe-area-inset-right,0px));top:max(10px,env(safe-area-inset-top,0px));display:flex;gap:8px}
