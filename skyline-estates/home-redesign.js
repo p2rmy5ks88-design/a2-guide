@@ -315,6 +315,8 @@ function hdCityPane(T){const saved=loadSave(),c=CITY_DATA[setup.city],C=countryO
  if(q('#qSeason'))q('#qSeason').onclick=()=>homeTab('season');if(q('#hdSpot'))q('#hdSpot').onclick=()=>homeTab('spotlight')}
 
 /* ---------- wiring ---------- */
+// Inline within the existing Spotlight card: no second floating home panel.
+{const st=document.createElement('style');st.textContent='#title .hd-stage.v2 .hd-card .hd-weekly-inline{font:700 max(10px,calc(1.05*var(--hd-u)))/1.1 var(--body,system-ui,sans-serif);color:#f2cf78;letter-spacing:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}@media(max-height:500px) and (orientation:landscape){#title .hd-stage.v2 .hd-card .hd-weekly-inline{font-size:10px}}';document.head.append(st)}
 const priorHomeTab=homeTab;
 homeTab=function(k){const r=priorHomeTab.apply(this,arguments);try{const home=document.querySelector('#title .home');if(home){const city=setup.tab==='play';home.classList.toggle('hd-on',city);hdBackground(city);hdDock();hdHeader(city)}}catch(e){console.error(e)}return r};
 const priorPaneP=paneP;
