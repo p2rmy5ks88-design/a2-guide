@@ -4,6 +4,7 @@
 const fs=require('node:fs'),path=require('node:path'),os=require('node:os'),assert=require('node:assert/strict'),crypto=require('node:crypto');
 const {settings}=require('../competition/service.cjs');
 if(process.env.COMPETITION_PRODUCTION_ACCEPT!=='1'){console.log('Production acceptance requires explicit operator opt-in');process.exit(0)}
+if(process.env.FIREBASE_DATABASE_EMULATOR_HOST)throw Error('Unset FIREBASE_DATABASE_EMULATOR_HOST for production acceptance');
 const BASE='https://europe-west1-eko-estates.cloudfunctions.net/skylineCompetition',DB='https://eko-estates-default-rtdb.europe-west1.firebasedatabase.app';
 const configFile=path.resolve(__dirname,'../../eko-estates/firebase-config.js'),configSource=fs.existsSync(configFile)?fs.readFileSync(configFile,'utf8'):require('node:child_process').execFileSync('git',['show','HEAD:eko-estates/firebase-config.js'],{cwd:path.resolve(__dirname,'../..'),encoding:'utf8'});const KEY=/apiKey:\s*"([^"]+)"/.exec(configSource)?.[1];if(!KEY)throw Error('Public Firebase web configuration missing');
 const privateFile=process.env.COMPETITION_ACCEPTANCE_SESSIONS_FILE?path.resolve(process.env.COMPETITION_ACCEPTANCE_SESSIONS_FILE):path.join(os.tmpdir(),'skyline-competition-acceptance-private.json'),reuseExisting=!!process.env.COMPETITION_ACCEPTANCE_SESSIONS_FILE,out=process.env.RUNNER_TEMP||path.resolve(__dirname,'../test-results');
@@ -26,6 +27,39 @@ async function call(route,account,body,{expected=200,origin,mutate=false}={}){if
  for(let attempt=0;attempt<4;attempt++){r=await fetch(BASE+route,{method:body===undefined?'GET':'POST',redirect:'error',cache:'no-store',signal:AbortSignal.timeout(20000),headers,...(body===undefined?{}:{body:JSON.stringify(body)})});if(expected===200&&[429,503].includes(r.status)&&attempt<3){await r.text();await sleep(65000);continue}break}
  const raw=await r.text();let v;try{v=JSON.parse(raw)}catch{v={}}if(r.status!==expected)throw Error('Acceptance '+route+' caller '+state.accounts.indexOf(account)+': HTTP '+r.status+' '+(v.error||'non-JSON response'));return v;
 }
+// Use the Realtime Database SDK's persistent connection, which sends the QA
+// user's Firebase JWT in an authentication message instead of in a request URL.
+async function probeDatabase(account){
+ const {initializeApp,deleteApp}=require(require.resolve('firebase-admin/app',{paths:[path.resolve(__dirname,'../competition-functions')]}));
+ const {getDatabase}=require(require.resolve('firebase-admin/database',{paths:[path.resolve(__dirname,'../competition-functions')]}));
+ const app=initializeApp({databaseURL:DB,credential:{
+  async getAccessToken(){
+   const access_token=await token(account);
+   return {access_token,expires_in:Math.max(1,Math.floor((account.expires-Date.now())/1000))};
+  }
+ }},'competition-acceptance-probe');
+ const db=getDatabase(app);
+ async function expectDenied(label,operation){
+  let timer;
+  try{
+   await Promise.race([operation(),new Promise((_,reject)=>{
+    timer=setTimeout(()=>reject(Error('Database probe timed out')),20000);
+   })]);
+  }catch(error){
+   if(String(error.code).toLowerCase()!=='permission_denied')throw Error(label+': probe did not return a permission denial');
+   check(label,true);
+   return;
+  }finally{clearTimeout(timer)}
+  throw Error(label+': request was allowed');
+ }
+ try{
+  await expectDenied('valid guest cannot read protected database directly',()=>db.ref('skylineV2').once('value'));
+  await expectDenied('valid guest cannot write protected database directly',()=>db.ref('skylineV2/competitionAcceptanceProbe/'+account.uid).set({releaseProbe:true}));
+ }finally{
+  db.goOffline();
+  await deleteApp(app);
+ }
+}
 const req=()=> 'release-'+crypto.randomUUID();
 const profile=(account,publish=false)=>call('/v1/competition/profile',account,{publish,shareName:publish,community:process.env.COMPETITION_COMMUNITY_ACCEPT==='1',name:account===state.accounts[0]?'Release QA 1':'Release QA 2'},{mutate:true});
 (async()=>{
@@ -37,8 +71,7 @@ const profile=(account,publish=false)=>call('/v1/competition/profile',account,{p
  if(reuseExisting&&state.accounts[0].uid===state.accounts[1].uid)throw Error('Existing test sessions must belong to two distinct accounts');
  while(!reuseExisting&&state.accounts.length<2){const r=await fetch('https://identitytoolkit.googleapis.com/v1/accounts:signUp?key='+KEY,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({returnSecureToken:true})});const v=await r.json();if(!r.ok)throw Error('Release-test guest sign-in failed');state.accounts.push({uid:v.localId,idToken:v.idToken,refreshToken:v.refreshToken,expires:Date.now()+Number(v.expiresIn)*1000});save()}
  for(const a of state.accounts)await profile(a,false);check('two real Firebase test sessions are private',true);
- const dbRead=await fetch(DB+'/skylineV2.json?auth='+encodeURIComponent(await token(state.accounts[0])));check('valid guest cannot read protected database directly',[401,403].includes(dbRead.status));await dbRead.text();
- const dbWrite=await fetch(DB+'/skylineV2/competitionAcceptanceProbe/'+state.accounts[0].uid+'.json?auth='+encodeURIComponent(await token(state.accounts[0])),{method:'PUT',headers:{'Content-Type':'application/json'},body:'{"releaseProbe":true}'});check('valid guest cannot write protected database directly',[401,403].includes(dbWrite.status));await dbWrite.text();
+ await probeDatabase(state.accounts[0]);
  await call('/v2/rooms/create',state.accounts[0],{requestId:req(),name:'Release QA 1',settings:{...settings('lagos'),perks:true}},{expected:400,mutate:true});check('advantaged setup rejected by live service',true);
  const cities=(process.env.COMPETITION_CITIES||'lagos,stockholm').split(',');
  for(const city of cities){const bridgeBefore=await call('/v1/competition/community',state.accounts[0],{});const [host,guest]=state.accounts;let match=state.matches[city];if(match){try{await call('/v2/game/lobby',host,{code:match.code})}catch(e){if(!e.message.includes('HTTP 403'))throw e;match=null}}if(!match){const created=await call('/v2/rooms/create',host,{requestId:req(),name:'Release QA 1',settings:settings(city)},{mutate:true});match=state.matches[city]={code:created.code,invite:created.invite,joined:false};save()}
