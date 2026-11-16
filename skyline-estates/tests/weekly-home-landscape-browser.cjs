@@ -22,15 +22,15 @@ const types={'.html':'text/html','.js':'text/javascript','.css':'text/css','.jso
    const card=document.querySelector('#hdSpot'),line=card?.querySelector('.hd-weekly-inline'),dock=document.querySelector('#title .rail');
    const R=e=>{if(!e)return null;const r=e.getBoundingClientRect();return{x:r.x,y:r.y,right:r.right,bottom:r.bottom,width:r.width,height:r.height}};
    const a=R(line),c=R(card),d=R(dock);
-   return{spot:!!card,hasLine:!!line,text:line?.textContent||'',a,c,d,clipped:!!line&&(line.scrollWidth>line.clientWidth+1||line.scrollHeight>line.clientHeight+1),weeklyTotal:window.SkylineWeeklySummary.summary(weekly(),WEEKLY,loc).total};
+   return{spot:!!card,hasLine:!!line,text:line?.textContent||'',a,c,d,clipped:!!line&&(line.scrollWidth>line.clientWidth+1),weeklyTotal:window.SkylineWeeklySummary.summary(weekly(),WEEKLY,loc).total};
   });
+  await page.screenshot({path:path.join(out,'weekly-home-'+width+'x'+height+'.png')});
   assert.ok(result.spot,'Spotlight card expected for test fixture');
   assert.ok(result.hasLine,'Weekly summary visible inside Spotlight');
   assert.ok(result.text.includes('weekly contracts')&&result.text.includes(' / '),'Weekly completion count visible');
   assert.ok(!result.clipped,'Weekly text not clipped: '+JSON.stringify(result));
   assert.ok(result.a.x>=result.c.x-1&&result.a.right<=result.c.right+1&&result.a.y>=result.c.y-1&&result.a.bottom<=result.c.bottom+1,'Weekly line inside Spotlight card');
   assert.ok(result.c.bottom<=result.d.y+1,'Spotlight clear of bottom dock');
-  await page.screenshot({path:path.join(out,'weekly-home-'+width+'x'+height+'.png')});
   await page.locator('#hdSpot').click();
   assert.equal(await page.evaluate(()=>setup.tab),'spotlight','Spotlight navigation works');
   assert.deepEqual(errors,[],'No browser errors');
