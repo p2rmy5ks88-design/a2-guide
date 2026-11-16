@@ -22,7 +22,7 @@ const types={'.html':'text/html','.js':'text/javascript','.css':'text/css','.jso
    const card=document.querySelector('#hdSpot'),line=card?.querySelector('.hd-weekly-inline'),dock=document.querySelector('#title .rail');
    const R=e=>{if(!e)return null;const r=e.getBoundingClientRect();return{x:r.x,y:r.y,right:r.right,bottom:r.bottom,width:r.width,height:r.height}};
    const a=R(line),c=R(card),d=R(dock);
-   return{spot:!!card,hasLine:!!line,text:line?.textContent||'',a,c,d,clipped:!!line&&(line.scrollWidth>line.clientWidth+1),weeklyTotal:window.SkylineWeeklySummary.summary(weekly(),WEEKLY,loc).total};
+   return{spot:!!card,hasLine:!!line,text:line?.textContent||'',a,c,d,clipped:!!line&&(line.scrollWidth>line.clientWidth+1),textMetrics:line?{scrollWidth:line.scrollWidth,clientWidth:line.clientWidth,scrollHeight:line.scrollHeight,clientHeight:line.clientHeight}:null,weeklyTotal:window.SkylineWeeklySummary.summary(weekly(),WEEKLY,loc).total};
   });
   await page.screenshot({path:path.join(out,'weekly-home-'+width+'x'+height+'.png')});
   assert.ok(result.spot,'Spotlight card expected for test fixture');
