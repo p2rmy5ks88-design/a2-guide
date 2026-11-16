@@ -23,7 +23,7 @@ Existing implementations, **not new feature requests**:
 - [ ] Check public capabilities endpoint status, origin restrictions and failure modes without credentials or mutations. Initial external read-only request was not accessible through the available web gateway; **no live status claim is made**.
 - [x] Static review: `compose.cjs` restricts CORS to the GitHub Pages origin and local/native origins, requires bearer authentication on POST competition routes, and exposes only GET capabilities publicly. These are source-code findings, not deployed-service verification.
 - [x] Static review: `verified.js` labels casual scores as ineligible for verified rankings, requires session auth, and uses server-scored match ingest; `social.js` marks manual friend results as device reports.
-- [x] Existing isolated service, transaction, match, social and browser regression suites passed in both Chromium and WebKit on initial PR commit `5a7a71a` (GitHub Actions run 43862503320). WebKit artifact reports 29 casual social browser checks and 10 mocked verified browser checks, zero page errors. These are mocked/isolated, not live two-account acceptance. Latest branch CI must be checked separately.
+- [x] Existing isolated service, transaction, match, social and browser regression suites passed in both Chromium and WebKit on initial PR commit `5a7a71a` (GitHub Actions run 43862503320). WebKit artifact reports 29 casual social browser checks and 10 mocked verified browser checks, zero page errors. These are mocked/isolated, not live two-account acceptance. Latest branch CI at `c2584604` completed successfully (run 43866621154): all nine jobs passed, including both browser engines and the Stability gate.
 - [ ] With explicitly authorized private release-test identities only: complete two-account production acceptance per `competition-functions/DEPLOY.md`, including reconnect, duplicate ingest, ranking opt-out and community receipts.
 - [ ] Review rate limiting, abuse controls and operational monitoring limitations before release.
 - [ ] Record evidence and remaining blockers; merge only verified changes; separately verify Pages deployment before any TestFlight upload.
@@ -39,3 +39,9 @@ Source code and green CI do not establish that production Firebase is healthy, t
 | WebKit | 29 | 10 | 0 | `skyline-visual-webkit` |
 
 Both reports have no failure field. Captured comparison and community screenshots were manually inspected at their recorded scroll positions; no obvious bottom dock obstruction was observed. This is **not** evidence of authenticated production matches, complete page visibility, or physical Safari acceptance.
+
+## Production acceptance decision
+
+**Current decision: HOLD for verified competition production acceptance; no TestFlight submission or backend mutation.** A direct read-only capabilities request through the available web gateway returned an access error, which cannot distinguish a network restriction from a service issue. The authorized two-account production harness has not run. No production credentials or test identities are stored in this PR.
+
+Before removing HOLD, the release operator must collect a successful public capabilities response from the actual deployment, run the opt-in production harness with two explicitly authorized test accounts, confirm results and privacy opt-out, and attach a sanitized acceptance summary. If the live endpoint is unavailable, keep the existing casual/offline experience intact and investigate service health without altering production data.
