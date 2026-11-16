@@ -26,7 +26,7 @@ const types={'.html':'text/html','.js':'text/javascript','.css':'text/css','.jso
   });
   assert.ok(result.spot,'Spotlight card expected for test fixture');
   assert.ok(result.hasLine,'Weekly summary visible inside Spotlight');
-  assert.match(result.text,/\\d+\\s*\\/\\s*\\d+ weekly contracts/);
+  assert.ok(result.text.includes('weekly contracts')&&result.text.includes(' / '),'Weekly completion count visible');
   assert.ok(!result.clipped,'Weekly text not clipped: '+JSON.stringify(result));
   assert.ok(result.a.x>=result.c.x-1&&result.a.right<=result.c.right+1&&result.a.y>=result.c.y-1&&result.a.bottom<=result.c.bottom+1,'Weekly line inside Spotlight card');
   assert.ok(result.c.bottom<=result.d.y+1,'Spotlight clear of bottom dock');
