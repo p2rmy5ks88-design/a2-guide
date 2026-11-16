@@ -1,0 +1,39 @@
+name: Weekly contracts home summary QA
+on:
+  pull_request:
+    paths:
+      - 'skyline-estates/lib/weekly-contracts-summary.js'
+      - 'skyline-estates/tests/weekly-contracts-summary.cjs'
+      - 'skyline-estates/home-redesign.js'
+      - 'skyline-estates/game.html'
+      - '.github/workflows/weekly-contracts-qa.yml'
+  workflow_dispatch:
+jobs:
+  source-check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Weekly summary unit tests
+        run: node skyline-estates/tests/weekly-contracts-summary.cjs
+      - name: JavaScript syntax
+        run: |
+          node --check skyline-estates/lib/weekly-contracts-summary.js
+          node --check skyline-estates/home-redesign.js
+      - name: Verify no parallel weekly progress or reward logic added
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          html=Path('skyline-estates/game.html').read_text()
+          home=Path('skyline-estates/home-redesign.js').read_text()
+          assert html.count('<script src="./lib/weekly-contracts-summary.js"></script>') == 1
+          assert html.index('<script src="./lib/weekly-contracts-summary.js"></script>') < html.index('<script src="./home-redesign.js"></script>')
+          assert "api.summary(weekly(),WEEKLY,loc)" in home
+          assert "hd-weekly-inline" in home
+          assert "homeTab('spotlight')" in home
+          print('PASS existing weekly wiring')
+          PY
