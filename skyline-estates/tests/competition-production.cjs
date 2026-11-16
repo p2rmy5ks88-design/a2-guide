@@ -27,12 +27,13 @@ async function call(route,account,body,{expected=200,origin,mutate=false}={}){if
  for(let attempt=0;attempt<4;attempt++){r=await fetch(BASE+route,{method:body===undefined?'GET':'POST',redirect:'error',cache:'no-store',signal:AbortSignal.timeout(20000),headers,...(body===undefined?{}:{body:JSON.stringify(body)})});if(expected===200&&[429,503].includes(r.status)&&attempt<3){await r.text();await sleep(65000);continue}break}
  const raw=await r.text();let v;try{v=JSON.parse(raw)}catch{v={}}if(r.status!==expected)throw Error('Acceptance '+route+' caller '+state.accounts.indexOf(account)+': HTTP '+r.status+' '+(v.error||'non-JSON response'));return v;
 }
-// Use the Realtime Database SDK's persistent connection, which sends the QA
+// Install the competition function dependencies before running production acceptance.
+// Use a WebSocket-only Realtime Database connection, which sends the QA
 // user's Firebase JWT in an authentication message instead of in a request URL.
 async function probeDatabase(account){
  const {initializeApp,deleteApp}=require(require.resolve('firebase-admin/app',{paths:[path.resolve(__dirname,'../competition-functions')]}));
  const {getDatabase}=require(require.resolve('firebase-admin/database',{paths:[path.resolve(__dirname,'../competition-functions')]}));
- const app=initializeApp({databaseURL:DB,credential:{
+ const app=initializeApp({databaseURL:DB.replace(/^https:/,'wss:'),credential:{
   async getAccessToken(){
    const access_token=await token(account);
    return {access_token,expires_in:Math.max(1,Math.floor((account.expires-Date.now())/1000))};
