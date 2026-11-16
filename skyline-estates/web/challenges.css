@@ -1,1 +1,45 @@
 .challenge-extension{margin:16px 0;padding:14px;border:1px solid #b99c5d88;border-radius:14px;background:#10223f;color:#f7eedb}.challenge-extension summary{cursor:pointer;min-height:44px;font-weight:700;display:flex;align-items:center}.challenge-extension p{font-size:12px;line-height:1.5;color:#d0d9e3}.challenge-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px}.challenge-cards article{display:flex;flex-direction:column;gap:8px;padding:12px;border:1px solid #b99c5d66;border-radius:10px}.challenge-cards small{line-height:1.4;color:#d0d9e3}.challenge-cards progress{width:100%;accent-color:#d5b567}.challenge-cards button,.challenge-overview{min-height:44px;padding:10px 14px;border-radius:10px;border:1px solid #b99c5d;background:#20395a;color:#ffedbb;cursor:pointer}.challenge-cards button:disabled{opacity:.6;cursor:default}.challenge-overview{margin:12px 0;width:100%}.challenge-awards{font-size:12px;margin:14px}
+
+/* Progress → Objectives tab: full list (not collapsed), ready rewards first. */
+.objectives-pane.challenge-extension{margin:10px 0 16px;padding:12px 14px;display:grid;gap:10px}
+.objectives-pane .obj-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.objectives-pane .obj-head b{display:block;font-size:16px;color:#f4d28b}
+.objectives-pane .obj-head small{display:block;font-size:12px;color:#d0d9e3;margin-top:2px}
+.objectives-pane .challenge-cards{grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px}
+.objectives-pane .obj-card{gap:5px;padding:10px 12px;background:#0b1d36}
+.objectives-pane .obj-card header{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.objectives-pane .obj-card header b{font-size:14.5px;color:#fff;line-height:1.2}
+.objectives-pane .obj-place{flex:none;font-size:11px;font-weight:700;color:#d5b567;text-transform:uppercase;letter-spacing:.05em}
+.objectives-pane .obj-desc{font-size:12.5px}
+.objectives-pane .obj-prog{display:grid;gap:3px}.objectives-pane .obj-prog span{font-size:12px;color:#e9eef3;font-weight:700}
+.objectives-pane .obj-rew{font-size:12px;color:#f4d28b!important}
+.objectives-pane .obj-card.is-ready{border-color:#e9c46a;box-shadow:0 0 0 1px #e9c46a55 inset}
+.objectives-pane .obj-card.is-ready button{background:linear-gradient(180deg,#f3d27e,#d9a845);color:#1a1406;border-color:#f6dc95;font-weight:800}
+.objectives-pane .obj-card.is-done{opacity:.72}
+.objectives-pane .challenge-message:empty{display:none}
+.objectives-pane .obj-rules summary{min-height:36px;font-size:13px;font-weight:700;color:#d5b567;cursor:pointer;display:flex;align-items:center}
+.objectives-pane .obj-rules p{margin:4px 0 0}
+.obj-link{text-align:left;font-weight:700}
+/* Claimable count: on the Objectives tab pill and on the bottom Progress button. */
+#pane>.subtabs [data-s="objectives"]{display:inline-flex;align-items:center;gap:6px}
+.obj-count{display:inline-grid;place-items:center;min-width:20px;height:20px;padding:0 6px;border-radius:10px;background:#e5484d;color:#fff;font:800 12px/1 var(--body,system-ui);font-style:normal;box-shadow:0 0 0 2px #0e1a2e}
+#title .hd-di.has-obj-count .dot,#title .tabs .tab.has-obj-count .dot{display:none}
+#title .hd-di .obj-count,#title .tabs .tab .obj-count{position:absolute;top:4px;right:14%;z-index:2}
+#title .tabs .tab{position:relative}
+@media (orientation:landscape) and (max-height:520px){
+ .objectives-pane.challenge-extension{margin:6px 0 10px;padding:10px 12px;gap:8px}
+ .objectives-pane .challenge-cards{grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
+ .objectives-pane .obj-head b{font-size:15px}.objectives-pane .obj-head small{font-size:11.5px}
+ /* Short cards so a ready reward's Claim button is visible without scrolling: progress bar and status share a line,
+    rewards sit beside the button (which keeps a 44 px target). */
+ .objectives-pane .obj-card{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"h h" "d d" "p p" "r b";align-items:center;padding:8px 10px;gap:3px 8px}
+ .objectives-pane .obj-card header{grid-area:h}.objectives-pane .obj-desc{grid-area:d;font-size:12px}
+ .objectives-pane .obj-prog{grid-area:p;display:flex;align-items:center;gap:8px}.objectives-pane .obj-prog progress{flex:1;min-width:0}.objectives-pane .obj-prog span{flex:none;font-size:11.5px}
+ .objectives-pane .obj-rew{grid-area:r;font-size:11.5px;line-height:1.25}
+ .objectives-pane .obj-card button{grid-area:b;min-height:44px;padding:6px 12px;white-space:nowrap}
+}
+html.light .objectives-pane.challenge-extension{background:#fff;color:#13284a;border-color:#c9a85a}
+html.light .objectives-pane .obj-card{background:#f6f8fb;border-color:#d3dbe4}
+html.light .objectives-pane .obj-card header b,html.light .objectives-pane .obj-prog span{color:#13284a}
+html.light .objectives-pane .obj-head b,html.light .objectives-pane .obj-place,html.light .objectives-pane .obj-rew{color:#8a5d00!important}
+html.light .objectives-pane small,html.light .objectives-pane p{color:#3b5068}

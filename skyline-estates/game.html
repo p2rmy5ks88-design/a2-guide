@@ -5336,9 +5336,10 @@ const ICO={portfolio:'M3 21h18M5 21V13h4v8M11 21V6h4v15M17 21V3h4v18',play:'M7 4
 const svgI=(k,s=20)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${ICO[k]}"/></svg>`;
 const SECTIONS=[['play','Play'],['world','World'],['collection','Collection'],['portfolio','Portfolio'],['shop','Shop'],['progress','Progress']];
 const SUBS={collection:[['cast','Characters'],['tokens','Tokens']],progress:[['season','Season'],['leagues','Leagues'],['ach','Awards'],['daily','Daily']],settings:[['settings','Settings'],['learn','How to play']],play:[['play','Play'],['custom','Custom game']]};
-const SEC_OF={portfolio:'portfolio',play:'play',custom:'play',world:'world',cast:'collection',tokens:'collection',season:'progress',leagues:'progress',ach:'progress',daily:'progress',shop:'shop',settings:'settings',learn:'settings',collection:'collection',progress:'progress'};
+const SEC_OF={portfolio:'portfolio',play:'play',custom:'play',world:'world',cast:'collection',tokens:'collection',season:'progress',leagues:'progress',ach:'progress',daily:'progress',objectives:'progress',shop:'shop',settings:'settings',learn:'settings',collection:'collection',progress:'progress'};
 function panePortfolio(T){T.textContent="Loading portfolio…"}
-const PANES=()=>({portfolio:panePortfolio,play:paneP,custom:paneCustom,world:paneWorld,cast:paneCast,tokens:paneTokens,season:paneSeason,leagues:paneLeagues,ach:paneAch,daily:paneDaily,spotlight:paneSpotlight,shop:paneShop,learn:paneLearn,settings:paneSettings});
+function paneObjectives(T){T.textContent='Objectives are unavailable on this build.'}
+const PANES=()=>({portfolio:panePortfolio,play:paneP,custom:paneCustom,world:paneWorld,cast:paneCast,tokens:paneTokens,season:paneSeason,leagues:paneLeagues,ach:paneAch,daily:paneDaily,objectives:paneObjectives,spotlight:paneSpotlight,shop:paneShop,learn:paneLearn,settings:paneSettings});
 const HOME_TABS=SECTIONS;
 const PCOIN=()=>`<span class="coinpill" role="status"><i aria-hidden="true"></i><b>${Math.round(PREF.coins).toLocaleString('en-US')}</b></span>`;
 function showTitle(){

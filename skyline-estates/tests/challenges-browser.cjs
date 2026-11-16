@@ -55,8 +55,23 @@ const check=(n,v)=>{assert.ok(v,n);report.checks.push(n);console.log('PASS',n)};
   G.progDone=false;const replayBefore=JSON.stringify(PREF);progressGameEnd(dub);ok('replayed finished match cannot grant existing profile rewards',JSON.stringify(PREF)===replayBefore);
   return checks;
  });result.forEach(n=>check(n,true));
- for(const tab of ['daily','season','spotlight','ach','shop','portfolio']){await p.evaluate(tab=>homeTab(tab),tab);await p.waitForTimeout(80);check(tab+' opens without exceptions',report.errors.length===0)}
- await p.evaluate(()=>homeTab('season'));await p.locator('.challenge-extension summary').click();await p.locator('.challenge-cards article').first().scrollIntoViewIfNeeded();await p.screenshot({path:path.join(out,`challenges-${engine}-season.png`)});
+ for(const tab of ['daily','season','objectives','spotlight','ach','shop','portfolio']){await p.evaluate(tab=>homeTab(tab),tab);await p.waitForTimeout(80);check(tab+' opens without exceptions',report.errors.length===0)}
+ // Progress → Objectives tab: beside Season, lists every objective (also when nothing is ready), claimable counts on the tab and the bottom Progress button.
+ await p.evaluate(()=>homeTab('season'));await p.waitForTimeout(150);
+ const nav=await p.evaluate(()=>({subs:[...document.querySelectorAll('#pane>.subtabs [data-s]')].map(b=>b.dataset.s),link:!!document.querySelector('.obj-link'),items:document.querySelectorAll('#title .hd-di,#title .tabs .tab').length}));
+ check('Objectives tab sits beside Season',nav.subs.indexOf('objectives')===nav.subs.indexOf('season')+1);check('Season links to Objectives',nav.link);check('bottom navigation keeps six items',nav.items===6);
+ await p.locator('#pane>.subtabs [data-s="objectives"]').click();await p.waitForTimeout(200);
+ const pane=await p.evaluate(()=>({tab:setup.tab,cards:document.querySelectorAll('.objectives-pane .obj-card').length,specs:SkylineChallenges.specs.length,open:!document.querySelector('.objectives-pane')?.closest('details:not([open])')}));
+ check('Objectives tab lists every active objective, expanded',pane.tab==='objectives'&&pane.cards===pane.specs&&pane.open);
+ const fx=await p.evaluate(()=>{const ledger=SkylineSCWallet.create(localStorage,()=>Date.now()-180000);const me=challengeFixture('tokyo','badge-tokyo');SkylineChallenges.record(me);G=null;homeTab('objectives');return SkylineChallenges.ready()});
+ await p.waitForTimeout(200);
+ const badge=await p.evaluate(()=>({tab:document.querySelector('#pane>.subtabs [data-s="objectives"] .obj-count')?.textContent,dock:(document.querySelector('#title .hd-di[data-dock="progress"] .obj-count')||[...document.querySelectorAll('#title .tabs .tab')].find(b=>/Progress/i.test(b.textContent))?.querySelector('.obj-count'))?.textContent,label:document.querySelector('#pane>.subtabs [data-s="objectives"]')?.getAttribute('aria-label')}));
+ check('claimable count shown on the Objectives tab',fx>0&&badge.tab===String(fx)&&/ready/.test(badge.label||''));check('same count shown on the bottom Progress button',badge.dock===String(fx));
+ const readyBtn=p.locator('.objectives-pane [data-objective]:not([disabled])').first();check('ready reward Claim button is visible without scrolling',await readyBtn.isVisible()&&await readyBtn.evaluate(b=>{const r=b.getBoundingClientRect(),d=document.querySelector('#title .hd-di,#title .tabs .tab')?.closest('nav,.tabs');const top=d?Math.min(...[...document.querySelectorAll('#title .hd-di')].map(x=>x.getBoundingClientRect().top),innerHeight):innerHeight;return r.bottom<=top&&r.height>=44}));
+ await p.screenshot({path:path.join(out,`challenges-${engine}-objectives.png`)});
+ await readyBtn.click();await p.waitForTimeout(400);
+ const after=await p.evaluate(()=>({n:SkylineChallenges.ready(),tab:document.querySelector('#pane>.subtabs [data-s="objectives"] .obj-count')?.textContent||'0',msg:document.querySelector('.objectives-pane .challenge-message')?.textContent||''}));
+ check('claiming from the tab works and updates the counts',after.n===fx-1&&after.tab===String(after.n)&&/claimed/i.test(after.msg));
  const last=p.locator('[data-objective]').last();await last.scrollIntoViewIfNeeded();check('landscape objective action remains reachable',await last.isVisible());
  await p.reload();await ready();check('claimed objective receipt survives refresh',await p.evaluate(()=>Object.keys(SkylineChallenges.claims()).length>=4));
  check('no browser exceptions',report.errors.length===0);await context.close();
