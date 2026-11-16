@@ -24,7 +24,7 @@ Existing implementations, **not new feature requests**:
 - [x] Static review: `compose.cjs` restricts CORS to the GitHub Pages origin and local/native origins, requires bearer authentication on POST competition routes, and exposes only GET capabilities publicly. These are source-code findings, not deployed-service verification.
 - [x] Static review: `verified.js` labels casual scores as ineligible for verified rankings, requires session auth, and uses server-scored match ingest; `social.js` marks manual friend results as device reports.
 - [x] Existing isolated service, transaction, match, social and browser regression suites passed in both Chromium and WebKit on initial PR commit `5a7a71a` (GitHub Actions run 43862503320). WebKit artifact reports 29 casual social browser checks and 10 mocked verified browser checks, zero page errors. These are mocked/isolated, not live two-account acceptance. Latest branch CI at `c2584604` completed successfully (run 43866621154): all nine jobs passed, including both browser engines and the Stability gate.
-- [ ] With explicitly authorized private release-test identities only: complete two-account production acceptance per `competition-functions/DEPLOY.md`, including reconnect, duplicate ingest, ranking opt-out and community receipts.
+- [x] The Phase 4 production harness passed with the two approved QA accounts. See the production result below.
 - [ ] Review rate limiting, abuse controls and operational monitoring limitations before release.
 - [ ] Record evidence and remaining blockers; merge only verified changes; separately verify Pages deployment before any TestFlight upload.
 
@@ -40,11 +40,11 @@ Source code and green CI do not establish that production Firebase is healthy, t
 
 Both reports have no failure field. Captured comparison and community screenshots were manually inspected at their recorded scroll positions; no obvious bottom dock obstruction was observed. This is **not** evidence of authenticated production matches, complete page visibility, or physical Safari acceptance.
 
-## Production acceptance decision
+## Production acceptance result
 
-**Current decision: HOLD for verified competition production acceptance; no TestFlight submission or backend mutation.** A direct read-only capabilities request through the available web gateway returned an access error, which cannot distinguish a network restriction from a service issue. The authorized two-account production harness has not run. No production credentials or test identities are stored in this PR.
+**The two-account production harness passed all 35 checks** on 16 November 2026 in `eko-estates` at harness revision `509e6ef`. Lagos and Stockholm each completed in 11 rounds. The checks covered live capabilities, database access denials, join and start replay, completed-result deduplication, ranking order, and profile opt-out.
 
-Before removing HOLD, the release operator must collect a successful public capabilities response from the actual deployment, run the opt-in production harness with two explicitly authorized test accounts, confirm results and privacy opt-out, and attach a sanitized acceptance summary. If the live endpoint is unavailable, keep the existing casual/offline experience intact and investigate service health without altering production data.
+The run kept community contributions disabled and verified the live community readout and denial of an unearned badge. A separate disconnect/reconnect scenario, opt-in community contribution receipts, and physical iPhone browser coverage were outside this run.
 
 ## Reuse the existing two test accounts (no new account creation)
 
@@ -73,4 +73,4 @@ COMPETITION_ACCEPTANCE_SESSIONS_FILE="$PRIVATE_QA_SESSION_FILE" \
   node skyline-estates/tests/competition-production.cjs
 ```
 
-When the environment variable is supplied, missing/invalid/incomplete session files fail closed and the script **will not create anonymous accounts**. Do not paste credentials, tokens, or private session files into GitHub, chat, logs or CI artifacts. The database probes use the installed Firebase SDK over a WebSocket-only connection, which keeps the Firebase ID token out of request URLs. The test writes QA match and ranking records to production; obtain authorization and review cleanup/retention first. The default script behavior without the variable remains unchanged for backward compatibility. No production test was executed as part of this PR.
+When the environment variable is supplied, missing/invalid/incomplete session files fail closed and the script **will not create anonymous accounts**. Do not paste credentials, tokens, or private session files into GitHub, chat, logs or CI artifacts. The database probes use the installed Firebase SDK over a WebSocket-only connection, which keeps the Firebase ID token out of request URLs. The test writes QA match and ranking records to production; obtain authorization and review cleanup/retention first. The default script behavior without the variable remains unchanged for backward compatibility.
