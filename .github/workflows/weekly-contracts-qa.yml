@@ -1,0 +1,93 @@
+name: Weekly contracts home summary QA
+on:
+  pull_request:
+    paths:
+      - 'skyline-estates/lib/weekly-contracts-summary.js'
+      - 'skyline-estates/tests/weekly-contracts-summary.cjs'
+      - 'skyline-estates/tests/weekly-home-landscape-browser.cjs'
+      - 'skyline-estates/home-redesign.js'
+      - 'skyline-estates/game.html'
+      - '.github/workflows/weekly-contracts-qa.yml'
+  workflow_dispatch:
+jobs:
+  source-check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Weekly summary unit tests
+        run: node skyline-estates/tests/weekly-contracts-summary.cjs
+      - name: Rebuild offline assets in CI and validate generated output
+        run: |
+          python3 skyline-estates/build.py
+          python3 skyline-estates/build.py --check
+          git diff --name-only -- skyline-estates | tee /tmp/skyline-generated-changes.txt
+          python3 - <<'PY'
+          from pathlib import Path
+          changed=set(Path('/tmp/skyline-generated-changes.txt').read_text().splitlines())
+          allowed={'skyline-estates/offline-assets.js','skyline-estates/sw.js'}
+          if not changed.issubset(allowed):
+              raise SystemExit('Unexpected generated changes: '+repr(changed-allowed))
+          if changed:
+              raise SystemExit('Generated assets differ from committed versions: '+repr(changed))
+          print('PASS generated offline assets match committed versions')
+          PY
+      - name: Upload generated offline assets for reviewed commit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: weekly-contracts-generated-offline
+          path: |
+            skyline-estates/offline-assets.js
+            skyline-estates/sw.js
+          retention-days: 7
+      - name: JavaScript syntax
+        run: |
+          node --check skyline-estates/lib/weekly-contracts-summary.js
+          node --check skyline-estates/home-redesign.js
+      - name: Verify no parallel weekly progress or reward logic added
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          html=Path('skyline-estates/game.html').read_text()
+          home=Path('skyline-estates/home-redesign.js').read_text()
+          assert '<script src="./lib/weekly-contracts-summary.js"></script>' not in html
+          assert '<script src="./home-redesign.js"></script>' in html
+          assert "helper.src='./lib/weekly-contracts-summary.js'" in home
+          assert "helper.onload=" in home
+          assert "api.summary(weekly(),WEEKLY,loc)" in home
+          assert "hd-weekly-inline" in home
+          assert "homeTab('spotlight')" in home
+          print('PASS existing weekly wiring')
+          PY
+
+  landscape-visual:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install existing browser test dependencies
+        run: npm install --prefix skyline-estates/tests --no-audit --no-fund
+      - name: Check generated offline assets
+        run: python3 skyline-estates/build.py --check
+      - name: Verify weekly summary in phone landscape and capture screenshots
+        env:
+          CHROME_PATH: /usr/bin/google-chrome
+          WEEKLY_VISUAL_DIR: ${{ runner.temp }}/weekly-home
+        run: node skyline-estates/tests/weekly-home-landscape-browser.cjs
+      - name: Upload landscape screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: weekly-home-landscape-screenshots
+          path: ${{ runner.temp }}/weekly-home/*.png
+          if-no-files-found: warn
