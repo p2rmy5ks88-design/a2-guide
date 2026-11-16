@@ -277,7 +277,7 @@ function hdCityPane(T){const saved=loadSave(),c=CITY_DATA[setup.city],C=countryO
  let weekLine='';
  try{
   const api=window.SkylineWeeklySummary;
-  if(api){const w=api.summary(weekly(),WEEKLY,loc);if(w.total)weekLine=w.completed+' / '+w.total+' weekly contracts';}
+  if(api){const w=api.summary(weekly(),WEEKLY,loc);if(w.total)weekLine='Weekly '+w.completed+'/'+w.total;}
  }catch(e){console.warn('Weekly home summary unavailable',e)}
 
  const main=saved?`<button class="hd-main saved" id="tCont" type="button"><span class="dice" aria-hidden="true"></span><span class="lbl"><b>Continue Match</b><small>${esc(savedLine(saved))}</small></span>${I_ARROW}</button>`
