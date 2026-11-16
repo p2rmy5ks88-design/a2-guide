@@ -4,6 +4,7 @@
    - Owner-coloured rim on every owned plot, so ownership reads in the overview.
    - A small district symbol in each street's colour band (helps colour-blind players).
    - Tokens on a corner square spread further apart.
+   - On landscape phones the board is centred between the player list and the tool buttons.
    Nothing here touches rules, money, saves, ownership logic, board geometry or online play. */
 (function(){'use strict';
 if(typeof applyTheme!=='function'||typeof updateCell!=='function')return;
@@ -88,7 +89,24 @@ window.SkylineDistrictSymbol=symbolFor;
 /* ---------- tokens on corner squares ---------- */
 {const _tx=tokenXY;tokenXY=function(p){const xy=_tx.apply(this,arguments);try{if(p.pos%10===0&&p.pos!==10){const r=rect(p.pos),cx=r.x+r.w/2,cy=r.y+r.h/2;return[cx+(xy[0]-cx)*1.75,cy+(xy[1]-cy)*1.75]}}catch(e){}return xy}}
 
+/* ---------- camera framing: centre the board in the space the HUD leaves free ---------- */
+// On landscape phones the player list sits on the left and the tool buttons on the right, so a board centred on
+// the whole screen sits closer to the list and the round chip covers the bottom-left corner. A horizontal lens shift
+// (screen-space, no change to camera angle or distance) moves the board to the middle of the free area. Picking and
+// riders use the same projection, so taps stay exact.
+CAMV.shift=0;let shiftGoal=0;
+function freeShift(){try{const cv=$('#gl'),cw=cv.clientWidth,ch=cv.clientHeight;if(!cw||cw/ch<1.3||(typeof ROT!=='undefined'&&ROT)||!$('#title').hidden)return 0;
+  const vis=e=>{if(!e)return null;const r=e.getBoundingClientRect();return r.width>0&&r.height>0&&getComputedStyle(e).visibility!=='hidden'?r:null};
+  const ro=vis($('#roster')),tl=vis($('#tools'));const left=ro&&ro.left<cw*.35?ro.right:0,right=tl&&tl.left>cw*.65?tl.left:cw;
+  const mid=(left+right)/2;return Math.max(-.2,Math.min(.2,(mid-cw/2)/(cw/2)))}catch(e){return 0}}
+function aimShift(){shiftGoal=freeShift()}
+{const _p=M4.persp;M4.persp=function(){const m=_p.apply(this,arguments);if(CAMV.shift)m[8]=-CAMV.shift;return m}}
+{const _co=camOverview;camOverview=function(){const r=_co.apply(this,arguments);aimShift();if(arguments[1]===0)CAMV.shift=shiftGoal;return r}}
+{const _cf=camFollow;camFollow=function(){const r=_cf.apply(this,arguments);aimShift();return r}}
+{const _cu=camUpdate;camUpdate=function(dt){const r=_cu.apply(this,arguments);try{if(!$('#title').hidden)shiftGoal=0;const k=1-Math.exp(-(dt||0)*4);CAMV.shift+=(shiftGoal-CAMV.shift)*k;if(Math.abs(CAMV.shift)<1e-4&&!shiftGoal)CAMV.shift=0}catch(e){}return r}}
+addEventListener('resize',()=>setTimeout(aimShift,60));
+
 // Redraw the board texture once so the district symbols appear, and apply the current light.
 try{if(typeof CUR_THEME!=='undefined')applyTheme(CUR_THEME)}catch(e){}
-window.SkylineBoardLook={mode:lookMode,refreshShadows};
+window.SkylineBoardLook={mode:lookMode,refreshShadows,freeShift};
 })();
