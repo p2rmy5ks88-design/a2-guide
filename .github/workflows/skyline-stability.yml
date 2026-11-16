@@ -354,6 +354,10 @@ jobs:
         if: (matrix.engine != 'webkit' || steps.wk.outcome == 'success')
         timeout-minutes: 5
         run: node skyline-estates/tests/competition-service.cjs
+      - name: "Competition production acceptance preflight (offline)"
+        if: (matrix.engine != 'webkit' || steps.wk.outcome == 'success')
+        timeout-minutes: 2
+        run: node skyline-estates/tests/competition-acceptance-preflight.cjs
       - name: "Visual: competition-match"
         if: (matrix.engine != 'webkit' || steps.wk.outcome == 'success')
         timeout-minutes: 5
