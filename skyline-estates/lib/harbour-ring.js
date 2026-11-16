@@ -55,8 +55,6 @@ const css=`
 .hr-t:not(.c):not(.s) b.lg{font-size:clamp(8.5px,2.4vh,10px)}
 .hr-t .ct{font:700 clamp(8px,2.2vh,9.5px)/1.1 var(--body,'Manrope',system-ui,sans-serif);color:#b8c3da;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:2px}
 .hr-t .ct .own{position:static;display:inline-block;width:8px;height:8px;margin-right:3px;vertical-align:-1px}
-.hr-t .ct .lvp{display:inline-flex;gap:1px;margin-left:3px;vertical-align:-1px;align-items:flex-end}.hr-t .ct .lvp span{width:3px;height:7px;border-radius:1px 1px 0 0}.hr-t .ct .lvp span.tw{width:4px;height:9px}
-.hr-t.y .lvp span{background:#ffe39b}.hr-t.r .lvp span{background:#ffb3b5}html.light .hr-t.y .lvp span{background:#b9832b}html.light .hr-t.r .lvp span{background:#c22d3d}
 .hr-t .ct em{font:inherit;color:inherit;opacity:.85}
 html.light .hr-t:not(.c):not(.s) b{color:#13284a}html.light .hr-t .ct{color:#4b5a76}
 .hr-t.y{border:2px solid #f2c457;background:linear-gradient(180deg,rgba(78,60,18,.96),rgba(26,22,24,.96))}
@@ -78,13 +76,18 @@ html.light .hr-t:not(.c):not(.s) b{color:#13284a}html.light .hr-t .ct{color:#4b5
 .hr-tok{position:absolute;width:20px;height:20px;border-radius:50%;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.6);object-fit:cover;z-index:2;background:#22325e;transition:transform .12s}
 .hr-tok.a{right:3px;bottom:3px;border-color:#f2c457}
 .hr-t.c .hr-tok.a{bottom:auto;top:3px}.hr-tok.b{right:4px;top:9px;border-color:#ff5a5f}
+.hr-t.prop .hr-tok{box-sizing:border-box;width:14px;height:14px;top:auto;right:3px;bottom:3px}
+.hr-t.prop.two-tokens .hr-tok.b{right:19px}
+.hr-t.prop.occupied b{padding-right:15px}
+.hr-t.prop.two-tokens b{padding-right:31px}
+.hr-t.prop.tg .ct,.hr-t.prop.locked .ct{padding-right:17px}
 .hr-tok.hop{transform:translateY(-4px) scale(1.08)}
 .hr-centre{grid-row:2/5;grid-column:2/9;position:relative;border-radius:12px;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;padding:8px 10px;min-height:0}
 .hr-centre:before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(5,9,24,0),rgba(5,9,24,.15) 45%,rgba(5,9,24,.78));pointer-events:none}
 .hr-centre>*{position:relative}
 .hr-title{align-self:center;display:flex;flex-direction:column;align-items:center;gap:2px;padding:5px 14px 6px;border-radius:12px;background:rgba(5,9,24,.55);color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.8)}
 .hr-title b{font:700 18px/1 'Cinzel',Georgia,serif;letter-spacing:.06em}.hr-title small{font:700 8.5px/1 var(--body,'Manrope',sans-serif);letter-spacing:.3em;color:#f6e2a8}
-.hr-sky{position:absolute;left:0;right:0;bottom:58px;height:clamp(86px,32vh,160px);pointer-events:none;isolation:isolate}
+.hr-sky{position:relative;flex:1 1 auto;min-height:0;pointer-events:none;isolation:isolate}
 .hr-sky:before{content:none}/* Do not paint an opaque horizontal water band over the harbour photo. */
 .hr-boat{animation:hrSail 22s linear infinite;opacity:.8;transform:translate(-32px,81px)}
 .hr-boat-2{animation-duration:30s;opacity:.55}
@@ -105,7 +108,7 @@ html.light .hr-t:not(.c):not(.s) b{color:#13284a}html.light .hr-t .ct{color:#4b5
 .hr-timer.low{background:radial-gradient(circle,#0b1633 0 15px,transparent 16px),conic-gradient(#ff5a5f var(--p),rgba(255,255,255,.18) 0)}
 html.light .hr-timer{color:#13284a;background:radial-gradient(circle,#fff 0 15px,transparent 16px),conic-gradient(#d9a23a var(--p),rgba(19,40,74,.15) 0)}
 html.light .hr-timer.low{background:radial-gradient(circle,#fff 0 15px,transparent 16px),conic-gradient(#d63b4a var(--p),rgba(19,40,74,.15) 0)}
-.hr-act{display:flex;align-items:center;gap:8px;min-height:44px}
+.hr-act{display:flex;align-items:center;gap:8px;min-height:44px;flex-shrink:0}
 .hr-act p{flex:1;margin:0;font:600 11.5px/1.3 var(--body,'Manrope',sans-serif);color:#eef2fb;text-shadow:0 1px 4px rgba(0,0,0,.8)}
 .hr-act p b{color:#fff}
 .hr-die{width:30px;height:30px;flex:none;border-radius:7px;background:#fdf6e3;box-shadow:0 3px 8px rgba(0,0,0,.5);display:grid;place-items:center}
@@ -221,14 +224,15 @@ function joint(w){const V=/[aeiouyåäöüéèáíóú]/i,mid=Math.round(w.lengt
 function softBreak(name){return name.split(/(\s+)/).map(w=>{if(w.length<=8||/\s/.test(w)||w.includes('-'))return E(w);const m=w.match(SUFFIX);
   if(!m&&w.length<=11)return E(w);if(m&&w[m.index-1]==='-')return E(w);const at=m&&m.index>=4?m.index:joint(w);return E(w.slice(0,at))+'&shy;'+E(w.slice(at))}).join('')}
 function tileHTML(t){const [r,c]=POS(t.i),tg=view.targets&&view.targets[t.i];let cls='hr-t',inner='';
-  if(t.k==='prop'){cls+=t.o===me?' y':t.o===ai?' r':'';const Dd=districtOf(t);
-    // Top line: owner mark, square number, building level, city. Street name below, up to two lines.
-    const pips=t.lv?`<span class="lvp" aria-hidden="true">${t.lv===4?'<span class="tw"></span>':'<span></span>'.repeat(t.lv)}</span>`:'';
-    inner=`<i class="st" style="background:${Dd.color}"></i><small class="ct">${t.o>=0?'<i class="own" aria-hidden="true"></i>':''}<em>${t.i}</em>${pips} · ${E(Dd.name)}</small><b${t.n.split(/\s+/).some(w=>w.length>7)?' class="lg"':''}>${softBreak(t.n)}</b>`;
-    if(t.lock>s.round)inner+=`<span class="lk">${ICON.lock}</span>`}
+  if(t.k==='prop'){cls+=' prop'+(t.o===me?' y':t.o===ai?' r':'');const Dd=districtOf(t);
+    // Construction levels are visible in the harbour and property details.
+    inner=`<i class="st" style="background:${Dd.color}"></i><small class="ct">${t.o>=0?'<i class="own" aria-hidden="true"></i>':''}<em>${t.i}</em> · ${E(Dd.name)}</small><b${t.n.split(/\s+/).some(w=>w.length>7)?' class="lg"':''}>${softBreak(t.n)}</b>`;
+    if(t.lock>s.round){cls+=' locked';inner+=`<span class="lk">${ICON.lock}</span>`}}
   else{cls+=t.k==='corner'?' c':' s';inner=`<em>${t.i}</em>${ICON[t.id]||''}<b>${E(t.n)}</b>`}
   if(tg){cls+=' tg';inner+=`<span class="n">${tg}</span>`}
   const pos=view.tok||s.players.map(p=>p.pos);
+  const tokenCount=pos.filter(q=>q===t.i).length;
+  if(tokenCount)cls+=tokenCount===2?' occupied two-tokens':' occupied';
   pos.forEach((q,p)=>{if(q===t.i)inner+=`<img class="hr-tok ${p===me?'a':'b'}${view.hop===p?' hop':''}" src="${E(s.players[p].avatar)}" alt="">`});
   const label=t.k==='prop'?`${t.i}, ${t.n}, ${districtOf(t).name}, ${t.o===me?'yours':t.o===ai?name(ai)+"'s":'for sale '+fmt(t.p)}`:`${t.i}, ${t.n}`;
   return `<button class="${cls}" data-i="${t.i}" style="grid-row:${r};grid-column:${c}" aria-label="${E(label)}">${inner}</button>`}
@@ -289,7 +293,8 @@ function towersHTML(){
     const [pr,pc]=POS(t.i),back=pr===1||(pc===1&&pr===2)||(pc===9&&pr===3);
     // Horizontal position as a share of the centre width (the centre spans board columns 2–8).
     // The back row sits high enough that its number clears the front-row pad below it.
-    const xp=pc===1?2.2:pc===9?97.8:((pc-2)+.5)/7*100, y=back?51:78;
+    const columnAnchor=pc===1?0:pc===9?1:((pc-2)+.5)/7;
+    const xp=6+88*columnAnchor, y=back?51:78;
     const p=t.o,lv=t.lv||0, key=t.i+':'+lv+':'+p;
     const side=p===me?'a':p===ai?'b':null;
     if(side)now.add(key);
@@ -303,7 +308,7 @@ function towersHTML(){
     const w=level?SHAPE[level][0]:0;
     if(level&&!built.has(key))buildingRises.set(key,clock);
     const riseAge=clock-(buildingRises.get(key)||0),riseActive=level&&riseAge>=0&&riseAge<700;
-    const b=level?'<g transform="translate(0 78) scale(1.3) translate(0 -78)">'+building(-w/2,level,side,riseActive?' rise':'',riseActive?riseAge:0)+'</g>':'';
+    const b=level?building(-(w+7)/2,level,side,riseActive?' rise':'',riseActive?riseAge:0):'';
     // Owned but not built yet: a foundation plus a small "sold" stake in the owner's colour, so early rounds read too.
     // The stake stands at the pad's right edge so it never covers a plot number behind it.
     const flag=side==='a'?'#f2c457':'#ff777d';
