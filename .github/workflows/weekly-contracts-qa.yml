@@ -20,6 +20,29 @@ jobs:
           node-version: '22'
       - name: Weekly summary unit tests
         run: node skyline-estates/tests/weekly-contracts-summary.cjs
+      - name: Rebuild offline assets in CI and validate generated output
+        run: |
+          python3 skyline-estates/build.py
+          python3 skyline-estates/build.py --check
+          git diff --name-only -- skyline-estates | tee /tmp/skyline-generated-changes.txt
+          python3 - <<'PY'
+          from pathlib import Path
+          changed=set(Path('/tmp/skyline-generated-changes.txt').read_text().splitlines())
+          allowed={'skyline-estates/offline-assets.js','skyline-estates/sw.js'}
+          if not changed.issubset(allowed):
+              raise SystemExit('Unexpected generated changes: '+repr(changed-allowed))
+          if not changed:
+              raise SystemExit('Expected offline asset refresh not found')
+          print('PASS regenerated offline assets:', ', '.join(sorted(changed)))
+          PY
+      - name: Upload generated offline assets for reviewed commit
+        uses: actions/upload-artifact@v4
+        with:
+          name: weekly-contracts-generated-offline
+          path: |
+            skyline-estates/offline-assets.js
+            skyline-estates/sw.js
+          retention-days: 7
       - name: JavaScript syntax
         run: |
           node --check skyline-estates/lib/weekly-contracts-summary.js
