@@ -273,11 +273,18 @@ function savedLine(g){try{const s=g.set||{},city=(CITY_DATA[s.city]||CITY_DATA.l
  return `${mode} · Round ${g.round}${s.mode==='timed'&&of?'/'+of:''}${s.championship||s.duel?'':' · '+city}`}catch(e){return ''}}
 function hdCityPane(T){const saved=loadSave(),c=CITY_DATA[setup.city],C=countryOf(setup.city),sp=spotNow(),S=season(),t=seasonTierNow(),cl=seasonClaimable();
  const showOnline=!(IS_APP&&!FIRE),name=c.name,len=Math.max(5,[...name].length);
+ // Reuse the existing weekly contract state; no second tracker or reward path.
+ let weekLine='';
+ try{
+  const api=window.SkylineWeeklySummary;
+  if(api){const w=api.summary(weekly(),WEEKLY,loc);if(w.total)weekLine=w.completed+' / '+w.total+' weekly contracts';}
+ }catch(e){console.warn('Weekly home summary unavailable',e)}
+
  const main=saved?`<button class="hd-main saved" id="tCont" type="button"><span class="dice" aria-hidden="true"></span><span class="lbl"><b>Continue Match</b><small>${esc(savedLine(saved))}</small></span>${I_ARROW}</button>`
   :`<button class="hd-main" id="qAI" type="button"><span class="dice" aria-hidden="true"></span><span class="lbl"><b>Play Solo</b></span>${I_ARROW}</button>`;
  let card='';
  if(sp){const k=Math.min(SPOT_GOAL,spotCount(sp.id)),R=roofDef(sp.reward),lag=sp.city==='lagos'&&hdLagosArt,ph=lag?hdLagosArt:cityPhoto(sp.city),ready=spotClaimable();
-  card=`<button class="hd-card" id="hdSpot" type="button" aria-label="City Spotlight: ${esc(sp.cityName)}, ${ready?'reward ready to claim':`${k} of ${SPOT_GOAL} matches`}${R?', reward '+esc(R.name):''}"><span class="th" style="${ph?`background-image:url(${ph})${lag?';background-size:430% auto;background-position:3% 86%':''}`:'background:#22325e'}"></span><span class="tx"><small>City Spotlight</small><b>${esc(sp.cityName)}</b><span>${ready?'Reward ready':`${k} / ${SPOT_GOAL} matches`}</span></span><span class="go" aria-hidden="true">${I_ARROW}</span></button>`}
+  card=`<button class="hd-card" id="hdSpot" type="button" aria-label="City Spotlight: ${esc(sp.cityName)}, ${ready?'reward ready to claim':`${k} of ${SPOT_GOAL} matches`}${R?', reward '+esc(R.name):''}"><span class="th" style="${ph?`background-image:url(${ph})${lag?';background-size:430% auto;background-position:3% 86%':''}`:'background:#22325e'}"></span><span class="tx"><small>City Spotlight</small><b>${esc(sp.cityName)}</b><span>${ready?'Reward ready':`${k} / ${SPOT_GOAL} matches`}</span>${weekLine?`<span class="hd-weekly-inline">${esc(weekLine)}</span>`:''}</span><span class="go" aria-hidden="true">${I_ARROW}</span></button>`}
  else{const sn=typeof seasonDisplay==='function'?seasonDisplay(S.n):S.n;
   card=`<button class="hd-card" id="qSeason" type="button" aria-label="Season ${sn}, ${esc(seasonName(S.n))}, tier ${t} of ${TIERS}${cl?', '+cl+' rewards ready':''}"><span class="th" style="background-image:url(${S.n===2?'art/skyline-gala.svg':'art/shop.jpg'})"></span><span class="tx"><small>Season ${sn}</small><b>${esc(seasonName(S.n))}</b><span>${cl?`${cl} reward${cl>1?'s':''} ready`:`Tier ${t} of ${TIERS}`}</span></span><span class="go" aria-hidden="true">${I_ARROW}</span></button>`}
  T.innerHTML=`<div class="hd-stage v2">
