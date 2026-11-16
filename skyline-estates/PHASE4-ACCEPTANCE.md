@@ -48,7 +48,19 @@ Before removing HOLD, the release operator must collect a successful public capa
 
 ## Reuse the existing two test accounts (no new account creation)
 
-The production harness now accepts `COMPETITION_ACCEPTANCE_SESSIONS_FILE` pointing to an **existing local mode-0600 JSON file**. It must contain exactly two distinct authenticated Firebase sessions in the existing harness format (`version:1`, `accounts:[{uid,idToken,refreshToken,expires}, ...]`, `matches:{}`). `expires` is a millisecond epoch timestamp. This file is read and refreshed locally, **never committed or printed**. Use the existing Cloud Shell secure sign-in procedure to obtain sessions for the two approved accounts; the separate Living City allowlist contains email hashes only and is **not** sufficient authentication for competition.
+The production harness now accepts `COMPETITION_ACCEPTANCE_SESSIONS_FILE` pointing to an **existing local mode-0600 JSON file**. It must contain exactly two distinct authenticated Firebase sessions in the existing harness format (`version:1`, `accounts:[{uid,idToken,refreshToken,expires}, ...]`, `matches:{}`). `expires` is a millisecond epoch timestamp. This file is read and refreshed locally, **never committed or printed**. Obtain sessions for the two approved accounts with the private sign-in procedure below; the separate Living City allowlist contains email hashes only and is **not** sufficient authentication for competition.
+
+### Private sign-in for the two approved QA accounts (Cloud Shell)
+
+The two approved accounts are existing **email-and-password** Firebase accounts. `tools/qa-session-signin.cjs` signs in to them and writes the session file. It uses only `accounts:signInWithPassword` and `accounts:lookup`, never sign-up, so it cannot create an account.
+
+1. Open Cloud Shell in the `eko-estates` project and go to the repository root on this branch.
+2. Run `node skyline-estates/tools/qa-session-signin.cjs`.
+3. Type each account's email and password when asked. The password is hidden; nothing goes on the command line or into shell history.
+4. The tool prints only "signed in", the last four characters of each user ID and whether the email is verified. It writes `~/.skyline-qa/competition-sessions.json` (folder mode 700, file mode 600) and stops without writing if a sign-in fails or both entries are the same account.
+5. Run `export PRIVATE_QA_SESSION_FILE="$HOME/.skyline-qa/competition-sessions.json"`.
+
+Sessions expire after about an hour, but the harness refreshes them with the stored refresh token. Run the tool with `--replace` to sign in again (for example after a password change). Never `cat`, copy or upload the file. Delete it when acceptance is finished: `rm -f "$PRIVATE_QA_SESSION_FILE"`. The offline test `tests/qa-session-signin.cjs` covers this tool in CI against a local mock service.
 
 With authorized Cloud Shell access, a release operator may run:
 

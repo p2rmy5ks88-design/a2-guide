@@ -358,6 +358,10 @@ jobs:
         if: (matrix.engine != 'webkit' || steps.wk.outcome == 'success')
         timeout-minutes: 2
         run: node skyline-estates/tests/competition-acceptance-preflight.cjs
+      - name: "QA session sign-in tool (offline mock)"
+        if: (matrix.engine != 'webkit' || steps.wk.outcome == 'success')
+        timeout-minutes: 2
+        run: node skyline-estates/tests/qa-session-signin.cjs
       - name: "Visual: competition-match"
         if: (matrix.engine != 'webkit' || steps.wk.outcome == 'success')
         timeout-minutes: 5
