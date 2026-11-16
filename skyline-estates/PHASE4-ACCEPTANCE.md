@@ -52,7 +52,7 @@ The production harness now accepts `COMPETITION_ACCEPTANCE_SESSIONS_FILE` pointi
 
 ### Private sign-in for the two approved QA accounts (Cloud Shell)
 
-The two approved accounts are existing **email-and-password** Firebase accounts. `tools/qa-session-signin.cjs` signs in to them and writes the session file. It uses only `accounts:signInWithPassword` and `accounts:lookup`, never sign-up, so it cannot create an account.
+Use the two approved Firebase accounts with email/password enabled. An existing account that uses Sign in with Apple can use the app’s **Link email** option to add email/password to that same account. `tools/qa-session-signin.cjs` signs in to them and writes the session file. It uses only `accounts:signInWithPassword` and `accounts:lookup`, never sign-up, so it cannot create an account.
 
 1. Open Cloud Shell in the `eko-estates` project and go to the repository root on this branch.
 2. Run `node skyline-estates/tools/qa-session-signin.cjs`.
@@ -66,9 +66,11 @@ With authorized Cloud Shell access, a release operator may run:
 
 ```sh
 chmod 600 "$PRIVATE_QA_SESSION_FILE"
+npm --prefix skyline-estates/competition-functions install --ignore-scripts --no-package-lock --no-audit --no-fund --omit=dev
+
 COMPETITION_ACCEPTANCE_SESSIONS_FILE="$PRIVATE_QA_SESSION_FILE" \
   COMPETITION_PRODUCTION_ACCEPT=1 \
   node skyline-estates/tests/competition-production.cjs
 ```
 
-When the environment variable is supplied, missing/invalid/incomplete session files fail closed and the script **will not create anonymous accounts**. Do not paste credentials, tokens, or private session files into GitHub, chat, logs or CI artifacts. The test still writes legitimate QA match and ranking records to production; obtain authorization and review cleanup/retention first. The default script behavior without the variable remains unchanged for backward compatibility. No production test was executed as part of this PR.
+When the environment variable is supplied, missing/invalid/incomplete session files fail closed and the script **will not create anonymous accounts**. Do not paste credentials, tokens, or private session files into GitHub, chat, logs or CI artifacts. The database probes use the installed Firebase SDK over a WebSocket-only connection, which keeps the Firebase ID token out of request URLs. The test writes QA match and ranking records to production; obtain authorization and review cleanup/retention first. The default script behavior without the variable remains unchanged for backward compatibility. No production test was executed as part of this PR.
