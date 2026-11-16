@@ -30,8 +30,10 @@ jobs:
           from pathlib import Path
           html=Path('skyline-estates/game.html').read_text()
           home=Path('skyline-estates/home-redesign.js').read_text()
-          assert html.count('<script src="./lib/weekly-contracts-summary.js"></script>') == 1
-          assert html.index('<script src="./lib/weekly-contracts-summary.js"></script>') < html.index('<script src="./home-redesign.js"></script>')
+          assert '<script src="./lib/weekly-contracts-summary.js"></script>' not in html
+          assert '<script src="./home-redesign.js"></script>' in html
+          assert "helper.src='./lib/weekly-contracts-summary.js'" in home
+          assert "helper.onload=" in home
           assert "api.summary(weekly(),WEEKLY,loc)" in home
           assert "hd-weekly-inline" in home
           assert "homeTab('spotlight')" in home
