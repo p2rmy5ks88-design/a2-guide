@@ -34,5 +34,26 @@
   return modalBefore.apply(this,[options]);
  };
  const st=document.createElement('style');st.textContent='.rt-card{display:grid;gap:3px;margin:4px 0 8px;padding:9px 12px;border-radius:12px;border:1px solid #c9a85a;background:linear-gradient(180deg,#123049,#0b2131);color:#f2f5f7}.rt-card b{font-size:17px;color:#f4d28b}.rt-card small{font-size:12.5px;color:#cfe0e7;line-height:1.4}.rt-card.no{border-color:#8a6b4a}.rt-card.no b{color:#ffd59a}.stand div:first-child{color:#f4d28b!important}.stand div:first-child span{color:inherit}html.light .stand div:first-child{color:#5a4108!important}.xpcard .xprow,.xpcard .xprow span{color:#304a60!important;font-weight:700}';document.head.append(st);
+ // Short landscape screens: keep four standings visible above the sticky action footer.
+ const compact=document.createElement('style');compact.textContent=`
+ @media (orientation:landscape) and (max-height:520px){
+  .mp.endres{gap:5px;padding-top:9px;padding-bottom:9px;max-height:calc(100dvh - 12px);overflow-y:auto;overscroll-behavior:contain}
+  .mp.endres>.mh{font-size:clamp(17px,3.5vh,22px);line-height:1.1;margin:0}
+  .mp.endres>.rt-card{margin:0 0 2px;padding:5px 10px;gap:1px}
+  .mp.endres>.rt-card b{font-size:15px;line-height:1.15}
+  .mp.endres>.rt-card small{font-size:11px;line-height:1.2}
+  .mp.endres .endgrid{gap:8px}
+  .mp.endres .endgrid>div{gap:3px}
+  .mp.endres .stand{gap:3px}
+  .mp.endres .stand>div{padding:3px 7px;min-height:34px;gap:5px;grid-template-columns:22px 27px minmax(0,1fr) auto}
+  .mp.endres .stand i{width:26px;height:26px;font-size:14px}
+  .mp.endres .stand em{font-size:15px}
+  .mp.endres .stand span{min-width:0}
+  .mp.endres .hls{gap:3px}
+  .mp.endres .hls>div{padding-top:3px;padding-bottom:3px}
+  .mp.endres>.mbar{flex:none;position:sticky;bottom:-9px;margin:0 -16px -9px;padding:7px 16px max(9px,env(safe-area-inset-bottom,0px))}
+  .mp.endres>.mbar .btn{min-height:44px}
+ }
+ `;document.head.append(compact);
  window.SkylineResultTrophies=Object.freeze({last:()=>last&&{reason:last.reason,trophies:last.result?.tr??null}});
 })();
