@@ -20,7 +20,9 @@ Existing implementations, **not new feature requests**:
 - [ ] Review the enabled web UI against the live function capabilities and consent behavior (including sign-in failure, privacy opt-out, disabled/unavailable service).
 - [ ] Validate that legacy device-reported rankings are clearly distinct from server-verified rankings; verify friend links never imply trusted scores.
 - [ ] Run Chromium and WebKit 844×390 and 844×320 screenshots; check all tabs, controls, safe areas and landscape overlays.
-- [ ] Check public capabilities endpoint status, origin restrictions and failure modes without credentials or mutations.
+- [ ] Check public capabilities endpoint status, origin restrictions and failure modes without credentials or mutations. Initial external read-only request was not accessible through the available web gateway; **no live status claim is made**.
+- [x] Static review: `compose.cjs` restricts CORS to the GitHub Pages origin and local/native origins, requires bearer authentication on POST competition routes, and exposes only GET capabilities publicly. These are source-code findings, not deployed-service verification.
+- [x] Static review: `verified.js` labels casual scores as ineligible for verified rankings, requires session auth, and uses server-scored match ingest; `social.js` marks manual friend results as device reports.
 - [ ] Execute existing isolated service, transaction, match, social and regression suites on the final branch.
 - [ ] With explicitly authorized private release-test identities only: complete two-account production acceptance per `competition-functions/DEPLOY.md`, including reconnect, duplicate ingest, ranking opt-out and community receipts.
 - [ ] Review rate limiting, abuse controls and operational monitoring limitations before release.
