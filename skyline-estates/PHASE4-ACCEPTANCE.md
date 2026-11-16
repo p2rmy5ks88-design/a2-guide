@@ -19,7 +19,7 @@ Existing implementations, **not new feature requests**:
 - [x] Confirm Phase 3 main branch Pages/iOS/Android/Desktop builds succeeded.
 - [ ] Review the enabled web UI against the live function capabilities and consent behavior (including sign-in failure, privacy opt-out, disabled/unavailable service).
 - [ ] Validate that legacy device-reported rankings are clearly distinct from server-verified rankings; verify friend links never imply trusted scores.
-- [ ] Complete manual Chromium and WebKit visual review across all requested sizes. Existing dual-engine tests pass touch reachability; WebKit 844×390 captured community and friend-result screenshots were manually inspected from artifact `skyline-visual-webkit` (run 43862503320): text is readable and actions are not visibly obscured at the captured scroll position. Other screenshots and states remain unreviewed.
+- [ ] Complete manual Chromium and WebKit visual review across all requested sizes. Existing dual-engine tests pass touch reachability; WebKit 844×390 captured community and friend-result screenshots were manually inspected from artifact `skyline-visual-webkit` (run 43862503320): text is readable and actions are not visibly obscured at the captured scroll position. Chromium 844×390 comparison/community screenshots were also inspected: bottom navigation remains visible and action buttons have accessible touch area at the captured scroll positions. The top of the cards is outside the viewport due to scroll position, so these screenshots do not prove complete-page layout or smaller viewport behavior. Remaining states/sizes require review.
 - [ ] Check public capabilities endpoint status, origin restrictions and failure modes without credentials or mutations. Initial external read-only request was not accessible through the available web gateway; **no live status claim is made**.
 - [x] Static review: `compose.cjs` restricts CORS to the GitHub Pages origin and local/native origins, requires bearer authentication on POST competition routes, and exposes only GET capabilities publicly. These are source-code findings, not deployed-service verification.
 - [x] Static review: `verified.js` labels casual scores as ineligible for verified rankings, requires session auth, and uses server-scored match ingest; `social.js` marks manual friend results as device reports.
@@ -30,3 +30,12 @@ Existing implementations, **not new feature requests**:
 
 ## Known evidence limits
 Source code and green CI do not establish that production Firebase is healthy, that two real authenticated sessions complete matches, or that browser controls are usable on a physical iPhone. The opt-in production harness is intentionally not part of normal CI. A server-verified badge is decorative; no wallet payout is authorized. Production status must be reported separately from local/CI acceptance.
+
+## Browser artifact evidence (initial PR run 43862503320)
+
+| Engine | Casual social checks | Mock verified checks | Browser errors | Artifacts |
+|---|---:|---:|---:|---|
+| Chromium | 29 | 10 | 0 | `skyline-visual-chromium` |
+| WebKit | 29 | 10 | 0 | `skyline-visual-webkit` |
+
+Both reports have no failure field. Captured comparison and community screenshots were manually inspected at their recorded scroll positions; no obvious bottom dock obstruction was observed. This is **not** evidence of authenticated production matches, complete page visibility, or physical Safari acceptance.
