@@ -1,6 +1,6 @@
 # Weekly contracts home summary — integration checklist
 
-The read-only summary and responsive button renderer are available in `lib/weekly-contracts-summary.js`, but are **not loaded or mounted** in production yet.
+The read-only summary and responsive button renderer are available in `lib/weekly-contracts-summary.js`, and are loaded from the cinematic home renderer on this branch. The standalone button mount is not used: the existing Spotlight card displays the weekly count.
 
 ## Existing game source
 - `game.html` defines `WEEKLY`, `weekly()`, `weekNo()`, `weeklyAdd()` around lines 4805–4813.
@@ -8,12 +8,11 @@ The read-only summary and responsive button renderer are available in `lib/weekl
 - `paneSpotlight(T)` around line 7578 already renders the full weekly contract list and is reachable with `homeTab('spotlight')`.
 - `paneP(T)` around line 5364 is later wrapped by the existing Spotlight banner around line 7620, and the separate `home-redesign.js` script is loaded after boot. Any home integration must be compatible with that override.
 
-## Suggested production wiring (after QA)
-1. Load `lib/weekly-contracts-summary.js` after the home redesign script.
-2. Use a tiny adapter inside `game.html` (where existing lexical `WEEKLY` and `weekly()` are accessible), calling `SkylineWeeklySummary.mount(host, weekly(), WEEKLY, loc, ()=>homeTab('spotlight'))`.
-3. Place the button in a verified unobstructed home-screen container. Do not append blindly to the existing Spotlight banner; inspect iPhone landscape first.
-4. Ensure it is rendered only once after navigation/re-render, with no stale DOM references.
-5. Verify light mode, reduced viewport height, touch target and screen-reader label.
+## Current branch wiring
+1. The protected `game.html` is identical to `main`; no audited hash update is needed.
+2. `home-redesign.js` loads the display-only helper asynchronously and refreshes the home pane after it loads.
+3. The weekly completion count appears inside the existing Spotlight card. Its click handler still opens `homeTab('spotlight')`.
+4. No extra floating panel is created; the unused `mount()` helper is available for later design experiments.
 
 ## QA and release gate
 - Execute `node skyline-estates/tests/weekly-contracts-summary.cjs`.
