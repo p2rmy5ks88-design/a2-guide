@@ -288,7 +288,8 @@ function towersHTML(){
     // Side columns hold two streets each: the upper one goes in the back row.
     const [pr,pc]=POS(t.i),back=pr===1||(pc===1&&pr===2)||(pc===9&&pr===3);
     // Horizontal position as a share of the centre width (the centre spans board columns 2–8).
-    const xp=pc===1?2.2:pc===9?97.8:((pc-2)+.5)/7*100, y=back?59:78;
+    // The back row sits high enough that its number clears the front-row pad below it.
+    const xp=pc===1?2.2:pc===9?97.8:((pc-2)+.5)/7*100, y=back?51:78;
     const p=t.o,lv=t.lv||0, key=t.i+':'+lv+':'+p;
     const side=p===me?'a':p===ai?'b':null;
     if(side)now.add(key);
@@ -303,7 +304,11 @@ function towersHTML(){
     if(level&&!built.has(key))buildingRises.set(key,clock);
     const riseAge=clock-(buildingRises.get(key)||0),riseActive=level&&riseAge>=0&&riseAge<700;
     const b=level?'<g transform="translate(0 78) scale(1.3) translate(0 -78)">'+building(-w/2,level,side,riseActive?' rise':'',riseActive?riseAge:0)+'</g>':'';
-    const foundation=side&&!level?'<path d="M-12 76 L0 71 L12 76 L0 81Z" fill="'+fill+'" opacity=".8"/>':'';
+    // Owned but not built yet: a foundation plus a small "sold" stake in the owner's colour, so early rounds read too.
+    // The stake stands at the pad's right edge so it never covers a plot number behind it.
+    const flag=side==='a'?'#f2c457':'#ff777d';
+    const foundation=side&&!level?'<path d="M-12 76 L0 71 L12 76 L0 81Z" fill="'+fill+'" opacity=".8"/>'+
+      '<g class="hr-stake"><path d="M8 76 V58" stroke="#e9e2d0" stroke-width="1.6" stroke-linecap="round"/><path d="M8.8 58.5 h10 l-3 4 l3 4 h-10Z" fill="'+flag+'" stroke="rgba(5,9,24,.45)" stroke-width=".6"/></g>':'';
     (back?plotsBack:plots).push('<svg class="hr-pl'+(back?' bk':'')+'" viewBox="-30 -40 60 140" preserveAspectRatio="xMidYMax meet" style="left:'+xp.toFixed(2)+'%" aria-hidden="true"><g class="hr-plot'+(claimActive?' changed':'')+'" style="'+(claimActive?'animation-delay:-'+claimAge+'ms':'')+'" data-plot="'+t.i+'" data-owner="'+(side||'neutral')+'" data-level="'+level+'" transform="translate(0 '+(y-78)+')">'+pad+foundation+b+'</g></svg>');
   });
   built=now;plotOwners=nextOwners;
