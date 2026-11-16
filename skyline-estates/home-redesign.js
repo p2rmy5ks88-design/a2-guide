@@ -317,6 +317,14 @@ function hdCityPane(T){const saved=loadSave(),c=CITY_DATA[setup.city],C=countryO
 /* ---------- wiring ---------- */
 // Inline within the existing Spotlight card: no second floating home panel.
 {const st=document.createElement('style');st.textContent='#title .hd-stage.v2 .hd-card .hd-weekly-inline{font:700 max(10px,calc(1.05*var(--hd-u)))/1.1 var(--body,system-ui,sans-serif);color:#f2cf78;letter-spacing:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}@media(max-height:500px) and (orientation:landscape){#title .hd-stage.v2 .hd-card .hd-weekly-inline{font-size:10px}}';document.head.append(st)}
+// Load the display-only helper without modifying the protected game.html source.
+if(!window.SkylineWeeklySummary){
+ const helper=document.createElement('script');
+ helper.src='./lib/weekly-contracts-summary.js';
+ helper.onload=()=>{try{if(!document.querySelector('#title .hd-weekly-inline')&&setup.tab==='play'&&document.querySelector('#title .hd-stage'))homeTab('play')}catch(e){console.warn('Weekly home refresh',e)}};
+ helper.onerror=()=>console.warn('Weekly contracts summary helper unavailable');
+ document.head.append(helper);
+}
 const priorHomeTab=homeTab;
 homeTab=function(k){const r=priorHomeTab.apply(this,arguments);try{const home=document.querySelector('#title .home');if(home){const city=setup.tab==='play';home.classList.toggle('hd-on',city);hdBackground(city);hdDock();hdHeader(city)}}catch(e){console.error(e)}return r};
 const priorPaneP=paneP;
