@@ -29,5 +29,18 @@
    '<span class="swc-bars" aria-hidden="true">'+data.entries.map(e=>'<i style="width:'+Math.round(100*e.progress/e.goal)+'%"></i>').join('')+'</span>'+
    '<span class="swc-hint">'+(data.entries.find(e=>!e.done)?escapeHTML(data.entries.find(e=>!e.done).title):'All weekly contracts complete')+'</span>';
  }
- return Object.freeze({summary,markup});
+ function mount(container,week,definitions,localize,navigate){
+  if(!container||!container.ownerDocument||typeof navigate!=='function')throw Error('Weekly summary mount needs container and navigation');
+  const data=summary(week,definitions,localize);
+  if(!data.total)return null;
+  const doc=container.ownerDocument;
+  let style=doc.getElementById('sky-weekly-summary-css');
+  if(!style){style=doc.createElement('style');style.id='sky-weekly-summary-css';style.textContent='.swc-home{display:flex;flex-direction:column;gap:4px;min-width:0;max-width:320px;width:100%;padding:9px 12px;border-radius:12px;border:1px solid #c9a75a88;background:#0c2436ee;color:#f6f1df;text-align:left;cursor:pointer;font:600 11px/1.25 system-ui,sans-serif}.swc-home:focus-visible{outline:3px solid #fff;outline-offset:2px}.swc-title{font-weight:800;font-size:12px;color:#f2cf78}.swc-count{font-size:11px}.swc-bars{display:flex;gap:4px}.swc-bars:empty{display:none}.swc-bars i{display:block;height:4px;max-width:100%;border-radius:4px;background:#f2c457;min-width:2px}.swc-hint{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#d4e0ea}@media(max-height:500px) and (orientation:landscape){.swc-home{max-width:230px;padding:6px 9px}.swc-hint{display:none}}';doc.head.append(style);}
+  const button=doc.createElement('button');button.type='button';button.className='swc-home';button.setAttribute('aria-label','Weekly contracts, '+data.completed+' of '+data.total+' complete. View contracts');
+  button.innerHTML=markup(data);
+  button.addEventListener('click',navigate);
+  container.append(button);
+  return button;
+ }
+ return Object.freeze({summary,markup,mount});
 });
