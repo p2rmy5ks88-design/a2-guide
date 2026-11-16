@@ -4,6 +4,7 @@ on:
     paths:
       - 'skyline-estates/lib/weekly-contracts-summary.js'
       - 'skyline-estates/tests/weekly-contracts-summary.cjs'
+      - 'skyline-estates/tests/weekly-home-landscape-browser.cjs'
       - 'skyline-estates/home-redesign.js'
       - 'skyline-estates/game.html'
       - '.github/workflows/weekly-contracts-qa.yml'
@@ -62,3 +63,30 @@ jobs:
           assert "homeTab('spotlight')" in home
           print('PASS existing weekly wiring')
           PY
+
+  landscape-visual:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install existing browser test dependencies
+        run: npm install --prefix skyline-estates/tests --no-audit --no-fund
+      - name: Check generated offline assets
+        run: python3 skyline-estates/build.py --check
+      - name: Verify weekly summary in phone landscape and capture screenshots
+        env:
+          CHROME_PATH: /usr/bin/google-chrome
+          WEEKLY_VISUAL_DIR: ${{ runner.temp }}/weekly-home
+        run: node skyline-estates/tests/weekly-home-landscape-browser.cjs
+      - name: Upload landscape screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: weekly-home-landscape-screenshots
+          path: ${{ runner.temp }}/weekly-home/*.png
+          if-no-files-found: warn
