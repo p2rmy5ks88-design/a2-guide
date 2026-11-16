@@ -8,6 +8,15 @@ const BASE='https://europe-west1-eko-estates.cloudfunctions.net/skylineCompetiti
 const configFile=path.resolve(__dirname,'../../eko-estates/firebase-config.js'),configSource=fs.existsSync(configFile)?fs.readFileSync(configFile,'utf8'):require('node:child_process').execFileSync('git',['show','HEAD:eko-estates/firebase-config.js'],{cwd:path.resolve(__dirname,'../..'),encoding:'utf8'});const KEY=/apiKey:\s*"([^"]+)"/.exec(configSource)?.[1];if(!KEY)throw Error('Public Firebase web configuration missing');
 const privateFile=process.env.COMPETITION_ACCEPTANCE_SESSIONS_FILE?path.resolve(process.env.COMPETITION_ACCEPTANCE_SESSIONS_FILE):path.join(os.tmpdir(),'skyline-competition-acceptance-private.json'),reuseExisting=!!process.env.COMPETITION_ACCEPTANCE_SESSIONS_FILE,out=process.env.RUNNER_TEMP||path.resolve(__dirname,'../test-results');
 const report={production:true,started:new Date().toISOString(),checks:[],matches:[],physicalIPhone:false};let state={version:1,accounts:[],matches:{}};
+// Validate explicitly supplied sessions before making any production HTTP request.
+// The operator must supply an already-authenticated, private pair of accounts.
+if(reuseExisting){
+ if(!fs.existsSync(privateFile))throw Error('Existing test-session file not found; refusing to create accounts');
+ const stat=fs.statSync(privateFile);
+ if(!stat.isFile()||(stat.mode&0o077)!==0)throw Error('Private acceptance session file must be a regular file with mode 0600');
+ const supplied=JSON.parse(fs.readFileSync(privateFile,'utf8'));
+ if(supplied.version!==1||!Array.isArray(supplied.accounts)||supplied.accounts.length!==2||supplied.accounts.some(a=>!a.uid||!a.idToken||!a.refreshToken||!Number.isFinite(a.expires))||supplied.accounts[0].uid===supplied.accounts[1].uid)throw Error('Existing sessions must contain two distinct authenticated Firebase sessions with refresh tokens and expiry');
+}
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));let lastMutation=0;
 const check=(n,v)=>{assert.ok(v,n);report.checks.push(n);console.log('PASS production',n)};
 function save(){fs.writeFileSync(privateFile,JSON.stringify(state),{mode:0o600});fs.chmodSync(privateFile,0o600)}
