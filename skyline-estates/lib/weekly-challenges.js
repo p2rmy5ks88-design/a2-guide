@@ -1,6 +1,7 @@
 /* Skyline Estates weekly challenge foundation.
  * Pure logic: no wallet mutations, network access, UI changes or game-rule hooks.
- * Integrators must award rewards through the existing trusted reward pathway.
+ * Event IDs are best-effort local deduplication, NOT a security boundary.
+ * Integrators must validate events and award rewards through a trusted atomic pathway.
  */
 (function(root,factory){
   const api=factory();
@@ -20,7 +21,7 @@
     const d=new Date(time),day=d.getUTCDay(),midnight=Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate());
     return midnight-((day+6)%7)*DAY;
   }
-  function fresh(time){return {version:1,week:weekStart(time),counts:{matches:0,properties:0,duel:0},claimed:[]};}
+  function fresh(time){return {version:1,week:weekStart(time),counts:{matches:0,properties:0,duel:0},claimed:[],seen:[]};}
   function normalize(value,time){
     const base=fresh(time);
     if(!value||value.version!==1||value.week!==base.week)return base;
@@ -28,12 +29,16 @@
       const n=value.counts&&value.counts[o.id];
       if(Number.isSafeInteger(n)&&n>=0)base.counts[o.id]=Math.min(n,o.target);
     }
+    if(Array.isArray(value.seen))base.seen=value.seen.filter(x=>typeof x==='string'&&x.length>0&&x.length<=128).slice(-2048);
     if(Array.isArray(value.claimed))base.claimed=OBJECTIVES.filter(o=>value.claimed.includes(o.id)&&base.counts[o.id]===o.target).map(o=>o.id);
     return base;
   }
   function record(value,event,time){
     const state=normalize(value,time);
-    if(!event||typeof event!=='object'||event.eligible!==true)return state;
+    if(!event||typeof event!=='object'||event.eligible!==true||typeof event.id!=='string'||!event.id||event.id.length>128||state.seen.includes(event.id))return state;
+    if(!OBJECTIVES.some(o=>o.event===event.type))return state;
+    state.seen.push(event.id);
+    if(state.seen.length>2048)state.seen.shift();
     for(const o of OBJECTIVES)if(o.event===event.type&&state.counts[o.id]<o.target)state.counts[o.id]++;
     return state;
   }
