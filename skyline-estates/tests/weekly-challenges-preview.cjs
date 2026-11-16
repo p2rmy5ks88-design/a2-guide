@@ -1,0 +1,18 @@
+const assert=require('node:assert/strict');
+const W=require('../lib/weekly-challenges.js');
+const UI=require('../lib/weekly-challenges-preview.js');
+const now=Date.parse('2026-11-16T12:00:00Z');
+const state=W.fresh(now);
+const markup=UI.format(W.view(state,now));
+assert.match(markup,/Weekly Challenges/);
+assert.match(markup,/Preview · rewards not active/);
+assert.equal((markup.match(/role="progressbar"/g)||[]).length,3);
+assert.match(markup,/aria-valuenow="0"/);
+assert.doesNotMatch(markup,/<button/);
+const html=UI.format({objectives:[{title:'<script>alert(1)</script>',target:5,progress:999,completed:true,claimed:false}]});
+assert.doesNotMatch(html,/<script>/);
+assert.match(html,/&lt;script&gt;/);
+assert.match(html,/aria-valuenow="5"/);
+assert.match(html,/width:100%/);
+assert.throws(()=>UI.format(null));
+console.log('PASS weekly preview: 9 assertions');
