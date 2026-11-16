@@ -45,3 +45,18 @@ Both reports have no failure field. Captured comparison and community screenshot
 **Current decision: HOLD for verified competition production acceptance; no TestFlight submission or backend mutation.** A direct read-only capabilities request through the available web gateway returned an access error, which cannot distinguish a network restriction from a service issue. The authorized two-account production harness has not run. No production credentials or test identities are stored in this PR.
 
 Before removing HOLD, the release operator must collect a successful public capabilities response from the actual deployment, run the opt-in production harness with two explicitly authorized test accounts, confirm results and privacy opt-out, and attach a sanitized acceptance summary. If the live endpoint is unavailable, keep the existing casual/offline experience intact and investigate service health without altering production data.
+
+## Reuse the existing two test accounts (no new account creation)
+
+The production harness now accepts `COMPETITION_ACCEPTANCE_SESSIONS_FILE` pointing to an **existing local mode-0600 JSON file**. It must contain exactly two distinct authenticated Firebase sessions in the existing harness format (`version:1`, `accounts:[{uid,idToken,refreshToken,expires}, ...]`, `matches:{}`). `expires` is a millisecond epoch timestamp. This file is read and refreshed locally, **never committed or printed**. Use the existing Cloud Shell secure sign-in procedure to obtain sessions for the two approved accounts; the separate Living City allowlist contains email hashes only and is **not** sufficient authentication for competition.
+
+With authorized Cloud Shell access, a release operator may run:
+
+```sh
+chmod 600 "$PRIVATE_QA_SESSION_FILE"
+COMPETITION_ACCEPTANCE_SESSIONS_FILE="$PRIVATE_QA_SESSION_FILE" \
+  COMPETITION_PRODUCTION_ACCEPT=1 \
+  node skyline-estates/tests/competition-production.cjs
+```
+
+When the environment variable is supplied, missing/invalid/incomplete session files fail closed and the script **will not create anonymous accounts**. Do not paste credentials, tokens, or private session files into GitHub, chat, logs or CI artifacts. The test still writes legitimate QA match and ranking records to production; obtain authorization and review cleanup/retention first. The default script behavior without the variable remains unchanged for backward compatibility. No production test was executed as part of this PR.
