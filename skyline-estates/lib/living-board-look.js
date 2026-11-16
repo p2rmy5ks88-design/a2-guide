@@ -5,6 +5,7 @@
    - A small district symbol in each street's colour band (helps colour-blind players).
    - Tokens on a corner square spread further apart.
    - On landscape phones the board is centred between the player list and the tool buttons.
+   - The Skyline FM track name stays on one line on short landscape screens.
    Nothing here touches rules, money, saves, ownership logic, board geometry or online play. */
 (function(){'use strict';
 if(typeof applyTheme!=='function'||typeof updateCell!=='function')return;
@@ -106,6 +107,13 @@ function aimShift(){shiftGoal=freeShift()}
 {const _cu=camUpdate;camUpdate=function(dt){const r=_cu.apply(this,arguments);try{if(!$('#title').hidden)shiftGoal=0;const k=1-Math.exp(-(dt||0)*4);CAMV.shift+=(shiftGoal-CAMV.shift)*k;if(Math.abs(CAMV.shift)<1e-4&&!shiftGoal)CAMV.shift=0}catch(e){}return r}}
 addEventListener('resize',()=>setTimeout(aimShift,60));
 
+/* ---------- Skyline FM pill on short landscape screens ---------- */
+// A long track name wrapped the pill to three lines (about 51 px) so it covered the last player card's ownership
+// chips. On short landscape screens the track name stays on one line with an ellipsis; the full name is in the
+// pill's title. The station label, tap target and position are unchanged.
+{const st=document.createElement('style');st.textContent='@media (orientation:landscape) and (max-height:520px){#radio .rl .rt{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}#radio .rl{min-width:0}}';document.head.append(st);
+ if(typeof renderRadioPill==='function'){const _rp=renderRadioPill;renderRadioPill=function(){const r=_rp.apply(this,arguments);try{const p=$('#radio'),rl=p&&p.querySelector('.rl');
+  if(rl&&!rl.querySelector('.rt')){const t=[...rl.childNodes].filter(n=>n.nodeType===3&&n.textContent.trim());if(t.length){const sp=document.createElement('span');sp.className='rt';sp.textContent=t.map(n=>n.textContent).join('');t.forEach(n=>n.remove());rl.append(sp);p.title=sp.textContent}}}catch(e){}return r}}}
 // Redraw the board texture once so the district symbols appear, and apply the current light.
 try{if(typeof CUR_THEME!=='undefined')applyTheme(CUR_THEME)}catch(e){}
 window.SkylineBoardLook={mode:lookMode,refreshShadows,freeShift};

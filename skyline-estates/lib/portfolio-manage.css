@@ -84,4 +84,14 @@ html.light .pfm .pfm-pips i.on{background:#2fa35a}html.light .pfm .pfm-pips i.to
  .pfm .pfm-tabs button{padding-left:11px;padding-right:11px}
  .pfm .pfm-list{gap:4px}
  .pfm .pfm-group{margin-top:2px}
+ /* The status note sits under the street details beside the actions instead of on its own full-width line,
+    so each row loses a text line; action buttons keep their size. */
+ .pfm .pfm-row{padding-top:4px;padding-bottom:4px;row-gap:1px}
+ .pfm .pfm-info{gap:1px}.pfm .pfm-info small{line-height:1.25}
+ .pfm .pfm-stats span{align-self:center}
+}
+/* Only where the details column is wide enough for the note to stay on one or two short lines (not iPhone SE). */
+@media (orientation:landscape) and (max-height:520px) and (min-width:760px){
+ .pfm .pfm-row>.pfm-acts{grid-column:2;grid-row:1/span 2;align-self:center}
+ .pfm .pfm-row>.pfm-why{grid-column:1;grid-row:2;font-size:11.5px;line-height:1.25}
 }

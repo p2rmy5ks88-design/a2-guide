@@ -52,7 +52,8 @@
   .mp.endres .hls{gap:3px}
   .mp.endres .hls>div{padding-top:3px;padding-bottom:3px}
   .mp.endres>.mbar{flex:none;position:sticky;bottom:-9px;margin:0 -16px -9px;padding:7px 16px max(9px,env(safe-area-inset-bottom,0px))}
-  .mp.endres>.mbar .btn{min-height:44px}
+  .mp.endres>.mbar .btn{min-height:48px}
+  .mp.endres>.mbar .sh-results-button{margin:0}
  }
  `;document.head.append(compact);
  window.SkylineResultTrophies=Object.freeze({last:()=>last&&{reason:last.reason,trophies:last.result?.tr??null}});
