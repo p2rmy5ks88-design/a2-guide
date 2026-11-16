@@ -31,9 +31,9 @@ jobs:
           allowed={'skyline-estates/offline-assets.js','skyline-estates/sw.js'}
           if not changed.issubset(allowed):
               raise SystemExit('Unexpected generated changes: '+repr(changed-allowed))
-          if not changed:
-              raise SystemExit('Expected offline asset refresh not found')
-          print('PASS regenerated offline assets:', ', '.join(sorted(changed)))
+          if changed:
+              raise SystemExit('Generated assets differ from committed versions: '+repr(changed))
+          print('PASS generated offline assets match committed versions')
           PY
       - name: Upload generated offline assets for reviewed commit
         uses: actions/upload-artifact@v4
