@@ -73,3 +73,15 @@ html.light .ov.pfmov{background:rgba(19,40,74,.28)!important}
 html.light .pfm .pfm-pips i.on{background:#2fa35a}html.light .pfm .pfm-pips i.tower.on{background:#d9a845}
 /* Task 07: portrait phones hid "Mortgaged" and "Missing sets" off the right edge; show all four as a 2×2 grid. */
 @media(max-width:560px){.pfm .pfm-tabs{flex-wrap:wrap;overflow:visible}.pfm .pfm-tabs button{flex:1 1 calc(50% - 6px);justify-content:center}}
+
+/* Compact only the overlay chrome; preserve property text and action target sizes. */
+@media (orientation:landscape) and (max-height:520px){
+ .mp.pf2.pfm{gap:5px;padding:8px 12px;max-height:calc(100dvh - 12px)}
+ .pfm .pfm-top{gap:7px}
+ .pfm .pfm-stats{gap:4px}
+ .pfm .pfm-stats span{padding:3px 8px}
+ .pfm .pfm-tabs{gap:5px}
+ .pfm .pfm-tabs button{padding-left:11px;padding-right:11px}
+ .pfm .pfm-list{gap:4px}
+ .pfm .pfm-group{margin-top:2px}
+}
