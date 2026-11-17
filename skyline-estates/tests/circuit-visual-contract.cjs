@@ -9,11 +9,11 @@ const path=require('node:path');
 const src=fs.readFileSync(path.join(__dirname,'../lib/circuit-renderer-3d.js'),'utf8');
 const rule=fs.readFileSync(path.join(__dirname,'../lib/circuit-rules.js'),'utf8');
 const checks=[
- ['sunlit ocean','deepWater:\'#388EAA\''],
- ['sandstone platform',"g.addColorStop(0,'#FFF0D3')"],
+ ['sunlit ocean','deepWater:\'#21889B\''],
+ ['sandstone platform',"g.addColorStop(0,'#F5DDAC')"],
  ['golden-hour illumination',"DirectionalLight('#FFE3A7',2.45)"],
- ['warm board streets',"color:'#F1E3C8'"],
- ['green civic park',"color:'#75B96E'"],
+ ['warm board streets',"color:'#E2BE94'"],
+ ['green civic park',"color:'#4A9C62'"],
  ['four architectural silhouettes','if(variant===0)'],
  ['civic tower','else if(variant===1)'],
  ['terrace tower','else if(variant===2)'],
