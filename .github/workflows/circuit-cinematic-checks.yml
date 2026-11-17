@@ -1,0 +1,43 @@
+name: Circuit cinematic draft checks
+on:
+  pull_request:
+    paths:
+      - 'skyline-estates/lib/circuit-ui.js'
+      - 'skyline-estates/lib/circuit-screen.js'
+      - 'skyline-estates/lib/circuit-rules.js'
+      - 'skyline-estates/circuit-cinematic-lab.html'
+      - 'skyline-estates/design/circuit-design-v1.json'
+      - 'skyline-estates/tests/circuit-*.cjs'
+      - '.github/workflows/circuit-cinematic-checks.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  cinematic-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check JavaScript syntax
+        run: |
+          node --check skyline-estates/lib/circuit-ui.js
+          node --check skyline-estates/tests/circuit-city-view.cjs
+          node --check skyline-estates/tests/circuit-cinematic-lab.cjs
+          node --check skyline-estates/tests/circuit-city-camera-audit.cjs
+      - name: Run cinematic contract checks
+        run: |
+          node skyline-estates/tests/circuit-city-view.cjs
+          node skyline-estates/tests/circuit-cinematic-lab.cjs
+      - name: Audit all 15 screen classes (report-only)
+        env:
+          CITY_CAMERA_REPORT: cinematic-camera-report.json
+        run: node skyline-estates/tests/circuit-city-camera-audit.cjs
+      - name: Publish camera audit artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: circuit-cinematic-camera-audit
+          path: cinematic-camera-report.json
+          if-no-files-found: ignore
