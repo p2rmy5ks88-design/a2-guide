@@ -43,7 +43,7 @@ function save(){if(window.__circuitBenchAuto||q.get('bench')==='1')return;if(s&&
 function setupScreen(){const saved=store.get(SC.SAVE_KEY),r=saved?SC.restore(saved):null;
  $('#cx-setup').hidden=false;$('#cx-game').hidden=true;
  $('#cx-setup').innerHTML=`<h1>Skyline Circuit <small>playable alpha</small></h1>
- <p class="cx-note">Functional prototype: placeholder board and HUD. Final art, camera and HUD come from the approved design.</p>
+ <p class="cx-note">Playable 3D preview. Explore the city between decisions; return to Strategy View to play. Visual design and iPhone Safari performance are still under review.</p>
  ${r&&r.ok?`<button id="cx-resume" class="cx-primary">Resume match (round ${r.state.round})</button>`:r&&r.reason==='newer-version'?'<p class="cx-warn">A saved Circuit match from a newer version is kept untouched.</p>':''}
  <fieldset><legend>Match length</legend>${['standard','extended','quick'].map(k=>`<label><input type="radio" name="len" value="${k}" ${k===(['standard','extended','quick'].includes(q.get('length'))?q.get('length'):'standard')?'checked':''}> ${esc(LENGTH_TEXT[k])}</label>`).join('')}</fieldset>
  <fieldset><legend>Opponents</legend><label>Computer players <select id="cx-n">${[1,2,3].map(n=>`<option ${n===3?'selected':''}>${n}</option>`).join('')}</select></label>
