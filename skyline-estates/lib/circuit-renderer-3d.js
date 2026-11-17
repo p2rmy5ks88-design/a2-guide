@@ -192,9 +192,16 @@ export function create(canvas,{layout,spec,camera:cam0,tier:tierName=pickTier(),
  const labelLayer=document.createElement('div');labelLayer.className='c3-labels';labelLayer.setAttribute('aria-hidden','true');canvas.parentElement.appendChild(labelLayer);
  // ---------- camera + sizing ----------
  let W=1,Hh=1,scale=1;
+ // Zoom (320 pt fallback): a uniform 2D magnification of the validated projection about `focus` (overview screen
+ // coordinates), exactly SS.zoomed(); folded into the projection matrix so drawing, labels and taps agree.
+ let zoom=null,Cview=null;
+ function setZoom(z){zoom=z?{factor:z.factor,focus:{x:z.focus.x,y:z.focus.y}}:null;setCamera(camNow);if(lastModel)update(lastModel);dirty=true}
  function setCamera(c){camNow={pitch:c.pitch,dist:c.dist};C=SS.camera(G,camNow,rect);const p=camNow.pitch*Math.PI/180;
   camera.position.set(0,C.D*Math.cos(p),C.D*Math.sin(p));camera.up.set(0,Math.sin(p),-Math.cos(p));camera.lookAt(0,0,0);camera.updateMatrixWorld();
-  const A=2*C.scale/W,Ay=2*C.scale/Hh,Bx=2*(C.ox-rect.x)/W-1,By=1-2*(C.oy-rect.y)/Hh,n=C.D*.15,f=C.D*4;
+  let sc=C.scale,ox=C.ox,oy=C.oy;
+  if(zoom){const cx=rect.x+rect.w/2,cy=rect.y+rect.h/2,Z=SS.zoomed(C,zoom.factor,zoom.focus);sc=C.scale*zoom.factor;ox=cx+zoom.factor*(C.ox-zoom.focus.x);oy=cy+zoom.factor*(C.oy-zoom.focus.y);
+   Cview={...C,project:Z.project,ppu:q=>C.ppu(q)*zoom.factor,scale:sc,ox,oy,zoom:{...zoom}}}else Cview=C;
+  const A=2*sc/W,Ay=2*sc/Hh,Bx=2*(ox-rect.x)/W-1,By=1-2*(oy-rect.y)/Hh,n=C.D*.15,f=C.D*4;
   camera.projectionMatrix.set(A,0,-Bx,0, 0,Ay,-By,0, 0,0,-(f+n)/(f-n),-2*f*n/(f-n), 0,0,-1,0);camera.projectionMatrixInverse.copy(camera.projectionMatrix).invert()}
  function resize(r){rect=r;W=Math.max(1,r.w);Hh=Math.max(1,r.h);const dpr=Math.min(window.devicePixelRatio||1,tier.maxScale*scaleK);renderer.setPixelRatio(dpr);renderer.setSize(W,Hh,false);setCamera(camNow);
   labelLayer.style.cssText=`position:fixed;left:${r.x}px;top:${r.y}px;width:${W}px;height:${Hh}px;pointer-events:none;overflow:hidden`}
@@ -224,7 +231,7 @@ export function create(canvas,{layout,spec,camera:cam0,tier:tierName=pickTier(),
   // labels: undeveloped plots ID+price, junctions/events ID, developed none, hidden under tokens, only at the decision camera
   const occupied=new Set(model.tokens.map(t=>t.to==null?t.node:null).filter(Boolean));let html='';const lab=[];
   if(camNow.pitch===0&&!model.hideLabels)for(const n of view.nodes){const st=stages[n.id]??n.stage;if(occupied.has(n.id))continue;if(n.type==='property'&&st>0)continue;
-   const p=C.project({...G.nodes[n.id],z:0}),t=T*C.ppu({...G.nodes[n.id],z:0}),text=n.type==='property'?`${n.id}<br>${n.price}`:n.id;
+   const p=Cview.project({...G.nodes[n.id],z:0}),t=T*Cview.ppu({...G.nodes[n.id],z:0}),text=n.type==='property'?`${n.id}<br>${n.price}`:n.id;
    const y=p.y-rect.y+t*.2;html+=`<span class="c3-l" data-id="${n.id}" style="left:${(p.x-rect.x).toFixed(1)}px;top:${y.toFixed(1)}px">${text}</span>`;lab.push(n.id)}
   labelLayer.innerHTML=html;labelLayer.dataset.labels=lab.join(',');dirty=true}
  // ---------- render ----------
@@ -250,6 +257,6 @@ export function create(canvas,{layout,spec,camera:cam0,tier:tierName=pickTier(),
   const pr=renderer.getPixelRatio(),tm=renderer.toneMapping,cs=renderer.outputColorSpace,cc=renderer.getClearColor(new THREE.Color());renderer.setPixelRatio(1);renderer.toneMapping=THREE.NoToneMapping;renderer.outputColorSpace=THREE.LinearSRGBColorSpace;renderer.setClearColor(0x000000);
   renderer.setRenderTarget(rt);renderer.render(scene,camera);const px=new Uint8Array(4);const res=points.map(pt=>{const x=Math.round(pt.x-rect.x),y=Math.round(Hh-(pt.y-rect.y));if(x<0||y<0||x>=W||y>=Hh)return null;renderer.readRenderTargetPixels(rt,x,y,1,1,px);return{kind:px[0],i:px[1]-1}});
   renderer.setRenderTarget(null);for(const [o,m] of saved){o.material.dispose();o.material=m}for(const o of hidden)o.visible=true;for(const o of reHide)o.visible=false;renderer.setPixelRatio(pr);renderer.toneMapping=tm;renderer.outputColorSpace=cs;renderer.setClearColor(cc);rt.dispose();dirty=true;return res}
- function routeSamples(pos){const out={};for(const via of ['stay','cross']){const pts=routePath(pos,via),res=[];for(let i=1;i<pts.length;i++){const a=pts[i-1],b=pts[i];for(const k of [.3,.5,.7]){const q={x:a.x+(b.x-a.x)*k,y:a.y+(b.y-a.y)*k,z:5.8};res.push(C.project(q))}}out[via]=res}return out}
+ function routeSamples(pos){const out={};for(const via of ['stay','cross']){const pts=routePath(pos,via),res=[];for(let i=1;i<pts.length;i++){const a=pts[i-1],b=pts[i];for(const k of [.3,.5,.7]){const q={x:a.x+(b.x-a.x)*k,y:a.y+(b.y-a.y)*k,z:5.8};res.push(Cview.project(q))}}out[via]=res}return out}
  function stats(){return{tier:tierName,calls:renderer.info.render.calls,triangles:renderer.info.render.triangles,textures:renderer.info.memory.textures,geometries:renderer.info.memory.geometries,pixelRatio:renderer.getPixelRatio(),frameMs:frames.slice(-60)}}
- return{resize,setCamera,update,render,tick,routeSamples,get tier(){return tierName},get camera(){return camNow},get C(){return C},G,projectNode,envelopeReport,idPass,stats,downgrade,renderer,labelLayer,markDirty:()=>{dirty=true}}}
+ return{resize,setCamera,update,render,tick,routeSamples,get tier(){return tierName},get camera(){return camNow},get C(){return Cview},get baseC(){return C},setZoom,get zoom(){return zoom},G,projectNode,envelopeReport,idPass,stats,downgrade,renderer,labelLayer,markDirty:()=>{dirty=true}}}

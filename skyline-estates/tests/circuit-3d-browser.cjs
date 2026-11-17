@@ -24,7 +24,9 @@ const BUDGET={low:{calls:120,triangles:60000},medium:{calls:250,triangles:150000
  const scene=(p,name,tokensAt=null)=>p.evaluate(async([name,tokensAt])=>{const SC=SkylineCircuit;const s=SC.newMatch({seed:2026,length:'standard',fx:true,players:[{name:'You'},{name:'Ada',level:'normal'},{name:'Bo',level:'normal'},{name:'Cy',level:'hard'}]});
   if(name==='skyline'){for(const id of SC.PROPS){const n=SC.NODES.find(x=>x.id===id);s.own[id]={o:n.quadrant,h:4}}}
   if(name==='route'){let g=0;while(!s.over&&g++<20000){const pd=SC.pending(s);if(s.round>=9&&pd.type==='roll'&&pd.player===0)break;SC.act(s,pd.player,SC.ai(s,pd.player))}const lead=[...s.players].sort((a,b)=>b.inf-a.inf)[0];s.clock={pid:lead.id,round:s.round,since:s.round}}
-  if(tokensAt)for(const p of s.players)p.pos=tokensAt;await __circuitUI.load(s);await new Promise(r=>setTimeout(r,250));return !!__circuitUI.r3()},[name,tokensAt]);
+  if(tokensAt)for(const p of s.players)p.pos=tokensAt;await __circuitUI.load(s);await new Promise(r=>setTimeout(r,250));
+  // overview checks: leave the 320 pt fallback zoom (tested separately in circuit-zoom-3d)
+  __circuitUI.overview();await new Promise(r=>setTimeout(r,60));return !!__circuitUI.r3()},[name,tokensAt]);
  // ---------- per-viewport checks ----------
  for(const [id,sc] of Object.entries(D.screens)){const {context,p}=await open(sc,{query:'&quality=medium'});
   assert.ok(await scene(p,'skyline','O0'),id+' 3D renderer active');

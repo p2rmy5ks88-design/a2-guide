@@ -21,7 +21,9 @@ const q=new URLSearchParams(location.search);
 const opts={speed:q.get('speed')||'normal',camera:q.get('camera')||'top',perf:q.get('perf')==='1',career:q.get('career')==='1',renderer:q.get('renderer')||'3d'};
 const reducedMotion=(()=>{try{return matchMedia('(prefers-reduced-motion: reduce)').matches}catch(e){return false}})();
 // 3D renderer (lib/circuit-renderer-3d.js) with the 2D placeholder as fallback when WebGL is unavailable or ?renderer=2d.
-let R3=null,R3tried=false,camCur=null;const CINEMATIC={pitch:15,dist:5};
+let R3=null,R3tried=false,camCur=null;
+// 320 pt fallback (validated in CIRCUIT-ALPHA.md): active whenever overview target spacing is below 44 pt.
+let zf=null,zoom=null,planFocused='';const CINEMATIC={pitch:15,dist:5};
 const tokSvg=(i,sz=12)=>{const c=PLAYERS[i].c,sh=PLAYERS[i].shape;const body=sh==='circle'?'<circle cx="6" cy="6" r="5"/>':sh==='square'?'<rect x="1.5" y="1.5" width="9" height="9"/>':sh==='triangle'?'<path d="M6 .8 11.2 10.6H.8z"/>':'<path d="M11 6 8.5 10.3h-5L1 6l2.5-4.3h5z"/>';return`<svg class="cx-tok" width="${sz}" height="${sz}" viewBox="0 0 12 12" fill="${c}" stroke="#0B1633" stroke-width="1.4" aria-hidden="true">${body}</svg>`};
 const SPEED={normal:{step:170,cross:280,ai:450,hold:900},fast:{step:60,cross:90,ai:120,hold:250},instant:{step:0,cross:0,ai:0,hold:0}};
 let s=null,layout=SC.referenceLayout(),G=SS.geometry(layout),C=null,cam=SS.CAMERAS[opts.camera]||SS.CAMERAS.top,plan='stay';
@@ -54,11 +56,21 @@ let looping=false;
 // ---------- geometry / layout ----------
 function hudRects(){return['#cx-players','#cx-actions'].map(sel=>{const e=$(sel),r=e.getBoundingClientRect();return{id:sel.slice(4),x:r.left,y:r.top,w:r.width,h:r.height}})}
 function boardRect(){const r=$('#cx-board').getBoundingClientRect();return{x:r.left,y:r.top,w:r.width,h:r.height}}
-function resize(){if(R3){R3.resize(boardRect());R3.setCamera(camCur||cam);C=R3.C;dirty=true;return}
+function resize(){if(R3){R3.resize(boardRect());R3.setCamera(camCur||cam);
+  // decide the fallback from the measured overview spacing at the decision camera
+  if(!camCur||camCur.pitch===cam.pitch){const base=R3.baseC,t=SS.touch(G,base).minCentreDistance;zf=t<SS.MIN_TOUCH?{factor:Math.max(1,Math.ceil(SS.MIN_TOUCH/t*1.05*20)/20),overview:t}:null;
+   if(!zf&&zoom){zoom=null;R3.setZoom(null)}else if(zoom)setZoomFocus(zoom.focus)}
+  C=R3.C;dirty=true;return}
  const cv=$('#cx-board'),r=boardRect(),dpr=Math.min(2,window.devicePixelRatio||1);cv.width=Math.round(r.width||r.w)*dpr;cv.height=Math.round(r.height||r.h)*dpr;
  const rect=boardRect();C=SS.camera(G,cam,rect);dirty=true}
+function setZoomFocus(f){if(!R3||!zf)return;const base=R3.baseC;zoom={factor:zf.factor,focus:SS.clampFocus(base,G,zf.factor,f)};R3.setZoom(zoom);C=R3.C;dirty=true;render()}
+function overview(){if(!R3)return;zoom=null;R3.setZoom(null);C=R3.C;dirty=true;render()}
+// Route decision focus: centre between the token and its first junction (validated for all 32 positions).
+function planFocus(){if(!zf||!s)return;const me=s.players[s.turn];let at=me.pos,k=0;while(k<12&&SC.NODES.find(n=>n.id===at).type!=='junction'){at=SC.next(at);k++}
+ const base=R3.baseC,a=base.project({...G.nodes[me.pos],z:0}),j=base.project({...G.nodes[at],z:0});setZoomFocus({x:(a.x+j.x)/2,y:(a.y+j.y)/2})}
 // Cinematic camera: up to 15° during movement and celebrations, 0° for every decision (approved V2 decision 4).
-function cameraStep(dt){if(!R3||!camCur)return;const want=(!reducedMotion&&opts.speed!=='instant'&&(busy()||(s&&s.over)))?CINEMATIC:cam;
+function cameraStep(dt){if(!R3||!camCur)return;if(zoom&&busy())overview(); // movement plays on the whole board
+const want=(!reducedMotion&&opts.speed!=='instant'&&(busy()||(s&&s.over)))?CINEMATIC:cam;
  if(camCur.pitch===want.pitch&&camCur.dist===want.dist)return;const k=Math.min(1,dt/350);
  const step=(a,b)=>Math.abs(b-a)<.05?b:a+(b-a)*Math.max(k,.12);camCur={pitch:step(camCur.pitch,want.pitch),dist:step(camCur.dist,want.dist)};R3.setCamera(camCur);C=R3.C;dirty=true}
 // ---------- driving the rules ----------
@@ -92,6 +104,7 @@ function loop(now=performance.now()){const dt=last?now-last:16;if(opts.perf&&las
  if(!busy()&&s&&!s.over){const pd=SC.pending(s);if(pd&&s.players[pd.player].ai&&!timer){const sp=SPEED[opts.speed]||SPEED.normal;
    const go=()=>{timer=null;if(!busy()&&SC.pending(s)&&s.players[SC.pending(s).player].ai){act(SC.ai(s,SC.pending(s).player))}};if(sp.ai)timer=setTimeout(go,sp.ai);else go()}}
  if(dirty){const t=performance.now();draw();render();if(opts.perf)perf.draw.push(performance.now()-t);dirty=false}
+ if(R3&&zf&&s&&!s.over&&!busy()){const pd=SC.pending(s);const key=s.round+'-'+s.turn;if(pd&&pd.type==='roll'&&!s.players[pd.player].ai&&planFocused!==key&&camCur&&camCur.pitch===cam.pitch){planFocused=key;planFocus()}}
  if(R3){if(busy())R3.tick(now);R3.render(now)}
  requestAnimationFrame(loop)}
 // ---------- drawing (placeholder art) ----------
@@ -140,6 +153,7 @@ function render(){if(!s)return;const v=SC.view(s),pd=v.pending,me=pd?s.players[p
  ${standings.map((p,r)=>`<div class="cx-p ${p.id===s.turn?'cx-turn':''} ${p.out?'cx-out':''}">${tokSvg(p.id)}<span class="cx-n1">${r+1}. ${esc(p.name)}${p.level?` <span class="cx-k">${esc(p.level[0].toUpperCase()+p.level.slice(1))}</span>`:''}</span><span>${p.influence}</span></div><div class="cx-bar"><span style="width:${Math.min(100,100*p.influence/v.target)}%;background:${COLORS[p.id]}"></span></div>`).join('')}</div>
  <div class="cx-sect cx-order"><div>Round ${v.round} / ${v.rounds}</div><div class="cx-k">Order · reverses each round</div><div>${v.order.map((i,k)=>(k?'<span class="cx-k">›</span>':'')+tokSvg(i)).join('')}</div></div>`;
  let h='';
+ if(zf)h+=`<button id="cx-zoom" class="cx-zoombtn">${zoom?'Whole board':'Zoom in'}</button>`;
  // 9. victory clock
  if(v.clock)h+=`<div class="cx-clock" role="status"><b>${esc(name(v.clock.pid))}</b> is at the target — wins at the end of round ${v.clock.winsAtEndOfRound} if still leading</div>`;
  if(v.over){// 10. game over
@@ -170,22 +184,31 @@ function render(){if(!s)return;const v=SC.view(s),pd=v.pending,me=pd?s.players[p
 function wire(){const on=(sel,f)=>{const e=$(sel);if(e)e.onclick=f};
  document.querySelectorAll('[data-plan]').forEach(b=>b.onclick=()=>{plan=b.dataset.plan;dirty=true;render()});
  on('#cx-roll',()=>{tally=null;act({type:'roll',via:plan})});on('#cx-buy',()=>act({type:'buy'}));on('#cx-pass',()=>act({type:'pass'}));
- on('#cx-end',()=>act({type:'end'}));on('#cx-skip',skip);on('#cx-again',()=>{s=null;setupScreen()});
+ on('#cx-end',()=>act({type:'end'}));on('#cx-zoom',()=>{if(zoom)overview();else planFocus()});on('#cx-skip',skip);on('#cx-again',()=>{s=null;setupScreen()});
  document.querySelectorAll('[data-build]').forEach(b=>b.onclick=()=>act({type:'build',node:b.dataset.build}))}
 // Tap on the board: identifies the node under the finger (the nearest centre within 22 pt), for inspection.
 function hit(x,y){if(R3&&camCur&&camCur.pitch!==cam.pitch)return null; // no selection while the camera is tilted
- let best=null,bd=SS.MIN_TOUCH/2;for(const id of Object.keys(G.nodes)){const p=C.project({...G.nodes[id],z:0}),d=Math.hypot(p.x-x,p.y-y);if(d<=bd){bd=d;best=id}}return best}
+ if(zf&&!zoom)return null; // fallback overview is view-only
+ const ok=zoom?new Set(SS.selectable(G,{project:C.project,rect:C.rect})):null;
+ let best=null,bd=SS.MIN_TOUCH/2;for(const id of Object.keys(G.nodes)){if(ok&&!ok.has(id))continue;const p=C.project({...G.nodes[id],z:0}),d=Math.hypot(p.x-x,p.y-y);if(d<=bd){bd=d;best=id}}return best}
 window.addEventListener('resize',()=>{if(s)resize()});
 // Re-measure whenever the board's box changes (layout settling, rotation, safe-area changes).
 let lastBox='';try{new ResizeObserver(()=>{const r=boardRect(),k=[r.x,r.y,r.w,r.h].map(Math.round).join();if(s&&k!==lastBox){lastBox=k;resize()}}).observe(document.getElementById('cx-board')||document.body)}catch(e){}
-document.addEventListener('DOMContentLoaded',()=>{setupScreen();$('#cx-board').addEventListener('click',e=>{const id=hit(e.clientX,e.clientY);if(id){notes.unshift({t:`${id}: ${describe(id)}`,kind:'inspect'});notes=notes.slice(0,6);render()}})});
+document.addEventListener('DOMContentLoaded',()=>{setupScreen();const cv=$('#cx-board');let down=null,lastTap=0;
+ cv.addEventListener('pointerdown',e=>{down={x:e.clientX,y:e.clientY,moved:0,focus:zoom?{...zoom.focus}:null};try{cv.setPointerCapture(e.pointerId)}catch(x){}});
+ cv.addEventListener('pointermove',e=>{if(!down)return;const dx=e.clientX-down.x,dy=e.clientY-down.y;down.moved=Math.max(down.moved,Math.hypot(dx,dy));
+  if(zoom&&down.focus&&down.moved>6)setZoomFocus({x:down.focus.x-dx/zoom.factor,y:down.focus.y-dy/zoom.factor})});
+ cv.addEventListener('pointerup',e=>{const d=down;down=null;if(!d||d.moved>6||!s)return;const now=performance.now(),dbl=now-lastTap<300;lastTap=now;
+  if(zf&&!zoom){if(!(camCur&&camCur.pitch!==cam.pitch))setZoomFocus({x:e.clientX,y:e.clientY});return}   // overview: a tap opens the zoom there
+  if(zoom&&dbl){overview();return}
+  const id=hit(e.clientX,e.clientY);if(id){notes.unshift({t:`${id}: ${describe(id)}`,kind:'inspect'});notes=notes.slice(0,6);render()}})});
 function describe(id){const n=SC.view(s).nodes.find(x=>x.id===id);if(n.type!=='property')return n.type==='junction'?`junction, connector to ${n.link}`:'event space';return `${n.owner>=0?name(n.owner):'Bank'} · ${n.stageName} · rent ${n.rent||Math.round(n.price*.12)}`}
 // Test and measurement hooks (no effect on the match).
 window.__circuitUI=Object.freeze({load:state=>{SC.drain(state);return begin(state)}, // review/tests: show a prepared rules state
  present:events=>{anim.queue.push(...events);dirty=true}, // presentation-only (tests): never reaches the rules
  state:()=>s,view:()=>SC.view(s),busy:()=>!!busy(),skip,hudRects,boardRect,overlay:()=>overlay,
  projected:()=>Object.keys(G.nodes).map(id=>{const p=C.project({...G.nodes[id],z:0});return{id,x:p.x,y:p.y}}),geometry:()=>({G,C,cam}),hit,
- setStages:o=>{stagesOverride=o;dirty=true},setDesign:({layout:l,spec,cam:c})=>{layout=l;G=SS.geometry(l,spec);if(c){cam=c;camCur={...c}}resize()},setCamera:k=>{cam=SS.CAMERAS[k];camCur={...cam};resize()},r3:()=>R3,setLayout:l=>{layout=l;G=SS.geometry(l);resize()},
+ setStages:o=>{stagesOverride=o;dirty=true},zoomInfo:()=>({fallback:zf,zoom}),zoomAt:(x,y)=>setZoomFocus({x,y}),overview,planFocus,setDesign:({layout:l,spec,cam:c})=>{layout=l;G=SS.geometry(l,spec);if(c){cam=c;camCur={...c}}resize()},setCamera:k=>{cam=SS.CAMERAS[k];camCur={...cam};resize()},r3:()=>R3,setLayout:l=>{layout=l;G=SS.geometry(l);resize()},
  placeAll:node=>{for(const p of s.players){p.pos=node;anim.tokens[p.id]={node}}dirty=true},perf:()=>{const f=[...perf.frames].sort((a,b)=>a-b),d=[...perf.draw].sort((a,b)=>a-b),pc=(a,k)=>a.length?+a[Math.min(a.length-1,Math.floor(k*a.length))].toFixed(2):null;
   return{frames:f.length,p50:pc(f,.5),p95:pc(f,.95),max:f.length?+f[f.length-1].toFixed(2):null,long50:f.filter(x=>x>50).length,drawP50:pc(d,.5),drawP95:pc(d,.95)}}});
 })();
