@@ -17,6 +17,7 @@ const base=process.env.CIRCUIT_PREVIEW_URL||'http://127.0.0.1:8765/circuit-cinem
    await page.waitForTimeout(1500);
    const status=await page.evaluate(()=>{const c=document.querySelector('canvas'),gl=c.getContext('webgl2')||c.getContext('webgl');return{width:c.width,height:c.height,webgl:!!gl}});
    if(!status.webgl||failures.length)throw Error(p.id+' '+JSON.stringify({status,failures}));
+   if(p.h<=520){const hud=await page.evaluate(()=>{const a=document.querySelector('aside').getBoundingClientRect(),b=document.querySelector('#status').getBoundingClientRect();return{asideBottom:a.bottom,statusTop:b.top,collapsed:getComputedStyle(document.querySelector('#buttons')).display==='none'}});if(!hud.collapsed||hud.asideBottom>=hud.statusTop)throw Error('Landscape HUD collision: '+JSON.stringify(hud))}
    await page.screenshot({path:path.join(out,p.id+'-cinematic.png')});
    await page.locator('#strat').click();await page.waitForTimeout(500);
    await page.screenshot({path:path.join(out,p.id+'-strategy.png')});
