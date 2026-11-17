@@ -4,6 +4,8 @@ on:
     paths:
       - '.github/workflows/circuit-assets-preview-once.yml'
       - 'skyline-estates/lib/circuit-ui.js'
+      - 'skyline-estates/lib/circuit-renderer-3d.js'
+      - 'skyline-estates/tests/circuit-visual-contract.cjs'
 permissions:
   contents: read
 jobs:

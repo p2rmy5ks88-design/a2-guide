@@ -9,11 +9,15 @@ const path=require('node:path');
 const src=fs.readFileSync(path.join(__dirname,'../lib/circuit-renderer-3d.js'),'utf8');
 const rule=fs.readFileSync(path.join(__dirname,'../lib/circuit-rules.js'),'utf8');
 const checks=[
- ['sunlit ocean','deepWater:\'#21889B\''],
- ['sandstone platform',"g.addColorStop(0,'#F5DDAC')"],
+ ['sunlit ocean','deepWater:\'#14768E\''],
+ ['sandstone platform',"g.addColorStop(0,'#EBC997')"],
  ['golden-hour illumination',"DirectionalLight('#FFE3A7',2.45)"],
- ['warm board streets',"color:'#E2BE94'"],
- ['green civic park',"color:'#4A9C62'"],
+ ['warm board streets',"color:'#D6AE80'"],
+ ['outer chocolate ring',"O:new THREE.MeshStandardMaterial({color:'#4A2D22'"],
+ ['inner chocolate ring',"I:new THREE.MeshStandardMaterial({color:'#5A3828'"],
+ ['road bands keyed by ring',"T*1.1,.15,roadMat[r]"],
+ ['tonal balance',"renderer.toneMappingExposure=1.07"],
+ ['green civic park',"color:'#318950'"],
  ['four architectural silhouettes','if(variant===0)'],
  ['civic tower','else if(variant===1)'],
  ['terrace tower','else if(variant===2)'],
