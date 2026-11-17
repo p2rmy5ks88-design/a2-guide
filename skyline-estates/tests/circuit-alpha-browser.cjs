@@ -3,6 +3,7 @@
 // projection, touch targets, every property at Skyscraper, four tokens on O0, both route previews at once, HUD occlusion.
 // Then the ten interaction states, deterministic animation, separate saves and the Career inbox.
 'use strict';
+// game flow, saves and Career; 3D is covered by circuit-3d-browser (pages run with ?renderer=2d)
 const {chromium,webkit}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
 const fs=require('fs'),http=require('http'),path=require('path'),assert=require('assert/strict');
 const SS=require('../lib/circuit-screen.js');
@@ -17,7 +18,7 @@ let n=0;const ok=m=>{n++;console.log('PASS',m)};const errors=[];let browser,serv
   // Browsers report no safe-area insets off-device, so the page reads them from CSS variables in tests.
   await p.addInitScript(([i,init])=>{document.addEventListener('DOMContentLoaded',()=>{const d=document.documentElement.style;d.setProperty('--sal',i.l+'px');d.setProperty('--sar',i.r+'px');d.setProperty('--sat',i.t+'px');d.setProperty('--sab',i.b+'px')});
    if(init)for(const [k,v] of Object.entries(init))localStorage.setItem(k,v)},[vp.inset,init||null]);
-  await p.goto(host+'circuit-alpha.html'+(query||''));await p.waitForSelector('#cx-start');return{context,p}}
+  await p.goto(host+'circuit-alpha.html'+(query||'')+((query||'').includes('?')?'&':'?')+'renderer=2d');await p.waitForSelector('#cx-start');return{context,p}}
  const start=async p=>{await p.click('#cx-start');await p.waitForFunction(()=>window.__circuitUI.state()&&document.querySelector('#cx-actions [data-state]'))};
 
  // ---------- 1–7. Design validation at every viewport (top-down placeholder camera, reference layout) ----------

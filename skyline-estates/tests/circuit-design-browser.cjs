@@ -4,6 +4,7 @@
 // drawn tokens (four on O0, all Skyscrapers) and both route previews are checked on screen.
 //   node tests/circuit-design-browser.cjs [design.json]    CIRCUIT_SHOTS=dir saves a screenshot per screen and camera.
 'use strict';
+// geometry; the 3D projection is checked by circuit-3d-browser (pages run with ?renderer=2d)
 const {chromium,webkit}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
 const fs=require('fs'),http=require('http'),path=require('path'),assert=require('assert/strict');
 const file=process.argv[2]||path.join(__dirname,'../design/circuit-design-v1.json'),D=JSON.parse(fs.readFileSync(file,'utf8'));
@@ -19,7 +20,7 @@ let n=0;const ok=m=>{n++;console.log('PASS',m)};const errors=[];let browser,serv
   const context=await browser.newContext({viewport:{width:vp.w,height:vp.h},hasTouch:true,serviceWorkers:'block'}),p=await context.newPage();
   p.on('pageerror',e=>errors.push(engine+' '+id+': '+String(e)));await context.route('https://**/*',r=>r.abort());
   await p.addInitScript(i=>{document.addEventListener('DOMContentLoaded',()=>{const d=document.documentElement.style;d.setProperty('--sal',i.l+'px');d.setProperty('--sar',i.r+'px');d.setProperty('--sat',i.t+'px');d.setProperty('--sab',i.b+'px')})},vp.inset);
-  await p.goto(host+'circuit-alpha.html?seed=5&speed=instant');await p.waitForSelector('#cx-start');await p.click('#cx-start');await p.waitForFunction(()=>window.__circuitUI.state());
+  await p.goto(host+'circuit-alpha.html?seed=5&speed=instant&renderer=2d');await p.waitForSelector('#cx-start');await p.click('#cx-start');await p.waitForFunction(()=>window.__circuitUI.state());
   // 1. The page hosts the package's HUD and board rectangles.
   const dom=await p.evaluate(()=>({hud:__circuitUI.hudRects(),board:__circuitUI.boardRect()}));
   for(const [a,b] of [[dom.board,sc.board],...sc.hudRects.map(h=>[dom.hud.find(x=>x.id===h.id),h])])for(const k of ['x','y','w','h'])assert.ok(Math.abs(a[k]-b[k])<=1,`${id} ${b.id||'board'}.${k}: page ${a[k]} vs design ${b[k]}`);
