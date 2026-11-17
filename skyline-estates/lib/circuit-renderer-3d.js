@@ -272,7 +272,7 @@ export function create(canvas,{layout,spec,camera:cam0,tier:tierName=pickTier(),
     add(slab(S*.35,body,S*.44,vGlass,vRoof),Z+base+body/2);
     for(const x of [-S*.27,S*.27])add(slab(S*.27,body*.82,S*.68,vGlass,vRoof),Z+base+body*.41,x,0);
     add(slab(S*.82,body*.055,S*.26,vTrim,vTrim),Z+base+body*.70);
-    add(slab(S*.46,crown,S*.49,mats.crown,mats.crown),Z+base+body+crown/2);
+    add(slab(S*.46,crown,S*.49,vRoof,vRoof),Z+base+body+crown/2);
    }
   }
   g.traverse(o=>{if(o.isMesh)o.userData.envelope=true});return g}
