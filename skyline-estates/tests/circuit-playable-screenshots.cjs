@@ -60,6 +60,19 @@ const base=process.env.CIRCUIT_GAME_URL||'http://127.0.0.1:8765/circuit-alpha.ht
    const matchAfterRoll=await page.evaluate(()=>JSON.stringify(window.__circuitUI.state()));
    if(matchBeforeRoll===matchAfterRoll)throw Error('Roll did not advance gameplay after returning from City View');
    if(errors.length)throw Error('Browser errors after restored gameplay: '+errors.join('; '));
+   // City inspection must remain safe even when the player has already rolled.
+   const rolledState=await page.evaluate(()=>JSON.stringify(window.__circuitUI.state()));
+   await page.locator('#cx-city-view').click();
+   await page.waitForTimeout(1100);
+   if((await page.locator('#cx-city-view').getAttribute('aria-pressed'))!=='true')throw Error('City View cannot reopen after a roll');
+   if(await page.locator('#cx-roll, #cx-buy, #cx-end, [data-plan], [data-build]').count())throw Error('Gameplay actions exposed during post-roll inspection');
+   await page.locator('#cx-city-view').click();
+   await page.waitForTimeout(600);
+   if((await page.locator('#cx-city-view').getAttribute('aria-pressed'))!=='false')throw Error('City View cannot close after a roll');
+   if(Math.abs(await page.evaluate(()=>window.__circuitUI.r3()?.camera?.pitch))>.1)throw Error('Post-roll return did not restore Strategy camera');
+   const resumedState=await page.evaluate(()=>JSON.stringify(window.__circuitUI.state()));
+   if(rolledState!==resumedState)throw Error('Post-roll inspection unexpectedly mutated game state');
+   if(errors.length)throw Error('Browser errors after second City View: '+errors.join('; '));
    console.log('PLAYABLE CAPTURED '+p.id+' '+JSON.stringify(strategy));
    await context.close();
   }
