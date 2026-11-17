@@ -24,6 +24,8 @@ jobs:
       - name: Check JavaScript syntax
         run: |
           node --check skyline-estates/lib/circuit-ui.js
+          node --check skyline-estates/lib/circuit-renderer-3d.js
+          node --check skyline-estates/tests/circuit-visual-contract.cjs
           node --check skyline-estates/tests/circuit-city-view.cjs
           node --check skyline-estates/tests/circuit-cinematic-lab.cjs
           node --check skyline-estates/tests/circuit-city-camera-audit.cjs
@@ -36,6 +38,7 @@ jobs:
           node skyline-estates/tests/circuit-city-view.cjs
           node skyline-estates/tests/circuit-cinematic-lab.cjs
           node skyline-estates/tests/circuit-render-sharpness.cjs
+          node skyline-estates/tests/circuit-visual-contract.cjs
       - name: Audit all 15 screen classes (report-only)
         env:
           CITY_CAMERA_REPORT: cinematic-camera-report.json
