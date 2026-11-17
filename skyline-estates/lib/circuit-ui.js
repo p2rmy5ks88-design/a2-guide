@@ -122,7 +122,7 @@ function stages(){if(stagesOverride)return stagesOverride;const o={};for(const i
 function draw(){if(R3)return draw3d();draw2d()}
 // 3D: the renderer draws; the overlay record (used by the checks) is computed with the same projection.
 function draw3d(){const v=SC.view(s),me=s.players[s.turn],st=stages();overlay={routeStay:[],routeCross:[],tokens:{},buildings:SC.PROPS.filter(id=>st[id]>0)};
- const showRoute=v.preview&&!me.ai&&!busy();if(showRoute){const paths=SS.routePaths(me.pos);overlay.routeStay=paths.stay.map(g=>g.to);overlay.routeCross=paths.cross.map(g=>g.to)}
+ const showRoute=!cityReview&&v.preview&&!me.ai&&!busy();if(showRoute){const paths=SS.routePaths(me.pos);overlay.routeStay=paths.stay.map(g=>g.to);overlay.routeCross=paths.cross.map(g=>g.to)}
  const toks=[],counts={};for(const p of s.players)if(!p.out){const a=anim.tokens[p.id]||{node:p.pos};toks.push({pid:p.id,...a});const slot=counts[a.node]=(counts[a.node]??-1)+1;const xy=tokenXY(p.id,slot%4);if(xy)overlay.tokens[p.id]={node:a.node,x:xy.x,y:xy.y,r:G.tokenR*C.ppu({...G.nodes[a.node],z:0})}}
  R3.update({view:v,stages:st,tokens:toks,route:showRoute?{pos:me.pos,plan,preview:v.preview}:null,networkFor:s.players.filter(p=>!p.out).map(p=>p.id)})}
 function draw2d(){const cv=$('#cx-board'),ctx=cv.getContext('2d'),dpr=cv.width/Math.max(1,boardRect().w),R=boardRect();ctx.setTransform(dpr,0,0,dpr,-R.x*dpr,-R.y*dpr);
@@ -193,9 +193,9 @@ function render(){if(!s)return;const v=SC.view(s),pd=v.pending,me=pd?s.players[p
  const A=$('#cx-actions');if(A.dataset.h!==h){A.innerHTML=h;A.dataset.h=h;wire()}}
 function wire(){const on=(sel,f)=>{const e=$(sel);if(e)e.onclick=f};
  on('#cx-city-view',()=>{if(!R3)return;cityReview=!cityReview;if(cityReview&&zoom)overview();dirty=true;render()});
- document.querySelectorAll('[data-plan]').forEach(b=>b.onclick=()=>{plan=b.dataset.plan;dirty=true;render()});
+ document.querySelectorAll('[data-plan]').forEach(b=>b.onclick=()=>{if(cityReview){cityReview=false;dirty=true;render();return}plan=b.dataset.plan;dirty=true;render()});
  on('#cx-roll',()=>{tally=null;act({type:'roll',via:plan})});on('#cx-buy',()=>act({type:'buy'}));on('#cx-pass',()=>act({type:'pass'}));
- on('#cx-end',()=>act({type:'end'}));on('#cx-zoom',()=>{if(zoom)overview();else planFocus()});on('#cx-skip',skip);on('#cx-again',()=>{s=null;setupScreen()});
+ on('#cx-end',()=>act({type:'end'}));on('#cx-zoom',()=>{if(cityReview){cityReview=false;dirty=true;render();return}if(zoom)overview();else planFocus()});on('#cx-skip',skip);on('#cx-again',()=>{s=null;setupScreen()});
  document.querySelectorAll('[data-build]').forEach(b=>b.onclick=()=>act({type:'build',node:b.dataset.build}))}
 // Tap on the board: identifies the node under the finger (the nearest centre within 22 pt), for inspection.
 function hit(x,y){if(cityReview)return null;if(R3&&camCur&&camCur.pitch!==cam.pitch)return null; // no selection while the camera is tilted
