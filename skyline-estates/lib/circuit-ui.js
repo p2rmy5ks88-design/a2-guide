@@ -193,7 +193,7 @@ function render(){if(!s)return;const v=SC.view(s),pd=v.pending,me=pd?s.players[p
  if(R3)h+=`<div class="cx-sect"><button id="cx-city-view" aria-pressed="${cityReview}" title="Non-interactive 3D city inspection">${cityReview?'Return to Strategy View':'Explore 3D City'}</button></div>`;
  const A=$('#cx-actions');if(A.dataset.h!==h){A.innerHTML=h;A.dataset.h=h;wire()}}
 function wire(){const on=(sel,f)=>{const e=$(sel);if(e)e.onclick=f};
- on('#cx-city-view',()=>{if(!R3)return;cityReview=!cityReview;if(cityReview&&zoom)overview();dirty=true;render()});
+ on('#cx-city-view',()=>{if(!R3)return;cityReview=!cityReview;if(cityReview&&zoom)overview();if(!cityReview){camCur={...cam};R3.setCamera(camCur);C=R3.C}dirty=true;render()});
  document.querySelectorAll('[data-plan]').forEach(b=>b.onclick=()=>{if(cityReview){cityReview=false;dirty=true;render();return}plan=b.dataset.plan;dirty=true;render()});
  on('#cx-roll',()=>{tally=null;act({type:'roll',via:plan})});on('#cx-buy',()=>act({type:'buy'}));on('#cx-pass',()=>act({type:'pass'}));
  on('#cx-end',()=>act({type:'end'}));on('#cx-zoom',()=>{if(cityReview){cityReview=false;dirty=true;render();return}if(zoom)overview();else planFocus()});on('#cx-skip',skip);on('#cx-again',()=>{s=null;setupScreen()});
