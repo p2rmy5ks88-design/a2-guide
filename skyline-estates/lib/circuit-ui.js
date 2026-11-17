@@ -221,6 +221,6 @@ window.__circuitUI=Object.freeze({load:state=>{SC.drain(state);return begin(stat
  state:()=>s,view:()=>SC.view(s),busy:()=>!!busy(),skip,hudRects,boardRect,overlay:()=>overlay,
  projected:()=>Object.keys(G.nodes).map(id=>{const p=C.project({...G.nodes[id],z:0});return{id,x:p.x,y:p.y}}),geometry:()=>({G,C,cam}),hit,
  setStages:o=>{stagesOverride=o;dirty=true},zoomInfo:()=>({fallback:zf,zoom}),zoomAt:(x,y)=>setZoomFocus({x,y}),overview,planFocus,setDesign:({layout:l,spec,cam:c})=>{layout=l;G=SS.geometry(l,spec);if(c){cam=c;camCur={...c}}resize()},setCamera:k=>{cam=SS.CAMERAS[k];camCur={...cam};resize()},r3:()=>R3,setLayout:l=>{layout=l;G=SS.geometry(l);resize()},
- placeAll:node=>{for(const p of s.players){p.pos=node;anim.tokens[p.id]={node}}dirty=true},perf:()=>{const f=[...perf.frames].sort((a,b)=>a-b),d=[...perf.draw].sort((a,b)=>a-b),pc=(a,k)=>a.length?+a[Math.min(a.length-1,Math.floor(k*a.length))].toFixed(2):null;
+ placeAll:node=>{for(const p of s.players){p.pos=node;anim.tokens[p.id]={node}}dirty=true},perfReset:()=>{perf.frames.length=0;perf.draw.length=0;last=performance.now()},perf:()=>{const f=[...perf.frames].sort((a,b)=>a-b),d=[...perf.draw].sort((a,b)=>a-b),pc=(a,k)=>a.length?+a[Math.min(a.length-1,Math.floor(k*a.length))].toFixed(2):null;
   return{frames:f.length,p50:pc(f,.5),p95:pc(f,.95),max:f.length?+f[f.length-1].toFixed(2):null,long50:f.filter(x=>x>50).length,drawP50:pc(d,.5),drawP95:pc(d,.95)}}});
 })();
