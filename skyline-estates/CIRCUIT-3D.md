@@ -1,6 +1,6 @@
 # Skyline Circuit — 3D renderer (draft for visual review and device QA)
 
-Status: **draft.** It stays in draft until the visual review and real-device QA are complete. Branch `feat/circuit-renderer-3d` is stacked on `feat/circuit-alpha` (PR #214 → #213 + #212). Nothing is merged or deployed. The rules, saves and Career eligibility are unchanged, as are the V1 coordinates, cameras and HUD rectangles.
+Status: **draft.** It stays in draft until the visual review and real-device QA are complete. Approved for device QA and a visual-polish pass, not for production (owner, 17 Nov 2026). Branch `feat/circuit-renderer-3d` is stacked on `feat/circuit-alpha` (PR #214 → #213 + #212). Nothing is merged or deployed. The rules, saves and Career eligibility are unchanged, as are the V1 coordinates, cameras and HUD rectangles.
 
 ## What it is
 
@@ -89,9 +89,9 @@ Existing suites, now running with the 3D renderer by default:
 
 **Known gaps:**
 
-- **Visual polish:** facades read weakly at the 0° decision camera, which shows mostly roofs, so stage identity relies on roof treatment. A movement-only 15° view shows the facades. ChatGPT's visual review should judge the roofs.
+- **(Superseded by the polish pass below.)** Facades read weakly at the 0° decision camera, which shows mostly roofs, so stage identity relies on roof treatment. A movement-only 15° view shows the facades. ChatGPT's visual review should judge the roofs.
 - **Glow:** there's no bloom (no post-processing addon in the repo). Crowns and bridge lights use emissive materials instead.
-- **Zoom/pan fallback:** validated geometrically (CIRCUIT-ALPHA.md) but **not yet implemented** in this renderer. The 320 pt screens currently show the overview.
+- **Zoom/pan fallback:** implemented in M1 (see below).
 - **Not wired into the native app bundle.**
 
 ## Real-device measurements
@@ -106,8 +106,57 @@ On-device QA follows the plan in CIRCUIT-ALPHA.md §8:
 
 The Low/Medium/High budgets in CIRCUIT-V2-REVIEW.md §4 are the acceptance targets. The renderer downgrades one tier automatically after sustained frames over 20 ms at the 95th percentile.
 
+## Polish pass (17 Nov 2026): milestones
+
+Each milestone was committed and tested separately in Chromium and WebKit. Rules, coordinates, camera limits, HUD rectangles, saves, Career eligibility and the renderer interface are unchanged.
+
+| Milestone | Commit | What changed | Measured |
+| --- | --- | --- | --- |
+| M1 · 320 pt zoom/pan fallback | 63f0d45 | Zoom folded into the projection matrix (exactly `SS.zoomed`). The overview is view-only; taps open the zoom; drag to pan with overscroll; only full 44 pt circles select; double-tap or the HUD button returns. At your route decision the view focuses on your token, the first junction and both exits. | `circuit-zoom-3d`: se1 ×1.25 → 46.6 pt; Safari ×1.1 → 47.0 pt. Drawn = measured. Full coverage. Zoomed visibility passes. Full screens unaffected. |
+| M2 · Five distinct stages | 706a95e | **Low-rise:** hipped slate roof and chimney. **Mid-rise:** podium with roof garden and an L-shaped glass block. **High-rise:** cross-shaped tower on a terraced podium. **Skyscraper:** an octagonal landmark with three stepped drums, bronze fins, a gold crown ring and a pavilion. | All stages 1–4 inside the envelopes on every property (new test) |
+| M3 · City environment | 5ccc5bd | Promenade shops, low civic blocks between the rings, plaza paving, street lamps, quay and promenade, two marinas, garden hedges, fountain and statue, bridge trusses. | Decorative geometry is low and off the tiles, and counted as an occluder in the ID pass, which still shows all 32 nodes. Worst case Low 89, Medium 95, High 95 draw calls. |
+| M4 · Premium HUD | 845f727 | **Left column:** turn card, ranked scoreboard with leader highlight, target marker and a "holding target" flag, turn-order chips. **Right column:** Stay/Cross with descriptors, dice Roll, build rows with district symbol and stage meter, value pulses (off with reduced motion). | Text ≥ 12 pt and targets ≥ 44 pt on all 15 screens |
+| M5 · Device QA tools | 7cd2e4b | `?bench=1` benchmark and a standalone QA bundle. Adaptive quality now uses 2 s windows. | Software WebGL: High → Medium at 11.9 s, → Low 5.7 s later, then render scale down |
+
+**Cost of the polish (worst case: all Skyscrapers + routes + networks, Pro Max @3x):**
+
+| Tier | Draw calls (before → after) | Triangles (before → after) | Budget (calls / triangles) |
+| --- | --- | --- | --- |
+| Low | 96 → 89 | 25.6k → 35.9k | 120 / 60k |
+| Medium | 98 → 95 | 35.0k → 55.3k | 250 / 150k |
+| High | 98 → 95 | 42.3k → 62.6k | 450 / 350k |
+
+Draw calls fell because static parts are now merged; triangles rose with the extra detail. All are within budget.
+
+## Device QA (iPhone Safari)
+
+**Not run yet.** This environment has no physical iPhone. Its browsers render WebGL in software, so frame rates here say nothing about devices. The tools are ready:
+
+- **On the web build:** `circuit-alpha.html?bench=1`.
+- **Standalone:** `node skyline-estates/tests/build-circuit-qa-bundle.cjs circuit-qa.html` produces one self-contained 0.82 MB file that runs the benchmark automatically.
+- **Scenarios** (about 50 s): idle 5 s; worst case continuous with adaptive quality 15 s; cinematic 0° → 15° → 0° 6 s; computer-played match 20 s.
+- **Reported:**
+  - FPS and frame-interval p50/p95/p99, plus frames over 50 ms;
+  - CPU render time (p95);
+  - draw calls, triangles, textures, geometries and pixel ratio;
+  - tier at start and end, with timed tier changes;
+  - memory (not exposed by Safari; reported as null);
+  - device, GPU string, DPR and reduced-motion setting.
+- A **Copy results** button gives JSON to paste back.
+- **Acceptance targets:** CIRCUIT-V2-REVIEW.md §4.
+
+## Remaining visual compromises (for ChatGPT's review)
+
+1. **Perspective lean at 0°:** at the top-down decision camera, tall towers lean outward from the board centre. This is validated: no node or token is hidden. Roofs are offset from their tiles, most visibly for Skyscrapers on the inner ring.
+2. **No bloom:** there's no post-processing. Crowns, lamps and bridge lights use emissive materials and a sky reflection map.
+3. **Procedural textures:** facades and paving are generated textures, with no authored PBR texture sets or models. A higher-fidelity asset pass would add download weight and needs its own budget check.
+4. **Small environment details:** boats, lamps and blocks are deliberately low-detail instanced geometry to stay inside the Low-tier budget.
+5. **The 2D fallback** (no WebGL) has no zoom/pan and none of the new visuals.
+
 ## Reproduce
 
 - `node skyline-estates/tests/circuit-3d-browser.cjs` (add `VISUAL_ENGINE=webkit` for WebKit)
 - Add `CIRCUIT_SHOTS=dir` for screenshots and `CIRCUIT_3D_REPORT=path` for a JSON report.
 - Open `skyline-estates/circuit-alpha.html?quality=low|medium|high&perf=1`.
+- `CIRCUIT_SHOTS=dir node skyline-estates/tests/circuit-3d-shots.cjs`: the review screenshot set at native resolution.
+- `node skyline-estates/tests/circuit-zoom-3d.cjs`: the 320 pt fallback in 3D.
