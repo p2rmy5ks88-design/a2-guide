@@ -95,7 +95,7 @@ check('bankruptcy sells buildings at half cost, then returns properties; last so
 
 check('influence victory needs the target and a clear lead at two consecutive round ends; a tie resets the clock',()=>{
  const s=two({target:50});const [a,b]=s.players;a.inf=60;
- endNow(s);endNow(s);assert.equal(s.over,false);assert.deepEqual(s.clock,{pid:0,round:1});
+ endNow(s);endNow(s);assert.equal(s.over,false);assert.deepEqual(s.clock,{pid:0,round:1,since:1});
  b.inf=60;endNow(s);endNow(s);assert.equal(s.clock,null);assert.equal(s.over,false);
  a.inf=70;endNow(s);endNow(s);assert.equal(s.over,false);endNow(s);endNow(s);
  assert.equal(s.over,true);assert.equal(s.endReason,'influence');assert.equal(s.winner,0);assert.equal(s.round,4)});
@@ -115,5 +115,72 @@ check('300 complete AI matches across 2-4 players: no errors, no negative cash, 
  for(let k=0;k<300;k++){const np=2+k%3;const s=SC.newMatch({seed:5000+k,players:[...Array(np)].map((_,i)=>({ai:(k+i)%2?'random':'route'}))});
   while(!s.over){const pd=SC.pending(s);SC.act(s,pd.player,SC.ai(s,pd.player));for(const p of s.players)assert.ok(p.cash>=0,'cash '+k)}
   assert.ok(['influence','last-solvent','round-limit'].includes(s.endReason));assert.ok(s.round<=s.cfg.rounds)}});
+
+check('effects and the view never change the match: same hash and winner with fx on, view called every step',()=>{
+ for(const seed of [11,12,13]){const ps=[{ai:'route'},{ai:'random'},{ai:'route'},{ai:'route'}];
+  const a=SC.playOut(SC.newMatch({seed,players:ps}));
+  const b=SC.newMatch({seed,players:ps,fx:true});let events=0;
+  while(!b.over){const before=JSON.stringify(b);SC.view(b);assert.equal(JSON.stringify(b),before,'view mutated state');const pd=SC.pending(b);SC.act(b,pd.player,SC.ai(b,pd.player));events+=SC.drain(b).length}
+  assert.equal(SC.hash(a),SC.hash(b));assert.equal(a.winner,b.winner);assert.ok(events>100)}});
+
+check('effect stream: steps follow legal edges, connector steps match LINKS, every roll ends in exactly one landing',()=>{
+ const s=SC.newMatch({seed:21,players:[{ai:'route'},{ai:'random'},{ai:'route'}],fx:true});const all=[];
+ while(!s.over){const pd=SC.pending(s);SC.act(s,pd.player,SC.ai(s,pd.player));all.push(...SC.drain(s))}
+ let open=null,lastVia=null;for(const e of all){
+  if(e.t==='roll'){assert.equal(open,null);open={steps:e.dice[0]+e.dice[1],n:0};lastVia=null}
+  if(e.t==='step'){open.n++;if(e.via==='connector'){assert.equal(SC.LINKS[e.from],e.to);assert.notEqual(lastVia,'connector','re-cross')}else assert.equal(SC.next(e.from),e.to);lastVia=e.via}
+  if(e.t==='land'){assert.equal(open.n,open.steps);open=null}}
+ assert.ok(all.some(e=>e.t==='round'&&e.tally.length));assert.equal(all.filter(e=>e.t==='over').length,1)});
+
+check('view: 32 nodes with owner/stage, build reasons, route preview probabilities sum to 1',()=>{
+ const s=SC.newMatch({seed:4,players:[{name:'You'},{level:'normal'}],length:'standard'});const v=SC.view(s);
+ assert.equal(v.nodes.length,32);assert.equal(v.target,300);assert.equal(v.rounds,40);assert.equal(v.players[1].ai,'route');assert.equal(v.players[0].ai,null);
+ for(const via of ['stay','cross'])assert.ok(Math.abs(v.preview[via].landing.reduce((n,x)=>n+x.p,0)-1)<1e-3);
+ assert.deepEqual(v.preview.firstJunction,{node:'O0',stepsAway:0,crossTo:'I0'});
+ give(s,0,['O1','O4']);s.own.O4.h=1;s.phase='build';const b=SC.view(s).build;
+ assert.deepEqual(b.map(x=>[x.node,x.reason]),[['O1',null],['O4','needs-network-2']])});
+
+check('lengths: Quick is marked experimental; Standard 300/40 and Extended 480/60',()=>{
+ assert.deepEqual([SC.LENGTHS.quick.target,SC.LENGTHS.standard.target,SC.LENGTHS.extended.target],[200,300,480]);
+ assert.equal(SC.LENGTHS.quick.experimental,true);assert.equal(SC.LENGTHS.standard.experimental,false);
+ assert.throws(()=>SC.newMatch({length:'blitz'}),/unknown length/)});
+
+check('saves: own slot, exact resume, fx not saved, newer version and other rulesets refused untouched',()=>{
+ const s=SC.newMatch({seed:31,players:[{ai:'route'},{ai:'route'},{ai:'random'}],fx:true});
+ for(let i=0;i<120&&!s.over;i++){const pd=SC.pending(s);SC.act(s,pd.player,SC.ai(s,pd.player))}assert.equal(s.over,false);
+ const text=SC.serialize(s);const o=JSON.parse(text);assert.equal(o.key,'skylineCircuitSave');assert.deepEqual(o.state.fx,[]);
+ assert.notEqual(SC.SAVE_KEY,'skylineSave');assert.notEqual(SC.SAVE_KEY,'skylineRingSave');
+ const r=SC.restore(text);assert.ok(r.ok);SC.playOut(r.state);SC.playOut(s);assert.equal(SC.hash(r.state),SC.hash(s));
+ const newer=JSON.stringify({...o,v:SC.VERSION+1});assert.deepEqual(SC.restore(newer),{ok:false,reason:'newer-version'});
+ assert.equal(SC.restore(JSON.stringify({...o,ruleset:'harbour-ring'})).reason,'wrong-ruleset');
+ assert.equal(SC.restore('{oops').reason,'invalid');
+ const bad=JSON.parse(text);bad.state.own.O1.h=9;assert.equal(SC.restore(bad).reason,'invalid');
+ const bad2=JSON.parse(text);bad2.state.players[0].pos='X9';assert.equal(SC.restore(bad2).reason,'invalid')});
+
+check('career facts: shape for SkylineCareerCore.record, weakest opponent decides the AI level, no wall clock in the rules',()=>{
+ const s=SC.newMatch({seed:41,length:'standard',players:[{name:'You'},{level:'hard'},{level:'normal'}],meta:{matchId:'circuit:abc',startedAt:1000}});
+ while(!s.over){const pd=SC.pending(s);const me=pd.player===0;const a=me?(pd.type==='roll'?{type:'roll',via:'stay'}:pd.type==='buy'?{type:'buy'}:pd.type==='route'?{type:'route',via:'stay'}:{type:'end'}):SC.ai(s,pd.player);
+  if(me&&pd.type==='buy'&&s.players[0].cash<pd.price)a.type='pass';SC.act(s,pd.player,a)}
+ const f=SC.careerFacts(s,{ownerSeat:0,endedAt:999999});
+ for(const k of ['board','matchId','startedAt','endedAt','sim','fast','online','assisted','over','ownerHuman','rounds','activity','won','score','aiOpponents','aiLevel'])assert.ok(k in f,k);
+ assert.equal(f.board,'circuit');assert.equal(f.matchId,'circuit:abc');assert.equal(f.ownerHuman,true);assert.equal(f.aiOpponents,2);assert.equal(f.aiLevel,'normal');
+ assert.equal(f.experimental,false);assert.equal(f.won,s.winner===0);
+ const q=SC.newMatch({seed:1,length:'quick',players:[{name:'You'},{level:'easy'}]});assert.equal(SC.careerFacts(q).experimental,true);assert.equal(SC.careerFacts(q).aiLevel,'easy')});
+
+check('layout check: reference layout passes; wrong direction, missing nodes, crowding and connectors over tiles fail',()=>{
+ const ok=SC.validateLayout(SC.referenceLayout());assert.ok(ok.ok,ok.errors.join());assert.equal(ok.stats.connectors.length,4);
+ const flip=SC.referenceLayout();for(const k of Object.keys(flip.nodes))if(k[0]==='O')flip.nodes[k].x*=-1;assert.ok(SC.validateLayout(flip).errors.includes('outer-ring-not-clockwise'));
+ const miss=SC.referenceLayout();delete miss.nodes.I5;assert.ok(SC.validateLayout(miss).errors.includes('missing-or-bad:I5'));
+ const extra=SC.referenceLayout();extra.nodes.O20={x:0,y:0};assert.ok(SC.validateLayout(extra).errors.includes('unknown-node:O20'));
+ assert.equal(SC.validateLayout(SC.referenceLayout(120,70)).ok,false); // too small for 44 pt spacing
+ const over=SC.referenceLayout();over.nodes.I2={x:over.nodes.O5.x*.8,y:over.nodes.O5.y*.8};assert.ok(SC.validateLayout(over,{minSpacing:20}).errors.some(e=>e.startsWith('connector-O5-I3-passes')))});
+
+check('pacing knobs: Quick forbids an influence win before round 12; hold:2 needs one more round; defaults unchanged',()=>{
+ const q=SC.newMatch({seed:2,length:'quick',players:[{},{}]});assert.equal(q.cfg.minWinRound,12);assert.equal(q.cfg.target,200);
+ q.players[0].inf=500;for(let r=1;r<=11;r++){endNow(q);endNow(q)}assert.equal(q.over,false);assert.equal(q.round,12);
+ assert.equal(SC.view(q).clock.winsAtEndOfRound,12);endNow(q);endNow(q);assert.equal(q.over,true);assert.equal(q.endReason,'influence');assert.equal(q.round,12);
+ const h=SC.newMatch({seed:2,target:50,players:[{},{}],rules:{hold:2}});h.players[0].inf=60;
+ endNow(h);endNow(h);endNow(h);endNow(h);assert.equal(h.over,false);endNow(h);endNow(h);assert.equal(h.over,true);assert.equal(h.round,3);
+ const d=SC.newMatch({seed:2,length:'standard',players:[{},{}]});assert.deepEqual([d.cfg.minWinRound,d.cfg.hold,d.cfg.payday,d.cfg.buildFactor],[0,1,200,.5])});
 
 console.log(`circuit-rules: ${n} checks passed`);

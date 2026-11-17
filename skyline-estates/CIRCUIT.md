@@ -1,6 +1,6 @@
 # Skyline Circuit — headless prototype (research)
 
-Status: rules research only — **prototype v0 passes all 12 thresholds on held-out seeds (Standard)**; Quick fails three (see Results). Owner approval needed before any UI work. No artwork, camera, HUD or production UI. The dual-ring identity is fixed; the node layout below is the **mechanical** topology that the visual design must respect. All numbers are provisional until simulation and owner approval.
+Status: **rules approved for prototype development** (owner review, 17 Nov 2026), not for production. Standard and Extended proceed to playable testing; Quick stays experimental. No artwork, camera, HUD or production UI here. The dual-ring identity is fixed; the node layout below is the **mechanical** topology the visual design must respect. Renderer interface: [CIRCUIT-RENDERER.md](CIRCUIT-RENDERER.md).
 
 ## Acceptance thresholds (written before any results)
 
@@ -99,7 +99,7 @@ Candidate changes apply to Quick only:
   - At the round limit, the highest influence wins.
 - **Bankruptcy:** a player who can't pay sells buildings back at half their cost, highest stage first. If that's still not enough, they are out and their properties return to the bank.
 - **Match lengths (provisional):**
-  - Quick: target 200, 30-round cap.
+  - Quick (experimental): target 200, 30-round cap, no influence victory before round 12.
   - Standard: target 300, 40-round cap.
   - Extended: target 480, 60-round cap.
 - **AIs:** both AIs share the same buy and build policy and differ only in route choice.
@@ -226,11 +226,115 @@ ChatGPT owns board shape, 3D look, HUD and final visual specifications. The requ
   - a close-up when a player is choosing a route or building is optional.
   - The final camera is ChatGPT's decision.
 
+## Owner review (17 Nov 2026) and follow-up
+
+**Approved for the next playable prototype** (not production):
+
+- route choice before rolling;
+- Standard target 300;
+- no building on the turn of purchase;
+- Skyscraper on a network of 3 or more spanning both rings;
+- turn order reversing each round.
+
+Standard and Extended go to playable testing. Quick stays experimental.
+
+### Quick investigation
+
+Criteria above (Q1–Q12), registered in commit 8589a54 before any Quick run. Candidates were tuned on development seeds 20,001–20,300, with 300 matches per configuration:
+
+| Quick candidate (cap 30) | Median victory round | Skyscraper (4p) | Wins before round 12 | Quick criteria |
+| --- | --- | --- | --- | --- |
+| Target 200 (as before) | 16 | 56.7% | 0% | all pass |
+| + hold the lead 2 more rounds | 18 | 60.7% | 0% | fails Q7 (too long) |
+| + no influence win before round 12 | 16 | 56.7% | 0% | all pass |
+| Payday 250, build cost ×0.4 | 16 | 59.0% | 0.3–1.3% | all pass |
+| The above, target 180, no win before 12 | 15 | 57.3% | 0% | all pass |
+| Target 180, no win before 12 | 16 | 54.7% | 0% | all pass |
+| Target 170, no win before 12 | 15 | 52.3% | 0% | all pass |
+
+Chosen: **target 200, plus no influence victory before round 12.** It changes no development-seed result and adds a hard floor against early wins. A faster economy barely shortened matches, and lower targets mainly cost Skyscrapers, so neither was adopted.
+
+**Held-out Quick verdict** (new seeds 910,000–910,999, N = 1,000):
+
+- **Quick criteria: 12 of 12 pass.**
+  - Median victory round 16 (the top of the 13–16 window).
+  - Skyscraper in 56.8%.
+  - 0% of wins before round 12.
+  - 2p route advantage 67.4%; 4p 43.1%.
+  - Seats 51.0/49.0 (2p), 28.6/24.9/22.8/23.7 (4p).
+- **Standard criteria: Quick still fails #5, #6 and #7,** with Skyscraper 56.8%, 20.9% of wins before round 15, and median victory round 16. This is expected for a shorter mode, and the Standard criteria are unchanged.
+
+Open: Quick is only about 4 rounds shorter than Standard (median 16 against 20). Influence compounds, so the target moves the end less than it might seem. If Quick should feel clearly shorter, a different lever is needed, for example fewer rounds of scoring. That is a design question for playtesting.
+
+### Near-threshold measurements
+
+Re-measured on **fresh** seeds 950,000–953,999 (N = 4,000, about 4× tighter than the verdict). Rules unchanged.
+
+- **2-player first-mover edge:**
+  - 50.3% / 49.7% (95% interval ± 1.5).
+  - The verdict's 54.3% was sampling noise. Not a concern.
+  - 3p: 33.7 / 34.7 / 31.6. 4p: 26.7 / 25.3 / 24.1 / 24.0.
+- **Skyscraper frequency (4 players):**
+  - 61.8% (95% interval 60.3–63.3%). It is genuinely just above the 60% line in 4 players.
+  - 2p: 74.1%. 3p: 71.1%.
+  - Crowded tables make networks spanning both rings harder to assemble.
+  - The figure comes from AI build policy. The AI doesn't plan for the cross-ring requirement, so humans may reach Skyscrapers more often.
+  - It needs a check in playable testing. If it falls below 60% with people, the least invasive lever is AI and UX guidance (show which property completes a cross-ring network), not a rule change.
+- **All 12 Standard thresholds pass again** in this larger sample. Other figures: median victory round 20; 2p route advantage 73.4%; 4p 42.5%.
+- **Extended large-sample results** are listed under Reproducing once complete.
+
+## Technical constraints for the board design (to ChatGPT, before the final renderer)
+
+These follow from the rules and the mobile targets. They limit geometry, not style. The layout check `validateLayout` (CIRCUIT-RENDERER.md §9) tests the measurable ones automatically. Please supply final node coordinates as `{unit:'pt', nodes:{O0:{x,y}, …}}` (top view) so they can be checked before art is finalised.
+
+1. **Topology is fixed:**
+   - 32 nodes with the IDs above, two clockwise rings, and 4 connectors (`O0`↔`I0`, `O5`↔`I3`, `O10`↔`I6`, `O15`↔`I9`).
+   - Both rings run the same way, and the direction must be visible (tokens never move backwards).
+   - The outer ring has 20 nodes and the inner ring 12. Each quadrant spans 5 outer and 3 inner nodes, and each connector joins nodes in the same quadrant. Radial (spoke-like) connectors are the natural fit, but the shape is the designer's choice.
+2. **A connector is a step, not a space.**
+   - A token crossing a connector moves directly between two junctions in one hop and can never stop on the connector.
+   - There must be no tile, building or token slot on a connector, and no connector may pass over another tile (`connector-…-passes-…`).
+3. **Minimum size on phones:**
+   - With 44 pt between node centres, a circular layout needs an outer radius of at least about 141 pt (chord 0.313 R ≥ 44) and an inner radius of at least about 85 pt (chord 0.518 r ≥ 44). The gap between the rings must also be at least 44 pt, so the inner radius can be at most R − 44.
+   - That is about 282 pt across node centres, and about 326 pt including tiles, before the HUD.
+   - The smallest supported landscape phone is 375 pt tall, so in a top-down view the board needs almost the full height.
+4. **Perspective camera:**
+   - A tilted camera shrinks far-side tiles below 44 pt. Either keep the default pitch close to top-down, use tap areas larger than the visible tiles (taps are projected, as on the Living Board), or offer a zoom.
+   - The worst case to test is all 20 properties as Skyscrapers. No node, token or junction exit may be hidden at the default camera.
+   - Inner-ring Skyscrapers must not hide outer far-side tiles, and the reverse.
+5. **Tokens:**
+   - Up to 4 tokens on any node, including junctions. All players start on `O0`, so 4 tokens share it in round 1.
+   - Plan for a 2×2 slot pattern per node within the 44 pt pitch, about 18 pt per token.
+6. **Buildings:** 5 visible stages per property, with the owner's colour readable at every stage. Junction and event tiles never carry buildings.
+7. **District readability:** each quadrant is a district (bonus for owning 3 of its 5). The district must be identifiable by colour and symbol, consistent with the Living Board's colour-blind district symbols.
+8. **Network display:**
+   - The renderer must be able to draw a player's network as a continuous path along ring segments, through junctions and across connectors.
+   - Event tiles (`O3`, `O8`, `O13`, `O18`) visibly break a chain.
+   - A Skyscraper needs the network to reach both rings, so the connector part of the path must be clear.
+9. **Route preview:**
+   - Before each roll, both plans are shown: the first junction (up to 4 hops away on the outer ring, 2 on the inner) and the likely landing tiles.
+   - Both paths must be visible at once from any position at the default camera. Probabilities come from `view.preview`.
+10. **HUD needs:**
+    - cash;
+    - influence against target (progress);
+    - the victory-clock banner;
+    - turn order, which reverses every round;
+    - the Stay/Cross plan control next to Roll;
+    - the build list with refusal reasons.
+    The HUD must not cover any node. Landscape leaves spare width beside a roughly square board, so that is the natural place for it.
+11. **Animation budget:**
+    - A move is 2–12 hops, with at most one connector hop per junction reached.
+    - Animations are skippable and must never block saving (save after every `act`).
+    - Same frame-time budget and adaptive resolution as the Living Board.
+12. **Determinism:** the renderer never generates randomness and never changes the state. Visual randomness, such as idle animations, must use its own generator, never the match RNG.
+
 ## Reproducing
 
-- `node skyline-estates/tests/circuit-rules.cjs`: 16 rule checks.
+- `node skyline-estates/tests/circuit-rules.cjs`: 24 rule, interface, save, pacing and layout checks.
 - `node skyline-estates/tests/circuit-sim.cjs`: the CI sample, 200 held-out seeds. It asserts all 12 thresholds, with seat balance tolerance 8 at this sample size.
 - `CIRCUIT_SEED=900000 CIRCUIT_N=1000 node skyline-estates/tests/circuit-sim.cjs`: the full verdict.
 - Quick: add `CIRCUIT_TARGET=200 CIRCUIT_ROUNDS=30 CIRCUIT_ASSERT=0`.
 - Extended: add `CIRCUIT_TARGET=480 CIRCUIT_ROUNDS=60`.
 - `CIRCUIT_RULES='{"routeTiming":"after-roll"}'` and similar settings reproduce the rejected variants.
+- Quick criteria: `CIRCUIT_CRITERIA=quick CIRCUIT_SEED=910000 CIRCUIT_N=1000 CIRCUIT_TARGET=200 CIRCUIT_ROUNDS=30 CIRCUIT_RULES='{"minWinRound":12}' node skyline-estates/tests/circuit-sim.cjs`
+- Large samples: `CIRCUIT_SEED=950000 CIRCUIT_N=4000 CIRCUIT_ASSERT=0 node skyline-estates/tests/circuit-sim.cjs` (add `CIRCUIT_TARGET=480 CIRCUIT_ROUNDS=60` for Extended).

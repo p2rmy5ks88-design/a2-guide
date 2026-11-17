@@ -28,7 +28,7 @@ function run(name,count,players,opt,rotate){const rows=[];for(let k=0;k<N;k++){c
 const ident=n=>()=>[...Array(n)].map((_,i)=>({name:'P'+i,ai:'route'}));
 function metrics(rows){const t=rows.flatMap(r=>r.turns),d=rows.flatMap(r=>r.decisions),wins=rows.filter(r=>r.end==='influence').map(r=>r.round);
  return{matches:rows.length,endInfluence:share(rows,r=>r.end==='influence'),endSolvent:share(rows,r=>r.end==='last-solvent'),endLimit:share(rows,r=>r.end==='round-limit'),
-  victoryRound:[pct(wins,.1),pct(wins,.5),pct(wins,.9)],earlyVictory:share(rows,r=>r.end==='influence'&&r.round<15),
+  victoryRound:[pct(wins,.1),pct(wins,.5),pct(wins,.9)],earlyVictory:share(rows,r=>r.end==='influence'&&r.round<15),earlyVictory12:share(rows,r=>r.end==='influence'&&r.round<12),
   firstMid:pct(rows.map(r=>r.hist.firstMid).filter(x=>x!=null),.5),midPct:share(rows,r=>r.hist.firstMid!=null),firstSky:pct(rows.map(r=>r.hist.firstSky).filter(x=>x!=null),.5),skyPct:share(rows,r=>r.hist.firstSky!=null),
   firstBuy:pct(rows.map(r=>r.hist.firstBuy).filter(x=>x!=null),.5),bankruptcyPct:share(rows,r=>r.hist.firstBankrupt!=null),
   turnsWithRoute:share(t,x=>x.routes>0),routesPerTurn:+(t.reduce((n,x)=>n+x.routes,0)/Math.max(1,t.length)).toFixed(2),meaningful:share(d,x=>x>=25),
@@ -57,9 +57,17 @@ function metrics(rows){const t=rows.flatMap(r=>r.turns),d=rows.flatMap(r=>r.deci
   ['10 seat balance (within '+SEAT_TOL+' points; first mover <= +'+SEAT_TOL+')',seats,Object.entries(seats).every(([n,w])=>w.every(x=>Math.abs(x-100/n)<=SEAT_TOL))],
   ['11 low-impact turns (<=42%)',m4.lowImpact,m4.lowImpact<=42],
   ['12 deterministic, 0 errors',out.deterministic,out.deterministic]];
+ // Quick criteria (CIRCUIT.md, Quick mode): Q1-Q4 and Q8-Q12 are the Standard checks; Q5-Q7 are Quick-specific.
+ const quick=[...verdict.slice(0,4).map(v=>['Q'+v[0],v[1],v[2]]),
+  ['Q5 first Mid-rise median round 3-8; Skyscraper in >=50%',[m4.firstMid,m4.skyPct],m4.firstMid>=3&&m4.firstMid<=8&&m4.skyPct>=50],
+  ['Q6 influence victory before round 12 (<5%)',all.map(m=>m.earlyVictory12),all.every(m=>m.earlyVictory12<5)],
+  ['Q7 natural endings >=70%; median victory round 13-16',[100-m4.endLimit,m4.victoryRound[1]],all.every(m=>100-m.endLimit>=70)&&m4.victoryRound[1]>=13&&m4.victoryRound[1]<=16],
+  ...verdict.slice(7).map(v=>['Q'+v[0],v[1],v[2]])];
+ const isQuick=process.env.CIRCUIT_CRITERIA==='quick';
  console.log('CIRCUIT',JSON.stringify({seeds:[SEED,SEED+N-1],standard:std,rules:RULES,metrics:out,seats,adv2,adv4}));
  for(const [name,val,pass] of verdict)console.log((pass?'PASS ':'FAIL ')+name+' :: '+JSON.stringify(val));
+ if(isQuick)for(const [name,val,pass] of quick)console.log((pass?'QPASS ':'QFAIL ')+name+' :: '+JSON.stringify(val));
  // Default (CI): every threshold must hold. CIRCUIT_ASSERT=0 only reports (tuning runs, Quick/Extended studies).
  assert.ok(out.deterministic,'Circuit must be deterministic');
- if(process.env.CIRCUIT_ASSERT!=='0'){const failed=verdict.filter(v=>!v[2]).map(v=>v[0]);assert.deepEqual(failed,[],'thresholds failed')}
+ if(process.env.CIRCUIT_ASSERT!=='0'){const failed=(isQuick?quick:verdict).filter(v=>!v[2]).map(v=>v[0]);assert.deepEqual(failed,[],'thresholds failed')}
 })().catch(e=>{console.error(e);process.exit(1)});
