@@ -281,7 +281,11 @@ Re-measured on **fresh** seeds 950,000–953,999 (N = 4,000, about 4× tighter t
   - The figure comes from AI build policy. The AI doesn't plan for the cross-ring requirement, so humans may reach Skyscrapers more often.
   - It needs a check in playable testing. If it falls below 60% with people, the least invasive lever is AI and UX guidance (show which property completes a cross-ring network), not a rule change.
 - **All 12 Standard thresholds pass again** in this larger sample. Other figures: median victory round 20; 2p route advantage 73.4%; 4p 42.5%.
-- **Extended large-sample results** are listed under Reproducing once complete.
+- **Extended, same 4,000 fresh seeds: all 12 pass.**
+  - Skyscraper 68.7%; median victory round 26; seats 50/50 (2p), 26.7/25.3/24.3/23.7 (4p).
+  - Two figures to watch in playtesting:
+    - 2-player route advantage is 79.3%, below the 85% ceiling. Longer games reward the better router more.
+    - Comebacks are 27.9%, just above 25%.
 
 ## Technical constraints for the board design (to ChatGPT, before the final renderer)
 
