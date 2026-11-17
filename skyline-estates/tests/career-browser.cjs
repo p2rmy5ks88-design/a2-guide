@@ -11,9 +11,9 @@ const PREFS={nick:'Career QA',nickSet:true,welcomed:1,tutDone:1,coach:{pre:1,pos
  server=http.createServer((q,r)=>{const f=path.resolve(root,'.'+decodeURIComponent(q.url.split('?')[0]));if(!f.startsWith(root+path.sep))return r.writeHead(403).end();fs.readFile(f,(e,b)=>{r.writeHead(e?404:200,{'Content-Type':({'.html':'text/html','.js':'text/javascript','.css':'text/css','.png':'image/png','.jpg':'image/jpeg','.webp':'image/webp','.svg':'image/svg+xml','.json':'application/json'})[path.extname(f)]||'application/octet-stream'});r.end(e?'missing':b)})});
  await new Promise(r=>server.listen(0,'127.0.0.1',r));const base=`http://127.0.0.1:${server.address().port}/skyline-estates/index.html`;
  browser=await({chromium,webkit}[engine]).launch({headless:true,...(engine==='chromium'?{executablePath:process.env.CHROME_PATH||undefined,args:['--disable-webgl']}:{})});
- async function session(query){const context=await browser.newContext({viewport:{width:844,height:390},hasTouch:true,serviceWorkers:'block'}),p=await context.newPage();
+ async function session(query,extra){const context=await browser.newContext({viewport:{width:844,height:390},hasTouch:true,serviceWorkers:'block'}),p=await context.newPage();
   p.on('pageerror',e=>errors.push(engine+': '+String(e)));await context.route('https://**/*',r=>r.abort());
-  await p.addInitScript(v=>{if(!localStorage.getItem('skylinePrefs'))localStorage.setItem('skylinePrefs',v)},JSON.stringify(PREFS));
+  await p.addInitScript(v=>{if(!localStorage.getItem('skylinePrefs'))localStorage.setItem('skylinePrefs',v)},JSON.stringify(Object.assign({},PREFS,extra||{})));
   await p.goto(base+(query||''));await p.waitForFunction(()=>window.SkylineCareer&&!document.querySelector('#boot'));await p.waitForTimeout(400);return{context,p}}
  // One finished Origins career match, identical for every call with the same id/won/level.
  const fixture=(p,id,won,ai='normal')=>p.evaluate(([id,won,ai])=>{const ledger=SkylineSCWallet.create(localStorage,()=>Date.now()-180000);
@@ -27,6 +27,11 @@ const PREFS={nick:'Career QA',nickSet:true,welcomed:1,tutDone:1,coach:{pre:1,pos
  let {context,p}=await session('');
  assert.equal(await p.evaluate(()=>SkylineCareer.enabled),false);
  await p.evaluate(()=>homeTab('play'));await p.waitForTimeout(200);assert.equal(await p.locator('#crOpen').count(),0);ok('career is off by default and adds no menu entry');
+ // What Game Modes holds, and what tapping Pass & Play does, with the flag off (compared with the flag on below).
+ const modes=async()=>p.evaluate(()=>[...document.querySelectorAll('.hd-gm-list>button')].map(b=>b.id));
+ const passPlay=async()=>{await p.evaluate(()=>homeTab('play'));await p.waitForTimeout(150);await p.evaluate(()=>document.querySelector('#qPP').click());await p.waitForTimeout(300);
+  const r=await p.evaluate(()=>({tab:setup.tab,modal:document.querySelector('#modals .mh')?.textContent||'',game:!!(G&&!G.over)}));await p.evaluate(()=>{document.querySelector('#modals').innerHTML='';if(G&&!G.over){G.over=true}homeTab('play')});return r};
+ const offModes=await modes(),offPass=await passPlay();
  const offRes=await fixture(p,'match-off-1',true);const offPref=await snapshot(p);
  assert.equal(offRes,null);assert.equal(await p.evaluate(()=>JSON.parse(localStorage.getItem(PKEY)).career),undefined);
  assert.equal((await p.evaluate(()=>SkylineCareer.completeTutorial('origins'))).reason,'career-disabled');ok('with the flag off, finished matches and helper calls write nothing');
@@ -37,6 +42,8 @@ const PREFS={nick:'Career QA',nickSet:true,welcomed:1,tutDone:1,coach:{pre:1,pos
  assert.equal(await p.evaluate(()=>SkylineCareer.enabled),true);
  await p.evaluate(()=>homeTab('play'));await p.waitForTimeout(200);
  assert.equal(await p.locator('#crOpen').count(),1);ok('flag on: a temporary Skyline Career entry appears in Game Modes');
+ const onModes=await modes();assert.deepEqual(onModes,['crOpen',...offModes]);assert.deepEqual(await passPlay(),offPass);
+ ok('every existing Game Modes entry is still there, in the same order, and Pass & Play behaves the same');
  const view=await p.evaluate(()=>SkylineCareer.state().map(b=>[b.id,b.status]));
  assert.deepEqual(view,[['origins','playable'],['circuit','locked'],['dominion','locked-hidden'],['empire','locked-hidden']]);ok('new player: Origins playable, Circuit locked with requirements, later boards hidden');
  // Origins = today's game: the set matches a Quick Play start except the two career tags.
@@ -56,6 +63,10 @@ const PREFS={nick:'Career QA',nickSet:true,welcomed:1,tutDone:1,coach:{pre:1,pos
  const r1=await fixture(p,'match-on-1',true);const onPref=await snapshot(p);
  assert.ok(r1.ok&&r1.qualifiedWin);assert.equal(onPref,offPref);ok('a qualifying win is recorded and nothing else in the profile differs from the same match with the flag off');
  assert.equal((await fixture(p,'match-on-1',true)).reason,'duplicate');
+ // A stale tab (its in-memory profile from before the match was counted) finishing the same match must not count it again.
+ const stale=await p.evaluate(()=>{const now=PREF.career;PREF.career={v:1,unlocked:{origins:0},boards:{},tutorials:{},challenges:{},receipts:[],floor:0};return !!now});
+ assert.ok(stale);assert.equal((await fixture(p,'match-on-1',true)).reason,'duplicate');
+ assert.equal(await p.evaluate(()=>SkylineCareerCore.normalize(JSON.parse(localStorage.getItem(PKEY)).career).boards.origins.qualifiedWins),1);ok('a stale tab cannot count the same match twice (the saved profile is re-read first)');
  const easy=await fixture(p,'match-on-easy',true,'easy');assert.ok(easy.ok&&!easy.qualifiedWin);
  const loss=await fixture(p,'match-on-loss',false);assert.ok(loss.ok&&!loss.won);ok('duplicates rejected; Easy-only wins and losses earn mastery but not unlocks');
  const r2=await fixture(p,'match-on-2',true);assert.deepEqual(r2.unlocked,['circuit']);
@@ -67,6 +78,12 @@ const PREFS={nick:'Career QA',nickSet:true,welcomed:1,tutDone:1,coach:{pre:1,pos
  assert.deepEqual(after[0],['origins','playable',2,4]);assert.equal(after[1][1],'unlocked-preview');ok('career progress survives a reload');
  await p.goto(base+'?career=off');await p.waitForFunction(()=>window.SkylineCareer&&!document.querySelector('#boot'));
  assert.equal(await p.evaluate(()=>SkylineCareer.enabled),false);assert.ok(await p.evaluate(()=>!!JSON.parse(localStorage.getItem(PKEY)).career));ok('?career=off turns the flag off and keeps stored progress');
+ await context.close();
+ // A career record from a newer app version is never overwritten by this build.
+ ({context,p}=await session('?career=on',{career:{v:2,unlocked:{origins:0,circuit:1},future:{keep:true}}}));
+ const newer=await fixture(p,'match-newer',true);assert.equal(newer.reason,'newer-version');
+ assert.deepEqual(await p.evaluate(()=>JSON.parse(localStorage.getItem(PKEY)).career),{v:2,unlocked:{origins:0,circuit:1},future:{keep:true}});
+ ok('a newer-version career record is left exactly as it was');
  await context.close();
  assert.deepEqual(errors,[]);ok('no browser errors');
 })().catch(e=>{console.error(e);process.exitCode=1}).finally(async()=>{if(browser)await browser.close();if(server)server.close();console.log(`CAREER BROWSER ${engine} ${n} checks`)});

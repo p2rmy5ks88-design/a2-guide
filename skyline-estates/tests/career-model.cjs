@@ -53,9 +53,18 @@ ok('Dominion needs Circuit first, two Circuit wins and three district challenges
 const round=C.normalize(JSON.parse(JSON.stringify(s)));assert.deepEqual(round,s);ok('state survives a JSON save/load round trip unchanged');
 const perm=C.normalize({v:1,unlocked:{origins:1,circuit:5},boards:{}});assert.equal(C.view(perm)[1].status,'unlocked-preview');ok('unlocked boards stay unlocked even if stats are missing');
 const bad=C.normalize({v:1,unlocked:{origins:'x',nope:1},boards:{origins:{xp:-5,matches:2.5,wins:1,qualifiedWins:3},bogus:{}},receipts:['ok',5,'ok','bad id!']});
-assert.equal(bad.boards.origins.xp,0);assert.equal(bad.boards.origins.matches,0);assert.equal(bad.boards.origins.wins,3);assert.equal(bad.boards.bogus,undefined);assert.deepEqual(bad.receipts,['ok']);
+assert.equal(bad.boards.origins.xp,0);assert.equal(bad.boards.origins.matches,0);assert.equal(bad.boards.origins.wins,3);assert.equal(bad.boards.bogus,undefined);assert.deepEqual(bad.receipts,[['ok',0]]);
 assert.deepEqual(C.normalize(null),C.fresh());assert.deepEqual(C.normalize('junk'),C.fresh());ok('corrupt or tampered fields are repaired to safe values');
-const big=C.fresh();for(let i=0;i<450;i++)C.record(big,match('r'+i),{},T0);assert.equal(big.receipts.length,C.QUALIFY.maxReceipts);ok('receipt history is capped');
+const big=C.fresh();for(let i=0;i<450;i++)assert.ok(C.record(big,match('r'+i,{startedAt:T0+i*1000,endedAt:T0+i*1000+300000}),{},T0).ok);
+assert.equal(big.receipts.length,C.QUALIFY.maxReceipts);assert.equal(big.floor,T0+49*1000);ok('receipt history is capped at 400 and remembers the latest evicted start time');
+const before=JSON.stringify(big);
+for(const i of [0,25,49]){const r=C.record(big,match('r'+i,{startedAt:T0+i*1000,endedAt:T0+i*1000+300000}),{},T0);assert.equal(r.reason,'older-than-history','evicted r'+i)}
+assert.equal(C.record(big,match('r60',{startedAt:T0+60*1000,endedAt:T0+60*1000+300000}),{},T0).reason,'duplicate');
+assert.equal(C.record(big,match('replay-old',{startedAt:T0,endedAt:T0+999999}),{},T0).reason,'older-than-history');assert.equal(JSON.stringify(big),before);
+assert.ok(C.record(big,match('r-new',{startedAt:T0+10_000_000,endedAt:T0+10_300_000}),{},T0).ok);
+const reload=C.normalize(JSON.parse(before));assert.equal(C.record(reload,match('r10',{startedAt:T0+10*1000,endedAt:T0+10*1000+300000}),{},T0).reason,'older-than-history');
+ok('an evicted or older match can never be counted again, before or after a save/load');
+const legacy=C.normalize({v:1,unlocked:{origins:0},receipts:['a','b','a']});assert.deepEqual(legacy.receipts,[['a',0],['b',0]]);ok('older receipt format (plain ids) loads safely');
 const newer=C.normalize({v:2,unlocked:{origins:1},future:true});assert.ok(newer.readOnly&&newer.future);assert.equal(C.record(newer,match('z')).reason,'newer-version');assert.deepEqual(C.evaluate(newer),[]);
 ok('a record from a newer version is left untouched');
 

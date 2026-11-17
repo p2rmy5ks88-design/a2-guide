@@ -44,7 +44,9 @@ const int=(v,lo=0)=>Number.isSafeInteger(v)&&v>=lo?v:0;
 const isObj=v=>v&&typeof v==='object'&&!Array.isArray(v);
 const ID=/^[A-Za-z0-9:_-]{1,80}$/;
 
-function fresh(){return{v:VERSION,unlocked:{origins:0},boards:{},tutorials:{},challenges:{},receipts:[]}}
+// receipts: the last counted matches as [matchId, startedAt]. When old receipts are evicted, `floor` keeps the latest
+// evicted start time, and any match that started at or before it is refused, so an evicted match can never count again.
+function fresh(){return{v:VERSION,unlocked:{origins:0},boards:{},tutorials:{},challenges:{},receipts:[],floor:0}}
 function boardStats(){return{xp:0,matches:0,qualified:0,wins:0,qualifiedWins:0,bestScore:0,lastAt:0}}
 // Normalise stored data. Unknown boards and malformed fields are dropped; counts can only be non-negative integers.
 // A record written by a newer version is returned as-is with readOnly=true so this build never overwrites it.
@@ -57,7 +59,9 @@ function normalize(raw){
  if(isObj(raw.boards))for(const b of BOARDS){const r=raw.boards[b.id];if(!isObj(r))continue;const t=boardStats();for(const k of Object.keys(t))t[k]=int(r[k]);if(t.qualifiedWins>t.wins)t.wins=t.qualifiedWins;s.boards[b.id]=t}
  if(isObj(raw.tutorials))for(const b of BOARDS)if(raw.tutorials[b.id])s.tutorials[b.id]=int(raw.tutorials[b.id])||1;
  if(isObj(raw.challenges))for(const b of BOARDS){const c=raw.challenges[b.id];if(!isObj(c))continue;const o={};for(const [k,v] of Object.entries(c))if(ID.test(k)&&isObj(v)&&typeof v.tag==='string')o[k]={tag:v.tag.slice(0,40),at:int(v.at)};s.challenges[b.id]=o}
- if(Array.isArray(raw.receipts))s.receipts=[...new Set(raw.receipts.filter(r=>typeof r==='string'&&ID.test(r)))].slice(-QUALIFY.maxReceipts);
+ s.floor=Number.isFinite(raw.floor)&&raw.floor>0?raw.floor:0;
+ if(Array.isArray(raw.receipts)){const seen=new Set();for(const r of raw.receipts){const id=Array.isArray(r)?r[0]:r,at=Array.isArray(r)&&Number.isFinite(r[1])?r[1]:0;if(typeof id==='string'&&ID.test(id)&&!seen.has(id)){seen.add(id);s.receipts.push([id,at])}}
+  while(s.receipts.length>QUALIFY.maxReceipts)s.floor=Math.max(s.floor,s.receipts.shift()[1])}
  return s;
 }
 const stats=(s,id)=>s.boards[id]||boardStats();
@@ -100,11 +104,12 @@ function qualify(f){
 function record(s,f,ctx={},now=Date.now()){
  if(s.readOnly)return{ok:false,reason:'newer-version'};
  const q=qualify(f);if(!q.counts)return{ok:false,reason:q.reasons[0],reasons:q.reasons};
- if(s.receipts.includes(f.matchId))return{ok:false,reason:'duplicate'};
+ if(s.receipts.some(r=>r[0]===f.matchId))return{ok:false,reason:'duplicate'};
+ if(f.startedAt<=s.floor)return{ok:false,reason:'older-than-history'};
  const t=s.boards[f.board]=stats(s,f.board);
  t.matches++;t.qualified++;t.xp+=MASTERY.matchXp+MASTERY.qualifiedXp;if(f.won){t.wins++;t.xp+=MASTERY.winXp}if(q.winCounts)t.qualifiedWins++;
  t.bestScore=Math.max(t.bestScore,int(Math.round(f.score||0)));t.lastAt=now;
- s.receipts.push(f.matchId);if(s.receipts.length>QUALIFY.maxReceipts)s.receipts=s.receipts.slice(-QUALIFY.maxReceipts);
+ s.receipts.push([f.matchId,f.startedAt]);while(s.receipts.length>QUALIFY.maxReceipts)s.floor=Math.max(s.floor,s.receipts.shift()[1]);
  const unlocked=evaluate(s,ctx,now);
  return{ok:true,qualifiedWin:q.winCounts,won:!!f.won,unlocked,xp:t.xp,level:masteryLevel(t.xp)};
 }
@@ -142,6 +147,8 @@ function flagOn(){try{const q=new URLSearchParams(location.search).get('career')
 const enabled=flagOn();
 const ctx=()=>({originsTutorialDone:!!PREF.tutDone});
 function load(){return C.normalize(PREF.career)}
+// Before recording, read the saved profile again: another tab or a restored backup may already hold this match.
+function loadStored(){try{const raw=JSON.parse(localStorage.getItem(PKEY)||'null');if(raw&&raw.career)return C.normalize(raw.career)}catch(e){}return load()}
 function store(s){if(s.readOnly)return false;PREF.career=s;savePref();return true}
 function state(){return load()}
 function gather(w){
@@ -153,8 +160,12 @@ function gather(w){
   startedAt,endedAt:Date.now(),rounds:G.round,activity,won:!!owner&&owner===w,score,aiOpponents:G.players.filter(p=>p.ai).length,aiLevel:G.set.ai}}
 let last=null;
 if(enabled){
- const oldEnd=progressGameEnd;progressGameEnd=function(w){const r=oldEnd.apply(this,arguments);
-  try{if(G&&G.set&&G.set.career==='origins'){const s=load();last=C.record(s,gather(w),ctx());if(last.ok)store(s)}}catch(e){last={ok:false,reason:'error',message:String(e)}}return r};
+ // The end-of-match code saves the whole profile, so a stale in-memory career record would overwrite a newer saved one.
+ // Adopt the saved record first (unless it is from a newer version, which stays exactly as stored), then record.
+ const oldEnd=progressGameEnd;progressGameEnd=function(w){let s=null;
+  try{if(G&&G.set&&G.set.career==='origins'){s=loadStored();if(!s.readOnly)PREF.career=s}}catch(e){s=null}
+  const r=oldEnd.apply(this,arguments);
+  try{if(s){last=C.record(s,gather(w),ctx());if(last.ok)store(s)}}catch(e){last={ok:false,reason:'error',message:String(e)}}return r};
 }
 // Start an Origins career match: today's Classic game, same players as Quick Play (you + 3 computer players).
 function startOrigins(length='standard'){

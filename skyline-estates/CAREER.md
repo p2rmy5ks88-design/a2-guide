@@ -6,6 +6,14 @@ Status: Phase A, behind a feature flag that is **off by default**. With the flag
 - Tests: `tests/career-model.cjs` (core), `tests/career-browser.cjs` (real game, Chromium and WebKit), `tests/origins-round-study.cjs` (Origins balance guard rails from the pre-development study).
 - Not in Phase A: Circuit, Dominion and Empire gameplay, the global street generator, final Career screens, artwork, online play.
 
+## Safety checks (Phase A review)
+
+- **No double counting:** a match id is counted once; evicted ids are blocked by `floor` (above).
+- **Stale tabs:** before a career match's end-of-match save, the game re-reads the saved career record and uses it, so an older tab cannot overwrite newer progress or count a match twice. Other profile fields keep the game's existing single-tab behaviour.
+- **Feature flag:** stored per device in `localStorage`. If storage is unavailable (private mode, blocked storage) the flag reads as off. A shared link with `?career=on` turns it on for whoever opens it, so keep such links to testers.
+- **Newer versions:** a record with a higher `v` is never modified; recording, unlocks and helper calls are refused and the record is saved back exactly as it was.
+- **Game Modes:** with the flag on, the temporary entry is added first and every existing entry stays, in the same order, with the same behaviour (tested with Pass & Play). With the flag off the panel is unchanged.
+
 ## Turning it on for testing
 
 - Open the game with `?career=on` once; the setting stays on that device (`localStorage['skylineFeature.career']='on'`).
@@ -51,7 +59,8 @@ Players are the Quick Play line-up: you plus three computer players at the chose
   },
   "tutorials": { "origins": 1794872700000 },
   "challenges": { "circuit": { "district-a": { "tag": "district", "at": 1794872717398 } } },
-  "receipts": ["<match id>", "..."]
+  "receipts": [["<match id>", 1794872400000], "..."],
+  "floor": 0
 }
 ```
 
@@ -59,7 +68,8 @@ Players are the Quick Play line-up: you plus three computer players at the chose
 - `boards`: per-board mastery. Board mastery XP is separate from profile XP, which the game already awards: +100 for a counted match, +100 more for a win. Mastery levels start at 0, 300, 800, 1500, 2500 and 4000 XP.
 - `tutorials`: completed board tutorials. For Origins, the existing How to play tour (`PREF.tutDone`) also counts.
 - `challenges`: board challenges recorded by future board modules through `SkylineCareer.completeChallenge(board, id, tag)`.
-- `receipts`: the last 400 counted match ids, so a match is never counted twice.
+- `receipts`: the last 400 counted matches as `[matchId, startedAt]`, so a match is never counted twice.
+- `floor`: the latest start time among receipts dropped from that list. Any match that started at or before it is refused (`older-than-history`), so a match that falls out of the 400-entry list can never be counted again, for example after restoring an old save. Start times come from the wallet's permanent "match started" record, which is never pruned.
 - Loading normalises the record: unknown boards and malformed values are dropped, counts must be non-negative integers. A record written by a newer version is left untouched and treated as read-only.
 
 ## Qualification rules
@@ -75,8 +85,14 @@ A finished career match counts (for mastery) only if **all** of these hold. The 
 
 A counted match is a **qualifying win** (it advances unlocks) only if the profile owner won **and** at least one opponent was a computer player on **Normal or Hard**.
 
-- Wins against Easy-only or all-human tables still earn mastery XP but do not unlock boards. This stops Easy or pass-and-play wins being farmed for unlocks.
-- The owner should confirm this policy, or relax it (for example, also allowing Easy).
+Owner decisions (17 Nov 2026):
+
+- Easy AI wins count toward mastery XP but do not unlock the next board.
+- Normal or Hard AI wins qualify for unlocking.
+- Quick 20-round Origins matches qualify when every other rule above is met.
+- Cloud sync of career progress is deferred; progress stays on the device.
+- Unlock thresholds stay provisional until player testing.
+- All-human (pass-and-play) wins earn mastery XP only, like Easy wins.
 
 Career progress is never written with the flag off, and City Boards progress is never read or written by career code. The browser test checks that a qualifying career match leaves every other part of the profile identical to the same match played with the flag off.
 
