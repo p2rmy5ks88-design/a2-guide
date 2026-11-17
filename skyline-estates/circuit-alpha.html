@@ -4,28 +4,35 @@
 <!-- Skyline Circuit playable alpha: a separate page. It does not load or change game.html, Classic or Harbour Ring
      saves; it writes only skylineCircuitSave and, for Career matches, one skylineCareerInbox:<matchId> entry. -->
 <style>
-:root{--sal:0px;--sar:0px;--sat:0px;--sab:0px;--bg:#0E1A2E;--panel:#13213A;--gold:#E2B54A;--ink:#F1E7D5;color-scheme:dark}
-*{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:13px/1.35 system-ui,-apple-system,sans-serif;overflow:hidden}
+:root{--sal:0px;--sar:0px;--sat:0px;--sab:0px;--navy:#0B1633;--panel:#101E35;--raised:#172A43;--gold:#F2C457;--mint:#70F0C2;--ink:#F8F6EF;--muted:#B6C5D1;--warn:#F3B45C;color-scheme:dark}
+*{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--navy);color:var(--ink);font:600 12px/1.3 -apple-system,system-ui,sans-serif;overflow:hidden;font-variant-numeric:tabular-nums lining-nums}
 [hidden]{display:none!important}
-#cx-setup{max-width:560px;margin:0 auto;padding:max(16px,env(safe-area-inset-top)) max(16px,var(--sar),env(safe-area-inset-right)) 16px max(16px,var(--sal),env(safe-area-inset-left));height:100%;overflow:auto}
+#cx-setup{max-width:560px;margin:0 auto;padding:max(16px,env(safe-area-inset-top)) max(16px,var(--sar),env(safe-area-inset-right)) 16px max(16px,var(--sal),env(safe-area-inset-left));height:100%;overflow:auto;font-weight:500;font-size:13px}
 #cx-setup h1{font-size:20px;margin:8px 0}#cx-setup h1 small{font-size:12px;color:var(--gold);font-weight:600}
 fieldset{border:1px solid #ffffff22;border-radius:8px;margin:10px 0;padding:8px 10px}fieldset label{display:block;padding:6px 0;min-height:32px}
-select,button{font:inherit}button{min-height:44px;min-width:44px;border-radius:8px;border:1px solid #ffffff33;background:#1c2d4d;color:var(--ink);padding:0 12px;cursor:pointer}
-.cx-primary{background:var(--gold);color:#1b1405;border-color:var(--gold);font-weight:700}.cx-link{color:var(--gold);margin-left:8px}
-.cx-note{color:#c9d3e6;font-size:12px}.cx-warn{color:#ffb4a8}
-#cx-game{position:fixed;inset:0;display:grid;grid-template-columns:var(--hudL) 1fr var(--hudR);
+select,button{font:inherit}button{min-height:44px;min-width:44px;border-radius:10px;border:1px solid #F2C45766;background:#0B1633;color:var(--ink);padding:0 12px;cursor:pointer}
+.cx-primary{width:100%;margin-top:6px;background:linear-gradient(180deg,#F6D27A,#E2A93A);color:#1b1405;border:0;font:700 14px -apple-system,system-ui,sans-serif}#cx-setup .cx-primary{width:auto}
+.cx-link{color:var(--gold);margin-left:8px}.cx-note,.cx-k{color:var(--muted);font-weight:500}.cx-warn{color:#ffb4a8}
+#cx-game{position:fixed;inset:0;display:grid;grid-template-columns:var(--hudL) minmax(0,1fr) var(--hudR);grid-template-rows:minmax(0,1fr);
  padding:max(var(--sat),env(safe-area-inset-top)) max(var(--sar),env(safe-area-inset-right)) max(var(--sab),env(safe-area-inset-bottom)) max(var(--sal),env(safe-area-inset-left));--hudL:156px;--hudR:184px}
 @media (max-width:760px){#cx-game{--hudL:132px;--hudR:156px}}
-#cx-players,#cx-actions{background:var(--panel);overflow:auto;padding:6px;min-height:0}
-#cx-board{width:100%;height:100%;display:block;touch-action:manipulation}
-.cx-h{font-size:11px;color:#c9d3e6;margin-bottom:4px}.cx-p{padding:4px;border-radius:6px;margin-bottom:4px;font-size:11px}.cx-p i,.cx-order i,.cx-tally i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px;vertical-align:-1px}
-.cx-turn{outline:2px solid var(--gold)}.cx-out{opacity:.45}.cx-bar{height:4px;background:#ffffff1a;border-radius:2px;margin-top:2px}.cx-bar span{display:block;height:100%;border-radius:2px}
-.cx-order{font-size:11px;margin-top:6px}
-.cx-panel h2{font-size:14px;margin:2px 0 6px}.cx-panel p{margin:4px 0}.cx-seg{display:flex;gap:4px}.cx-seg button{flex:1;font-size:11px;padding:0 4px}.cx-seg [aria-checked=true]{background:#2f4a7a;border-color:var(--gold)}
-.cx-b{display:flex;justify-content:space-between;align-items:center;gap:4px;padding:2px 0;font-size:11px}.cx-b button{min-height:36px;font-size:11px}.cx-b small{color:#c9d3e6;text-align:right}
-.cx-clock{background:#3b2f10;border:1px solid var(--gold);border-radius:6px;padding:4px 6px;margin-bottom:6px;font-size:11px}
-.cx-tally{background:#0b1526;border-radius:6px;padding:4px 6px;margin:6px 0;font-size:11px}.cx-feed{font-size:11px;color:#c9d3e6;margin-top:6px}.cx-n{padding:2px 0;border-top:1px solid #ffffff12}
+#cx-players,#cx-actions{background:linear-gradient(180deg,var(--raised),var(--panel));overflow:auto;padding:6px;min-height:0;border:0 solid #F2C45733}
+#cx-players{border-right-width:1px}#cx-actions{border-left-width:1px}
+#cx-board{width:100%;height:100%;min-width:0;min-height:0;display:block;touch-action:manipulation;background:var(--navy)}
+.cx-cur{display:flex;align-items:center;gap:6px;padding:4px 5px;border-radius:8px;background:#0B163399;border:1px solid #F2C45755}.cx-cur b{font-size:13px}
+.cx-sect{margin-top:7px;padding-top:5px;border-top:1px solid #ffffff14}
+.cx-p{display:flex;align-items:center;gap:5px;margin-top:5px}.cx-n1{flex:1;min-width:0;overflow-wrap:anywhere}.cx-turn .cx-n1{text-decoration:underline;text-decoration-color:var(--gold);text-underline-offset:3px}
+.cx-out{opacity:.45}.cx-tok{flex:none;vertical-align:-2px}
+.cx-bar{height:5px;background:#ffffff18;border-radius:3px;margin:3px 0 2px}.cx-bar span{display:block;height:100%;border-radius:3px}
+.cx-panel h2{font-size:13px;margin:2px 0 6px}.cx-panel p{margin:4px 0}
+.cx-seg{display:flex;border:1px solid #F2C45766;border-radius:10px;overflow:hidden}.cx-seg button{flex:1;border:0;border-radius:0;background:transparent;padding:0 2px;display:flex;align-items:center;justify-content:center;gap:5px}
+.cx-seg i{display:inline-block;width:16px;height:0;border-top:3px solid var(--gold)}.cx-seg .cx-cross i{border-top:3px dashed var(--mint)}
+.cx-seg .cx-stay[aria-checked=true]{background:#F2C45722;box-shadow:inset 0 -3px 0 var(--gold)}.cx-seg .cx-cross[aria-checked=true]{background:#70F0C222;box-shadow:inset 0 -3px 0 var(--mint)}
+.cx-b{display:flex;justify-content:space-between;align-items:center;gap:4px;padding:2px 0}.cx-b button{padding:0 6px}.cx-why{color:var(--muted);font-weight:500;text-align:right}
+.cx-clock{background:#3a2a10;border:1px solid var(--warn);border-radius:8px;padding:5px 6px;margin-bottom:6px}
+.cx-tally{background:#0b1526;border-radius:8px;padding:4px 6px;margin:6px 0}.cx-feed{color:var(--muted);font-weight:500;margin-top:6px}.cx-n{padding:2px 0;border-top:1px solid #ffffff12}
 .cx-bankrupt{color:#ffb4a8}.cx-card{color:#f4d28b}
+.c3-labels .c3-l{position:absolute;transform:translate(-50%,-50%);font:600 12px/1.05 -apple-system,system-ui,sans-serif;color:var(--ink);background:rgba(11,22,51,.74);padding:1px 3px;border-radius:3px;text-align:center;white-space:nowrap}
 </style></head><body>
 <div id="cx-setup" hidden></div>
 <div id="cx-game" hidden><aside id="cx-players" aria-label="Players"></aside><canvas id="cx-board" aria-label="Circuit board"></canvas><aside id="cx-actions" aria-label="Actions"></aside></div>

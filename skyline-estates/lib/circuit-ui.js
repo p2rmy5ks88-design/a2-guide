@@ -9,14 +9,20 @@
 (function(){'use strict';
 const SC=window.SkylineCircuit,SS=window.SkylineCircuitScreen;if(!SC||!SS)return;
 const $=s=>document.querySelector(s),esc=t=>String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
-const COLORS=['#E2B54A','#4FB3FF','#FF6B8A','#7BD88F'],DISTRICT=[{c:'#2c8f86',sym:'●'},{c:'#7a5cc7',sym:'▲'},{c:'#c7703a',sym:'■'},{c:'#3a78c7',sym:'◆'}];
+// Approved V2 player identities (owner decision 17 Nov 2026): colour and shape, never colour alone.
+const PLAYERS=[{c:'#FF7A59',shape:'circle'},{c:'#4C7DFF',shape:'square'},{c:'#F8F6EF',shape:'triangle'},{c:'#E055C8',shape:'hex'}],COLORS=PLAYERS.map(p=>p.c),
+ DISTRICT_NAMES=['Harbour Quarter','Civic Heights','Verdant Mile','Neon Exchange'],DISTRICT=[{c:'#2c8f86',sym:'●'},{c:'#7a5cc7',sym:'▲'},{c:'#c7703a',sym:'■'},{c:'#3a78c7',sym:'◆'}];
 const LEVELS={easy:'Easy · picks routes at random',normal:'Normal · plans its routes',hard:'Hard · plans its routes (same as Normal in this alpha)'};
 const LENGTH_TEXT={standard:'Standard · target 300, up to 40 rounds',extended:'Extended · target 480, up to 60 rounds',quick:'Quick · experimental · target 200 · mastery XP only, never unlocks'};
 const REASON={'not-owned':'Not yours','max-stage':'Already a Skyscraper','one-stage-per-turn':'Already built this turn','bought-this-turn':'Bought this turn — build next turn',
  'needs-network-2':'Needs 2 connected properties','needs-network-3':'Needs 3 connected properties','needs-network-3-both-rings':'Needs 3 connected properties on both rings','cannot-afford':'Not enough cash'};
 const CARD={grant:'City grant: +150',fund:'Development fund: +100',festival:'Festival: +6 influence',inspection:'Inspection: −3 influence',tax:'City tax: 10% of cash',toll:'Toll: −50',repairs:'Repairs: 25 per building stage',rentday:'Rent day: every other player pays you 30'};
 const q=new URLSearchParams(location.search);
-const opts={speed:q.get('speed')||'normal',camera:q.get('camera')||'top',perf:q.get('perf')==='1',career:q.get('career')==='1'};
+const opts={speed:q.get('speed')||'normal',camera:q.get('camera')||'top',perf:q.get('perf')==='1',career:q.get('career')==='1',renderer:q.get('renderer')||'3d'};
+const reducedMotion=(()=>{try{return matchMedia('(prefers-reduced-motion: reduce)').matches}catch(e){return false}})();
+// 3D renderer (lib/circuit-renderer-3d.js) with the 2D placeholder as fallback when WebGL is unavailable or ?renderer=2d.
+let R3=null,R3tried=false,camCur=null;const CINEMATIC={pitch:15,dist:5};
+const tokSvg=(i,sz=12)=>{const c=PLAYERS[i].c,sh=PLAYERS[i].shape;const body=sh==='circle'?'<circle cx="6" cy="6" r="5"/>':sh==='square'?'<rect x="1.5" y="1.5" width="9" height="9"/>':sh==='triangle'?'<path d="M6 .8 11.2 10.6H.8z"/>':'<path d="M11 6 8.5 10.3h-5L1 6l2.5-4.3h5z"/>';return`<svg class="cx-tok" width="${sz}" height="${sz}" viewBox="0 0 12 12" fill="${c}" stroke="#0B1633" stroke-width="1.4" aria-hidden="true">${body}</svg>`};
 const SPEED={normal:{step:170,cross:280,ai:450,hold:900},fast:{step:60,cross:90,ai:120,hold:250},instant:{step:0,cross:0,ai:0,hold:0}};
 let s=null,layout=SC.referenceLayout(),G=SS.geometry(layout),C=null,cam=SS.CAMERAS[opts.camera]||SS.CAMERAS.top,plan='stay';
 let anim={queue:[],cur:null,t0:0,tokens:{}},notes=[],tally=null,dirty=true,overlay={},timer=null,stagesOverride=null;
@@ -40,13 +46,21 @@ function setupScreen(){const saved=store.get(SC.SAVE_KEY),r=saved?SC.restore(sav
  $('#cx-start').onclick=()=>{const length=document.querySelector('input[name=len]:checked').value,levels=[...document.querySelectorAll('[data-lv]')].map(e=>e.value);
   const seed=q.get('seed')?+q.get('seed'):(()=>{const a=new Uint32Array(1);crypto.getRandomValues(a);return a[0]})(),startedAt=Date.now();
   begin(SC.newMatch({seed,length,fx:true,players:[{name:'You'},...levels.map((level,i)=>({name:'Computer '+(i+1),level}))],meta:{matchId:'circuit-'+seed.toString(36)+'-'+startedAt.toString(36),startedAt,career:opts.career}}))}}
-function begin(state){s=state;s.cfg.fx=true;$('#cx-setup').hidden=true;$('#cx-game').hidden=false;anim={queue:[],cur:null,t0:0,tokens:{}};notes=[];tally=null;
- for(const p of s.players)anim.tokens[p.id]={node:p.pos};resize();enqueue();save();loop()}
+async function begin(state){s=state;s.cfg.fx=true;$('#cx-setup').hidden=true;$('#cx-game').hidden=false;anim={queue:[],cur:null,t0:0,tokens:{}};notes=[];tally=null;
+ for(const p of s.players)anim.tokens[p.id]={node:p.pos};
+ if(opts.renderer==='3d'&&!R3tried){R3tried=true;try{const m=await import('./circuit-renderer-3d.js');R3=m.create($('#cx-board'),{layout,camera:cam,onTierChange:t=>{notes.unshift({t:'Graphics quality lowered to '+t+' for smoother play',kind:'quality'});render()}})}catch(e){R3=null;console.warn('3D renderer unavailable, using 2D',e)}}
+ camCur={...cam};resize();enqueue();save();if(!looping){looping=true;loop()}}
+let looping=false;
 // ---------- geometry / layout ----------
 function hudRects(){return['#cx-players','#cx-actions'].map(sel=>{const e=$(sel),r=e.getBoundingClientRect();return{id:sel.slice(4),x:r.left,y:r.top,w:r.width,h:r.height}})}
 function boardRect(){const r=$('#cx-board').getBoundingClientRect();return{x:r.left,y:r.top,w:r.width,h:r.height}}
-function resize(){const cv=$('#cx-board'),r=boardRect(),dpr=Math.min(2,window.devicePixelRatio||1);cv.width=Math.round(r.width||r.w)*dpr;cv.height=Math.round(r.height||r.h)*dpr;
+function resize(){if(R3){R3.resize(boardRect());R3.setCamera(camCur||cam);C=R3.C;dirty=true;return}
+ const cv=$('#cx-board'),r=boardRect(),dpr=Math.min(2,window.devicePixelRatio||1);cv.width=Math.round(r.width||r.w)*dpr;cv.height=Math.round(r.height||r.h)*dpr;
  const rect=boardRect();C=SS.camera(G,cam,rect);dirty=true}
+// Cinematic camera: up to 15° during movement and celebrations, 0° for every decision (approved V2 decision 4).
+function cameraStep(dt){if(!R3||!camCur)return;const want=(!reducedMotion&&opts.speed!=='instant'&&(busy()||(s&&s.over)))?CINEMATIC:cam;
+ if(camCur.pitch===want.pitch&&camCur.dist===want.dist)return;const k=Math.min(1,dt/350);
+ const step=(a,b)=>Math.abs(b-a)<.05?b:a+(b-a)*Math.max(k,.12);camCur={pitch:step(camCur.pitch,want.pitch),dist:step(camCur.dist,want.dist)};R3.setCamera(camCur);C=R3.C;dirty=true}
 // ---------- driving the rules ----------
 function enqueue(){anim.queue.push(...SC.drain(s));dirty=true}
 // The match result is stored as soon as the rules end the match, never waiting for the animation to reach it.
@@ -74,16 +88,23 @@ function finish(){if(finished===s)return;finished=s;if(!s.meta||!s.meta.career){
  const f=SC.careerFacts(s,{ownerSeat:0,endedAt:Date.now()});store.set('skylineCareerInbox:'+f.matchId,JSON.stringify(f));store.del(SC.SAVE_KEY)}
 // ---------- loop ----------
 const perf={frames:[],draw:[]};let last=0;
-function loop(now=performance.now()){if(opts.perf&&last)perf.frames.push(now-last);last=now;stepAnim(now);
+function loop(now=performance.now()){const dt=last?now-last:16;if(opts.perf&&last)perf.frames.push(now-last);last=now;stepAnim(now);cameraStep(dt);
  if(!busy()&&s&&!s.over){const pd=SC.pending(s);if(pd&&s.players[pd.player].ai&&!timer){const sp=SPEED[opts.speed]||SPEED.normal;
    const go=()=>{timer=null;if(!busy()&&SC.pending(s)&&s.players[SC.pending(s).player].ai){act(SC.ai(s,SC.pending(s).player))}};if(sp.ai)timer=setTimeout(go,sp.ai);else go()}}
  if(dirty){const t=performance.now();draw();render();if(opts.perf)perf.draw.push(performance.now()-t);dirty=false}
+ if(R3){if(busy())R3.tick(now);R3.render(now)}
  requestAnimationFrame(loop)}
 // ---------- drawing (placeholder art) ----------
 function tokenXY(pid,slot){const a=anim.tokens[pid];const at=q=>C.project(SS.tokenPoint(G,q,slot));if(!a)return null;if(a.to==null)return at(a.node);
  const p=at(a.node),r=at(a.to);return{x:p.x+(r.x-p.x)*a.k,y:p.y+(r.y-p.y)*a.k,d:p.d}}
 function stages(){if(stagesOverride)return stagesOverride;const o={};for(const id of SC.PROPS)o[id]=s.own[id].h;return o}
-function draw(){const cv=$('#cx-board'),ctx=cv.getContext('2d'),dpr=cv.width/Math.max(1,boardRect().w),R=boardRect();ctx.setTransform(dpr,0,0,dpr,-R.x*dpr,-R.y*dpr);
+function draw(){if(R3)return draw3d();draw2d()}
+// 3D: the renderer draws; the overlay record (used by the checks) is computed with the same projection.
+function draw3d(){const v=SC.view(s),me=s.players[s.turn],st=stages();overlay={routeStay:[],routeCross:[],tokens:{},buildings:SC.PROPS.filter(id=>st[id]>0)};
+ const showRoute=v.preview&&!me.ai&&!busy();if(showRoute){const paths=SS.routePaths(me.pos);overlay.routeStay=paths.stay.map(g=>g.to);overlay.routeCross=paths.cross.map(g=>g.to)}
+ const toks=[],counts={};for(const p of s.players)if(!p.out){const a=anim.tokens[p.id]||{node:p.pos};toks.push({pid:p.id,...a});const slot=counts[a.node]=(counts[a.node]??-1)+1;const xy=tokenXY(p.id,slot%4);if(xy)overlay.tokens[p.id]={node:a.node,x:xy.x,y:xy.y,r:G.tokenR*C.ppu({...G.nodes[a.node],z:0})}}
+ R3.update({view:v,stages:st,tokens:toks,route:showRoute?{pos:me.pos,plan,preview:v.preview}:null,networkFor:s.players.filter(p=>!p.out).map(p=>p.id)})}
+function draw2d(){const cv=$('#cx-board'),ctx=cv.getContext('2d'),dpr=cv.width/Math.max(1,boardRect().w),R=boardRect();ctx.setTransform(dpr,0,0,dpr,-R.x*dpr,-R.y*dpr);
  ctx.clearRect(R.x,R.y,R.w,R.h);const v=SC.view(s),me=s.players[s.turn],st=stages();overlay={routeStay:[],routeCross:[],tokens:{},buildings:[]};
  const P=id=>C.project({...G.nodes[id],z:0});
  // connectors
@@ -113,10 +134,11 @@ function draw(){const cv=$('#cx-board'),ctx=cv.getContext('2d'),dpr=cv.width/Mat
  items.sort((a,b)=>b.d-a.d).forEach(i=>i.draw())}
 // ---------- HUD (placeholder composition; one panel per interaction state) ----------
 function render(){if(!s)return;const v=SC.view(s),pd=v.pending,me=pd?s.players[pd.player]:null;
- $('#cx-players').innerHTML=`<div class="cx-h">Round ${v.round}/${v.rounds} · target ${v.target}${s.cfg.length==='quick'?' · <b>Quick (experimental)</b>':''}</div>
- ${v.players.map(p=>`<div class="cx-p ${p.id===s.turn?'cx-turn':''} ${p.out?'cx-out':''}"><i style="background:${COLORS[p.id]}"></i><b>${esc(p.name)}</b>${p.level?` <small>${esc(p.level[0].toUpperCase()+p.level.slice(1))}</small>`:''}
-  <div><small>Cash</small> ${p.cash} · <small>Influence</small> ${p.influence}</div><div class="cx-bar"><span style="width:${Math.min(100,100*p.influence/v.target)}%;background:${COLORS[p.id]}"></span></div></div>`).join('')}
- <div class="cx-order"><small>Order this round</small><br>${v.order.map(i=>`<i style="background:${COLORS[i]}"></i>`).join(' → ')}<br><small>Reverses every round</small></div>`;
+ const cur=v.players[s.turn],standings=[...v.players].sort((a,b)=>b.influence-a.influence);
+ $('#cx-players').innerHTML=`<div class="cx-cur">${tokSvg(cur.id,16)}<div><b>${esc(cur.name)}</b><div class="cx-k">Cash ${cur.cash}</div></div></div>
+ <div class="cx-sect"><div class="cx-k">Influence → target ${v.target}${s.cfg.length==='quick'?' · Quick (experimental)':''}</div>
+ ${standings.map((p,r)=>`<div class="cx-p ${p.id===s.turn?'cx-turn':''} ${p.out?'cx-out':''}">${tokSvg(p.id)}<span class="cx-n1">${r+1}. ${esc(p.name)}${p.level?` <span class="cx-k">${esc(p.level[0].toUpperCase()+p.level.slice(1))}</span>`:''}</span><span>${p.influence}</span></div><div class="cx-bar"><span style="width:${Math.min(100,100*p.influence/v.target)}%;background:${COLORS[p.id]}"></span></div>`).join('')}</div>
+ <div class="cx-sect cx-order"><div>Round ${v.round} / ${v.rounds}</div><div class="cx-k">Order · reverses each round</div><div>${v.order.map((i,k)=>(k?'<span class="cx-k">›</span>':'')+tokSvg(i)).join('')}</div></div>`;
  let h='';
  // 9. victory clock
  if(v.clock)h+=`<div class="cx-clock" role="status"><b>${esc(name(v.clock.pid))}</b> is at the target — wins at the end of round ${v.clock.winsAtEndOfRound} if still leading</div>`;
@@ -129,19 +151,19 @@ function render(){if(!s)return;const v=SC.view(s),pd=v.pending,me=pd?s.players[p
  else if(pd&&me.ai)h+=`<div class="cx-panel" data-state="ai"><p>${esc(me.name)} is thinking…</p></div>`;
  else if(pd&&pd.type==='roll'){// 1. plan and roll
   const pv=v.preview,fj=pv.firstJunction,chance=Math.round(100*pv[plan].junctionChance);
-  h+=`<div class="cx-panel" data-state="roll"><h2>Your route</h2><div class="cx-seg" role="radiogroup"><button role="radio" aria-checked="${plan==='stay'}" data-plan="stay">Stay on ring</button><button role="radio" aria-checked="${plan==='cross'}" data-plan="cross">Cross at junction</button></div>
-   <p><small>${fj?`First junction ${fj.node}${fj.stepsAway?` (${fj.stepsAway} steps)`:' (you are on it)'} → crosses to ${fj.crossTo}. `:''}${chance?`Your plan applies on ${chance}% of rolls.`:'No junction can be reached this roll — the plan has no effect.'}</small></p>
-   <p><small>Solid line: stay · dashed: cross · dots: likely landings</small></p><button id="cx-roll" class="cx-primary">Roll</button></div>`}
+  h+=`<div class="cx-panel" data-state="roll"><h2>Your route</h2><div class="cx-seg" role="radiogroup" aria-label="Route plan"><button role="radio" aria-checked="${plan==='stay'}" data-plan="stay" class="cx-stay"><i aria-hidden="true"></i>Stay</button><button role="radio" aria-checked="${plan==='cross'}" data-plan="cross" class="cx-cross"><i aria-hidden="true"></i>Cross</button></div>
+   <p>${fj?`First junction <b>${fj.node}</b>${fj.stepsAway?` · ${fj.stepsAway} step${fj.stepsAway===1?'':'s'}`:' · here'}`:''}</p><p class="cx-k">${chance?`Plan applies on ${chance}% of rolls. Dots show likely landings, not certainties.`:'No junction can be reached this roll — the plan has no effect.'}</p>
+   <button id="cx-roll" class="cx-primary">Roll</button></div>`}
  else if(pd&&pd.type==='buy'){// 3. buy
   const n=v.nodes.find(x=>x.id===pd.node);
   const after=JSON.parse(JSON.stringify(s));after.own[pd.node]={o:pd.player,h:0};const sizeAfter=(SC.networks(after,pd.player).find(x=>x.props.includes(pd.node))||{size:1}).size;
-  h+=`<div class="cx-panel" data-state="buy"><h2>${pd.node} · District ${n.quadrant+1} ${DISTRICT[n.quadrant].sym}</h2><p>Price ${pd.price} · rent ${Math.round(pd.price*.12)} at Plot${n.ring==='I'?' · inner ring (premium)':''}</p>
-   <p><small>${sizeAfter>1?`Joins a network of ${sizeAfter}.`:'Does not connect to your properties yet.'}</small></p><button id="cx-buy" class="cx-primary">Buy</button> <button id="cx-pass">Pass</button></div>`}
+  h+=`<div class="cx-panel" data-state="buy"><h2>${pd.node} · ${DISTRICT_NAMES[n.quadrant]}</h2><p>Price ${pd.price} · rent ${Math.round(pd.price*.12)} at Plot${n.ring==='I'?' · inner ring (premium)':''}</p>
+   <p class="cx-k">${sizeAfter>1?`Joins a network of ${sizeAfter}.`:'Does not connect to your properties yet.'}</p><button id="cx-buy" class="cx-primary">Buy</button> <button id="cx-pass">Pass</button></div>`}
  else if(pd&&pd.type==='build'){// 4. build
-  const rows=v.build||[];h+=`<div class="cx-panel" data-state="build"><h2>Build</h2>${rows.length?rows.map(r=>`<div class="cx-b"><span>${r.node} · ${SC.STAGES[r.stage]}</span>${r.reason?`<small>${esc(REASON[r.reason]||r.reason)}</small>`:`<button data-build="${r.node}">${SC.STAGES[r.stage+1]} · ${r.cost}</button>`}</div>`).join(''):'<p><small>You own no properties yet.</small></p>'}
+  const rows=v.build||[];h+=`<div class="cx-panel" data-state="build"><h2>Build</h2>${rows.length?rows.map(r=>`<div class="cx-b"><span>${r.node} · ${SC.STAGES[r.stage]}</span>${r.reason?`<span class="cx-why">${esc(REASON[r.reason]||r.reason)}</span>`:`<button data-build="${r.node}">${SC.STAGES[r.stage+1]} · ${r.cost}</button>`}</div>`).join(''):'<p class="cx-k">You own no properties yet.</p>'}
    <button id="cx-end" class="cx-primary">End turn</button></div>`}
  // 8. end of round tally
- if(tally)h+=`<div class="cx-tally" data-state="round"><b>Round ${tally.round} influence</b>${tally.tally.map(t=>`<div><i style="background:${COLORS[t.pid]}"></i> +${t.total} <small>(${t.properties} properties · ${t.networks} networks · ${t.districts} districts)</small></div>`).join('')}</div>`;
+ if(tally)h+=`<div class="cx-tally" data-state="round"><b>Round ${tally.round} influence</b>${tally.tally.map(t=>`<div>${tokSvg(t.pid)} +${t.total} <span class="cx-k">(${t.properties} properties · ${t.networks} networks · ${t.districts} districts)</span></div>`).join('')}</div>`;
  // 5–7. card, rent, payday, bankruptcy and other events
  h+=`<div class="cx-feed" aria-live="polite">${notes.map(n=>`<div class="cx-n cx-${n.kind}">${esc(n.t)}</div>`).join('')}</div>`;
  const A=$('#cx-actions');if(A.dataset.h!==h){A.innerHTML=h;A.dataset.h=h;wire()}}
@@ -151,15 +173,19 @@ function wire(){const on=(sel,f)=>{const e=$(sel);if(e)e.onclick=f};
  on('#cx-end',()=>act({type:'end'}));on('#cx-skip',skip);on('#cx-again',()=>{s=null;setupScreen()});
  document.querySelectorAll('[data-build]').forEach(b=>b.onclick=()=>act({type:'build',node:b.dataset.build}))}
 // Tap on the board: identifies the node under the finger (the nearest centre within 22 pt), for inspection.
-function hit(x,y){let best=null,bd=SS.MIN_TOUCH/2;for(const id of Object.keys(G.nodes)){const p=C.project({...G.nodes[id],z:0}),d=Math.hypot(p.x-x,p.y-y);if(d<=bd){bd=d;best=id}}return best}
+function hit(x,y){if(R3&&camCur&&camCur.pitch!==cam.pitch)return null; // no selection while the camera is tilted
+ let best=null,bd=SS.MIN_TOUCH/2;for(const id of Object.keys(G.nodes)){const p=C.project({...G.nodes[id],z:0}),d=Math.hypot(p.x-x,p.y-y);if(d<=bd){bd=d;best=id}}return best}
 window.addEventListener('resize',()=>{if(s)resize()});
+// Re-measure whenever the board's box changes (layout settling, rotation, safe-area changes).
+let lastBox='';try{new ResizeObserver(()=>{const r=boardRect(),k=[r.x,r.y,r.w,r.h].map(Math.round).join();if(s&&k!==lastBox){lastBox=k;resize()}}).observe(document.getElementById('cx-board')||document.body)}catch(e){}
 document.addEventListener('DOMContentLoaded',()=>{setupScreen();$('#cx-board').addEventListener('click',e=>{const id=hit(e.clientX,e.clientY);if(id){notes.unshift({t:`${id}: ${describe(id)}`,kind:'inspect'});notes=notes.slice(0,6);render()}})});
 function describe(id){const n=SC.view(s).nodes.find(x=>x.id===id);if(n.type!=='property')return n.type==='junction'?`junction, connector to ${n.link}`:'event space';return `${n.owner>=0?name(n.owner):'Bank'} · ${n.stageName} · rent ${n.rent||Math.round(n.price*.12)}`}
 // Test and measurement hooks (no effect on the match).
-window.__circuitUI=Object.freeze({present:events=>{anim.queue.push(...events);dirty=true}, // presentation-only (tests): never reaches the rules
+window.__circuitUI=Object.freeze({load:state=>{SC.drain(state);return begin(state)}, // review/tests: show a prepared rules state
+ present:events=>{anim.queue.push(...events);dirty=true}, // presentation-only (tests): never reaches the rules
  state:()=>s,view:()=>SC.view(s),busy:()=>!!busy(),skip,hudRects,boardRect,overlay:()=>overlay,
  projected:()=>Object.keys(G.nodes).map(id=>{const p=C.project({...G.nodes[id],z:0});return{id,x:p.x,y:p.y}}),geometry:()=>({G,C,cam}),hit,
- setStages:o=>{stagesOverride=o;dirty=true},setDesign:({layout:l,spec,cam:c})=>{layout=l;G=SS.geometry(l,spec);if(c)cam=c;resize()},setCamera:k=>{cam=SS.CAMERAS[k];resize()},setLayout:l=>{layout=l;G=SS.geometry(l);resize()},
+ setStages:o=>{stagesOverride=o;dirty=true},setDesign:({layout:l,spec,cam:c})=>{layout=l;G=SS.geometry(l,spec);if(c){cam=c;camCur={...c}}resize()},setCamera:k=>{cam=SS.CAMERAS[k];camCur={...cam};resize()},r3:()=>R3,setLayout:l=>{layout=l;G=SS.geometry(l);resize()},
  placeAll:node=>{for(const p of s.players){p.pos=node;anim.tokens[p.id]={node}}dirty=true},perf:()=>{const f=[...perf.frames].sort((a,b)=>a-b),d=[...perf.draw].sort((a,b)=>a-b),pc=(a,k)=>a.length?+a[Math.min(a.length-1,Math.floor(k*a.length))].toFixed(2):null;
   return{frames:f.length,p50:pc(f,.5),p95:pc(f,.95),max:f.length?+f[f.length-1].toFixed(2):null,long50:f.filter(x=>x>50).length,drawP50:pc(d,.5),drawP95:pc(d,.95)}}});
 })();

@@ -65,7 +65,8 @@ function camera(G,cam,rect){const pts=Object.values(G.nodes);const R=Math.max(..
  const project=q=>{const r=raw(q);return{x:ox+s*r.x,y:oy+s*r.y,d:r.d}};
  // Screen points per board unit at a node (for converting the 44 pt rule).
  const ppu=(q)=>{const a=project(q),b=project({...q,x:q.x+1});return Math.hypot(b.x-a.x,b.y-a.y)};
- return{project,ppu,scale:s,pitch:cam.pitch,dist:cam.dist,rect}}
+ // D, ox, oy and the axis convention are exposed so a 3D renderer can build the identical projection.
+ return{project,ppu,scale:s,pitch:cam.pitch,dist:cam.dist,rect,D,ox,oy}}
 // Convex hull (monotone chain) of projected points.
 function hull(pts){const P=[...pts].sort((a,b)=>a.x-b.x||a.y-b.y);if(P.length<3)return P;const cr=(o,a,b)=>(a.x-o.x)*(b.y-o.y)-(a.y-o.y)*(b.x-o.x);const lo=[],up=[];
  for(const p of P){while(lo.length>=2&&cr(lo[lo.length-2],lo[lo.length-1],p)<=0)lo.pop();lo.push(p)}
