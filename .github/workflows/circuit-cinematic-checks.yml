@@ -26,6 +26,7 @@ jobs:
         run: |
           node --check skyline-estates/lib/circuit-ui.js
           node --check skyline-estates/tests/circuit-access-guard.cjs
+          node --check skyline-estates/tests/circuit-access-browser.cjs
           node --check skyline-estates/lib/circuit-renderer-3d.js
           node --check skyline-estates/tests/circuit-visual-contract.cjs
           node --check skyline-estates/tests/circuit-city-view.cjs
@@ -52,6 +53,8 @@ jobs:
         run: node skyline-estates/tests/circuit-city-camera-sweep.cjs
       - name: Install browser test dependency
         run: npm install --prefix skyline-estates/tests --no-audit --no-fund
+      - name: Verify public preview link gate in Chromium
+        run: node skyline-estates/tests/circuit-access-browser.cjs
       - name: Capture cinematic camera lab screenshots
         env:
           CHROME_PATH: /usr/bin/google-chrome
@@ -63,6 +66,10 @@ jobs:
           node skyline-estates/tests/circuit-playable-screenshots.cjs
       - name: Install Safari-engine test browser
         run: npx --prefix skyline-estates/tests playwright install --with-deps webkit
+      - name: Verify public preview link gate in WebKit
+        env:
+          VISUAL_ENGINE: webkit
+        run: node skyline-estates/tests/circuit-access-browser.cjs
       - name: Verify Safari-engine Circuit City View
         env:
           CIRCUIT_VISUAL_ENGINE: webkit
