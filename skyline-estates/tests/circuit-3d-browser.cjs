@@ -69,6 +69,12 @@ const BUDGET={low:{calls:120,triangles:60000},medium:{calls:250,triangles:150000
   const st=await p.evaluate(()=>{const R=__circuitUI.r3();R.markDirty();R.render();return R.stats()});report.tiers[tier]=st;
   assert.equal(st.tier,tier);assert.ok(st.calls<=BUDGET[tier].calls&&st.triangles<=BUDGET[tier].triangles,`${tier} budget ${st.calls} calls ${st.triangles} tris`);await context.close()}
  ok(`tier budgets on the worst case: ${['low','medium','high'].map(t=>`${t} ${report.tiers[t].calls} calls/${report.tiers[t].triangles} tris (≤${BUDGET[t].calls}/${BUDGET[t].triangles})`).join('; ')}`);
+ // ---------- every stage (1–4) inside its envelope ----------
+ {const {context,p}=await open(D.screens.i12,{query:'&quality=low'});await scene(p,'clean');
+  const bad=await p.evaluate(()=>new Promise(res=>{const U=__circuitUI,SC=SkylineCircuit,out=[];let k=0;const step=()=>{if(k>3)return res(out);const st={};SC.PROPS.forEach((id,i)=>st[id]=((i+k)%4)+1);U.setStages(st);
+   requestAnimationFrame(()=>requestAnimationFrame(()=>{for(const e of U.r3().envelopeReport())if(e.halfX>e.maxHalf+.01||e.halfZ>e.maxHalf+.01||e.top>e.maxTop+.01)out.push(e);k++;step()}))};step()}));
+  assert.deepEqual(bad,[],'stage envelopes');await context.close()}
+ ok('all four built stages stay inside their validated envelopes on every property');
  // ---------- cinematic camera (≤15°, no selection while tilted) and reduced motion ----------
  for(const reduced of [false,true]){const {context,p}=await open(D.screens.i12,{query:'&quality=low&speed=normal',reduced});await p.click('#cx-start');await p.waitForFunction(()=>__circuitUI.r3());await p.waitForTimeout(300);
   await p.click('#cx-roll');let maxPitch=0,tiltedHit=null;for(let i=0;i<40;i++){await p.waitForTimeout(25);const c=await p.evaluate(()=>({pitch:__circuitUI.r3().camera.pitch,busy:__circuitUI.busy(),hit:__circuitUI.hit(...(()=>{const q=__circuitUI.projected().find(x=>x.id==='O1');return[q.x,q.y]})())}));maxPitch=Math.max(maxPitch,c.pitch);if(c.pitch>0&&tiltedHit===null)tiltedHit=c.hit}

@@ -144,18 +144,33 @@ export function create(canvas,{layout,spec,camera:cam0,tier:tierName=pickTier(),
  const mats={masonry:new THREE.MeshStandardMaterial({map:facade('masonry'),roughness:.85}),stone:new THREE.MeshStandardMaterial({map:facade('stone'),roughness:.75}),
   glass:new THREE.MeshStandardMaterial({map:facade('glass'),roughness:.2,metalness:tier.shadows?.3:0,emissive:'#3a2a10',emissiveIntensity:.12}),
   glass2:new THREE.MeshStandardMaterial({map:facade('glass2'),roughness:.18,metalness:tier.shadows?.35:0,emissive:'#3a2a10',emissiveIntensity:.15}),
-  roof:new THREE.MeshStandardMaterial({color:'#e9dcc2',roughness:.8}),roofDark:new THREE.MeshStandardMaterial({color:'#3d6488',roughness:.35,metalness:tier.shadows?.35:0}),roofMid:new THREE.MeshStandardMaterial({color:'#6f8fb0',roughness:.6,metalness:.2}),roofHigh:new THREE.MeshStandardMaterial({color:'#a9c3da',roughness:.5,metalness:.25}),terrace:new THREE.MeshStandardMaterial({color:'#4f9a6b',roughness:.9}),
+  roof:new THREE.MeshStandardMaterial({color:'#e9dcc2',roughness:.8}),slate:new THREE.MeshStandardMaterial({color:'#9aa9c0',roughness:.65,flatShading:true}),metal:new THREE.MeshStandardMaterial({color:'#8a7a5c',roughness:.35,metalness:tier.shadows?.7:.1}),roofDark:new THREE.MeshStandardMaterial({color:'#3d6488',roughness:.35,metalness:tier.shadows?.35:0}),roofMid:new THREE.MeshStandardMaterial({color:'#6f8fb0',roughness:.6,metalness:.2}),roofHigh:new THREE.MeshStandardMaterial({color:'#a9c3da',roughness:.5,metalness:.25}),terrace:new THREE.MeshStandardMaterial({color:'#4f9a6b',roughness:.9}),
   crown:new THREE.MeshStandardMaterial({color:P.gold,emissive:P.gold,emissiveIntensity:tier.glow?.6:.35,metalness:.6,roughness:.3})};
  const S=G.buildingSide,H=G.stageHeight;
  // A box with side walls from `mat` and a roof from `roof` (BoxGeometry face order: +x,-x,+y(top),-y,+z,-z).
  const box=(w,h,mat,roof=mats.roof)=>{const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,w),[mat,mat,roof,mat,mat,mat]);m.castShadow=m.receiveShadow=!!tier.shadows;return m};
- function stageModel(stage){const g=new THREE.Group(),add=(m,y)=>{m.position.y=y;g.add(m);return m};const Z=4.2; // tile top
-  if(stage===1){add(box(S*.94,H[1]-Z,mats.masonry),Z+(H[1]-Z)/2);const parapet=box(S*.9,.6,mats.roof);add(parapet,H[1]-.3)}
-  else if(stage===2){const pod=(H[2]-Z)*.55;add(box(S*.94,pod,mats.stone,mats.terrace),Z+pod/2);add(box(S*.74,H[2]-Z-pod,mats.glass,mats.roofMid),Z+pod+(H[2]-Z-pod)/2)}
-  else if(stage===3){const a=(H[3]-Z)*.28,b=(H[3]-Z)*.47,c=H[3]-Z-a-b;add(box(S*.94,a,mats.stone,mats.terrace),Z+a/2);add(box(S*.84,b,mats.glass,mats.terrace),Z+a+b/2);add(box(S*.64,c,mats.glass2,mats.roofHigh),Z+a+b+c/2)}
-  else if(stage===4){const a=(H[4]-Z)*.1,crown=1.6,b=H[4]-Z-a-crown;add(box(S*.94,a,mats.stone),Z+a/2);add(box(S*.88,b,mats.glass2,mats.roofDark),Z+a+b/2);
-   const fr=rounded(S*.9,S*.06);fr.holes.push(rounded(S*.74,S*.04));const fg=new THREE.ExtrudeGeometry(fr,{depth:crown,bevelEnabled:false,curveSegments:4});fg.rotateX(-Math.PI/2);const cr=new THREE.Mesh(fg,mats.crown);add(cr,H[4]-crown);
-   const roofGlass=new THREE.Mesh(new THREE.BoxGeometry(S*.74,.4,S*.74),mats.roofDark);add(roofGlass,H[4]-crown*.6)}
+ // Five stages, each with its own top-down silhouette, all inside the validated envelope (footprint S, height H[stage]).
+ const oct=(r,h,mat,{open=false}={})=>{const g=new THREE.CylinderGeometry(r,r,h,8,1,open);g.rotateY(Math.PI/8);const m=new THREE.Mesh(g,mat);m.castShadow=m.receiveShadow=!!tier.shadows;return m};
+ const hip=(w,h,mat)=>{const g=new THREE.ConeGeometry(w/Math.SQRT2,h,4,1);g.rotateY(Math.PI/4);const m=new THREE.Mesh(g,mat);m.castShadow=m.receiveShadow=!!tier.shadows;return m};
+ const slab=(w,h,d,mat,roof=mats.roof)=>{const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),[mat,mat,roof,mat,mat,mat]);m.castShadow=m.receiveShadow=!!tier.shadows;return m};
+ function stageModel(stage){const g=new THREE.Group(),add=(m,y,x=0,z=0)=>{m.position.set(x,y,z);g.add(m);return m};const Z=4.2,h=H[stage]-Z; // building height above the tile
+  if(stage===1){// Low-rise: cream masonry house, hipped slate roof (ridge "X" reads from above), chimney
+   const wall=h*.58;add(box(S*.86,wall,mats.masonry),Z+wall/2);add(hip(S*.94,h-wall,mats.slate),Z+wall+(h-wall)/2);add(slab(S*.08,(h-wall)*.7,S*.08,mats.stone,mats.stone),Z+wall+(h-wall)*.35,S*.24,-S*.2)}
+  else if(stage===2){// Mid-rise: stone podium with roof garden, L-shaped glass upper block
+   const pod=h*.42,up=h-pod;add(box(S*.94,pod,mats.stone,mats.terrace),Z+pod/2);
+   add(slab(S*.86,up,S*.42,mats.glass,mats.roofMid),Z+pod+up/2,0,-S*.21);add(slab(S*.42,up,S*.86,mats.glass,mats.roofMid),Z+pod+up/2,-S*.21,0);
+   add(slab(S*.34,.5,S*.34,mats.terrace,mats.terrace),Z+pod+.3,S*.24,S*.24)}
+  else if(stage===3){// High-rise: terraced podium, cross-shaped tower with a glass crown
+   const pod=h*.18,tw=h-pod,top=tw*.16;add(box(S*.94,pod,mats.stone,mats.terrace),Z+pod/2);
+   add(slab(S*.86,tw-top,S*.36,mats.glass2,mats.roofHigh),Z+pod+(tw-top)/2);add(slab(S*.36,tw-top,S*.86,mats.glass2,mats.roofHigh),Z+pod+(tw-top)/2);
+   add(slab(S*.5,top,S*.5,mats.glass,mats.metal),Z+pod+tw-top/2)}
+  else if(stage===4){// Skyscraper: octagonal landmark — base, three stepped drums with fins, gold crown ring and pavilion (no spire)
+   const base=h*.08,crown=h*.05,body=h-base-crown,d1=body*.5,d2=body*.3,d3=body-d1-d2,R=S*.5;
+   add(box(S*.94,base,mats.stone,mats.terrace),Z+base/2);
+   add(oct(R*.98,d1,mats.glass2),Z+base+d1/2);add(oct(R*.86,d2,mats.glass2),Z+base+d1+d2/2);add(oct(R*.72,d3,mats.glass2),Z+base+d1+d2+d3/2);
+   for(const [y,r] of [[Z+base+d1,R*.98],[Z+base+d1+d2,R*.86]])add(oct(r*1.0,.5,mats.metal),y);                 // setback ledges
+   for(let i=0;i<8;i++){const a=i*Math.PI/4,fr=R*.88;const fin=slab(.5,d1+d2*.9,.9,mats.metal,mats.metal);fin.rotation.y=-a;add(fin,Z+base+(d1+d2*.9)/2,Math.cos(a)*fr,Math.sin(a)*fr)}
+   add(oct(R*.74,crown,mats.crown,{open:true}),Z+base+body+crown/2);add(oct(R*.6,.4,mats.roofDark),Z+base+body+.2);add(oct(R*.26,crown*.9,mats.crown),Z+base+body+crown*.45)}
   g.traverse(o=>{if(o.isMesh)o.userData.envelope=true});return g}
  const stageCache=[null,1,2,3,4].map(s=>s?stageModel(s):null);
  const ownerBandGeo=(()=>{const s=rounded(S,S*.08);s.holes.push(rounded(S*.9,S*.06));const g=new THREE.ExtrudeGeometry(s,{depth:1.4,bevelEnabled:false,curveSegments:4});g.rotateX(-Math.PI/2);return g})();
