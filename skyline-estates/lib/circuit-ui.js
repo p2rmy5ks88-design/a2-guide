@@ -190,7 +190,7 @@ function render(){if(!s)return;const v=SC.view(s),pd=v.pending,me=pd?s.players[p
  // 5–7. card, rent, payday, bankruptcy and other events
  h+=`<div class="cx-feed" aria-live="polite">${notes.map(n=>`<div class="cx-n cx-${n.kind}">${esc(n.t)}</div>`).join('')}</div>`;
  if(cityReview)h='<div class="cx-sect"><b>City inspection</b><p class="cx-k">A visual tour only — no match actions while inspecting the city.</p></div>';
- if(R3)h+=`<div class="cx-sect"><button id="cx-city-view" aria-pressed="${cityReview}" title="Non-interactive 3D city inspection">${cityReview?'Return to Strategy View':'Explore 3D City'}</button>${cityReview?'<p class="cx-k">City View is for looking only. Return to Strategy View before selecting a space.</p>':''}</div>`;
+ if(R3)h+=`<div class="cx-sect"><button id="cx-city-view" aria-pressed="${cityReview}" title="Non-interactive 3D city inspection">${cityReview?'Return to Strategy View':'Explore 3D City'}</button></div>`;
  const A=$('#cx-actions');if(A.dataset.h!==h){A.innerHTML=h;A.dataset.h=h;wire()}}
 function wire(){const on=(sel,f)=>{const e=$(sel);if(e)e.onclick=f};
  on('#cx-city-view',()=>{if(!R3)return;cityReview=!cityReview;if(cityReview&&zoom)overview();dirty=true;render()});
