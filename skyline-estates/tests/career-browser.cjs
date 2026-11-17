@@ -43,10 +43,10 @@ const PREFS={nick:'Career QA',nickSet:true,welcomed:1,tutDone:1,coach:{pre:1,pos
  await p.evaluate(()=>{document.querySelector('#crOpen').click()});await p.waitForSelector('.career-preview');
  assert.equal(await p.locator('.career-preview .cr-row').count(),4);
  await p.getByRole('button',{name:'Origins · Standard 30'}).click();await p.waitForFunction(()=>G&&G.set&&G.set.career==='origins');
- const career=await p.evaluate(()=>{const s={...G.set};delete s.career;delete s.careerLength;return {set:s,players:G.players.map(q=>[q.ai,q.cash])}});
+ const career=await p.evaluate(()=>{const s={...G.set};delete s.career;delete s.careerLength;return {set:s,ai:G.players.map(q=>q.ai),cash:G.players.map(q=>q.cash).sort((x,y)=>x-y)}});
  await p.evaluate(()=>{G.over=true;showTitle()});await p.waitForTimeout(200);
  await p.evaluate(()=>{const me=setup.slots[0];startFromSetup(document.body,setup.slots.map((s,i)=>({...s,type:i===0?'human':i<4?'ai':'off',tok:i===0?me.tok:s.tok})),{mode:'timed',rounds:30,championship:1})});
- const quick=await p.evaluate(()=>({set:{...G.set},players:G.players.map(q=>[q.ai,q.cash])}));
+ const quick=await p.evaluate(()=>({set:{...G.set},ai:G.players.map(q=>q.ai),cash:G.players.map(q=>q.cash).sort((x,y)=>x-y)}));// Skyline Keys gives a random seat the late-start bonus, so cash is compared as a set
  assert.deepEqual(career,quick);assert.equal(career.set.rounds,30);assert.equal(career.set.mode,'timed');ok('an Origins career match uses exactly the Quick Play rules (30-round Championship, same players)');
  await p.evaluate(()=>{G.over=true;showTitle()});
  // Save compatibility: a career match saves and loads through the existing save path.
