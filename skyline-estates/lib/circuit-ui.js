@@ -24,6 +24,8 @@ const reducedMotion=(()=>{try{return matchMedia('(prefers-reduced-motion: reduce
 let R3=null,R3tried=false,camCur=null;
 // 320 pt fallback (validated in CIRCUIT-ALPHA.md): active whenever overview target spacing is below 44 pt.
 let zf=null,zoom=null,planFocused='';const CINEMATIC={pitch:15,dist:5};
+// Owner-review City View: explicitly non-interactive. Strategy View remains the only decision camera.
+const CITY_REVIEW={pitch:40,dist:6};let cityReview=false;
 const SYMS=['wave','sun','leaf','spark'],DCOL=['#58B9CF','#E6B45B','#70C79A','#B89BF0'];
 const symSvg=(q,sz=14)=>{const c=DCOL[q],k=SYMS[q];const body=k==='wave'?'<path d="M1 5c2-3 4 3 6 0s4 3 6 0M1 10c2-3 4 3 6 0s4 3 6 0" fill="none" stroke-width="1.6"/>':k==='sun'?'<circle cx="7" cy="7" r="2.6"/><path d="M7 1v2M7 11v2M1 7h2M11 7h2M2.8 2.8l1.4 1.4M9.8 9.8l1.4 1.4M2.8 11.2l1.4-1.4M9.8 4.2l1.4-1.4" stroke-width="1.4"/>':k==='leaf'?'<path d="M2 12C1 5 6 2 12 2c0 6-3 11-10 10z"/>':'<path d="M7 1l1.5 4.5L13 7l-4.5 1.5L7 13l-1.5-4.5L1 7l4.5-1.5z"/>';
  return`<svg class="cx-sym" width="${sz}" height="${sz}" viewBox="0 0 14 14" fill="${c}" stroke="${c}" aria-hidden="true">${body}</svg>`};
@@ -76,13 +78,13 @@ function planFocus(){if(!zf||!s)return;const me=s.players[s.turn];let at=me.pos,
  const base=R3.baseC,a=base.project({...G.nodes[me.pos],z:0}),j=base.project({...G.nodes[at],z:0});setZoomFocus({x:(a.x+j.x)/2,y:(a.y+j.y)/2})}
 // Cinematic camera: up to 15° during movement and celebrations, 0° for every decision (approved V2 decision 4).
 function cameraStep(dt){if(!R3||!camCur)return;if(zoom&&busy())overview(); // movement plays on the whole board
-const want=(!reducedMotion&&opts.speed!=='instant'&&(busy()||(s&&s.over)))?CINEMATIC:cam;
+const want=cityReview?CITY_REVIEW:(!reducedMotion&&opts.speed!=='instant'&&(busy()||(s&&s.over)))?CINEMATIC:cam;
  if(camCur.pitch===want.pitch&&camCur.dist===want.dist)return;const k=Math.min(1,dt/350);
  const step=(a,b)=>Math.abs(b-a)<.05?b:a+(b-a)*Math.max(k,.12);camCur={pitch:step(camCur.pitch,want.pitch),dist:step(camCur.dist,want.dist)};R3.setCamera(camCur);C=R3.C;dirty=true}
 // ---------- driving the rules ----------
 function enqueue(){anim.queue.push(...SC.drain(s));dirty=true}
 // The match result is stored as soon as the rules end the match, never waiting for the animation to reach it.
-function act(a){const pd=SC.pending(s);if(!pd)return;SC.act(s,pd.player,a);if(s.over)finish();enqueue();save();render()}
+function act(a){if(cityReview){cityReview=false;dirty=true}const pd=SC.pending(s);if(!pd)return;SC.act(s,pd.player,a);if(s.over)finish();enqueue();save();render()}
 function busy(){return anim.cur||anim.queue.length}
 function stepAnim(now){const sp=SPEED[opts.speed]||SPEED.normal;if(anim.queue.length)dirty=true;
  while(!anim.cur&&anim.queue.length){const e=anim.queue.shift();
@@ -187,14 +189,16 @@ function render(){if(!s)return;const v=SC.view(s),pd=v.pending,me=pd?s.players[p
  if(tally)h+=`<div class="cx-tally" data-state="round"><b>Round ${tally.round} influence</b>${tally.tally.map(t=>`<div>${tokSvg(t.pid)} +${t.total} <span class="cx-k">(${t.properties} properties · ${t.networks} networks · ${t.districts} districts)</span></div>`).join('')}</div>`;
  // 5–7. card, rent, payday, bankruptcy and other events
  h+=`<div class="cx-feed" aria-live="polite">${notes.map(n=>`<div class="cx-n cx-${n.kind}">${esc(n.t)}</div>`).join('')}</div>`;
+ h+=`<div class="cx-sect"><button id="cx-city-view" aria-pressed="${cityReview}" title="Non-interactive 3D city inspection">${cityReview?'Return to Strategy View':'Explore 3D City'}</button>${cityReview?'<p class="cx-k">City View is for looking only. Return to Strategy View before selecting a space.</p>':''}</div>`;
  const A=$('#cx-actions');if(A.dataset.h!==h){A.innerHTML=h;A.dataset.h=h;wire()}}
 function wire(){const on=(sel,f)=>{const e=$(sel);if(e)e.onclick=f};
+ on('#cx-city-view',()=>{if(!R3)return;cityReview=!cityReview;if(cityReview&&zoom)overview();dirty=true;render()});
  document.querySelectorAll('[data-plan]').forEach(b=>b.onclick=()=>{plan=b.dataset.plan;dirty=true;render()});
  on('#cx-roll',()=>{tally=null;act({type:'roll',via:plan})});on('#cx-buy',()=>act({type:'buy'}));on('#cx-pass',()=>act({type:'pass'}));
  on('#cx-end',()=>act({type:'end'}));on('#cx-zoom',()=>{if(zoom)overview();else planFocus()});on('#cx-skip',skip);on('#cx-again',()=>{s=null;setupScreen()});
  document.querySelectorAll('[data-build]').forEach(b=>b.onclick=()=>act({type:'build',node:b.dataset.build}))}
 // Tap on the board: identifies the node under the finger (the nearest centre within 22 pt), for inspection.
-function hit(x,y){if(R3&&camCur&&camCur.pitch!==cam.pitch)return null; // no selection while the camera is tilted
+function hit(x,y){if(cityReview)return null;if(R3&&camCur&&camCur.pitch!==cam.pitch)return null; // no selection while the camera is tilted
  if(zf&&!zoom)return null; // fallback overview is view-only
  const ok=zoom?new Set(SS.selectable(G,{project:C.project,rect:C.rect})):null;
  let best=null,bd=SS.MIN_TOUCH/2;for(const id of Object.keys(G.nodes)){if(ok&&!ok.has(id))continue;const p=C.project({...G.nodes[id],z:0}),d=Math.hypot(p.x-x,p.y-y);if(d<=bd){bd=d;best=id}}return best}
