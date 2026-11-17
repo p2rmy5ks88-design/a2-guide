@@ -24,6 +24,11 @@ const reducedMotion=(()=>{try{return matchMedia('(prefers-reduced-motion: reduce
 let R3=null,R3tried=false,camCur=null;
 // 320 pt fallback (validated in CIRCUIT-ALPHA.md): active whenever overview target spacing is below 44 pt.
 let zf=null,zoom=null,planFocused='';const CINEMATIC={pitch:15,dist:5};
+const SYMS=['wave','sun','leaf','spark'],DCOL=['#58B9CF','#E6B45B','#70C79A','#B89BF0'];
+const symSvg=(q,sz=14)=>{const c=DCOL[q],k=SYMS[q];const body=k==='wave'?'<path d="M1 5c2-3 4 3 6 0s4 3 6 0M1 10c2-3 4 3 6 0s4 3 6 0" fill="none" stroke-width="1.6"/>':k==='sun'?'<circle cx="7" cy="7" r="2.6"/><path d="M7 1v2M7 11v2M1 7h2M11 7h2M2.8 2.8l1.4 1.4M9.8 9.8l1.4 1.4M2.8 11.2l1.4-1.4M9.8 4.2l1.4-1.4" stroke-width="1.4"/>':k==='leaf'?'<path d="M2 12C1 5 6 2 12 2c0 6-3 11-10 10z"/>':'<path d="M7 1l1.5 4.5L13 7l-4.5 1.5L7 13l-1.5-4.5L1 7l4.5-1.5z"/>';
+ return`<svg class="cx-sym" width="${sz}" height="${sz}" viewBox="0 0 14 14" fill="${c}" stroke="${c}" aria-hidden="true">${body}</svg>`};
+const pips=st=>`<span class="cx-pips" role="img" aria-label="Stage ${SC.STAGES[st]}">${[1,2,3,4].map(k=>`<i class="${k<=st?'on':''}"></i>`).join('')}</span>`;
+let prevVals={};const pulse=(key,val)=>{const ch=prevVals[key]!==undefined&&prevVals[key]!==val;prevVals[key]=val;return ch?' cx-pulse':''};
 const tokSvg=(i,sz=12)=>{const c=PLAYERS[i].c,sh=PLAYERS[i].shape;const body=sh==='circle'?'<circle cx="6" cy="6" r="5"/>':sh==='square'?'<rect x="1.5" y="1.5" width="9" height="9"/>':sh==='triangle'?'<path d="M6 .8 11.2 10.6H.8z"/>':'<path d="M11 6 8.5 10.3h-5L1 6l2.5-4.3h5z"/>';return`<svg class="cx-tok" width="${sz}" height="${sz}" viewBox="0 0 12 12" fill="${c}" stroke="#0B1633" stroke-width="1.4" aria-hidden="true">${body}</svg>`};
 const SPEED={normal:{step:170,cross:280,ai:450,hold:900},fast:{step:60,cross:90,ai:120,hold:250},instant:{step:0,cross:0,ai:0,hold:0}};
 let s=null,layout=SC.referenceLayout(),G=SS.geometry(layout),C=null,cam=SS.CAMERAS[opts.camera]||SS.CAMERAS.top,plan='stay';
@@ -147,11 +152,12 @@ function draw2d(){const cv=$('#cx-board'),ctx=cv.getContext('2d'),dpr=cv.width/M
  items.sort((a,b)=>b.d-a.d).forEach(i=>i.draw())}
 // ---------- HUD (placeholder composition; one panel per interaction state) ----------
 function render(){if(!s)return;const v=SC.view(s),pd=v.pending,me=pd?s.players[pd.player]:null;
- const cur=v.players[s.turn],standings=[...v.players].sort((a,b)=>b.influence-a.influence);
- $('#cx-players').innerHTML=`<div class="cx-cur">${tokSvg(cur.id,16)}<div><b>${esc(cur.name)}</b><div class="cx-k">Cash ${cur.cash}</div></div></div>
- <div class="cx-sect"><div class="cx-k">Influence → target ${v.target}${s.cfg.length==='quick'?' · Quick (experimental)':''}</div>
- ${standings.map((p,r)=>`<div class="cx-p ${p.id===s.turn?'cx-turn':''} ${p.out?'cx-out':''}">${tokSvg(p.id)}<span class="cx-n1">${r+1}. ${esc(p.name)}${p.level?` <span class="cx-k">${esc(p.level[0].toUpperCase()+p.level.slice(1))}</span>`:''}</span><span>${p.influence}</span></div><div class="cx-bar"><span style="width:${Math.min(100,100*p.influence/v.target)}%;background:${COLORS[p.id]}"></span></div>`).join('')}</div>
- <div class="cx-sect cx-order"><div>Round ${v.round} / ${v.rounds}</div><div class="cx-k">Order · reverses each round</div><div>${v.order.map((i,k)=>(k?'<span class="cx-k">›</span>':'')+tokSvg(i)).join('')}</div></div>`;
+ const cur=v.players[s.turn],standings=[...v.players].sort((a,b)=>b.influence-a.influence),leader=standings[0],nextSeat=v.order[(v.orderIdx+1)%v.order.length];
+ $('#cx-players').innerHTML=`<div class="cx-cur" style="--pc:${COLORS[cur.id]}"><span class="cx-badge">${tokSvg(cur.id,20)}</span><div class="cx-curtx"><div class="cx-k">${cur.id===0?'Your turn':'Turn'}</div><b>${esc(cur.name)}</b><div class="cx-money${pulse('cash'+cur.id,cur.cash)}">Cash <b>${cur.cash}</b></div></div></div>
+ <div class="cx-sect"><div class="cx-row"><span class="cx-k">Influence</span><span class="cx-k">Target <b class="cx-t">${v.target}</b>${s.cfg.length==='quick'?' · Quick':''}</span></div>
+ ${standings.map((p,r)=>{const pct=Math.min(100,100*p.influence/v.target),clock=v.clock&&v.clock.pid===p.id;return`<div class="cx-p ${p.id===s.turn?'cx-turn':''} ${p.out?'cx-out':''} ${r===0&&p.influence>0?'cx-lead':''}" style="--pc:${COLORS[p.id]}"><span class="cx-rank">${r+1}</span>${tokSvg(p.id)}<span class="cx-n1">${esc(p.name)}${p.level?` <span class="cx-k">${esc(p.level[0].toUpperCase()+p.level.slice(1))}</span>`:''}</span><span class="cx-iv${pulse('inf'+p.id,p.influence)}">${p.influence}</span></div>
+  <div class="cx-bar" role="progressbar" aria-label="${esc(p.name)} influence" aria-valuenow="${p.influence}" aria-valuemax="${v.target}"><span style="width:${pct}%;background:${COLORS[p.id]}"></span>${clock?'<em class="cx-clockmark">holding target</em>':''}</div>`}).join('')}</div>
+ <div class="cx-sect cx-order"><div class="cx-row"><span>Round <b>${v.round}</b> / ${v.rounds}</span></div><div class="cx-chips">${v.order.map(i=>`<span class="cx-chip ${i===s.turn?'now':''} ${i===nextSeat&&i!==s.turn?'next':''}" style="--pc:${COLORS[i]}">${tokSvg(i)}</span>`).join('<span class="cx-k">›</span>')}</div><div class="cx-k">Order reverses each round</div></div>`;
  let h='';
  if(zf)h+=`<button id="cx-zoom" class="cx-zoombtn">${zoom?'Whole board':'Zoom in'}</button>`;
  // 9. victory clock
@@ -165,16 +171,16 @@ function render(){if(!s)return;const v=SC.view(s),pd=v.pending,me=pd?s.players[p
  else if(pd&&me.ai)h+=`<div class="cx-panel" data-state="ai"><p>${esc(me.name)} is thinking…</p></div>`;
  else if(pd&&pd.type==='roll'){// 1. plan and roll
   const pv=v.preview,fj=pv.firstJunction,chance=Math.round(100*pv[plan].junctionChance);
-  h+=`<div class="cx-panel" data-state="roll"><h2>Your route</h2><div class="cx-seg" role="radiogroup" aria-label="Route plan"><button role="radio" aria-checked="${plan==='stay'}" data-plan="stay" class="cx-stay"><i aria-hidden="true"></i>Stay</button><button role="radio" aria-checked="${plan==='cross'}" data-plan="cross" class="cx-cross"><i aria-hidden="true"></i>Cross</button></div>
+  h+=`<div class="cx-panel" data-state="roll"><h2>Your route</h2><div class="cx-seg" role="radiogroup" aria-label="Route plan"><button role="radio" aria-checked="${plan==='stay'}" data-plan="stay" class="cx-stay"><i aria-hidden="true"></i><span>Stay<small>on ring</small></span></button><button role="radio" aria-checked="${plan==='cross'}" data-plan="cross" class="cx-cross"><i aria-hidden="true"></i><span>Cross<small>by bridge</small></span></button></div>
    <p>${fj?`First junction <b>${fj.node}</b>${fj.stepsAway?` · ${fj.stepsAway} step${fj.stepsAway===1?'':'s'}`:' · here'}`:''}</p><p class="cx-k">${chance?`Plan applies on ${chance}% of rolls. Dots show likely landings, not certainties.`:'No junction can be reached this roll — the plan has no effect.'}</p>
-   <button id="cx-roll" class="cx-primary">Roll</button></div>`}
+   <button id="cx-roll" class="cx-primary"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><rect x="1.5" y="1.5" width="15" height="15" rx="3.5" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="6" cy="6" r="1.4" fill="currentColor"/><circle cx="12" cy="12" r="1.4" fill="currentColor"/><circle cx="9" cy="9" r="1.4" fill="currentColor"/></svg> Roll</button></div>`}
  else if(pd&&pd.type==='buy'){// 3. buy
   const n=v.nodes.find(x=>x.id===pd.node);
   const after=JSON.parse(JSON.stringify(s));after.own[pd.node]={o:pd.player,h:0};const sizeAfter=(SC.networks(after,pd.player).find(x=>x.props.includes(pd.node))||{size:1}).size;
-  h+=`<div class="cx-panel" data-state="buy"><h2>${pd.node} · ${DISTRICT_NAMES[n.quadrant]}</h2><p>Price ${pd.price} · rent ${Math.round(pd.price*.12)} at Plot${n.ring==='I'?' · inner ring (premium)':''}</p>
+  h+=`<div class="cx-panel" data-state="buy"><h2>${symSvg(n.quadrant,16)} ${pd.node}</h2><p class="cx-k">${DISTRICT_NAMES[n.quadrant]}</p><p>Price ${pd.price} · rent ${Math.round(pd.price*.12)} at Plot${n.ring==='I'?' · inner ring (premium)':''}</p>
    <p class="cx-k">${sizeAfter>1?`Joins a network of ${sizeAfter}.`:'Does not connect to your properties yet.'}</p><button id="cx-buy" class="cx-primary">Buy</button> <button id="cx-pass">Pass</button></div>`}
  else if(pd&&pd.type==='build'){// 4. build
-  const rows=v.build||[];h+=`<div class="cx-panel" data-state="build"><h2>Build</h2>${rows.length?rows.map(r=>`<div class="cx-b"><span>${r.node} · ${SC.STAGES[r.stage]}</span>${r.reason?`<span class="cx-why">${esc(REASON[r.reason]||r.reason)}</span>`:`<button data-build="${r.node}">${SC.STAGES[r.stage+1]} · ${r.cost}</button>`}</div>`).join(''):'<p class="cx-k">You own no properties yet.</p>'}
+  const rows=v.build||[];h+=`<div class="cx-panel" data-state="build"><h2>Build</h2>${rows.length?rows.map(r=>`<div class="cx-b"><span class="cx-bn">${symSvg(SC.NODES.find(x=>x.id===r.node).quadrant)} ${r.node}${pips(r.stage)}</span>${r.reason?`<span class="cx-why">${esc(REASON[r.reason]||r.reason)}</span>`:`<button data-build="${r.node}">${SC.STAGES[r.stage+1]} · ${r.cost}</button>`}</div>`).join(''):'<p class="cx-k">You own no properties yet.</p>'}
    <button id="cx-end" class="cx-primary">End turn</button></div>`}
  // 8. end of round tally
  if(tally)h+=`<div class="cx-tally" data-state="round"><b>Round ${tally.round} influence</b>${tally.tally.map(t=>`<div>${tokSvg(t.pid)} +${t.total} <span class="cx-k">(${t.properties} properties · ${t.networks} networks · ${t.districts} districts)</span></div>`).join('')}</div>`;
