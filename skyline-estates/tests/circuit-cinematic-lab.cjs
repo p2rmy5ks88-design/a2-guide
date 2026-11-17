@@ -1,8 +1,11 @@
 /* Skyline Circuit cinematic lab — exact V1 topology contract. Run: node tests/circuit-cinematic-lab.cjs */
-const fs=require('node:fs'),assert=require('node:assert/strict'),path=require('node:path');
+const fs=require('node:fs'),assert=require('node:assert/strict'),path=require('node:path'),vm=require('node:vm');
 const root=path.join(__dirname,'..');
 const html=fs.readFileSync(path.join(root,'circuit-cinematic-lab.html'),'utf8');
 const design=JSON.parse(fs.readFileSync(path.join(root,'design/circuit-design-v1.json'),'utf8'));
+const inline=html.match(/<script type="module">([\\s\\S]*?)<\\/script>/);
+assert(inline,'camera lab module exists');
+new vm.SourceTextModule(inline[1]);
 const match=html.match(/const positions=(\{[^;]+\});const nodes=\[\]/);
 assert(match,'cinematic lab must contain embedded V1 coordinates');
 const positions=JSON.parse(match[1]),source=design.layout.nodes;
