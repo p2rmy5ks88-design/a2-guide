@@ -53,6 +53,13 @@ const base=process.env.CIRCUIT_GAME_URL||'http://127.0.0.1:8765/circuit-alpha.ht
    const strategyPitch=await page.evaluate(()=>window.__circuitUI.r3()?.camera?.pitch);
    if(Math.abs(strategyPitch)>.1)throw Error('Strategy View did not restore 0-degree decision camera: '+strategyPitch);
    if(!(await page.locator('#cx-roll').count()))throw Error('Gameplay controls were not restored on return');
+   // Returning from inspection must restore real gameplay, not just the appearance of controls.
+   const matchBeforeRoll=await page.evaluate(()=>JSON.stringify(window.__circuitUI.state()));
+   await page.locator('#cx-roll').click();
+   await page.waitForTimeout(300);
+   const matchAfterRoll=await page.evaluate(()=>JSON.stringify(window.__circuitUI.state()));
+   if(matchBeforeRoll===matchAfterRoll)throw Error('Roll did not advance gameplay after returning from City View');
+   if(errors.length)throw Error('Browser errors after restored gameplay: '+errors.join('; '));
    console.log('PLAYABLE CAPTURED '+p.id+' '+JSON.stringify(strategy));
    await context.close();
   }
