@@ -23,6 +23,28 @@ These were committed before the first simulation run. Tuning uses development se
 
 A threshold that fails is reported as failed. Rules may be revised and re-run on new held-out seeds, and every revision is reported.
 
+## Quick mode criteria (written 17 Nov 2026, before any Quick experiment)
+
+Owner decision: Quick stays experimental; investigate pacing and premature victories **without weakening the Standard criteria**. Standard and Extended rules and thresholds above do not change. Quick candidates are reported against **both** the unchanged Standard table and this Quick table.
+
+Tuning uses development seeds 20,001–20,600. The Quick verdict uses new held-out seeds 910,000–910,999 (never used before), 1,000 matches per configuration.
+
+| # | Quick measure | Pass if |
+| --- | --- | --- |
+| Q1–Q4 | Route choices happen and matter; strategic advantage (2p and 4p) | Same as Standard #1–#4 |
+| Q5 | First development | Median first Mid-rise rounds 3–8; first Skyscraper in ≥ 50% of matches |
+| Q6 | No premature wins | < 5% of matches end by influence victory before round 12 |
+| Q7 | Natural, shorter endings | ≥ 70% end by influence or last player standing; median victory round 13–16 (Standard: 20) |
+| Q8–Q12 | Close finishes, comebacks, seat balance, low-impact turns, robustness | Same as Standard #8–#12 |
+
+Candidate changes apply to Quick only:
+
+- payday;
+- build cost factor;
+- how many rounds the target and the lead must be held;
+- the earliest round an influence victory may complete;
+- the target.
+
 ## Board topology (prototype v0)
 
 32 nodes on two clockwise rings joined by four connectors. IDs are stable and are what saves, logs and the UI use.
