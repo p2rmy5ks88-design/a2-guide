@@ -294,9 +294,11 @@ export function create(canvas,{layout,spec,camera:cam0,tier:tierName=pickTier(),
  function render(now=performance.now()){if(tier.water){waterTex.offset.x=(now/60000)%1;waterTex.offset.y=(now/90000)%1;dirty=true}
   if(!dirty)return false;const a=performance.now();renderer.render(scene,camera);dirty=false;frames.push(performance.now()-a);if(frames.length>240)frames.shift();return true}
  // ---------- adaptive quality ----------
- const frameIntervals=[];let lastTick=0,overBudget=0;
- function tick(now){if(lastTick){const d=now-lastTick;frameIntervals.push(d);if(frameIntervals.length>120)frameIntervals.shift()}lastTick=now;
-  if(frameIntervals.length>=120){const s=[...frameIntervals].sort((a,b)=>a-b),p95=s[Math.floor(s.length*.95)];if(p95>20){overBudget++;if(overBudget>=2)downgrade()}else overBudget=0;frameIntervals.length=0}}
+ // Evaluated on time, not frame count, so a very slow device still adapts quickly: every 2 s window (≥ 3 frames; gaps over 5 s, e.g. a hidden tab, are ignored) with
+ // p95 frame interval over 20 ms counts as over budget; two in a row drop one tier (then render scale on Low).
+ const frameIntervals=[];let lastTick=0,overBudget=0,windowStart=0;
+ function tick(now){if(lastTick&&now-lastTick<5000)frameIntervals.push(now-lastTick);lastTick=now;if(!windowStart)windowStart=now;
+  if(now-windowStart>=2000&&frameIntervals.length>=3){const s=[...frameIntervals].sort((a,b)=>a-b),p95=s[Math.floor(s.length*.95)];if(p95>20){overBudget++;if(overBudget>=2)downgrade()}else overBudget=0;frameIntervals.length=0;windowStart=now}}
  function downgrade(){const order=['high','medium','low'],i=order.indexOf(tierName);overBudget=0;if(i<0||i>=2){if(scaleK>.75){scaleK-=.25;resize(rect)}return}
   tierName=order[i+1];tier=TIERS[tierName];renderer.shadowMap.enabled=!!tier.shadows;sun.castShadow=!!tier.shadows;scene.traverse(o=>{if(o.isInstancedMesh)o.visible=!!tier.trees;if(o.material&&o.material.needsUpdate!==undefined)o.material.needsUpdate=true});
   for(const s of glowSprites)s.visible=tier.glow;resize(rect);if(lastModel)update(lastModel);onTierChange&&onTierChange(tierName)}
