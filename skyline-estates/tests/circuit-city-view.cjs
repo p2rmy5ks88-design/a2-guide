@@ -2,7 +2,7 @@
 const fs=require('node:fs'),assert=require('node:assert/strict'),path=require('node:path');
 const ui=fs.readFileSync(path.join(__dirname,'../lib/circuit-ui.js'),'utf8');
 const rules=fs.readFileSync(path.join(__dirname,'../lib/circuit-rules.js'),'utf8');
-assert.match(ui,/const CITY_REVIEW=\{pitch:40,dist:6\}/);
+assert.match(ui,/const CITY_REVIEW=\{pitch:30,dist:5\}/);
 assert.match(ui,/const want=cityReview\?CITY_REVIEW:/);
 assert.match(ui,/function hit\(x,y\)\{if\(cityReview\)return null;/,'no picking in City View');
 assert.match(ui,/function act\(a\)\{if\(cityReview\)\{cityReview=false;dirty=true;render\(\);return\}/,'first action exits City View without changing game state');
