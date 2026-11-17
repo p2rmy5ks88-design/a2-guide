@@ -49,7 +49,13 @@ function facade(kind){return canvasTex(256,512,(ctx,w,h)=>{ctx.scale(2,2);w/=2;h
  else if(kind==='stone'){ctx.fillStyle='#B9C2C4';ctx.fillRect(0,0,w,h);ctx.fillStyle='#2b3f5f';for(let y=20;y<h;y+=40)ctx.fillRect(0,y,w,16);ctx.strokeStyle='#8f9a9d';for(let x=0;x<w;x+=32){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke()}}
  else{const g=ctx.createLinearGradient(0,0,0,h);g.addColorStop(0,'#9cc9e6');g.addColorStop(1,'#2d5878');ctx.fillStyle=g;ctx.fillRect(0,0,w,h);ctx.strokeStyle='rgba(12,26,48,.75)';ctx.lineWidth=2;
   for(let y=0;y<h;y+=18){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke()}for(let x=0;x<w;x+=16){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke()}
-  const r=rng(kind==='glass'?3:5);ctx.fillStyle='rgba(255,212,140,.85)';for(let i=0;i<40;i++)ctx.fillRect(Math.floor(r()*8)*16+3,Math.floor(r()*14)*18+4,10,10)}},{repeat:[1,1]})}
+  const r=rng(kind==='glass'?3:5);ctx.fillStyle='rgba(255,212,140,.85)';for(let i=0;i<40;i++)ctx.fillRect(Math.floor(r()*8)*16+3,Math.floor(r()*14)*18+4,10,10);
+  // Thin architectural mullions and alternating glass reflections stay crisp at oblique angles.
+  ctx.fillStyle='rgba(215,236,248,.30)';for(let x=1;x<w;x+=16)ctx.fillRect(x,0,1,h);
+  ctx.fillStyle='rgba(10,26,47,.34)';for(let x=13;x<w;x+=16)ctx.fillRect(x,0,2,h);
+  ctx.fillStyle='rgba(245,199,120,.15)';for(let y=6;y<h;y+=54)ctx.fillRect(0,y,w,3);
+  ctx.fillStyle='rgba(241,248,255,.24)';for(let y=3;y<h;y+=36)for(let x=4;x<w;x+=32)ctx.fillRect(x,y,5,1)
+ }},{repeat:[1,1]})}
 
 // ---------- draw-call economy: merge meshes per material (display); originals stay as hidden pick/envelope proxies ----------
 function piecesOf(mesh){mesh.updateWorldMatrix(true,false);const g0=mesh.geometry.index?mesh.geometry.toNonIndexed():mesh.geometry.clone();g0.applyMatrix4(mesh.matrixWorld);
