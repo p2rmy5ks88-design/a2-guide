@@ -193,37 +193,68 @@ export function create(canvas,{layout,spec,camera:cam0,tier:tierName=pickTier(),
   roof:new THREE.MeshStandardMaterial({color:'#F8E7CB',roughness:.8}),slate:new THREE.MeshStandardMaterial({color:'#C9B3A2',roughness:.65,flatShading:true}),metal:new THREE.MeshStandardMaterial({color:'#C6A15F',roughness:.35,metalness:tier.shadows?.7:.1}),roofDark:new THREE.MeshStandardMaterial({color:'#48859B',roughness:.35,metalness:tier.shadows?.35:0}),roofMid:new THREE.MeshStandardMaterial({color:'#74B5C3',roughness:.6,metalness:.2}),roofHigh:new THREE.MeshStandardMaterial({color:'#C3E6E8',roughness:.5,metalness:.25}),terrace:new THREE.MeshStandardMaterial({color:'#70B983',roughness:.9}),
   crown:new THREE.MeshStandardMaterial({color:P.gold,emissive:P.gold,emissiveIntensity:tier.glow?.6:.35,metalness:.6,roughness:.3})};
  const S=G.buildingSide,H=G.stageHeight;
+ // Four district architecture palettes share the validated stage envelopes.
+ // Material and silhouette variation is purely visual: no new lots, streets or gameplay rules.
+ const districtGlass=['#FFFFFF','#FFE8D3','#DEF9E3','#E0EDFF'].map(color=>new THREE.MeshStandardMaterial({
+  map:mats.glass.map,color,roughness:.23,metalness:.17,emissive:'#6F715D',emissiveIntensity:.045}));
+ const districtRoof=['#DAAC7D','#E3C5AB','#89BFA4','#93BDD1'].map(color=>new THREE.MeshStandardMaterial({color,roughness:.56,metalness:.12}));
+ const districtTrim=['#D6AF63','#C98D64','#76BBA2','#90AACA'].map(color=>new THREE.MeshStandardMaterial({color,metalness:.35,roughness:.39}));
  // A box with side walls from `mat` and a roof from `roof` (BoxGeometry face order: +x,-x,+y(top),-y,+z,-z).
  const box=(w,h,mat,roof=mats.roof)=>{const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,w),[mat,mat,roof,mat,mat,mat]);m.castShadow=m.receiveShadow=!!tier.shadows;return m};
  // Five stages, each with its own top-down silhouette, all inside the validated envelope (footprint S, height H[stage]).
  const oct=(r,h,mat,{open=false}={})=>{const g=new THREE.CylinderGeometry(r,r,h,8,1,open);g.rotateY(Math.PI/8);const m=new THREE.Mesh(g,mat);m.castShadow=m.receiveShadow=!!tier.shadows;return m};
  const hip=(w,h,mat)=>{const g=new THREE.ConeGeometry(w/Math.SQRT2,h,4,1);g.rotateY(Math.PI/4);const m=new THREE.Mesh(g,mat);m.castShadow=m.receiveShadow=!!tier.shadows;return m};
  const slab=(w,h,d,mat,roof=mats.roof)=>{const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),[mat,mat,roof,mat,mat,mat]);m.castShadow=m.receiveShadow=!!tier.shadows;return m};
- function stageModel(stage){const g=new THREE.Group(),add=(m,y,x=0,z=0)=>{m.position.set(x,y,z);g.add(m);return m};const Z=4.2,h=H[stage]-Z; // building height above the tile
+ function stageModel(stage,variant=0){const g=new THREE.Group(),add=(m,y,x=0,z=0)=>{m.position.set(x,y,z);g.add(m);return m};const Z=4.2,h=H[stage]-Z; // building height above the tile
+  const vGlass=districtGlass[variant],vRoof=districtRoof[variant],vTrim=districtTrim[variant];
   if(stage===1){// Low-rise: cream masonry house, hipped slate roof (ridge "X" reads from above), chimney
-   const wall=h*.58;add(box(S*.86,wall,mats.masonry),Z+wall/2);add(hip(S*.94,h-wall,mats.slate),Z+wall+(h-wall)/2);add(slab(S*.08,(h-wall)*.7,S*.08,mats.stone,mats.stone),Z+wall+(h-wall)*.35,S*.24,-S*.2)}
+   const wall=h*.58;add(box(S*.86,wall,mats.masonry),Z+wall/2);add(hip(S*.94,h-wall,vRoof),Z+wall+(h-wall)/2);add(slab(S*.08,(h-wall)*.7,S*.08,mats.stone,mats.stone),Z+wall+(h-wall)*.35,S*.24,-S*.2)}
   else if(stage===2){// Mid-rise: stone podium with roof garden, L-shaped glass upper block
    const pod=h*.42,up=h-pod;add(box(S*.94,pod,mats.stone,mats.terrace),Z+pod/2);
-   add(slab(S*.86,up,S*.42,mats.glass,mats.roofMid),Z+pod+up/2,0,-S*.21);add(slab(S*.42,up,S*.86,mats.glass,mats.roofMid),Z+pod+up/2,-S*.21,0);
+   add(slab(S*.86,up,S*.42,vGlass,vRoof),Z+pod+up/2,0,-S*.21);add(slab(S*.42,up,S*.86,vGlass,vRoof),Z+pod+up/2,-S*.21,0);
    add(slab(S*.34,.5,S*.34,mats.terrace,mats.terrace),Z+pod+.3,S*.24,S*.24);
    // Slim exterior corner mullions make the L-shaped facade read from the City View camera.
-   for(const [x,z] of [[-S*.4,-S*.4],[S*.4,-S*.4],[-S*.4,S*.4]])add(slab(S*.025,up*.88,S*.025,mats.metal,mats.metal),Z+pod+up*.44,x,z)}
+   for(const [x,z] of [[-S*.4,-S*.4],[S*.4,-S*.4],[-S*.4,S*.4]])add(slab(S*.025,up*.88,S*.025,vTrim,vTrim),Z+pod+up*.44,x,z)}
   else if(stage===3){// High-rise: terraced podium, cross-shaped tower with a glass crown
    const pod=h*.18,tw=h-pod,top=tw*.16;add(box(S*.94,pod,mats.stone,mats.terrace),Z+pod/2);
-   add(slab(S*.86,tw-top,S*.36,mats.glass2,mats.roofHigh),Z+pod+(tw-top)/2);add(slab(S*.36,tw-top,S*.86,mats.glass2,mats.roofHigh),Z+pod+(tw-top)/2);
-   add(slab(S*.5,top,S*.5,mats.glass,mats.metal),Z+pod+tw-top/2);
+   add(slab(S*.86,tw-top,S*.36,vGlass,vRoof),Z+pod+(tw-top)/2);add(slab(S*.36,tw-top,S*.86,vGlass,vRoof),Z+pod+(tw-top)/2);
+   add(slab(S*.5,top,S*.5,vGlass,vTrim),Z+pod+tw-top/2);
    // Recessed crown rim and four vertical corner accents, inside the existing height envelope.
-   add(slab(S*.56,Math.min(.75,top*.12),S*.56,mats.metal,mats.metal),Z+pod+tw-Math.min(.75,top*.12)/2);
-   for(const [x,z] of [[-S*.17,-S*.17],[S*.17,-S*.17],[-S*.17,S*.17],[S*.17,S*.17]])add(slab(S*.022,(tw-top)*.78,S*.022,mats.metal,mats.metal),Z+pod+(tw-top)*.48,x,z)}
-  else if(stage===4){// Skyscraper: octagonal landmark — base, three stepped drums with fins, gold crown ring and pavilion (no spire)
-   const base=h*.08,crown=h*.05,body=h-base-crown,d1=body*.5,d2=body*.3,d3=body-d1-d2,R=S*.5;
+   add(slab(S*.56,Math.min(.75,top*.12),S*.56,vTrim,vTrim),Z+pod+tw-Math.min(.75,top*.12)/2);
+   for(const [x,z] of [[-S*.17,-S*.17],[S*.17,-S*.17],[-S*.17,S*.17],[S*.17,S*.17]])add(slab(S*.022,(tw-top)*.78,S*.022,vTrim,vTrim),Z+pod+(tw-top)*.48,x,z)}
+  else if(stage===4){// Skyscrapers: four distinct district silhouettes, shared base and validated 3D envelope.
+   // Landmark silhouette is still readable from the 30-degree inspection camera and 0-degree strategy view.
+   const base=h*.09,crown=h*.06,body=h-base-crown,R=S*.5;
    add(box(S*.94,base,mats.stone,mats.terrace),Z+base/2);
-   add(oct(R*.98,d1,mats.glass2),Z+base+d1/2);add(oct(R*.86,d2,mats.glass2),Z+base+d1+d2/2);add(oct(R*.72,d3,mats.glass2),Z+base+d1+d2+d3/2);
-   for(const [y,r] of [[Z+base+d1,R*.98],[Z+base+d1+d2,R*.86]])add(oct(r*1.0,.5,mats.metal),y);                 // setback ledges
-   for(let i=0;i<8;i++){const a=i*Math.PI/4,fr=R*.88;const fin=slab(.5,d1+d2*.9,.9,mats.metal,mats.metal);fin.rotation.y=-a;add(fin,Z+base+(d1+d2*.9)/2,Math.cos(a)*fr,Math.sin(a)*fr)}
-   add(oct(R*.74,crown,mats.crown,{open:true}),Z+base+body+crown/2);add(oct(R*.6,.4,mats.roofDark),Z+base+body+.2);add(oct(R*.26,crown*.9,mats.crown),Z+base+body+crown*.45)}
+   if(variant===0){// Harbour Quarter: octagonal stepped maritime tower with golden observation crown.
+    const d1=body*.5,d2=body*.3,d3=body-d1-d2;
+    add(oct(R*.98,d1,vGlass),Z+base+d1/2);add(oct(R*.86,d2,vGlass),Z+base+d1+d2/2);add(oct(R*.72,d3,vGlass),Z+base+d1+d2+d3/2);
+    for(const [y,r] of [[Z+base+d1,R*.98],[Z+base+d1+d2,R*.86]])add(oct(r,.5,vTrim),y);
+    for(let i=0;i<8;i++){const a=i*Math.PI/4,fr=R*.85;const fin=slab(.48,d1+d2*.85,.85,vTrim,vTrim);fin.rotation.y=-a;add(fin,Z+base+(d1+d2*.85)/2,Math.cos(a)*fr,Math.sin(a)*fr)}
+    add(oct(R*.75,crown,mats.crown),Z+base+body+crown/2);
+   }else if(variant===1){// Civic Heights: elegant rectangular terraces and a broad illuminated crown.
+    const lower=body*.74,upper=body-lower;
+    add(slab(S*.74,lower,S*.71,vGlass,vRoof),Z+base+lower/2);
+    add(slab(S*.57,upper,S*.57,vGlass,vRoof),Z+base+lower+upper/2);
+    for(const x of [-S*.34,S*.34])add(slab(S*.028,lower*.94,S*.03,vTrim,vTrim),Z+base+lower*.48,x,-S*.34);
+    add(slab(S*.61,crown,S*.61,mats.crown,mats.crown),Z+base+body+crown/2);
+   }else if(variant===2){// Verdant Mile: terraced circular sky gardens around a glazed residential tower.
+    const d1=body*.48,d2=body*.30,d3=body-d1-d2;
+    add(oct(R*.88,d1,vGlass),Z+base+d1/2);
+    add(oct(R*.74,d2,vGlass),Z+base+d1+d2/2);
+    add(oct(R*.59,d3,vGlass),Z+base+d1+d2+d3/2);
+    add(oct(R*.96,.62,mats.terrace),Z+base+d1);
+    add(oct(R*.81,.62,mats.terrace),Z+base+d1+d2);
+    add(oct(R*.63,crown,vRoof),Z+base+body+crown/2);
+   }else{// Neon Exchange: two glass wings linked by a luminous skybridge and a central roof pavilion.
+    add(slab(S*.35,body,S*.44,vGlass,vRoof),Z+base+body/2);
+    for(const x of [-S*.27,S*.27])add(slab(S*.27,body*.82,S*.68,vGlass,vRoof),Z+base+body*.41,x,0);
+    add(slab(S*.82,body*.055,S*.26,vTrim,vTrim),Z+base+body*.70);
+    add(slab(S*.46,crown,S*.49,mats.crown,mats.crown),Z+base+body+crown/2);
+   }
+  }
   g.traverse(o=>{if(o.isMesh)o.userData.envelope=true});return g}
- const stageCache=[null,1,2,3,4].map(s=>s?stageModel(s):null);
+ const stageCache=Array.from({length:4},(_,variant)=>[null,1,2,3,4].map(s=>s?stageModel(s,variant):null));
  const ownerBandGeo=(()=>{const s=rounded(S,S*.08);s.holes.push(rounded(S*.9,S*.06));const g=new THREE.ExtrudeGeometry(s,{depth:1.4,bevelEnabled:false,curveSegments:4});g.rotateX(-Math.PI/2);return g})();
  const buildings={};
  function setBuilding(id,stage,owner){const rec=tile[id];if(rec.stage===stage&&rec.owner===owner)return;rec.stage=stage;rec.owner=owner;
@@ -232,7 +263,7 @@ export function create(canvas,{layout,spec,camera:cam0,tier:tierName=pickTier(),
   if(rec.seatBadge){rec.grp.remove(rec.seatBadge);rec.seatBadge=null}
   if(owner>=0){const p=DECISIONS.players[owner];const b=new THREE.Mesh(new THREE.PlaneGeometry(T*.24,T*.24).rotateX(-Math.PI/2),decal(p.shape,p.c,{bg:'#0B1633',outline:'#0B1633'}));b.position.set(T*.33,4.45,T*.33);b.userData.dynamic=true;rec.grp.add(b);rec.seatBadge=b}
   rec.plotSymbol.visible=stage===0;rec.baseSymbol.visible=stage>0;
-  if(stage>0){const g=stageCache[stage].clone();g.traverse(o=>{if(o.isMesh)o.userData.pick={kind:2,i:idx[id]}});
+  if(stage>0){const variant=SC.NODES.find(n=>n.id===id)?.quadrant??0;const g=stageCache[variant][stage].clone();g.traverse(o=>{if(o.isMesh)o.userData.pick={kind:2,i:idx[id]}});
    if(owner>=0){const band=new THREE.Mesh(ownerBandGeo,ownerRimMat[owner]);band.position.y=4.1;band.userData.envelope=true;band.userData.pick={kind:2,i:idx[id]};g.add(band)}
    rec.grp.add(g);rec.building=g}}
  // ---------- tokens ----------
