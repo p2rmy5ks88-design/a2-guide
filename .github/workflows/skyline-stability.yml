@@ -94,6 +94,8 @@ jobs:
           t 'node skyline-estates/tests/harbour-ring-rules.cjs'
           t 'node skyline-estates/tests/harbour-ring-sim.cjs 3000'
           t 'node skyline-estates/tests/harbour-ring-browser.cjs'
+          t 'node skyline-estates/tests/circuit-rules.cjs'
+          t 'node skyline-estates/tests/circuit-sim.cjs'
           t 'node skyline-estates/tests/tutorial-v2-browser.cjs'
           t 'node skyline-estates/tests/living-board-render-scale.cjs'
           t 'node skyline-estates/tests/living-board-look-browser.cjs'
