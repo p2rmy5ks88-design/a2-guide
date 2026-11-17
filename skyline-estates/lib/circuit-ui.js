@@ -109,8 +109,8 @@ function finish(){if(finished===s)return;finished=s;if(!s.meta||!s.meta.career){
 // ---------- loop ----------
 const perf={frames:[],draw:[]};let last=0;
 function loop(now=performance.now()){const dt=last?now-last:16;if(opts.perf&&last)perf.frames.push(now-last);last=now;stepAnim(now);cameraStep(dt);
- if(!busy()&&s&&!s.over){const pd=SC.pending(s);if(pd&&s.players[pd.player].ai&&!timer){const sp=SPEED[opts.speed]||SPEED.normal;
-   const go=()=>{timer=null;if(!busy()&&SC.pending(s)&&s.players[SC.pending(s).player].ai){act(SC.ai(s,SC.pending(s).player))}};if(sp.ai)timer=setTimeout(go,sp.ai);else go()}}
+ if(!cityReview&&!busy()&&s&&!s.over){const pd=SC.pending(s);if(pd&&s.players[pd.player].ai&&!timer){const sp=SPEED[opts.speed]||SPEED.normal;
+   const go=()=>{timer=null;if(!cityReview&&!busy()&&SC.pending(s)&&s.players[SC.pending(s).player].ai){act(SC.ai(s,SC.pending(s).player))}};if(sp.ai)timer=setTimeout(go,sp.ai);else go()}}
  if(dirty){const t=performance.now();draw();render();if(opts.perf)perf.draw.push(performance.now()-t);dirty=false}
  if(R3&&zf&&s&&!s.over&&!busy()){const pd=SC.pending(s);const key=s.round+'-'+s.turn;if(pd&&pd.type==='roll'&&!s.players[pd.player].ai&&planFocused!==key&&camCur&&camCur.pitch===cam.pitch){planFocused=key;planFocus()}}
  if(R3){if(busy())R3.tick(now);R3.render(now)}
