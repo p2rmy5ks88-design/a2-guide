@@ -93,7 +93,10 @@ const base=process.env.CIRCUIT_GAME_URL||'http://127.0.0.1:8765/circuit-alpha.ht
    const resumedState=await page.evaluate(()=>JSON.stringify(window.__circuitUI.state()));
    if(rolledState!==resumedState)throw Error('Post-roll inspection unexpectedly mutated game state');
    if(errors.length)throw Error('Browser errors after second City View: '+errors.join('; '));
-   const performanceEvidence=await page.evaluate(()=>({frames:window.__circuitUI.perf(),renderer:window.__circuitUI.r3()?.stats?.()}));
+   // Isolate a short no-screenshot window; screenshot-driven rAF stalls must not be scored as gameplay FPS.
+   await page.evaluate(()=>window.__circuitUI.perfReset());
+   await page.waitForTimeout(2200);
+   const performanceEvidence=await page.evaluate(()=>({frames:window.__circuitUI.perf(),renderer:(()=>{const v=window.__circuitUI.r3()?.stats?.();return v?{tier:v.tier,calls:v.calls,triangles:v.triangles,textures:v.textures,geometries:v.geometries,pixelRatio:v.pixelRatio}:null})()}));
    console.log('CIRCUIT PERF '+p.id+' '+JSON.stringify(performanceEvidence));
    console.log('PLAYABLE CAPTURED '+p.id+' '+JSON.stringify(strategy));
    await context.close();
