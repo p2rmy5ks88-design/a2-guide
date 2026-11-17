@@ -1,0 +1,21 @@
+{
+  "package": "Skyline Circuit Design V2",
+  "files": [
+    {
+      "name": "README-CLAUDE.md",
+      "sha256": "da05bb2c7e88d1e292db4144012bae8b5644238e2f972fc36a41a04e9fabeb24"
+    },
+    {
+      "name": "circuit-design-v2.json",
+      "sha256": "cab024f5cdebcba7c8636ed63229bcf0a424695b5acb43baa9cc04b72387e9c0"
+    },
+    {
+      "name": "circuit-design-v1-baseline.json",
+      "sha256": "a3b317317fe821b58c5becdc38c7e26ab0a7b95543ea9a5b6ffcbe84fbf2e031"
+    },
+    {
+      "name": "topology-reference.svg",
+      "sha256": "e75aad330d50ab3209776075dcf05f7f8071a285a0ccb07b9ed783dcbdcd228f"
+    }
+  ]
+}
