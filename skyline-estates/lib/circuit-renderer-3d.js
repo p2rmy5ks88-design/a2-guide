@@ -18,8 +18,8 @@ export const DECISIONS={routes:{stay:'#F2C457',cross:'#70F0C2',casing:'#0B1633'}
  palette:{navy:'#0B1633',deepWater:'#12384B',waterHighlight:'#2D7283',gold:'#F2C457',ivory:'#F2E9D8',stone:'#AAB6BA',warning:'#F3B45C'}};
 // Quality tiers (CIRCUIT-V2-REVIEW.md §4). Changes are visual only.
 export const TIERS={low:{shadows:0,trees:0,glow:false,water:false,maxScale:1.5,antialias:false},
- medium:{shadows:1024,trees:90,glow:false,water:false,maxScale:2,antialias:true},
- high:{shadows:2048,trees:160,glow:true,water:true,maxScale:2.5,antialias:true}};
+ medium:{shadows:1024,trees:90,glow:false,water:false,maxScale:2.5,antialias:true},
+ high:{shadows:2048,trees:160,glow:true,water:true,maxScale:3,antialias:true}};
 export function pickTier(){try{const q=new URLSearchParams(location.search).get('quality');if(TIERS[q])return q;
  const n=navigator,cores=n.hardwareConcurrency||4,mem=n.deviceMemory||4,small=Math.min(screen.width,screen.height)<=320;
  if(small||cores<=2||mem<=2||(n.connection&&n.connection.saveData))return 'low';
@@ -28,7 +28,7 @@ function rng(seed){let a=seed>>>0;return()=>{a=(a+0x6D2B79F5)>>>0;let t=a;t=Math
 const V=(x,y,z=0)=>new THREE.Vector3(x,z,y); // board → three
 const col=c=>new THREE.Color(c);
 // ---------- procedural textures (canvas) ----------
-function canvasTex(w,h,draw,{repeat=null,srgb=true}={}){const c=document.createElement('canvas');c.width=w;c.height=h;draw(c.getContext('2d'),w,h);const t=new THREE.CanvasTexture(c);if(srgb)t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=4;if(repeat){t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(...repeat)}return t}
+function canvasTex(w,h,draw,{repeat=null,srgb=true}={}){const c=document.createElement('canvas');c.width=w;c.height=h;draw(c.getContext('2d'),w,h);const t=new THREE.CanvasTexture(c);if(srgb)t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=8;t.minFilter=THREE.LinearMipmapLinearFilter;t.magFilter=THREE.LinearFilter;if(repeat){t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(...repeat)}return t}
 function symbolPath(ctx,kind,r){ctx.lineCap='round';ctx.lineJoin='round';
  if(kind==='wave'){ctx.beginPath();for(const k of [-1,1]){ctx.moveTo(-r,k*r*.35);ctx.bezierCurveTo(-r*.5,k*r*.35-r*.55,-r*.1,k*r*.35+r*.55,r*.35,k*r*.35);ctx.quadraticCurveTo(r*.7,k*r*.35-r*.35,r,k*r*.35)}ctx.stroke()}
  else if(kind==='sun'){ctx.beginPath();ctx.arc(0,0,r*.42,0,7);ctx.fill();for(let i=0;i<8;i++){const a=i*Math.PI/4;ctx.beginPath();ctx.moveTo(Math.cos(a)*r*.65,Math.sin(a)*r*.65);ctx.lineTo(Math.cos(a)*r,Math.sin(a)*r);ctx.stroke()}}
@@ -44,7 +44,7 @@ const decalCache=new Map();
 function decal(kind,color,{bg=null,outline=null}={}){const key=kind+color+bg+outline;if(decalCache.has(key))return decalCache.get(key);
  const t=canvasTex(128,128,(ctx,w)=>{ctx.translate(w/2,w/2);if(bg){ctx.beginPath();ctx.arc(0,0,w*.46,0,7);ctx.fillStyle=bg;ctx.fill()}ctx.fillStyle=color;ctx.strokeStyle=outline||color;ctx.lineWidth=w*.075;symbolPath(ctx,kind,w*.34)});
  const m=new THREE.MeshBasicMaterial({map:t,transparent:true,depthWrite:false});decalCache.set(key,m);return m}
-function facade(kind){return canvasTex(128,256,(ctx,w,h)=>{
+function facade(kind){return canvasTex(256,512,(ctx,w,h)=>{ctx.scale(2,2);w/=2;h/=2;
  if(kind==='masonry'){ctx.fillStyle='#EDE3CF';ctx.fillRect(0,0,w,h);ctx.fillStyle='#1E2E52';for(let y=26;y<h-10;y+=46)for(let x=14;x<w-10;x+=36)ctx.fillRect(x,y,20,26);ctx.fillStyle='#d8ccb3';ctx.fillRect(0,h-14,w,14)}
  else if(kind==='stone'){ctx.fillStyle='#B9C2C4';ctx.fillRect(0,0,w,h);ctx.fillStyle='#2b3f5f';for(let y=20;y<h;y+=40)ctx.fillRect(0,y,w,16);ctx.strokeStyle='#8f9a9d';for(let x=0;x<w;x+=32){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke()}}
  else{const g=ctx.createLinearGradient(0,0,0,h);g.addColorStop(0,'#9cc9e6');g.addColorStop(1,'#2d5878');ctx.fillStyle=g;ctx.fillRect(0,0,w,h);ctx.strokeStyle='rgba(12,26,48,.75)';ctx.lineWidth=2;
@@ -258,7 +258,7 @@ export function create(canvas,{layout,spec,camera:cam0,tier:tierName=pickTier(),
    Cview={...C,project:Z.project,ppu:q=>C.ppu(q)*zoom.factor,scale:sc,ox,oy,zoom:{...zoom}}}else Cview=C;
   const A=2*sc/W,Ay=2*sc/Hh,Bx=2*(ox-rect.x)/W-1,By=1-2*(oy-rect.y)/Hh,n=C.D*.15,f=C.D*4;
   camera.projectionMatrix.set(A,0,-Bx,0, 0,Ay,-By,0, 0,0,-(f+n)/(f-n),-2*f*n/(f-n), 0,0,-1,0);camera.projectionMatrixInverse.copy(camera.projectionMatrix).invert()}
- function resize(r){rect=r;W=Math.max(1,r.w);Hh=Math.max(1,r.h);const dpr=Math.min(window.devicePixelRatio||1,tier.maxScale*scaleK);renderer.setPixelRatio(dpr);renderer.setSize(W,Hh,false);setCamera(camNow);
+ function resize(r){rect=r;W=Math.max(1,r.w);Hh=Math.max(1,r.h);const dpr=Math.max(1,Math.min(window.devicePixelRatio||1,tier.maxScale*scaleK,Math.sqrt(4200000/(W*Hh))));renderer.setPixelRatio(dpr);renderer.setSize(W,Hh,false);setCamera(camNow);
   labelLayer.style.cssText=`position:fixed;left:${r.x}px;top:${r.y}px;width:${W}px;height:${Hh}px;pointer-events:none;overflow:hidden`}
  let scaleK=1;
  // ---------- frame model ----------
