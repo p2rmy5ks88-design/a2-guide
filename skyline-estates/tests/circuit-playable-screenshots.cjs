@@ -34,7 +34,7 @@ const base=process.env.CIRCUIT_GAME_URL||'http://127.0.0.1:8765/circuit-alpha.ht
    const populated=await page.evaluate(()=>({stages:window.SkylineCircuit.PROPS.length,modelStages:window.__circuitUI.state().own}));
    if(populated.stages!==20)throw Error('Expected 20 property stage previews');
    await page.locator('#cx-city-view').click();
-   const backawait page.locator('#cx-city-view').getAttribute('aria-pressed');
+   const back=await page.locator('#cx-city-view').getAttribute('aria-pressed');
    if(back!=='false')throw Error('City View did not return to Strategy View');
    console.log('PLAYABLE CAPTURED '+p.id+' '+JSON.stringify(strategy));
    await context.close();
