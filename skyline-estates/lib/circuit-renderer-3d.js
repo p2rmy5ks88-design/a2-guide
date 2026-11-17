@@ -152,6 +152,22 @@ export function create(canvas,{layout,spec,camera:cam0,tier:tierName=pickTier(),
   for(let i=0;i<8;i++){const a=i*Math.PI/4;jets.push({x:Math.cos(a)*innerR*.18,y:3,z:Math.sin(a)*innerR*.18,sx:.5,sy:5,sz:.5})}jets.push({x:0,y:4.5,z:0,sx:1.2,sy:8,sz:1.2});
   inst(new THREE.CylinderGeometry(1,1,1,6),new THREE.MeshStandardMaterial({color:'#dff3ff',emissive:'#9fd8ff',emissiveIntensity:.6,transparent:true,opacity:.85}),jets);
   const statue=new THREE.Mesh(new THREE.CylinderGeometry(innerR*.06,innerR*.09,3,8),new THREE.MeshStandardMaterial({color:P.ivory,roughness:.4}));statue.position.y=1.6;env.add(statue)}
+ // Sunlit civic park: a low walking circuit, colourful planting beds and timber benches.
+ // Everything is decorative and below the adjacent street and building sightlines.
+ {const walk=new THREE.Mesh(new THREE.RingGeometry(innerR*.68,innerR*.72,96),
+    new THREE.MeshStandardMaterial({color:'#FFF0CC',roughness:.98,side:THREE.DoubleSide}));
+  walk.rotation.x=-Math.PI/2;walk.position.y=1.18;env.add(walk);
+  const flowers=[[],[],[]],benches=[],seats=[];
+  for(let i=0;i<36;i++){const a=(i+.23)*Math.PI/18,d=innerR*(i%2?.79:.58);
+   flowers[i%3].push({x:Math.cos(a)*d,y:1.85,z:Math.sin(a)*d,sx:1.55,sy:.55,sz:1.55})}
+  for(let i=0;i<8;i++){const a=(i+.5)*Math.PI/4,d=innerR*.77;
+   benches.push({x:Math.cos(a)*d,y:1.85,z:Math.sin(a)*d,sx:4.2,sy:.65,sz:1.1,ry:-a});
+   seats.push({x:Math.cos(a)*d,y:2.1,z:Math.sin(a)*d,sx:4.3,sy:1.35,sz:.32,ry:-a})}
+  for(let k=0;k<flowers.length;k++)inst(new THREE.IcosahedronGeometry(1,1),
+   new THREE.MeshStandardMaterial({color:['#E77E76','#F3D27A','#B99EDC'][k],roughness:1}),
+   flowers[k],{pick:false});
+  inst(new THREE.BoxGeometry(1,1,1),new THREE.MeshStandardMaterial({color:'#B88E68',roughness:.87}),benches,{pick:false});
+  inst(new THREE.BoxGeometry(1,1,1),new THREE.MeshStandardMaterial({color:'#F8E0BA',roughness:.82}),seats,{pick:false})}
  // bridges: one hop, no stopping tile; ivory light strips
  const bridgeTruss=new THREE.MeshStandardMaterial({color:P.ivory,roughness:.45,metalness:.2}),bridgeMat=new THREE.MeshStandardMaterial({color:'#607F82',roughness:.7}),lightMat=new THREE.MeshStandardMaterial({color:P.ivory,emissive:'#FFE7B0',emissiveIntensity:tier.glow?1.6:.9});
  for(const [a,b] of Object.entries(SC.LINKS))if(a[0]==='O'){const p=G.nodes[a],q=G.nodes[b],len=Math.hypot(q.x-p.x,q.y-p.y),ang=Math.atan2(q.y-p.y,q.x-p.x),mx=(p.x+q.x)/2,my=(p.y+q.y)/2;
