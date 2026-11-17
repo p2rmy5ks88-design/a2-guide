@@ -27,6 +27,7 @@ jobs:
           node --check skyline-estates/tests/circuit-cinematic-lab.cjs
           node --check skyline-estates/tests/circuit-city-camera-audit.cjs
           node --check skyline-estates/tests/circuit-city-camera-sweep.cjs
+          node --check skyline-estates/tests/circuit-camera-screenshots.cjs
       - name: Run cinematic contract checks
         run: |
           node skyline-estates/tests/circuit-city-view.cjs
@@ -39,6 +40,23 @@ jobs:
         env:
           CAMERA_SWEEP_REPORT: cinematic-camera-sweep.json
         run: node skyline-estates/tests/circuit-city-camera-sweep.cjs
+      - name: Install browser test dependency
+        run: npm install --prefix skyline-estates/tests --no-audit --no-fund
+      - name: Capture cinematic camera lab screenshots
+        env:
+          CHROME_PATH: /usr/bin/google-chrome
+          CIRCUIT_SCREENSHOT_DIR: circuit-camera-screenshots
+        run: |
+          python3 -m http.server 8765 --directory skyline-estates > /tmp/circuit-preview.log 2>&1 &
+          sleep 2
+          node skyline-estates/tests/circuit-camera-screenshots.cjs
+      - name: Publish camera screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: circuit-camera-visual-evidence
+          path: circuit-camera-screenshots/
+          if-no-files-found: ignore
       - name: Publish camera audit artifact
         if: always()
         uses: actions/upload-artifact@v4
