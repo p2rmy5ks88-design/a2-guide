@@ -2,7 +2,7 @@
    Uses a fresh browser context and fixed seed; no live deployment or native build. */
 'use strict';
 const {chromium}=require('playwright'),fs=require('node:fs'),path=require('node:path');
-const base=process.env.CIRCUIT_GAME_URL||'http://127.0.0.1:8765/circuit-alpha.html?renderer=3d&quality=high&seed=32981&speed=instant';
+const base=process.env.CIRCUIT_GAME_URL||'http://127.0.0.1:8765/circuit-alpha.html?renderer=3d&quality=high&seed=32981&speed=instant&perf=1';
 (async()=>{
  const out=path.resolve(process.env.CIRCUIT_SCREENSHOT_DIR||'circuit-camera-screenshots');fs.mkdirSync(out,{recursive:true});
  const browser=await chromium.launch({headless:true,executablePath:process.env.CHROME_PATH||undefined,args:['--enable-webgl','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--no-sandbox']});
@@ -93,6 +93,8 @@ const base=process.env.CIRCUIT_GAME_URL||'http://127.0.0.1:8765/circuit-alpha.ht
    const resumedState=await page.evaluate(()=>JSON.stringify(window.__circuitUI.state()));
    if(rolledState!==resumedState)throw Error('Post-roll inspection unexpectedly mutated game state');
    if(errors.length)throw Error('Browser errors after second City View: '+errors.join('; '));
+   const performanceEvidence=await page.evaluate(()=>({frames:window.__circuitUI.perf(),renderer:window.__circuitUI.r3()?.stats?.()}));
+   console.log('CIRCUIT PERF '+p.id+' '+JSON.stringify(performanceEvidence));
    console.log('PLAYABLE CAPTURED '+p.id+' '+JSON.stringify(strategy));
    await context.close();
   }
