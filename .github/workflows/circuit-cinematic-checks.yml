@@ -54,6 +54,8 @@ jobs:
       - name: Install browser test dependency
         run: npm install --prefix skyline-estates/tests --no-audit --no-fund
       - name: Verify public preview link gate in Chromium
+        env:
+          CHROME_PATH: /usr/bin/google-chrome
         run: node skyline-estates/tests/circuit-access-browser.cjs
       - name: Capture cinematic camera lab screenshots
         env:
