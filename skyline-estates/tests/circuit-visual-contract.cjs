@@ -11,7 +11,7 @@ const rule=fs.readFileSync(path.join(__dirname,'../lib/circuit-rules.js'),'utf8'
 const checks=[
  ['sunlit ocean','deepWater:\'#388EAA\''],
  ['sandstone platform',"g.addColorStop(0,'#FFF0D3')"],
- ['golden-hour illumination',"DirectionalLight('#FFE3A7',3.15)"],
+ ['golden-hour illumination',"DirectionalLight('#FFE3A7',2.45)"],
  ['warm board streets',"color:'#F1E3C8'"],
  ['green civic park',"color:'#75B96E'"],
  ['four architectural silhouettes','if(variant===0)'],
