@@ -8,7 +8,7 @@ const base=process.env.CIRCUIT_GAME_URL||'http://127.0.0.1:8765/circuit-alpha.ht
  const out=path.resolve(process.env.CIRCUIT_SCREENSHOT_DIR||'circuit-camera-screenshots');fs.mkdirSync(out,{recursive:true});
  const browser=await (engine==='webkit'?webkit:chromium).launch({headless:true,...(engine==='chromium'?{executablePath:process.env.CHROME_PATH||undefined,args:['--enable-webgl','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--no-sandbox']}: {})});
  try{
-  const profiles=[{id:'iphone',w:956,h:440,dpr:2},{id:'compact',w:844,h:390,dpr:2},{id:'desktop',w:1440,h:900,dpr:1}];
+  const profiles=[{id:'iphone',w:956,h:440,dpr:3},{id:'compact',w:844,h:390,dpr:2},{id:'desktop',w:1440,h:900,dpr:1}];
   for(const p of (engine==='webkit'?profiles.filter(p=>p.id!=='desktop'):profiles)){
    const context=await browser.newContext({viewport:{width:p.w,height:p.h},deviceScaleFactor:p.dpr});
    const page=await context.newPage();const errors=[];
@@ -21,7 +21,7 @@ const base=process.env.CIRCUIT_GAME_URL||'http://127.0.0.1:8765/circuit-alpha.ht
    await page.waitForSelector('#cx-city-view',{timeout:25000});
    await page.waitForTimeout(1800);
    const strategy=await page.evaluate(()=>{const c=document.querySelector('#cx-board');return{css:{w:c.clientWidth,h:c.clientHeight},pixels:{w:c.width,h:c.height},renderer:!!document.querySelector('#cx-city-view')}});
-   if(errors.length||!strategy.renderer||strategy.pixels.w<strategy.css.w*(p.dpr>1?1.5:1)||strategy.pixels.h<strategy.css.h*(p.dpr>1?1.5:1))throw Error(p.id+' strategy '+JSON.stringify({strategy,errors}));
+   if(errors.length||!strategy.renderer||strategy.pixels.w<strategy.css.w*(p.id==='iphone'?2.9:p.dpr>1?1.5:1)||strategy.pixels.h<strategy.css.h*(p.id==='iphone'?2.9:p.dpr>1?1.5:1))throw Error(p.id+' strategy '+JSON.stringify({strategy,errors}));
    const strategyPng=await page.screenshot({path:path.join(out,p.id+'-playable-strategy.png')});
    const strategyBoard=await page.locator('#cx-board').screenshot({path:path.join(out,p.id+'-board-strategy.png')});
    await page.locator('#cx-city-view').click();

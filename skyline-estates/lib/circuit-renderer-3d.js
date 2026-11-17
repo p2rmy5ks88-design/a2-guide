@@ -14,8 +14,8 @@ import {mergeGeometries} from './BufferGeometryUtils.js';
 const SC=window.SkylineCircuit,SS=window.SkylineCircuitScreen;
 export const DECISIONS={routes:{stay:'#F2C457',cross:'#70F0C2',casing:'#0B1633'},
  players:[{c:'#FF7A59',shape:'circle'},{c:'#4C7DFF',shape:'square'},{c:'#F8F6EF',shape:'triangle'},{c:'#E055C8',shape:'hex'}],
- districts:[{name:'Harbour Quarter',accent:'#58B9CF',symbol:'wave'},{name:'Civic Heights',accent:'#E6B45B',symbol:'sun'},{name:'Verdant Mile',accent:'#70C79A',symbol:'leaf'},{name:'Neon Exchange',accent:'#B89BF0',symbol:'spark'}],
- palette:{navy:'#0B1633',deepWater:'#14768E',waterHighlight:'#36ADC1',gold:'#F2C457',ivory:'#FFF0D0',stone:'#E6D4B4',warning:'#F3B45C'}};
+ districts:[{name:'Harbour Quarter',accent:'#1989D0',symbol:'wave'},{name:'Civic Heights',accent:'#F5B629',symbol:'sun'},{name:'Verdant Mile',accent:'#22A565',symbol:'leaf'},{name:'Neon Exchange',accent:'#E34B42',symbol:'spark'}],
+ palette:{navy:'#0B1633',deepWater:'#08768F',waterHighlight:'#28B5C6',gold:'#F2C457',ivory:'#FFF0D0',stone:'#E6D4B4',warning:'#F3B45C'}};
 // Quality tiers (CIRCUIT-V2-REVIEW.md §4). Changes are visual only.
 export const TIERS={low:{shadows:0,trees:0,glow:false,water:false,maxScale:1.5,antialias:false},
  medium:{shadows:1024,trees:90,glow:false,water:false,maxScale:2.5,antialias:true},
@@ -44,10 +44,10 @@ const decalCache=new Map();
 function decal(kind,color,{bg=null,outline=null}={}){const key=kind+color+bg+outline;if(decalCache.has(key))return decalCache.get(key);
  const t=canvasTex(128,128,(ctx,w)=>{ctx.translate(w/2,w/2);if(bg){ctx.beginPath();ctx.arc(0,0,w*.46,0,7);ctx.fillStyle=bg;ctx.fill()}ctx.fillStyle=color;ctx.strokeStyle=outline||color;ctx.lineWidth=w*.075;symbolPath(ctx,kind,w*.34)});
  const m=new THREE.MeshBasicMaterial({map:t,transparent:true,depthWrite:false});decalCache.set(key,m);return m}
-function facade(kind){return canvasTex(256,512,(ctx,w,h)=>{ctx.scale(2,2);w/=2;h/=2;
+function facade(kind,detail=1){const mul=detail>1?4:2;return canvasTex(128*mul,256*mul,(ctx,w,h)=>{ctx.scale(mul,mul);w/=mul;h/=mul;
  if(kind==='masonry'){ctx.fillStyle='#D5B790';ctx.fillRect(0,0,w,h);ctx.fillStyle='#315A70';for(let y=26;y<h-10;y+=46)for(let x=14;x<w-10;x+=36)ctx.fillRect(x,y,20,26);ctx.fillStyle='#E4C89F';ctx.fillRect(0,h-14,w,14)}
  else if(kind==='stone'){ctx.fillStyle='#C9A074';ctx.fillRect(0,0,w,h);ctx.fillStyle='#78A8B4';for(let y=20;y<h;y+=40)ctx.fillRect(0,y,w,16);ctx.strokeStyle='#D4B990';for(let x=0;x<w;x+=32){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke()}}
- else{const g=ctx.createLinearGradient(0,0,0,h);g.addColorStop(0,'#8CC6D5');g.addColorStop(1,'#276B87');ctx.fillStyle=g;ctx.fillRect(0,0,w,h);ctx.strokeStyle='rgba(14,51,70,.80)';ctx.lineWidth=2;
+ else{const g=ctx.createLinearGradient(0,0,0,h);g.addColorStop(0,'#8CC6D5');g.addColorStop(1,'#276B87');ctx.fillStyle=g;ctx.fillRect(0,0,w,h);ctx.strokeStyle='rgba(8,45,65,.90)';ctx.lineWidth=2;
   for(let y=0;y<h;y+=18){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke()}for(let x=0;x<w;x+=16){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke()}
   const r=rng(kind==='glass'?3:5);ctx.fillStyle='rgba(255,227,158,.90)';for(let i=0;i<40;i++)ctx.fillRect(Math.floor(r()*8)*16+3,Math.floor(r()*14)*18+4,10,10);
   // Thin architectural mullions and alternating glass reflections stay crisp at oblique angles.
@@ -70,7 +70,7 @@ function disposeGroup(g){if(!g)return;g.traverse(o=>{if(o.isMesh)o.geometry.disp
 export function create(canvas,{layout,spec,camera:cam0,tier:tierName=pickTier(),onTierChange=null}={}){
  const P=DECISIONS.palette;let tier=TIERS[tierName];
  let renderer;try{renderer=new THREE.WebGLRenderer({canvas,antialias:tier.antialias,alpha:false,powerPreference:'high-performance',preserveDrawingBuffer:new URLSearchParams(location.search).get('test')==='1'})}catch(e){return null}
- renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.07;
+ renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.0;
  renderer.shadowMap.enabled=!!tier.shadows;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.setClearColor('#73BAD0');
  const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera();camera.updateProjectionMatrix=()=>{};// projection is set explicitly
  const G=SS.geometry(layout,spec),T=G.tile;let C=null,rect=null,camNow={...cam0};
@@ -189,14 +189,15 @@ export function create(canvas,{layout,spec,camera:cam0,tier:tierName=pickTier(),
  const tileGeo=new THREE.ExtrudeGeometry(rounded(T*.92,T*.12),{depth:3,bevelEnabled:true,bevelSize:.6,bevelThickness:.6,bevelSegments:1,curveSegments:4});tileGeo.rotateX(-Math.PI/2);
  const rimShape=rounded(T*1.0,T*.15);rimShape.holes.push(rounded(T*.86,T*.1));const rimGeo=new THREE.ExtrudeGeometry(rimShape,{depth:3.6,bevelEnabled:false,curveSegments:4});rimGeo.rotateX(-Math.PI/2);
  const inlayGeo=new THREE.PlaneGeometry(T*.7,T*.7);inlayGeo.rotateX(-Math.PI/2);
- const tileMat={property:new THREE.MeshStandardMaterial({color:'#D6AE80',roughness:.82}),junction:new THREE.MeshStandardMaterial({color:'#32697C',roughness:.7}),event:new THREE.MeshStandardMaterial({color:'#B96839',roughness:.7})};
+ const tileMat={property:new THREE.MeshStandardMaterial({color:'#D5A778',roughness:.82}),junction:new THREE.MeshStandardMaterial({color:'#32697C',roughness:.7}),event:new THREE.MeshStandardMaterial({color:'#B96839',roughness:.7})};
  const junctionRim=new THREE.MeshStandardMaterial({color:P.ivory,roughness:.4,emissive:'#4a4230',emissiveIntensity:.25}),eventRim=new THREE.MeshStandardMaterial({color:P.warning,roughness:.4,emissive:'#5a3a10',emissiveIntensity:.4});
  const ownerRimMat=DECISIONS.players.map(p=>new THREE.MeshStandardMaterial({color:p.c,roughness:.45,emissive:p.c,emissiveIntensity:.18}));
  const tile={};
  for(const n of SC.NODES){const g=G.nodes[n.id],grp=new THREE.Group();grp.position.set(g.x,0,g.y);grp.rotation.y=-g.ang;tilesGroup.add(grp);
   const base=new THREE.Mesh(tileGeo,tileMat[n.type]);base.receiveShadow=base.castShadow=!!tier.shadows;base.userData.pick={kind:1,i:idx[n.id]};grp.add(base);
   const rec={grp,base,decals:{}};tile[n.id]=rec;
-  if(n.type==='property'){const d=DECISIONS.districts[n.quadrant];const inlay=new THREE.Mesh(inlayGeo,new THREE.MeshStandardMaterial({color:d.accent,transparent:true,opacity:.34,roughness:.7}));inlay.position.y=4.25;grp.add(inlay);
+  if(n.type==='property'){const d=DECISIONS.districts[n.quadrant];// Un-tonemapped enamel district inlay: blue, gold, green and red retain their full saturated identity.
+   const inlay=new THREE.Mesh(inlayGeo,new THREE.MeshBasicMaterial({color:d.accent,toneMapped:false}));inlay.position.y=4.25;grp.add(inlay);
    const ownerRim=new THREE.Mesh(rimGeo,ownerRimMat[0]);ownerRim.visible=false;ownerRim.userData.dynamic=true;grp.add(ownerRim);rec.ownerRim=ownerRim;
    const sym=new THREE.Mesh(new THREE.PlaneGeometry(T*.42,T*.42).rotateX(-Math.PI/2),decal(d.symbol,d.accent));sym.position.y=4.4;sym.userData.dynamic=true;grp.add(sym);rec.plotSymbol=sym;
    // district symbol on the building base (corner), shown once developed
@@ -208,18 +209,18 @@ export function create(canvas,{layout,spec,camera:cam0,tier:tierName=pickTier(),
  scene.updateMatrixWorld(true);{const statics=[];tilesGroup.traverse(o=>{if(o.isMesh&&!o.userData.dynamic)statics.push(o)});const merged=mergeByMaterial(statics,{shadows:!!tier.shadows});scene.add(merged);
   for(const o of statics){if(o.userData.pick){o.visible=false;o.userData.pickOnly=true}else o.parent.remove(o)}}
  // ---------- buildings: five stages inside the envelope ----------
- const mats={masonry:new THREE.MeshStandardMaterial({map:facade('masonry'),roughness:.85}),stone:new THREE.MeshStandardMaterial({map:facade('stone'),roughness:.75}),
-  glass:new THREE.MeshStandardMaterial({map:facade('glass'),roughness:.2,metalness:tier.shadows?.3:0,emissive:'#3a2a10',emissiveIntensity:.12}),
-  glass2:new THREE.MeshStandardMaterial({map:facade('glass2'),roughness:.18,metalness:tier.shadows?.35:0,emissive:'#3a2a10',emissiveIntensity:.15}),
+ const mats={masonry:new THREE.MeshStandardMaterial({map:facade('masonry',tierName!=='low'?2:1),roughness:.85}),stone:new THREE.MeshStandardMaterial({map:facade('stone',tierName!=='low'?2:1),roughness:.75}),
+  glass:new THREE.MeshStandardMaterial({map:facade('glass',tierName!=='low'?2:1),roughness:.2,metalness:tier.shadows?.3:0,emissive:'#3a2a10',emissiveIntensity:.12}),
+  glass2:new THREE.MeshStandardMaterial({map:facade('glass2',tierName!=='low'?2:1),roughness:.18,metalness:tier.shadows?.35:0,emissive:'#3a2a10',emissiveIntensity:.15}),
   roof:new THREE.MeshStandardMaterial({color:'#F8E7CB',roughness:.8}),slate:new THREE.MeshStandardMaterial({color:'#C9B3A2',roughness:.65,flatShading:true}),metal:new THREE.MeshStandardMaterial({color:'#C6A15F',roughness:.35,metalness:tier.shadows?.7:.1}),roofDark:new THREE.MeshStandardMaterial({color:'#48859B',roughness:.35,metalness:tier.shadows?.35:0}),roofMid:new THREE.MeshStandardMaterial({color:'#74B5C3',roughness:.6,metalness:.2}),roofHigh:new THREE.MeshStandardMaterial({color:'#C3E6E8',roughness:.5,metalness:.25}),terrace:new THREE.MeshStandardMaterial({color:'#70B983',roughness:.9}),
   crown:new THREE.MeshStandardMaterial({color:'#CFA038',emissive:'#EFBF63',emissiveIntensity:tier.glow?.6:.35,metalness:.6,roughness:.3})};
  const S=G.buildingSide,H=G.stageHeight;
  // Four district architecture palettes share the validated stage envelopes.
  // Material and silhouette variation is purely visual: no new lots, streets or gameplay rules.
- const districtGlass=['#D1E8EA','#E5C3A3','#B9D8C5','#A1C6DE'].map(color=>new THREE.MeshStandardMaterial({
+ const districtGlass=['#B4E0F4','#FFE0A0','#B2E4C4','#F6B6AD'].map(color=>new THREE.MeshStandardMaterial({
   map:mats.glass.map,color,roughness:.23,metalness:.17,emissive:'#6F715D',emissiveIntensity:.045}));
- const districtRoof=['#B9855D','#B7896F','#5F9D7C','#6095B1'].map(color=>new THREE.MeshStandardMaterial({color,roughness:.56,metalness:.12}));
- const districtTrim=['#D6AF63','#C98D64','#76BBA2','#90AACA'].map(color=>new THREE.MeshStandardMaterial({color,metalness:.35,roughness:.39}));
+ const districtRoof=['#277DAE','#DA992C','#31966D','#C24E49'].map(color=>new THREE.MeshStandardMaterial({color,roughness:.56,metalness:.12}));
+ const districtTrim=['#1787C7','#F1B32E','#199E69','#DE5246'].map(color=>new THREE.MeshStandardMaterial({color,metalness:.35,roughness:.39}));
  // A box with side walls from `mat` and a roof from `roof` (BoxGeometry face order: +x,-x,+y(top),-y,+z,-z).
  const box=(w,h,mat,roof=mats.roof)=>{const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,w),[mat,mat,roof,mat,mat,mat]);m.castShadow=m.receiveShadow=!!tier.shadows;return m};
  // Five stages, each with its own top-down silhouette, all inside the validated envelope (footprint S, height H[stage]).

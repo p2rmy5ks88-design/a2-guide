@@ -26,7 +26,7 @@ let R3=null,R3tried=false,camCur=null;
 let zf=null,zoom=null,planFocused='';const CINEMATIC={pitch:15,dist:5};
 // Owner-review City View: explicitly non-interactive. Strategy View remains the only decision camera.
 const CITY_REVIEW={pitch:40,dist:5};let cityReview=false;
-const SYMS=['wave','sun','leaf','spark'],DCOL=['#58B9CF','#E6B45B','#70C79A','#B89BF0'];
+const SYMS=['wave','sun','leaf','spark'],DCOL=['#1989D0','#F5B629','#22A565','#E34B42'];
 const symSvg=(q,sz=14)=>{const c=DCOL[q],k=SYMS[q];const body=k==='wave'?'<path d="M1 5c2-3 4 3 6 0s4 3 6 0M1 10c2-3 4 3 6 0s4 3 6 0" fill="none" stroke-width="1.6"/>':k==='sun'?'<circle cx="7" cy="7" r="2.6"/><path d="M7 1v2M7 11v2M1 7h2M11 7h2M2.8 2.8l1.4 1.4M9.8 9.8l1.4 1.4M2.8 11.2l1.4-1.4M9.8 4.2l1.4-1.4" stroke-width="1.4"/>':k==='leaf'?'<path d="M2 12C1 5 6 2 12 2c0 6-3 11-10 10z"/>':'<path d="M7 1l1.5 4.5L13 7l-4.5 1.5L7 13l-1.5-4.5L1 7l4.5-1.5z"/>';
  return`<svg class="cx-sym" width="${sz}" height="${sz}" viewBox="0 0 14 14" fill="${c}" stroke="${c}" aria-hidden="true">${body}</svg>`};
 const pips=st=>`<span class="cx-pips" role="img" aria-label="Stage ${SC.STAGES[st]}">${[1,2,3,4].map(k=>`<i class="${k<=st?'on':''}"></i>`).join('')}</span>`;
