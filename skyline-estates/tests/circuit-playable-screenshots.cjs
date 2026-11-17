@@ -25,6 +25,7 @@ const base=process.env.CIRCUIT_GAME_URL||'http://127.0.0.1:8765/circuit-alpha.ht
    await page.waitForTimeout(1600);
    const city=await page.locator('#cx-city-view').getAttribute('aria-pressed');
    if(city!=='true'||errors.length)throw Error(p.id+' city '+JSON.stringify({city,errors}));
+   if(await page.locator('#cx-roll, #cx-buy, #cx-end, [data-plan], [data-build]').count())throw Error('Gameplay controls remain visible in inspection-only City View');
    const cityPng=await page.screenshot({path:path.join(out,p.id+'-playable-city.png')});
    if(strategyPng.equals(cityPng))throw Error('City and Strategy screenshots are pixel-identical');
    // Review-only populated skyline: use the existing presentation test hook, never modify rules state.
@@ -40,6 +41,7 @@ const base=process.env.CIRCUIT_GAME_URL||'http://127.0.0.1:8765/circuit-alpha.ht
    await page.locator('#cx-city-view').click();
    const back=await page.locator('#cx-city-view').getAttribute('aria-pressed');
    if(back!=='false')throw Error('City View did not return to Strategy View');
+   if(!(await page.locator('#cx-roll').count()))throw Error('Gameplay controls were not restored on return');
    console.log('PLAYABLE CAPTURED '+p.id+' '+JSON.stringify(strategy));
    await context.close();
   }
