@@ -11,7 +11,7 @@ const base=process.env.CIRCUIT_PREVIEW_URL||'http://127.0.0.1:8765/circuit-cinem
   for(const p of profiles){
    const context=await browser.newContext({viewport:{width:p.w,height:p.h},deviceScaleFactor:p.dpr});
    const page=await context.newPage();const failures=[];
-   page.on('pageerror',e=>failures.push(e.message));page.on('console',m=>{if(m.type()==='error')failures.push('console: '+m.text())});
+   page.on('pageerror',e=>failures.push(e.message));page.on('response',response=>{if(response.status()>=400&&!response.url().endsWith('/favicon.ico'))failures.push('HTTP '+response.status()+' '+response.url())});
    await page.goto(base,{waitUntil:'networkidle',timeout:30000});
    try{await page.waitForFunction(()=>{const c=document.querySelector('canvas');return c&&c.width>0&&c.height>0},{timeout:20000})}catch(e){throw Error('WebGL initialization failed on '+p.id+': '+JSON.stringify({errors:failures,html:(await page.content()).slice(0,300)}))}
    await page.waitForTimeout(1500);
