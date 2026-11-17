@@ -5,7 +5,7 @@ const rules=fs.readFileSync(path.join(__dirname,'../lib/circuit-rules.js'),'utf8
 assert.match(ui,/const CITY_REVIEW=\{pitch:40,dist:6\}/);
 assert.match(ui,/const want=cityReview\?CITY_REVIEW:/);
 assert.match(ui,/function hit\(x,y\)\{if\(cityReview\)return null;/,'no picking in City View');
-assert.match(ui,/function act\(a\)\{if\(cityReview\)\{cityReview=false;/,'rule actions return to strategy');
+assert.match(ui,/function act\(a\)\{if\(cityReview\)\{cityReview=false;dirty=true;render\(\);return\}/,'first action exits City View without changing game state');
 assert.match(ui,/if\(R3\)h\+=`<div class="cx-sect"><button id="cx-city-view"/,'no City View without WebGL');
 assert.match(ui,/if\(cityReview&&zoom\)overview\(\)/,'zoom reset for cinematic view');
 assert.match(ui,/Return to Strategy View/);
