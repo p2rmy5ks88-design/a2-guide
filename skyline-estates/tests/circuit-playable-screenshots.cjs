@@ -66,6 +66,20 @@ const base=process.env.CIRCUIT_GAME_URL||'http://127.0.0.1:8765/circuit-alpha.ht
    if(before!==after)throw Error('Presentation-only populated skyline mutated match state');
    const populated=await page.evaluate(()=>({stages:window.SkylineCircuit.PROPS.length,modelStages:window.__circuitUI.state().own}));
    if(populated.stages!==20)throw Error('Expected 20 property stage previews');
+   // Final visual acceptance evidence: all twenty Skyscrapers under the actual playable City View.
+   // This is a renderer-only stage override; the match, cash and ownership must remain untouched.
+   const beforeMax=await page.evaluate(()=>JSON.stringify(window.__circuitUI.state()));
+   await page.evaluate(()=>{
+    const maxStages={};
+    for(const id of window.SkylineCircuit.PROPS)maxStages[id]=4;
+    window.__circuitUI.setStages(maxStages);
+   });
+   await page.waitForTimeout(750);
+   const maxBoard=await page.locator('#cx-board').screenshot({path:path.join(out,p.id+'-board-all-skyscrapers.png')});
+   await page.screenshot({path:path.join(out,p.id+'-all-skyscrapers-city.png')});
+   if(maxBoard.equals(populatedBoard))throw Error('All-skyscraper 3D board matches mixed-stage preview');
+   if(beforeMax!==await page.evaluate(()=>JSON.stringify(window.__circuitUI.state())))throw Error('All-skyscraper review changed gameplay state');
+   if(Math.abs(await page.evaluate(()=>window.__circuitUI.r3()?.camera?.pitch)-30)>.1)throw Error('All-skyscraper City View lost the validated inspection pitch');
    await page.locator('#cx-city-view').click();
    const back=await page.locator('#cx-city-view').getAttribute('aria-pressed');
    if(back!=='false')throw Error('City View did not return to Strategy View');
