@@ -11,5 +11,7 @@ assert.match(ui,/if\(cityReview&&zoom\)overview\(\)/,'zoom reset for cinematic v
 assert.match(ui,/Return to Strategy View/);
 assert.match(ui,/const showRoute=!cityReview&&v.preview/,'City View hides route overlays');
 assert.match(ui,/if\(cityReview\)\{cityReview=false;dirty=true;render\(\);return\}plan=b.dataset.plan/,'route planning cannot change in City View');
+assert.match(ui,/if\(!cityReview&&!busy\(\)&&s&&!s.over\)/,'AI scheduling paused during City inspection');
+assert.match(ui,/if\(!cityReview&&!busy\(\)&&SC.pending\(s\)/,'queued AI callback cannot mutate a match during inspection');
 assert(!rules.includes('CITY_REVIEW'),'camera mode must not enter rules engine');
 console.log('PASS: City View presentation-only, no board selection, return to Strategy View, no rules change');
