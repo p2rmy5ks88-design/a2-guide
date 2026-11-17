@@ -31,7 +31,12 @@ const checks=[
  ['no rule-space expansion','const stageCache=Array.from({length:4}'],
  ['validated camera remains','function setCamera(c)'],
  ['adaptive pixel budget','Math.sqrt(4200000/(W*Hh))'],
- ['civic planting','Sunlit civic park: a low walking circuit']
+ ['civic planting','Sunlit civic park: a low walking circuit'],
+ ['recessed skyscraper glass entrance','Recessed glazed lobby and metal canopy'],
+ ['inside stage footprint','S*.52,base*.70,S*.022'],
+ ['architectural mullion contrast',"ctx.fillStyle='rgba(9,39,57,.24)'"],
+ ['grounded shadow bias','sun.shadow.normalBias=.38'],
+ ['balanced ambient fill',"HemisphereLight('#E6F5FF','#A88564',.76)"]
 ];
 for(const [description,needle] of checks)assert(src.includes(needle),description+' missing');
 assert(!rule.includes('Sunlit civic park'),'decoration cannot enter rules engine');

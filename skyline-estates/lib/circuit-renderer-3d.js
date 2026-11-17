@@ -51,7 +51,9 @@ function facade(kind,detail=1){const mul=detail>1?4:2;return canvasTex(128*mul,2
   for(let y=0;y<h;y+=18){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke()}for(let x=0;x<w;x+=16){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke()}
   const r=rng(kind==='glass'?3:5);ctx.fillStyle='rgba(255,227,158,.90)';for(let i=0;i<40;i++)ctx.fillRect(Math.floor(r()*8)*16+3,Math.floor(r()*14)*18+4,10,10);
   // Thin architectural mullions and alternating glass reflections stay crisp at oblique angles.
-  ctx.fillStyle='rgba(215,236,248,.30)';for(let x=1;x<w;x+=16)ctx.fillRect(x,0,1,h);
+  // Facade depth: thin dark recessed bays and crisp sunlit mullion highlights.
+  ctx.fillStyle='rgba(9,39,57,.24)';for(let x=9;x<w;x+=16)ctx.fillRect(x,0,4,h);
+  ctx.fillStyle='rgba(237,250,244,.42)';for(let x=1;x<w;x+=16)ctx.fillRect(x,0,1,h);
   ctx.fillStyle='rgba(12,52,74,.45)';for(let x=13;x<w;x+=16)ctx.fillRect(x,0,2,h);
   ctx.fillStyle='rgba(245,199,120,.15)';for(let y=6;y<h;y+=54)ctx.fillRect(0,y,w,3);
   ctx.fillStyle='rgba(241,248,255,.24)';for(let y=3;y<h;y+=36)for(let x=4;x<w;x+=32)ctx.fillRect(x,y,5,1)
@@ -80,9 +82,9 @@ export function create(canvas,{layout,spec,camera:cam0,tier:tierName=pickTier(),
  if(tier.shadows){const pm=new THREE.PMREMGenerator(renderer),es=new THREE.Scene();const sky=canvasTex(16,256,(ctx,w,h)=>{const g=ctx.createLinearGradient(0,0,0,h);g.addColorStop(0,'#74B7D3');g.addColorStop(.45,'#B7D9E2');g.addColorStop(.52,'#FFE2AE');g.addColorStop(.68,'#E3AF82');g.addColorStop(1,'#8CB7C8');ctx.fillStyle=g;ctx.fillRect(0,0,w,h)});
   es.add(new THREE.Mesh(new THREE.SphereGeometry(100,32,16),new THREE.MeshBasicMaterial({map:sky,side:THREE.BackSide})));scene.environment=pm.fromScene(es,.02).texture;scene.environmentIntensity=.56;pm.dispose()}
  // ---------- lights ----------
- const hemi=new THREE.HemisphereLight('#E6F5FF','#A88564',.84);scene.add(hemi);
+ const hemi=new THREE.HemisphereLight('#E6F5FF','#A88564',.76);scene.add(hemi);
  const sun=new THREE.DirectionalLight('#FFE3A7',2.45);sun.position.copy(V(-420,-150,380));sun.target.position.set(0,0,0);scene.add(sun,sun.target);
- if(tier.shadows){sun.castShadow=true;sun.shadow.mapSize.set(tier.shadows,tier.shadows);const sc=sun.shadow.camera;sc.left=-R*1.3;sc.right=R*1.3;sc.top=R*1.3;sc.bottom=-R*1.3;sc.near=10;sc.far=1400;sun.shadow.bias=-.0008;sun.shadow.normalBias=.6}
+ if(tier.shadows){sun.castShadow=true;sun.shadow.mapSize.set(tier.shadows,tier.shadows);const sc=sun.shadow.camera;sc.left=-R*1.3;sc.right=R*1.3;sc.top=R*1.3;sc.bottom=-R*1.3;sc.near=10;sc.far=1400;sun.shadow.bias=-.0008;sun.shadow.normalBias=.38}
  // ---------- environment ----------
  const env=new THREE.Group();scene.add(env);
  const waterTex=canvasTex(256,256,(ctx,w,h)=>{ctx.fillStyle=P.deepWater;ctx.fillRect(0,0,w,h);const r=rng(7);ctx.strokeStyle='rgba(222,248,250,.32)';ctx.lineWidth=1.4;for(let i=0;i<70;i++){const x=r()*w,y=r()*h,l=6+r()*16;ctx.beginPath();ctx.moveTo(x-l,y);ctx.quadraticCurveTo(x,y-3,x+l,y);ctx.stroke()}},{repeat:[14,14]});
@@ -248,6 +250,11 @@ export function create(canvas,{layout,spec,camera:cam0,tier:tierName=pickTier(),
    // Landmark silhouette is still readable from the 30-degree inspection camera and 0-degree strategy view.
    const base=h*.09,crown=h*.06,body=h-base-crown,R=S*.5;
    add(box(S*.94,base,mats.stone,mats.terrace),Z+base/2);
+   // Recessed glazed lobby and metal canopy read as ground-floor architecture.
+   // Every detail is strictly inside the existing S*.94 footprint and stage height.
+   add(slab(S*.52,base*.70,S*.022,mats.glass2,mats.glass2),Z+base*.5,0,-S*.458);
+   for(const x of [-S*.28,S*.28])add(slab(S*.026,base*.73,S*.026,vTrim,vTrim),Z+base*.5,x,-S*.454);
+   add(slab(S*.59,base*.09,S*.035,vTrim,vTrim),Z+base*.85,0,-S*.45);
    if(variant===0){// Harbour Quarter: octagonal stepped maritime tower with golden observation crown.
     const d1=body*.5,d2=body*.3,d3=body-d1-d2;
     add(oct(R*.98,d1,vGlass),Z+base+d1/2);add(oct(R*.86,d2,vGlass),Z+base+d1+d2/2);add(oct(R*.72,d3,vGlass),Z+base+d1+d2+d3/2);
