@@ -70,7 +70,7 @@ function disposeGroup(g){if(!g)return;g.traverse(o=>{if(o.isMesh)o.geometry.disp
 export function create(canvas,{layout,spec,camera:cam0,tier:tierName=pickTier(),onTierChange=null}={}){
  const P=DECISIONS.palette;let tier=TIERS[tierName];
  let renderer;try{renderer=new THREE.WebGLRenderer({canvas,antialias:tier.antialias,alpha:false,powerPreference:'high-performance',preserveDrawingBuffer:new URLSearchParams(location.search).get('test')==='1'})}catch(e){return null}
- renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.65;
+ renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.25;
  renderer.shadowMap.enabled=!!tier.shadows;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.setClearColor('#73BAD0');
  const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera();camera.updateProjectionMatrix=()=>{};// projection is set explicitly
  const G=SS.geometry(layout,spec),T=G.tile;let C=null,rect=null,camNow={...cam0};
@@ -78,10 +78,10 @@ export function create(canvas,{layout,spec,camera:cam0,tier:tierName=pickTier(),
  const R=Math.max(...nodeIds.map(id=>Math.hypot(G.nodes[id].x,G.nodes[id].y)));
  // ---------- golden-hour sky as an environment map (reflections for glass; Medium/High only) ----------
  if(tier.shadows){const pm=new THREE.PMREMGenerator(renderer),es=new THREE.Scene();const sky=canvasTex(16,256,(ctx,w,h)=>{const g=ctx.createLinearGradient(0,0,0,h);g.addColorStop(0,'#74B7D3');g.addColorStop(.45,'#B7D9E2');g.addColorStop(.52,'#FFE2AE');g.addColorStop(.68,'#E3AF82');g.addColorStop(1,'#8CB7C8');ctx.fillStyle=g;ctx.fillRect(0,0,w,h)});
-  es.add(new THREE.Mesh(new THREE.SphereGeometry(100,32,16),new THREE.MeshBasicMaterial({map:sky,side:THREE.BackSide})));scene.environment=pm.fromScene(es,.02).texture;scene.environmentIntensity=.8;pm.dispose()}
+  es.add(new THREE.Mesh(new THREE.SphereGeometry(100,32,16),new THREE.MeshBasicMaterial({map:sky,side:THREE.BackSide})));scene.environment=pm.fromScene(es,.02).texture;scene.environmentIntensity=.65;pm.dispose()}
  // ---------- lights ----------
- const hemi=new THREE.HemisphereLight('#E6F5FF','#A88564',1.25);scene.add(hemi);
- const sun=new THREE.DirectionalLight('#FFE3A7',3.15);sun.position.copy(V(-420,-150,380));sun.target.position.set(0,0,0);scene.add(sun,sun.target);
+ const hemi=new THREE.HemisphereLight('#E6F5FF','#A88564',.95);scene.add(hemi);
+ const sun=new THREE.DirectionalLight('#FFE3A7',2.45);sun.position.copy(V(-420,-150,380));sun.target.position.set(0,0,0);scene.add(sun,sun.target);
  if(tier.shadows){sun.castShadow=true;sun.shadow.mapSize.set(tier.shadows,tier.shadows);const sc=sun.shadow.camera;sc.left=-R*1.3;sc.right=R*1.3;sc.top=R*1.3;sc.bottom=-R*1.3;sc.near=10;sc.far=1400;sun.shadow.bias=-.0008;sun.shadow.normalBias=.6}
  // ---------- environment ----------
  const env=new THREE.Group();scene.add(env);
