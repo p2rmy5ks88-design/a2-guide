@@ -205,11 +205,16 @@ export function create(canvas,{layout,spec,camera:cam0,tier:tierName=pickTier(),
   else if(stage===2){// Mid-rise: stone podium with roof garden, L-shaped glass upper block
    const pod=h*.42,up=h-pod;add(box(S*.94,pod,mats.stone,mats.terrace),Z+pod/2);
    add(slab(S*.86,up,S*.42,mats.glass,mats.roofMid),Z+pod+up/2,0,-S*.21);add(slab(S*.42,up,S*.86,mats.glass,mats.roofMid),Z+pod+up/2,-S*.21,0);
-   add(slab(S*.34,.5,S*.34,mats.terrace,mats.terrace),Z+pod+.3,S*.24,S*.24)}
+   add(slab(S*.34,.5,S*.34,mats.terrace,mats.terrace),Z+pod+.3,S*.24,S*.24);
+   // Slim exterior corner mullions make the L-shaped facade read from the City View camera.
+   for(const [x,z] of [[-S*.4,-S*.4],[S*.4,-S*.4],[-S*.4,S*.4]])add(slab(S*.025,up*.88,S*.025,mats.metal,mats.metal),Z+pod+up*.44,x,z)}
   else if(stage===3){// High-rise: terraced podium, cross-shaped tower with a glass crown
    const pod=h*.18,tw=h-pod,top=tw*.16;add(box(S*.94,pod,mats.stone,mats.terrace),Z+pod/2);
    add(slab(S*.86,tw-top,S*.36,mats.glass2,mats.roofHigh),Z+pod+(tw-top)/2);add(slab(S*.36,tw-top,S*.86,mats.glass2,mats.roofHigh),Z+pod+(tw-top)/2);
-   add(slab(S*.5,top,S*.5,mats.glass,mats.metal),Z+pod+tw-top/2)}
+   add(slab(S*.5,top,S*.5,mats.glass,mats.metal),Z+pod+tw-top/2);
+   // Recessed crown rim and four vertical corner accents, inside the existing height envelope.
+   add(slab(S*.56,Math.min(.75,top*.12),S*.56,mats.metal,mats.metal),Z+pod+tw-Math.min(.75,top*.12)/2);
+   for(const [x,z] of [[-S*.17,-S*.17],[S*.17,-S*.17],[-S*.17,S*.17],[S*.17,S*.17]])add(slab(S*.022,(tw-top)*.78,S*.022,mats.metal,mats.metal),Z+pod+(tw-top)*.48,x,z)}
   else if(stage===4){// Skyscraper: octagonal landmark — base, three stepped drums with fins, gold crown ring and pavilion (no spire)
    const base=h*.08,crown=h*.05,body=h-base-crown,d1=body*.5,d2=body*.3,d3=body-d1-d2,R=S*.5;
    add(box(S*.94,base,mats.stone,mats.terrace),Z+base/2);
