@@ -21,6 +21,7 @@ const base=process.env.CIRCUIT_GAME_URL||'http://127.0.0.1:8765/circuit-alpha.ht
    const strategy=await page.evaluate(()=>{const c=document.querySelector('#cx-board');return{css:{w:c.clientWidth,h:c.clientHeight},pixels:{w:c.width,h:c.height},renderer:!!document.querySelector('#cx-city-view')}});
    if(errors.length||!strategy.renderer||strategy.pixels.w<strategy.css.w*(p.dpr>1?1.5:1)||strategy.pixels.h<strategy.css.h*(p.dpr>1?1.5:1))throw Error(p.id+' strategy '+JSON.stringify({strategy,errors}));
    const strategyPng=await page.screenshot({path:path.join(out,p.id+'-playable-strategy.png')});
+   const strategyBoard=await page.locator('#cx-board').screenshot({path:path.join(out,p.id+'-board-strategy.png')});
    await page.locator('#cx-city-view').click();
    await page.waitForTimeout(1600);
    const city=await page.locator('#cx-city-view').getAttribute('aria-pressed');
@@ -29,12 +30,18 @@ const base=process.env.CIRCUIT_GAME_URL||'http://127.0.0.1:8765/circuit-alpha.ht
    if((await page.locator('#cx-actions').innerText()).match(/City View is for looking only/g))throw Error('Redundant City View warning returned');
    const cityPng=await page.screenshot({path:path.join(out,p.id+'-playable-city.png')});
    if(strategyPng.equals(cityPng))throw Error('City and Strategy screenshots are pixel-identical');
+   const cityBoard=await page.locator('#cx-board').screenshot({path:path.join(out,p.id+'-board-city.png')});
+   if(strategyBoard.equals(cityBoard))throw Error('3D board did not change between Strategy and City View; HUD-only changes are insufficient');
+   const cityPitch=await page.evaluate(()=>window.__circuitUI.r3()?.camera?.pitch);
+   if(Math.abs(cityPitch-30)>.1)throw Error('City View camera did not reach validated 30-degree pitch: '+cityPitch);
    // Review-only populated skyline: use the existing presentation test hook, never modify rules state.
    const before=await page.evaluate(()=>JSON.stringify(window.__circuitUI.state()));
    await page.evaluate(()=>{const ids=window.SkylineCircuit.PROPS,st={};ids.forEach((id,i)=>st[id]=1+(i%4));window.__circuitUI.setStages(st)});
    await page.waitForTimeout(700);
    const populatedPng=await page.screenshot({path:path.join(out,p.id+'-populated-city.png')});
    if(populatedPng.equals(cityPng))throw Error('Populated skyline is visually identical to empty city');
+   const populatedBoard=await page.locator('#cx-board').screenshot({path:path.join(out,p.id+'-board-populated.png')});
+   if(populatedBoard.equals(cityBoard))throw Error('Populated buildings did not change the 3D canvas');
    const after=await page.evaluate(()=>JSON.stringify(window.__circuitUI.state()));
    if(before!==after)throw Error('Presentation-only populated skyline mutated match state');
    const populated=await page.evaluate(()=>({stages:window.SkylineCircuit.PROPS.length,modelStages:window.__circuitUI.state().own}));
@@ -42,6 +49,9 @@ const base=process.env.CIRCUIT_GAME_URL||'http://127.0.0.1:8765/circuit-alpha.ht
    await page.locator('#cx-city-view').click();
    const back=await page.locator('#cx-city-view').getAttribute('aria-pressed');
    if(back!=='false')throw Error('City View did not return to Strategy View');
+   await page.waitForTimeout(900);
+   const strategyPitch=await page.evaluate(()=>window.__circuitUI.r3()?.camera?.pitch);
+   if(Math.abs(strategyPitch)>.1)throw Error('Strategy View did not restore 0-degree decision camera: '+strategyPitch);
    if(!(await page.locator('#cx-roll').count()))throw Error('Gameplay controls were not restored on return');
    console.log('PLAYABLE CAPTURED '+p.id+' '+JSON.stringify(strategy));
    await context.close();
