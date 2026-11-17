@@ -1,0 +1,25 @@
+name: Circuit facade final generated assets (draft)
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/circuit-assets-preview-once.yml'
+      - 'skyline-estates/lib/circuit-renderer-3d.js'
+permissions:
+  contents: read
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Rebuild deterministic assets
+        run: |
+          python3 skyline-estates/build.py
+          python3 skyline-estates/build.py --check
+      - name: Publish exact current generated cache
+        uses: actions/upload-artifact@v4
+        with:
+          name: circuit-final-facade-assets
+          path: |
+            skyline-estates/offline-assets.js
+            skyline-estates/sw.js
+          if-no-files-found: error
