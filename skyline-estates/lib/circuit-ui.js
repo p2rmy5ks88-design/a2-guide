@@ -209,8 +209,8 @@ let lastBox='';try{new ResizeObserver(()=>{const r=boardRect(),k=[r.x,r.y,r.w,r.
 document.addEventListener('DOMContentLoaded',()=>{setupScreen();const cv=$('#cx-board');let down=null,lastTap=0;
  cv.addEventListener('pointerdown',e=>{down={x:e.clientX,y:e.clientY,moved:0,focus:zoom?{...zoom.focus}:null};try{cv.setPointerCapture(e.pointerId)}catch(x){}});
  cv.addEventListener('pointermove',e=>{if(!down)return;const dx=e.clientX-down.x,dy=e.clientY-down.y;down.moved=Math.max(down.moved,Math.hypot(dx,dy));
-  if(zoom&&down.focus&&down.moved>6)setZoomFocus({x:down.focus.x-dx/zoom.factor,y:down.focus.y-dy/zoom.factor})});
- cv.addEventListener('pointerup',e=>{const d=down;down=null;if(!d||d.moved>6||!s)return;const now=performance.now(),dbl=now-lastTap<300;lastTap=now;
+  if(!cityReview&&zoom&&down.focus&&down.moved>6)setZoomFocus({x:down.focus.x-dx/zoom.factor,y:down.focus.y-dy/zoom.factor})});
+ cv.addEventListener('pointerup',e=>{const d=down;down=null;if(!d||d.moved>6||!s||cityReview)return;const now=performance.now(),dbl=now-lastTap<300;lastTap=now;
   if(zf&&!zoom){if(!(camCur&&camCur.pitch!==cam.pitch))setZoomFocus({x:e.clientX,y:e.clientY});return}   // overview: a tap opens the zoom there
   if(zoom&&dbl){overview();return}
   const id=hit(e.clientX,e.clientY);if(id){notes.unshift({t:`${id}: ${describe(id)}`,kind:'inspect'});notes=notes.slice(0,6);render()}})});
