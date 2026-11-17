@@ -26,6 +26,7 @@ jobs:
           node --check skyline-estates/tests/circuit-city-view.cjs
           node --check skyline-estates/tests/circuit-cinematic-lab.cjs
           node --check skyline-estates/tests/circuit-city-camera-audit.cjs
+          node --check skyline-estates/tests/circuit-city-camera-sweep.cjs
       - name: Run cinematic contract checks
         run: |
           node skyline-estates/tests/circuit-city-view.cjs
@@ -34,10 +35,16 @@ jobs:
         env:
           CITY_CAMERA_REPORT: cinematic-camera-report.json
         run: node skyline-estates/tests/circuit-city-camera-audit.cjs
+      - name: Sweep camera pitches and distances (diagnostic)
+        env:
+          CAMERA_SWEEP_REPORT: cinematic-camera-sweep.json
+        run: node skyline-estates/tests/circuit-city-camera-sweep.cjs
       - name: Publish camera audit artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: circuit-cinematic-camera-audit
-          path: cinematic-camera-report.json
+          path: |
+            cinematic-camera-report.json
+            cinematic-camera-sweep.json
           if-no-files-found: ignore
