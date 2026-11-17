@@ -35,7 +35,8 @@ let s=null,layout=SC.referenceLayout(),G=SS.geometry(layout),C=null,cam=SS.CAMER
 let anim={queue:[],cur:null,t0:0,tokens:{}},notes=[],tally=null,dirty=true,overlay={},timer=null,stagesOverride=null;
 // ---------- storage ----------
 const store={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v);return true}catch(e){return false}},del:k=>{try{localStorage.removeItem(k)}catch(e){}}};
-function save(){if(s&&!s.over)store.set(SC.SAVE_KEY,SC.serialize(s))}
+function save(){if(window.__circuitBenchAuto||q.get('bench')==='1')return;if(s&&!s.over)store.set(SC.SAVE_KEY,SC.serialize(s))}
+// (benchmark runs never write saves)
 // ---------- setup ----------
 function setupScreen(){const saved=store.get(SC.SAVE_KEY),r=saved?SC.restore(saved):null;
  $('#cx-setup').hidden=false;$('#cx-game').hidden=true;
@@ -55,7 +56,7 @@ function setupScreen(){const saved=store.get(SC.SAVE_KEY),r=saved?SC.restore(sav
   begin(SC.newMatch({seed,length,fx:true,players:[{name:'You'},...levels.map((level,i)=>({name:'Computer '+(i+1),level}))],meta:{matchId:'circuit-'+seed.toString(36)+'-'+startedAt.toString(36),startedAt,career:opts.career}}))}}
 async function begin(state){s=state;s.cfg.fx=true;$('#cx-setup').hidden=true;$('#cx-game').hidden=false;anim={queue:[],cur:null,t0:0,tokens:{}};notes=[];tally=null;
  for(const p of s.players)anim.tokens[p.id]={node:p.pos};
- if(opts.renderer==='3d'&&!R3tried){R3tried=true;try{const m=await import(window.__circuitRendererURL||'./circuit-renderer-3d.js');R3=m.create($('#cx-board'),{layout,camera:cam,onTierChange:t=>{notes.unshift({t:'Graphics quality lowered to '+t+' for smoother play',kind:'quality'});render()}})}catch(e){R3=null;console.warn('3D renderer unavailable, using 2D',e)}}
+ if(opts.renderer==='3d'&&!R3tried){R3tried=true;try{const m=window.SkylineCircuitRenderer3D||await import(window.__circuitRendererURL||'./circuit-renderer-3d.js');R3=m.create($('#cx-board'),{layout,camera:cam,onTierChange:t=>{notes.unshift({t:'Graphics quality lowered to '+t+' for smoother play',kind:'quality'});render()}})}catch(e){R3=null;console.warn('3D renderer unavailable, using 2D',e)}}
  camCur={...cam};resize();enqueue();save();if(!looping){looping=true;loop()}}
 let looping=false;
 // ---------- geometry / layout ----------
