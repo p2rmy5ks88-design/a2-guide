@@ -1,13 +1,15 @@
 /* Browser evidence from the actual playable Circuit renderer, isolated from production.
    Uses a fresh browser context and fixed seed; no live deployment or native build. */
 'use strict';
-const {chromium}=require('playwright'),fs=require('node:fs'),path=require('node:path');
+const {chromium,webkit}=require('playwright'),fs=require('node:fs'),path=require('node:path');
+const engine=process.env.CIRCUIT_VISUAL_ENGINE==='webkit'?'webkit':'chromium';
 const base=process.env.CIRCUIT_GAME_URL||'http://127.0.0.1:8765/circuit-alpha.html?renderer=3d&quality=high&seed=32981&speed=instant&perf=1';
 (async()=>{
  const out=path.resolve(process.env.CIRCUIT_SCREENSHOT_DIR||'circuit-camera-screenshots');fs.mkdirSync(out,{recursive:true});
- const browser=await chromium.launch({headless:true,executablePath:process.env.CHROME_PATH||undefined,args:['--enable-webgl','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--no-sandbox']});
+ const browser=await (engine==='webkit'?webkit:chromium).launch({headless:true,...(engine==='chromium'?{executablePath:process.env.CHROME_PATH||undefined,args:['--enable-webgl','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--no-sandbox']}: {})});
  try{
-  for(const p of [{id:'iphone',w:956,h:440,dpr:2},{id:'compact',w:844,h:390,dpr:2},{id:'desktop',w:1440,h:900,dpr:1}]){
+  const profiles=[{id:'iphone',w:956,h:440,dpr:2},{id:'compact',w:844,h:390,dpr:2},{id:'desktop',w:1440,h:900,dpr:1}];
+  for(const p of (engine==='webkit'?profiles.filter(p=>p.id!=='desktop'):profiles)){
    const context=await browser.newContext({viewport:{width:p.w,height:p.h},deviceScaleFactor:p.dpr});
    const page=await context.newPage();const errors=[];
    page.on('pageerror',e=>errors.push(e.message));
@@ -115,7 +117,7 @@ const base=process.env.CIRCUIT_GAME_URL||'http://127.0.0.1:8765/circuit-alpha.ht
    const frameAssessment=frameSample.frames>=60&&frameSample.p95!==null&&frameSample.p95<100
     ?'usable-for-ci-trend-only':'inconclusive-ci-frame-scheduling';
    console.log('CIRCUIT PERF '+p.id+' '+JSON.stringify({...performanceEvidence,assessment:frameAssessment,notice:'Software WebGL / headless Chromium; not real-device FPS'}));
-   console.log('PLAYABLE CAPTURED '+p.id+' '+JSON.stringify(strategy));
+   console.log('PLAYABLE CAPTURED '+engine+' '+p.id+' '+JSON.stringify(strategy));
    await context.close();
   }
  }finally{await browser.close()}
