@@ -39,12 +39,14 @@ function hudPlan(vp){// narrow matches the page's CSS breakpoint (max-width:760p
  return{rects:[{id:'players',x:x0,y:y0,w:L,h:H},{id:'actions',x:x0+W-R,y:y0,w:R,h:H}],board:{x:x0+L,y:y0,w:W-L-R,h:H}}}
 
 // ---------- geometry from a layout ----------
-function geometry(layout){const N=layout.nodes,ids=SC.NODES.map(n=>n.id);let minAdj=Infinity;
+// `spec` takes a design package's geometry block (multipliers of the tile size); defaults are the alpha's values.
+const GEO=Object.freeze({tileMultiplier:.86,stageHeightMultipliers:[0,.35,.7,1.1,1.6],buildingSideMultiplier:.62,tokenRadiusMultiplier:.15,tokenHeightMultiplier:.3,tokenSlots:[[-.22,-.22],[.22,-.22],[-.22,.22],[.22,.22]]});
+function geometry(layout,spec={}){const g={...GEO,...Object.fromEntries(Object.entries(spec||{}).filter(([k])=>k in GEO))};const N=layout.nodes,ids=SC.NODES.map(n=>n.id);let minAdj=Infinity;
  for(const id of ids){const a=N[id],b=N[SC.next(id)];minAdj=Math.min(minAdj,Math.hypot(a.x-b.x,a.y-b.y))}
- const tile=+(layout.tile||minAdj*.86).toFixed(3);
+ const tile=+(layout.tile||minAdj*g.tileMultiplier).toFixed(3);
  const nodes={};for(const n of SC.NODES){const p=N[n.id],q=N[SC.next(n.id)],o=N[prevOf(n.id)];const ang=Math.atan2(q.y-o.y,q.x-o.x);nodes[n.id]={id:n.id,type:n.type,ring:n.ring,x:p.x,y:p.y,ang}}
- return{tile,nodes,stageHeight:[0,.35,.7,1.1,1.6].map(k=>k*tile),buildingSide:.62*tile,tokenR:.15*tile,tokenH:.3*tile,
-  tokenSlots:[[-.22,-.22],[.22,-.22],[-.22,.22],[.22,.22]].map(([u,v])=>[u*tile,v*tile])}}
+ return{tile,nodes,stageHeight:g.stageHeightMultipliers.map(k=>k*tile),buildingSide:g.buildingSideMultiplier*tile,tokenR:g.tokenRadiusMultiplier*tile,tokenH:g.tokenHeightMultiplier*tile,
+  tokenSlots:g.tokenSlots.map(([u,v])=>[u*tile,v*tile])}}
 const prevOf=id=>{const n=SC.NODES.find(x=>x.id===id);return n.ring==='O'?'O'+((n.idx+19)%20):'I'+((n.idx+11)%12)};
 const rot=(ang,u,v)=>[u*Math.cos(ang)-v*Math.sin(ang),u*Math.sin(ang)+v*Math.cos(ang)];
 function tileCorners(G,id,k=.5){const n=G.nodes[id],t=G.tile*k;return[[-t,-t],[t,-t],[t,t],[-t,t]].map(([u,v])=>{const [a,b]=rot(n.ang,u,v);return{x:n.x+a,y:n.y+b,z:0}})}
@@ -118,15 +120,45 @@ function hud(G,C,hudRects,{min=MIN_TOUCH}={}){const errors=[];for(const id of Ob
    for(let i=0;i<4;i++)if(insideRect(C.project(tokenPoint(G,id,i)),r)){errors.push(`token-under-hud:${id}:${r.id}`);break}}}
  return{ok:errors.length===0,errors:[...new Set(errors)]}}
 // Run every check for one viewport + camera + layout.
-function validate({layout=SC.referenceLayout(),cam=CAMERAS.top,vp=VIEWPORTS[1],hudRects=null,board=null}={}){const G=geometry(layout),plan=hudPlan(vp);const rects=hudRects||plan.rects,rect=board||plan.board;
+function validate({layout=SC.referenceLayout(),cam=CAMERAS.top,vp=VIEWPORTS[1],hudRects=null,board=null,spec=null}={}){const G=geometry(layout,spec),plan=hudPlan(vp);const rects=hudRects||plan.rects,rect=board||plan.board;
  const C=camera(G,cam,rect),allSky={};for(const id of SC.PROPS)allSky[id]=4;
  const r={viewport:vp.id,camera:cam,board:rect,scalePtPerUnit:+C.scale.toFixed(4),
   projection:projection(G,C,vp,rects),touch:touch(G,C),skyline:skyline(G,C,{hudRects:rects}),tokens:tokens(G,C,{stages:allSky}),
   route:{O0:routePreview(G,C,{pos:'O0',stages:allSky,hudRects:rects}),O1:routePreview(G,C,{pos:'O1',stages:allSky,hudRects:rects}),I1:routePreview(G,C,{pos:'I1',stages:allSky,hudRects:rects})},hud:hud(G,C,rects)};
  r.ok=['projection','touch','skyline','tokens','hud'].every(k=>r[k].ok)&&Object.values(r.route).every(x=>x.ok);return r}
+// ---------- zoom/pan fallback (screens too small for 44 pt targets at the overview) ----------
+// Overview: the whole board at fit scale, view-only (taps open a zoom, never select). Zoom: a uniform magnification of
+// the overview by `factor` about a focus point, clamped so the board always fills the window. Only nodes whose whole
+// 44 pt target circle lies inside the board rectangle are selectable in a zoomed view. A uniform 2D zoom keeps the
+// camera, so occlusion is unchanged from the overview.
+function zoomed(C,factor,focus){const R=C.rect,cx=R.x+R.w/2,cy=R.y+R.h/2;
+ return{factor,focus,project:q=>{const p=C.project(q);return{x:cx+factor*(p.x-focus.x),y:cy+factor*(p.y-focus.y),d:p.d}},rect:R}}
+// Panning may overscroll the board edge by half a target (+4 pt) so edge nodes can be fully targeted.
+function clampFocus(C,G,factor,f,min=MIN_TOUCH){const pad=(min/2+4)/factor;const pts=Object.keys(G.nodes).map(id=>C.project({...G.nodes[id],z:0}));
+ const minX=Math.min(...pts.map(p=>p.x))-pad,maxX=Math.max(...pts.map(p=>p.x))+pad,minY=Math.min(...pts.map(p=>p.y))-pad,maxY=Math.max(...pts.map(p=>p.y))+pad;const hw=C.rect.w/2/factor,hh=C.rect.h/2/factor;
+ const cl=(v,a,b)=>a>b?(a+b)/2:Math.max(a,Math.min(b,v));return{x:cl(f.x,minX+hw,maxX-hw),y:cl(f.y,minY+hh,maxY-hh)}}
+function selectable(G,Z,min=MIN_TOUCH){const R=Z.rect,r=min/2;return Object.keys(G.nodes).filter(id=>{const p=Z.project({...G.nodes[id],z:0});return p.x-r>=R.x&&p.x+r<=R.x+R.w&&p.y-r>=R.y&&p.y+r<=R.y+R.h})}
+function zoomFallback(G,C,{min=MIN_TOUCH,margin=1.05,hudRects=[]}={}){const base=touch(G,C).minCentreDistance;const factor=Math.max(1,Math.ceil(min/base*margin*20)/20);const errors=[];
+ const ground=id=>C.project({...G.nodes[id],z:0});const view=f=>zoomed(C,factor,clampFocus(C,G,factor,f));
+ // a. spacing among selectable nodes in any zoomed view (uniform scale: overview spacing × factor)
+ const zoomSpacing=+(base*factor).toFixed(1);if(zoomSpacing<min)errors.push('zoom-spacing:'+zoomSpacing);
+ // b. coverage: every node is selectable in the view focused on it
+ const uncovered=Object.keys(G.nodes).filter(id=>!selectable(G,view(ground(id)),min).includes(id));for(const id of uncovered)errors.push('not-selectable-when-focused:'+id);
+ // c. route-decision focus: for every start position, one view (centred between the token and its first junction) shows
+ //    the token, the junction and both exits (ring and connector) as selectable targets.
+ const planFail=[];for(const pos of Object.keys(G.nodes)){let at=pos,k=0;while(k<12&&SC.NODES.find(n=>n.id===at).type!=='junction'){at=SC.next(at);k++}
+  const a=ground(pos),j=ground(at),Z=view({x:(a.x+j.x)/2,y:(a.y+j.y)/2}),sel=new Set(selectable(G,Z,min));
+  const need=[pos,at,SC.next(at),SC.LINKS[at]];if(!need.every(x=>sel.has(x)))planFail.push(pos+'→'+need.filter(x=>!sel.has(x)).join('+'))}
+ for(const f of planFail)errors.push('plan-view:'+f);
+ // d. four tokens on O0 in its focused view: bigger than the overview, not under the HUD, not overlapping
+ const Zt=view(ground('O0')),T=[0,1,2,3].map(i=>Zt.project(tokenPoint(G,'O0',i))),tr=G.tokenR*C.ppu({...G.nodes.O0,z:0})*factor;
+ for(let i=0;i<4;i++){for(const h of hudRects)if(T[i].x>h.x&&T[i].x<h.x+h.w&&T[i].y>h.y&&T[i].y<h.y+h.h)errors.push('zoom-token-under-hud:'+i);for(let j=i+1;j<4;j++)if(Math.hypot(T[i].x-T[j].x,T[i].y-T[j].y)<2*tr)errors.push('zoom-tokens-overlap')}
+ // e. how many pan positions cover the board (greedy over node-focused views) — for the interaction design
+ const left=new Set(Object.keys(G.nodes)),stops=[];while(left.size&&stops.length<40){let best=null,bs=[];for(const id of Object.keys(G.nodes)){const s=selectable(G,view(ground(id)),min).filter(x=>left.has(x));if(s.length>bs.length){bs=s;best=id}}if(!best)break;stops.push(best);bs.forEach(x=>left.delete(x))}
+ return{ok:errors.length===0,errors,overviewSpacing:base,factor,zoomSpacing,zoomTokenPt:+(2*tr).toFixed(1),selectablePerView:{min:Math.min(...Object.keys(G.nodes).map(id=>selectable(G,view(ground(id)),min).length)),max:Math.max(...Object.keys(G.nodes).map(id=>selectable(G,view(ground(id)),min).length))},panStopsToCoverBoard:stops}}
 // Smallest board rectangle (square) for which a layout keeps 44 pt between all node centres from this camera.
 function minBoardSide(layout=SC.referenceLayout(),cam=CAMERAS.top){const G=geometry(layout);let lo=100,hi=2000;
  for(let i=0;i<30;i++){const m=(lo+hi)/2;const C=camera(G,cam,{x:0,y:0,w:m,h:m});if(touch(G,C).ok)hi=m;else lo=m}return Math.ceil(hi)}
 return Object.freeze({VIEWPORTS,CAMERAS,MIN_TOUCH,hudPlan,geometry,camera,tileCorners,buildingBox,tokenPoint,hull,inPoly,routePaths,
- projection,touch,skyline,tokens,routePreview,hud,validate,minBoardSide});
+ projection,touch,skyline,tokens,routePreview,hud,validate,minBoardSide,zoomFallback,zoomed,clampFocus,selectable,GEO});
 });

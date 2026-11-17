@@ -189,3 +189,90 @@ What each numbered check tests (all pass on every app viewport from SE 2nd gen u
 - There are no street names (they come from the design or the global street generator), so nodes show IDs and prices.
 - Hard is identical to Normal (stated in the UI).
 - Not wired into the native app's bundled `www`. The page is in the web build and the offline manifest only.
+
+## Design package V1 validation (17 Nov 2026)
+
+Input: ChatGPT's `design/circuit-design-v1.json` ("validation candidate, not final 3D art"), committed unchanged as validation data. It specifies:
+
+- node coordinates;
+- two cameras: default top-down (pitch 0, distance 6) and detail (pitch 15, distance 5);
+- HUD and board rectangles for 15 screens;
+- geometry multipliers;
+- a zoom fallback for the 320 pt-tall screens.
+
+The game rules are unchanged.
+
+- **Node test:** `node skyline-estates/tests/circuit-design.cjs [design.json]`.
+  - It writes the full screen-space measurements to `design/circuit-design-v1.report.json`: per screen, per camera, all 32 node positions, closest pair, smallest tile, the O0 token slots, the least-visible tiles at Skyscraper and the zoom figures.
+- **Browser test:** `node skyline-estates/tests/circuit-design-browser.cjs [design.json]`, in Chromium and WebKit. It checks that:
+  - the page's real HUD and board rectangles match the package within 1 pt;
+  - the browser engine reproduces the Node figures exactly;
+  - nodes are drawn exactly where they were measured;
+  - four tokens are drawn on O0 without overlap, with every property at Skyscraper;
+  - both route previews are drawn at once.
+
+### Result: 30/30 screen×camera combinations pass, in Node, Chromium and WebKit
+
+- **Topology:** passes.
+  - All 32 IDs, both rings clockwise, inner ring inside the outer.
+  - Closest pair I1–I2 at 52.8 layout units.
+  - Four connectors of 68 units, none passing over a tile.
+  - Board 340×340 units.
+- **Coordinates:** the package's coordinates are identical to the reference layout (largest difference 0.000). **No coordinate corrections are required.**
+
+| Screen | Mode | Closest node centres (default / detail 15°) | Smallest visible tile edge | Token at O0 | Result |
+| --- | --- | --- | --- | --- | --- |
+| se 667×375 | full | 50.3 / 47.7 pt | 43.2 / 37.9 pt | 13.0 / 12.3 pt | pass |
+| mini, x 812×375 | full | 47.4 / **44.9** pt | 40.8 / 35.8 pt | 12.2 / 11.6 pt | pass (detail: 0.9 pt headroom) |
+| xr 896×414 | full | 52.7 / 50.0 pt | 45.4 / 39.8 pt | 13.6 / 12.9 pt | pass |
+| i12 844×390 | full | 49.4 / 46.9 pt | 42.5 / 37.3 pt | 12.8 / 12.1 pt | pass |
+| i14p 852×393 | full | 49.9 / 47.3 pt | 42.9 / 37.6 pt | 12.9 / 12.2 pt | pass |
+| i14pl 926×428 | full | 54.7 / 51.8 pt | 47.0 / 41.2 pt | 14.1 / 13.3 pt | pass |
+| i16pl 932×430 | full | 54.9 / 52.1 pt | 47.2 / 41.5 pt | 14.2 / 13.4 pt | pass |
+| i16p 874×402 | full | 51.1 / 48.4 pt | 43.9 / 38.6 pt | 13.2 / 12.5 pt | pass |
+| i17 874×402 | full | 48.5 / 46.0 pt | 41.7 / 36.6 pt | 12.5 / 11.8 pt | pass |
+| air 912×420 | full | 49.7 / 47.1 pt | 42.8 / 37.5 pt | 12.8 / 12.1 pt | pass |
+| i16pm 956×440 | full | 53.6 / 50.8 pt | 46.1 / 40.4 pt | 13.8 / 13.1 pt | pass |
+| se1 568×320 | zoom fallback | overview 37.3 / 35.6 → **zoom ×1.25 / ×1.3 → 46.6 / 46.3 pt** | 32.0 / 28.4 pt | 9.6 / 9.2 pt (zoomed 12.0) | pass with fallback |
+| safari-se 667×320 | zoom fallback | overview 42.7 / 40.5 → **zoom ×1.1 / ×1.15 → 47.0 / 46.6 pt** | 36.8 / 32.3 pt | 11.0 / 10.4 pt (zoomed 12.1) | pass with fallback |
+| safari-12 844×320 | zoom fallback | overview 42.7 / 40.5 → **zoom ×1.1 / ×1.15 → 47.0 / 46.6 pt** | 36.8 / 32.3 pt | 11.0 / 10.4 pt (zoomed 12.1) | pass with fallback |
+
+On every screen, with both cameras, every property at Skyscraper and four tokens on O0:
+
+- every node, tile, roof and token stays visible;
+- both route previews are fully visible from O0, O1 and I1;
+- nothing sits under the HUD.
+
+On the fallback screens, the only overview failure is the 44 pt spacing, as expected; there the overview is view-only.
+
+### 320 pt screens: current failure and the validated zoom/pan fallback
+
+**Current failure.** At the overview, adjacent outer-ring nodes are 37.3 pt apart on SE (1st gen) and 42.7 pt apart in Safari with toolbars. With the detail camera they are 35.6 and 40.5 pt. 44 pt targets would overlap. On SE (1st gen) the O5 and O15 target circles also reach under the HUD. **Targets are not shrunk.**
+
+**Proposed fallback** (`SS.zoomFallback`, validated):
+
+1. **Trigger:** use the fallback whenever the measured overview spacing is below 44 pt, not a list of devices. A future layout or HUD change therefore switches screens in or out automatically.
+2. **Overview:** the whole board, view-only.
+   - It shows ownership, buildings, tokens and both route previews; all of these pass the visibility and HUD checks.
+   - Tapping the board never selects at the overview. It opens the zoom centred on the tap.
+3. **Zoom:** a uniform magnification of the overview, rounded up to 0.05: (44 ÷ overview spacing) × 1.05.
+   - That gives ×1.25 on SE (1st gen) (×1.3 with the detail camera) and ×1.1 in Safari (×1.15 detail).
+   - Spacing becomes at least 46.3 pt everywhere.
+   - The camera is unchanged, so what hides what is exactly as at the overview.
+4. **Pan:** drag to pan. The view may go past the board edge by half a target plus 4 pt, so edge nodes (O0, O10) can be fully targeted.
+5. **Selection:** only nodes whose **whole 44 pt circle** is inside the board area are selectable. Partly clipped nodes are dimmed and inert. A button or double-tap returns to the overview.
+6. **Route decision focus:** at Plan and roll, an automatic zoom centres between the token and its first junction.
+   - Validated for all 32 start positions: the token, the junction and both exits (ring and connector) are selectable together.
+7. **Coverage:** every node is selectable when the view is centred on it.
+   - Two pan positions cover the whole board: O1/O11 on SE (1st gen), O0/O6 in Safari.
+   - SE (1st gen) with the detail camera needs three: O0/O6/O11.
+8. **Tokens:** four on O0 stay apart and clear of the HUD at about 12 pt when zoomed.
+
+All rule decisions in Circuit are made with panel buttons (Stay/Cross, Roll, Buy/Pass, the Build list, End turn). Board taps are for inspection and selection only, so the fallback never blocks a move.
+
+### Recommendations for the final renderer (no corrections required)
+
+- **Detail camera:** keep it at **15° or less**. On the 375 pt-tall phones it leaves only 0.9 pt above the 44 pt minimum (44.9 pt). Any increase in pitch, tile size or HUD width needs revalidation.
+- **Hit-testing:** select by the nearest node centre within 22 pt, as the alpha does, not by the visible tile shape. Visible tile edges are 28–47 pt, smaller than the tap target on most screens.
+- **Tokens:** 9–14 pt at the overview, so they need strong contrast and an outline.
+- **Rerun on every change:** run `circuit-design.cjs` and `circuit-design-browser.cjs` on every new package version. CI runs them for V1.
