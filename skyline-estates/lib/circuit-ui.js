@@ -84,7 +84,7 @@ const want=cityReview?CITY_REVIEW:(!reducedMotion&&opts.speed!=='instant'&&(busy
 // ---------- driving the rules ----------
 function enqueue(){anim.queue.push(...SC.drain(s));dirty=true}
 // The match result is stored as soon as the rules end the match, never waiting for the animation to reach it.
-function act(a){if(cityReview){cityReview=false;dirty=true}const pd=SC.pending(s);if(!pd)return;SC.act(s,pd.player,a);if(s.over)finish();enqueue();save();render()}
+function act(a){if(cityReview){cityReview=false;dirty=true;render();return}const pd=SC.pending(s);if(!pd)return;SC.act(s,pd.player,a);if(s.over)finish();enqueue();save();render()}
 function busy(){return anim.cur||anim.queue.length}
 function stepAnim(now){const sp=SPEED[opts.speed]||SPEED.normal;if(anim.queue.length)dirty=true;
  while(!anim.cur&&anim.queue.length){const e=anim.queue.shift();
