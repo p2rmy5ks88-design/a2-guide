@@ -3,6 +3,7 @@ on:
   pull_request:
     paths:
       - 'skyline-estates/lib/circuit-ui.js'
+      - 'skyline-estates/lib/circuit-renderer-3d.js'
       - 'skyline-estates/lib/circuit-screen.js'
       - 'skyline-estates/lib/circuit-rules.js'
       - 'skyline-estates/circuit-cinematic-lab.html'
@@ -54,6 +55,22 @@ jobs:
           sleep 2
           node skyline-estates/tests/circuit-camera-screenshots.cjs
           node skyline-estates/tests/circuit-playable-screenshots.cjs
+      - name: Install Safari-engine test browser
+        run: npx --prefix skyline-estates/tests playwright install --with-deps webkit
+      - name: Verify Safari-engine Circuit City View
+        env:
+          CIRCUIT_VISUAL_ENGINE: webkit
+          CIRCUIT_SCREENSHOT_DIR: circuit-camera-webkit-screenshots
+          WEBKIT_DISABLE_DMABUF_RENDERER: '1'
+          LIBGL_ALWAYS_SOFTWARE: '1'
+        run: node skyline-estates/tests/circuit-playable-screenshots.cjs
+      - name: Publish Safari-engine Circuit screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: circuit-webkit-city-evidence
+          path: circuit-camera-webkit-screenshots/
+          if-no-files-found: ignore
       - name: Publish camera screenshots
         if: always()
         uses: actions/upload-artifact@v4
