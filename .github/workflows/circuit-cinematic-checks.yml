@@ -70,3 +70,20 @@ jobs:
             cinematic-camera-report.json
             cinematic-camera-sweep.json
           if-no-files-found: ignore
+      # These are staging artifacts only. The generated files are committed later
+      # to this draft branch, and the full Skyline stability gate still verifies
+      # their checked-in parity before this PR can leave draft.
+      - name: Generate reproducible offline assets for draft QA
+        if: always()
+        run: |
+          python3 skyline-estates/build.py
+          python3 skyline-estates/build.py --check
+      - name: Publish draft generated asset evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: circuit-generated-assets-preview
+          path: |
+            skyline-estates/offline-assets.js
+            skyline-estates/sw.js
+          if-no-files-found: error
