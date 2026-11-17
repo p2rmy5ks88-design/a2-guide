@@ -3,6 +3,7 @@
    quality tier, with a Copy button so a tester can paste the JSON back. It drives the public test hooks only; it never
    changes rules or saves (the match it plays is not saved: it runs with a fixed seed in a throwaway state). */
 (function(){'use strict';
+if(window.__circuitAccessAllowed===false)return;
 if(new URLSearchParams(location.search).get('bench')!=='1'&&!window.__circuitBenchAuto)return;
 const wait=ms=>new Promise(r=>setTimeout(r,ms)),raf=()=>new Promise(r=>requestAnimationFrame(r));
 const pct=(a,q)=>{if(!a.length)return null;const s=[...a].sort((x,y)=>x-y);return +s[Math.min(s.length-1,Math.floor(q*s.length))].toFixed(2)};

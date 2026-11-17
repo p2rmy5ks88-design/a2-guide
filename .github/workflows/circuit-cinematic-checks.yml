@@ -2,6 +2,7 @@ name: Circuit cinematic draft checks
 on:
   pull_request:
     paths:
+      - 'skyline-estates/circuit-alpha.html'
       - 'skyline-estates/lib/circuit-ui.js'
       - 'skyline-estates/lib/circuit-renderer-3d.js'
       - 'skyline-estates/lib/circuit-screen.js'
@@ -24,6 +25,7 @@ jobs:
       - name: Check JavaScript syntax
         run: |
           node --check skyline-estates/lib/circuit-ui.js
+          node --check skyline-estates/tests/circuit-access-guard.cjs
           node --check skyline-estates/lib/circuit-renderer-3d.js
           node --check skyline-estates/tests/circuit-visual-contract.cjs
           node --check skyline-estates/tests/circuit-city-view.cjs
@@ -35,6 +37,7 @@ jobs:
           node --check skyline-estates/tests/circuit-playable-screenshots.cjs
       - name: Run cinematic contract checks
         run: |
+          node skyline-estates/tests/circuit-access-guard.cjs
           node skyline-estates/tests/circuit-city-view.cjs
           node skyline-estates/tests/circuit-cinematic-lab.cjs
           node skyline-estates/tests/circuit-render-sharpness.cjs
