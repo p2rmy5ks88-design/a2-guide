@@ -19,7 +19,7 @@ const base=process.env.CIRCUIT_GAME_URL||'http://127.0.0.1:8765/circuit-alpha.ht
    await page.waitForSelector('#cx-city-view',{timeout:25000});
    await page.waitForTimeout(1800);
    const strategy=await page.evaluate(()=>{const c=document.querySelector('#cx-board');return{css:{w:c.clientWidth,h:c.clientHeight},pixels:{w:c.width,h:c.height},renderer:!!document.querySelector('#cx-city-view')}});
-   if(errors.length||!strategy.renderer||strategy.pixels.w<strategy.css.w*1.5||strategy.pixels.h<strategy.css.h*1.5)throw Error(p.id+' strategy '+JSON.stringify({strategy,errors}));
+   if(errors.length||!strategy.renderer||strategy.pixels.w<strategy.css.w*(p.dpr>1?1.5:1)||strategy.pixels.h<strategy.css.h*(p.dpr>1?1.5:1))throw Error(p.id+' strategy '+JSON.stringify({strategy,errors}));
    const strategyPng=await page.screenshot({path:path.join(out,p.id+'-playable-strategy.png')});
    await page.locator('#cx-city-view').click();
    await page.waitForTimeout(1600);
