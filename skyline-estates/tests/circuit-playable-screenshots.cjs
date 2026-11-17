@@ -28,9 +28,13 @@ const base=process.env.CIRCUIT_GAME_URL||'http://127.0.0.1:8765/circuit-alpha.ht
    const cityPng=await page.screenshot({path:path.join(out,p.id+'-playable-city.png')});
    if(strategyPng.equals(cityPng))throw Error('City and Strategy screenshots are pixel-identical');
    // Review-only populated skyline: use the existing presentation test hook, never modify rules state.
+   const before=await page.evaluate(()=>JSON.stringify(window.__circuitUI.state()));
    await page.evaluate(()=>{const ids=window.SkylineCircuit.PROPS,st={};ids.forEach((id,i)=>st[id]=1+(i%4));window.__circuitUI.setStages(st)});
    await page.waitForTimeout(700);
-   await page.screenshot({path:path.join(out,p.id+'-populated-city.png')});
+   const populatedPng=await page.screenshot({path:path.join(out,p.id+'-populated-city.png')});
+   if(populatedPng.equals(cityPng))throw Error('Populated skyline is visually identical to empty city');
+   const after=await page.evaluate(()=>JSON.stringify(window.__circuitUI.state()));
+   if(before!==after)throw Error('Presentation-only populated skyline mutated match state');
    const populated=await page.evaluate(()=>({stages:window.SkylineCircuit.PROPS.length,modelStages:window.__circuitUI.state().own}));
    if(populated.stages!==20)throw Error('Expected 20 property stage previews');
    await page.locator('#cx-city-view').click();
