@@ -27,6 +27,9 @@ const BOARDS=Object.freeze([
    building:'A complete property group allows building; five stages from Plot to Skyscraper, built evenly.',victory:'Highest Championship score at the round limit, or last solvent player.',
    status:'playable',design:null}},
  {id:'circuit',tier:2,name:'Skyline Circuit',difficulty:'Normal',strategy:'Routes and connectivity',playable:false,ruleset:null,
+  // Playable alpha (owner approval 17 Nov 2026), only with ctx.alphaBoards including 'circuit'. Quick is experimental:
+  // it earns mastery XP but its wins never count toward unlocks.
+  alpha:{ruleset:'circuit-v0',lengths:['standard','extended','quick'],experimental:['quick'],defaultLength:'standard'},
   requires:[{kind:'tutorial',board:'origins'},{kind:'qualifiedWins',board:'origins',count:2}],lengths:[],
   preview:{headline:'Choose your route and connect the city.',geometry:'Two connected rings with junctions (design pending)',movement:'Dice with route choices at junctions',
    building:'Owning a street allows Low-rise; higher stages need connected properties.',victory:'Reach and hold an influence target.',status:'in-development',design:null}},
@@ -82,9 +85,15 @@ function evaluate(s,ctx={},now=Date.now()){
  return opened;
 }
 // Decide whether a finished match counts. `facts` is plain data the app gathers; nothing here reads the game.
-function qualify(f){
- const reasons=[];
- if(!f||f.board!=='origins')reasons.push('not-career');
+const alphaOn=(b,ctx)=>!!(b&&b.alpha&&ctx&&Array.isArray(ctx.alphaBoards)&&ctx.alphaBoards.includes(b.id));
+const isPlayable=(b,ctx)=>!!b&&(b.playable||alphaOn(b,ctx));
+function qualify(f,ctx={}){
+ const reasons=[],b=f&&BY_ID[f.board];
+ if(!f||!isPlayable(b,ctx))reasons.push('not-career');
+ // A board played through its alpha must report its own rules version and a length the board offers.
+ const alpha=!b||b.playable?null:alphaOn(b,ctx)?b.alpha:null;
+ if(alpha&&f.ruleset!==alpha.ruleset)reasons.push('wrong-ruleset');
+ if(alpha&&!alpha.lengths.includes(f.length))reasons.push('unknown-length');
  if(f&&(f.sim||f.fast))reasons.push('simulated');
  if(f&&f.online)reasons.push('online');
  if(f&&f.assisted)reasons.push('assisted');
@@ -96,14 +105,17 @@ function qualify(f){
  if(f&&int(f.activity)<QUALIFY.minActivity)reasons.push('too-little-activity');
  const counts=reasons.length===0;
  // A qualifying win also needs at least one AI opponent on Normal or Hard (not an all-human or Easy-only table).
- const winCounts=counts&&!!f.won&&f.aiOpponents>0&&QUALIFY.qualifyingAI.includes(f.aiLevel);
- return{counts,winCounts,reasons};
+ // Experimental lengths (Circuit Quick) earn mastery XP only; the board definition decides, not the reported facts.
+ const experimental=!!(alpha&&alpha.experimental.includes(f.length))||!!(f&&f.experimental);
+ const winCounts=counts&&!experimental&&!!f.won&&f.aiOpponents>0&&QUALIFY.qualifyingAI.includes(f.aiLevel);
+ return{counts,winCounts,experimental,reasons};
 }
 // Record a finished career match once. Participation always earns some board XP if the match counts as genuine play;
 // rejected (simulated, online, duplicate, too short) matches change nothing.
 function record(s,f,ctx={},now=Date.now()){
  if(s.readOnly)return{ok:false,reason:'newer-version'};
- const q=qualify(f);if(!q.counts)return{ok:false,reason:q.reasons[0],reasons:q.reasons};
+ const q=qualify(f,ctx);if(!q.counts)return{ok:false,reason:q.reasons[0],reasons:q.reasons};
+ if(s.unlocked[f.board]==null)return{ok:false,reason:'board-locked'};
  if(s.receipts.some(r=>r[0]===f.matchId))return{ok:false,reason:'duplicate'};
  if(f.startedAt<=s.floor)return{ok:false,reason:'older-than-history'};
  const t=s.boards[f.board]=stats(s,f.board);
@@ -111,7 +123,7 @@ function record(s,f,ctx={},now=Date.now()){
  t.bestScore=Math.max(t.bestScore,int(Math.round(f.score||0)));t.lastAt=now;
  s.receipts.push([f.matchId,f.startedAt]);while(s.receipts.length>QUALIFY.maxReceipts)s.floor=Math.max(s.floor,s.receipts.shift()[1]);
  const unlocked=evaluate(s,ctx,now);
- return{ok:true,qualifiedWin:q.winCounts,won:!!f.won,unlocked,xp:t.xp,level:masteryLevel(t.xp)};
+ return{ok:true,qualifiedWin:q.winCounts,experimental:q.experimental,won:!!f.won,unlocked,xp:t.xp,level:masteryLevel(t.xp)};
 }
 function completeTutorial(s,board,ctx={},now=Date.now()){if(s.readOnly||!BY_ID[board])return [];s.tutorials[board]=now||1;return evaluate(s,ctx,now)}
 // Board challenges (Circuit district, Dominion negotiation) are recorded by future board modules through this call.
@@ -119,10 +131,12 @@ function completeChallenge(s,board,id,tag,ctx={},now=Date.now()){if(s.readOnly||
 // One read model for any Career interface: status, progress and preview data per board.
 function view(s,ctx={}){
  return BOARDS.map(b=>{const unlocked=s.unlocked[b.id]!=null,st=stats(s,b.id),prev=BOARDS[b.tier-2];
-  const status=!unlocked?(prev&&s.unlocked[prev.id]==null?'locked-hidden':'locked'):b.playable?'playable':'unlocked-preview';
-  return{id:b.id,tier:b.tier,name:b.name,difficulty:b.difficulty,strategy:b.strategy,status,unlocked,playable:unlocked&&b.playable,
+  const play=isPlayable(b,ctx),alpha=!b.playable&&alphaOn(b,ctx);
+  const status=!unlocked?(prev&&s.unlocked[prev.id]==null?'locked-hidden':'locked'):play?'playable':'unlocked-preview';
+  return{id:b.id,tier:b.tier,name:b.name,difficulty:b.difficulty,strategy:b.strategy,status,unlocked,playable:unlocked&&play,alpha,
+   experimentalLengths:alpha?b.alpha.experimental:[],
    unlockedAt:unlocked?s.unlocked[b.id]:null,requirements:b.requires.map(r=>({...r,label:reqLabel(r),...progressOf(s,r,ctx)})),
-   mastery:{...st,level:masteryLevel(st.xp),nextLevelXp:MASTERY.levels[masteryLevel(st.xp)+1]??null},lengths:b.lengths,defaultLength:b.defaultLength||null,preview:b.preview}});
+   mastery:{...st,level:masteryLevel(st.xp),nextLevelXp:MASTERY.levels[masteryLevel(st.xp)+1]??null},lengths:alpha?b.alpha.lengths:b.lengths,defaultLength:alpha?b.alpha.defaultLength:b.defaultLength||null,preview:b.preview}});
 }
 // ---- Property manifest (prepared for the Phase B global street generator; no generator yet) ----
 function rng(seed){let a=seed>>>0;return()=>{a=(a+0x6D2B79F5)>>>0;let t=a;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return((t^(t>>>14))>>>0)/4294967296}}
@@ -145,7 +159,11 @@ const C=window.SkylineCareerCore,FLAG='skylineFeature.career';
 // Disabled by default. Enable for testing with ?career=on (persists on this device) and disable with ?career=off.
 function flagOn(){try{const q=new URLSearchParams(location.search).get('career');if(q==='on')localStorage.setItem(FLAG,'on');else if(q==='off')localStorage.removeItem(FLAG);return localStorage.getItem(FLAG)==='on'}catch(e){return false}}
 const enabled=flagOn();
-const ctx=()=>({originsTutorialDone:!!PREF.tutDone});
+// Circuit playable alpha: a second flag (?circuitAlpha=on/off), only meaningful with Career on.
+const ALPHA='skylineFeature.circuitAlpha';
+function alphaOn(){try{const q=new URLSearchParams(location.search).get('circuitAlpha');if(q==='on')localStorage.setItem(ALPHA,'on');else if(q==='off')localStorage.removeItem(ALPHA);return localStorage.getItem(ALPHA)==='on'}catch(e){return false}}
+const circuitAlpha=enabled&&alphaOn();
+const ctx=()=>({originsTutorialDone:!!PREF.tutDone,alphaBoards:circuitAlpha?['circuit']:[]});
 function load(){return C.normalize(PREF.career)}
 // Before recording, read the saved profile again: another tab or a restored backup may already hold this match.
 function loadStored(){try{const raw=JSON.parse(localStorage.getItem(PKEY)||'null');if(raw&&raw.career)return C.normalize(raw.career)}catch(e){}return load()}
@@ -158,7 +176,16 @@ function gather(w){
  let score=0;try{score=typeof skylineChampionshipScore==='function'&&owner?skylineChampionshipScore(owner).total:(owner?netWorth(owner):0)}catch(e){}
  return{board:G.set.career,matchId:G.masteryId,sim:!!G.sim,fast:!!FAST,online:!!G.online,assisted:!!G.scAssisted,over:!!G.over,ownerHuman:!!owner&&!owner.ai,
   startedAt,endedAt:Date.now(),rounds:G.round,activity,won:!!owner&&owner===w,score,aiOpponents:G.players.filter(p=>p.ai).length,aiLevel:G.set.ai}}
-let last=null;
+let last=null,inbox=[];
+// Matches from separate board pages (Circuit alpha) arrive as one localStorage key per match, so two tabs can never
+// overwrite each other. Each key is recorded once (receipts reject repeats) and then removed. A newer-version
+// Career record is never written, and its inbox is left for that version.
+const INBOX='skylineCareerInbox:';
+function ingest(){if(!enabled)return [];const out=[];let keys=[];try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith(INBOX))keys.push(k)}}catch(e){return out}
+ for(const k of keys.sort()){let s=loadStored();if(s.readOnly)break;let f=null;try{f=JSON.parse(localStorage.getItem(k))}catch(e){}
+  const r=f?C.record(s,f,ctx()):{ok:false,reason:'invalid'};if(r.ok)store(s);out.push({key:k.slice(INBOX.length),...r});try{localStorage.removeItem(k)}catch(e){}}
+ inbox=inbox.concat(out).slice(-20);return out}
+if(enabled){try{ingest()}catch(e){}}
 if(enabled){
  // The end-of-match code saves the whole profile, so a stale in-memory career record would overwrite a newer saved one.
  // Adopt the saved record first (unless it is from a newer version, which stays exactly as stored), then record.
@@ -174,11 +201,14 @@ function startOrigins(length='standard'){
  startFromSetup($('#pane')||document.body,setup.slots.map((x,i)=>({...x,type:i===0?'human':i<4?'ai':'off',tok:i===0?me.tok:x.tok})),over);return true}
 // Temporary functional entry point (testing only, flag on). The final Career screen comes from the approved design package.
 async function open(){
- const v=C.view(load(),ctx());
+ try{ingest()}catch(e){}
+ const v=C.view(load(),ctx()),circuit=v.find(b=>b.id==='circuit');
  const row=b=>`<div class="cr-row cr-${b.status}"><div><b>${b.tier} · ${esc(b.name)}</b> <small>${esc(b.difficulty)} · ${esc(b.strategy)}</small><br><small>${esc(b.preview.headline)}</small>${b.status==='playable'?`<br><small>Mastery level ${b.mastery.level} · ${b.mastery.qualifiedWins} qualifying wins · ${b.mastery.matches} matches</small>`:''}${b.requirements.length&&!b.unlocked?`<ul>${b.requirements.map(r=>`<li>${esc(r.label)}: ${r.have} / ${r.need}</li>`).join('')}</ul>`:''}</div><span>${b.status==='playable'?'Play':b.status==='unlocked-preview'?'Unlocked · coming soon':b.status==='locked'?'Locked':'Locked'}</span></div>`;
  const k=await modal({cls:'wide career-preview',html:`<div class="mh">Skyline Career <small>(preview build)</small></div><div class="mtxt">${v.map(row).join('')}</div>`,
-  btns:[{k:'quick',label:'Origins · Quick 20'},{k:'standard',label:'Origins · Standard 30',primary:true},{k:'extended',label:'Origins · Extended 40'},{k:'unlimited',label:'Origins · Unlimited'},{k:null,label:'Close'}]});
- if(k)startOrigins(k);
+  btns:[{k:'quick',label:'Origins · Quick 20'},{k:'standard',label:'Origins · Standard 30',primary:true},{k:'extended',label:'Origins · Extended 40'},{k:'unlimited',label:'Origins · Unlimited'},
+   ...(circuit&&circuit.playable?[{k:'circuit:standard',label:'Circuit alpha · Standard'},{k:'circuit:extended',label:'Circuit alpha · Extended'},{k:'circuit:quick',label:'Circuit alpha · Quick (experimental, XP only)'}]:[]),{k:null,label:'Close'}]});
+ if(k&&k.startsWith('circuit:'))location.href='./circuit-alpha.html?career=1&length='+k.slice(8);
+ else if(k)startOrigins(k);
 }
 if(enabled){
  const st=document.createElement('style');st.textContent='.career-preview .cr-row{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid #ffffff22}.career-preview .cr-row ul{margin:4px 0 0 18px;padding:0;font-size:12px}.career-preview .cr-row span{flex:none;font-weight:700;color:#f4d28b}.career-preview .cr-locked-hidden{opacity:.55}';document.head.append(st);
@@ -186,7 +216,7 @@ if(enabled){
 }
 // With the flag off every entry point is inert: nothing is read into the UI and nothing is written to the profile.
 const off=()=>({ok:false,reason:'career-disabled'});
-window.SkylineCareer=Object.freeze({enabled,state:()=>C.view(load(),ctx()),raw:()=>load(),last:()=>last,
+window.SkylineCareer=Object.freeze({enabled,circuitAlpha,ingest:enabled?ingest:()=>[],inbox:()=>inbox,state:()=>C.view(load(),ctx()),raw:()=>load(),last:()=>last,
  startOrigins:enabled?startOrigins:()=>false,open:enabled?open:()=>false,
  completeTutorial:enabled?board=>{const s=load();const u=C.completeTutorial(s,board,ctx());store(s);return u}:off,
  completeChallenge:enabled?(board,id,tag)=>{const s=load();const r=C.completeChallenge(s,board,id,tag,ctx());if(r.ok)store(s);return r}:off});

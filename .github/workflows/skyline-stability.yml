@@ -96,6 +96,8 @@ jobs:
           t 'node skyline-estates/tests/harbour-ring-browser.cjs'
           t 'node skyline-estates/tests/circuit-rules.cjs'
           t 'node skyline-estates/tests/circuit-sim.cjs'
+          t 'node skyline-estates/tests/circuit-screen.cjs'
+          t 'node skyline-estates/tests/circuit-career.cjs'
           t 'node skyline-estates/tests/tutorial-v2-browser.cjs'
           t 'node skyline-estates/tests/living-board-render-scale.cjs'
           t 'node skyline-estates/tests/living-board-look-browser.cjs'
@@ -322,6 +324,10 @@ jobs:
         if: (matrix.engine != 'webkit' || steps.wk.outcome == 'success')
         timeout-minutes: 5
         run: node skyline-estates/tests/career-browser.cjs
+      - name: "Visual: circuit-alpha-browser"
+        if: (matrix.engine != 'webkit' || steps.wk.outcome == 'success')
+        timeout-minutes: 10
+        run: node skyline-estates/tests/circuit-alpha-browser.cjs
       - name: "Visual: cloud-restore"
         if: (matrix.engine != 'webkit' || steps.wk.outcome == 'success')
         timeout-minutes: 5

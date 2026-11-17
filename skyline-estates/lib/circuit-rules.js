@@ -75,7 +75,7 @@ function newMatch({seed=1,players=[{name:'A',ai:'route'},{name:'B',ai:'route'}],
  // 'spread' starts players on different outer junctions in turn order (2 players: O0, O10; 3: O0, O5, O10; 4: O0, O5, O10, O15).
  const STARTS={2:['O0','O10'],3:['O0','O5','O10'],4:['O0','O5','O10','O15']};
  if(players.length<2||players.length>4)throw Error('Circuit needs 2–4 players');
- const s={v:VERSION,ruleset:RULESET,seed:seed>>>0,rng:seed>>>0,cfg:{target,rounds,length:length||null,fx:!!withFx,...R},meta:meta?{matchId:String(meta.matchId||''),startedAt:+meta.startedAt||0}:null,fx:[],round:1,turn:first,first,
+ const s={v:VERSION,ruleset:RULESET,seed:seed>>>0,rng:seed>>>0,cfg:{target,rounds,length:length||null,fx:!!withFx,...R},meta:meta?{matchId:String(meta.matchId||''),startedAt:+meta.startedAt||0,career:!!meta.career}:null,fx:[],round:1,turn:first,first,
   players:players.map((p,i)=>({id:i,name:String(p.name||'P'+(i+1)),ai:p.ai||(p.level?AI_LEVELS[p.level]:null),level:p.level||null,cash:CFG.startCash+R.seatBonus*((i-first+players.length)%players.length),pos:R.start==='spread'?STARTS[players.length][(i-first+players.length)%players.length]:'O0',inf:0,out:false,plan:null,st:{turns:0,routeDecisions:0,buys:0,builds:0,paid:0}})),
   bought:{},order:players.map((_,i)=>(first+i)%players.length),orderIdx:0,
   own:Object.fromEntries(PROPS.map(id=>[id,{o:-1,h:0}])),phase:'roll',move:null,built:{},deck:[],clock:null,over:false,winner:null,endReason:null,

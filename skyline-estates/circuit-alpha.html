@@ -1,0 +1,33 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0E1A2E"><title>Skyline Circuit (alpha)</title>
+<!-- Skyline Circuit playable alpha: a separate page. It does not load or change game.html, Classic or Harbour Ring
+     saves; it writes only skylineCircuitSave and, for Career matches, one skylineCareerInbox:<matchId> entry. -->
+<style>
+:root{--sal:0px;--sar:0px;--sat:0px;--sab:0px;--bg:#0E1A2E;--panel:#13213A;--gold:#E2B54A;--ink:#F1E7D5;color-scheme:dark}
+*{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:13px/1.35 system-ui,-apple-system,sans-serif;overflow:hidden}
+[hidden]{display:none!important}
+#cx-setup{max-width:560px;margin:0 auto;padding:max(16px,env(safe-area-inset-top)) max(16px,var(--sar),env(safe-area-inset-right)) 16px max(16px,var(--sal),env(safe-area-inset-left));height:100%;overflow:auto}
+#cx-setup h1{font-size:20px;margin:8px 0}#cx-setup h1 small{font-size:12px;color:var(--gold);font-weight:600}
+fieldset{border:1px solid #ffffff22;border-radius:8px;margin:10px 0;padding:8px 10px}fieldset label{display:block;padding:6px 0;min-height:32px}
+select,button{font:inherit}button{min-height:44px;min-width:44px;border-radius:8px;border:1px solid #ffffff33;background:#1c2d4d;color:var(--ink);padding:0 12px;cursor:pointer}
+.cx-primary{background:var(--gold);color:#1b1405;border-color:var(--gold);font-weight:700}.cx-link{color:var(--gold);margin-left:8px}
+.cx-note{color:#c9d3e6;font-size:12px}.cx-warn{color:#ffb4a8}
+#cx-game{position:fixed;inset:0;display:grid;grid-template-columns:var(--hudL) 1fr var(--hudR);
+ padding:max(var(--sat),env(safe-area-inset-top)) max(var(--sar),env(safe-area-inset-right)) max(var(--sab),env(safe-area-inset-bottom)) max(var(--sal),env(safe-area-inset-left));--hudL:156px;--hudR:184px}
+@media (max-width:760px){#cx-game{--hudL:132px;--hudR:156px}}
+#cx-players,#cx-actions{background:var(--panel);overflow:auto;padding:6px;min-height:0}
+#cx-board{width:100%;height:100%;display:block;touch-action:manipulation}
+.cx-h{font-size:11px;color:#c9d3e6;margin-bottom:4px}.cx-p{padding:4px;border-radius:6px;margin-bottom:4px;font-size:11px}.cx-p i,.cx-order i,.cx-tally i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px;vertical-align:-1px}
+.cx-turn{outline:2px solid var(--gold)}.cx-out{opacity:.45}.cx-bar{height:4px;background:#ffffff1a;border-radius:2px;margin-top:2px}.cx-bar span{display:block;height:100%;border-radius:2px}
+.cx-order{font-size:11px;margin-top:6px}
+.cx-panel h2{font-size:14px;margin:2px 0 6px}.cx-panel p{margin:4px 0}.cx-seg{display:flex;gap:4px}.cx-seg button{flex:1;font-size:11px;padding:0 4px}.cx-seg [aria-checked=true]{background:#2f4a7a;border-color:var(--gold)}
+.cx-b{display:flex;justify-content:space-between;align-items:center;gap:4px;padding:2px 0;font-size:11px}.cx-b button{min-height:36px;font-size:11px}.cx-b small{color:#c9d3e6;text-align:right}
+.cx-clock{background:#3b2f10;border:1px solid var(--gold);border-radius:6px;padding:4px 6px;margin-bottom:6px;font-size:11px}
+.cx-tally{background:#0b1526;border-radius:6px;padding:4px 6px;margin:6px 0;font-size:11px}.cx-feed{font-size:11px;color:#c9d3e6;margin-top:6px}.cx-n{padding:2px 0;border-top:1px solid #ffffff12}
+.cx-bankrupt{color:#ffb4a8}.cx-card{color:#f4d28b}
+</style></head><body>
+<div id="cx-setup" hidden></div>
+<div id="cx-game" hidden><aside id="cx-players" aria-label="Players"></aside><canvas id="cx-board" aria-label="Circuit board"></canvas><aside id="cx-actions" aria-label="Actions"></aside></div>
+<script src="./lib/circuit-rules.js"></script><script src="./lib/circuit-screen.js"></script><script src="./lib/circuit-ui.js"></script>
+</body></html>
