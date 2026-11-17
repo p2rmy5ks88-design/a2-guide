@@ -35,7 +35,7 @@ const base=process.env.CIRCUIT_GAME_URL||'http://127.0.0.1:8765/circuit-alpha.ht
    const cityBoard=await page.locator('#cx-board').screenshot({path:path.join(out,p.id+'-board-city.png')});
    if(strategyBoard.equals(cityBoard))throw Error('3D board did not change between Strategy and City View; HUD-only changes are insufficient');
    const cityPitch=await page.evaluate(()=>window.__circuitUI.r3()?.camera?.pitch);
-   if(Math.abs(cityPitch-30)>.1)throw Error('City View camera did not reach validated 30-degree pitch: '+cityPitch);
+   if(Math.abs(cityPitch-40)>.1)throw Error('City View camera did not reach validated 40-degree inspection pitch: '+cityPitch);
    // Review-only populated skyline: use the existing presentation test hook, never modify rules state.
    // A board tap in inspection mode must not select a tile or mutate the match.
    const beforeTap=await page.evaluate(()=>JSON.stringify(window.__circuitUI.state()));
@@ -81,7 +81,7 @@ const base=process.env.CIRCUIT_GAME_URL||'http://127.0.0.1:8765/circuit-alpha.ht
    await page.screenshot({path:path.join(out,p.id+'-all-skyscrapers-city.png')});
    if(maxBoard.equals(populatedBoard))throw Error('All-skyscraper 3D board matches mixed-stage preview');
    if(beforeMax!==await page.evaluate(()=>JSON.stringify(window.__circuitUI.state())))throw Error('All-skyscraper review changed gameplay state');
-   if(Math.abs(await page.evaluate(()=>window.__circuitUI.r3()?.camera?.pitch)-30)>.1)throw Error('All-skyscraper City View lost the validated inspection pitch');
+   if(Math.abs(await page.evaluate(()=>window.__circuitUI.r3()?.camera?.pitch)-40)>.1)throw Error('All-skyscraper City View lost the validated inspection pitch');
    await page.locator('#cx-city-view').click();
    const back=await page.locator('#cx-city-view').getAttribute('aria-pressed');
    if(back!=='false')throw Error('City View did not return to Strategy View');
