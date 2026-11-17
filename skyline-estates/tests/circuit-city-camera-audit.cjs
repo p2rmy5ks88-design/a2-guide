@@ -7,7 +7,7 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const SS=require('../lib/circuit-screen.js'),SC=require('../lib/circuit-rules.js');
 const D=JSON.parse(fs.readFileSync(path.join(__dirname,'../design/circuit-design-v1.json'),'utf8'));
-const G=SS.geometry(D.layout,D.geometry),CITY={pitch:40,dist:6};
+const G=SS.geometry(D.layout,D.geometry),CITY={pitch:30,dist:5};
 assert.equal(Object.keys(G.nodes).length,32,'fixed 32-node layout');
 assert.equal(SC.validateLayout(D.layout).ok,true,'validated topology');
 const rows=[];
@@ -22,5 +22,7 @@ for(const [id,screen] of Object.entries(D.screens)){
  console.log(id.padEnd(12)+' nodes '+inside+'/32 · min spacing '+touch.minCentreDistance+' pt · skyline '+(skyline.ok?'clear':'OCCLUDED'));
 }
 assert.equal(rows.length,15,'all V1 screen classes audited');
+assert(rows.every(r=>r.projectedNodesInside===32),'all 32 node centres must remain on screen');
+assert(rows.every(r=>r.skylineVisible),'30-degree cinematic camera must avoid full-stage skyline occlusion');
 if(process.env.CITY_CAMERA_REPORT)fs.writeFileSync(process.env.CITY_CAMERA_REPORT,JSON.stringify({camera:CITY,mode:'inspection-only',rows},null,2));
-console.log('City View audit completed. 40° is NOT approved as an interactive decision camera.');
+console.log('30-degree City View audit passed framing and skyline visibility; inspection only, not approved for touch decisions.');
