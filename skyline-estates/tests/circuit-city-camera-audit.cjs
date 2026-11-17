@@ -16,8 +16,7 @@ for(const [id,screen] of Object.entries(D.screens)){
  const projected=Object.values(G.nodes).map(n=>({id:n.id,...C.project({...n,z:0})}));
  const touch=SS.touch(G,C);
  const inside=projected.filter(p=>p.x>=screen.board.x&&p.x<=screen.board.x+screen.board.w&&p.y>=screen.board.y&&p.y<=screen.board.y+screen.board.h).length;
- const stages=Object.fromEntries(SC.PROPS.map(id=>[id,4]));
- const skyline=SS.skyline(G,C,stages);
+ const skyline=SS.skyline(G,C,{stage:4,hudRects:screen.hudRects});
  const result={screen:id,viewport:screen.viewport,projectedNodesInside:inside,totalNodes:32,minimumNodeSpacingPt:touch.minCentreDistance,touchTargetsOverlap:!touch.ok,skylineVisible:skyline.ok,occlusionExamples:skyline.errors.slice(0,8)};
  rows.push(result);
  console.log(id.padEnd(12)+' nodes '+inside+'/32 · min spacing '+touch.minCentreDistance+' pt · skyline '+(skyline.ok?'clear':'OCCLUDED'));
