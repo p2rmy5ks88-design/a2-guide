@@ -24,5 +24,17 @@ for(const [id,screen] of Object.entries(D.screens)){
 assert.equal(rows.length,15,'all V1 screen classes audited');
 assert(rows.every(r=>r.projectedNodesInside===32),'all 32 node centres must remain on screen');
 assert(rows.every(r=>r.skylineVisible),'30-degree cinematic camera must avoid full-stage skyline occlusion');
-if(process.env.CITY_CAMERA_REPORT)fs.writeFileSync(process.env.CITY_CAMERA_REPORT,JSON.stringify({camera:CITY,mode:'inspection-only',rows},null,2));
-console.log('30-degree City View audit passed framing and skyline visibility; inspection only, not approved for touch decisions.');
+// The more architectural 40-degree City View is a visual tour, not a strategy camera.
+ // Record (rather than conceal) its tower occlusions and overlapping decision targets.
+ // Every node centre must still fit within the inspection viewport.
+const TOUR={pitch:40,dist:5},tourRows=[];
+for(const [id,screen] of Object.entries(D.screens)){
+ const C=SS.camera(G,TOUR,screen.board),touch=SS.touch(G,C),skyline=SS.skyline(G,C,{stage:4,hudRects:screen.hudRects});
+ const all=Object.values(G.nodes).map(n=>C.project({...n,z:0})),inside=all.filter(p=>p.x>=screen.board.x&&p.x<=screen.board.x+screen.board.w&&p.y>=screen.board.y&&p.y<=screen.board.y+screen.board.h).length;
+ tourRows.push({screen:id,projectedNodesInside:inside,totalNodes:32,skylineVisible:skyline.ok,occlusionCount:skyline.errors.length,minimumNodeSpacingPt:touch.minCentreDistance,touchTargetsOverlap:!touch.ok});
+}
+assert.equal(tourRows.length,15,'40-degree City View viewport count');
+assert(tourRows.every(r=>r.projectedNodesInside===32),'40-degree City View must retain all 32 projected node centres');
+// Do not assert all towers visible here: upper-stage occlusion is expected in the visual-only tour.
+if(process.env.CITY_CAMERA_REPORT)fs.writeFileSync(process.env.CITY_CAMERA_REPORT,JSON.stringify({camera:CITY,mode:'validated-baseline',rows,cityTour:{camera:TOUR,mode:'inspection-only-no-decisions',rows:tourRows}},null,2));
+console.log('30-degree baseline passed full skyline visibility; 40-degree inspection tour keeps 32 node centres in-frame and reports occlusion, never enables decisions.');
