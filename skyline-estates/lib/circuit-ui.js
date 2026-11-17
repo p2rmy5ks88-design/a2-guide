@@ -49,7 +49,8 @@ function resize(){const cv=$('#cx-board'),r=boardRect(),dpr=Math.min(2,window.de
  const rect=boardRect();C=SS.camera(G,cam,rect);dirty=true}
 // ---------- driving the rules ----------
 function enqueue(){anim.queue.push(...SC.drain(s));dirty=true}
-function act(a){const pd=SC.pending(s);if(!pd)return;SC.act(s,pd.player,a);enqueue();save();render()}
+// The match result is stored as soon as the rules end the match, never waiting for the animation to reach it.
+function act(a){const pd=SC.pending(s);if(!pd)return;SC.act(s,pd.player,a);if(s.over)finish();enqueue();save();render()}
 function busy(){return anim.cur||anim.queue.length}
 function stepAnim(now){const sp=SPEED[opts.speed]||SPEED.normal;if(anim.queue.length)dirty=true;
  while(!anim.cur&&anim.queue.length){const e=anim.queue.shift();
@@ -67,9 +68,9 @@ function note(e){const P=e.pid!=null?name(e.pid):'';let t=null;
  else if(e.t==='build')t=`${P} built ${SC.STAGES[e.stage]} on ${e.node}`;else if(e.t==='sell')t=`${P} sold a stage on ${e.node} (+${e.refund})`;
  else if(e.t==='bankrupt')t=`${P} is bankrupt — their properties return to the bank`;else if(e.t==='order')t=`Turn order reverses: ${e.order.map(i=>i+1).join(' → ')}`;
  else if(e.t==='clock-reset')t=`${P} lost the lead — victory clock reset`;else if(e.t==='roll')t=`${P} rolled ${e.dice[0]}+${e.dice[1]} (${e.plan==='cross'?'cross':'stay'})`;
- else if(e.t==='over'){finish(e);t=null}
  if(t){notes.unshift({t,kind:e.t});notes=notes.slice(0,6)}}
-function finish(e){if(!s.meta||!s.meta.career){store.del(SC.SAVE_KEY);return}
+let finished=null;
+function finish(){if(finished===s)return;finished=s;if(!s.meta||!s.meta.career){store.del(SC.SAVE_KEY);return}
  const f=SC.careerFacts(s,{ownerSeat:0,endedAt:Date.now()});store.set('skylineCareerInbox:'+f.matchId,JSON.stringify(f));store.del(SC.SAVE_KEY)}
 // ---------- loop ----------
 const perf={frames:[],draw:[]};let last=0;
