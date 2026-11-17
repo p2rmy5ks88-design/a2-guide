@@ -97,7 +97,10 @@ const base=process.env.CIRCUIT_GAME_URL||'http://127.0.0.1:8765/circuit-alpha.ht
    await page.evaluate(()=>window.__circuitUI.perfReset());
    await page.waitForTimeout(2200);
    const performanceEvidence=await page.evaluate(()=>({frames:window.__circuitUI.perf(),renderer:(()=>{const v=window.__circuitUI.r3()?.stats?.();return v?{tier:v.tier,calls:v.calls,triangles:v.triangles,textures:v.textures,geometries:v.geometries,pixelRatio:v.pixelRatio}:null})()}));
-   console.log('CIRCUIT PERF '+p.id+' '+JSON.stringify(performanceEvidence));
+   const frameSample=performanceEvidence.frames;
+   const frameAssessment=frameSample.frames>=60&&frameSample.p95!==null&&frameSample.p95<100
+    ?'usable-for-ci-trend-only':'inconclusive-ci-frame-scheduling';
+   console.log('CIRCUIT PERF '+p.id+' '+JSON.stringify({...performanceEvidence,assessment:frameAssessment,notice:'Software WebGL / headless Chromium; not real-device FPS'}));
    console.log('PLAYABLE CAPTURED '+p.id+' '+JSON.stringify(strategy));
    await context.close();
   }
