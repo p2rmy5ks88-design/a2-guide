@@ -34,6 +34,8 @@ const checks=[
  ['civic planting','Sunlit civic park: a low walking circuit'],
  ['recessed skyscraper glass entrance','Recessed glazed lobby and metal canopy'],
  ['inside stage footprint','S*.52,base*.70,S*.022'],
+ ['lobby visible on podium face','Z+base*.5,0,-S*.483'],
+ ['canopy visible under silhouette envelope','Z+base*.85,0,-S*.48'],
  ['architectural mullion contrast',"ctx.fillStyle='rgba(9,39,57,.24)'"],
  ['grounded shadow bias','sun.shadow.normalBias=.38'],
  ['balanced ambient fill',"HemisphereLight('#E6F5FF','#A88564',.76)"]

@@ -252,9 +252,9 @@ export function create(canvas,{layout,spec,camera:cam0,tier:tierName=pickTier(),
    add(box(S*.94,base,mats.stone,mats.terrace),Z+base/2);
    // Recessed glazed lobby and metal canopy read as ground-floor architecture.
    // Every detail is strictly inside the existing S*.94 footprint and stage height.
-   add(slab(S*.52,base*.70,S*.022,mats.glass2,mats.glass2),Z+base*.5,0,-S*.458);
-   for(const x of [-S*.28,S*.28])add(slab(S*.026,base*.73,S*.026,vTrim,vTrim),Z+base*.5,x,-S*.454);
-   add(slab(S*.59,base*.09,S*.035,vTrim,vTrim),Z+base*.85,0,-S*.45);
+   add(slab(S*.52,base*.70,S*.022,mats.glass2,mats.glass2),Z+base*.5,0,-S*.483);
+   for(const x of [-S*.28,S*.28])add(slab(S*.026,base*.73,S*.026,vTrim,vTrim),Z+base*.5,x,-S*.483);
+   add(slab(S*.59,base*.09,S*.035,vTrim,vTrim),Z+base*.85,0,-S*.48);
    if(variant===0){// Harbour Quarter: octagonal stepped maritime tower with golden observation crown.
     const d1=body*.5,d2=body*.3,d3=body-d1-d2;
     add(oct(R*.98,d1,vGlass),Z+base+d1/2);add(oct(R*.86,d2,vGlass),Z+base+d1+d2/2);add(oct(R*.72,d3,vGlass),Z+base+d1+d2+d3/2);
