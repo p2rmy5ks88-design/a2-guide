@@ -43,6 +43,18 @@ const base=process.env.CIRCUIT_GAME_URL||'http://127.0.0.1:8765/circuit-alpha.ht
    if((await page.locator('#cx-city-view').getAttribute('aria-pressed'))!=='true')throw Error('Board tap unexpectedly exited City View');
    const afterTap=await page.evaluate(()=>JSON.stringify(window.__circuitUI.state()));
    if(beforeTap!==afterTap)throw Error('Board tap mutated game state during City View');
+   // Dragging the board in City View must neither pan a zoomed board nor change the match.
+   const zoomBeforeDrag=await page.evaluate(()=>JSON.stringify(window.__circuitUI.zoomInfo()));
+   const startX=boardBounds.x+boardBounds.width*.42,startY=boardBounds.y+boardBounds.height*.42;
+   await page.mouse.move(startX,startY);
+   await page.mouse.down();
+   await page.mouse.move(startX+45,startY+25,{steps:6});
+   await page.mouse.up();
+   await page.waitForTimeout(180);
+   const zoomAfterDrag=await page.evaluate(()=>JSON.stringify(window.__circuitUI.zoomInfo()));
+   if(zoomBeforeDrag!==zoomAfterDrag)throw Error('Dragging City View changed board zoom/pan');
+   if(beforeTap!==await page.evaluate(()=>JSON.stringify(window.__circuitUI.state())))throw Error('Dragging City View mutated match state');
+   if((await page.locator('#cx-city-view').getAttribute('aria-pressed'))!=='true')throw Error('Dragging board exited City View');
    const before=await page.evaluate(()=>JSON.stringify(window.__circuitUI.state()));
    await page.evaluate(()=>{const ids=window.SkylineCircuit.PROPS,st={};ids.forEach((id,i)=>st[id]=1+(i%4));window.__circuitUI.setStages(st)});
    await page.waitForTimeout(700);
