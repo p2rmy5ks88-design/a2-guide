@@ -11,4 +11,6 @@ assert.match(src,/high:\{[^}]*maxScale:3,/,'high tier allows native 3x density')
 assert.match(src,/Math\.sqrt\(4200000\/\(W\*Hh\)\)/,'pixel budget caps rendering cost');
 assert.match(src,/function downgrade\(\)/,'adaptive quality fallback preserved');
 assert.match(src,/renderer\.setPixelRatio\(dpr\)/,'pixel ratio actually applied');
+assert.match(src,/Slim exterior corner mullions/,'mid-rise facade accents retained');
+assert.match(src,/Recessed crown rim and four vertical corner accents/,'high-rise silhouette accents retained');
 console.log('PASS: 2x facades, anisotropic mipmaps, capped native-density rendering and adaptive fallback');
