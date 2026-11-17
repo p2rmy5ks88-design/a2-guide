@@ -99,8 +99,10 @@ export function create(canvas,{layout,spec,camera:cam0,tier:tierName=pickTier(),
  const markMat=new THREE.MeshBasicMaterial({color:P.ivory,transparent:true,opacity:.55,side:THREE.DoubleSide});
  for(const r of ['O','I']){const pts=smooth(ringPts(r));const road=strip(pts,T*1.1,.15,roadMat);road.receiveShadow=!!tier.shadows;env.add(road);
   for(const s of [-1,1]){const off=pts.map((p,i)=>{const a=pts[(i-1+pts.length)%pts.length],c=pts[(i+1)%pts.length];let tx=c.x-a.x,ty=c.y-a.y;const l=Math.hypot(tx,ty);return{x:p.x-ty/l*s*T*.6,y:p.y+tx/l*s*T*.6}});env.add(strip(off,1.1,.3,markMat))}}
+ const ringGapIn0=()=>Math.min(...SC.NODES.filter(n=>n.ring==='I').map(n=>Math.hypot(G.nodes[n.id].x,G.nodes[n.id].y)))+T*.62,ringGapOut0=()=>R-T*.62;
  // central civic garden (decorative)
  const innerR=Math.min(...SC.NODES.filter(n=>n.ring==='I').map(n=>Math.hypot(G.nodes[n.id].x,G.nodes[n.id].y)))-T*.72;
+ const plaza=new THREE.Mesh(new THREE.RingGeometry(ringGapIn0(),ringGapOut0(),128),new THREE.MeshStandardMaterial({color:'#2c3a58',roughness:.9}));plaza.rotation.x=-Math.PI/2;plaza.position.y=.08;plaza.receiveShadow=!!tier.shadows;env.add(plaza);
  const garden=new THREE.Mesh(new THREE.CylinderGeometry(innerR,innerR,2,96),new THREE.MeshStandardMaterial({color:'#2f6b4f',roughness:.95}));garden.position.y=0;garden.receiveShadow=!!tier.shadows;env.add(garden);
  const pool=new THREE.Mesh(new THREE.CylinderGeometry(innerR*.3,innerR*.3,2.2,64),new THREE.MeshStandardMaterial({color:P.waterHighlight,roughness:.2,metalness:.2}));pool.position.y=.3;env.add(pool);
  const poolRim=new THREE.Mesh(new THREE.TorusGeometry(innerR*.3,.9,8,64),new THREE.MeshStandardMaterial({color:P.ivory,roughness:.5}));poolRim.rotation.x=Math.PI/2;poolRim.position.y=1.5;env.add(poolRim);
@@ -111,11 +113,49 @@ export function create(canvas,{layout,spec,camera:cam0,tier:tierName=pickTier(),
   for(let i=0;i<Math.round(n*.7);i++){const a=r()*Math.PI*2;put(Math.cos(a)*(platR-3.5),Math.sin(a)*(platR-3.5),2.4+r()*1.4)}
   while(k<n){const a=r()*Math.PI*2,d=innerR*(.42+r()*.48);put(Math.cos(a)*d,Math.sin(a)*d,2.2+r()*1.6)}
   foliage.count=trunk.count=k;foliage.castShadow=trunk.castShadow=!!tier.shadows;foliage.userData.pick={kind:4,i:0};env.add(foliage,trunk)}
+ // ---------- city depth (decorative; low, off the tiles; registered as occluders for the visibility pass) ----------
+ function inst(geo,mat,list,{shadows=false,pick=true}={}){if(!list.length)return null;const m=new THREE.InstancedMesh(geo,mat,list.length),M=new THREE.Matrix4(),q=new THREE.Quaternion(),e=new THREE.Euler();
+  list.forEach((t,i)=>{q.setFromEuler(e.set(0,t.ry||0,0));M.compose(new THREE.Vector3(t.x,t.y,t.z),q,new THREE.Vector3(t.sx,t.sy,t.sz));m.setMatrixAt(i,M)});m.castShadow=shadows;m.receiveShadow=!!tier.shadows;if(pick)m.userData.pick={kind:4,i:0};env.add(m);return m}
+ const junctionAngles=SC.NODES.filter(n=>n.type==='junction'&&n.ring==='O').map(n=>Math.atan2(G.nodes[n.id].y,G.nodes[n.id].x));
+ const nearJunction=(a,deg)=>junctionAngles.some(j=>Math.abs(Math.atan2(Math.sin(a-j),Math.cos(a-j)))<deg*Math.PI/180);
+ const outerEdge=R+T*.62,innerR2=Math.min(...SC.NODES.filter(n=>n.ring==='I').map(n=>Math.hypot(G.nodes[n.id].x,G.nodes[n.id].y)));
+ const ringGapIn=innerR2+T*.62,ringGapOut=R-T*.62;
+ {const r=rng(21),blocks=[],roofs=[],lamps=[];const blockMat=new THREE.MeshStandardMaterial({color:'#56627a',roughness:.85}),roofMat=new THREE.MeshStandardMaterial({color:'#7d8aa0',roughness:.8});
+  // outer promenade: low shops and townhouses between the boulevard and the waterfront
+  for(let i=0;i<120;i++){const a=i/120*Math.PI*2+r()*.02,d=outerEdge+3+r()*(platR-outerEdge-9);const w=3.2+r()*2.6,h=2.2+r()*3.2;blocks.push({x:Math.cos(a)*d,y:h/2,z:Math.sin(a)*d,sx:w,sy:h,sz:w*.8,ry:-a})}
+  // between the rings: low civic blocks and pocket parks, kept clear of the bridges
+  for(let i=0;i<70;i++){const a=i/70*Math.PI*2+r()*.03;if(nearJunction(a,9))continue;const d=ringGapIn+2.5+r()*(ringGapOut-ringGapIn-5);const w=2.6+r()*2.2,h=1.4+r()*2.2;blocks.push({x:Math.cos(a)*d,y:h/2,z:Math.sin(a)*d,sx:w,sy:h,sz:w,ry:-a})}
+  inst(new THREE.BoxGeometry(1,1,1),blockMat,blocks,{shadows:!!tier.shadows});
+  for(const b of blocks)roofs.push({...b,y:b.sy+.15,sy:.3,sx:b.sx*.9,sz:b.sz*.9});inst(new THREE.BoxGeometry(1,1,1),roofMat,roofs);
+  // street lamps along both boulevards (warm points)
+  if(tier.trees){for(const rr of [outerEdge+1.2,ringGapIn-1.2,ringGapOut+1.2])for(let i=0;i<64;i++){const a=i/64*Math.PI*2;if(nearJunction(a,3))continue;lamps.push({x:Math.cos(a)*rr,y:2.2,z:Math.sin(a)*rr,sx:.55,sy:.55,sz:.55})}
+   inst(new THREE.SphereGeometry(1,6,4),new THREE.MeshStandardMaterial({color:'#FFE2A8',emissive:'#FFD08A',emissiveIntensity:1.4}),lamps,{pick:false})}}
+ // waterfront: quay wall with railing lights, a marina and small boats (outside the platform)
+ {const quay=new THREE.Mesh(new THREE.CylinderGeometry(platR+1.5,platR+2.5,5,128,1,true),new THREE.MeshStandardMaterial({color:'#8d9aa6',roughness:.8,side:THREE.DoubleSide}));quay.position.y=-2.5;env.add(quay);
+  const prom=new THREE.Mesh(new THREE.RingGeometry(platR-4,platR+1.4,128),new THREE.MeshStandardMaterial({color:'#b9b0a0',roughness:.9}));prom.rotation.x=-Math.PI/2;prom.position.y=.12;prom.receiveShadow=!!tier.shadows;env.add(prom);
+  if(tier.trees){const r=rng(31),rail=[],hulls=[],sails=[];for(let i=0;i<90;i++){const a=i/90*Math.PI*2;rail.push({x:Math.cos(a)*(platR+.8),y:1.2,z:Math.sin(a)*(platR+.8),sx:.45,sy:.45,sz:.45})}
+   inst(new THREE.SphereGeometry(1,6,4),new THREE.MeshStandardMaterial({color:P.ivory,emissive:'#FFE7B0',emissiveIntensity:1.2}),rail,{pick:false});
+   // two marinas: a pier running out from the quay with boats moored in rows on both sides
+   const piers=[];for(const a of [Math.PI*1.25,Math.PI*.25]){const ux=Math.cos(a),uz=Math.sin(a),px=-uz,pz=ux,len=34;piers.push({x:ux*(platR+len/2),y:-5.6,z:uz*(platR+len/2),sx:len,sy:1.2,sz:3,ry:-a});
+    for(let k=0;k<6;k++)for(const sd of [-1,1]){const d=platR+6+k*5.2,l=4.2+r()*1.4;hulls.push({x:ux*d+px*sd*4.2,y:-6.2,z:uz*d+pz*sd*4.2,sx:1.7,sy:1.1,sz:l,ry:-a+Math.PI/2})}}
+   inst(new THREE.BoxGeometry(1,1,1),new THREE.MeshStandardMaterial({color:'#9b8f7c',roughness:.9}),piers,{pick:false});
+   inst(new THREE.BoxGeometry(1,1,1),new THREE.MeshStandardMaterial({color:'#e8e4da',roughness:.55}),hulls,{pick:false})}}
+ // garden: hedge ring, lamp posts and fountain jets
+ {const r=rng(41),hedges=[],jets=[];for(let i=0;i<48;i++){const a=i/48*Math.PI*2;if(i%12===1||i%12===2)continue;hedges.push({x:Math.cos(a)*(innerR-2),y:1.6,z:Math.sin(a)*(innerR-2),sx:5.5,sy:1.6,sz:1.6,ry:-a+Math.PI/2})}
+  inst(new THREE.BoxGeometry(1,1,1),new THREE.MeshStandardMaterial({color:'#2e6e4c',roughness:.95}),hedges);
+  for(let i=0;i<8;i++){const a=i*Math.PI/4;jets.push({x:Math.cos(a)*innerR*.18,y:3,z:Math.sin(a)*innerR*.18,sx:.5,sy:5,sz:.5})}jets.push({x:0,y:4.5,z:0,sx:1.2,sy:8,sz:1.2});
+  inst(new THREE.CylinderGeometry(1,1,1,6),new THREE.MeshStandardMaterial({color:'#dff3ff',emissive:'#9fd8ff',emissiveIntensity:.6,transparent:true,opacity:.85}),jets);
+  const statue=new THREE.Mesh(new THREE.CylinderGeometry(innerR*.06,innerR*.09,3,8),new THREE.MeshStandardMaterial({color:P.ivory,roughness:.4}));statue.position.y=1.6;env.add(statue)}
  // bridges: one hop, no stopping tile; ivory light strips
- const bridgeMat=new THREE.MeshStandardMaterial({color:'#3b4a69',roughness:.7}),lightMat=new THREE.MeshStandardMaterial({color:P.ivory,emissive:'#FFE7B0',emissiveIntensity:tier.glow?1.6:.9});
+ const bridgeTruss=new THREE.MeshStandardMaterial({color:P.ivory,roughness:.45,metalness:.2}),bridgeMat=new THREE.MeshStandardMaterial({color:'#3b4a69',roughness:.7}),lightMat=new THREE.MeshStandardMaterial({color:P.ivory,emissive:'#FFE7B0',emissiveIntensity:tier.glow?1.6:.9});
  for(const [a,b] of Object.entries(SC.LINKS))if(a[0]==='O'){const p=G.nodes[a],q=G.nodes[b],len=Math.hypot(q.x-p.x,q.y-p.y),ang=Math.atan2(q.y-p.y,q.x-p.x),mx=(p.x+q.x)/2,my=(p.y+q.y)/2;
   const deck=new THREE.Mesh(new THREE.BoxGeometry(len,1.6,T*.42),bridgeMat);deck.position.set(mx,1,my);deck.rotation.y=-ang;deck.receiveShadow=deck.castShadow=!!tier.shadows;env.add(deck);
-  for(const s of [-1,1]){const l=new THREE.Mesh(new THREE.BoxGeometry(len*.98,.8,.7),lightMat);l.position.set(mx-Math.sin(ang)*s*T*.2,2.1,my+Math.cos(ang)*s*T*.2);l.rotation.y=-ang;env.add(l)}}
+  for(const s of [-1,1]){const l=new THREE.Mesh(new THREE.BoxGeometry(len*.98,.8,.7),lightMat);l.position.set(mx-Math.sin(ang)*s*T*.2,2.1,my+Math.cos(ang)*s*T*.2);l.rotation.y=-ang;env.add(l);
+   // low arched truss beside the deck (below token height, outside the tiles)
+   const arch=new THREE.Mesh(new THREE.TorusGeometry(len*.36,.45,6,16,Math.PI),bridgeTruss);arch.scale.set(1,.16,1);arch.position.set(mx-Math.sin(ang)*s*T*.23,1.4,my+Math.cos(ang)*s*T*.23);arch.rotation.y=-ang;arch.userData.pick={kind:4,i:0};env.add(arch)}}
+ // static environment meshes → merged by material (instanced meshes stay instanced; occluder proxies kept for the ID pass)
+ scene.updateMatrixWorld(true);{const plain=env.children.filter(o=>o.isMesh&&!o.isInstancedMesh&&o!==water);const merged=mergeByMaterial(plain,{shadows:!!tier.shadows});merged.traverse(o=>{if(o.isMesh){o.receiveShadow=!!tier.shadows}});env.add(merged);
+  for(const o of plain){if(o.userData.pick){o.visible=false;o.userData.pickOnly=true}else env.remove(o)}}
  // ---------- tiles ----------
  const tilesGroup=new THREE.Group();scene.add(tilesGroup);
  function rounded(w,r){const s=new THREE.Shape(),h=w/2;s.moveTo(-h+r,-h);s.lineTo(h-r,-h);s.quadraticCurveTo(h,-h,h,-h+r);s.lineTo(h,h-r);s.quadraticCurveTo(h,h,h-r,h);s.lineTo(-h+r,h);s.quadraticCurveTo(-h,h,-h,h-r);s.lineTo(-h,-h+r);s.quadraticCurveTo(-h,-h,-h+r,-h);return s}
