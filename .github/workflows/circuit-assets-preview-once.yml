@@ -1,0 +1,26 @@
+name: Circuit grounded-city asset verification (draft)
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/circuit-assets-preview-once.yml'
+      - 'skyline-estates/lib/circuit-renderer-3d.js'
+      - 'skyline-estates/tests/circuit-visual-contract.cjs'
+permissions:
+  contents: read
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Regenerate and verify deterministic offline assets
+        run: |
+          python3 skyline-estates/build.py
+          python3 skyline-estates/build.py --check
+      - name: Upload generated assets for byte-exact branch sync
+        uses: actions/upload-artifact@v4
+        with:
+          name: circuit-grounded-visual-cache
+          path: |
+            skyline-estates/offline-assets.js
+            skyline-estates/sw.js
+          if-no-files-found: error
