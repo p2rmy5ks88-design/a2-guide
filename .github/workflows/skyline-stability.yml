@@ -340,6 +340,11 @@ jobs:
         run: |
           node skyline-estates/tests/circuit-design-browser.cjs skyline-estates/design/v2/circuit-design-v2.json
           node skyline-estates/tests/circuit-v2-review.cjs
+      - name: "Visual: circuit-3d-browser"
+        if: (matrix.engine != 'webkit' || steps.wk.outcome == 'success')
+        # Software WebGL on CI runners; about 3 minutes locally per engine.
+        timeout-minutes: 20
+        run: node skyline-estates/tests/circuit-3d-browser.cjs
       - name: "Visual: cloud-restore"
         if: (matrix.engine != 'webkit' || steps.wk.outcome == 'success')
         timeout-minutes: 5
