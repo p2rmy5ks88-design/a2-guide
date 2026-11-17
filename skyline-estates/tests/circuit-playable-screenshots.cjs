@@ -35,6 +35,14 @@ const base=process.env.CIRCUIT_GAME_URL||'http://127.0.0.1:8765/circuit-alpha.ht
    const cityPitch=await page.evaluate(()=>window.__circuitUI.r3()?.camera?.pitch);
    if(Math.abs(cityPitch-30)>.1)throw Error('City View camera did not reach validated 30-degree pitch: '+cityPitch);
    // Review-only populated skyline: use the existing presentation test hook, never modify rules state.
+   // A board tap in inspection mode must not select a tile or mutate the match.
+   const beforeTap=await page.evaluate(()=>JSON.stringify(window.__circuitUI.state()));
+   const boardBounds=await page.locator('#cx-board').boundingBox();
+   await page.mouse.click(boardBounds.x+boardBounds.width*.48,boardBounds.y+boardBounds.height*.46);
+   await page.waitForTimeout(180);
+   if((await page.locator('#cx-city-view').getAttribute('aria-pressed'))!=='true')throw Error('Board tap unexpectedly exited City View');
+   const afterTap=await page.evaluate(()=>JSON.stringify(window.__circuitUI.state()));
+   if(beforeTap!==afterTap)throw Error('Board tap mutated game state during City View');
    const before=await page.evaluate(()=>JSON.stringify(window.__circuitUI.state()));
    await page.evaluate(()=>{const ids=window.SkylineCircuit.PROPS,st={};ids.forEach((id,i)=>st[id]=1+(i%4));window.__circuitUI.setStages(st)});
    await page.waitForTimeout(700);
