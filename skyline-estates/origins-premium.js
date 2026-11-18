@@ -395,6 +395,18 @@
   const update=(now)=>{
    requestAnimationFrame(update);
    if(now-last<70)return;last=now;
+   // The original engine can reset the board camera during turn banners.
+   // In Origins whole-board mode retain the complete 40-space perimeter;
+   // never override explicit user orbit, follow-token mode or a deed zoom.
+   if(typeof G!=='undefined'&&G&&!document.querySelector('#ui')?.hidden&&
+      typeof camMode!=='undefined'&&camMode==='board'&&
+      typeof userCam!=='undefined'&&!userCam&&
+      (typeof BZ==='undefined'||BZ==null)&&typeof camGoal==='function'){
+    const target=20.4;
+    if(Math.abs(camT.L-target)>.04||Math.abs(camT.pitch-.78)>.025||
+       Math.abs(camT.yaw)>.025)
+     camGoal([0,0,0],0,target,.78,9);
+   }
    const ui=document.querySelector('#ui'),cv=document.querySelector('#gl');
    if(ui?.hidden||!cv||!G?.players||!CAMM?.vp||!Array.isArray(tok3)){
     wrap.hidden=true;return;
@@ -506,7 +518,7 @@
    // rather than a dramatic near-horizontal board filling the whole screen.
    // One-time lab camera only; user-driven orbit/zoom is not overwritten.
    if(typeof camGoal==='function'){
-    camMode='board';camGoal([0,0,0],0,19.1,.78,16);
+    camMode='board';camGoal([0,0,0],0,20.4,.78,16);
     premiumCameraSet=true;
    }
   }
