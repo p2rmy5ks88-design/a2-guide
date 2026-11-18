@@ -56,6 +56,35 @@ button.addEventListener("click",function(){
 });
 document.addEventListener("visibilitychange",sync);
 if(reduce&&reduce.addEventListener)reduce.addEventListener("change",sync);
+// The city breathes with the ACTUAL match: only owned, developed lots illuminate
+// corresponding background districts. This is derived display state, never rules.
+var lastDevelopment="";
+function reflect(view){
+ if(!view||!Array.isArray(view.nodes))return;
+ var quarters=[0,0,0,0],owned=0,developed=0;
+ view.nodes.forEach(function(node){
+  if(node.type!=="property"||node.owner<0)return;
+  owned++;
+  var stage=Math.max(0,Math.min(4,Number(node.stage)||0));
+  if(stage>0){developed++;quarters[node.quadrant||0]+=stage;}
+ });
+ var fingerprint=quarters.join(":")+":"+owned+":"+developed;
+ if(fingerprint===lastDevelopment)return;
+ lastDevelopment=fingerprint;
+ world.dataset.owned=String(owned);
+ world.dataset.developed=String(developed);
+ var towers=world.querySelectorAll(".lifeTower");
+ towers.forEach(function(tower,index){
+  var weight=quarters[index%4];
+  var isLit=weight>=(index>=4?5:1);
+  tower.classList.toggle("cityLit",isLit);
+  tower.dataset.lit=String(isLit);
+ });
+ // City traffic accelerates gently as actual streets are developed.
+ // No setInterval, no frame-loop JS; transitions stay CSS/compositor driven.
+ details.style.setProperty("--traffic-first",String(31-Math.min(9,developed*.42))+"s");
+ details.style.setProperty("--traffic-second",String(38-Math.min(10,developed*.45))+"s");
+}
 function pulse(kind,id){
  if(!id)return;
  var tile=board.querySelector('.tile[data-node="'+String(id).replace(/[^OI0-9]/g,"")+'"]');
@@ -68,5 +97,5 @@ function pulse(kind,id){
  window.setTimeout(function(){tile.classList.remove(name)},850);
 }
 sync();
-window.SkylineCircuitLife=Object.freeze({pulse:pulse,active:function(){return enabled&&!(reduce&&reduce.matches)},pause:function(){enabled=false;sync()},resume:function(){enabled=true;sync()}});
+window.SkylineCircuitLife=Object.freeze({pulse:pulse,reflect:reflect,active:function(){return enabled&&!(reduce&&reduce.matches)},pause:function(){enabled=false;sync()},resume:function(){enabled=true;sync()}});
 })();
