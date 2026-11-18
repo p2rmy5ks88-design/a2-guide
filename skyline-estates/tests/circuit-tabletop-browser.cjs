@@ -33,7 +33,7 @@ let browser,server;
    assert.equal(await p.locator('.tile.property').count(),20,'all land property spaces present');
    assert.equal(await p.locator('.tile.event').count(),4,'four City Events present');
    assert.equal(await p.locator('.tile.special').count(),8,'eight Skyline junction squares present');
-   const text=await p.locator('#tiles').innerText();
+   const text=await p.locator('#tiles').textContent();
    assert(!/\b[OI]\d{1,2}\b/.test(text),'never print raw node identifiers in visible board');
    assert(text.includes('Marina Avenue')&&text.includes('SC 70'),'show street name and real price');
    assert.equal(await p.evaluate(()=>__circuitTabletop.state().ruleset),'circuit-v0','real game rules, not a visual mock');
