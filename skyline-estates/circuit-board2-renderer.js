@@ -219,6 +219,47 @@ export function create(canvas,{layout,spec,camera:cam0,tier:tierName=pickTier(),
     for(let k=0;k<6;k++)for(const sd of [-1,1]){const d=platR+6+k*5.2,l=4.2+r()*1.4;hulls.push({x:ux*d+px*sd*4.2,y:-6.2,z:uz*d+pz*sd*4.2,sx:1.7,sy:1.1,sz:l,ry:-a+Math.PI/2})}}
    inst(new THREE.BoxGeometry(1,1,1),new THREE.MeshStandardMaterial({color:'#B98961',roughness:.9}),piers,{pick:false});
    inst(new THREE.BoxGeometry(1,1,1),new THREE.MeshStandardMaterial({color:'#FDF7EA',roughness:.55}),hulls,{pick:false})}}
+ // Living metropolitan harbour BEHIND the board (the approved reference).
+ // Actual low-draw-call 3D waterfront blocks — no painted false properties,
+ // no selectable scenery, no changes to board/route geometry.
+ {
+  const rand=rng(198711),glassCity=[],stoneCity=[],roofCaps=[],promLights=[];
+  const coastZ=-platR-18;
+  const coast=new THREE.Mesh(
+   new THREE.BoxGeometry(platR*2.42,2.5,42),
+   new THREE.MeshStandardMaterial({color:'#9A866B',roughness:.92}));
+  coast.position.set(0,-5.55,coastZ);env.add(coast);
+  const quayLine=new THREE.Mesh(
+   new THREE.BoxGeometry(platR*2.45,1.0,1.5),
+   new THREE.MeshStandardMaterial({color:'#E5B773',metalness:.15,roughness:.62}));
+  quayLine.position.set(0,-4.0,-platR+3);env.add(quayLine);
+  const n=tierName==='low'?18:34;
+  for(let i=0;i<n;i++){
+   const x=-platR*1.01+(i+.5)*platR*2.02/n+(rand()-.5)*3.1;
+   const z=coastZ+(rand()-.5)*19;
+   const width=4.6+rand()*5.4;
+   const height=11+rand()*21+(i%9===0?13:0);
+   const footprint=width*(.72+rand()*.24);
+   const target=i%3===1?stoneCity:glassCity;
+   target.push({x,y:-4.4+height/2,z,sx:width,sy:height,sz:footprint});
+   roofCaps.push({x,y:-4.1+height,z,sx:width*1.07,sy:.60,sz:footprint*1.08});
+   if(i%2===0)promLights.push({x,y:-3.22,z:-platR+3,
+    sx:.7,sy:.7,sz:.7});
+  }
+  const metropolitanGlass=new THREE.MeshStandardMaterial({
+   map:facade('glass',tierName==='low'?1:2),color:'#F3E6D1',
+   roughness:.23,metalness:.18,emissive:'#233F63',emissiveIntensity:.19});
+  const metropolitanStone=new THREE.MeshStandardMaterial({
+   map:facade('stone',tierName==='low'?1:2),color:'#FFE3B0',
+   roughness:.64,metalness:.06,emissive:'#705331',emissiveIntensity:.12});
+  inst(new THREE.BoxGeometry(1,1,1),metropolitanGlass,glassCity,{pick:false});
+  inst(new THREE.BoxGeometry(1,1,1),metropolitanStone,stoneCity,{pick:false});
+  inst(new THREE.BoxGeometry(1,1,1),new THREE.MeshStandardMaterial({
+   color:'#ECC477',metalness:.54,roughness:.34,emissive:'#C78C46',emissiveIntensity:.24}),roofCaps,{pick:false});
+  inst(new THREE.SphereGeometry(1,6,4),new THREE.MeshStandardMaterial({
+   color:'#FFF2C7',emissive:'#FFD98D',emissiveIntensity:1.5}),promLights,{pick:false});
+  env.userData.circuitBackdropBuildings=n;
+ }
  // garden: hedge ring, lamp posts and fountain jets
  {const r=rng(41),hedges=[],jets=[];for(let i=0;i<48;i++){const a=i/48*Math.PI*2;if(i%12===1||i%12===2)continue;hedges.push({x:Math.cos(a)*(innerR-2),y:1.6,z:Math.sin(a)*(innerR-2),sx:5.5,sy:1.6,sz:1.6,ry:-a+Math.PI/2})}
   inst(new THREE.BoxGeometry(1,1,1),new THREE.MeshStandardMaterial({color:'#3D8D58',roughness:.95}),hedges);
