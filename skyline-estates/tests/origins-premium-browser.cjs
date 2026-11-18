@@ -109,11 +109,16 @@ const types={'.html':'text/html','.css':'text/css','.js':'text/javascript','.jso
     // A clean, real gameplay frame: suppress only a transient trophy toast
     // created by test-fixture construction. It is not part of the default HUD,
     // and removing the test toast does not affect the game state.
-    await subframe.evaluate(()=>document.querySelectorAll('.achpop').forEach(el=>el.style.visibility='hidden'));
+    await subframe.evaluate(()=>{
+      const guard=document.createElement('style');guard.id='origins-qa-hide-transient';
+      guard.textContent='.achpop{visibility:hidden!important}';
+      document.head.appendChild(guard);
+    });
     // Exclude the review-only watermark, never the authoritative game view.
     await page.locator('#reviewLabel').evaluate(el=>el.hidden=true);
     await page.screenshot({path:file,fullPage:false});
     await page.locator('#reviewLabel').evaluate(el=>el.hidden=false);
+    await subframe.evaluate(()=>document.querySelector('#origins-qa-hide-transient')?.remove());
     const buf=fs.readFileSync(file);
     assert.equal(buf.readUInt32BE(16),vp.width*vp.dpr,'screenshot is actually captured in Retina device pixels');
     assert.equal(buf.readUInt32BE(20),vp.height*vp.dpr,'screenshot height retains landscape Retina pixels');
