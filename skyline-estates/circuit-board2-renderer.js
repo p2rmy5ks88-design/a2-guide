@@ -367,7 +367,10 @@ export function create(canvas,{layout,spec,camera:cam0,tier:tierName=pickTier(),
  let lastModel=null,glowSprites=[],dynMerged=null;
  function update(model){lastModel=model;const {view}=model,stages=model.stages||{};
   let changed=false;for(const n of view.nodes)if(n.type==='property'){const st=stages[n.id]??n.stage;if(tile[n.id].stage!==st||tile[n.id].owner!==n.owner){setBuilding(n.id,st,n.owner);changed=true}}
-  if(changed||!dynMerged){disposeGroup(dynMerged);scene.updateMatrixWorld(true);const parts=[];
+  const direct=!!model.cityShowcase;
+  // Architectural preview draws the original meshes instead of burning CPU
+  // merging 20 complex stage meshes that will immediately be hidden anyway.
+  if(!direct&&(changed||!dynMerged)){disposeGroup(dynMerged);scene.updateMatrixWorld(true);const parts=[];
    for(const id of SC.PROPS){const rec=tile[id];for(const o of [rec.ownerRim,rec.plotSymbol,rec.baseSymbol,rec.seatBadge])if(o&&o.visible!==false&&(o!==rec.ownerRim||rec.owner>=0)&&(o!==rec.plotSymbol||rec.stage===0)&&(o!==rec.baseSymbol||rec.stage>0))parts.push(o);
     if(rec.building)rec.building.traverse(o=>{if(o.isMesh)parts.push(o)})}
    for(const o of parts)o.visible=true;dynMerged=mergeByMaterial(parts,{shadows:!!tier.shadows});scene.add(dynMerged);
@@ -377,7 +380,6 @@ export function create(canvas,{layout,spec,camera:cam0,tier:tierName=pickTier(),
   // remain untouched; Strategy View returns to the validated merged path.
   // Direct meshes also avoid a merged-multi-material limitation on low-end
   // Safari GPUs which made most city-preview architecture disappear.
-  const direct=!!model.cityShowcase;
   if(dynMerged)dynMerged.visible=!direct;
   for(const id of SC.PROPS){
    const b=tile[id].building;if(!b)continue;
