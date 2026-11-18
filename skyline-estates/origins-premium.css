@@ -1,0 +1,214 @@
+/* Skyline Origins — APPROVED-ART visual translation / development lab
+   Deliberately scoped; only activates inside the separate review iframe.
+   No edits to Classic rules, 40 tiles, saves, player inventory, native builds. */
+html.origins-premium-v1{
+ --origins-navy:#101f39;--origins-navy2:#1b304b;
+ --origins-gold:#f4c15d;--origins-deepgold:#ad7133;
+ --origins-ivory:#fff3dc;--origins-white:#fff9ee;
+ --origins-line:rgba(244,193,93,.76);
+ --origins-ruby:#d94846;--origins-teal:#128fb0;
+ color-scheme:dark;
+}
+html.origins-premium-v1 body{
+ background:radial-gradient(ellipse at 52% 8%,#396d83 0%,#1b4660 34%,#092239 80%,#07182e 100%)!important;
+ color:var(--origins-ivory);
+}
+html.origins-premium-v1 #gl{
+ filter:saturate(1.19) contrast(1.10) brightness(1.02);
+}
+html.origins-premium-v1 #ui{
+ text-shadow:0 1px 1px #07172885;
+}
+html.origins-premium-v1 #roster{
+ left:max(11px,env(safe-area-inset-left,0px));
+ top:max(50px,env(safe-area-inset-top,0px));
+ max-width:clamp(134px,18vw,228px);max-height:calc(100% - 93px);
+ gap:6px;padding:1px 4px 4px 2px;
+}
+html.origins-premium-v1 .pcard,
+html.origins-premium-v1 #roster .pcard{
+ background:linear-gradient(115deg,rgba(21,42,67,.98),rgba(13,28,50,.94))!important;
+ border:1px solid #d6ab648e!important;
+ border-radius:14px!important;
+ padding:5px 10px 5px 5px!important;
+ box-shadow:inset 0 1px 0 #ffffff18,0 5px 12px #0612248f!important;
+ color:var(--origins-ivory)!important;
+ min-width:0;
+}
+html.origins-premium-v1 .pcard.cur,
+html.origins-premium-v1 #roster .pcard.cur{
+ transform:translateX(3px) scale(1.01)!important;
+ border-color:var(--origins-gold)!important;
+ box-shadow:0 0 0 2px #f9c8598a,0 6px 15px #071629bb!important;
+}
+html.origins-premium-v1 #roster .pt{
+ border:2px solid #f8e7ba!important;
+ box-shadow:0 0 0 2px var(--pc),0 3px 6px #08182a!important;
+}
+html.origins-premium-v1 #roster .pn,
+html.origins-premium-v1 #roster .pc{
+ color:#fff1ce!important;text-shadow:0 1px 0 #071526;
+}
+html.origins-premium-v1 #roster .pc{
+ font-size:clamp(12px,1.25vw,18px);
+ font-variant-numeric:tabular-nums;
+}
+html.origins-premium-v1 #roster .pn{font-weight:900}
+html.origins-premium-v1 #roster .pg i{box-shadow:0 0 0 1px #f1cb78b8}
+html.origins-premium-v1 #tools{
+ top:max(8px,env(safe-area-inset-top,0px));
+ right:max(12px,env(safe-area-inset-right,0px));
+ flex-direction:row;gap:6px;z-index:5;
+}
+html.origins-premium-v1 #tools .tb{
+ width:38px;height:38px;border-radius:11px;
+ background:linear-gradient(135deg,#22374f,#0d1c33)!important;
+ color:var(--origins-ivory)!important;
+ border:1px solid var(--origins-line)!important;
+ box-shadow:inset 0 1px 0 #ffffff20,0 3px 0 #93622a!important;
+}
+html.origins-premium-v1 #tools .tb svg{width:19px;height:19px}
+html.origins-premium-v1 #tools .tb.on{background:linear-gradient(#ffde8b,#d69a3d)!important;color:#17263a!important}
+html.origins-premium-v1 #prompt{
+ top:max(8px,env(safe-area-inset-top,0px));
+ max-width:clamp(185px,37vw,365px);
+ padding:6px 11px;
+ border-radius:13px;
+ font-size:11px;
+ color:#fff0cf;
+ background:linear-gradient(110deg,#1d3854e8,#0c1b32e9)!important;
+ border:1px solid var(--origins-line);
+ box-shadow:0 5px 14px #05162694!important;
+}
+html.origins-premium-v1 #prompt .sub{color:#d2dbc9!important}
+html.origins-premium-v1 #round{
+ bottom:max(7px,env(safe-area-inset-bottom,0px));
+ left:max(12px,env(safe-area-inset-left,0px));
+ padding:5px 10px;border-radius:8px;font-size:11px;
+ background:linear-gradient(120deg,#1e3955,#111f34)!important;
+ border:1px solid #e7b96fa8!important;color:#ffebbe!important;
+ box-shadow:0 4px 10px #0412267c!important;
+}
+html.origins-premium-v1 #log{
+ bottom:max(9px,env(safe-area-inset-bottom,0px));
+ max-width:35vw;padding:7px 11px;
+ background:#142a45e5!important;
+ border:1px solid #e6c17a8a;border-radius:10px;color:#f9e9c5;
+ box-shadow:0 3px 9px #0611238a;
+}
+html.origins-premium-v1 #acts{
+ bottom:max(10px,env(safe-area-inset-bottom,0px));
+ right:max(14px,env(safe-area-inset-right,0px));
+ gap:6px;z-index:6;
+}
+html.origins-premium-v1 #acts .pills{gap:5px}
+html.origins-premium-v1 .pill,
+html.origins-premium-v1 #acts .pill{
+ font-size:11px;border-radius:10px;
+ padding:9px 11px;
+ background:linear-gradient(135deg,#213c5b,#0d2038)!important;
+ border:1px solid #e7bf77a3!important;
+ color:#fff4d7!important;
+ box-shadow:0 3px 0 #77542f!important;
+}
+html.origins-premium-v1 .pill.pri,
+html.origins-premium-v1 #acts .pill.pri{
+ background:linear-gradient(175deg,#ffe09a,#d39a3d)!important;
+ color:#152b3e!important;border:1px solid #ffe5a7!important;
+}
+html.origins-premium-v1 #acts .bigb:not(.end){
+ min-width:130px;width:clamp(130px,15vw,184px);
+ height:56px;padding:4px 12px;
+ display:flex;flex-direction:row;gap:9px;
+ border-radius:16px;border:2px solid #ffdf9a;
+ background:linear-gradient(160deg,#ef6766 0%,#ca2739 70%,#a41936 100%);
+ box-shadow:inset 0 2px 0 #ffd5ba98,0 4px 0 #8b2631,0 9px 18px #051529ad;
+ color:#fff9dc;font-size:13px;text-shadow:0 2px 0 #7b1e29;
+ animation:none;
+}
+html.origins-premium-v1 #acts .bigb:not(.end) svg{width:26px;height:26px;flex:none}
+html.origins-premium-v1 #acts .bigb.end{
+ min-width:116px;width:auto;height:48px;
+ border-radius:12px;font-size:12px;
+ border:2px solid #ead0a1;background:linear-gradient(#fff0b9,#dbaa53);
+}
+html.origins-premium-v1 #diceHud{
+ background:linear-gradient(110deg,#10263fed,#203a53f0)!important;
+ border:1px solid #f3d28f!important;
+ box-shadow:0 7px 20px #071a2b9c!important;
+ color:var(--origins-ivory);
+}
+html.origins-premium-v1 #diceHud b{color:#ffe5a1!important}
+html.origins-premium-v1 #toast.on{background:linear-gradient(130deg,#ffe3a0,#e3a640);border:1px solid #fff2c3;box-shadow:0 4px 0 #946324}
+html.origins-premium-v1 #modals .mp{
+ background:linear-gradient(160deg,#1c344e,#0f203a)!important;color:#ffeed3!important;
+ border:1px solid #ecc47e!important;box-shadow:0 15px 40px #020b19be!important;
+}
+html.origins-premium-v1 #modals .mh{color:#ffe2a4}
+html.origins-premium-v1 #modals .btn{background:#1a3b58;color:#fff0cd;border-color:#c79d62}
+html.origins-premium-v1 #modals .btn.pri{background:linear-gradient(#ffdf92,#d49b43);color:#182b3c}
+html.origins-premium-v1 .deed{color:#1b150c}
+html.origins-premium-v1 #originsPremiumMark{
+ pointer-events:none;position:fixed;top:max(8px,env(safe-area-inset-top,0px));
+ left:max(12px,env(safe-area-inset-left,0px));z-index:9;
+ color:#ffe8ab;background:linear-gradient(110deg,#0d2036e8,#233e54d9);
+ border:1px solid #e9be75aa;border-radius:11px;
+ box-shadow:inset 0 1px 0 #fff5d032,0 4px 14px #06152498;
+ padding:5px 10px 4px;text-shadow:0 2px 2px #050f1e;
+ font:900 11px/1.05 -apple-system,system-ui,Arial,sans-serif;
+ letter-spacing:1.15px;
+}
+html.origins-premium-v1 #originsPremiumMark small{
+ display:block;text-align:center;font:850 7px/1.2 system-ui,Arial,sans-serif;
+ color:#aee6ed;letter-spacing:1.55px;margin-top:3px;
+}
+html.origins-premium-v1 #originsPremiumStats{
+ position:fixed;z-index:7;right:max(12px,env(safe-area-inset-right,0px));top:56px;
+ width:clamp(135px,17vw,210px);padding:9px 10px;
+ background:linear-gradient(153deg,#182c48ec,#0a1932f0);
+ border:1px solid #f4c479b8;border-radius:13px;
+ box-shadow:inset 0 1px 0 #fff1c521,0 7px 19px #071525a8;
+ color:#fff2d8;font:600 10px/1.3 -apple-system,system-ui,Arial,sans-serif;
+}
+html.origins-premium-v1 #originsPremiumStats .orgStatsTitle{
+ color:#ffe39f;letter-spacing:1px;font-weight:1000;
+ border-bottom:1px solid #b08b5485;padding-bottom:6px;margin-bottom:5px;
+}
+html.origins-premium-v1 #originsPremiumStats .orgStatsRow{
+ display:flex;justify-content:space-between;align-items:center;gap:7px;
+ padding:3px 0;border-bottom:1px solid #ffffff12;
+}
+html.origins-premium-v1 #originsPremiumStats .orgStatsRow strong{
+ color:#e4f6ff;font-variant-numeric:tabular-nums;
+}
+html.origins-premium-v1 #originsPremiumStats .orgStatsRow:last-child{border-bottom:none}
+html.origins-premium-v1 #originsPremiumProgress{
+ position:fixed;z-index:7;left:50%;transform:translateX(-50%);
+ bottom:max(8px,env(safe-area-inset-bottom,0px));
+ pointer-events:none;
+ background:linear-gradient(120deg,#101d34dc,#203956ef);
+ border:1px solid #b9955fb3;border-radius:11px;
+ color:#f8dea0;font:800 9px/1 -apple-system,system-ui,Arial,sans-serif;
+ letter-spacing:.9px;padding:6px 11px;white-space:nowrap;
+ box-shadow:0 3px 12px #071527a6;
+}
+@media(max-height:500px) and (orientation:landscape){
+ html.origins-premium-v1 #roster{max-width:156px;top:47px;gap:3px;max-height:calc(100% - 90px)}
+ html.origins-premium-v1 #roster .pcard{padding:2px 6px 2px 3px!important;gap:5px}
+ html.origins-premium-v1 #roster .pt{width:29px;height:29px;font-size:16px}
+ html.origins-premium-v1 #roster .pn{font-size:9px;max-width:98px}
+ html.origins-premium-v1 #roster .pc{font-size:12px}
+ html.origins-premium-v1 #originsPremiumStats{top:56px;width:146px;padding:7px 8px;font-size:9px}
+ html.origins-premium-v1 #originsPremiumProgress{bottom:4px;max-width:30vw;overflow:hidden;text-overflow:ellipsis}
+ html.origins-premium-v1 #acts .bigb:not(.end){width:130px;height:50px;font-size:12px}
+ html.origins-premium-v1 #prompt{top:9px;max-width:36vw}
+}
+@media(max-height:390px){
+ html.origins-premium-v1 #originsPremiumStats{width:132px;top:52px}
+ html.origins-premium-v1 #roster{max-width:136px;top:42px}
+ html.origins-premium-v1 #originsPremiumProgress{display:none}
+ html.origins-premium-v1 #acts .bigb:not(.end){width:116px;height:46px}
+}
+@media(prefers-reduced-motion:reduce){
+ html.origins-premium-v1 #acts .bigb{animation:none!important;transition:none!important}
+}
