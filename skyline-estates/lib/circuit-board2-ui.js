@@ -15,6 +15,16 @@ const $=s=>document.querySelector(s),esc=t=>String(t).replace(/[&<>"']/g,c=>({'&
 // Approved V2 player identities (owner decision 17 Nov 2026): colour and shape, never colour alone.
 const PLAYERS=[{c:'#FF7A59',shape:'circle'},{c:'#4C7DFF',shape:'square'},{c:'#F8F6EF',shape:'triangle'},{c:'#E055C8',shape:'hex'}],COLORS=PLAYERS.map(p=>p.c),
  DISTRICT_NAMES=['Harbour Quarter','Civic Heights','Verdant Mile','Neon Exchange'],DISTRICT=[{c:'#2c8f86',sym:'●'},{c:'#7a5cc7',sym:'▲'},{c:'#c7703a',sym:'■'},{c:'#3a78c7',sym:'◆'}];
+// Real street names: Board 2 is a living board game, never a numbered simulator.
+const STREET={
+ O0:'Skyline Station',O1:'Marina Avenue',O2:'Ocean View',O3:'City Event',O4:'Seabreeze Drive',O5:'City Exchange',
+ O6:'City Centre',O7:'Sunrise Row',O8:'City Event',O9:'Grand Arcade',O10:'Grand Terminal',
+ O11:'Parkside Walk',O12:'Garden Boulevard',O13:'City Event',O14:'Maple Quay',O15:'Harbour Gateway',
+ O16:'Skyline Way',O17:'The Promenade',O18:'City Event',O19:'Rooftop Avenue',
+ I0:'Marina Link',I1:'Harbour Plaza',I2:'Pier Heights',I3:'Civic Link',I4:'Civic Crown',
+ I5:'Golden Mile',I6:'Garden Link',I7:'Canopy Square',I8:'Emerald Terrace',
+ I9:'Metro Link',I10:'Neon Towers',I11:'Lantern Lane'};
+const friendlyName=id=>STREET[id]||id;
 const LEVELS={easy:'Easy · picks routes at random',normal:'Normal · plans its routes',hard:'Hard · plans its routes (same as Normal in this alpha)'};
 const LENGTH_TEXT={standard:'Standard · target 300, up to 40 rounds',extended:'Extended · target 480, up to 60 rounds',quick:'Quick · experimental · target 200 · mastery XP only, never unlocks'};
 const REASON={'not-owned':'Not yours','max-stage':'Already a Skyscraper','one-stage-per-turn':'Already built this turn','bought-this-turn':'Bought this turn — build next turn',
@@ -188,15 +198,15 @@ function render(){if(!s)return;const v=SC.view(s),pd=v.pending,me=pd?s.players[p
  else if(pd&&pd.type==='roll'){// 1. plan and roll
   const pv=v.preview,fj=pv.firstJunction,chance=Math.round(100*pv[plan].junctionChance);
   h+=`<div class="cx-panel" data-state="roll"><h2>Your route</h2><div class="cx-seg" role="radiogroup" aria-label="Route plan"><button role="radio" aria-checked="${plan==='stay'}" data-plan="stay" class="cx-stay"><i aria-hidden="true"></i><span>Stay<small>on ring</small></span></button><button role="radio" aria-checked="${plan==='cross'}" data-plan="cross" class="cx-cross"><i aria-hidden="true"></i><span>Cross<small>by bridge</small></span></button></div>
-   <p>${fj?`First junction <b>${fj.node}</b>${fj.stepsAway?` · ${fj.stepsAway} step${fj.stepsAway===1?'':'s'}`:' · here'}`:''}</p><p class="cx-k">${chance?`Plan applies on ${chance}% of rolls. Dots show likely landings, not certainties.`:'No junction can be reached this roll — the plan has no effect.'}</p>
+   <p>${fj?`First junction <b>${esc(friendlyName(fj.node))}</b>${fj.stepsAway?` · ${fj.stepsAway} step${fj.stepsAway===1?'':'s'}`:' · here'}`:''}</p><p class="cx-k">${chance?`Plan applies on ${chance}% of rolls. Dots show likely landings, not certainties.`:'No junction can be reached this roll — the plan has no effect.'}</p>
    <button id="cx-roll" class="cx-primary"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><rect x="1.5" y="1.5" width="15" height="15" rx="3.5" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="6" cy="6" r="1.4" fill="currentColor"/><circle cx="12" cy="12" r="1.4" fill="currentColor"/><circle cx="9" cy="9" r="1.4" fill="currentColor"/></svg> Roll</button></div>`}
  else if(pd&&pd.type==='buy'){// 3. buy
   const n=v.nodes.find(x=>x.id===pd.node);
   const after=JSON.parse(JSON.stringify(s));after.own[pd.node]={o:pd.player,h:0};const sizeAfter=(SC.networks(after,pd.player).find(x=>x.props.includes(pd.node))||{size:1}).size;
-  h+=`<div class="cx-panel" data-state="buy"><h2>${symSvg(n.quadrant,16)} ${pd.node}</h2><p class="cx-k">${DISTRICT_NAMES[n.quadrant]}</p><p>Price ${pd.price} · rent ${Math.round(pd.price*.12)} at Plot${n.ring==='I'?' · inner ring (premium)':''}</p>
+  h+=`<div class="cx-panel" data-state="buy"><h2>${symSvg(n.quadrant,16)} ${esc(friendlyName(pd.node))}</h2><p class="cx-k">${DISTRICT_NAMES[n.quadrant]}</p><p>Price ${pd.price} · rent ${Math.round(pd.price*.12)} at Plot${n.ring==='I'?' · inner ring (premium)':''}</p>
    <p class="cx-k">${sizeAfter>1?`Joins a network of ${sizeAfter}.`:'Does not connect to your properties yet.'}</p><button id="cx-buy" class="cx-primary">Buy</button> <button id="cx-pass">Pass</button></div>`}
  else if(pd&&pd.type==='build'){// 4. build
-  const rows=v.build||[];h+=`<div class="cx-panel" data-state="build"><h2>Build</h2>${rows.length?rows.map(r=>`<div class="cx-b"><span class="cx-bn">${symSvg(SC.NODES.find(x=>x.id===r.node).quadrant)} ${r.node}${pips(r.stage)}</span>${r.reason?`<span class="cx-why">${esc(REASON[r.reason]||r.reason)}</span>`:`<button data-build="${r.node}">${SC.STAGES[r.stage+1]} · ${r.cost}</button>`}</div>`).join(''):'<p class="cx-k">You own no properties yet.</p>'}
+  const rows=v.build||[];h+=`<div class="cx-panel" data-state="build"><h2>Build</h2>${rows.length?rows.map(r=>`<div class="cx-b"><span class="cx-bn">${symSvg(SC.NODES.find(x=>x.id===r.node).quadrant)} ${esc(friendlyName(r.node))}${pips(r.stage)}</span>${r.reason?`<span class="cx-why">${esc(REASON[r.reason]||r.reason)}</span>`:`<button data-build="${r.node}">${SC.STAGES[r.stage+1]} · ${r.cost}</button>`}</div>`).join(''):'<p class="cx-k">You own no properties yet.</p>'}
    <button id="cx-end" class="cx-primary">End turn</button></div>`}
  // 8. end of round tally
  if(tally)h+=`<div class="cx-tally" data-state="round"><b>Round ${tally.round} influence</b>${tally.tally.map(t=>`<div>${tokSvg(t.pid)} +${t.total} <span class="cx-k">(${t.properties} properties · ${t.networks} networks · ${t.districts} districts)</span></div>`).join('')}</div>`;
@@ -209,7 +219,7 @@ function render(){if(!s)return;const v=SC.view(s),pd=v.pending,me=pd?s.players[p
    <div class="b2-orbit" aria-label="3D camera controls"><button id="b2-left" title="Orbit left">↶</button><button id="b2-right" title="Orbit right">↷</button>
    <button id="b2-zoom-out" title="Zoom out">−</button><button id="b2-zoom-in" title="Zoom in">+</button></div>
    <p class="cx-k" id="b2-camera-readout">Orbit ${Math.round(orbitYaw)}° · zoom ${cityDistance.toFixed(1)}</p>
-   <div class="b2-spotlight" role="status">${node?`<b>${esc(node.name||node.id)}</b>
+   <div class="b2-spotlight" role="status">${node?`<b>${esc(friendlyName(node.id))}</b>
     <p>${esc(DISTRICT_NAMES[node.quadrant])} · ${node.type==='property'?`${esc(node.stageName)} · Price SC ${node.price} · ${node.owner<0?'Unowned':esc(name(node.owner))}`:esc(node.type)}</p>`:'<b>Select a street or property</b><p>Watch it light up and inspect its ownership, stage and district.</p>'}</div></div>`;
  }
  if(R3)h+=`<div class="cx-sect"><button id="cx-city-view" aria-pressed="${cityReview}" title="${cityReview?'Return to decisions':'Explore interactive 3D city'}">${cityReview?'← Strategy View':'Explore 3D City'}</button></div>`;
@@ -249,7 +259,7 @@ document.addEventListener('DOMContentLoaded',()=>{setupScreen();const cv=$('#cx-
   if(d.moved>6)return;const now=performance.now(),dbl=now-lastTap<300;lastTap=now;
   if(zf&&!zoom){if(!(camCur&&camCur.pitch!==cam.pitch))setZoomFocus({x:e.clientX,y:e.clientY});return}   // overview: a tap opens the zoom there
   if(zoom&&dbl){overview();return}
-  const id=hit(e.clientX,e.clientY);if(id){notes.unshift({t:`${id}: ${describe(id)}`,kind:'inspect'});notes=notes.slice(0,6);render()}})});
+  const id=hit(e.clientX,e.clientY);if(id){notes.unshift({t:`${friendlyName(id)}: ${describe(id)}`,kind:'inspect'});notes=notes.slice(0,6);render()}})});
 function describe(id){const n=SC.view(s).nodes.find(x=>x.id===id);if(n.type!=='property')return n.type==='junction'?`junction, connector to ${n.link}`:'event space';return `${n.owner>=0?name(n.owner):'Bank'} · ${n.stageName} · rent ${n.rent||Math.round(n.price*.12)}`}
 // Test and measurement hooks (no effect on the match).
 window.__circuitBoard2=Object.freeze({orbit:()=>orbitYaw,city:()=>cityReview,selected:()=>citySelection,zoom:()=>cityDistance,saveKey:BOARD2_SAVE,orbitBy:cityOrbit,inspect:cityInspect});
