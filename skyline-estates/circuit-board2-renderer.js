@@ -335,12 +335,30 @@ export function create(canvas,{layout,spec,camera:cam0,tier:tierName=pickTier(),
   inst(new THREE.BoxGeometry(1,1,1),new THREE.MeshStandardMaterial({color:'#B88E68',roughness:.87}),benches,{pick:false});
   inst(new THREE.BoxGeometry(1,1,1),new THREE.MeshStandardMaterial({color:'#F8E0BA',roughness:.82}),seats,{pick:false})}
  // bridges: one hop, no stopping tile; ivory light strips
- const bridgeTruss=new THREE.MeshStandardMaterial({color:P.ivory,roughness:.45,metalness:.2}),bridgeMat=new THREE.MeshStandardMaterial({color:'#607F82',roughness:.7}),lightMat=new THREE.MeshStandardMaterial({color:P.ivory,emissive:'#FFE7B0',emissiveIntensity:tier.glow?1.6:.9});
+ const bridgeTruss=new THREE.MeshStandardMaterial({color:'#F5D495',roughness:.3,metalness:.55,emissive:'#B77B34',emissiveIntensity:.23}),bridgeMat=new THREE.MeshStandardMaterial({color:'#A9D6DA',roughness:.37,metalness:.12}),lightMat=new THREE.MeshStandardMaterial({color:P.ivory,emissive:'#FFE7B0',emissiveIntensity:tier.glow?1.6:.9});
  for(const [a,b] of Object.entries(SC.LINKS))if(a[0]==='O'){const p=G.nodes[a],q=G.nodes[b],len=Math.hypot(q.x-p.x,q.y-p.y),ang=Math.atan2(q.y-p.y,q.x-p.x),mx=(p.x+q.x)/2,my=(p.y+q.y)/2;
   const deck=new THREE.Mesh(new THREE.BoxGeometry(len,1.6,T*.42),bridgeMat);deck.position.set(mx,1,my);deck.rotation.y=-ang;deck.receiveShadow=deck.castShadow=!!tier.shadows;env.add(deck);
   for(const s of [-1,1]){const l=new THREE.Mesh(new THREE.BoxGeometry(len*.98,.8,.7),lightMat);l.position.set(mx-Math.sin(ang)*s*T*.2,2.1,my+Math.cos(ang)*s*T*.2);l.rotation.y=-ang;env.add(l);
    // low arched truss beside the deck (below token height, outside the tiles)
-   const arch=new THREE.Mesh(new THREE.TorusGeometry(len*.36,.45,6,16,Math.PI),bridgeTruss);arch.scale.set(1,.16,1);arch.position.set(mx-Math.sin(ang)*s*T*.23,1.4,my+Math.cos(ang)*s*T*.23);arch.rotation.y=-ang;arch.userData.pick={kind:4,i:0};env.add(arch)}}
+   const arch=new THREE.Mesh(new THREE.TorusGeometry(len*.36,.45,6,16,Math.PI),bridgeTruss);arch.scale.set(1,.16,1);arch.position.set(mx-Math.sin(ang)*s*T*.23,1.4,my+Math.cos(ang)*s*T*.23);arch.rotation.y=-ang;arch.userData.pick={kind:4,i:0};env.add(arch)}
+  // An authentic pair of illuminated arch girders rises over the real
+  // connection. The route itself remains the same, and the arches are
+  // non-selectable decorative 3D rather than new playable intersections.
+  const ux=(q.x-p.x)/len,uz=(q.y-p.y)/len;
+  const over=new THREE.MeshStandardMaterial({color:'#D9F3F0',transparent:true,
+    opacity:.32,metalness:.2,roughness:.19,depthWrite:false,side:THREE.DoubleSide});
+  const roof=new THREE.Mesh(new THREE.BoxGeometry(len*.84,.26,T*.31),over);
+  roof.position.set(mx,7.25,my);roof.rotation.y=-ang;env.add(roof);
+  for(const side of [-1,1]){
+   const crossX=-uz*side*T*.22,crossZ=ux*side*T*.22;
+   const archCurve=new THREE.QuadraticBezierCurve3(
+    new THREE.Vector3(p.x+ux*len*.09+crossX,2.45,p.y+uz*len*.09+crossZ),
+    new THREE.Vector3(mx+crossX,10.75,my+crossZ),
+    new THREE.Vector3(q.x-ux*len*.09+crossX,2.45,q.y-uz*len*.09+crossZ));
+   const archRib=new THREE.Mesh(new THREE.TubeGeometry(archCurve,22,.24,6,false),bridgeTruss);
+   archRib.userData.circuitBridgeArch=true;env.add(archRib);
+  }
+ }
  // static environment meshes → merged by material (instanced meshes stay instanced; occluder proxies kept for the ID pass)
  scene.updateMatrixWorld(true);{const plain=env.children.filter(o=>o.isMesh&&!o.isInstancedMesh&&o!==water);const merged=mergeByMaterial(plain,{shadows:!!tier.shadows});merged.traverse(o=>{if(o.isMesh){o.receiveShadow=!!tier.shadows}});env.add(merged);
   for(const o of plain){if(o.userData.pick){o.visible=false;o.userData.pickOnly=true}else env.remove(o)}}
