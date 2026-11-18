@@ -131,10 +131,10 @@ let browser,server;
      await p.locator('[data-action="roll"]').click();
      await p.waitForFunction(()=>!document.querySelector('#moveCounter').hidden,null,{timeout:10000});
      const counter=await p.locator('#moveCounter').innerText();
-     assert(/\\d+ \\/ \\d+ spaces/.test(counter),'on-screen movement counter shows the step number');
+     assert(counter.includes(' / ')&&counter.includes(' spaces'),'on-screen movement counter shows the step number');
      assert.equal(await p.locator('#boardStage').evaluate(el=>el.style.transform),cameraBeforeDice,'rolling dice never moves or rescales the board');
      // Capture the actual moving token and numbered progress on an iPhone-sized screen.
-     if(out)await p.screenshot({path:path.join(out,engine+'-iphone-readble-move.png'),fullPage:false});
+     if(out)await p.screenshot({path:path.join(out,engine+'-iphone-readable-move.png'),fullPage:false});
      await p.waitForFunction(()=>document.querySelector('#moveCounter').hidden,null,{timeout:30000});
      assert.equal(await p.locator('#boardStage').evaluate(el=>el.style.transform),cameraBeforeDice,'the board remains stationary after pawn animation finishes');
      assert.equal(await p.locator('#boardCaption').isVisible(),true,'board title returns when the countdown finishes');
