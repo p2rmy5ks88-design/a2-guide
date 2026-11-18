@@ -33,6 +33,56 @@
   }
   return true;
  }
+ function deepenActualScene(){
+  if(!isReady())return false;
+  // Skyline's existing Surround system can override theme colours after
+  // applyTheme(). Correct the real Node materials AFTER that cascade.
+  // This avoids the pale peach giant island seen in the first Retina render.
+  S3.islandMat.c=hex('#244657');S3.rimMat.c=hex('#c8a168');
+  S3.slabMat.c=hex('#82522e');S3.trimMat.c=hex('#3d271b');
+  S3.waterMat.c=hex('#0c5076');S3.waterMat.spec=.52;
+  if(S3.groundNear&&S3.groundNear.visible)S3.groundNear.mat.c=hex('#2c5263');
+  if(S3.groundFar&&S3.groundFar.visible)S3.groundFar.mat.c=hex('#193949');
+  return true;
+ }
+ function paintPremiumCityGround(){
+  if(!isReady()||!S3.boardCanvas||S3.originsPremiumGroundPainted)return false;
+  const ctx=S3.boardCanvas.getContext('2d'),scale=ctx.canvas.width/1100;
+  ctx.save();ctx.setTransform(scale,0,0,scale,0,0);
+  // All textures remain inside the validated 40-space perimeter (252–848).
+  const turf=ctx.createLinearGradient(250,250,840,850);
+  turf.addColorStop(0,'#327c59');turf.addColorStop(.55,'#397f4d');turf.addColorStop(1,'#235e43');
+  ctx.fillStyle=turf;ctx.fillRect(254,254,592,592);
+  // A fine gold / limestone waterfront city street network, under the
+  // existing real 3D buildings. No heavy title painted across the plaza.
+  ctx.fillStyle='#9b9b89';ctx.fillRect(520,254,54,592);
+  ctx.fillRect(254,508,592,45);
+  ctx.fillStyle='#d9bd83';ctx.fillRect(516,254,5,592);ctx.fillRect(573,254,5,592);
+  ctx.fillRect(254,503,592,5);ctx.fillRect(254,553,592,5);
+  ctx.strokeStyle='#fff2d580';ctx.lineWidth=2;ctx.setLineDash([13,16]);
+  ctx.beginPath();ctx.moveTo(548,260);ctx.lineTo(548,841);
+  ctx.moveTo(260,530);ctx.lineTo(842,530);ctx.stroke();ctx.setLineDash([]);
+  // Civic garden and lagoon terrace: deep teal water and warm-metal edging.
+  ctx.fillStyle='#d6b574';ctx.beginPath();ctx.ellipse(550,565,164,126,0,0,Math.PI*2);ctx.fill();
+  const water=ctx.createLinearGradient(445,470,640,650);
+  water.addColorStop(0,'#249db0');water.addColorStop(1,'#0c5275');
+  ctx.fillStyle=water;ctx.beginPath();ctx.ellipse(550,565,146,108,0,0,Math.PI*2);ctx.fill();
+  ctx.lineWidth=4;ctx.strokeStyle='#ffdf9d';ctx.stroke();
+  ctx.strokeStyle='#b7ece9c2';ctx.lineWidth=2;
+  for(let k=0;k<9;k++){
+   const y=490+k*16;ctx.beginPath();ctx.moveTo(467+k*2,y);
+   ctx.quadraticCurveTo(538,y-8,626-k,y);ctx.stroke();
+  }
+  // Pavement stones and pocket landscaping, from a deterministic pattern.
+  for(let i=0;i<70;i++){
+   const x=273+(i*151%565),y=274+(i*223%560);
+   if(Math.abs(x-550)<83||Math.abs(y-530)<68)continue;
+   ctx.fillStyle=i%3?'#4ca0655c':'#e7c88d47';
+   ctx.beginPath();ctx.arc(x,y,2.5+(i%5),0,Math.PI*2);ctx.fill();
+  }
+  ctx.restore();texUpdate(S3.boardTex);S3.originsPremiumGroundPainted=true;
+  return true;
+ }
  function addArchitecture(){
   if(!isReady()||!S3.centers||!S3.centers.beach)return 0;
   const group=S3.centers.beach;if(group.originsPremiumAdded)return group.originsPremiumCount||0;
@@ -148,6 +198,7 @@
   }
   // A real game should select its own edition as before. This showcase only
   // recolours the established Lagos beach edition, not other editions.
+  deepenActualScene();paintPremiumCityGround();
   const b=addArchitecture();stats();return{ready:true,buildings:b,boardCount:40};
  }
  function queueRefresh(){
