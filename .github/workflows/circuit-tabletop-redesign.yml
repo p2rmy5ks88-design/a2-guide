@@ -5,6 +5,11 @@ on:
       - 'skyline-estates/circuit-tabletop-lab.html'
       - 'skyline-estates/circuit-tabletop-life.css'
       - 'skyline-estates/circuit-tabletop-life.js'
+      - 'skyline-estates/lib/career.js'
+      - 'skyline-estates/build.py'
+      - 'skyline-estates/offline-assets.js'
+      - 'skyline-estates/sw.js'
+      - 'skyline-estates/tests/circuit-board1-release.cjs'
       - 'skyline-estates/tests/circuit-tabletop-browser.cjs'
       - '.github/workflows/circuit-tabletop-redesign.yml'
   workflow_dispatch:
@@ -23,6 +28,10 @@ jobs:
         run: |
           node --check skyline-estates/tests/circuit-tabletop-browser.cjs
           node --check skyline-estates/circuit-tabletop-life.js
+      - name: Verify Career launch and offline release manifest
+        run: |
+          node skyline-estates/tests/circuit-board1-release.cjs
+          python3 skyline-estates/build.py --check
       - name: Confirm Classic and Circuit rules remain present
         run: |
           test -f skyline-estates/game.html
