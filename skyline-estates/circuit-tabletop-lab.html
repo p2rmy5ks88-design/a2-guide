@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#132338">
-<title>Skyline Estates — Circuit Tabletop Rebuild</title>
+<title>Skyline Estates — Circuit Living Board</title>
 <style>
 :root{--navy:#12233b;--cream:#fff0d2;--gold:#efbd56;--ink:#26313e;--wood:#8d4f2a;--burnt:#d97049;--mint:#4bb9a2;--shadow:0 10px 28px #050c19a8;font-family:system-ui,-apple-system,Segoe UI,sans-serif}
 *{box-sizing:border-box}
@@ -132,7 +132,7 @@ button:disabled{opacity:.46;cursor:default}
 #selectedCard .badges span{background:#31546a;padding:3px 7px;border-radius:8px;color:#e9f3eb;font-size:10px;font-weight:850}
 .buildList{max-height:clamp(105px,28vh,200px);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:0 5px 7px 0}
 #topRibbon{position:absolute;top:9px;left:50%;transform:translateX(-50%);padding:5px 17px;border-radius:20px;background:#0d2239c7;border:1px solid #edc7786b;z-index:48;font-size:11px;letter-spacing:1.1px;font-weight:900;color:#ffe3a5;pointer-events:none}
-#previewMark{position:absolute;bottom:7px;right:10px;z-index:30;font-size:9px;color:#fff6ceae;font-weight:800;letter-spacing:.7px}
+#previewMark{position:absolute;bottom:7px;left:10px;z-index:70;font-size:10px;color:#fff4ce;font-weight:850;letter-spacing:.45px;text-decoration:none;pointer-events:auto;cursor:pointer;padding:5px 7px;border:1px solid #d9bc8570;border-radius:8px;background:#132c43cf}#previewMark:focus-visible{outline:2px solid #ffe8ad;outline-offset:2px}
 #dice{display:flex;justify-content:center;gap:8px;margin:10px 0 6px}
 .die{background:#fff4db;color:#123050;width:35px;height:35px;display:grid;place-items:center;border:2px solid #aa8153;border-radius:7px;box-shadow:3px 4px 0 #73553d;font-size:24px;font-weight:950}
 #controlsInfo{font-size:10px;color:#c0d2cf;margin-top:9px;text-align:center}
@@ -151,7 +151,7 @@ button:disabled{opacity:.46;cursor:default}
    <div id="tiles"></div><div class="tokenDock" id="tokens"></div></div>
   </div>
  </div>
- <div id="topRibbon">SKYLINE ESTATES · CIRCUIT TABLETOP</div>
+ <div id="topRibbon">SKYLINE CIRCUIT · LIVING CITY</div>
  <aside id="hud"><div class="hudCard"><div class="hudBrand">SKYLINE ESTATES</div><div class="hudSmall" id="activeLabel">YOUR TURN</div><div id="activeName">You</div><div id="activeCash">SC 1,500</div><div id="roundStamp">Round 1</div><div id="roster"></div></div><div id="hudActions"><button class="miniBtn" id="zoomOut" title="Zoom out">− Zoom</button><button class="miniBtn" id="zoomIn" title="Zoom in">+ Zoom</button><button class="miniBtn" id="centerBtn">Center</button></div><div id="viewActions"><button class="miniBtn" id="detailBtn" aria-pressed="false" title="Zoom in to a selected property">Inspect</button><button class="miniBtn" id="overviewBtn" title="Restore whole-board camera">Full board</button><button class="miniBtn" id="matchBtn" title="Configure a new Circuit match">Match</button></div></aside>
  <aside id="actionSide"><div id="actionCard" aria-live="polite"></div><div id="selectedCard"></div></aside>
  <div id="matchSetup" role="dialog" aria-modal="true" aria-labelledby="matchSetupTitle" hidden><div id="matchSetupPanel">
@@ -163,7 +163,7 @@ button:disabled{opacity:.46;cursor:default}
  </div><p>*Hard currently uses the same route planning as Normal. Quick is experimental.</p>
  <div class="matchButtons"><button type="button" id="matchCancel" class="secondary">Keep playing</button><button type="submit" id="matchStart">Start new match</button></div></form>
  </div></div>
- <div id="eventToast" role="status"></div><div id="previewMark">INTERACTIVE REDESIGN LAB · NOT THE LIVE GAME</div>
+ <div id="eventToast" role="status"></div><a id="previewMark" href="./index.html" aria-label="Return to Skyline Estates">← SKYLINE ESTATES</a>
 </div>
 <script src="./lib/circuit-rules.js"></script>
 <script src="./circuit-tabletop-life.js"></script>
