@@ -251,7 +251,8 @@ function render(){if(!s)return;const v=SC.view(s),pd=v.pending,me=pd?s.players[p
    </div>`;
  }
  if(R3)h+=`<div class="cx-sect"><button id="cx-city-view" aria-pressed="${cityReview}" title="${cityReview?'Return to decisions':'Explore interactive 3D city'}">${cityReview?'← Strategy View':'Explore 3D City'}</button></div>`;
- const A=$('#cx-actions');if(A.dataset.h!==h){A.innerHTML=h;A.dataset.h=h;wire()}}
+ const A=$('#cx-actions');A.classList.toggle('b2-city-mode',cityReview);
+ if(A.dataset.h!==h){A.innerHTML=h;A.dataset.h=h;wire()}}
 function wire(){const on=(sel,f)=>{const e=$(sel);if(e)e.onclick=f};
  on('#cx-city-view',()=>{if(!R3)return;cityReview=!cityReview;if(cityReview&&zoom)overview();
   if(!cityReview){citySelection=null;orbitYaw=0;previewStage=-1;cityShowcase=false;stagesOverride=null;R3.setOrbitYaw(0);R3.setSpotlight(null);camCur={...cam};R3.setCamera(camCur);C=R3.C}
