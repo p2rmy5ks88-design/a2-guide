@@ -119,6 +119,23 @@ const types={'.html':'text/html','.css':'text/css','.js':'text/javascript','.jso
    assert(markerLayout.noOverlap,'grouped token labels must not overlap: '+JSON.stringify(markerLayout));
    assert(markerLayout.inViewport,'all player labels fit within landscape: '+JSON.stringify(markerLayout));
    checks+=3;
+   const boardFrame=await subframe.evaluate(()=>{
+    const m=CAMM.vp,cv=document.querySelector('#gl'),r=cv.getBoundingClientRect();
+    const corners=[];
+    for(const x of [-6.3,6.3])for(const z of [-6.3,6.3]){
+     const a=m[0]*x+m[8]*z+m[12],b=m[1]*x+m[9]*z+m[13],
+      w=m[3]*x+m[11]*z+m[15];
+     corners.push({x:r.left+(a/w+1)*.5*r.width,
+      y:r.top+(1-b/w)*.5*r.height});
+    }
+    return {mode:camMode,target:camT.L,actual:camS.L,corners,
+     fullPerimeter:corners.every(p=>p.x>=5&&p.x<=innerWidth-5&&
+       p.y>=6&&p.y<=innerHeight-8)};
+   });
+   assert.equal(boardFrame.mode,'board','Origins default is a stable full-perimeter strategy camera');
+   assert(boardFrame.fullPerimeter,'all four original board corners fit on iPhone Safari: '+JSON.stringify(boardFrame));
+   assert(Math.abs(boardFrame.target-20.4)<.15,'default 3D camera should not revert to clipped overview: '+JSON.stringify(boardFrame));
+   checks+=3;
    const cover=await subframe.evaluate(()=>{
     const r1=document.querySelector('#roster').getBoundingClientRect(),
       r2=document.querySelector('#originsPremiumStats').getBoundingClientRect(),
