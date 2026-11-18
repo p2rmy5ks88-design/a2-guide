@@ -44,6 +44,17 @@ let browser,server;
    await p.locator('#zoomIn').click();const after=await p.locator('#boardStage').getAttribute('style');
    assert.notEqual(after,before,'board zoom is functional');
    if(out){fs.mkdirSync(out,{recursive:true});await p.screenshot({path:path.join(out,engine+'-'+vp.id+'-tabletop.png'),fullPage:false})}
+   if(out&&vp.id==='iphone'){
+     const beforeCity=await p.evaluate(()=>{
+       const state=__circuitTabletop.state(),save=JSON.stringify(state.own);
+       for(const id of SkylineCircuit.PROPS){const node=SkylineCircuit.NODES.find(n=>n.id===id);
+         state.own[id]={o:node.quadrant,h:4};}
+       __circuitTabletop.select('O1');return save;
+     });
+     assert.equal(await p.locator('.model.level4').count(),20,'20 physical skyline pieces visible in populated preview');
+     await p.screenshot({path:path.join(out,engine+'-'+vp.id+'-all-buildings.png'),fullPage:false});
+     await p.evaluate(snapshot=>{__circuitTabletop.state().own=JSON.parse(snapshot);__circuitTabletop.select('O1')},beforeCity);
+   }
    if(vp.id==='iphone'){
      await p.locator('[data-action="cross"]').click();
      const phase=await p.evaluate(()=>__circuitTabletop.state().phase);
