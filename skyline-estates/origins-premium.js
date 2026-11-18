@@ -101,13 +101,15 @@
    deep=mat('#224f70',{spec:.75,em:.12}),sand=mat('#bba588'),
    nav=mat('#f1e4ca',{spec:.7}),windowLight=mat('#f8d391',{em:.65,unlit:1}),
    leaf=mat('#2d6c55'),lamp=mat('#edc174',{em:.6,unlit:1});
-  // Harbours on the upper background; realistic water stays clear around
-  // the foreground board. Lightweight mesh budget for mobile Safari.
+  // Keep the upper harbour inside the landscape frame: the previous taller
+  // waterfront towers clipped above the actual iPhone viewport. The adjusted
+  // lower, near-shore silhouette leaves clear water between the two districts.
+  // Keep the mobile Safari mesh budget small.
   let count=0;
   // One continuous shoreline connects the miniature city blocks. A detached
   // row of three hovering rectangles looked like a UI diorama, not the
   // waterfront metropolis in the approved visual reference.
-  const shore=new Node().at(0,-.90,-10.35);
+  const shore=new Node().at(0,-.90,-9.55);
   shore.add(N(g.box,quayMat,0,.05,0).sc(21.2,.12,2.4));
   shore.add(N(g.box,pier,0,.145,1.13).sc(21.2,.07,.18));
   shore.add(N(g.box,deep,0,.11,-1.12).sc(21.2,.08,.11));
@@ -117,13 +119,13 @@
    shore.add(N(g.sph,lamp,x,.61,1.05).sc(.075));
   }
   group.add(shore);
-  for(const [k,x,z] of [[0,-8.2,-10.1],[1,0,-10.8],[2,8.2,-10.1]]){
+  for(const [k,x,z] of [[0,-8.2,-9.30],[1,0,-10.0],[2,8.2,-9.30]]){
    const q=new Node().at(x,-.90,z).sc(.55);
    q.add(N(g.box,quayMat,0,.14,0).sc(4.55,.23,3.4));
    q.add(N(g.box,pier,0,.27,1.44).sc(4.5,.085,.35));
    q.add(N(g.box,sand,0,.27,-1.42).sc(4.5,.08,.35));
    for(let j=0;j<5;j++){
-    const xx=-1.78+j*.89,height=1.8+((j*7+k*5)%4)*.68,width=.57+((j+k)%2)*.1;
+    const xx=-1.78+j*.89,height=1.45+((j*7+k*5)%4)*.48,width=.57+((j+k)%2)*.1;
     const tower=new Node().at(xx,.28,-.35);
     tower.add(N(g.box,j%3===0?nav:deep,0,height/2,0).sc(width,height,.72));
     // Golden windows on two real façades.
