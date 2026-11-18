@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#132338">
+<title>Skyline Estates — Circuit Tabletop Rebuild</title>
+<style>
+:root{--navy:#12233b;--cream:#fff0d2;--gold:#efbd56;--ink:#26313e;--wood:#8d4f2a;--burnt:#d97049;--mint:#4bb9a2;--shadow:0 10px 28px #050c19a8;font-family:system-ui,-apple-system,Segoe UI,sans-serif}
+*{box-sizing:border-box}
+html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#11223c;color:#f7f1e7;-webkit-tap-highlight-color:transparent}
+button{font:inherit;cursor:pointer;touch-action:manipulation}
+button:disabled{opacity:.46;cursor:default}
+#game{position:relative;width:100%;height:100%;overflow:hidden;background:radial-gradient(ellipse at 51% 35%,#6d9f78 0,#598769 25%,#2b584b 49%,#102739 88%);isolation:isolate}
+#game:before{position:absolute;inset:0;content:"";background:repeating-linear-gradient(124deg,transparent 0 90px,#ffffff05 90px 92px),radial-gradient(circle at 20% 85%,#e5ac6a2c,transparent 58%);pointer-events:none}
+#tableViewport{position:absolute;inset:0;perspective:1500px;overflow:hidden;touch-action:none;cursor:grab}
+#tableViewport.dragging{cursor:grabbing}
+#boardStage{position:absolute;left:50%;top:50%;width:720px;height:720px;transform-origin:50% 50%;will-change:transform}
+#board{position:absolute;inset:0;border:17px solid #b9793c;border-radius:21px;background:linear-gradient(138deg,#e7c493 0,#ffe4b6 33%,#efd0a0 72%,#bf925d 100%);box-shadow:0 17px 0 #633d2d,0 27px 0 #392723,0 34px 50px #000b, inset 0 0 0 6px #f9e5b4,inset 0 0 0 11px #7e4a32}
+#board:before{position:absolute;inset:11px;content:"";pointer-events:none;border:4px double #d6a758;border-radius:4px;box-shadow:inset 0 0 0 2px #8f6543}
+#board:after{position:absolute;inset:-19px;content:"";pointer-events:none;border:4px solid #eab762;border-radius:25px;box-shadow:0 1px 0 #fbe2a5}
+#innerGarden{position:absolute;left:274px;top:274px;width:172px;height:172px;border:8px solid #a78556;border-radius:8px;background:radial-gradient(ellipse at 50% 47%,#50a283 0 17%,#267b77 18% 26%,#d9c6a4 27% 31%,#8bba75 32% 67%,#4e8d4f 68%);box-shadow:0 7px 5px #261d1594,inset 0 0 0 4px #f8e5bb}
+#innerGarden:after{content:"";position:absolute;left:47px;top:46px;width:62px;height:62px;border:4px solid #f7e0a5;border-radius:50%;background:radial-gradient(circle,#d2f9f4 0 16%,#44a8bb 18% 58%,#1b6986 60%);box-shadow:0 3px 9px #12303a99}
+#parkLogo{position:absolute;top:280px;left:280px;width:160px;text-align:center;z-index:2;pointer-events:none}
+#parkLogo b{display:block;font-size:22px;letter-spacing:2px;color:#fff4ce;text-shadow:0 3px 5px #123c30,1px 1px #153228}
+#parkLogo small{font-size:12px;letter-spacing:4px;color:#ffffe1;text-shadow:0 2px 4px #163128;font-weight:900}
+#parkTrees{position:absolute;left:278px;top:278px;width:165px;height:165px;pointer-events:none}
+.tree{position:absolute;width:23px;height:23px;border-radius:50%;background:radial-gradient(circle at 32% 28%,#b5d766,#3e904e 55%,#1f5c39 80%);box-shadow:5px 7px 1px #0c412445,0 2px 0 3px #3b5536}
+.tree:nth-child(1){left:9px;top:9px}.tree:nth-child(2){right:11px;top:11px}.tree:nth-child(3){left:11px;bottom:10px}.tree:nth-child(4){right:11px;bottom:10px}
+.street{position:absolute;inset:0;pointer-events:none;background:linear-gradient(#ba8d5c00,#cb9a6a17);border-radius:12px}
+.skybridge{position:absolute;background:#50717d;border:3px solid #efdfb5;box-shadow:0 5px 0 #36516c,inset 0 0 0 3px #345f79;opacity:.9;pointer-events:none}
+.skybridge.h{width:96px;height:18px}.skybridge.v{height:96px;width:18px}
+#bridgeTL{left:106px;top:185px;transform:rotate(45deg)}#bridgeTR{right:106px;top:185px;transform:rotate(-45deg)}
+#bridgeBR{right:106px;bottom:185px;transform:rotate(45deg)}#bridgeBL{left:106px;bottom:185px;transform:rotate(-45deg)}
+.tile{position:absolute;width:107px;height:107px;transform:translate(-50%,-50%);overflow:visible;border:2px solid #bb9b6f;border-radius:4px;background:linear-gradient(145deg,#fff6df 0,#f4dec0 62%,#d2ad7e 100%);box-shadow:1px 3px 0 #aa784a,3px 6px 0 #75492d,4px 9px 9px #2e271c7d;user-select:none;color:#263243;transition:filter .16s,border-color .16s;outline:0;touch-action:none}
+.tile:before{content:"";position:absolute;inset:4px;border:1px solid #cab58f;border-radius:2px;pointer-events:none}
+.tile:hover,.tile:focus-visible{filter:brightness(1.08);z-index:8}
+.tile.selected{border:3px solid #fff0a3;box-shadow:0 0 0 3px #cc873f,2px 5px 0 #9a5d35,0 9px 16px #151e2980;z-index:12}
+.tile.current{box-shadow:0 0 0 3px #e9aa36,2px 5px 0 #7c4f25,0 9px 19px #152420a3}
+.tile .stripe{position:absolute;top:0;left:0;right:0;height:13px;background:var(--district);border-bottom:2px solid #d7b67a;box-shadow:inset 0 2px #ffffff3b;border-radius:1px}
+.tile .name{position:absolute;left:6px;right:6px;top:18px;height:32px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:11px;line-height:1.05;font-weight:900;letter-spacing:.15px;text-transform:uppercase;text-shadow:0 1px #fff9eb}
+.tile .price{position:absolute;bottom:5px;left:3px;right:3px;text-align:center;font-size:13px;font-weight:950;letter-spacing:-.3px;color:#1c2735;text-shadow:0 1px #fff5cf}
+.tile .stamp{position:absolute;right:5px;top:53px;font-size:9px;font-weight:900;color:#51605c}
+.tile .lot{position:absolute;left:50%;top:55px;transform:translateX(-50%);width:48px;height:27px;background:linear-gradient(#c1dd9d,#70b381);border:2px solid #e3cba1;box-shadow:0 2px #376d4e,1px 4px #294e3b66;border-radius:2px}
+.tile .lot:after{content:"";position:absolute;left:16px;top:6px;width:15px;height:15px;border-radius:50%;background:#2b7959;box-shadow:2px 2px #15563f}
+.tile.special{background:linear-gradient(135deg,#e3eed8,#bbd7c2 54%,#77ac9b)}
+.tile.special .stripe{background:linear-gradient(90deg,#2f7290,#68b9b2)}
+.tile.special .name{top:34px;font-size:12px}
+.tile.special .specialIcon{position:absolute;left:0;right:0;top:13px;text-align:center;font-size:24px;text-shadow:1px 3px #12425230}
+.tile.event{background:linear-gradient(130deg,#fff0d4,#e8c391)}
+.tile.event .stripe{background:#e9a34a}
+.tile.event .name{top:49px;font-size:12px}
+.tile.event .specialIcon{top:18px}
+.tile.owned{border-color:var(--owner,#e5b362)}
+.tile .ownerBand{position:absolute;inset:auto 0 0;height:8px;background:var(--owner);border-top:1px solid #fff8}
+.tile .towers{position:absolute;left:50%;top:49px;transform:translateX(-50%);width:64px;height:50px;pointer-events:none}
+.model{position:absolute;left:50%;bottom:10px;width:43px;transform:translateX(-50%);height:var(--height,28px);background:repeating-linear-gradient(0deg,transparent 0 9px,#0a29319a 9px 11px),repeating-linear-gradient(90deg,#547f8c 0 7px,#b6deca 7px 9px,#406a7b 9px 15px);border:3px solid #e9d3a4;border-bottom:5px solid #435d6e;box-shadow:4px 4px 0 #1c4659,7px 7px 8px #071b315a}
+.model:before{position:absolute;top:-10px;left:-2px;content:"";height:9px;width:100%;background:linear-gradient(110deg,#f9df91,#bc9256);transform:skewX(-25deg);border:1px solid #735940}
+.model:after{position:absolute;top:-4px;left:100%;content:"";height:100%;width:9px;background:repeating-linear-gradient(#294d61 0 11px,#517f95 11px 16px);transform:skewY(-45deg);transform-origin:left top}
+.model.level1{--height:22px;width:37px;background:#d2bb94;box-shadow:4px 4px #856b4e}
+.model.level2{--height:32px;width:37px}
+.model.level3{--height:49px}
+.model.level4{--height:66px;width:46px;border-color:#f5d68f;box-shadow:5px 6px #26495a,8px 10px 12px #071c2c96}
+.tokenDock{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none}
+.pawn{position:absolute;z-index:20;width:19px;height:19px;border-radius:50%;background:radial-gradient(circle at 29% 24%,#fff5e6 0,#e5d0a8 11%,var(--player) 18%,var(--player) 63%,#10243b 90%);box-shadow:0 3px 0 #101c30,1px 7px 6px #0810209c;border:2px solid #fff9cc;transform:translate(-50%,-50%);transition:left .12s linear,top .12s linear}
+.pawn:before{content:"";position:absolute;left:3px;top:-11px;width:10px;height:9px;border-radius:4px 4px 1px 1px;background:var(--player);border:1px solid #fde3b4;box-shadow:1px -3px 0 #fff1c275}
+.pawn.turn:after{content:"";position:absolute;left:2px;right:2px;top:-15px;height:2px;background:#fff5bd;box-shadow:0 0 7px 3px #e3ac3e}
+#hud{position:absolute;left:max(12px,env(safe-area-inset-left));top:max(12px,env(safe-area-inset-top));width:185px;z-index:50;pointer-events:auto}
+.hudCard{padding:12px 13px 13px;background:linear-gradient(145deg,#0b1e33ea,#142b43e9);border:1px solid #efd08490;border-radius:17px;box-shadow:var(--shadow);backdrop-filter:blur(12px)}
+.hudBrand{font-size:12px;letter-spacing:2px;font-weight:900;color:#e8c36a}
+.hudSmall{font-size:10px;letter-spacing:1px;color:#a8c3cd;text-transform:uppercase;font-weight:850}
+#activeName{font-size:22px;font-weight:900;line-height:1.13;margin:6px 0 2px;white-space:nowrap}
+#activeCash{font-size:23px;color:#ffedb9;font-weight:950;letter-spacing:-.8px}
+#roster{padding-top:9px;margin-top:10px;border-top:1px solid #ffffff29;display:grid;gap:5px}
+.rPlayer{display:flex;align-items:center;justify-content:space-between;font-size:11px;font-weight:800;color:#d7e8df}
+.rPlayer .dot{width:10px;height:10px;border-radius:50%;background:var(--player);display:inline-block;margin-right:5px}
+.rPlayer em{font-size:11px;font-weight:700;color:#efd99c;font-style:normal}
+.rPlayer.now{color:#fff}
+#roundStamp{margin-top:9px;font-weight:900;color:#dfc08a;font-size:12px}
+#hudActions{margin-top:8px;display:flex;gap:5px}
+.miniBtn{border:1px solid #d8c59376;background:#0e2945d9;border-radius:12px;color:#fff4dc;padding:8px;font-size:11px;font-weight:850;flex:1;box-shadow:0 3px 7px #06142768}
+#actionSide{position:absolute;right:max(13px,env(safe-area-inset-right));top:max(13px,env(safe-area-inset-top));bottom:max(10px,env(safe-area-inset-bottom));width:205px;z-index:60;display:flex;flex-direction:column;gap:7px}
+#actionCard{border-radius:17px;padding:13px 13px 10px;background:linear-gradient(150deg,#13263ded,#172f46ef);border:1px solid #efc8758c;box-shadow:var(--shadow);overflow-y:auto;max-height:100%;scrollbar-width:thin}
+#actionCard h2{font-size:17px;font-weight:950;margin:0 0 6px;color:#fff4d2}
+#actionCard p{font-size:12px;margin:7px 0;line-height:1.3;color:#d5e2e5}
+.tag{font-size:10px;color:#eec67a;letter-spacing:1.3px;font-weight:900}
+.actionBtn{display:block;width:100%;margin:8px 0 0;padding:12px 9px;border:1px solid #e8c271;border-radius:12px;background:linear-gradient(#ffdb81,#efb64a);box-shadow:0 5px 0 #a56f2e,0 8px 14px #0b1b29;color:#192d3d;font-size:16px;font-weight:950;text-transform:uppercase}
+.actionBtn.secondary{padding:10px 7px;background:#18344c;border-color:#6e8b93;box-shadow:0 3px #061b30;color:#eef2e9;font-size:12px}
+.actionBtn.coral{background:linear-gradient(#f6ae83,#e47752);box-shadow:0 5px #a64c34}
+.routeControls{display:flex;gap:7px;margin:9px 0}
+.routeControls button{flex:1;padding:10px 3px;border-radius:10px;border:1px solid #7896a1;background:#20354a;color:#eff5ee;font-size:11px;font-weight:900}
+.routeControls button.chosen{background:#d5ae5a;color:#1f2b36;border-color:#ffe0a2}
+#eventToast{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);z-index:70;background:#0e2336e8;border:1px solid #e6c17799;border-radius:15px;padding:10px 14px;max-width:50vw;text-align:center;box-shadow:var(--shadow);font-size:13px;font-weight:800;color:#f6ecdb;pointer-events:none;opacity:0;transition:opacity .25s}
+#eventToast.show{opacity:1}
+#selectedCard{margin-top:7px;border:1px solid #89a19b88;background:#0a2037bf;padding:9px 10px;border-radius:12px}
+#selectedCard h3{font-size:14px;margin:0 0 3px;color:#ffe2a7}
+#selectedCard .desc{font-size:11px;color:#d9e7df;line-height:1.35}
+#selectedCard .badges{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}
+#selectedCard .badges span{background:#31546a;padding:3px 7px;border-radius:8px;color:#e9f3eb;font-size:10px;font-weight:850}
+#topRibbon{position:absolute;top:9px;left:50%;transform:translateX(-50%);padding:5px 17px;border-radius:20px;background:#0d2239c7;border:1px solid #edc7786b;z-index:48;font-size:11px;letter-spacing:1.1px;font-weight:900;color:#ffe3a5;pointer-events:none}
+#previewMark{position:absolute;bottom:7px;right:10px;z-index:30;font-size:9px;color:#fff6ceae;font-weight:800;letter-spacing:.7px}
+#dice{display:flex;justify-content:center;gap:8px;margin:10px 0 6px}
+.die{background:#fff4db;color:#123050;width:35px;height:35px;display:grid;place-items:center;border:2px solid #aa8153;border-radius:7px;box-shadow:3px 4px 0 #73553d;font-size:24px;font-weight:950}
+#controlsInfo{font-size:10px;color:#c0d2cf;margin-top:9px;text-align:center}
+@media(max-width:800px){#hud{width:143px}#actionSide{width:162px}#activeName{font-size:17px}#activeCash{font-size:20px}.hudCard{padding:9px}#actionCard{padding:10px}#actionCard h2{font-size:15px}.actionBtn{padding:10px 5px;font-size:13px}#topRibbon{top:4px;font-size:9px}#selectedCard{padding:7px}}
+@media(max-height:365px){#hud{top:5px}#roundStamp{margin-top:4px}#actionSide{top:5px}#roster{gap:1px;padding-top:3px;margin-top:4px}#actionCard{padding:7px}.hudBrand{font-size:10px}#hudActions{margin-top:3px}#topRibbon{display:none}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div id="game">
+ <div id="tableViewport" aria-label="Interactive Skyline Estates tabletop board">
+  <div id="boardStage">
+   <div id="board"><div id="innerGarden"></div><div id="parkTrees"><i class="tree"></i><i class="tree"></i><i class="tree"></i><i class="tree"></i></div><div id="parkLogo"><b>SKYLINE</b><small>ESTATES</small></div>
+   <div class="skybridge h" id="bridgeTL"></div><div class="skybridge h" id="bridgeTR"></div><div class="skybridge h" id="bridgeBR"></div><div class="skybridge h" id="bridgeBL"></div>
+   <div id="tiles"></div><div class="tokenDock" id="tokens"></div></div>
+  </div>
+ </div>
+ <div id="topRibbon">SKYLINE ESTATES · CIRCUIT TABLETOP</div>
+ <aside id="hud"><div class="hudCard"><div class="hudBrand">SKYLINE ESTATES</div><div class="hudSmall" id="activeLabel">YOUR TURN</div><div id="activeName">You</div><div id="activeCash">SC 1,500</div><div id="roundStamp">Round 1</div><div id="roster"></div></div><div id="hudActions"><button class="miniBtn" id="zoomOut" title="Zoom out">− Zoom</button><button class="miniBtn" id="zoomIn" title="Zoom in">+ Zoom</button><button class="miniBtn" id="centerBtn">Center</button></div></aside>
+ <aside id="actionSide"><div id="actionCard" aria-live="polite"></div><div id="selectedCard"></div></aside>
+ <div id="eventToast" role="status"></div><div id="previewMark">INTERACTIVE REDESIGN LAB · NOT THE LIVE GAME</div>
+</div>
+<script src="./lib/circuit-rules.js"></script>
+<script>
+(function(){
+"use strict";
+var SC=window.SkylineCircuit;if(!SC){document.querySelector("#actionCard").textContent="Circuit rules are unavailable";return;}
+var PREVIEW_SAVE="skylineCircuitTabletopRebootSave";var COLORS=["#f58653","#4d93de","#42bd88","#b774e0"];
+var DISTRICTS=["Harbour Quarter","Civic Heights","Garden Mile","Neon Exchange"];
+var ACCENTS=["#1e99c2","#efc04b","#39a66b","#e77755"];
+var STREET={
+O1:"Marina Avenue",O2:"Ocean View",O4:"Seabreeze Drive",O6:"City Centre",O7:"Sunrise Row",O9:"Grand Arcade",O11:"Parkside Walk",O12:"Garden Boulevard",O14:"Maple Quay",O16:"Skyline Way",O17:"The Promenade",O19:"Rooftop Avenue",
+I1:"Harbour Plaza",I2:"Pier Heights",I4:"Civic Crown",I5:"Golden Mile",I7:"Canopy Square",I8:"Emerald Terrace",I10:"Neon Towers",I11:"Lantern Lane"
+};
+var CORNERS={O0:["Skyline Station","🚏"],O5:["City Exchange","🏙️"],O10:["Grand Terminal","🚍"],O15:["Harbour Gateway","⚓"],I0:["Marina Link","🌉"],I3:["Civic Link","🌉"],I6:["Garden Link","🌉"],I9:["Metro Link","🌉"]};
+var EVENT_NAMES={O3:"City Event",O8:"City Event",O13:"City Event",O18:"City Event"};
+var $=function(q){return document.querySelector(q)};
+var escapeHTML=function(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];})};
+var store={get:function(k){try{return localStorage.getItem(k)}catch(e){return null}},put:function(k,v){try{localStorage.setItem(k,v)}catch(e){}},del:function(k){try{localStorage.removeItem(k)}catch(e){}}};
+var s=null,selected="O0",plan="stay",busy=false,aiRunning=false,visualPos={},tiles={},lastDice=[1,1],zoom=.74,panX=0,panY=20,drag=null,suppressClickUntil=0,toastTimer=null;
+var corners=function(n){var out=[];for(var x=0;x<n-1;x++)out.push([x,0]);for(var y=0;y<n-1;y++)out.push([n-1,y]);for(var x=n-1;x>0;x--)out.push([x,n-1]);for(var y=n-1;y>0;y--)out.push([0,y]);return out;};
+var outer=corners(6),inner=corners(4);var locations={};
+outer.forEach(function(p,i){locations["O"+i]=[70+p[0]*112,70+p[1]*112]});
+inner.forEach(function(p,i){locations["I"+i]=[182+p[0]*112,182+p[1]*112]});
+function nameOf(id){return (CORNERS[id]||[])[0]||EVENT_NAMES[id]||STREET[id]||"Skyline Property";}
+function fmt(v){return Math.round(v||0).toLocaleString("en-US")}
+function toast(msg){var n=$("#eventToast");n.textContent=msg;n.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(function(){n.classList.remove("show")},2800)}
+function button(label,action,cls,extra){return '<button class="actionBtn '+(cls||"")+'" data-action="'+action+'" '+(extra||"")+'>'+label+'</button>';}
+function ringLabel(id){return id.charAt(0)==="I"?"Inner Boulevard":"City Boulevard"}
+function boardCreate(){var root=$("#tiles");root.innerHTML="";
+ SC.NODES.forEach(function(n){
+   var el=document.createElement("button");el.type="button";el.className="tile";el.dataset.node=n.id;
+   el.setAttribute("aria-label",nameOf(n.id));var xy=locations[n.id];el.style.left=xy[0]+"px";el.style.top=xy[1]+"px";
+   var code=n.type==="property"?"property":n.type==="event"?"event":"special";el.classList.add(code);
+   el.style.setProperty("--district",ACCENTS[n.quadrant]);
+   var innerHTML='<div class="stripe"></div>';
+   if(n.type!=="property")innerHTML+='<div class="specialIcon">'+(n.type==="event"?"★":(CORNERS[n.id]||[])[1]||"✦")+'</div>';
+   innerHTML+='<div class="name">'+escapeHTML(nameOf(n.id))+'</div>';
+   if(n.type==="property")innerHTML+='<div class="lot"></div><div class="towers"></div><div class="price">SC '+fmt(n.price)+'</div><div class="ownerBand" hidden></div>';
+   if(n.type==="junction")innerHTML+='<div class="price">SKY BRIDGE</div>';
+   if(n.type==="event")innerHTML+='<div class="price">PICK A CARD</div>';
+   el.innerHTML=innerHTML;
+   el.addEventListener("click",function(){if(Date.now()<suppressClickUntil)return;selected=n.id;paintTiles();renderSelected();});
+   el.addEventListener("keydown",function(e){if(e.key==="Enter"||e.key===" "){selected=n.id;paintTiles();renderSelected();}});
+   tiles[n.id]=el;root.appendChild(el);
+ });
+}
+function camera(){var st=$("#boardStage");st.style.transform="translate(-50%,-50%) translate("+Math.round(panX)+"px,"+Math.round(panY)+"px) rotateX(25deg) rotateZ(-3deg) scale("+zoom+")"}
+function center(onToken){panX=0;panY=12;
+ if(onToken&&s){var p=locations[visualPos[0]||s.players[0].pos];if(p){panX=(360-p[0])*zoom*.55;panY=(360-p[1])*zoom*.34}}
+ camera();}
+function paintTiles(){if(!s)return;var v=SC.view(s);v.nodes.forEach(function(n){var tile=tiles[n.id];if(!tile)return;
+ tile.classList.toggle("selected",selected===n.id);tile.classList.toggle("current",v.players[v.turn]&&v.players[v.turn].pos===n.id);
+ if(n.type!=="property")return;
+ var o=n.owner;tile.classList.toggle("owned",o>=0);tile.style.setProperty("--owner",o>=0?COLORS[o]:"#b9a982");
+ var band=tile.querySelector(".ownerBand");band.hidden=o<0;
+ var model=tile.querySelector(".towers");model.innerHTML=(o>=0&&n.stage>0?'<div class="model level'+n.stage+'"></div>':"");
+ tile.querySelector(".lot").style.display=o>=0&&n.stage>0?"none":"block";
+ });}
+function paintTokens(){if(!s)return;var root=$("#tokens");root.innerHTML="";
+ s.players.forEach(function(p,i){var pos=locations[visualPos[i]||p.pos];if(!pos)return;
+ var tok=document.createElement("div");tok.className="pawn"+(s.turn===i?" turn":"");tok.style.setProperty("--player",COLORS[i]);
+ tok.style.left=(pos[0]+(i%2?11:-11))+"px";tok.style.top=(pos[1]+(i<2?-9:11))+"px";tok.title=p.name;
+ root.appendChild(tok);});
+}
+function renderRoster(){if(!s)return;var v=SC.view(s),current=v.players[v.turn],p=s.players[s.turn];
+ $("#activeLabel").textContent=p.ai?"COMPUTER TURN":"YOUR TURN";$("#activeName").textContent=p.name;
+ $("#activeCash").textContent="SC "+fmt(p.cash);$("#roundStamp").textContent="Round "+v.round+" of "+v.rounds;
+ $("#roster").innerHTML=v.players.map(function(x){return '<div class="rPlayer '+(x.id===v.turn?"now":"")+'" style="--player:'+COLORS[x.id]+'"><span><i class="dot"></i>'+escapeHTML(x.name)+'</span><em>'+fmt(x.influence)+' pts</em></div>'}).join("");
+}
+function renderSelected(){if(!s)return;var v=SC.view(s),n=v.nodes.find(function(z){return z.id===selected});if(!n)return;var html='<h3>'+escapeHTML(nameOf(n.id))+'</h3><div class="desc">';
+ if(n.type==="property"){html+=escapeHTML(DISTRICTS[n.quadrant])+' · '+ringLabel(n.id)+'</div><div class="badges"><span>SC '+fmt(n.price)+'</span><span>'+(n.owner<0?"For sale":escapeHTML(s.players[n.owner].name))+'</span><span>'+(n.owner<0?"Land plot":n.stageName)+'</span></div>';
+ if(n.owner>=0)html+='<div class="desc" style="margin-top:7px">Rent SC '+fmt(n.rent)+'</div>';}
+ else html+=n.type==="event"?"Draw a City Event when you land here.":"Use the skyline bridge to travel between boulevards."+'</div>';
+ $("#selectedCard").innerHTML=html;
+}
+function renderActions(){if(!s)return;var v=SC.view(s),pd=SC.pending(s),me=s.players[s.turn],human=!me.ai&&!busy;var html='<div class="tag">SKYLINE CIRCUIT · BOARD 1</div>';
+ if(s.over){html+='<h2>Match finished</h2><p>'+escapeHTML(s.players[s.winner].name)+' wins this Skyline Circuit match.</p>'+button("Play again","new","coral");}
+ else if(me.ai||busy){html+='<h2>'+(busy?"On the move":"Computer turn")+'</h2><p>Watch the pieces move along the board. Your next turn starts automatically.</p>'; }
+ else if(pd&&pd.type==="roll"){
+  html+='<h2>Ready to roll?</h2><p>Choose a street or take the bridge when you reach a junction.</p>';
+  html+='<div class="routeControls"><button data-action="stay" class="'+(plan==="stay"?"chosen":"")+'">Boulevard</button><button data-action="cross" class="'+(plan==="cross"?"chosen":"")+'">Sky Bridge</button></div>';
+  html+='<div id="dice"><div class="die">'+lastDice[0]+'</div><div class="die">'+lastDice[1]+'</div></div>';
+  html+=button("🎲 Roll dice","roll","");}
+ else if(pd&&pd.type==="buy"){
+  selected=pd.node;
+  html+='<h2>'+escapeHTML(nameOf(pd.node))+'</h2><p>Available property · SC '+fmt(pd.price)+'</p>';
+  html+=button("Buy property","buy","")+button("Pass","pass","secondary");
+ }
+ else if(pd&&pd.type==="build"){
+  html+='<h2>Build or finish</h2><p>Upgrade your properties or end your turn.</p>';
+  var opts=pd.options.filter(function(x){return x.type==="build"});
+  if(opts.length)html+='<div style="max-height:100px;overflow-y:auto">'+opts.slice(0,6).map(function(b){return button("Build "+escapeHTML(nameOf(b.node))+" · SC "+fmt(b.cost),"build:"+b.node,"secondary")}).join("")+'</div>';
+  html+=button("End turn","end","coral");
+ }else html+='<h2>Player turn</h2><p>Waiting for the next move.</p>';
+ html+='<div id="controlsInfo">Drag to explore the board · tap a property to inspect</div>';
+ var side=$("#actionCard");if(side.dataset.state!==html){side.innerHTML=html;side.dataset.state=html;}
+ side.querySelectorAll("[data-action]").forEach(function(b){b.addEventListener("click",function(){actUI(b.dataset.action)})});
+}
+function render(){if(!s)return;paintTiles();paintTokens();renderRoster();renderActions();renderSelected();}
+function sleep(ms){return new Promise(function(resolve){setTimeout(resolve,ms)})}
+async function perform(action){if(busy||!s||s.over)return;var pd=SC.pending(s);if(!pd||pd.player!==s.turn)return;
+ busy=true;var start=Object.assign({},visualPos),before=s.players.map(function(p){return p.pos});
+ try{
+  SC.act(s,pd.player,action);var events=SC.drain(s);
+  var d=events.find(function(e){return e.t==="roll"});if(d)lastDice=d.dice;
+  for(var k=0;k<events.length;k++){
+    var e=events[k];
+    if(e.t==="step"){visualPos[e.pid]=e.to;paintTokens();await sleep(95);}
+    else if(e.t==="buy")toast(nameOf(e.node)+" purchased!");
+    else if(e.t==="build")toast(nameOf(e.node)+" upgraded!");
+    else if(e.t==="rent")toast("Rent paid · SC "+fmt(e.amount));
+    else if(e.t==="card")toast("City Event · "+String(e.card).replace(/-/g," "));
+  }
+  s.players.forEach(function(p,i){visualPos[i]=p.pos});
+  store.put(PREVIEW_SAVE,SC.serialize(s));
+  selected=s.players[s.turn].pos;render();
+ }catch(err){visualPos=start;toast("Move could not complete: "+err.message);console.error(err);}
+ finally{busy=false;render()}
+ if(!s.over)kickAI();
+}
+async function aiLoop(){
+ try{
+  var count=0;
+  while(s&&!s.over&&!busy&&s.players[s.turn].ai&&count++<45){
+   await sleep(280);
+   var pd=SC.pending(s);if(!pd||!s.players[pd.player].ai)break;
+   var move=SC.ai(s,pd.player);if(!move)break;
+   await perform(move);
+  }
+ }finally{aiRunning=false;}
+}
+function kickAI(){if(!s||s.over||busy||aiRunning)return;if(s.players[s.turn].ai){aiRunning=true;aiLoop().catch(function(e){console.error(e);toast("Computer move stopped");aiRunning=false})}}
+function actUI(a){
+ if(a==="new"){if(!confirm("Start a fresh Circuit tabletop match?"))return;store.del(PREVIEW_SAVE);start(true);return;}
+ if(a==="stay"||a==="cross"){plan=a;renderActions();return;}
+ if(a==="roll"){perform({type:"roll",via:plan});return;}
+ if(a==="buy"||a==="pass"||a==="end"){perform({type:a});return;}
+ if(a.indexOf("build:")===0){perform({type:"build",node:a.slice(6)});return;}
+}
+function start(fresh){var raw=fresh?null:store.get(PREVIEW_SAVE),parsed=raw?SC.restore(raw):null;
+ if(parsed&&parsed.ok)s=parsed.state;
+ else s=SC.newMatch({seed:(Date.now()>>>0),length:"standard",fx:true,players:[{name:"You"},{name:"Kofi",level:"normal"},{name:"Mei",level:"normal"},{name:"Lucas",level:"normal"}]});
+ SC.drain(s);
+ for(var i=0;i<s.players.length;i++)visualPos[i]=s.players[i].pos;
+ selected=s.players[s.turn].pos;busy=false;plan="stay";lastDice=[1,1];render();center(false);kickAI();
+}
+$("#zoomIn").addEventListener("click",function(){zoom=Math.min(1.55,zoom+.12);camera()});
+$("#zoomOut").addEventListener("click",function(){zoom=Math.max(.48,zoom-.12);camera()});
+$("#centerBtn").addEventListener("click",function(){center(true)});
+var viewport=$("#tableViewport");
+viewport.addEventListener("pointerdown",function(e){if(e.target.closest(".tile"))return;drag={x:e.clientX,y:e.clientY,cx:panX,cy:panY,moved:false};viewport.setPointerCapture(e.pointerId);});
+viewport.addEventListener("pointermove",function(e){if(!drag)return;var dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(Math.abs(dx)+Math.abs(dy)>5){drag.moved=true;viewport.classList.add("dragging");}panX=drag.cx+dx;panY=drag.cy+dy;camera();});
+viewport.addEventListener("pointerup",function(){if(drag&&drag.moved)suppressClickUntil=Date.now()+200;drag=null;viewport.classList.remove("dragging")});
+viewport.addEventListener("wheel",function(e){e.preventDefault();zoom=Math.max(.48,Math.min(1.55,zoom+(e.deltaY<0?.06:-.06)));camera()},{passive:false});
+window.addEventListener("keydown",function(e){if(e.key==="Escape"){$("#selectedCard").innerHTML="";}if(e.key==="+"||e.key==="="){zoom=Math.min(1.55,zoom+.08);camera()}if(e.key==="-"){zoom=Math.max(.48,zoom-.08);camera()}});
+boardCreate();start(false);
+window.__circuitTabletop=Object.freeze({state:function(){return s},view:function(){return SC.view(s)},select:function(id){if(!tiles[id])return false;selected=id;render();return true},zoom:function(z){zoom=Math.max(.48,Math.min(1.55,z));camera()},reset:function(){start(true)}});
+})();
+</script>
+</body></html>
