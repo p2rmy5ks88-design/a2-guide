@@ -38,8 +38,8 @@ let R3=null,R3tried=false,camCur=null;
 // 320 pt fallback (validated in CIRCUIT-ALPHA.md): active whenever overview target spacing is below 44 pt.
 let zf=null,zoom=null,planFocused='';const CINEMATIC={pitch:15,dist:5};
 // Owner-review City View: explicitly non-interactive. Strategy View remains the only decision camera.
-const CITY_REVIEW={pitch:38,dist:5.65};let cityReview=false;
-let orbitYaw=0,cityDistance=5.65,citySelection=null,previewStage=-1,cityShowcase=false;
+const CITY_REVIEW={pitch:46,dist:5.85};let cityReview=false;
+let orbitYaw=0,cityDistance=5.85,citySelection=null,previewStage=-1,cityShowcase=false;
 const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
 function cityOrbit(delta){if(!R3||!cityReview)return;orbitYaw=clamp(orbitYaw+delta,-55,55);R3.setOrbitYaw(orbitYaw);dirty=true;render();}
 function cityZoom(delta){if(!R3||!cityReview)return;cityDistance=clamp(cityDistance+delta,4.65,7.3);dirty=true;render();}
@@ -97,7 +97,7 @@ function setupScreen(){const saved=store.get(BOARD2_SAVE),r=saved?SC.restore(sav
  $('#cx-start').onclick=()=>{const length=document.querySelector('input[name=len]:checked').value,levels=[...document.querySelectorAll('[data-lv]')].map(e=>e.value);
   const seed=q.get('seed')?+q.get('seed'):(()=>{const a=new Uint32Array(1);crypto.getRandomValues(a);return a[0]})(),startedAt=Date.now();
   begin(SC.newMatch({seed,length,fx:true,players:[{name:'You'},...levels.map((level,i)=>({name:'Computer '+(i+1),level}))],meta:{matchId:'circuit-'+seed.toString(36)+'-'+startedAt.toString(36),startedAt,career:opts.career}}))}}
-async function begin(state){cityReview=false;orbitYaw=0;cityDistance=5.65;citySelection=null;previewStage=-1;cityShowcase=false;stagesOverride=null;s=state;s.cfg.fx=true;$('#cx-setup').hidden=true;$('#cx-game').hidden=false;anim={queue:[],cur:null,t0:0,tokens:{}};notes=[];tally=null;
+async function begin(state){cityReview=false;orbitYaw=0;cityDistance=5.85;citySelection=null;previewStage=-1;cityShowcase=false;stagesOverride=null;s=state;s.cfg.fx=true;$('#cx-setup').hidden=true;$('#cx-game').hidden=false;anim={queue:[],cur:null,t0:0,tokens:{}};notes=[];tally=null;
  for(const p of s.players)anim.tokens[p.id]={node:p.pos};
  if(opts.renderer==='3d'&&!R3tried){R3tried=true;try{const m=window.SkylineCircuitRenderer3D||await import(window.__circuitRendererURL||'./circuit-board2-renderer.js');R3=m.create($('#cx-board'),{layout,camera:cam,onTierChange:t=>{notes.unshift({t:'Graphics quality lowered to '+t+' for smoother play',kind:'quality'});render()}})}catch(e){R3=null;console.warn('3D renderer unavailable, using 2D',e)}}
  camCur={...cam};resize();enqueue();save();if(!looping){looping=true;loop()}}
@@ -167,7 +167,7 @@ function draw(){if(R3)return draw3d();draw2d()}
 function draw3d(){const v=SC.view(s),me=s.players[s.turn],st=stages();overlay={routeStay:[],routeCross:[],tokens:{},buildings:SC.PROPS.filter(id=>st[id]>0)};
  const showRoute=!cityReview&&v.preview&&!me.ai&&!busy();if(showRoute){const paths=SS.routePaths(me.pos);overlay.routeStay=paths.stay.map(g=>g.to);overlay.routeCross=paths.cross.map(g=>g.to)}
  const toks=[],counts={};for(const p of s.players)if(!p.out){const a=anim.tokens[p.id]||{node:p.pos};toks.push({pid:p.id,...a});const slot=counts[a.node]=(counts[a.node]??-1)+1;const xy=tokenXY(p.id,slot%4);if(xy)overlay.tokens[p.id]={node:a.node,x:xy.x,y:xy.y,r:G.tokenR*C.ppu({...G.nodes[a.node],z:0})}}
- R3.update({view:v,stages:st,tokens:toks,route:showRoute?{pos:me.pos,plan,preview:v.preview}:null,networkFor:s.players.filter(p=>!p.out).map(p=>p.id)})}
+ R3.update({view:v,stages:st,cityShowcase:cityReview&&cityShowcase,tokens:toks,route:showRoute?{pos:me.pos,plan,preview:v.preview}:null,networkFor:s.players.filter(p=>!p.out).map(p=>p.id)})}
 function draw2d(){const cv=$('#cx-board'),ctx=cv.getContext('2d'),dpr=cv.width/Math.max(1,boardRect().w),R=boardRect();ctx.setTransform(dpr,0,0,dpr,-R.x*dpr,-R.y*dpr);
  ctx.clearRect(R.x,R.y,R.w,R.h);const v=SC.view(s),me=s.players[s.turn],st=stages();overlay={routeStay:[],routeCross:[],tokens:{},buildings:[]};
  const P=id=>C.project({...G.nodes[id],z:0});
@@ -239,8 +239,8 @@ function render(){if(!s)return;const v=SC.view(s),pd=v.pending,me=pd?s.players[p
    <div class="b2-orbit" aria-label="3D camera controls"><button id="b2-left" title="Orbit left">↶</button><button id="b2-right" title="Orbit right">↷</button>
    <button id="b2-zoom-out" title="Zoom out">−</button><button id="b2-zoom-in" title="Zoom in">+</button></div>
    <p class="cx-k" id="b2-camera-readout">Orbit ${Math.round(orbitYaw)}° · zoom ${cityDistance.toFixed(1)}</p>
-   <button class="b2-skyline-toggle" id="b2-skyline" aria-pressed="${cityShowcase}">${cityShowcase?'Restore actual buildings':'Preview full 3D skyline'}</button>
-   ${cityShowcase?'<p class="b2-demo-note">Visual-only buildings · match unchanged</p>':''}
+   <button class="b2-skyline-toggle" id="b2-skyline" aria-pressed="${cityShowcase}">${cityShowcase?'Show actual match buildings':'Preview full 3D skyline'}</button>
+   ${cityShowcase?'<p class="b2-demo-note">Architectural concept preview · not owned or purchased · match unchanged</p>':''}
    <div class="b2-spotlight" role="status">${node?`<b>${esc(friendlyName(node.id))}</b>
     <p>${esc(DISTRICT_NAMES[node.quadrant])} · ${node.type==='property'?`${esc(node.stageName)} · Price SC ${node.price} · ${node.owner<0?'Unowned':esc(name(node.owner))}`:esc(node.type)}</p>`:'<b>Select a street or property</b><p>Watch it light up and inspect its ownership, stage and district.</p>'}</div>
    ${node&&node.type==='property'?`<label class="b2-stage-label" for="b2-preview-stage">3D building preview <small>(not a purchase)</small></label>
@@ -256,6 +256,10 @@ function render(){if(!s)return;const v=SC.view(s),pd=v.pending,me=pd?s.players[p
 function wire(){const on=(sel,f)=>{const e=$(sel);if(e)e.onclick=f};
  on('#cx-city-view',()=>{if(!R3)return;cityReview=!cityReview;if(cityReview&&zoom)overview();
   if(!cityReview){citySelection=null;orbitYaw=0;previewStage=-1;cityShowcase=false;stagesOverride=null;R3.setOrbitYaw(0);R3.setSpotlight(null);camCur={...cam};R3.setCamera(camCur);C=R3.C}
+  else { // The owner-approved city concept is the entry view; the clear toggle
+    // lets players inspect true purchased buildings instead at any time.
+    cityShowcase=true;applyStagePreview();
+  }
   dirty=true;render()});
  on('#b2-left',()=>cityOrbit(-14));on('#b2-right',()=>cityOrbit(14));
  on('#b2-zoom-in',()=>cityZoom(-.45));on('#b2-zoom-out',()=>cityZoom(.45));on('#b2-skyline',toggleCityShowcase);
