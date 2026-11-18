@@ -336,6 +336,7 @@ export function create(canvas,{layout,spec,camera:cam0,tier:tierName=pickTier(),
   inst(new THREE.BoxGeometry(1,1,1),new THREE.MeshStandardMaterial({color:'#F8E0BA',roughness:.82}),seats,{pick:false})}
  // bridges: one hop, no stopping tile; ivory light strips
  const bridgeTruss=new THREE.MeshStandardMaterial({color:'#F5D495',roughness:.3,metalness:.55,emissive:'#B77B34',emissiveIntensity:.23}),bridgeMat=new THREE.MeshStandardMaterial({color:'#A9D6DA',roughness:.37,metalness:.12}),lightMat=new THREE.MeshStandardMaterial({color:P.ivory,emissive:'#FFE7B0',emissiveIntensity:tier.glow?1.6:.9});
+ let circuitBridgeArchCount=0;
  for(const [a,b] of Object.entries(SC.LINKS))if(a[0]==='O'){const p=G.nodes[a],q=G.nodes[b],len=Math.hypot(q.x-p.x,q.y-p.y),ang=Math.atan2(q.y-p.y,q.x-p.x),mx=(p.x+q.x)/2,my=(p.y+q.y)/2;
   const deck=new THREE.Mesh(new THREE.BoxGeometry(len,1.6,T*.42),bridgeMat);deck.position.set(mx,1,my);deck.rotation.y=-ang;deck.receiveShadow=deck.castShadow=!!tier.shadows;env.add(deck);
   for(const s of [-1,1]){const l=new THREE.Mesh(new THREE.BoxGeometry(len*.98,.8,.7),lightMat);l.position.set(mx-Math.sin(ang)*s*T*.2,2.1,my+Math.cos(ang)*s*T*.2);l.rotation.y=-ang;env.add(l);
@@ -356,7 +357,7 @@ export function create(canvas,{layout,spec,camera:cam0,tier:tierName=pickTier(),
     new THREE.Vector3(mx+crossX,10.75,my+crossZ),
     new THREE.Vector3(q.x-ux*len*.09+crossX,2.45,q.y-uz*len*.09+crossZ));
    const archRib=new THREE.Mesh(new THREE.TubeGeometry(archCurve,22,.24,6,false),bridgeTruss);
-   archRib.userData.circuitBridgeArch=true;env.add(archRib);
+   archRib.userData.circuitBridgeArch=true;env.add(archRib);circuitBridgeArchCount++;
   }
  }
  // static environment meshes → merged by material (instanced meshes stay instanced; occluder proxies kept for the ID pass)
@@ -639,7 +640,8 @@ export function create(canvas,{layout,spec,camera:cam0,tier:tierName=pickTier(),
   });
   return {waterChannel:canalSurfaces>0,blueWaterUnderlay:waterUnderlay>0,centralLandmarkPlaque:plaqueSurfaces>0,
    backdropBuildings:env.userData.circuitBackdropBuildings||0,
-   realSpaces:SC.NODES.length,realBridges:Object.keys(SC.LINKS).filter(k=>k[0]==='O').length};
+   realSpaces:SC.NODES.length,realBridges:Object.keys(SC.LINKS).filter(k=>k[0]==='O').length,
+   physicalBridgeArches:circuitBridgeArchCount};
  }
  function stats(){return{tier:tierName,calls:renderer.info.render.calls,triangles:renderer.info.render.triangles,textures:renderer.info.memory.textures,geometries:renderer.info.memory.geometries,pixelRatio:renderer.getPixelRatio(),frameMs:frames.slice(-60)}}
  return{resize,setCamera,setOrbitYaw,setSpotlight,get orbitYaw(){return yaw},update,render,tick,routeSamples,get tier(){return tierName},get camera(){return camNow},get C(){return Cview},get baseC(){return C},setZoom,get zoom(){return zoom},G,projectNode,envelopeReport,idPass,artReport,stats,downgrade,renderer,labelLayer,markDirty:()=>{dirty=true}}}
