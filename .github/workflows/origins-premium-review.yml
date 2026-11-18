@@ -1,0 +1,48 @@
+name: Skyline Origins premium visual lab
+on:
+  pull_request:
+    paths:
+      - 'skyline-estates/origins-premium-lab.html'
+      - 'skyline-estates/origins-premium.css'
+      - 'skyline-estates/origins-premium.js'
+      - 'skyline-estates/tests/origins-premium-browser.cjs'
+      - '.github/workflows/origins-premium-review.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  actual-origins-render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify preview is independent of production offline cache
+        run: |
+          node --check skyline-estates/origins-premium.js
+          node --check skyline-estates/tests/origins-premium-browser.cjs
+          python3 skyline-estates/build.py --check
+      - name: Install real browser test runner
+        run: npm install --prefix skyline-estates/tests --no-audit --no-fund
+      - name: Review actual 40-space WebGL board in Chromium
+        env:
+          CHROME_PATH: /usr/bin/google-chrome
+          ORIGINS_SHOTS: origins-premium-qa
+        run: node skyline-estates/tests/origins-premium-browser.cjs
+      - name: Install Safari WebKit engine
+        run: npx --prefix skyline-estates/tests playwright install --with-deps webkit
+      - name: Review actual 40-space WebGL board in Safari WebKit
+        env:
+          VISUAL_ENGINE: webkit
+          WEBKIT_DISABLE_DMABUF_RENDERER: '1'
+          ORIGINS_SHOTS: origins-premium-qa
+        run: node skyline-estates/tests/origins-premium-browser.cjs
+      - name: Upload Retina screenshots, including failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: skyline-origins-approved-art-retina-review
+          path: origins-premium-qa/
+          if-no-files-found: ignore
