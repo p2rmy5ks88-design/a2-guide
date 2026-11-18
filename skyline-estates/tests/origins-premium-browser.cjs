@@ -96,7 +96,11 @@ const types={'.html':'text/html','.css':'text/css','.js':'text/javascript','.jso
    if(out){
     fs.mkdirSync(out,{recursive:true});
     const file=path.join(out,engine+'-'+vp.name+'.png');
+    // The review-only watermark belongs to the outer wrapper, not the actual
+    // playable game HUD. Exclude it from the owner's game-render image.
+    await page.locator('#reviewLabel').evaluate(el=>el.hidden=true);
     await page.screenshot({path:file,fullPage:false});
+    await page.locator('#reviewLabel').evaluate(el=>el.hidden=false);
     const buf=fs.readFileSync(file);
     assert.equal(buf.readUInt32BE(16),vp.width*vp.dpr,'screenshot is actually captured in Retina device pixels');
     assert.equal(buf.readUInt32BE(20),vp.height*vp.dpr,'screenshot height retains landscape Retina pixels');
