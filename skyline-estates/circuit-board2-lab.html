@@ -76,7 +76,17 @@ select,button{font:inherit}button{min-height:44px;min-width:44px;border-radius:1
 .b2-orbit button{padding:0;min-width:0;min-height:44px;border:1px solid #a8d9d0;background:#183e53;font-size:23px;font-weight:900;color:#ffe6ac}
 .b2-spotlight{padding:8px 7px;margin-top:6px;border-left:3px solid #ffcb66;border-radius:7px;background:#23536a90;min-height:57px;overflow-wrap:anywhere}
 .b2-spotlight b{color:#ffe7a3;font-size:12px}
-.b2-stage-label{display:block;margin:8px 0 4px;color:#ffe5a7;font-weight:900;font-size:11px}
+.b2-stage-label{display:block;margin:6px 0 4px;color:#ffe5a7;font-weight:900;font-size:11px}
+#cx-actions.b2-city-mode{display:flex;flex-direction:column;gap:3px;overflow:hidden}
+#cx-actions.b2-city-mode>.b2-inspect{flex:1;min-height:0;overflow-y:auto;margin:0;padding:2px 0 0;overscroll-behavior:contain}
+#cx-actions.b2-city-mode>.cx-sect:last-child{flex:0 0 auto;margin:0;padding:4px 0 0}
+#cx-actions.b2-city-mode .b2-inspect>b{font-size:14px}
+#cx-actions.b2-city-mode .b2-inspect>p.cx-k{font-size:10px;line-height:1.24;margin:4px 0}
+#cx-actions.b2-city-mode .b2-orbit{margin:5px 0}
+#cx-actions.b2-city-mode .b2-spotlight{padding:6px 7px;margin-top:4px;min-height:46px}
+.b2-skyline-toggle{display:block;width:100%;min-height:37px;padding:4px;border:1px solid #f4cc82;border-radius:9px;background:#24465a;color:#ffe6a9;font-size:11px;font-weight:900}
+.b2-skyline-toggle[aria-pressed=true]{background:#efcd84;color:#102b3f}
+.b2-demo-note{font-size:10px!important;color:#fff1bf!important;margin:3px 0!important}
 .b2-stage-label small{font-weight:600;color:#d3e6e5}
 #b2-preview-stage{display:block;width:100%;min-height:42px;border:1px solid #ebc17d;border-radius:9px;background:#17394e;color:#fff4da;padding:6px;font:750 12px/1.2 -apple-system,system-ui,sans-serif}
 #b2-preview-stage:focus-visible{outline:2px solid #ffdd91;outline-offset:2px}
