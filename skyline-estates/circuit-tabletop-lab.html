@@ -177,7 +177,7 @@ function center(onToken){panX=0;panY=-8;
 // Frame the complete board between the player HUD and action panel on every landscape viewport.
 function fitCamera(){
  var avail=window.innerWidth-$("#hud").offsetWidth-$("#actionSide").offsetWidth-56;
- zoom=Math.max(.48,Math.min(1.02,(window.innerHeight-45)/630,Math.max(250,avail)/760));
+ zoom=Math.max(.48,Math.min(1.02,(window.innerHeight-45)/630,Math.max(250,avail)/800));
  center(false);
 }
 function focusMovingPlayer(pid){if(!s)return;var p=locations[visualPos[pid]||s.players[pid].pos];if(!p)return;panX=(360-p[0])*zoom*.75;panY=(360-p[1])*zoom*.5;camera();}
