@@ -44,16 +44,29 @@ const root=path.resolve(__dirname,'../..'),out=process.env.BOARD2_SHOTS||null,en
    await p.evaluate(()=>__circuitBoard2.inspect('O1'));
    assert.equal(await p.evaluate(()=>__circuitBoard2.selected()),'O1','3D building inspection selects the intended street');
    assert((await p.locator('.b2-spotlight').innerText()).includes('Marina Avenue'),'building detail displays real street names, not raw tile IDs');
-   assert.equal(await p.evaluate(()=>JSON.stringify(__circuitUI.state())),before,'orbit/inspect/zoom never change authoritative match state');
+   assert.equal(await p.locator('#b2-preview-stage').count(),1,'selected property exposes a non-purchase building-stage preview');
+   await p.locator('#b2-preview-stage').selectOption('4');
+   await p.waitForFunction(()=>window.__circuitUI.r3().envelopeReport().some(x=>x.id==='O1'&&x.stage===4),null,{timeout:10000});
+   assert.equal(await p.evaluate(()=>__circuitBoard2.preview()),4,'City View can showcase a true 3D Skyscraper model');
+   assert.equal(await p.evaluate(()=>JSON.stringify(__circuitUI.state())),before,'previewed Skyscraper cannot affect gameplay or currency');
+   assert.equal(await p.evaluate(()=>localStorage.getItem('skylineCircuitSave')),null,'preview never touches Career saved game');
+   // Touch-drag orbit is a real camera response; the visible arrows are not just decorative.
+   const canvas=await p.locator('#cx-board').boundingBox();
+   const x=canvas.x+canvas.width*.5,y=canvas.y+canvas.height*.6;
+   await p.mouse.move(x,y);await p.mouse.down();await p.mouse.move(x+74,y,{steps:5});await p.mouse.up();
+   assert((await p.evaluate(()=>__circuitBoard2.orbit()))>14,'horizontal drag orbits the 3D city, bounded by the same camera control');
+   assert.equal(await p.evaluate(()=>JSON.stringify(__circuitUI.state())),before,'drag orbit cannot change game data');
    if(out){
     fs.mkdirSync(out,{recursive:true});
     const f=path.join(out,engine+'-'+vp.name+'-city.png');await p.screenshot({path:f});
     const buf=fs.readFileSync(f);assert.equal(buf.readUInt32BE(16),vp.width*vp.dpr);assert.equal(buf.readUInt32BE(20),vp.height*vp.dpr);
    }
-   checks+=9;
+   checks+=15;
    await p.locator('#cx-city-view').click();
    await p.waitForFunction(()=>!window.__circuitBoard2.city()&&window.__circuitUI.r3().camera.pitch===0,null,{timeout:9000});
    assert.equal(await p.evaluate(()=>__circuitBoard2.orbit()),0,'returning to Strategy resets yaw');
+   await p.waitForFunction(()=>!window.__circuitUI.r3().envelopeReport().some(x=>x.id==='O1'),null,{timeout:10000});
+   assert.equal(await p.evaluate(()=>__circuitBoard2.preview()),-1,'leaving City View resets every visual-only stage preview');
    assert.equal(await p.locator('#cx-roll').count(),1,'real dice action is restored');
    assert.equal(await p.evaluate(()=>localStorage.getItem('skylineCareerInbox:circuit-board2-lab')),null,'preview never writes Career results');
    await p.locator('#cx-roll').click();
@@ -61,7 +74,7 @@ const root=path.resolve(__dirname,'../..'),out=process.env.BOARD2_SHOTS||null,en
    assert.equal(await p.evaluate(()=>__circuitBoard2.orbit()),0,'dice movement cannot start an orbit');
    assert.equal(await p.evaluate(()=>localStorage.getItem('skylineCircuitSave')),null,'Career save remains untouched after a roll');
    assert.equal(errors.length,0,'no JavaScript errors during true WebGL interaction');
-   checks+=6;
+   checks+=7;
    await ctx.close();
   }
  }finally{await browser.close();await new Promise(r=>server.close(r))}
