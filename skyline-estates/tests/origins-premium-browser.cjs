@@ -106,8 +106,11 @@ const types={'.html':'text/html','.css':'text/css','.js':'text/javascript','.jso
    if(out){
     fs.mkdirSync(out,{recursive:true});
     const file=path.join(out,engine+'-'+vp.name+'.png');
-    // The review-only watermark belongs to the outer wrapper, not the actual
-    // playable game HUD. Exclude it from the owner's game-render image.
+    // A clean, real gameplay frame: suppress only a transient trophy toast
+    // created by test-fixture construction. It is not part of the default HUD,
+    // and removing the test toast does not affect the game state.
+    await subframe.evaluate(()=>document.querySelectorAll('.achpop').forEach(el=>el.style.visibility='hidden'));
+    // Exclude the review-only watermark, never the authoritative game view.
     await page.locator('#reviewLabel').evaluate(el=>el.hidden=true);
     await page.screenshot({path:file,fullPage:false});
     await page.locator('#reviewLabel').evaluate(el=>el.hidden=false);
