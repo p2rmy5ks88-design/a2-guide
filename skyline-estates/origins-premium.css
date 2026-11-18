@@ -215,3 +215,34 @@ html.origins-premium-v1 #originsPremiumProgress{
 @media(prefers-reduced-motion:reduce){
  html.origins-premium-v1 #acts .bigb{animation:none!important;transition:none!important}
 }
+
+
+/* Real-piece position markers, anchored to the existing camera projection.
+   Hidden during menus; never intercepts tap, dice, board or UI interaction. */
+html.origins-premium-v1 #originsTokenMarkers{
+ position:fixed;inset:0;z-index:4;pointer-events:none;
+ overflow:hidden;contain:layout style;user-select:none;
+}
+html.origins-premium-v1 #originsTokenMarkers[hidden]{display:none!important}
+html.origins-premium-v1 .originsTokenBadge{
+ position:fixed;display:grid;place-items:center;
+ box-sizing:border-box;width:29px;height:29px;
+ transform:translate(-50%,-50%);
+ border:2.5px solid var(--seat-color,#f6c465);
+ background:linear-gradient(145deg,#1f3c54,#071b34 78%);
+ color:#fff6dd;
+ border-radius:50%;
+ box-shadow:0 0 0 2px #fdf0b8be,0 4px 8px #031324cf,
+  inset 0 2px 3px #ffffff24;
+ text-align:center;
+ font:900 14px/1 -apple-system,system-ui,Arial,sans-serif;
+ text-shadow:0 1px 2px #000;
+ font-variant-numeric:tabular-nums;
+}
+html.origins-premium-v1 .originsTokenBadge[hidden]{display:none!important}
+html.origins-premium-v1 .originsTokenBadge.seat-1{border-radius:5px}
+html.origins-premium-v1 .originsTokenBadge.seat-2{border-radius:14px 14px 3px 3px}
+html.origins-premium-v1 .originsTokenBadge.seat-3{border-radius:4px 13px 4px 13px}
+@media(max-height:390px){
+ html.origins-premium-v1 .originsTokenBadge{width:25px;height:25px;font-size:12px}
+}
