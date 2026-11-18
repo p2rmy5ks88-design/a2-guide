@@ -30,7 +30,7 @@ const root=path.resolve(__dirname,'../..'),out=process.env.BOARD2_SHOTS||null,en
    assert(start.r.calls>0,'real WebGL renderer submitted draw calls');
    assert.equal(await p.evaluate(()=>localStorage.getItem('skylineCircuitSave')),null,'Board 1/Career slot is never overwritten');
    assert.equal(await p.evaluate(()=>localStorage.getItem('skylineCircuitTabletopRebootSave')),null,'Board 1 practice slot is untouched');
-   checks+=7;
+   checks+=8;
    await p.locator('#cx-city-view').click();
    await p.waitForFunction(()=>window.__circuitBoard2.city()&&window.__circuitUI.r3().camera.pitch>25,null,{timeout:9000});
    assert.equal(await p.locator('[data-plan]').count(),0,'Strategy route buttons are disabled during city inspection');
@@ -49,6 +49,15 @@ const root=path.resolve(__dirname,'../..'),out=process.env.BOARD2_SHOTS||null,en
    await p.waitForFunction(()=>window.__circuitUI.r3().envelopeReport().some(x=>x.id==='O1'&&x.stage===4),null,{timeout:10000});
    assert.equal(await p.evaluate(()=>__circuitBoard2.preview()),4,'City View can showcase a true 3D Skyscraper model');
    assert.equal(await p.evaluate(()=>JSON.stringify(__circuitUI.state())),before,'previewed Skyscraper cannot affect gameplay or currency');
+   await p.locator('#b2-skyline').click();
+   await p.waitForFunction(()=>window.__circuitUI.r3().envelopeReport().length===20,null,{timeout:10000});
+   assert.equal(await p.evaluate(()=>__circuitBoard2.showcase()),true,'full Skyline architectural preview is opt-in');
+   assert.equal(await p.evaluate(()=>JSON.stringify(__circuitUI.state())),before,'full-city showcase never buys any buildings');
+   const panelBounds=await p.evaluate(()=>{
+     const card=document.querySelector('#cx-actions').getBoundingClientRect(),back=document.querySelector('#cx-city-view').getBoundingClientRect();
+     return{inside:back.top>=card.top&&back.bottom<=card.bottom+2&&back.bottom<innerHeight};
+   });
+   assert(panelBounds.inside,'Return to Strategy stays visible even with all 3D inspector controls open');
    assert.equal(await p.evaluate(()=>localStorage.getItem('skylineCircuitSave')),null,'preview never touches Career saved game');
    // Touch-drag orbit is a real camera response; the visible arrows are not just decorative.
    const canvas=await p.locator('#cx-board').boundingBox();
@@ -61,12 +70,13 @@ const root=path.resolve(__dirname,'../..'),out=process.env.BOARD2_SHOTS||null,en
     const f=path.join(out,engine+'-'+vp.name+'-city.png');await p.screenshot({path:f});
     const buf=fs.readFileSync(f);assert.equal(buf.readUInt32BE(16),vp.width*vp.dpr);assert.equal(buf.readUInt32BE(20),vp.height*vp.dpr);
    }
-   checks+=15;
+   checks+=18;
    await p.locator('#cx-city-view').click();
    await p.waitForFunction(()=>!window.__circuitBoard2.city()&&window.__circuitUI.r3().camera.pitch===0,null,{timeout:9000});
    assert.equal(await p.evaluate(()=>__circuitBoard2.orbit()),0,'returning to Strategy resets yaw');
-   await p.waitForFunction(()=>!window.__circuitUI.r3().envelopeReport().some(x=>x.id==='O1'),null,{timeout:10000});
+   await p.waitForFunction(()=>window.__circuitUI.r3().envelopeReport().length===0,null,{timeout:10000});
    assert.equal(await p.evaluate(()=>__circuitBoard2.preview()),-1,'leaving City View resets every visual-only stage preview');
+   assert.equal(await p.evaluate(()=>__circuitBoard2.showcase()),false,'returning to Strategy turns off skyline showcase');
    assert.equal(await p.locator('#cx-roll').count(),1,'real dice action is restored');
    assert.equal(await p.evaluate(()=>localStorage.getItem('skylineCareerInbox:circuit-board2-lab')),null,'preview never writes Career results');
    await p.locator('#cx-roll').click();
