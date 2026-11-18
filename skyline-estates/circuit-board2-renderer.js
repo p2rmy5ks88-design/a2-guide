@@ -563,5 +563,19 @@ export function create(canvas,{layout,spec,camera:cam0,tier:tierName=pickTier(),
   renderer.setRenderTarget(rt);renderer.render(scene,camera);const px=new Uint8Array(4);const res=points.map(pt=>{const x=Math.round(pt.x-rect.x),y=Math.round(Hh-(pt.y-rect.y));if(x<0||y<0||x>=W||y>=Hh)return null;renderer.readRenderTargetPixels(rt,x,y,1,1,px);return{kind:px[0],i:px[1]-1}});
   renderer.setRenderTarget(null);for(const [o,m] of saved){o.material.dispose();o.material=m}for(const o of hidden)o.visible=true;for(const o of reHide)o.visible=false;renderer.setPixelRatio(pr);renderer.toneMapping=tm;renderer.outputColorSpace=cs;renderer.setClearColor(cc);rt.dispose();dirty=true;return res}
  function routeSamples(pos){const out={};for(const via of ['stay','cross']){const pts=routePath(pos,via),res=[];for(let i=1;i<pts.length;i++){const a=pts[i-1],b=pts[i];for(const k of [.3,.5,.7]){const q={x:a.x+(b.x-a.x)*k,y:a.y+(b.y-a.y)*k,z:5.8};res.push(Cview.project(q))}}out[via]=res}return out}
+ // QA introspects real physical meshes rather than relying on stylesheet names
+ // or approving the artwork merely because CI captured a screenshot.
+ function artReport(){
+  let canalSurfaces=0,plaqueSurfaces=0;
+  scene.traverse(o=>{
+   if(!o.isMesh)return;
+   const materials=Array.isArray(o.material)?o.material:[o.material];
+   if(materials.some(m=>m?.map===canalTex))canalSurfaces++;
+   if(materials.some(m=>m?.map===plaqueMap))plaqueSurfaces++;
+  });
+  return {waterChannel:canalSurfaces>0,centralLandmarkPlaque:plaqueSurfaces>0,
+   backdropBuildings:env.userData.circuitBackdropBuildings||0,
+   realSpaces:SC.NODES.length,realBridges:Object.keys(SC.LINKS).filter(k=>k[0]==='O').length};
+ }
  function stats(){return{tier:tierName,calls:renderer.info.render.calls,triangles:renderer.info.render.triangles,textures:renderer.info.memory.textures,geometries:renderer.info.memory.geometries,pixelRatio:renderer.getPixelRatio(),frameMs:frames.slice(-60)}}
- return{resize,setCamera,setOrbitYaw,setSpotlight,get orbitYaw(){return yaw},update,render,tick,routeSamples,get tier(){return tierName},get camera(){return camNow},get C(){return Cview},get baseC(){return C},setZoom,get zoom(){return zoom},G,projectNode,envelopeReport,idPass,stats,downgrade,renderer,labelLayer,markDirty:()=>{dirty=true}}}
+ return{resize,setCamera,setOrbitYaw,setSpotlight,get orbitYaw(){return yaw},update,render,tick,routeSamples,get tier(){return tierName},get camera(){return camNow},get C(){return Cview},get baseC(){return C},setZoom,get zoom(){return zoom},G,projectNode,envelopeReport,idPass,artReport,stats,downgrade,renderer,labelLayer,markDirty:()=>{dirty=true}}}
