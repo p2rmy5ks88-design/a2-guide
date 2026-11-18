@@ -34,6 +34,7 @@ const root=path.resolve(__dirname,'../..'),out=process.env.BOARD2_SHOTS||null,en
    assert.equal(start.cam.pitch,0,'decision camera stays top-down for fair moves');
    assert(start.r.calls>0,'real WebGL renderer submitted draw calls');
    assert(start.art.waterChannel,'the approved double ring contains a real, textured 3D canal');
+   assert(start.art.blueWaterUnderlay,'approved blue canal and blue-water underlay are both real 3D textured surfaces');
    assert(start.art.centralLandmarkPlaque,'the physical Circuit City central landmark carries its own sign');
    assert(start.art.backdropBuildings>=18,'the premium 3D waterfront skyline exists in each quality tier');
    assert.equal(start.art.realSpaces,32,'art-only changes preserve every real stop and tile');
@@ -41,7 +42,7 @@ const root=path.resolve(__dirname,'../..'),out=process.env.BOARD2_SHOTS||null,en
    if(vp.name==='iphone')assert(start.r.pixelRatio>=2.4,'main iPhone uses a true 2.5x WebGL canvas rather than a blurry 1.5x upscale');
    assert.equal(await p.evaluate(()=>localStorage.getItem('skylineCircuitSave')),null,'Board 1/Career slot is never overwritten');
    assert.equal(await p.evaluate(()=>localStorage.getItem('skylineCircuitTabletopRebootSave')),null,'Board 1 practice slot is untouched');
-   checks+=14;
+   checks+=15;
    await p.locator('#cx-city-view').click({noWaitAfter:true});
    await p.waitForFunction(()=>window.__circuitBoard2.city()&&window.__circuitUI.r3().camera.pitch>35,null,{timeout:9000});
    await p.waitForFunction(()=>window.__circuitUI.r3().envelopeReport().length===20,null,{timeout:18000});
