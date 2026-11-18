@@ -67,6 +67,8 @@ const types={'.html':'text/html','.css':'text/css','.js':'text/javascript','.jso
      oversizedIslandVisible:ROOT.kids.some(n=>n.visible!==false&&(n.mat===S3.islandMat||n.mat===S3.rimMat)),
      stats:document.querySelector('#originsPremiumStats')?.textContent,
      expectedCash:typeof fmt==='function'?fmt(G.players[0].cash):null,
+     premiumCameraPitch:camT.pitch,
+     rollBackground:getComputedStyle(document.querySelector('#acts .bigb')).backgroundImage,
      roster:document.querySelectorAll('#roster .pcard').length,
      gameView:{w:canvas.width,h:canvas.height,cssw:canvas.clientWidth,cssh:canvas.clientHeight},
      gameKeys:Object.fromEntries(['skylineCircuitSave','skylineCircuitTabletopRebootSave'].map(k=>[k,localStorage.getItem(k)]))};
@@ -75,6 +77,8 @@ const types={'.html':'text/html','.css':'text/css','.js':'text/javascript','.jso
    assert.equal(review.buildings,15,'fifteen additional distinct landmark buildings surround the civic plaza');
    assert.equal(review.harbourCount,15,'fifteen real waterfront backdrop towers accompany the main board');
    assert.equal(review.oversizedIslandVisible,false,'the oversized polygon no longer covers the blue water surrounding the 40-space square');
+   assert(Math.abs(review.premiumCameraPitch-.78)<.005,'default Origins camera is lower and more isometric for stronger building depth');
+   assert(review.rollBackground.includes('239, 103, 102'),'approved red Roll Dice action overrides the original gold theme: '+review.rollBackground);
    assert.equal(review.sameGame,true,'visual refresh never changes ownership, players or turns');
    assert.equal(review.rootClass,true,'premium look only activates inside the isolated lab');
    assert.equal(review.water,'#0c5578','approved deep-blue water is used in actual 3D game materials');
@@ -86,7 +90,7 @@ const types={'.html':'text/html','.css':'text/css','.js':'text/javascript','.jso
    assert.deepEqual(review.gameKeys,initial.saves,'the premium visual patch writes neither the Board 1 nor Circuit saves');
    assert(review.gameView.w/review.gameView.cssw>=(vp.dpr>1?1.7:.9),
      'WebGL backing resolution is suitable for the tested DPR tier: '+JSON.stringify(review.gameView));
-   checks+=14;
+   checks+=16;
    await page.waitForTimeout(5200); // let legitimate achievement popups clear before the layout snapshot
    assert.equal(await frame.locator('#acts .bigb').count(),1,'the actual game Roll Dice action is visible inside the styled HUD');checks++;
    const cover=await subframe.evaluate(()=>{
