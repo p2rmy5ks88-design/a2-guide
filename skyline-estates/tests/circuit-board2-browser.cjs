@@ -29,13 +29,14 @@ const root=path.resolve(__dirname,'../..'),out=process.env.BOARD2_SHOTS||null,en
    const start=await p.evaluate(()=>({saveKey:__circuitBoard2.saveKey,view:__circuitUI.view(),cam:__circuitUI.r3().camera,orbit:__circuitBoard2.orbit(),r:__circuitUI.r3().stats()}));
    assert.equal(start.saveKey,'skylineCircuitBoard2PracticeSave');
    assert.equal(start.view.nodes.length,32,'dual-ring keeps 32 rules nodes');
+   assert.deepEqual(start.view.players.map(x=>x.name),['You','Kofi','Mei','Lucas'],'names match the Y/K/M/L pieces in the premium 3D city');
    assert.equal(start.orbit,0,'decision camera cannot start pre-orbited');
    assert.equal(start.cam.pitch,0,'decision camera stays top-down for fair moves');
    assert(start.r.calls>0,'real WebGL renderer submitted draw calls');
    if(vp.name==='iphone')assert(start.r.pixelRatio>=2.4,'main iPhone uses a true 2.5x WebGL canvas rather than a blurry 1.5x upscale');
    assert.equal(await p.evaluate(()=>localStorage.getItem('skylineCircuitSave')),null,'Board 1/Career slot is never overwritten');
    assert.equal(await p.evaluate(()=>localStorage.getItem('skylineCircuitTabletopRebootSave')),null,'Board 1 practice slot is untouched');
-   checks+=8;
+   checks+=9;
    await p.locator('#cx-city-view').click({noWaitAfter:true});
    await p.waitForFunction(()=>window.__circuitBoard2.city()&&window.__circuitUI.r3().camera.pitch>35,null,{timeout:9000});
    await p.waitForFunction(()=>window.__circuitUI.r3().envelopeReport().length===20,null,{timeout:18000});
