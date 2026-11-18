@@ -262,7 +262,7 @@ function renderActions(){if(!s)return;var v=SC.view(s),pd=SC.pending(s),me=s.pla
  var side=$("#actionCard");if(side.dataset.state!==html){side.innerHTML=html;side.dataset.state=html;}
  side.querySelectorAll("[data-action]").forEach(function(b){b.addEventListener("click",function(){actUI(b.dataset.action)})});
 }
-function render(){if(!s)return;renderActions();paintTiles();paintTokens();renderRoster();renderSelected();}
+function render(){if(!s)return;renderActions();paintTiles();paintTokens();renderRoster();renderSelected();if(window.SkylineCircuitLife)window.SkylineCircuitLife.reflect(SC.view(s));}
 function sleep(ms){return new Promise(function(resolve){setTimeout(resolve,ms)})}
 async function perform(action){if(busy||!s||s.over)return;var pd=SC.pending(s);if(!pd||pd.player!==s.turn)return;
  busy=true;var start=Object.assign({},visualPos),turnBefore=s.turn;
