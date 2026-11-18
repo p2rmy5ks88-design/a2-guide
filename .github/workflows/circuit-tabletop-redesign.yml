@@ -39,6 +39,25 @@ jobs:
           WEBKIT_DISABLE_DMABUF_RENDERER: '1'
           TABLETOP_SCREENSHOTS: tabletop-qa
         run: node skyline-estates/tests/circuit-tabletop-browser.cjs
+      - name: Package self-contained playable HTML preview
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          html = Path('skyline-estates/circuit-tabletop-lab.html').read_text()
+          rules = Path('skyline-estates/lib/circuit-rules.js').read_text()
+          needle = '<script src="./lib/circuit-rules.js"></script>'
+          assert html.count(needle) == 1
+          html = html.replace(needle, '<script>\n' + rules + '\n</script>')
+          out = Path('tabletop-playable')
+          out.mkdir(exist_ok=True)
+          (out / 'Skyline-Circuit-Interactive-Preview.html').write_text(html)
+          PY
+      - name: Publish self-contained interactive board
+        uses: actions/upload-artifact@v4
+        with:
+          name: skyline-circuit-interactive-preview
+          path: tabletop-playable/
+          if-no-files-found: error
       - name: Upload true playable board screenshots
         if: always()
         uses: actions/upload-artifact@v4
