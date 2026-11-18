@@ -115,7 +115,34 @@ export function create(canvas,{layout,spec,camera:cam0,tier:tierName=pickTier(),
  const ringGapIn0=()=>Math.min(...SC.NODES.filter(n=>n.ring==='I').map(n=>Math.hypot(G.nodes[n.id].x,G.nodes[n.id].y)))+T*.62,ringGapOut0=()=>R-T*.62;
  // central civic garden (decorative)
  const innerR=Math.min(...SC.NODES.filter(n=>n.ring==='I').map(n=>Math.hypot(G.nodes[n.id].x,G.nodes[n.id].y)))-T*.72;
- const plaza=new THREE.Mesh(new THREE.RingGeometry(ringGapIn0(),ringGapOut0(),128),new THREE.MeshStandardMaterial({color:'#B78A60',roughness:.9}));plaza.rotation.x=-Math.PI/2;plaza.position.y=.08;plaza.receiveShadow=!!tier.shadows;env.add(plaza);
+ // Official approved Board 2: teal water between BOTH chocolate-brown
+ // boulevards, under real bridge geometry. This scenic material never changes
+ // the original 32 node positions, route handling or ownership rules.
+ const canalTex=canvasTex(512,512,(ctx,w,h)=>{
+  const bg=ctx.createLinearGradient(0,0,w,h);
+  bg.addColorStop(0,'#063854');bg.addColorStop(.36,'#0d6385');
+  bg.addColorStop(.70,'#0e7490');bg.addColorStop(1,'#093e65');
+  ctx.fillStyle=bg;ctx.fillRect(0,0,w,h);
+  const rand=rng(20261118);
+  for(let k=0;k<1400;k++){
+   const x=rand()*w,y=rand()*h,len=2+rand()*21;
+   ctx.strokeStyle=rand()<.13?'rgba(255,209,128,.36)':
+    rand()<.6?'rgba(183,237,239,.25)':'rgba(7,42,65,.30)';
+   ctx.lineWidth=.6+rand()*1.6;ctx.beginPath();ctx.moveTo(x,y);
+   ctx.quadraticCurveTo(x+len*.5,y-2.4,x+len,y-.6);ctx.stroke();
+  }
+ },{repeat:[2,2]});
+ const canal=new THREE.Mesh(new THREE.RingGeometry(ringGapIn0(),ringGapOut0(),128),
+  new THREE.MeshStandardMaterial({map:canalTex,color:'#FFFFFF',roughness:.24,
+   metalness:.11,emissive:'#06405a',emissiveIntensity:.12,side:THREE.DoubleSide}));
+ canal.rotation.x=-Math.PI/2;canal.position.y=.08;
+ canal.receiveShadow=!!tier.shadows;canal.userData.circuitCanal=true;env.add(canal);
+ const canalEdgeMat=new THREE.MeshStandardMaterial({
+  color:'#E5B65D',metalness:.62,roughness:.31,emissive:'#8C541D',emissiveIntensity:.23});
+ for(const rr of [ringGapIn0()+.45,ringGapOut0()-.45]){
+  const edge=new THREE.Mesh(new THREE.TorusGeometry(rr,.43,6,144),canalEdgeMat);
+  edge.rotation.x=Math.PI/2;edge.position.y=.27;env.add(edge);
+ }
  const garden=new THREE.Mesh(new THREE.CylinderGeometry(innerR,innerR,2,96),new THREE.MeshStandardMaterial({color:'#176C41',roughness:.96}));garden.position.y=0;garden.receiveShadow=!!tier.shadows;env.add(garden);
  // Board 2's unmistakable civic landmark: physical plinth, glass gallery,
  // six limestone columns and a low glazed dome. All parts are real meshes,
@@ -133,9 +160,27 @@ export function create(canvas,{layout,spec,camera:cam0,tier:tierName=pickTier(),
    add(new THREE.CylinderGeometry(1.8,1.8,.65,8),bronze,x,12.2,z)}
   add(new THREE.BoxGeometry(w*1.07,1.8,d*1.15),limestone,0,12.9,0);
   add(new THREE.BoxGeometry(w*.9,.55,d*.96),bronze,0,14,0);
-  const dome=new THREE.Mesh(new THREE.SphereGeometry(Math.min(w*.25,d*.78),20,10,0,Math.PI*2,0,Math.PI/2),glazing);
-  dome.position.set(0,14.4,0);dome.castShadow=!!tier.shadows;pavilion.add(dome);
-  add(new THREE.CylinderGeometry(1.5,1.9,2.1,10),bronze,0,14.4+Math.min(w*.25,d*.78)+1,0);
+  // Larger oval glass dome and gilded meridian ribs, the focal landmark in
+  // the approved Circuit City image. Pure decoration inside the civic park.
+  const domeR=Math.min(w*.25,d*.78);
+  const dome=new THREE.Mesh(
+   new THREE.SphereGeometry(domeR,32,16,0,Math.PI*2,0,Math.PI/2),glazing);
+  dome.scale.set(1.28,.88,.84);dome.position.set(0,14.4,0);
+  dome.castShadow=!!tier.shadows;pavilion.add(dome);
+  const domeRib=new THREE.MeshStandardMaterial({color:'#F5CD80',metalness:.8,
+   roughness:.3,emissive:'#B37932',emissiveIntensity:.27});
+  const baseRing=new THREE.Mesh(new THREE.TorusGeometry(domeR,.24,6,52),domeRib);
+  baseRing.rotation.x=Math.PI/2;baseRing.scale.set(1.30,.84,1);
+  baseRing.position.y=14.55;pavilion.add(baseRing);
+  for(let k=0;k<7;k++){
+   const a=Math.PI*k/7,dx=Math.cos(a)*domeR*1.22,dz=Math.sin(a)*domeR*.78;
+   const bow=new THREE.QuadraticBezierCurve3(
+    new THREE.Vector3(-dx,14.6,-dz),
+    new THREE.Vector3(0,14.6+domeR*.91,0),
+    new THREE.Vector3(dx,14.6,dz));
+   pavilion.add(new THREE.Mesh(new THREE.TubeGeometry(bow,18,.16,5,false),domeRib));
+  }
+  add(new THREE.CylinderGeometry(1.1,1.5,1.7,12),bronze,0,14.4+domeR*.91+.8,0);
   pavilion.position.set(0,0,-innerR*.42);env.add(pavilion);}
 
  const pool=new THREE.Mesh(new THREE.CylinderGeometry(innerR*.3,innerR*.3,2.2,64),new THREE.MeshStandardMaterial({color:P.waterHighlight,roughness:.2,metalness:.2}));pool.position.y=.3;env.add(pool);
@@ -154,7 +199,7 @@ export function create(canvas,{layout,spec,camera:cam0,tier:tierName=pickTier(),
  const nearJunction=(a,deg)=>junctionAngles.some(j=>Math.abs(Math.atan2(Math.sin(a-j),Math.cos(a-j)))<deg*Math.PI/180);
  const outerEdge=R+T*.62,innerR2=Math.min(...SC.NODES.filter(n=>n.ring==='I').map(n=>Math.hypot(G.nodes[n.id].x,G.nodes[n.id].y)));
  const ringGapIn=innerR2+T*.62,ringGapOut=R-T*.62;
- {const r=rng(21),blocks=[],roofs=[],lamps=[];const blockMat=new THREE.MeshStandardMaterial({color:'#D8B38C',roughness:.85}),roofMat=new THREE.MeshStandardMaterial({color:'#C78664',roughness:.8});
+ {const r=rng(21),blocks=[],roofs=[],lamps=[];const blockMat=new THREE.MeshStandardMaterial({map:facade('masonry',tierName!=='low'?2:1),color:'#F8E5C7',roughness:.68,metalness:.03}),roofMat=new THREE.MeshStandardMaterial({color:'#C98554',roughness:.65,metalness:.07});
   // outer promenade: low shops and townhouses between the boulevard and the waterfront
   for(let i=0;i<120;i++){const a=i/120*Math.PI*2+r()*.02,d=outerEdge+3+r()*(platR-outerEdge-9);const w=3.2+r()*2.6,h=2.2+r()*3.2;blocks.push({x:Math.cos(a)*d,y:h/2,z:Math.sin(a)*d,sx:w,sy:h,sz:w*.8,ry:-a})}
   // between the rings: low civic blocks and pocket parks, kept clear of the bridges
@@ -436,7 +481,7 @@ export function create(canvas,{layout,spec,camera:cam0,tier:tierName=pickTier(),
  }
  // ---------- render ----------
  let dirty=true,t0=0;const frames=[];
- function render(now=performance.now()){if(tier.water){waterTex.offset.x=(now/60000)%1;waterTex.offset.y=(now/90000)%1;dirty=true}
+ function render(now=performance.now()){if(tier.water){waterTex.offset.x=(now/60000)%1;waterTex.offset.y=(now/90000)%1;canalTex.offset.x=(now/165000)%1;dirty=true}
   if(!dirty)return false;const a=performance.now();renderer.render(scene,camera);dirty=false;frames.push(performance.now()-a);if(frames.length>240)frames.shift();return true}
  // ---------- adaptive quality ----------
  // Evaluated on time, not frame count, so a very slow device still adapts quickly: every 2 s window (≥ 3 frames; gaps over 5 s, e.g. a hidden tab, are ignored) with
