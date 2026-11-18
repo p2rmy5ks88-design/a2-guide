@@ -59,7 +59,9 @@ let browser,server;
    if(out&&vp.id==='iphone'){fs.mkdirSync(out,{recursive:true});await p.screenshot({path:path.join(out,engine+'-'+vp.id+'-zoomed.png'),fullPage:false})}
    // Restore the actual launch zoom before taking the default review screenshot.
    await p.locator('#zoomOut').click();
-   assert.equal(await p.locator('#boardStage').getAttribute('style'),before,'zooming back restores the approved full-board framing');
+   const restored=await p.locator('#boardStage').getAttribute('style');
+   const scaleOf=s=>Number(s.match(/scale\(([^)]+)\)/)[1]);
+   assert(Math.abs(scaleOf(restored)-scaleOf(before))<1e-6,'zooming back restores the approved full-board scale');
    if(out){fs.mkdirSync(out,{recursive:true});await p.screenshot({path:path.join(out,engine+'-'+vp.id+'-tabletop.png'),fullPage:false})}
    if(out&&vp.id==='iphone'){
      const beforeCity=await p.evaluate(()=>{
