@@ -31,6 +31,13 @@ jobs:
           CHROME_PATH: /usr/bin/google-chrome
           ORIGINS_SHOTS: origins-premium-qa
         run: node skyline-estates/tests/origins-premium-browser.cjs
+      - name: Upload early real Chromium Retina screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: skyline-origins-premium-chromium-qa
+          path: origins-premium-qa/chromium-*.png
+          if-no-files-found: ignore
       - name: Install Safari WebKit engine
         run: npx --prefix skyline-estates/tests playwright install --with-deps webkit
       - name: Review actual 40-space WebGL board in Safari WebKit
