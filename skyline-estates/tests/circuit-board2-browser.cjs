@@ -19,7 +19,10 @@ const root=path.resolve(__dirname,'../..'),out=process.env.BOARD2_SHOTS||null,en
   for(const vp of [{name:'iphone',width:956,height:440,dpr:3},{name:'small',width:844,height:390,dpr:3},{name:'desktop',width:1366,height:768,dpr:1}]){
    const ctx=await browser.newContext({viewport:{width:vp.width,height:vp.height},deviceScaleFactor:vp.dpr,hasTouch:vp.dpr>1,serviceWorkers:'block',reducedMotion:'reduce'});
    const p=await ctx.newPage(),errors=[];p.on('pageerror',e=>errors.push(String(e)));
-   await p.goto('http://127.0.0.1:'+server.address().port+'/skyline-estates/circuit-board2-lab.html?quality=low&seed=271828',{waitUntil:'load'});
+   // Main iPhone capture uses genuine Retina 3× WebGL rather than a 1.5×
+   // low-quality canvas upscaled to a 3× PNG; small-screen covers fallback.
+   const tier=vp.name==='iphone'?'high':'low';
+   await p.goto('http://127.0.0.1:'+server.address().port+'/skyline-estates/circuit-board2-lab.html?quality='+tier+'&seed=271828',{waitUntil:'load'});
    await p.locator('#cx-start').click();
    await p.waitForFunction(()=>window.__circuitUI&&window.__circuitUI.r3(),null,{timeout:18000});
    const start=await p.evaluate(()=>({saveKey:__circuitBoard2.saveKey,view:__circuitUI.view(),cam:__circuitUI.r3().camera,orbit:__circuitBoard2.orbit(),r:__circuitUI.r3().stats()}));
@@ -28,11 +31,14 @@ const root=path.resolve(__dirname,'../..'),out=process.env.BOARD2_SHOTS||null,en
    assert.equal(start.orbit,0,'decision camera cannot start pre-orbited');
    assert.equal(start.cam.pitch,0,'decision camera stays top-down for fair moves');
    assert(start.r.calls>0,'real WebGL renderer submitted draw calls');
+   if(vp.name==='iphone')assert(start.r.pixelRatio>=2.6,'main iPhone uses truly high-resolution WebGL, not a blurry low-tier upscale');
    assert.equal(await p.evaluate(()=>localStorage.getItem('skylineCircuitSave')),null,'Board 1/Career slot is never overwritten');
    assert.equal(await p.evaluate(()=>localStorage.getItem('skylineCircuitTabletopRebootSave')),null,'Board 1 practice slot is untouched');
    checks+=8;
    await p.locator('#cx-city-view').click();
-   await p.waitForFunction(()=>window.__circuitBoard2.city()&&window.__circuitUI.r3().camera.pitch>25,null,{timeout:9000});
+   await p.waitForFunction(()=>window.__circuitBoard2.city()&&window.__circuitUI.r3().camera.pitch>35,null,{timeout:9000});
+   await p.waitForFunction(()=>window.__circuitUI.r3().envelopeReport().length===20,null,{timeout:18000});
+   assert.equal(await p.evaluate(()=>__circuitBoard2.showcase()),true,'City View opens in owner-approved 20-building concept display');
    assert.equal(await p.locator('[data-plan]').count(),0,'Strategy route buttons are disabled during city inspection');
    assert.equal(await p.locator('#b2-left').count(),1,'City View has explicit orbit controls');
    assert.equal(await p.locator('#b2-zoom-in').count(),1,'City View has explicit zoom controls');
@@ -49,9 +55,14 @@ const root=path.resolve(__dirname,'../..'),out=process.env.BOARD2_SHOTS||null,en
    await p.waitForFunction(()=>window.__circuitUI.r3().envelopeReport().some(x=>x.id==='O1'&&x.stage===4),null,{timeout:10000});
    assert.equal(await p.evaluate(()=>__circuitBoard2.preview()),4,'City View can showcase a true 3D Skyscraper model');
    assert.equal(await p.evaluate(()=>JSON.stringify(__circuitUI.state())),before,'previewed Skyscraper cannot affect gameplay or currency');
+   // An obvious one-tap control must switch to the TRUE match architecture,
+   // then back to the concept world, without any purchase or save mutation.
+   await p.locator('#b2-skyline').click();
+   await p.waitForFunction(()=>window.__circuitUI.r3().envelopeReport().length===1,null,{timeout:10000});
+   assert.equal(await p.evaluate(()=>__circuitBoard2.showcase()),false,'City View can show only actual match buildings plus selected inspection');
    await p.locator('#b2-skyline').click();
    await p.waitForFunction(()=>window.__circuitUI.r3().envelopeReport().length===20,null,{timeout:10000});
-   assert.equal(await p.evaluate(()=>__circuitBoard2.showcase()),true,'full Skyline architectural preview is opt-in');
+   assert.equal(await p.evaluate(()=>__circuitBoard2.showcase()),true,'Concept skyline can be restored with a single tap');
    assert.equal(await p.evaluate(()=>JSON.stringify(__circuitUI.state())),before,'full-city showcase never buys any buildings');
    const panelBounds=await p.evaluate(()=>{
      const card=document.querySelector('#cx-actions').getBoundingClientRect(),back=document.querySelector('#cx-city-view').getBoundingClientRect();
@@ -70,7 +81,7 @@ const root=path.resolve(__dirname,'../..'),out=process.env.BOARD2_SHOTS||null,en
     const f=path.join(out,engine+'-'+vp.name+'-city.png');await p.screenshot({path:f});
     const buf=fs.readFileSync(f);assert.equal(buf.readUInt32BE(16),vp.width*vp.dpr);assert.equal(buf.readUInt32BE(20),vp.height*vp.dpr);
    }
-   checks+=18;
+   checks+=22;
    await p.locator('#cx-city-view').click();
    await p.waitForFunction(()=>!window.__circuitBoard2.city()&&window.__circuitUI.r3().camera.pitch===0,null,{timeout:9000});
    assert.equal(await p.evaluate(()=>__circuitBoard2.orbit()),0,'returning to Strategy resets yaw');
