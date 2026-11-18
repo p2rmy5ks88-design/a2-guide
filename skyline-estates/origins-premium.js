@@ -338,6 +338,99 @@
 
  // Unique physical markers follow the REAL moving tokens, including across
  // moves and board rebuilds. This is visual-only and never changes inventory.
+
+ // Water refinement: one baked texture, no per-frame allocations or additional
+ // render meshes. The original animated water surface, board and physics stay put.
+ function paintDetailedWater(){
+  if(!isReady()||S3.originsWaterTex)return !!S3?.originsWaterTex;
+  const texture=cnv(1024,1024,(c,w,h)=>{
+   const g=c.createLinearGradient(0,0,w,h);
+   g.addColorStop(0,'#0a4867');g.addColorStop(.43,'#116a84');
+   g.addColorStop(.72,'#0d5877');g.addColorStop(1,'#073a5d');
+   c.fillStyle=g;c.fillRect(0,0,w,h);
+   let seed=0x13579bdf;
+   const next=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296};
+   // Short directional ripples, teal undertones and warm golden-hour glints.
+   for(let i=0;i<3400;i++){
+    const x=next()*w,y=next()*h,len=2+next()*12;
+    const lit=next()>.86;
+    c.strokeStyle=lit?'rgba(255,217,148,.19)':next()>.45?'rgba(172,233,233,.19)':'rgba(8,38,70,.33)';
+    c.lineWidth=.75+next()*1.6;c.beginPath();c.moveTo(x,y);
+    c.quadraticCurveTo(x+len*.50,y-1.5-next()*1.7,x+len,y-.6);c.stroke();
+   }
+   // Diffused sunlight stays below the physical board's reflective wave motion.
+   const glow=c.createRadialGradient(w*.38,h*.35,0,w*.38,h*.35,w*.4);
+   glow.addColorStop(0,'rgba(255,204,126,.095)');
+   glow.addColorStop(1,'rgba(255,204,126,0)');
+   c.fillStyle=glow;c.fillRect(0,0,w,h);
+  });
+  const t=texFrom(texture);S3.originsWaterTex=t;
+  S3.waterMat.tex=t;S3.waterMat.c=hex('#ffffff');
+  S3.waterMat.unlit=1;S3.waterMat.spec=.42;S3.waterMat.wave=1;
+  return true;
+ }
+
+ // Project the real moving pieces through Skyline's authoritative camera.
+ // Tiny read-only badges are deconflicted when all players share GO/a street,
+ // and never change token positions, pathing, input or player data.
+ let badgesStarted=false;
+ function syncTokenBadges(){
+  if(badgesStarted)return;
+  badgesStarted=true;
+  const wrap=document.createElement('div');wrap.id='originsTokenMarkers';
+  wrap.setAttribute('aria-hidden','true');document.body.append(wrap);
+  const chips=Array.from({length:4},(_,i)=>{
+   const el=document.createElement('span');
+   el.className='originsTokenBadge seat-'+i;
+   el.dataset.seat=String(i);wrap.append(el);return el;
+  });
+  let last=0;
+  const update=(now)=>{
+   requestAnimationFrame(update);
+   if(now-last<70)return;last=now;
+   const ui=document.querySelector('#ui'),cv=document.querySelector('#gl');
+   if(ui?.hidden||!cv||!G?.players||!CAMM?.vp||!Array.isArray(tok3)){
+    wrap.hidden=true;return;
+   }
+   const rect=cv.getBoundingClientRect(),m=CAMM.vp;
+   if(!rect.width||!rect.height){wrap.hidden=true;return}
+   wrap.hidden=false;
+   const loc=new Map(),views=[];
+   for(const player of G.players.slice(0,4)){
+    const t=tok3[player.id],el=chips[player.id];
+    if(!el)continue;
+    el.hidden=!t||player.bankrupt;if(el.hidden)continue;
+    el.textContent=player.ai?(player.name||'?').trim().charAt(0).toUpperCase():'Y';
+    el.style.setProperty('--seat-color',player.col||'#f7c85b');
+    const [x,y,z]=t.p,up=y+.73;
+    const xx=m[0]*x+m[4]*up+m[8]*z+m[12],
+      yy=m[1]*x+m[5]*up+m[9]*z+m[13],
+      ww=m[3]*x+m[7]*up+m[11]*z+m[15];
+    if(!(ww>.01)){el.hidden=true;continue}
+    const sx=rect.left+(xx/ww+1)*.5*rect.width,
+      sy=rect.top+(1-yy/ww)*.5*rect.height;
+    if(sx<-20||sx>innerWidth+20||sy<-20||sy>innerHeight+20){
+     el.hidden=true;continue;
+    }
+    const space=String(player.pos),group=loc.get(space)||[];
+    group.push({el,sx,sy});loc.set(space,group);views.push(el);
+   }
+   for(const group of loc.values()){
+    const x=group.reduce((a,v)=>a+v.sx,0)/group.length,
+      y=group.reduce((a,v)=>a+v.sy,0)/group.length;
+    group.forEach((v,k)=>{
+     // Two-row formation is deliberately placed ABOVE the occupied tile.
+     const cols=Math.min(2,group.length),row=Math.floor(k/2),
+       col=k%cols;
+     const fx=group.length===1?v.sx:x+(col-(cols-1)/2)*30,
+       fy=group.length===1?v.sy-12:y-41+row*29;
+     v.el.style.left=fx.toFixed(1)+'px';
+     v.el.style.top=fy.toFixed(1)+'px';
+    });
+   }
+  };
+  requestAnimationFrame(update);
+ }
  function markPhysicalTokens(){
   if(!isReady()||typeof G==='undefined'||!G?.players||
      typeof tok3==='undefined'||!Array.isArray(tok3))return 0;
@@ -421,7 +514,7 @@
     BOARD_RES.level=2.5;BOARD_RES.ceiling=2.5;
    }
   }
-  deepenActualScene();paintPremiumCityGround();decorateWaterfront();
+  deepenActualScene();paintDetailedWater();paintPremiumCityGround();decorateWaterfront();syncTokenBadges();
   const b=addArchitecture(),tokens=markPhysicalTokens();stats();return{ready:true,buildings:b,tokens,waterfront:!!S3.centers?.beach?.originsHarbourAdded,boardCount:40};
  }
  function queueRefresh(){
