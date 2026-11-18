@@ -1,0 +1,40 @@
+name: Skyline Board 1 offline release manifest
+on:
+  pull_request:
+    paths:
+      - 'skyline-estates/lib/career.js'
+      - 'skyline-estates/build.py'
+      - 'skyline-estates/circuit-tabletop-lab.html'
+      - 'skyline-estates/circuit-tabletop-life.css'
+      - 'skyline-estates/circuit-tabletop-life.js'
+      - '.github/workflows/board1-generate-offline.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  generate-manifest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate deterministic offline artifacts
+        run: |
+          python3 skyline-estates/build.py
+          python3 skyline-estates/build.py --check
+          python3 - <<'PY'
+          import json,pathlib,re
+          p=pathlib.Path('skyline-estates/offline-assets.js').read_text()
+          payload=json.loads(p.split('=',1)[1].strip().rstrip(';'))
+          required=['./circuit-tabletop-lab.html','./circuit-tabletop-life.css','./circuit-tabletop-life.js']
+          assert all(k in payload['files'] for k in required)
+          print('BOARD1_EXPECTED_OFFLINE_VERSION='+payload['version'])
+          PY
+          git diff --name-only -- skyline-estates
+      - name: Upload derived offline assets for auditable release
+        uses: actions/upload-artifact@v4
+        with:
+          name: board1-generated-offline-assets
+          path: |
+            skyline-estates/offline-assets.js
+            skyline-estates/sw.js
+          if-no-files-found: error
