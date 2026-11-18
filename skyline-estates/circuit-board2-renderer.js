@@ -148,7 +148,7 @@ export function create(canvas,{layout,spec,camera:cam0,tier:tierName=pickTier(),
  // six limestone columns and a low glazed dome. All parts are real meshes,
  // live behind the fountain, and never intersect a legal street or bridge.
  // A small silhouette remains readable even in the battery-saving Low tier.
- {const pavilion=new THREE.Group(),w=innerR*.59,d=innerR*.26;
+ {const pavilion=new THREE.Group(),w=innerR*.94,d=innerR*.55;
   const limestone=new THREE.MeshStandardMaterial({color:'#FFF0D4',roughness:.76}),
    bronze=new THREE.MeshStandardMaterial({color:'#E8B75F',metalness:tier.shadows?.62:.12,roughness:.28,emissive:'#7B5119',emissiveIntensity:.17}),
    glazing=new THREE.MeshStandardMaterial({color:'#75C7E5',metalness:tier.shadows?.35:.04,roughness:.21,emissive:'#33799C',emissiveIntensity:.24,transparent:true,opacity:.96});
@@ -162,18 +162,18 @@ export function create(canvas,{layout,spec,camera:cam0,tier:tierName=pickTier(),
   add(new THREE.BoxGeometry(w*.9,.55,d*.96),bronze,0,14,0);
   // Larger oval glass dome and gilded meridian ribs, the focal landmark in
   // the approved Circuit City image. Pure decoration inside the civic park.
-  const domeR=Math.min(w*.25,d*.78);
+  const domeR=Math.min(w*.42,d*.72);
   const dome=new THREE.Mesh(
    new THREE.SphereGeometry(domeR,32,16,0,Math.PI*2,0,Math.PI/2),glazing);
-  dome.scale.set(1.28,.88,.84);dome.position.set(0,14.4,0);
+  dome.scale.set(1.12,.88,.90);dome.position.set(0,14.4,0);
   dome.castShadow=!!tier.shadows;pavilion.add(dome);
   const domeRib=new THREE.MeshStandardMaterial({color:'#F5CD80',metalness:.8,
    roughness:.3,emissive:'#B37932',emissiveIntensity:.27});
   const baseRing=new THREE.Mesh(new THREE.TorusGeometry(domeR,.24,6,52),domeRib);
-  baseRing.rotation.x=Math.PI/2;baseRing.scale.set(1.30,.84,1);
+  baseRing.rotation.x=Math.PI/2;baseRing.scale.set(1.14,.90,1);
   baseRing.position.y=14.55;pavilion.add(baseRing);
   for(let k=0;k<7;k++){
-   const a=Math.PI*k/7,dx=Math.cos(a)*domeR*1.22,dz=Math.sin(a)*domeR*.78;
+   const a=Math.PI*k/7,dx=Math.cos(a)*domeR*1.08,dz=Math.sin(a)*domeR*.85;
    const bow=new THREE.QuadraticBezierCurve3(
     new THREE.Vector3(-dx,14.6,-dz),
     new THREE.Vector3(0,14.6+domeR*.91,0),
@@ -197,8 +197,8 @@ export function create(canvas,{layout,spec,camera:cam0,tier:tierName=pickTier(),
 
   pavilion.position.set(0,0,0);env.add(pavilion);}
 
- const pool=new THREE.Mesh(new THREE.CylinderGeometry(innerR*.3,innerR*.3,2.2,64),new THREE.MeshStandardMaterial({color:P.waterHighlight,roughness:.2,metalness:.2}));pool.position.set(innerR*.55,.3,innerR*.20);env.add(pool);
- const poolRim=new THREE.Mesh(new THREE.TorusGeometry(innerR*.3,.9,8,64),new THREE.MeshStandardMaterial({color:P.ivory,roughness:.5}));poolRim.rotation.x=Math.PI/2;poolRim.position.set(innerR*.55,1.5,innerR*.20);env.add(poolRim);
+ const pool=new THREE.Mesh(new THREE.CylinderGeometry(innerR*.16,innerR*.16,2.2,64),new THREE.MeshStandardMaterial({color:P.waterHighlight,roughness:.2,metalness:.2}));pool.position.set(innerR*.69,.3,innerR*.10);env.add(pool);
+ const poolRim=new THREE.Mesh(new THREE.TorusGeometry(innerR*.16,.9,8,64),new THREE.MeshStandardMaterial({color:P.ivory,roughness:.5}));poolRim.rotation.x=Math.PI/2;poolRim.position.set(innerR*.69,1.5,innerR*.10);env.add(poolRim);
  for(let i=0;i<4;i++){const a=i*Math.PI/2+Math.PI/4,len=innerR*.62;const path=new THREE.Mesh(new THREE.BoxGeometry(len,.6,3.2),new THREE.MeshStandardMaterial({color:'#FFF0CF',roughness:.9}));path.position.set(Math.cos(a)*(innerR*.33+len/2),1.2,Math.sin(a)*(innerR*.33+len/2));path.rotation.y=-a;env.add(path)}
  // trees: instanced, decorative RNG
  if(tier.trees){const r=rng(11),n=tier.trees,foliage=new THREE.InstancedMesh(new THREE.IcosahedronGeometry(1,1),new THREE.MeshStandardMaterial({color:'#3A9250',roughness:.85,flatShading:true}),n),trunk=new THREE.InstancedMesh(new THREE.CylinderGeometry(.25,.32,1,6),new THREE.MeshStandardMaterial({color:'#856343'}),n);
@@ -277,7 +277,7 @@ export function create(canvas,{layout,spec,camera:cam0,tier:tierName=pickTier(),
  // garden: hedge ring, lamp posts and fountain jets
  {const r=rng(41),hedges=[],jets=[];for(let i=0;i<48;i++){const a=i/48*Math.PI*2;if(i%12===1||i%12===2)continue;hedges.push({x:Math.cos(a)*(innerR-2),y:1.6,z:Math.sin(a)*(innerR-2),sx:5.5,sy:1.6,sz:1.6,ry:-a+Math.PI/2})}
   inst(new THREE.BoxGeometry(1,1,1),new THREE.MeshStandardMaterial({color:'#3D8D58',roughness:.95}),hedges);
-  for(let i=0;i<8;i++){const a=i*Math.PI/4;jets.push({x:innerR*.55+Math.cos(a)*innerR*.18,y:3,z:innerR*.20+Math.sin(a)*innerR*.18,sx:.5,sy:5,sz:.5})}jets.push({x:innerR*.55,y:4.5,z:innerR*.20,sx:1.2,sy:8,sz:1.2});
+  for(let i=0;i<8;i++){const a=i*Math.PI/4;jets.push({x:innerR*.69+Math.cos(a)*innerR*.11,y:3,z:innerR*.10+Math.sin(a)*innerR*.11,sx:.5,sy:5,sz:.5})}jets.push({x:innerR*.69,y:4.5,z:innerR*.10,sx:1.2,sy:8,sz:1.2});
   inst(new THREE.CylinderGeometry(1,1,1,6),new THREE.MeshStandardMaterial({color:'#dff3ff',emissive:'#9fd8ff',emissiveIntensity:.6,transparent:true,opacity:.85}),jets);
   const statue=new THREE.Mesh(new THREE.CylinderGeometry(innerR*.06,innerR*.09,3,8),new THREE.MeshStandardMaterial({color:P.ivory,roughness:.4}));statue.position.set(-innerR*.63,1.6,innerR*.20);env.add(statue)}
  // Sunlit civic park: a low walking circuit, colourful planting beds and timber benches.
