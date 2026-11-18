@@ -154,6 +154,11 @@ let browser,server;
      assert.equal(await p.evaluate(()=>__circuitTabletop.state().players.length),2,'new match supports one CPU');
      assert.equal(await p.evaluate(()=>__circuitTabletop.state().players[1].level),'easy','new match saves selected difficulty');
      assert.equal(await p.locator('.pawn').count(),2,'removed CPU pieces do not remain on the physical board');
+     // A newly configured match is saved before the first roll.
+     await p.reload({waitUntil:'load'});
+     await p.waitForFunction(()=>window.__circuitTabletop && document.querySelectorAll('.pawn').length===2);
+     assert.equal(await p.evaluate(()=>__circuitTabletop.state().cfg.length),'extended','initial match setup survives refresh before a move');
+     assert.equal(await p.evaluate(()=>__circuitTabletop.state().players[1].level),'easy','CPU difficulty survives pre-roll refresh');
      await p.locator('#matchBtn').click();
      await p.locator('#matchLength').selectOption('quick');
      await p.locator('#matchOpponents').selectOption('3');
@@ -163,10 +168,17 @@ let browser,server;
      assert.equal(await p.evaluate(()=>__circuitTabletop.state().players.length),4,'three computer rivals restore four pawns');
      assert.equal(await p.evaluate(()=>__circuitTabletop.state().players[3].level),'hard','difficulty propagates to every rival');
      assert.equal(await p.locator('.pawn').count(),4,'all physical player pieces are restored');
-     assert.equal(errors.length,0,'no runtime exceptions during roll, reload or setup');
+     await p.evaluate(()=>{
+       const s=__circuitTabletop.state();
+       s.phase='route';s.move={at:s.players[s.turn].pos,steps:3,noChoice:false};
+       __circuitTabletop.select('O1');
+     });
+     assert.equal(await p.locator('[data-action="route:stay"]').count(),1,'after-roll route phase shows a real stay action');
+     assert.equal(await p.locator('[data-action="route:cross"]').count(),1,'after-roll route phase shows a real connector action');
+     assert.equal(errors.length,0,'no runtime exceptions during roll, reload, setup or route decision');
    }
    assert.deepEqual(errors,[],'browser free of page errors '+vp.id);
-   total+=33;
+   total+=37;
    await context.close();
  }
  console.log('PASS: '+engine+' Circuit physical tabletop interactive smoke tests; '+total+' checks on four viewports');
