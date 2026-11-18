@@ -237,7 +237,7 @@ let browser,server;
    // completion hook exists on the board; only SC.act may end a real match.
    await p.evaluate(()=>{
      const s=__circuitTabletop.state();
-     s.order=[1,0,2,3];s.orderIdx=3;s.order[s.orderIdx]=0;
+     s.order=[1,2,3,0];s.orderIdx=3;
      s.turn=0;s.phase='build';s.round=s.cfg.rounds;s.bought={};s.built={};s.clock=null;
      s.players[0].inf=20;
      s.players.slice(1).forEach((player,i)=>player.inf=10-i);
