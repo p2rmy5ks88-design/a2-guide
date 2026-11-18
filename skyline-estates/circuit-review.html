@@ -1,0 +1,67 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+<title>Skyline Circuit · V2 design review</title>
+<!-- Design REVIEW page for ChatGPT's Premium Design Package V2 (not the final renderer, not linked from the game).
+     Scenes come from real rules states: ?scene=clean|skyline|route, ?quality=low|medium|high, ?camera=default|detail,
+     ?labels=all|plots|none, ?gray=1. HUD stays inside the package's per-screen rectangles. -->
+<style>
+:root{--sal:0px;--sar:0px;--sat:0px;--sab:0px;--navy:#0B1633;--panel:#101E35;--raised:#172A43;--gold:#F2C457;--text:#F8F6EF;--muted:#B6C5D1;--warn:#F3B45C;color-scheme:dark}
+*{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--navy);color:var(--text);font:600 12px/1.25 -apple-system,system-ui,sans-serif;overflow:hidden;font-variant-numeric:tabular-nums lining-nums}
+body.gray{filter:grayscale(1)}
+#app{position:fixed;inset:0;display:grid;grid-template-columns:var(--hudL) 1fr var(--hudR);padding:max(var(--sat),env(safe-area-inset-top)) max(var(--sar),env(safe-area-inset-right)) max(var(--sab),env(safe-area-inset-bottom)) max(var(--sal),env(safe-area-inset-left));--hudL:156px;--hudR:184px}
+@media (max-width:760px){#app{--hudL:132px;--hudR:156px}}
+aside{background:linear-gradient(180deg,var(--raised),var(--panel));overflow:auto;padding:6px;min-height:0;border-color:#F2C45733;border-style:solid;border-width:0}
+#left{border-right-width:1px}#right{border-left-width:1px}
+canvas{width:100%;height:100%;display:block}
+.cur{display:flex;align-items:center;gap:6px;padding:4px 5px;border-radius:8px;background:#0B163399;border:1px solid #F2C45755}
+.cur b{font-size:13px}.k{color:var(--muted);font-weight:500}
+.bar{height:5px;border-radius:3px;background:#ffffff18;margin:3px 0 2px}.bar i{display:block;height:100%;border-radius:3px}
+.row{display:flex;align-items:center;gap:5px;margin-top:5px}.row .n{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tok{flex:none;width:12px;height:12px}
+.sect{margin-top:7px;padding-top:5px;border-top:1px solid #ffffff14}
+.order{display:flex;align-items:center;gap:3px;flex-wrap:wrap}
+.seg{display:flex;border:1px solid #F2C45766;border-radius:10px;overflow:hidden}.seg button{flex:1;min-height:44px;background:transparent;color:var(--text);border:0;font:inherit;padding:0 2px}.seg [aria-checked=true]{background:#F2C45722;box-shadow:inset 0 -3px 0 var(--gold)}
+.seg .cross[aria-checked=true]{background:#58B9CF22;box-shadow:inset 0 -3px 0 #58B9CF}
+.roll{width:100%;min-height:44px;margin-top:6px;border-radius:10px;border:0;background:linear-gradient(180deg,#F6D27A,#E2A93A);color:#1b1405;font:700 14px -apple-system,system-ui,sans-serif}
+.clock{margin-top:6px;padding:5px 6px;border-radius:8px;background:#3a2a10;border:1px solid var(--warn)}
+.b{display:flex;justify-content:space-between;gap:4px;align-items:center;margin-top:4px}.b button{min-height:44px;min-width:44px;border-radius:8px;border:1px solid #F2C45766;background:#0B1633;color:var(--text);font:inherit;padding:0 6px}
+.why{color:var(--muted);font-weight:500;text-align:right}
+h2{font-size:13px;margin:0 0 4px}
+</style></head><body>
+<div id="app"><aside id="left" aria-label="Players"></aside><canvas id="board"></canvas><aside id="right" aria-label="Actions"></aside></div>
+<script src="./lib/circuit-rules.js"></script><script src="./lib/circuit-screen.js"></script><script src="./lib/circuit-review-art.js"></script>
+<script>
+(async()=>{'use strict';
+const q=new URLSearchParams(location.search),scene=q.get('scene')||'clean',quality=q.get('quality')||'high',labels=q.get('labels')||'all';
+if(q.get('gray')==='1')document.body.classList.add('gray');
+const D=await (await fetch('./design/v2/circuit-design-v2.json')).json(),SC=SkylineCircuit,ART=SkylineCircuitReviewArt.create(D,quality);
+const cam=D.camera[q.get('camera')||'default'];
+// Scenes from real rules states (review only: ownership is set directly for the Skyscraper scene).
+const s=SC.newMatch({seed:2026,length:'standard',players:[{name:'You'},{name:'Ada',level:'normal'},{name:'Bo',level:'normal'},{name:'Cy',level:'hard'}]});
+if(scene==='skyline'){for(const id of SC.PROPS){const n=SC.NODES.find(x=>x.id===id);s.own[id]={o:n.quadrant,h:4}}s.phase='build'}
+if(scene==='route'){let g=0;while(!s.over&&g++<20000){const pd=SC.pending(s);if(s.round>=9&&pd.type==='roll'&&pd.player===0)break;SC.act(s,pd.player,SC.ai(s,pd.player))}
+ const lead=[...s.players].sort((a,b)=>b.inf-a.inf)[0];s.clock={pid:lead.id,round:s.round,since:s.round}}
+const v=SC.view(s),P=ART.PLAYERS,me=v.players[0];
+const tokSvg=(i)=>{const c=P[i].c,sh=P[i].shape;const body=sh==='circle'?'<circle cx="6" cy="6" r="5"/>':sh==='square'?'<rect x="1.5" y="1.5" width="9" height="9"/>':sh==='triangle'?'<path d="M6 .8 11.2 10.6H.8z"/>':'<path d="M11 6 8.5 10.3h-5L1 6l2.5-4.3h5z"/>';return`<svg class="tok" viewBox="0 0 12 12" fill="${c}" stroke="#0B1633" stroke-width="1.4" aria-hidden="true">${body}</svg>`};
+const name=p=>p.id===0?'You':p.name;
+const standings=[...v.players].sort((a,b)=>b.influence-a.influence);
+document.getElementById('left').innerHTML=`<div class="cur">${tokSvg(v.turn)}<div><b>${name(v.players[v.turn])}</b><div class="k">Cash ${v.players[v.turn].cash}</div></div></div>
+ <div class="sect"><div class="k">Influence → target ${v.target}</div>${standings.map((p,r)=>`<div class="row">${tokSvg(p.id)}<span class="n">${r+1}. ${name(p)}</span><span>${p.influence}</span></div><div class="bar"><i style="width:${Math.min(100,100*p.influence/v.target)}%;background:${P[p.id].c}"></i></div>`).join('')}</div>
+ <div class="sect"><div>Round ${v.round} / ${v.rounds}</div><div class="k">Order · reverses each round</div><div class="order">${v.order.map((i,k)=>(k?'<span class="k">›</span>':'')+tokSvg(i)).join('')}</div></div>`;
+let right='';
+if(v.clock)right+=`<div class="clock">${name(v.players[v.clock.pid])} holds the target — wins at end of round ${v.clock.winsAtEndOfRound} if still leading</div>`;
+if(scene==='skyline'){right=`<h2>Build</h2>`+(v.build||[]).slice(0,6).map(b=>`<div class="b"><span>${b.node}</span><span class="why">Skyscraper · max</span></div>`).join('')+`<button class="roll">End turn</button>`+right}
+else{const pv=v.preview,fj=pv.firstJunction;right=`<h2>Your route</h2><div class="seg" role="radiogroup"><button role="radio" aria-checked="true" class="stay">Stay</button><button role="radio" aria-checked="false" class="cross">Cross</button></div>
+ <div class="sect">First junction <b>${fj.node}</b>${fj.stepsAway?` · ${fj.stepsAway} step${fj.stepsAway===1?'':'s'}`:' · here'}<div class="k">Plan applies on ${Math.round(100*pv.stay.junctionChance)}% of rolls. Dots show likely landings, not certainties.</div></div><button class="roll">Roll</button>`+right}
+document.getElementById('right').innerHTML=right;
+const cv=document.getElementById('board'),rect=()=>{const r=cv.getBoundingClientRect();return{x:r.left,y:r.top,w:r.width,h:r.height}};
+let result=null;function paint(){const R=rect(),dpr=window.devicePixelRatio||1;cv.width=Math.round(R.w*dpr);cv.height=Math.round(R.h*dpr);const ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,-R.x*dpr,-R.y*dpr);
+ ART.setup(R,cam);const t0=performance.now();result=ART.draw(ctx,R,v,{scene,pid:0,labels,tokensAt:scene==='route'?null:'O0'});result.drawMs=performance.now()-t0}
+paint();window.addEventListener('resize',paint);
+// Review measurements: HUD overflow, smallest critical text, label collisions with each other and with buildings.
+window.__review={ready:true,result:()=>result,
+ hud:()=>['left','right'].map(id=>{const e=document.getElementById(id),r=e.getBoundingClientRect();const sizes=[...e.querySelectorAll('*')].filter(x=>x.childNodes.length&&[...x.childNodes].some(n=>n.nodeType===3&&n.textContent.trim())).map(x=>parseFloat(getComputedStyle(x).fontSize));
+  return{id,x:r.left,y:r.top,w:r.width,h:r.height,overflowY:e.scrollHeight-e.clientHeight,overflowX:e.scrollWidth-e.clientWidth,minFont:Math.min(...sizes),buttons:[...e.querySelectorAll('button')].map(b=>{const k=b.getBoundingClientRect();return{w:k.width,h:k.height}})}}),
+ board:rect,view:()=>v};
+})();
+</script></body></html>

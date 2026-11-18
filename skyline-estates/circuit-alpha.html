@@ -1,0 +1,86 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0E1A2E"><title>Skyline Circuit (alpha)</title>
+<!-- Skyline Circuit playable alpha: a separate page. It does not load or change game.html, Classic or Harbour Ring
+     saves; it writes only skylineCircuitSave and, for Career matches, one skylineCareerInbox:<matchId> entry. -->
+<style>
+:root{--sal:0px;--sar:0px;--sat:0px;--sab:0px;--navy:#0B1633;--panel:#101E35;--raised:#172A43;--gold:#F2C457;--mint:#70F0C2;--ink:#F8F6EF;--muted:#B6C5D1;--warn:#F3B45C;color-scheme:dark}
+*{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--navy);color:var(--ink);font:600 12px/1.3 -apple-system,system-ui,sans-serif;overflow:hidden;font-variant-numeric:tabular-nums lining-nums}
+[hidden]{display:none!important}
+#cx-setup{max-width:560px;margin:0 auto;padding:max(16px,env(safe-area-inset-top)) max(16px,var(--sar),env(safe-area-inset-right)) 16px max(16px,var(--sal),env(safe-area-inset-left));height:100%;overflow:auto;font-weight:500;font-size:13px}
+#cx-setup h1{font-size:20px;margin:8px 0}#cx-setup h1 small{font-size:12px;color:var(--gold);font-weight:600}
+fieldset{border:1px solid #ffffff22;border-radius:8px;margin:10px 0;padding:8px 10px}fieldset label{display:block;padding:6px 0;min-height:32px}
+select,button{font:inherit}button{min-height:44px;min-width:44px;border-radius:10px;border:1px solid #F2C45766;background:#0B1633;color:var(--ink);padding:0 12px;cursor:pointer}
+.cx-primary{width:100%;margin-top:6px;background:linear-gradient(180deg,#F6D27A,#E2A93A);color:#1b1405;border:0;font:700 14px -apple-system,system-ui,sans-serif}#cx-setup .cx-primary{width:auto}
+.cx-link{color:var(--gold);margin-left:8px}.cx-note,.cx-k{color:var(--muted);font-weight:500}.cx-warn{color:#ffb4a8}
+#cx-game{position:fixed;inset:0;display:grid;grid-template-columns:var(--hudL) minmax(0,1fr) var(--hudR);grid-template-rows:minmax(0,1fr);
+ padding:max(var(--sat),env(safe-area-inset-top)) max(var(--sar),env(safe-area-inset-right)) max(var(--sab),env(safe-area-inset-bottom)) max(var(--sal),env(safe-area-inset-left));--hudL:156px;--hudR:184px}
+@media (max-width:760px){#cx-game{--hudL:132px;--hudR:156px}}
+#cx-players,#cx-actions{background:linear-gradient(180deg,var(--raised),var(--panel));overflow:auto;padding:6px;min-height:0;border:0 solid #F2C45733}
+#cx-players{border-right-width:1px}#cx-actions{border-left-width:1px}
+#cx-board{width:100%;height:100%;min-width:0;min-height:0;display:block;touch-action:manipulation;background:var(--navy)}
+.cx-cur{display:flex;align-items:center;gap:6px;padding:4px 5px;border-radius:8px;background:#0B163399;border:1px solid #F2C45755}.cx-cur b{font-size:13px}
+.cx-sect{margin-top:7px;padding-top:5px;border-top:1px solid #ffffff14}
+.cx-p{display:flex;align-items:center;gap:5px;margin-top:5px}.cx-n1{flex:1;min-width:0;overflow-wrap:anywhere}.cx-turn .cx-n1{text-decoration:underline;text-decoration-color:var(--gold);text-underline-offset:3px}
+.cx-out{opacity:.45}.cx-tok{flex:none;vertical-align:-2px}
+.cx-bar{height:5px;background:#ffffff18;border-radius:3px;margin:3px 0 2px}.cx-bar span{display:block;height:100%;border-radius:3px}
+.cx-panel h2{font-size:13px;margin:2px 0 6px}.cx-panel p{margin:4px 0}
+.cx-seg{display:flex;border:1px solid #F2C45766;border-radius:10px;overflow:hidden}.cx-seg button{flex:1;border:0;border-radius:0;background:transparent;padding:0 2px;display:flex;align-items:center;justify-content:center;gap:5px}
+.cx-seg i{display:inline-block;width:16px;height:0;border-top:3px solid var(--gold)}.cx-seg .cx-cross i{border-top:3px dashed var(--mint)}
+.cx-seg .cx-stay[aria-checked=true]{background:#F2C45722;box-shadow:inset 0 -3px 0 var(--gold)}.cx-seg .cx-cross[aria-checked=true]{background:#70F0C222;box-shadow:inset 0 -3px 0 var(--mint)}
+.cx-b{display:flex;justify-content:space-between;align-items:center;gap:4px;padding:2px 0}.cx-b button{padding:0 6px}.cx-why{color:var(--muted);font-weight:500;text-align:right}
+.cx-clock{background:#3a2a10;border:1px solid var(--warn);border-radius:8px;padding:5px 6px;margin-bottom:6px}
+.cx-tally{background:#0b1526;border-radius:8px;padding:4px 6px;margin:6px 0}.cx-feed{color:var(--muted);font-weight:500;margin-top:6px}.cx-n{padding:2px 0;border-top:1px solid #ffffff12}
+.cx-zoombtn{width:100%;margin-bottom:6px}
+/* premium HUD (M4) */
+.cx-cur{display:flex;gap:7px;align-items:center;padding:6px;border-radius:12px;background:linear-gradient(135deg,#0B163399,#17304f99);border:1px solid color-mix(in srgb,var(--pc) 55%,transparent);box-shadow:inset 0 0 0 1px #ffffff0d}
+.cx-badge{flex:none;display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:#0B1633;box-shadow:0 0 0 2px var(--pc)}
+.cx-curtx b{font-size:14px}.cx-money b{color:var(--ink)}
+.cx-row{display:flex;justify-content:space-between;align-items:baseline;gap:4px}.cx-t{color:var(--gold)}
+.cx-p{position:relative;padding:3px 3px 0 3px;border-radius:7px}.cx-p.cx-turn{background:#ffffff0d}.cx-p.cx-lead .cx-rank{background:var(--gold);color:#1b1405}
+.cx-rank{flex:none;display:inline-grid;place-items:center;min-width:16px;height:16px;border-radius:8px;background:#ffffff1f;font-size:12px}
+.cx-iv{font-weight:700}
+.cx-bar{position:relative;height:6px;margin:3px 3px 4px}.cx-bar::after{content:'';position:absolute;right:0;top:-2px;bottom:-2px;width:2px;background:var(--gold);border-radius:1px}
+.cx-clockmark{position:absolute;right:4px;top:6px;font:600 12px/1 -apple-system,system-ui,sans-serif;color:var(--warn);font-style:normal}
+.cx-p.cx-lead+.cx-bar:has(.cx-clockmark){margin-bottom:16px}
+.cx-chips{display:flex;align-items:center;gap:3px;flex-wrap:wrap;margin:3px 0}.cx-chip{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:#0B1633}
+.cx-chip.now{box-shadow:0 0 0 2px var(--pc)}.cx-chip.next{box-shadow:0 0 0 1px #ffffff55}
+.cx-seg button span{display:flex;flex-direction:column;line-height:1.1}.cx-seg small{font:500 12px/1.1 -apple-system,system-ui,sans-serif;color:var(--muted)}
+.cx-primary{display:flex;align-items:center;justify-content:center;gap:6px}
+.cx-b{padding:4px 0;border-top:1px solid #ffffff10}.cx-bn{display:flex;align-items:center;gap:4px;flex-wrap:wrap}.cx-b button{min-height:44px}
+.cx-pips{display:inline-flex;gap:2px;margin-left:2px}.cx-pips i{width:5px;height:9px;border-radius:2px;background:#ffffff26}.cx-pips i.on{background:var(--gold)}
+.cx-sym{flex:none;vertical-align:-2px}
+.cx-pulse{animation:cxPulse .6s ease-out}@keyframes cxPulse{0%{color:var(--gold);transform:scale(1.12)}100%{transform:none}}
+@media (prefers-reduced-motion:reduce){.cx-pulse{animation:none}}
+.cx-bankrupt{color:#ffb4a8}.cx-card{color:#f4d28b}
+.c3-labels .c3-l{position:absolute;transform:translate(-50%,-50%);font:600 12px/1.05 -apple-system,system-ui,sans-serif;color:var(--ink);background:rgba(11,22,51,.74);padding:1px 3px;border-radius:3px;text-align:center;white-space:nowrap}
+</style></head><body>
+<div id="cx-setup" hidden></div>
+<div id="cx-game" hidden><aside id="cx-players" aria-label="Players"></aside><canvas id="cx-board" aria-label="Circuit board"></canvas><aside id="cx-actions" aria-label="Actions"></aside></div>
+<script id="cx-access-guard">
+(function(){
+  'use strict';
+  // Soft preview gate, not an authentication or anti-tamper boundary.
+  // Preview remains open to loopback and private LAN hosts for on-device Safari QA.
+  const h=location.hostname;
+  const dev=h==='localhost'||h==='127.0.0.1'||h==='::1'||h==='[::1]'||
+    /^10(?:\.\d{1,3}){3}$/.test(h)||
+    /^192\.168(?:\.\d{1,3}){2}$/.test(h)||
+    /^172\.(?:1[6-9]|2\d|3[01])(?:\.\d{1,3}){2}$/.test(h);
+  let allowed=dev;
+  if(!allowed){
+    try{allowed=localStorage.getItem('skylineFeature.career')==='on' &&
+      localStorage.getItem('skylineFeature.circuitAlpha')==='on'}catch(e){allowed=false}
+  }
+  window.__circuitAccessAllowed=allowed;
+  if(!allowed){
+    const panel=document.getElementById('cx-setup');
+    panel.hidden=false;
+    panel.innerHTML='<h1>Skyline Circuit <small>preview locked</small></h1>'+
+      '<p class="cx-note">Circuit preview is not enabled on this device. Return to Skyline Estates.</p>'+
+      '<p><a class="cx-link" href="./game.html">Back to Skyline Estates</a></p>';
+  }
+})();
+</script>
+<script src="./lib/circuit-rules.js"></script><script src="./lib/circuit-screen.js"></script><script src="./lib/circuit-ui.js"></script><script src="./lib/circuit-bench.js"></script>
+</body></html>
