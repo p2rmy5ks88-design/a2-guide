@@ -72,7 +72,7 @@ button:disabled{opacity:.46;cursor:default}
 .model.level3{--height:49px}
 .model.level4{--height:66px;width:46px;border-color:#f5d68f;box-shadow:5px 6px #26495a,8px 10px 12px #071c2c96}
 .tokenDock{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none}
-.pawn{position:absolute;z-index:20;width:28px;height:15px;border-radius:5px 6px 4px 4px;background:linear-gradient(105deg,#f1e6bd,var(--player) 31%,var(--player) 73%,#254660);box-shadow:0 4px 0 #20303c,2px 7px 6px #07152399;border:2px solid #f9e3aa;transform:translate(-50%,-50%) rotate(-7deg);transition:left .12s linear,top .12s linear}
+.pawn{position:absolute;z-index:20;width:28px;height:15px;border-radius:5px 6px 4px 4px;background:linear-gradient(105deg,#f1e6bd,var(--player) 31%,var(--player) 73%,#254660);box-shadow:0 4px 0 #20303c,2px 7px 6px #07152399;border:2px solid #f9e3aa;transform:translate(-50%,-50%) rotate(-7deg);transition:left .34s cubic-bezier(.28,.68,.36,1),top .34s cubic-bezier(.28,.68,.36,1)}
 .pawn:before{content:"";position:absolute;left:4px;top:-10px;width:17px;height:10px;border-radius:6px 6px 1px 1px;background:linear-gradient(110deg,#acd4e1,#345a75 65%,#d0e3d5);border:2px solid var(--player);box-shadow:0 -1px 0 #f7e2a1}
 .pawn:after{content:"";position:absolute;left:2px;bottom:-6px;width:6px;height:7px;border-radius:50%;background:#111e2b;box-shadow:17px 0 #111e2b,1px -13px 0 -2px #ffe3ae}
 .pawn.turn{filter:drop-shadow(0 0 6px #ffe490)}
@@ -131,7 +131,10 @@ button:disabled{opacity:.46;cursor:default}
 #selectedCard .badges{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}
 #selectedCard .badges span{background:#31546a;padding:3px 7px;border-radius:8px;color:#e9f3eb;font-size:10px;font-weight:850}
 .buildList{max-height:clamp(105px,28vh,200px);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:0 5px 7px 0}
-#topRibbon{position:absolute;top:9px;left:50%;transform:translateX(-50%);padding:5px 17px;border-radius:20px;background:#0d2239c7;border:1px solid #edc7786b;z-index:48;font-size:11px;letter-spacing:1.1px;font-weight:900;color:#ffe3a5;pointer-events:none}
+#topRibbon{position:absolute;top:9px;left:50%;transform:translateX(-50%);padding:5px 17px;border-radius:20px;background:#0d2239c7;border:1px solid #edc7786b;z-index:48;font-size:11px;letter-spacing:1.1px;font-weight:900;color:#ffe3a5;pointer-events:none;white-space:nowrap}
+#topRibbon.moving{background:#172b41ed;border-color:#ffe5a2;box-shadow:0 0 0 2px #ffdf8233}
+#moveCounter{letter-spacing:.35px;font-variant-numeric:tabular-nums;color:#fff2c8}
+#moveCounter[hidden],#boardCaption[hidden]{display:none!important}
 #previewMark{position:absolute;bottom:7px;left:10px;z-index:70;font-size:10px;color:#fff4ce;font-weight:850;letter-spacing:.45px;text-decoration:none;pointer-events:auto;cursor:pointer;padding:5px 7px;border:1px solid #d9bc8570;border-radius:8px;background:#132c43cf}#previewMark:focus-visible{outline:2px solid #ffe8ad;outline-offset:2px}
 #dice{display:flex;justify-content:center;gap:8px;margin:10px 0 6px}
 .die{background:#fff4db;color:#123050;width:35px;height:35px;display:grid;place-items:center;border:2px solid #aa8153;border-radius:7px;box-shadow:3px 4px 0 #73553d;font-size:24px;font-weight:950}
@@ -151,7 +154,7 @@ button:disabled{opacity:.46;cursor:default}
    <div id="tiles"></div><div class="tokenDock" id="tokens"></div></div>
   </div>
  </div>
- <div id="topRibbon">SKYLINE CIRCUIT · LIVING CITY</div>
+ <div id="topRibbon"><span id="boardCaption">SKYLINE CIRCUIT · LIVING CITY</span><span id="moveCounter" role="status" aria-live="off" hidden></span></div>
  <aside id="hud"><div class="hudCard"><div class="hudBrand">SKYLINE ESTATES</div><div class="hudSmall" id="activeLabel">YOUR TURN</div><div id="activeName">You</div><div id="activeCash">SC 1,500</div><div id="roundStamp">Round 1</div><div id="roster"></div></div><div id="hudActions"><button class="miniBtn" id="zoomOut" title="Zoom out">− Zoom</button><button class="miniBtn" id="zoomIn" title="Zoom in">+ Zoom</button><button class="miniBtn" id="centerBtn">Center</button></div><div id="viewActions"><button class="miniBtn" id="detailBtn" aria-pressed="false" title="Zoom in to a selected property">Inspect</button><button class="miniBtn" id="overviewBtn" title="Restore whole-board camera">Full board</button><button class="miniBtn" id="matchBtn" title="Configure a new Circuit match">Match</button></div></aside>
  <aside id="actionSide"><div id="actionCard" aria-live="polite"></div><div id="selectedCard"></div></aside>
  <div id="matchSetup" role="dialog" aria-modal="true" aria-labelledby="matchSetupTitle" hidden><div id="matchSetupPanel">
@@ -263,7 +266,8 @@ function fitCamera(){
  zoom=Math.max(.48,Math.min(1.02,(window.innerHeight-45)/630,Math.max(250,avail)/800));
  overviewZoom=zoom;detailMode=false;center(false);
 }
-function focusMovingPlayer(pid){if(!s)return;var p=locations[visualPos[pid]||s.players[pid].pos];if(!p)return;panX=(360-p[0])*zoom*.75;panY=(360-p[1])*zoom*.5;camera();}
+// Camera changes are reserved for explicit drag, zoom, Inspect or Center input.
+// Do not recenter on dice rolls or after AI turns: it makes a physical board feel like it jumps.
 function paintTiles(){if(!s)return;var v=SC.view(s);v.nodes.forEach(function(n){var tile=tiles[n.id];if(!tile)return;
  tile.classList.toggle("selected",selected===n.id);tile.classList.toggle("current",v.players[v.turn]&&v.players[v.turn].pos===n.id);
  if(n.type!=="property")return;
@@ -341,6 +345,18 @@ function renderActions(){if(!s)return;var v=SC.view(s),pd=SC.pending(s),me=s.pla
 }
 function render(){if(!s)return;renderActions();paintTiles();paintTokens();renderRoster();renderSelected();if(window.SkylineCircuitLife)window.SkylineCircuitLife.reflect(SC.view(s));}
 function sleep(ms){return new Promise(function(resolve){setTimeout(resolve,ms)})}
+// Display the real sequence of rules-generated spaces as a legible moving counter.
+// Only presentation timing changes; the dice, path, turn and save remain authoritative.
+var PAWN_STEP_MS=430,PAWN_BRIDGE_MS=550;
+function movementCounter(pid,current,total,dice){
+ var n=$("#moveCounter"),caption=$("#boardCaption");
+ var heading=(s.players[pid]&&s.players[pid].name||"Player")+" moving · "+current+" / "+total+" spaces";
+ if(dice&&dice.length===2)heading+=" · Dice "+dice[0]+"+"+dice[1];
+ n.textContent=heading;n.hidden=false;caption.hidden=true;$("#topRibbon").classList.add("moving");
+}
+function clearMovementCounter(){
+ $("#moveCounter").hidden=true;$("#boardCaption").hidden=false;$("#topRibbon").classList.remove("moving");
+}
 async function perform(action){if(busy||!s||s.over)return;var pd=SC.pending(s);if(!pd||pd.player!==s.turn)return;
  busy=true;var start=Object.assign({},visualPos),turnBefore=s.turn;
  try{
@@ -349,22 +365,30 @@ async function perform(action){if(busy||!s||s.over)return;var pd=SC.pending(s);i
   store.put(PREVIEW_SAVE,SC.serialize(s));
   var events=SC.drain(s),lifeEvents=[];
   var d=events.find(function(e){return e.t==="roll"});if(d)lastDice=d.dice;
+  var steps=events.filter(function(e){return e.t==="step"&&e.pid===pd.player}).length;
+  var travelled=0;
+  if(steps)movementCounter(pd.player,0,steps,d&&d.dice);
   for(var k=0;k<events.length;k++){
     var e=events[k];
-    if(e.t==="step"){visualPos[e.pid]=e.to;paintTokens();await sleep(e.via==="connector"?185:140);}
+    if(e.t==="step"){
+     visualPos[e.pid]=e.to;paintTokens();
+     if(e.pid===pd.player)movementCounter(pd.player,++travelled,steps,d&&d.dice);
+     await sleep(e.via==="connector"?PAWN_BRIDGE_MS:PAWN_STEP_MS);
+    }
     else if(e.t==="buy"){toast(nameOf(e.node)+" purchased!");lifeEvents.push({kind:"buy",node:e.node});}
     else if(e.t==="build"){toast(nameOf(e.node)+" upgraded!");lifeEvents.push({kind:"build",node:e.node});}
     else if(e.t==="rent")toast("Rent paid · SC "+fmt(e.amount));
     else if(e.t==="card"){toast("City Event · "+String(e.card).replace(/-/g," "));lifeEvents.push({kind:"card",node:e.node||s.players[pd.player].pos});}
   }
   s.players.forEach(function(p,i){visualPos[i]=p.pos});
-  if(events.some(function(e){return e.t==="step"}))focusMovingPlayer(pd.player);
+  // Leave the board at the player's chosen pan and zoom after the move.
+  // Never let a dice result automatically move the camera.
   if(s.turn!==turnBefore)plan="stay";
   selected=s.players[s.turn].pos;render();
   if(window.SkylineCircuitLife)lifeEvents.forEach(function(ev){window.SkylineCircuitLife.pulse(ev.kind,ev.node)});
   if(s.over)completeCareer();
  }catch(err){visualPos=start;toast("Move could not complete: "+err.message);console.error(err);}
- finally{busy=false;render()}
+ finally{clearMovementCounter();busy=false;render()}
  if(!s.over)kickAI();
 }
 async function aiLoop(){
@@ -450,7 +474,14 @@ viewport.addEventListener("touchend",function(e){if(e.touches.length<2)pinch=nul
 viewport.addEventListener("touchcancel",function(){pinch=null},{passive:true});
 viewport.addEventListener("wheel",function(e){e.preventDefault();zoom=Math.max(.48,Math.min(1.55,zoom+(e.deltaY<0?.06:-.06)));camera()},{passive:false});
 window.addEventListener("keydown",function(e){if(e.key==="Escape"){if(!$("#matchSetup").hidden){closeMatchSetup();return}$("#selectedCard").innerHTML="";}if(e.key==="+"||e.key==="="){zoom=Math.min(1.55,zoom+.08);camera()}if(e.key==="-"){zoom=Math.max(.48,zoom-.08);camera()}});
-window.addEventListener("resize",fitCamera);boardCreate();start(false);
+// Safari browser chrome can change viewport height during play; that must not
+// reset the board's zoom/pan. Refit only for a real width/rotation change.
+var lastFittedWidth=window.innerWidth;
+window.addEventListener("resize",function(){
+ if(Math.abs(window.innerWidth-lastFittedWidth)<24)return;
+ lastFittedWidth=window.innerWidth;fitCamera();
+});
+boardCreate();start(false);
 window.__circuitTabletop=Object.freeze({state:function(){return s},view:function(){return SC.view(s)},select:function(id){if(!tiles[id])return false;selected=id;render();if(detailMode)inspectSelected();return true},inspect:inspectSelected,overview:showFullBoard,zoom:function(z){zoom=Math.max(.48,Math.min(1.55,z));camera()},reset:function(){start(true)},settings:openMatchSetup,careerMode:function(){return CAREER_MODE}});
 })();
 </script>
