@@ -38,8 +38,8 @@
   // Skyline's existing Surround system can override theme colours after
   // applyTheme(). Correct the real Node materials AFTER that cascade.
   // This avoids the pale peach giant island seen in the first Retina render.
-  S3.islandMat.c=hex('#244657');S3.rimMat.c=hex('#c8a168');
-  S3.slabMat.c=hex('#82522e');S3.trimMat.c=hex('#3d271b');
+  S3.islandMat.c=hex('#183e52');S3.rimMat.c=hex('#91673c');
+  S3.slabMat.c=hex('#65442c');S3.trimMat.c=hex('#30241f');
   S3.waterMat.c=hex('#0c5076');S3.waterMat.spec=.52;
   if(S3.groundNear&&S3.groundNear.visible)S3.groundNear.mat.c=hex('#2c5263');
   if(S3.groundFar&&S3.groundFar.visible)S3.groundFar.mat.c=hex('#193949');
@@ -101,28 +101,70 @@
    [2.50,2.54,1.82,.53],[1.23,2.66,2.52,.49],[-.14,2.86,1.58,.44],
    [-1.54,2.59,2.05,.52],[-2.70,2.24,1.74,.47],[-3.06,.72,2.18,.39]
   ];
+  // 3D facade system: varied silhouettes, blue glass, warm limestone and
+  // intricate window rhythm. Every piece is actual geometry under the camera,
+  // not a screenshot pasted into the board.
+  const glassDeep=mat('#185879',{spec:.92,em:.09}),
+    glassLight=mat('#2c88af',{spec:.87,em:.11}),
+    ivory=mat('#d9c8ad',{spec:.37}),
+    warmBrick=mat('#bf8060',{spec:.30}),
+    roof=mat('#344f66',{spec:.5}),dusk=mat('#5bb6cf',{spec:.8,em:.14});
   for(let i=0;i<loci.length;i++){
-   const [x,z,h,w]=loci[i],b=new Node().at(x,0,z);
-   // A raised stone parcel with gold footprint and deep-glazed upper stories.
-   b.add(N(geo.box,stone,0,.055,0).sc(w*1.65,.11,w*1.65));
-   b.add(N(geo.box,bronze,0,.13,0).sc(w*1.35,.08,w*1.35));
-   b.add(N(geo.box,i%4===0?white:i%3===0?azure:glass,0,h/2+.16,0).sc(w,h,w));
-   b.add(N(geo.box,gold,0,h+.2,0).sc(w*1.1,.10,w*1.1));
-   b.add(N(geo.box,white,0,h+.31,0).sc(w*.65,.16,w*.65));
-   // Reflective glass accent: from high camera angle it reads as a skyscraper,
-   // not a painted cuboid. Gold-lit vertical windows give scale at 3×.
-   const nx=2+(i%3),height=h*.72;
-   for(let k=0;k<nx;k++){
-    const off=(k-(nx-1)/2)*w/(nx+1)*1.4;
-    b.add(N(geo.box,warm,off,.27+height/2,w/2+.008).sc(w*.11,height,.018));
-    b.add(N(geo.box,warm,w/2+.008,.27+height/2,off).sc(.018,height,w*.11));
+   const [x,z,h,w]=loci[i],b=new Node().at(x,0,z),kind=i%5;
+   const main=kind===0?ivory:kind===1?glassDeep:kind===2?warmBrick:kind===3?glassLight:glass;
+   const high=h*(kind===2?.85:1);
+   const ww=w*(kind===0?1.05:1),dd=w*(kind===3?.79:1);
+   // Gold-footed parcel with steps, so towers sit in a designed city block.
+   b.add(N(geo.box,stone,0,.055,0).sc(ww*1.48,.11,dd*1.5));
+   b.add(N(geo.box,bronze,0,.128,0).sc(ww*1.3,.05,dd*1.31));
+   b.add(N(geo.box,gold,0,.18,0).sc(ww*1.21,.055,dd*1.21));
+   b.add(N(geo.box,main,0,.21+high/2,0).sc(ww,high,dd));
+   // Façade pilasters and slim illuminated windows break up the former
+   // bare yellow blocks; horizontal floor lines read at iPhone distance.
+   const glassPanel=kind===0?glassDeep:kind===2?glassLight:dusk;
+   for(const k of [-1,1]){
+    b.add(N(geo.box,kind===2?ivory:gold,k*ww*.44,.21+high/2,dd/2+.021).sc(ww*.055,high*.95,.035));
+    b.add(N(geo.box,kind===2?ivory:gold,ww/2+.021,.21+high/2,k*dd*.43).sc(.035,high*.95,dd*.055));
    }
-   if(i%4===1){
-    b.add(N(geo.cyl8,gold,0,h+.46,0).sc(w*.13,.25,w*.13));
-    b.add(N(geo.sph,warm,0,h+.63,0).sc(w*.12));
+   for(let k=0;k<4;k++){
+    const dx=(k-1.5)*ww*.205,dz=(k-1.5)*dd*.205;
+    b.add(N(geo.box,glassPanel,dx,.22+high*.51,dd/2+.025).sc(ww*.15,high*.72,.023));
+    b.add(N(geo.box,glassPanel,ww/2+.025,.22+high*.51,dz).sc(.023,high*.72,dd*.15));
    }
+   const floors=Math.max(3,Math.round(high/.42));
+   for(let j=1;j<=floors;j++){
+    const yy=.23+j*high/(floors+1),trim=kind===2?ivory:bronze;
+    b.add(N(geo.box,trim,0,yy,dd/2+.044).sc(ww*.98,.019,.055));
+    b.add(N(geo.box,trim,ww/2+.044,yy,0).sc(.055,.019,dd*.98));
+    if(j%2===0){
+     for(const dx of [-ww*.20,ww*.20]){
+      b.add(N(geo.box,warm,dx,yy+.095,dd/2+.063).sc(ww*.095,.115,.024));
+     }
+    }
+   }
+   b.add(N(geo.box,gold,0,.24+high,0).sc(ww*1.11,.10,dd*1.11));
+   if(kind===1||kind===4){
+    // Two-step Art Deco crown, with delicate rooftop antenna.
+    b.add(N(geo.box,ivory,0,.32+high,0).sc(ww*.78,.16,dd*.75));
+    b.add(N(geo.box,gold,0,.45+high,0).sc(ww*.37,.08,dd*.34));
+    b.add(N(geo.cyl8,bronze,0,.56+high,0).sc(.026,.16,.026));
+    b.add(N(geo.sph,warm,0,.73+high,0).sc(.058));
+   }else if(kind===0){
+    b.add(N(geo.box,ivory,0,.36+high,0).sc(ww*.78,.18,dd*.82));
+    b.add(N(geo.box,roof,0,.48+high,0).sc(ww*.6,.065,dd*.64));
+   }else if(kind===2){
+    // Classic low-rise with an angled copper-coloured rooftop.
+    b.add(N(geo.cone4,roof,0,.38+high,0).sc(ww*.76,.30,dd*.76).rot(0,Math.PI/4,0));
+    b.add(N(geo.box,gold,0,.22+high,0).sc(ww*1.08,.065,dd*1.08));
+   }else{
+    b.add(N(geo.box,glassLight,0,.36+high,0).sc(ww*.70,.15,dd*.64));
+    b.add(N(geo.box,gold,0,.48+high,0).sc(ww*.40,.06,dd*.42));
+   }
+   // Warm street-level frontage and lamps for dense-city atmosphere.
+   b.add(N(geo.box,warm,0,.26,dd/2+.045).sc(ww*.41,.14,.022));
+   b.add(N(geo.sph,warm,ww*.65,.21,dd*.65).sc(.065));
    group.add(b);
-   if(typeof S3.shadow==='function')S3.shadow(x,z,Math.max(w*.92,.58),group);
+   if(typeof S3.shadow==='function')S3.shadow(x,z,Math.max(ww*.95,.52),group);
   }
   // A golden central civic fountain and promenades, legible from default
   // camera and intentionally clear of the legal board's perimeter spaces.
@@ -177,13 +219,13 @@
   if(!you){el.hidden=true;return}
   let plots=0,dev=0;
   for(const o of G.own||[]){if(o&&o.o===you.id){plots++;dev+=o.h||0}}
-  const coins=Math.max(0,Math.round(you.cash||0));
+  const coins=typeof fmt==='function'?fmt(you.cash||0):'SC '+Math.round(you.cash||0).toLocaleString('en');
   const round=Math.max(1,Math.round(G.round||1));
   const title='<div class="orgStatsTitle">✦ MY PORTFOLIO</div>';
   el.innerHTML=title+
    '<div class="orgStatsRow"><span>Properties</span><strong>'+plots+' / 40</strong></div>'+
    '<div class="orgStatsRow"><span>Developments</span><strong>'+dev+'</strong></div>'+
-   '<div class="orgStatsRow"><span>Skyline Cash</span><strong>SC '+coins.toLocaleString('en')+'</strong></div>'+
+   '<div class="orgStatsRow"><span>Skyline Cash</span><strong>'+coins+'</strong></div>'+
    '<div class="orgStatsRow"><span>Round</span><strong>'+round+'</strong></div>';
   el.hidden=false;
  }
@@ -195,7 +237,7 @@
    // rather than a dramatic near-horizontal board filling the whole screen.
    // One-time lab camera only; user-driven orbit/zoom is not overwritten.
    if(typeof camGoal==='function'){
-    camMode='board';camGoal([0,0,0],0,19.4,1.16,16);
+    camMode='board';camGoal([0,0,0],0,19.1,1.04,16);
     premiumCameraSet=true;
    }
   }
