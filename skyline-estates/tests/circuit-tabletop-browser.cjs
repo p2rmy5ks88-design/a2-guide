@@ -31,6 +31,7 @@ let browser,server;
    assert.equal(await p.locator('.tile').count(),32,'all physical squares are rendered');
    assert.equal(await p.locator('.pawn').count(),4,'four player pawns are rendered');
    assert.equal(await p.locator('#circuitLivingWorld .lifeTower').count(),9,'living waterfront skyline is rendered');
+   assert.equal(await p.locator('#circuitLivingWorld').getAttribute('data-developed'),'0','city starts undeveloped, without fake ownership lighting');
    assert.equal(await p.locator('.lifeCar').count(),2,'miniature moving vehicles are in the board world');
    assert.equal(await p.locator('.lifeFountain').count(),1,'central fountain is present');
    assert.equal(await p.locator('#lifeMotionToggle').count(),1,'motion has an accessible pause control');
@@ -39,6 +40,13 @@ let browser,server;
    assert(await p.locator('#game').evaluate(el=>el.classList.contains('scenePaused')),'paused state also stops the world');
    await p.locator('#lifeMotionToggle').click();
    assert.equal(await p.locator('#lifeMotionToggle').getAttribute('aria-pressed'),'true','living world can resume');
+   if(vp.id==='iphone'){
+     await p.emulateMedia({reducedMotion:'reduce'});
+     await p.waitForFunction(()=>document.querySelector('#game').classList.contains('scenePaused'));
+     assert.equal(await p.locator('#lifeMotionToggle').getAttribute('aria-pressed'),'false','system reduced-motion preference pauses the scene');
+     await p.emulateMedia({reducedMotion:'no-preference'});
+     await p.waitForFunction(()=>!document.querySelector('#game').classList.contains('scenePaused'));
+   }
    await p.evaluate(()=>SkylineCircuitLife.pulse('card','O3'));
    assert(await p.locator('[data-node="O3"]').evaluate(el=>el.classList.contains('lifeEvent')),'City Event applies a scene effect');
    assert.equal(await p.locator('.tile.property').count(),20,'all land property spaces present');
@@ -89,8 +97,18 @@ let browser,server;
        __circuitTabletop.select('O1');return save;
      });
      assert.equal(await p.locator('.model.level4').count(),20,'20 physical skyline pieces visible in populated preview');
+     assert.equal(await p.locator('#circuitLivingWorld').getAttribute('data-developed'),'20','living skyline follows real developed game properties');
+     assert.equal(await p.locator('#circuitLivingWorld .lifeTower.cityLit').count(),9,'all skyline quarters respond to true board development');
+     const existingModel=await p.evaluate(()=>{
+       window.__stableModel=document.querySelector('[data-node="O1"] .model');
+       __circuitTabletop.select('O2');
+       return window.__stableModel===document.querySelector('[data-node="O1"] .model');
+     });
+     assert(existingModel,'ordinary re-renders do not recreate owned 3D miniature buildings');
+     await p.evaluate(()=>__circuitTabletop.select('O1'));
      await p.screenshot({path:path.join(out,engine+'-'+vp.id+'-all-buildings.png'),fullPage:false});
      await p.evaluate(snapshot=>{__circuitTabletop.state().own=JSON.parse(snapshot);__circuitTabletop.select('O1')},beforeCity);
+     assert.equal(await p.locator('#circuitLivingWorld').getAttribute('data-developed'),'0','city reverts its lighting when match properties are cleared');
    }
    if(vp.id==='iphone'){
      // Late-game regression: all legal upgrades must remain available in the scrollable build tray.
@@ -124,7 +142,7 @@ let browser,server;
      assert.equal(errors.length,0,'no runtime exceptions during roll and reload');
    }
    assert.deepEqual(errors,[],'browser free of page errors '+vp.id);
-   total+=17;
+   total+=22;
    await context.close();
  }
  console.log('PASS: '+engine+' Circuit physical tabletop interactive smoke tests; '+total+' checks on four viewports');
