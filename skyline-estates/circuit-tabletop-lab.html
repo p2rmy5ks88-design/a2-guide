@@ -209,8 +209,15 @@ function paintTiles(){if(!s)return;var v=SC.view(s);v.nodes.forEach(function(n){
  if(n.type!=="property")return;
  var o=n.owner;tile.classList.toggle("owned",o>=0);tile.style.setProperty("--owner",o>=0?COLORS[o]:"#b9a982");
  var band=tile.querySelector(".ownerBand");band.hidden=o<0;
- var model=tile.querySelector(".towers");model.innerHTML=(o>=0&&n.stage>0?'<div class="model level'+n.stage+'"></div>':"");
- tile.querySelector(".lot").style.display=o>=0&&n.stage>0?"none":"block";
+ var model=tile.querySelector(".towers"),stage=o>=0&&n.stage>0?n.stage:0;
+ // Do not recreate a miniature on every render: persistent DOM keeps its 3D edges
+ // and building-growth animation stable during focus, movement and panel updates.
+ if(Number(tile.dataset.stage||0)!==stage){
+  model.replaceChildren();
+  if(stage){var building=document.createElement("div");building.className="model level"+stage;model.appendChild(building);}
+  tile.dataset.stage=String(stage);
+ }
+ tile.querySelector(".lot").style.display=stage?"none":"block";
  });}
 function paintTokens(){if(!s)return;var root=$("#tokens");
  s.players.forEach(function(p,i){var pos=locations[visualPos[i]||p.pos];if(!pos)return;
