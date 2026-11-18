@@ -104,6 +104,19 @@
   // Harbours on the upper background; realistic water stays clear around
   // the foreground board. Lightweight mesh budget for mobile Safari.
   let count=0;
+  // One continuous shoreline connects the miniature city blocks. A detached
+  // row of three hovering rectangles looked like a UI diorama, not the
+  // waterfront metropolis in the approved visual reference.
+  const shore=new Node().at(0,-.90,-10.35);
+  shore.add(N(g.box,quayMat,0,.05,0).sc(21.2,.12,2.4));
+  shore.add(N(g.box,pier,0,.145,1.13).sc(21.2,.07,.18));
+  shore.add(N(g.box,deep,0,.11,-1.12).sc(21.2,.08,.11));
+  for(let k=0;k<11;k++){
+   const x=-9.65+k*1.93;
+   shore.add(N(g.cyl8,quayMat,x,.33,1.05).sc(.045,.36,.045));
+   shore.add(N(g.sph,lamp,x,.61,1.05).sc(.075));
+  }
+  group.add(shore);
   for(const [k,x,z] of [[0,-8.2,-10.1],[1,0,-10.8],[2,8.2,-10.1]]){
    const q=new Node().at(x,-.90,z).sc(.55);
    q.add(N(g.box,quayMat,0,.14,0).sc(4.55,.23,3.4));
