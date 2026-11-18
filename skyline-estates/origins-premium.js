@@ -41,6 +41,13 @@
   S3.islandMat.c=hex('#183e52');S3.rimMat.c=hex('#91673c');
   S3.slabMat.c=hex('#65442c');S3.trimMat.c=hex('#30241f');
   S3.waterMat.c=hex('#0c5076');S3.waterMat.spec=.52;
+  // The original oversized decagonal island obscures the waterfront. Origins
+  // is an elegant square game-board *over* water, not a dark polygon island.
+  // Hide only these two review-only plinth meshes; the actual 40-space
+  // board slab, physical trim, token interactions and collisions are intact.
+  for(const n of ROOT.kids){
+   if(n.mat===S3.islandMat||n.mat===S3.rimMat)n.visible=false;
+  }
   if(S3.groundNear&&S3.groundNear.visible)S3.groundNear.mat.c=hex('#2c5263');
   if(S3.groundFar&&S3.groundFar.visible)S3.groundFar.mat.c=hex('#193949');
   return true;
@@ -84,6 +91,56 @@
    ctx.beginPath();ctx.arc(x,y,2.5+(i%5),0,Math.PI*2);ctx.fill();
   }
   ctx.restore();texUpdate(S3.boardTex);S3.originsPremiumGroundPainted=true;
+  return true;
+ }
+ function decorateWaterfront(){
+  if(!isReady()||!S3.centers?.beach)return false;
+  const group=S3.centers.beach;
+  if(group.originsHarbourAdded)return true;
+  const g=S3.geo,quayMat=mat('#8d7562',{spec:.27}),pier=mat('#d0ac6b',{spec:.4}),
+   deep=mat('#224f70',{spec:.75,em:.12}),sand=mat('#bba588'),
+   nav=mat('#f1e4ca',{spec:.7}),windowLight=mat('#f8d391',{em:.65,unlit:1}),
+   leaf=mat('#2d6c55'),lamp=mat('#edc174',{em:.6,unlit:1});
+  // Harbours on the upper background; realistic water stays clear around
+  // the foreground board. Lightweight mesh budget for mobile Safari.
+  let count=0;
+  for(const [k,x,z] of [[0,-8.6,-13.4],[1,0,-14.4],[2,8.6,-13.3]]){
+   const q=new Node().at(x,-.90,z);
+   q.add(N(g.box,quayMat,0,.14,0).sc(4.55,.23,3.4));
+   q.add(N(g.box,pier,0,.27,1.44).sc(4.5,.085,.35));
+   q.add(N(g.box,sand,0,.27,-1.42).sc(4.5,.08,.35));
+   for(let j=0;j<5;j++){
+    const xx=-1.78+j*.89,height=1.8+((j*7+k*5)%4)*.68,width=.57+((j+k)%2)*.1;
+    const tower=new Node().at(xx,.28,-.35);
+    tower.add(N(g.box,j%3===0?nav:deep,0,height/2,0).sc(width,height,.72));
+    // Golden windows on two real façades.
+    for(let fl=1;fl<=Math.max(3,Math.floor(height/.55));fl++){
+     const yy=fl*height/(Math.max(3,Math.floor(height/.55))+1);
+     tower.add(N(g.box,windowLight,0,yy,.365).sc(width*.55,.10,.018));
+     tower.add(N(g.box,pier,width/2+.01,yy,0).sc(.025,.035,.68));
+    }
+    tower.add(N(g.box,pier,0,height+.08,0).sc(width*1.1,.13,.83));
+    q.add(tower);count++;
+   }
+   // Real waterfront path lamps and groups of evergreen trees.
+   for(const xx of [-1.82,1.82]){
+    q.add(N(g.cyl8,quayMat,xx,.69,1.1).sc(.045,.78,.045));
+    q.add(N(g.sph,lamp,xx,1.11,1.1).sc(.11));
+    q.add(N(g.cyl8,quayMat,xx,.53,-1.05).sc(.055,.38,.055));
+    q.add(N(g.sph,leaf,xx,.94,-1.05).sc(.32,.49,.34));
+   }
+   group.add(q);
+  }
+  // A few anchored miniature white boats add waterfront life; they are
+  // presentation-only and do not impersonate player tokens.
+  for(const [x,z,ang] of [[-4.9,-10.5,.4],[5.5,-9.9,-.5],[0,-9.6,-.2]]){
+   const boat=new Node().at(x,-.74,z).rot(0,ang,0);
+   boat.add(N(g.box,nav,0,.15,0).sc(.92,.22,.36));
+   boat.add(N(g.box,deep,-.08,.29,0).sc(.44,.16,.28));
+   boat.add(N(g.box,pier,.43,.18,0).sc(.12,.09,.42));
+   group.add(boat);
+  }
+  group.originsHarbourAdded=true;group.originsHarbourCount=count;
   return true;
  }
  function addArchitecture(){
@@ -243,8 +300,8 @@
   }
   // A real game should select its own edition as before. This showcase only
   // recolours the established Lagos beach edition, not other editions.
-  deepenActualScene();paintPremiumCityGround();
-  const b=addArchitecture();stats();return{ready:true,buildings:b,boardCount:40};
+  deepenActualScene();paintPremiumCityGround();decorateWaterfront();
+  const b=addArchitecture();stats();return{ready:true,buildings:b,waterfront:!!S3.centers?.beach?.originsHarbourAdded,boardCount:40};
  }
  function queueRefresh(){
   if(refreshQueued)return;refreshQueued=true;
