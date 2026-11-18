@@ -98,9 +98,59 @@ select,button{font:inherit}button{min-height:44px;min-width:44px;border-radius:1
 @media(max-height:470px){#cx-players,#cx-actions{padding:8px;margin-top:5px;margin-bottom:5px}.cx-cur{padding:5px}.cx-sect{margin-top:6px;padding-top:4px}#b2-title{padding:4px 10px;top:3px;font-size:10px}#b2-foot{bottom:3px;padding:3px 9px}}
 @media(max-width:760px){#cx-game{--hudL:133px;--hudR:165px}#cx-players,#cx-actions{padding:6px;margin-left:3px;margin-right:3px}.b2-orbit{gap:2px}}
 @media(prefers-reduced-motion:reduce){#cx-players,#cx-actions{backdrop-filter:none}}
+
+/* Approved Circuit visual authority: luxurious but FUNCTIONAL HUD.
+   The live board is still the renderer, not a flattened concept screenshot. */
+#cx-players,#cx-actions{
+ background:linear-gradient(165deg,#183250f5 0%,#0c1b34f5 61%,#091629fa 100%);
+ border:1.5px solid #f3c879c7;
+ box-shadow:0 4px 0 #8d5b2b4d,0 8px 25px #000a16a6,
+   inset 0 0 0 1px #ffe4a124;
+ backdrop-filter:none;
+}
+#cx-players .cx-cur{
+ background:linear-gradient(135deg,#213e5b,#142b43);
+ border-color:#f6d17c88;
+ box-shadow:0 2px 8px #07142599,inset 0 1px 0 #ffffff15;
+}
+#cx-players .cx-row b,#cx-players .cx-iv{color:#ffe09c}
+#cx-actions .cx-panel h2{color:#ffdf92;text-shadow:0 1px 1px #050e19}
+#cx-roll{
+ min-height:50px;margin-top:8px;
+ border:2px solid #ffeab2;border-radius:15px;
+ background:linear-gradient(180deg,#fff0b9 0%,#ffda72 29%,#eeb34a 77%,#c98923 100%);
+ box-shadow:0 3px 0 #80501f,0 5px 12px #061222ba,inset 0 2px 2px #fff6d6;
+ color:#182236;text-transform:uppercase;font:900 16px/1.1 -apple-system,system-ui,sans-serif;
+}
+#cx-roll:active{transform:translateY(2px);box-shadow:0 1px 0 #80501f,inset 0 2px 3px #ad7425}
+#b2-title{
+ display:flex;align-items:center;justify-content:center;gap:7px;
+ max-width:calc(100vw - 340px);
+ border:1px solid #f6c97c;border-radius:13px;
+ padding:5px 11px;
+ color:#fff1c1;background:linear-gradient(180deg,#132b45f2,#0b1a31f5);
+ box-shadow:0 4px 13px #000b1cba,inset 0 1px 0 #ffdf8d55;
+ letter-spacing:0;text-shadow:0 1px 2px #091220;
+}
+#b2-title strong{font:900 11px/1 Georgia,serif;color:#ffd375;letter-spacing:.7px}
+#b2-title span{font:900 12px/1.2 -apple-system,system-ui,sans-serif;color:#fff2cc;letter-spacing:.5px}
+#b2-title small{font:800 9px/1.2 -apple-system,system-ui,sans-serif;color:#eac684;letter-spacing:.5px}
+#b2-foot{background:#0b1e37e8;color:#ffdd96;border:1px solid #e2ba71aa;
+ box-shadow:0 2px 8px #06162990;font-weight:900;letter-spacing:.5px}
+@media(max-width:1000px){
+ #b2-title{max-width:calc(100vw - 340px);gap:5px;padding:4px 7px}
+ #b2-title strong{display:none}
+ #b2-title span{font-size:11px}
+ #b2-title small{font-size:8px}
+}
+@media(max-width:760px){
+ #b2-title small{display:none}
+ #b2-title{max-width:calc(100vw - 304px)}
+ #cx-roll{font-size:13px;min-height:44px}
+}
 </style></head><body>
-<div id="b2-title">SKYLINE CIRCUIT · BOARD 2 · 3D CITY</div>
-<div id="b2-foot" aria-hidden="true">Strategy: choose routes · City: orbit / inspect buildings</div>
+<div id="b2-title"><strong>SKYLINE ESTATES</strong><span>SKYLINE CIRCUIT</span><small>CAREER BOARD 2 OF 4 · NORMAL</small></div>
+<div id="b2-foot" aria-hidden="true">CIRCUIT CITY · 32 PLAYABLE SPACES · FOUR STRATEGIC BRIDGES</div>
 <div id="cx-setup" hidden></div>
 <div id="cx-game" hidden><aside id="cx-players" aria-label="Players"></aside><canvas id="cx-board" aria-label="Circuit board"></canvas><aside id="cx-actions" aria-label="Actions"></aside></div>
 <script>window.__circuitAccessAllowed=true; // Standalone Board 2 research only: isolated saves and no Career eligibility.</script>
