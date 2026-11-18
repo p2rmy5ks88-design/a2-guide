@@ -1,0 +1,78 @@
+name: Circuit board-game rebuild review
+on:
+  pull_request:
+    paths:
+      - 'skyline-estates/circuit-tabletop-lab.html'
+      - 'skyline-estates/circuit-tabletop-life.css'
+      - 'skyline-estates/circuit-tabletop-life.js'
+      - 'skyline-estates/tests/circuit-tabletop-browser.cjs'
+      - '.github/workflows/circuit-tabletop-redesign.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  playable-review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify tabletop browser test syntax
+        run: |
+          node --check skyline-estates/tests/circuit-tabletop-browser.cjs
+          node --check skyline-estates/circuit-tabletop-life.js
+      - name: Confirm Classic and Circuit rules remain present
+        run: |
+          test -f skyline-estates/game.html
+          test -f skyline-estates/lib/circuit-rules.js
+          node skyline-estates/tests/circuit-rules.cjs
+      - name: Install test browser packages
+        run: npm install --prefix skyline-estates/tests --no-audit --no-fund
+      - name: Test playable board in Chromium (four viewports)
+        env:
+          CHROME_PATH: /usr/bin/google-chrome
+          TABLETOP_SCREENSHOTS: tabletop-qa
+        run: node skyline-estates/tests/circuit-tabletop-browser.cjs
+      - name: Install WebKit
+        run: npx --prefix skyline-estates/tests playwright install --with-deps webkit
+      - name: Test playable board in Safari engine (four viewports)
+        env:
+          VISUAL_ENGINE: webkit
+          WEBKIT_DISABLE_DMABUF_RENDERER: '1'
+          TABLETOP_SCREENSHOTS: tabletop-qa
+        run: node skyline-estates/tests/circuit-tabletop-browser.cjs
+      - name: Package self-contained playable HTML preview
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          html = Path('skyline-estates/circuit-tabletop-lab.html').read_text()
+          rules = Path('skyline-estates/lib/circuit-rules.js').read_text()
+          needle = '<script src="./lib/circuit-rules.js"></script>'
+          assert html.count(needle) == 1
+          html = html.replace(needle, '<script>\n' + rules + '\n</script>')
+          css_needle = '<link rel="stylesheet" href="./circuit-tabletop-life.css">'
+          js_needle = '<script src="./circuit-tabletop-life.js"></script>'
+          assert html.count(css_needle) == html.count(js_needle) == 1
+          css = Path('skyline-estates/circuit-tabletop-life.css').read_text()
+          life = Path('skyline-estates/circuit-tabletop-life.js').read_text()
+          html = html.replace(css_needle, '<style>\n' + css + '\n</style>')
+          html = html.replace(js_needle, '<script>\n' + life + '\n</script>')
+          out = Path('tabletop-playable')
+          out.mkdir(exist_ok=True)
+          (out / 'Skyline-Circuit-Interactive-Preview.html').write_text(html)
+          PY
+      - name: Publish self-contained interactive board
+        uses: actions/upload-artifact@v4
+        with:
+          name: skyline-circuit-interactive-preview
+          path: tabletop-playable/
+          if-no-files-found: error
+      - name: Upload true playable board screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: circuit-physical-tabletop-qa
+          path: tabletop-qa/
+          if-no-files-found: ignore
