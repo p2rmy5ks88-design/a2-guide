@@ -302,6 +302,36 @@
     t.add(N(geo.sph,mat('#359d65'),.11,.76,-.06).sc(.15,.2,.17));
     group.add(t);
   }
+  // Owner-approved density: distinct miniature residential streets around
+  // the civic plaza, all decorative and entirely INSIDE the legal 40 tiles.
+  const homes=[
+   [-1.72,-1.26,.40,0],[-.78,-1.63,.34,1],[.94,-1.58,.42,2],[1.81,-1.22,.37,3],
+   [-1.77,1.13,.46,1],[-.95,1.63,.36,2],[1.03,1.60,.38,3],[1.83,1.06,.43,0]
+  ];
+  const terrace=mat('#ddc59d',{spec:.34}),awning=[
+   mat('#d74a4c',{spec:.32}),mat('#27a6b0',{spec:.4}),
+   mat('#ecac39',{spec:.4}),mat('#316baf',{spec:.45})];
+  homes.forEach(([x,z,w,kind],i)=>{
+   const height=.47+(i%3)*.17,house=new Node().at(x,0,z);
+   house.add(N(geo.box,stone,0,.032,0).sc(w*1.72,.065,w*1.67));
+   house.add(N(geo.box,terrace,0,.082,0).sc(w*1.57,.045,w*1.50));
+   house.add(N(geo.box,kind%2?facadeStone:facadeBrick,0,.145+height/2,0).sc(w*1.17,height,w*1.10));
+   house.add(N(geo.box,ivory,0,height+.17,0).sc(w*1.26,.055,w*1.17));
+   if(i%2===0)house.add(N(geo.cone4,roof,0,height+.31,0).sc(w*.88,.25,w*.88).rot(0,Math.PI/4,0));
+   else{
+    house.add(N(geo.box,terrace,0,height+.28,0).sc(w*.95,.12,w*.95));
+    house.add(N(geo.box,gold,0,height+.36,0).sc(w*.50,.045,w*.52));
+   }
+   house.add(N(geo.box,warm,0,.26,w*.575).sc(w*.70,.20,.023));
+   house.add(N(geo.box,bronze,0,.26,w*.596).sc(w*.20,.26,.018));
+   house.add(N(geo.box,awning[kind],0,.42,w*.665).sc(w*.88,.065,w*.24));
+   for(const side of [-1,1]){
+    house.add(N(geo.sph,crown,side*w*.75,.30,w*.35).sc(w*.20,.27,w*.20));
+    house.add(N(geo.sph,warm,side*w*.59,.49,w*.60).sc(.030));
+   }
+   group.add(house);
+  });
+  group.originsTownhouses=homes.length;
   group.originsPremiumAdded=true;group.originsPremiumCount=loci.length;
   return loci.length;
  }
