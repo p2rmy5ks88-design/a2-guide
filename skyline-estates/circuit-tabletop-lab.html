@@ -442,7 +442,7 @@ viewport.addEventListener("touchcancel",function(){pinch=null},{passive:true});
 viewport.addEventListener("wheel",function(e){e.preventDefault();zoom=Math.max(.48,Math.min(1.55,zoom+(e.deltaY<0?.06:-.06)));camera()},{passive:false});
 window.addEventListener("keydown",function(e){if(e.key==="Escape"){if(!$("#matchSetup").hidden){closeMatchSetup();return}$("#selectedCard").innerHTML="";}if(e.key==="+"||e.key==="="){zoom=Math.min(1.55,zoom+.08);camera()}if(e.key==="-"){zoom=Math.max(.48,zoom-.08);camera()}});
 window.addEventListener("resize",fitCamera);boardCreate();start(false);
-window.__circuitTabletop=Object.freeze({state:function(){return s},view:function(){return SC.view(s)},select:function(id){if(!tiles[id])return false;selected=id;render();if(detailMode)inspectSelected();return true},inspect:inspectSelected,overview:showFullBoard,zoom:function(z){zoom=Math.max(.48,Math.min(1.55,z));camera()},reset:function(){start(true)},settings:openMatchSetup,careerMode:function(){return CAREER_MODE},complete:completeCareer});
+window.__circuitTabletop=Object.freeze({state:function(){return s},view:function(){return SC.view(s)},select:function(id){if(!tiles[id])return false;selected=id;render();if(detailMode)inspectSelected();return true},inspect:inspectSelected,overview:showFullBoard,zoom:function(z){zoom=Math.max(.48,Math.min(1.55,z));camera()},reset:function(){start(true)},settings:openMatchSetup,careerMode:function(){return CAREER_MODE}});
 })();
 </script>
 </body></html>
