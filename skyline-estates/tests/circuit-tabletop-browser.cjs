@@ -139,10 +139,34 @@ let browser,server;
      await p.reload({waitUntil:'load'});
      await p.waitForFunction(()=>window.__circuitTabletop && document.querySelectorAll('.pawn').length===4);
      assert.equal(await p.evaluate(()=>__circuitTabletop.state().players[0].pos),afterRoll.pos,'reload resumes the actual last move');
-     assert.equal(errors.length,0,'no runtime exceptions during roll and reload');
+     // Match setup must keep the current game intact unless a new match is confirmed.
+     await p.locator('#matchBtn').click();
+     assert(await p.locator('#matchSetup').isVisible(),'match setup opens in landscape');
+     assert.equal(await p.locator('#matchOpponents').inputValue(),'3','setup defaults to the existing four-person match');
+     await p.locator('#matchCancel').click();
+     assert.equal(await p.evaluate(()=>__circuitTabletop.state().players[0].pos),afterRoll.pos,'cancel keeps the match unchanged');
+     await p.locator('#matchBtn').click();
+     await p.locator('#matchLength').selectOption('extended');
+     await p.locator('#matchOpponents').selectOption('1');
+     await p.locator('#matchDifficulty').selectOption('easy');
+     await p.locator('#matchStart').click();
+     assert.equal(await p.evaluate(()=>__circuitTabletop.state().cfg.length),'extended','new match supports Extended');
+     assert.equal(await p.evaluate(()=>__circuitTabletop.state().players.length),2,'new match supports one CPU');
+     assert.equal(await p.evaluate(()=>__circuitTabletop.state().players[1].level),'easy','new match saves selected difficulty');
+     assert.equal(await p.locator('.pawn').count(),2,'removed CPU pieces do not remain on the physical board');
+     await p.locator('#matchBtn').click();
+     await p.locator('#matchLength').selectOption('quick');
+     await p.locator('#matchOpponents').selectOption('3');
+     await p.locator('#matchDifficulty').selectOption('hard');
+     await p.locator('#matchStart').click();
+     assert.equal(await p.evaluate(()=>__circuitTabletop.state().cfg.length),'quick','Quick experimental match starts');
+     assert.equal(await p.evaluate(()=>__circuitTabletop.state().players.length),4,'three computer rivals restore four pawns');
+     assert.equal(await p.evaluate(()=>__circuitTabletop.state().players[3].level),'hard','difficulty propagates to every rival');
+     assert.equal(await p.locator('.pawn').count(),4,'all physical player pieces are restored');
+     assert.equal(errors.length,0,'no runtime exceptions during roll, reload or setup');
    }
    assert.deepEqual(errors,[],'browser free of page errors '+vp.id);
-   total+=22;
+   total+=33;
    await context.close();
  }
  console.log('PASS: '+engine+' Circuit physical tabletop interactive smoke tests; '+total+' checks on four viewports');
