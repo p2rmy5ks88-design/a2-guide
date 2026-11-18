@@ -367,7 +367,12 @@ async function perform(action){if(busy||!s||s.over)return;var pd=SC.pending(s);i
   var d=events.find(function(e){return e.t==="roll"});if(d)lastDice=d.dice;
   var steps=events.filter(function(e){return e.t==="step"&&e.pid===pd.player}).length;
   var travelled=0;
-  if(steps)movementCounter(pd.player,0,steps,d&&d.dice);
+  if(steps){
+   // Disable stale Roll/Buy buttons while the real pawn path is animating.
+   // This keeps the action panel in sync with the numbered movement ribbon.
+   renderActions();
+   movementCounter(pd.player,0,steps,d&&d.dice);
+  }
   for(var k=0;k<events.length;k++){
     var e=events[k];
     if(e.t==="step"){
