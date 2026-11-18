@@ -46,7 +46,10 @@
   return true;
  }
  function paintPremiumCityGround(){
-  if(!isReady()||!S3.boardCanvas||S3.originsPremiumGroundPainted)return false;
+  if(!isReady()||!S3.boardCanvas)return false;
+  // Board textures are rebuilt when Skyline updates city/theme. Repaint this
+  // centre after each game roster refresh so the approved generic Origins
+  // plaza doesn't revert to the large country-specific logo mid-session.
   const ctx=S3.boardCanvas.getContext('2d'),scale=ctx.canvas.width/1100;
   ctx.save();ctx.setTransform(scale,0,0,scale,0,0);
   // All textures remain inside the validated 40-space perimeter (252–848).
