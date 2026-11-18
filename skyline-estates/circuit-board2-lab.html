@@ -148,6 +148,21 @@ select,button{font:inherit}button{min-height:44px;min-width:44px;border-radius:1
  #b2-title{max-width:calc(100vw - 304px)}
  #cx-roll{font-size:13px;min-height:44px}
 }
+
+/* Circuit City physical landmark — projected from the REAL 3D camera.
+   Crisp at iPhone Retina scale, never a clickable or gameplay-blocking layer. */
+.b2-civic-name{
+ position:fixed;z-index:9;pointer-events:none;
+ transform:translate(-50%,-50%);
+ padding:4px 10px 3px;border:1.5px solid #ffe2a1;
+ border-radius:15px;background:linear-gradient(180deg,#182d45ef,#07182aef);
+ color:#ffe3a2;white-space:nowrap;
+ font:900 11px/1.1 Georgia,serif;
+ letter-spacing:1px;text-shadow:0 1px 2px #000;
+ box-shadow:0 2px 0 #9b6538aa,0 4px 9px #05142199;
+}
+.b2-civic-name[hidden]{display:none!important}
+@media(max-width:760px){.b2-civic-name{font-size:9px;padding:3px 6px}}
 </style></head><body>
 <div id="b2-title"><strong>SKYLINE ESTATES</strong><span>SKYLINE CIRCUIT</span><small>CAREER BOARD 2 OF 4 · NORMAL</small></div>
 <div id="b2-foot" aria-hidden="true">CIRCUIT CITY · 32 PLAYABLE SPACES · FOUR STRATEGIC BRIDGES</div>
