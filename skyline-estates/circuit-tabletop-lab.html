@@ -90,8 +90,21 @@ button:disabled{opacity:.46;cursor:default}
 #roundStamp{margin-top:9px;font-weight:900;color:#dfc08a;font-size:12px}
 #hudActions{margin-top:8px;display:flex;gap:5px}
 #viewActions{margin-top:6px;display:flex;gap:5px}
-#viewActions .miniBtn{min-height:30px;padding:6px 4px;white-space:nowrap;font-size:11px}
+#viewActions .miniBtn{min-height:30px;padding:6px 3px;white-space:nowrap;font-size:10px}
 #viewActions .miniBtn[aria-pressed=true]{background:#ecd18b;color:#172738;border-color:#ffe4a8}
+#matchSetup[hidden]{display:none!important}
+#matchSetup{position:fixed;inset:0;z-index:110;display:grid;place-items:center;background:#061426d9;padding:8px 12px;backdrop-filter:blur(5px)}
+#matchSetupPanel{width:min(455px,calc(100vw - 40px));max-height:calc(100dvh - 16px);overflow-y:auto;border:2px solid #f4cb76;border-radius:16px;background:linear-gradient(150deg,#123452,#0b2339);box-shadow:0 16px 50px #000b;padding:12px 15px;color:#fdf0cb}
+#matchSetupPanel h2{font-size:18px;margin:0 0 3px}
+#matchSetupPanel p{font-size:11px;color:#cbd9de;margin:3px 0 10px}
+#matchSetupPanel .matchFields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+#matchSetupPanel label{font-size:11px;font-weight:850;display:grid;gap:4px}
+#matchSetupPanel select{min-width:0;min-height:36px;border:1px solid #eaca86;border-radius:9px;background:#18384c;color:#fff8df;font-size:13px;padding:5px}
+#matchSetupPanel .matchButtons{display:flex;gap:10px;margin-top:11px}
+#matchSetupPanel .matchButtons button{flex:1;min-height:38px;border:1px solid #f1cf82;border-radius:9px;background:#ecd08a;color:#162d40;font-weight:900}
+#matchSetupPanel .matchButtons button.secondary{background:#17344b;color:#f2f0e5}
+@media(max-width:720px){#matchSetupPanel{padding:8px}#matchSetupPanel .matchFields{gap:5px}#matchSetupPanel select{font-size:11px}}
+
 .miniBtn{border:1px solid #d8c59376;background:#0e2945d9;border-radius:12px;color:#fff4dc;padding:8px;font-size:11px;font-weight:850;flex:1;box-shadow:0 3px 7px #06142768}
 #actionSide{position:absolute;right:max(13px,env(safe-area-inset-right));top:max(13px,env(safe-area-inset-top));bottom:max(10px,env(safe-area-inset-bottom));width:205px;z-index:60;display:flex;flex-direction:column;gap:7px}
 #actionCard{border-radius:17px;padding:13px 13px 10px;background:linear-gradient(150deg,#13263ded,#172f46ef);border:1px solid #efc8758c;box-shadow:var(--shadow);overflow-y:auto;max-height:100%;scrollbar-width:thin}
@@ -133,8 +146,17 @@ button:disabled{opacity:.46;cursor:default}
   </div>
  </div>
  <div id="topRibbon">SKYLINE ESTATES · CIRCUIT TABLETOP</div>
- <aside id="hud"><div class="hudCard"><div class="hudBrand">SKYLINE ESTATES</div><div class="hudSmall" id="activeLabel">YOUR TURN</div><div id="activeName">You</div><div id="activeCash">SC 1,500</div><div id="roundStamp">Round 1</div><div id="roster"></div></div><div id="hudActions"><button class="miniBtn" id="zoomOut" title="Zoom out">− Zoom</button><button class="miniBtn" id="zoomIn" title="Zoom in">+ Zoom</button><button class="miniBtn" id="centerBtn">Center</button></div><div id="viewActions"><button class="miniBtn" id="detailBtn" aria-pressed="false" title="Zoom in to a selected property">Inspect</button><button class="miniBtn" id="overviewBtn" title="Restore whole-board camera">Full board</button></div></aside>
+ <aside id="hud"><div class="hudCard"><div class="hudBrand">SKYLINE ESTATES</div><div class="hudSmall" id="activeLabel">YOUR TURN</div><div id="activeName">You</div><div id="activeCash">SC 1,500</div><div id="roundStamp">Round 1</div><div id="roster"></div></div><div id="hudActions"><button class="miniBtn" id="zoomOut" title="Zoom out">− Zoom</button><button class="miniBtn" id="zoomIn" title="Zoom in">+ Zoom</button><button class="miniBtn" id="centerBtn">Center</button></div><div id="viewActions"><button class="miniBtn" id="detailBtn" aria-pressed="false" title="Zoom in to a selected property">Inspect</button><button class="miniBtn" id="overviewBtn" title="Restore whole-board camera">Full board</button><button class="miniBtn" id="matchBtn" title="Configure a new Circuit match">Match</button></div></aside>
  <aside id="actionSide"><div id="actionCard" aria-live="polite"></div><div id="selectedCard"></div></aside>
+ <div id="matchSetup" role="dialog" aria-modal="true" aria-labelledby="matchSetupTitle" hidden><div id="matchSetupPanel">
+ <h2 id="matchSetupTitle">New Skyline Circuit match</h2><p>Choose your match. Your existing game is only replaced when you press Start.</p>
+ <form id="matchForm"><div class="matchFields">
+ <label>Length<select id="matchLength"><option value="standard">Standard · 40</option><option value="extended">Extended · 60</option><option value="quick">Quick · 30</option></select></label>
+ <label>Rivals<select id="matchOpponents"><option value="1">1 CPU</option><option value="2">2 CPU</option><option value="3" selected>3 CPU</option></select></label>
+ <label>Difficulty<select id="matchDifficulty"><option value="easy">Easy</option><option value="normal" selected>Normal</option><option value="hard">Hard*</option></select></label>
+ </div><p>*Hard currently uses the same route planning as Normal. Quick is experimental.</p>
+ <div class="matchButtons"><button type="button" id="matchCancel" class="secondary">Keep playing</button><button type="submit" id="matchStart">Start new match</button></div></form>
+ </div></div>
  <div id="eventToast" role="status"></div><div id="previewMark">INTERACTIVE REDESIGN LAB · NOT THE LIVE GAME</div>
 </div>
 <script src="./lib/circuit-rules.js"></script>
@@ -302,19 +324,49 @@ async function aiLoop(){
 }
 function kickAI(){if(!s||s.over||busy||aiRunning)return;if(s.players[s.turn].ai){aiRunning=true;aiLoop().catch(function(e){console.error(e);toast("Computer move stopped");aiRunning=false})}}
 function actUI(a){
- if(a==="new"){if(!confirm("Start a fresh Circuit tabletop match?"))return;store.del(PREVIEW_SAVE);start(true);return;}
+ if(a==="new"){openMatchSetup();return;}
  if(a==="stay"||a==="cross"){plan=a;renderActions();return;}
  if(a==="roll"){perform({type:"roll",via:plan});return;}
  if(a==="buy"||a==="pass"||a==="end"){perform({type:a});return;}
  if(a.indexOf("build:")===0){perform({type:"build",node:a.slice(6)});return;}
 }
-function start(fresh){var raw=fresh?null:store.get(PREVIEW_SAVE),parsed=raw?SC.restore(raw):null;
+function start(fresh,settings){var raw=fresh?null:store.get(PREVIEW_SAVE),parsed=raw?SC.restore(raw):null;
  if(parsed&&parsed.ok)s=parsed.state;
- else s=SC.newMatch({seed:(Date.now()>>>0),length:"standard",fx:true,players:[{name:"You"},{name:"Kofi",level:"normal"},{name:"Mei",level:"normal"},{name:"Lucas",level:"normal"}]});
+ else{
+  var length=settings&&["standard","extended","quick"].includes(settings.length)?settings.length:"standard";
+  var count=settings&&Number.isInteger(settings.count)?Math.max(1,Math.min(3,settings.count)):3;
+  var level=settings&&["easy","normal","hard"].includes(settings.level)?settings.level:"normal";
+  var players=[{name:"You"}];
+  ["Kofi","Mei","Lucas"].slice(0,count).forEach(function(name){players.push({name:name,level:level})});
+  var seed=new Uint32Array(1);try{crypto.getRandomValues(seed)}catch(e){seed[0]=Date.now()>>>0}
+  s=SC.newMatch({seed:seed[0],length:length,fx:true,players:players});
+  // New-match setup is a local practice game. Career results remain on the existing gated Circuit route.
+ }
  SC.drain(s);
- for(var i=0;i<s.players.length;i++)visualPos[i]=s.players[i].pos;
+ visualPos={};for(var i=0;i<s.players.length;i++)visualPos[i]=s.players[i].pos;
+ $("#tokens").replaceChildren(); // clear retired player tokens when reducing the number of opponents
  selected=s.players[s.turn].pos;busy=false;plan="stay";lastDice=[1,1];render();fitCamera();kickAI();
 }
+function openMatchSetup(){
+ if(busy||aiRunning){toast("Finish the current move before changing match settings");return}
+ var panel=$("#matchSetup");
+ $("#matchLength").value=s&&s.cfg.length||"standard";
+ $("#matchOpponents").value=String(s?Math.max(1,s.players.length-1):3);
+ $("#matchDifficulty").value=s&&s.players[1]&&s.players[1].level||"normal";
+ panel.hidden=false;$("#matchLength").focus();
+}
+function closeMatchSetup(){$("#matchSetup").hidden=true;$("#matchBtn").focus();}
+$("#matchBtn").addEventListener("click",openMatchSetup);
+$("#matchCancel").addEventListener("click",closeMatchSetup);
+$("#matchSetup").addEventListener("click",function(e){if(e.target===e.currentTarget)closeMatchSetup()});
+$("#matchForm").addEventListener("submit",function(e){
+ e.preventDefault();if(busy||aiRunning){toast("Finish the current move first");return}
+ var cfg={length:$("#matchLength").value,count:Number($("#matchOpponents").value),level:$("#matchDifficulty").value};
+ // Delete only the standalone tabletop save; never touch Classic, Harbour Ring or Circuit Alpha saves.
+ store.del(PREVIEW_SAVE);
+ $("#matchSetup").hidden=true;start(true,cfg);
+});
+
 $("#zoomIn").addEventListener("click",function(){zoom=Math.min(1.55,zoom+.12);camera()});
 $("#zoomOut").addEventListener("click",function(){zoom=Math.max(.48,zoom-.12);camera()});
 $("#centerBtn").addEventListener("click",function(){center(true)});
@@ -331,9 +383,9 @@ viewport.addEventListener("touchmove",function(e){if(!pinch||e.touches.length!==
 viewport.addEventListener("touchend",function(e){if(e.touches.length<2)pinch=null},{passive:true});
 viewport.addEventListener("touchcancel",function(){pinch=null},{passive:true});
 viewport.addEventListener("wheel",function(e){e.preventDefault();zoom=Math.max(.48,Math.min(1.55,zoom+(e.deltaY<0?.06:-.06)));camera()},{passive:false});
-window.addEventListener("keydown",function(e){if(e.key==="Escape"){$("#selectedCard").innerHTML="";}if(e.key==="+"||e.key==="="){zoom=Math.min(1.55,zoom+.08);camera()}if(e.key==="-"){zoom=Math.max(.48,zoom-.08);camera()}});
+window.addEventListener("keydown",function(e){if(e.key==="Escape"){if(!$("#matchSetup").hidden){closeMatchSetup();return}$("#selectedCard").innerHTML="";}if(e.key==="+"||e.key==="="){zoom=Math.min(1.55,zoom+.08);camera()}if(e.key==="-"){zoom=Math.max(.48,zoom-.08);camera()}});
 window.addEventListener("resize",fitCamera);boardCreate();start(false);
-window.__circuitTabletop=Object.freeze({state:function(){return s},view:function(){return SC.view(s)},select:function(id){if(!tiles[id])return false;selected=id;render();if(detailMode)inspectSelected();return true},inspect:inspectSelected,overview:showFullBoard,zoom:function(z){zoom=Math.max(.48,Math.min(1.55,z));camera()},reset:function(){start(true)}});
+window.__circuitTabletop=Object.freeze({state:function(){return s},view:function(){return SC.view(s)},select:function(id){if(!tiles[id])return false;selected=id;render();if(detailMode)inspectSelected();return true},inspect:inspectSelected,overview:showFullBoard,zoom:function(z){zoom=Math.max(.48,Math.min(1.55,z));camera()},reset:function(){start(true)},settings:openMatchSetup});
 })();
 </script>
 </body></html>
