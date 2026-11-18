@@ -57,5 +57,30 @@ select,button{font:inherit}button{min-height:44px;min-width:44px;border-radius:1
 </style></head><body>
 <div id="cx-setup" hidden></div>
 <div id="cx-game" hidden><aside id="cx-players" aria-label="Players"></aside><canvas id="cx-board" aria-label="Circuit board"></canvas><aside id="cx-actions" aria-label="Actions"></aside></div>
+<script id="cx-access-guard">
+(function(){
+  'use strict';
+  // Soft preview gate, not an authentication or anti-tamper boundary.
+  // Preview remains open to loopback and private LAN hosts for on-device Safari QA.
+  const h=location.hostname;
+  const dev=h==='localhost'||h==='127.0.0.1'||h==='::1'||h==='[::1]'||
+    /^10(?:\.\d{1,3}){3}$/.test(h)||
+    /^192\.168(?:\.\d{1,3}){2}$/.test(h)||
+    /^172\.(?:1[6-9]|2\d|3[01])(?:\.\d{1,3}){2}$/.test(h);
+  let allowed=dev;
+  if(!allowed){
+    try{allowed=localStorage.getItem('skylineFeature.career')==='on' &&
+      localStorage.getItem('skylineFeature.circuitAlpha')==='on'}catch(e){allowed=false}
+  }
+  window.__circuitAccessAllowed=allowed;
+  if(!allowed){
+    const panel=document.getElementById('cx-setup');
+    panel.hidden=false;
+    panel.innerHTML='<h1>Skyline Circuit <small>preview locked</small></h1>'+
+      '<p class="cx-note">Circuit preview is not enabled on this device. Return to Skyline Estates.</p>'+
+      '<p><a class="cx-link" href="./game.html">Back to Skyline Estates</a></p>';
+  }
+})();
+</script>
 <script src="./lib/circuit-rules.js"></script><script src="./lib/circuit-screen.js"></script><script src="./lib/circuit-ui.js"></script><script src="./lib/circuit-bench.js"></script>
 </body></html>

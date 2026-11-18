@@ -7,6 +7,8 @@
    - geometry from lib/circuit-screen.js (the same functions the design validators use).
    Replace this file to change the presentation; the rules and the screen checks stay. */
 (function(){'use strict';
+// The HTML preview gate runs before Circuit's UI. Never initialize the game when it denies access.
+if(window.__circuitAccessAllowed===false)return;
 const SC=window.SkylineCircuit,SS=window.SkylineCircuitScreen;if(!SC||!SS)return;
 const $=s=>document.querySelector(s),esc=t=>String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
 // Approved V2 player identities (owner decision 17 Nov 2026): colour and shape, never colour alone.
