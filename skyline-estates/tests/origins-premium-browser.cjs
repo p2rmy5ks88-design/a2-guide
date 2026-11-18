@@ -64,6 +64,7 @@ const types={'.html':'text/html','.css':'text/css','.js':'text/javascript','.jso
     return {...res,sameGame:before===after,rootClass:document.documentElement.classList.contains('origins-premium-v1'),
      water:THEMES.beach.water,cell:BOARDS.beach.cell,mark:!!document.querySelector('#originsPremiumMark'),
      stats:document.querySelector('#originsPremiumStats')?.textContent,
+     expectedCash:typeof fmt==='function'?fmt(G.players[0].cash):null,
      roster:document.querySelectorAll('#roster .pcard').length,
      gameView:{w:canvas.width,h:canvas.height,cssw:canvas.clientWidth,cssh:canvas.clientHeight},
      gameKeys:Object.fromEntries(['skylineCircuitSave','skylineCircuitTabletopRebootSave'].map(k=>[k,localStorage.getItem(k)]))};
@@ -77,10 +78,11 @@ const types={'.html':'text/html','.css':'text/css','.js':'text/javascript','.jso
    assert.equal(review.mark,true);
    assert.equal(review.roster,4);
    assert(review.stats.includes('Properties')&&review.stats.includes('Skyline Cash'),'the new live HUD reads real match values');
+   assert(review.stats.includes(review.expectedCash),'new portfolio uses the same actual displayed currency units as the original roster');
    assert.deepEqual(review.gameKeys,initial.saves,'the premium visual patch writes neither the Board 1 nor Circuit saves');
    assert(review.gameView.w/review.gameView.cssw>=(vp.dpr>1?1.7:.9),
      'WebGL backing resolution is suitable for the tested DPR tier: '+JSON.stringify(review.gameView));
-   checks+=11;
+   checks+=12;
    await page.waitForTimeout(5200); // let legitimate achievement popups clear before the layout snapshot
    assert.equal(await frame.locator('#acts .bigb').count(),1,'the actual game Roll Dice action is visible inside the styled HUD');checks++;
    const cover=await subframe.evaluate(()=>{
