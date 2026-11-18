@@ -39,7 +39,7 @@ let R3=null,R3tried=false,camCur=null;
 let zf=null,zoom=null,planFocused='';const CINEMATIC={pitch:15,dist:5};
 // Owner-review City View: explicitly non-interactive. Strategy View remains the only decision camera.
 const CITY_REVIEW={pitch:38,dist:5.65};let cityReview=false;
-let orbitYaw=0,cityDistance=5.65,citySelection=null,previewStage=-1;
+let orbitYaw=0,cityDistance=5.65,citySelection=null,previewStage=-1,cityShowcase=false;
 const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
 function cityOrbit(delta){if(!R3||!cityReview)return;orbitYaw=clamp(orbitYaw+delta,-55,55);R3.setOrbitYaw(orbitYaw);dirty=true;render();}
 function cityZoom(delta){if(!R3||!cityReview)return;cityDistance=clamp(cityDistance+delta,4.65,7.3);dirty=true;render();}
@@ -49,12 +49,18 @@ function cityInspect(id){
  applyStagePreview();dirty=true;render();
 }
 function applyStagePreview(){
- stagesOverride=null;
- if(!cityReview||!citySelection||previewStage<0)return;
- const node=SC.NODES.find(n=>n.id===citySelection);
- if(!node||node.type!=='property')return;
- stagesOverride={[citySelection]:previewStage};
+ stagesOverride=null;if(!cityReview)return;
+ const sample={};
+ if(cityShowcase)for(const node of SC.NODES)if(node.type==='property')
+  sample[node.id]=1+(node.idx+node.quadrant*2)%4;
+ if(citySelection&&previewStage>=0&&SC.NODES.some(n=>n.id===citySelection&&n.type==='property'))
+  sample[citySelection]=previewStage;
+ stagesOverride=Object.keys(sample).length?sample:null;
  dirty=true;
+}
+function toggleCityShowcase(){
+ if(!R3||!cityReview)return;
+ cityShowcase=!cityShowcase;applyStagePreview();render();
 }
 function cityStagePreview(value){
  if(!R3||!cityReview)return;
@@ -91,7 +97,7 @@ function setupScreen(){const saved=store.get(BOARD2_SAVE),r=saved?SC.restore(sav
  $('#cx-start').onclick=()=>{const length=document.querySelector('input[name=len]:checked').value,levels=[...document.querySelectorAll('[data-lv]')].map(e=>e.value);
   const seed=q.get('seed')?+q.get('seed'):(()=>{const a=new Uint32Array(1);crypto.getRandomValues(a);return a[0]})(),startedAt=Date.now();
   begin(SC.newMatch({seed,length,fx:true,players:[{name:'You'},...levels.map((level,i)=>({name:'Computer '+(i+1),level}))],meta:{matchId:'circuit-'+seed.toString(36)+'-'+startedAt.toString(36),startedAt,career:opts.career}}))}}
-async function begin(state){cityReview=false;orbitYaw=0;cityDistance=5.65;citySelection=null;previewStage=-1;stagesOverride=null;s=state;s.cfg.fx=true;$('#cx-setup').hidden=true;$('#cx-game').hidden=false;anim={queue:[],cur:null,t0:0,tokens:{}};notes=[];tally=null;
+async function begin(state){cityReview=false;orbitYaw=0;cityDistance=5.65;citySelection=null;previewStage=-1;cityShowcase=false;stagesOverride=null;s=state;s.cfg.fx=true;$('#cx-setup').hidden=true;$('#cx-game').hidden=false;anim={queue:[],cur:null,t0:0,tokens:{}};notes=[];tally=null;
  for(const p of s.players)anim.tokens[p.id]={node:p.pos};
  if(opts.renderer==='3d'&&!R3tried){R3tried=true;try{const m=window.SkylineCircuitRenderer3D||await import(window.__circuitRendererURL||'./circuit-board2-renderer.js');R3=m.create($('#cx-board'),{layout,camera:cam,onTierChange:t=>{notes.unshift({t:'Graphics quality lowered to '+t+' for smoother play',kind:'quality'});render()}})}catch(e){R3=null;console.warn('3D renderer unavailable, using 2D',e)}}
  camCur={...cam};resize();enqueue();save();if(!looping){looping=true;loop()}}
@@ -229,15 +235,17 @@ function render(){if(!s)return;const v=SC.view(s),pd=v.pending,me=pd?s.players[p
  if(cityReview){
   const node=citySelection&&v.nodes.find(n=>n.id===citySelection);
   h=`<div class="cx-sect b2-inspect"><b>Interactive City View</b>
-   <p class="cx-k">Drag the city to orbit. Tap a street or building to inspect. Strategy actions are paused—not simulated.</p>
+   <p class="cx-k">Drag to orbit · tap a building to inspect. Return to Strategy to play.</p>
    <div class="b2-orbit" aria-label="3D camera controls"><button id="b2-left" title="Orbit left">↶</button><button id="b2-right" title="Orbit right">↷</button>
    <button id="b2-zoom-out" title="Zoom out">−</button><button id="b2-zoom-in" title="Zoom in">+</button></div>
    <p class="cx-k" id="b2-camera-readout">Orbit ${Math.round(orbitYaw)}° · zoom ${cityDistance.toFixed(1)}</p>
+   <button class="b2-skyline-toggle" id="b2-skyline" aria-pressed="${cityShowcase}">${cityShowcase?'Restore actual buildings':'Preview full 3D skyline'}</button>
+   ${cityShowcase?'<p class="b2-demo-note">Visual-only buildings · match unchanged</p>':''}
    <div class="b2-spotlight" role="status">${node?`<b>${esc(friendlyName(node.id))}</b>
     <p>${esc(DISTRICT_NAMES[node.quadrant])} · ${node.type==='property'?`${esc(node.stageName)} · Price SC ${node.price} · ${node.owner<0?'Unowned':esc(name(node.owner))}`:esc(node.type)}</p>`:'<b>Select a street or property</b><p>Watch it light up and inspect its ownership, stage and district.</p>'}</div>
    ${node&&node.type==='property'?`<label class="b2-stage-label" for="b2-preview-stage">3D building preview <small>(not a purchase)</small></label>
     <select id="b2-preview-stage">
-      <option value="-1" ${previewStage<0?'selected':''}>Actual match stage</option>
+      <option value="-1" ${previewStage<0?'selected':''}>Current scene stage</option>
       ${['Plot','Low-rise','Mid-rise','High-rise','Skyscraper'].map((level,i)=>`<option value="${i}" ${previewStage===i?'selected':''}>${level}</option>`).join('')}
     </select>`:''}
    </div>`;
@@ -246,10 +254,10 @@ function render(){if(!s)return;const v=SC.view(s),pd=v.pending,me=pd?s.players[p
  const A=$('#cx-actions');if(A.dataset.h!==h){A.innerHTML=h;A.dataset.h=h;wire()}}
 function wire(){const on=(sel,f)=>{const e=$(sel);if(e)e.onclick=f};
  on('#cx-city-view',()=>{if(!R3)return;cityReview=!cityReview;if(cityReview&&zoom)overview();
-  if(!cityReview){citySelection=null;orbitYaw=0;previewStage=-1;stagesOverride=null;R3.setOrbitYaw(0);R3.setSpotlight(null);camCur={...cam};R3.setCamera(camCur);C=R3.C}
+  if(!cityReview){citySelection=null;orbitYaw=0;previewStage=-1;cityShowcase=false;stagesOverride=null;R3.setOrbitYaw(0);R3.setSpotlight(null);camCur={...cam};R3.setCamera(camCur);C=R3.C}
   dirty=true;render()});
  on('#b2-left',()=>cityOrbit(-14));on('#b2-right',()=>cityOrbit(14));
- on('#b2-zoom-in',()=>cityZoom(-.45));on('#b2-zoom-out',()=>cityZoom(.45));
+ on('#b2-zoom-in',()=>cityZoom(-.45));on('#b2-zoom-out',()=>cityZoom(.45));on('#b2-skyline',toggleCityShowcase);
  const stageSelect=$('#b2-preview-stage');if(stageSelect)stageSelect.onchange=()=>cityStagePreview(stageSelect.value);
  document.querySelectorAll('[data-plan]').forEach(b=>b.onclick=()=>{if(cityReview){cityReview=false;dirty=true;render();return}plan=b.dataset.plan;dirty=true;render()});
  on('#cx-roll',()=>{tally=null;act({type:'roll',via:plan})});on('#cx-buy',()=>act({type:'buy'}));on('#cx-pass',()=>act({type:'pass'}));
@@ -283,7 +291,7 @@ document.addEventListener('DOMContentLoaded',()=>{setupScreen();const cv=$('#cx-
   const id=hit(e.clientX,e.clientY);if(id){notes.unshift({t:`${friendlyName(id)}: ${describe(id)}`,kind:'inspect'});notes=notes.slice(0,6);render()}})});
 function describe(id){const n=SC.view(s).nodes.find(x=>x.id===id);if(n.type!=='property')return n.type==='junction'?`junction, connector to ${n.link}`:'event space';return `${n.owner>=0?name(n.owner):'Bank'} · ${n.stageName} · rent ${n.rent||Math.round(n.price*.12)}`}
 // Test and measurement hooks (no effect on the match).
-window.__circuitBoard2=Object.freeze({orbit:()=>orbitYaw,city:()=>cityReview,selected:()=>citySelection,zoom:()=>cityDistance,preview:()=>previewStage,previewStage:cityStagePreview,saveKey:BOARD2_SAVE,orbitBy:cityOrbit,inspect:cityInspect});
+window.__circuitBoard2=Object.freeze({orbit:()=>orbitYaw,city:()=>cityReview,selected:()=>citySelection,zoom:()=>cityDistance,preview:()=>previewStage,previewStage:cityStagePreview,showcase:()=>cityShowcase,toggleShowcase:toggleCityShowcase,saveKey:BOARD2_SAVE,orbitBy:cityOrbit,inspect:cityInspect});
 window.__circuitUI=Object.freeze({load:state=>{SC.drain(state);return begin(state)}, // review/tests: show a prepared rules state
  present:events=>{anim.queue.push(...events);dirty=true}, // presentation-only (tests): never reaches the rules
  state:()=>s,view:()=>SC.view(s),busy:()=>!!busy(),skip,hudRects,boardRect,overlay:()=>overlay,
