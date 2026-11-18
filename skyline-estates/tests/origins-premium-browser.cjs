@@ -88,7 +88,7 @@ const types={'.html':'text/html','.css':'text/css','.js':'text/javascript','.jso
    assert(review.waterTexture,'the existing 3D ocean mesh has a rippled teal/gold water texture');
    assert.equal(review.screenMarkerCount,4,'all four real player pieces receive camera-projected labels');
    assert.equal(review.oversizedIslandVisible,false,'the oversized polygon no longer covers the blue water surrounding the 40-space square');
-   assert(Math.abs(review.premiumCameraPitch-.78)<.005,'default Origins camera is lower and more isometric for stronger building depth');
+   assert(Math.abs(review.premiumCameraPitch-.62)<.005,'default Origins camera is lower and more isometric for stronger building depth');
    assert(review.rollBackground.includes('239, 103, 102'),'approved red Roll Dice action overrides the original gold theme: '+review.rollBackground);
    assert.equal(review.sameGame,true,'visual refresh never changes ownership, players or turns');
    assert.equal(review.rootClass,true,'premium look only activates inside the isolated lab');
@@ -134,15 +134,15 @@ const types={'.html':'text/html','.css':'text/css','.js':'text/javascript','.jso
    });
    assert.equal(boardFrame.mode,'board','Origins default is a stable full-perimeter strategy camera');
    assert(boardFrame.fullPerimeter,'all four original board corners fit on iPhone Safari: '+JSON.stringify(boardFrame));
-   assert(Math.abs(boardFrame.target-20.4)<.15,'default 3D camera should not revert to clipped overview: '+JSON.stringify(boardFrame));
+   assert(Math.abs(boardFrame.target-19.4)<.15,'default 3D camera should not revert to clipped overview: '+JSON.stringify(boardFrame));
    checks+=3;
    const cover=await subframe.evaluate(()=>{
     const r1=document.querySelector('#roster').getBoundingClientRect(),
       r2=document.querySelector('#originsPremiumStats').getBoundingClientRect(),
       act=document.querySelector('#acts').getBoundingClientRect(),
       mark=document.querySelector('#originsPremiumMark').getBoundingClientRect();
-    return {separate:r1.right<r2.left,view:r2.right<=innerWidth+1,act:act.right<=innerWidth+1&&act.bottom<=innerHeight+2,
-      mark:mark.bottom<r1.top+8};
+    return {separate:r1.top>=r2.bottom,view:r2.right<=innerWidth+1,act:act.right<=innerWidth+1&&act.bottom<=innerHeight+2,
+      mark:mark.right<innerWidth/2};
    });
    assert(cover.separate&&cover.view&&cover.act&&cover.mark,'premium HUD elements are positioned without cutting off gameplay edges: '+JSON.stringify(cover));
    checks++;
@@ -166,6 +166,13 @@ const types={'.html':'text/html','.css':'text/css','.js':'text/javascript','.jso
     assert.equal(buf.readUInt32BE(16),vp.width*vp.dpr,'screenshot is actually captured in Retina device pixels');
     assert.equal(buf.readUInt32BE(20),vp.height*vp.dpr,'screenshot height retains landscape Retina pixels');
     checks+=2;
+   }
+   if(vp.name==='desktop'){
+    await subframe.evaluate(()=>{void playTurn(G.players[0])});
+    const roll=frame.getByRole('button',{name:'Roll dice'});
+    await roll.click({timeout:15000});
+    await subframe.waitForFunction(()=>G.players[0].pos!==0,null,{timeout:20000});
+    checks++;
    }
    assert.equal(errors.length,0,'no JavaScript exceptions: '+errors.join('; '));
    checks++;

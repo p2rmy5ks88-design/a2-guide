@@ -6,6 +6,7 @@
  'use strict';
  if(window.SkylineOriginsPremiumLab)return;
  let ready=false,observer=null,refreshQueued=false,premiumCameraSet=false,premiumDprConfigured=false;
+ const framing={look:[0,0,.55],distance:19.4,pitch:.62};
  const skin={
    sky:'linear-gradient(180deg,#0e2339 0%,#24617b 48%,#102a42 100%)',
    fogC:'#718a89',fog:[26,65],skyL:'#b1c6d6',gnd:'#78563a',
@@ -155,6 +156,28 @@
    boat.add(N(g.box,pier,.43,.18,0).sc(.12,.09,.42));
    group.add(boat);
   }
+  // A promenade on each near bank gives the water a foreground and a
+  // far shore. Both sit beyond the square board and retain open water
+  // around its front corners.
+  const paving=mat('#d3b59d',{spec:.25}),bark=mat('#63402a'),
+   leafShade=mat('#284a35'),leafSun=mat('#557c36');
+  for(const side of [-1,1]){
+   const bank=new Node().at(side*10.5,-.95,6.9).rot(0,side*-.32,0);
+   bank.add(N(g.cyl,quayMat,0,.17,0).sc(3.9,.78,3.5),
+    N(g.cyl,pier,0,.56,0).sc(3.91,.10,3.51),
+    N(g.cyl,paving,0,.63,0).sc(3.82,.10,3.41));
+   for(const [x,z,h] of [[-1.4,-1.5,.70],[-.4,-2.3,.94],[.7,-2.4,.72],[1.8,-1.3,.83],[-2.1,.65,.91],[1.1,.82,.70]]){
+    bank.add(N(g.cyl8,bark,x,.68+h*.4,z).sc(.065,h*.8,.065),
+     N(g.sph,leafShade,x,.65+h,z).sc(.36,.42,.38),
+     N(g.sph,leafSun,x-.14,.72+h,z+.08).sc(.21,.29,.24));
+   }
+   for(let i=0;i<6;i++){
+    const a=(i+3)*Math.PI/9,x=Math.cos(a)*3.65,z=-Math.sin(a)*3.22;
+    bank.add(N(g.cyl8,quayMat,x,.91,z).sc(.041,.52,.041),
+     N(g.sph,lamp,x,1.19,z).sc(.087));
+   }
+   group.add(bank);
+  }
   group.originsHarbourAdded=true;group.originsHarbourCount=count;
   return true;
  }
@@ -207,20 +230,18 @@
   const facadeGlass=facadeMap('glass'),facadeStone=facadeMap('stone'),
    facadeBrick=facadeMap('brick');
   const loci=[
-   [-2.92,-2.72,1.42,.46],[-2.20,-2.6,1.86,.51],[-1.38,-2.52,2.55,.54],
-   [-.32,-2.91,1.55,.43],[.82,-2.72,2.34,.5],[2.06,-2.59,1.95,.53],
-   [3.05,-1.62,1.48,.39],[2.92,-.42,2.61,.48],[3.10,1.24,1.58,.45],
-   [2.50,2.54,1.82,.53],[1.23,2.66,2.52,.49],[-.14,2.86,1.58,.44],
-   [-1.54,2.59,2.05,.52],[-2.70,2.24,1.74,.47],[-3.06,.72,2.18,.39]
+   [-2.92,-2.72,.88,.63],[-2.20,-2.2,1.69,.64],[-1.18,-1.77,1.26,.71],
+   [-.28,-2.54,.88,.56],[.66,-1.70,2.88,.62],[2.06,-2.25,1.32,.73],
+   [2.78,-1.10,.88,.58],[1.96,-.74,2.38,.54],[3.10,1.24,.87,.61],
+   [2.50,2.54,.64,.53],[1.55,2.62,.63,.49],[-.90,2.73,.48,.56],
+   [-1.86,1.21,1.25,.65],[-2.70,2.24,.65,.58],[-2.66,-.24,1.79,.61]
   ];
   // 3D facade system: varied silhouettes, blue glass, warm limestone and
   // intricate window rhythm. Every piece is actual geometry under the camera,
   // not a screenshot pasted into the board.
-  const glassDeep=mat('#185879',{spec:.92,em:.09}),
-    glassLight=mat('#2c88af',{spec:.87,em:.11}),
+  const glassLight=mat('#2c88af',{spec:.87,em:.11}),
     ivory=mat('#d9c8ad',{spec:.37}),
-    warmBrick=mat('#bf8060',{spec:.30}),
-    roof=mat('#344f66',{spec:.5}),dusk=mat('#5bb6cf',{spec:.8,em:.14});
+    roof=mat('#344f66',{spec:.5});
   for(let i=0;i<loci.length;i++){
    const [x,z,h,w]=loci[i],b=new Node().at(x,0,z),kind=i%5;
    const main=kind===0?facadeStone:kind===2?facadeBrick:facadeGlass;
@@ -233,15 +254,10 @@
    b.add(N(geo.box,main,0,.21+high/2,0).sc(ww,high,dd));
    // Façade pilasters and slim illuminated windows break up the former
    // bare yellow blocks; horizontal floor lines read at iPhone distance.
-   const glassPanel=kind===0?glassDeep:kind===2?glassLight:dusk;
    for(const k of [-1,1]){
-    b.add(N(geo.box,kind===2?ivory:gold,k*ww*.44,.21+high/2,dd/2+.021).sc(ww*.055,high*.95,.035));
-    b.add(N(geo.box,kind===2?ivory:gold,ww/2+.021,.21+high/2,k*dd*.43).sc(.035,high*.95,dd*.055));
-   }
-   for(let k=0;k<4;k++){
-    const dx=(k-1.5)*ww*.205,dz=(k-1.5)*dd*.205;
-    b.add(N(geo.box,glassPanel,dx,.22+high*.51,dd/2+.025).sc(ww*.15,high*.72,.023));
-    b.add(N(geo.box,glassPanel,ww/2+.025,.22+high*.51,dz).sc(.023,high*.72,dd*.15));
+    const frame=kind===2?ivory:kind===0?white:gold;
+    b.add(N(geo.box,frame,k*ww*.46,.21+high/2,dd/2+.008).sc(ww*.043,high*.95,.019));
+    b.add(N(geo.box,frame,ww/2+.008,.21+high/2,k*dd*.44).sc(.019,high*.95,dd*.043));
    }
    const floors=Math.max(3,Math.round(high/.42));
    for(let j=1;j<=floors;j++){
@@ -343,6 +359,18 @@
  // render meshes. The original animated water surface, board and physics stay put.
  function paintDetailedWater(){
   if(!isReady())return false;
+  const mesh=ROOT.kids.find(node=>node.mat===S3.waterMat);
+  if(mesh&&!mesh.originsWaterMapping){
+   // The stock plane spreads its UVs over 160 world units. Tile the detail
+   // at harbour scale so wakes and surface highlights survive minification.
+   const vertices=mesh.geo.v.slice();
+   for(let i=0;i<vertices.length;i+=8){
+    vertices[i+6]*=5;
+    vertices[i+7]*=5;
+   }
+   mesh.geo=mkGeo(vertices,mesh.geo.idx);
+   mesh.originsWaterMapping=true;
+  }
   if(S3.originsWaterTex){
    // The base game reapplies theme colours on turn/board transitions.
    // Reassert the approved ocean texture without reallocating GPU memory.
@@ -351,10 +379,7 @@
    return true;
   }
   const texture=cnv(1024,1024,(c,w,h)=>{
-   const g=c.createLinearGradient(0,0,w,h);
-   g.addColorStop(0,'#0a4867');g.addColorStop(.43,'#116a84');
-   g.addColorStop(.72,'#0d5877');g.addColorStop(1,'#073a5d');
-   c.fillStyle=g;c.fillRect(0,0,w,h);
+   c.fillStyle='#104d6d';c.fillRect(0,0,w,h);
    let seed=0x13579bdf;
    const next=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296};
    // Short directional ripples, teal undertones and warm golden-hour glints.
@@ -365,13 +390,9 @@
     c.lineWidth=.75+next()*1.6;c.beginPath();c.moveTo(x,y);
     c.quadraticCurveTo(x+len*.50,y-1.5-next()*1.7,x+len,y-.6);c.stroke();
    }
-   // Diffused sunlight stays below the physical board's reflective wave motion.
-   const glow=c.createRadialGradient(w*.38,h*.35,0,w*.38,h*.35,w*.4);
-   glow.addColorStop(0,'rgba(255,204,126,.095)');
-   glow.addColorStop(1,'rgba(255,204,126,0)');
-   c.fillStyle=glow;c.fillRect(0,0,w,h);
+
   });
-  const t=texFrom(texture);S3.originsWaterTex=t;
+  const t=texFrom(texture,true);S3.originsWaterTex=t;
   S3.waterMat.tex=t;S3.waterMat.c=hex('#ffffff');
   S3.waterMat.unlit=1;S3.waterMat.spec=.42;S3.waterMat.wave=1;
   return true;
@@ -402,10 +423,9 @@
       typeof camMode!=='undefined'&&camMode==='board'&&
       typeof userCam!=='undefined'&&!userCam&&
       (typeof BZ==='undefined'||BZ==null)&&typeof camGoal==='function'){
-    const target=20.4;
-    if(Math.abs(camT.L-target)>.04||Math.abs(camT.pitch-.78)>.025||
+    if(Math.abs(camT.L-framing.distance)>.04||Math.abs(camT.pitch-framing.pitch)>.025||
        Math.abs(camT.yaw)>.025)
-     camGoal([0,0,0],0,target,.78,9);
+     camGoal(framing.look,0,framing.distance,framing.pitch,9);
    }
    const ui=document.querySelector('#ui'),cv=document.querySelector('#gl');
    if(ui?.hidden||!cv||!G?.players||!CAMM?.vp||!Array.isArray(tok3)){
@@ -478,20 +498,39 @@
   document.documentElement.classList.add('origins-premium-v1');
   if(!document.querySelector('#originsPremiumMark')){
    const mark=document.createElement('div');mark.id='originsPremiumMark';
-   mark.setAttribute('aria-hidden','true');
-   mark.innerHTML='✦ SKYLINE ESTATES <small>ORIGINS · CAREER BOARD 1</small>';
-   document.body.append(mark);
+   mark.innerHTML='<span class="originsCrest" aria-hidden="true">▂▅▇▃▆▂</span><strong>Skyline<br>Estates</strong><small>Career Mode</small><div class="originsCareer"><b>1</b><span>Skyline Origins<small>Easy · Beginner</small></span></div>';
+   const ui=document.querySelector('#ui');
+   const overview=document.createElement('section');
+   overview.className='originsOverview';
+   overview.innerHTML='<h2>Board Overview</h2><ul><li>40 perimeter spaces</li><li>Buy, develop and trade properties</li><li>Build from lots to skyscrapers</li></ul>';
+   mark.append(overview);
+   ui.append(mark);
+   const heading=document.createElement('header');
+   heading.id='originsTitle';
+   heading.innerHTML='<h1>Skyline Origins</h1><p>The Property Development Classic</p>';
+   ui.prepend(heading);
+   const dock=document.createElement('nav');
+   dock.id='originsActions';dock.setAttribute('aria-label','Match actions');
+   const trade=document.querySelector('#bTrade'),assets=document.querySelector('#bAssets');
+   trade.append(document.createTextNode('Trade'));
+   assets.append(document.createTextNode('Manage'));
+   dock.append(trade,document.querySelector('#acts'),assets);
+   ui.append(dock);
   }
   if(!document.querySelector('#originsPremiumStats')){
    const box=document.createElement('aside');box.id='originsPremiumStats';
    box.setAttribute('aria-label','Origins match portfolio overview');
-   box.hidden=true;document.body.append(box);
+   box.hidden=true;
+   const rail=document.createElement('div');rail.id='originsRightRail';
+   rail.append(box,document.querySelector('#roster'));
+   document.querySelector('#ui').append(rail);
   }
-  if(!document.querySelector('#originsPremiumProgress')){
-   const bar=document.createElement('div');bar.id='originsPremiumProgress';
-   bar.setAttribute('aria-hidden','true');bar.textContent='40 SPACES  ·  REAL PROPERTY  ·  LIVING CITY';
-   document.body.append(bar);
-  }
+
+ }
+ function labelRoll(){
+  const roll=document.querySelector('#acts [aria-label="Roll dice"]');
+  const label=roll?.lastChild;
+  if(label?.nodeType===window.Node.TEXT_NODE&&label.textContent==='ROLL')label.textContent='ROLL DICE';
  }
  function stats(){
   const el=document.querySelector('#originsPremiumStats');
@@ -501,36 +540,37 @@
   let plots=0,dev=0;
   for(const o of G.own||[]){if(o&&o.o===you.id){plots++;dev+=o.h||0}}
   const coins=typeof fmt==='function'?fmt(you.cash||0):'SC '+Math.round(you.cash||0).toLocaleString('en');
-  const round=Math.max(1,Math.round(G.round||1));
+  const sets=Object.keys(GROUPS).filter(group=>ownsAll(you.id,group)).length;
   const title='<div class="orgStatsTitle">✦ MY PORTFOLIO</div>';
   el.innerHTML=title+
    '<div class="orgStatsRow"><span>Properties</span><strong>'+plots+' / 40</strong></div>'+
    '<div class="orgStatsRow"><span>Developments</span><strong>'+dev+'</strong></div>'+
    '<div class="orgStatsRow"><span>Skyline Cash</span><strong>'+coins+'</strong></div>'+
-   '<div class="orgStatsRow"><span>Round</span><strong>'+round+'</strong></div>';
+   '<div class="orgStatsRow"><span>Complete Sets</span><strong>'+sets+'</strong></div>'+
+   '<div class="orgStatsRow"><span>Net Worth</span><strong>'+fmt(netWorth(you))+'</strong></div>';
   el.hidden=false;
  }
  function refresh(){
-  ensureHud();
+  ensureHud();labelRoll();
   if(!isReady())return{ready:false,buildings:0};
   if(!premiumCameraSet&&typeof G!=='undefined'&&G&&!document.querySelector('#ui')?.hidden){
    // Board 1 reference: full 40-square perimeter in frame, gently isometric
    // rather than a dramatic near-horizontal board filling the whole screen.
    // One-time lab camera only; user-driven orbit/zoom is not overwritten.
    if(typeof camGoal==='function'){
-    camMode='board';camGoal([0,0,0],0,20.4,.78,16);
+    camMode='board';camGoal(framing.look,0,framing.distance,framing.pitch,16);
     premiumCameraSet=true;
    }
   }
   // A real game should select its own edition as before. This showcase only
   // recolours the established Lagos beach edition, not other editions.
-  // Retina-first review quality: 2.5× native WebGL backbuffer on 3×
+  // Retina-first review quality: 3× native WebGL backbuffer on 3×
   // iPhones, while preserving Skyline's existing automatic performance
   // downgrade. Never re-force quality after a thermal/frame-time downgrade.
   if(!premiumDprConfigured){
    premiumDprConfigured=true;
    if(typeof BOARD_RES!=='undefined'&&typeof COARSE!=='undefined'&&COARSE&&window.devicePixelRatio>=2.5){
-    BOARD_RES.level=2.5;BOARD_RES.ceiling=2.5;
+    BOARD_RES.level=3;BOARD_RES.ceiling=3;
    }
   }
   deepenActualScene();paintDetailedWater();paintPremiumCityGround();decorateWaterfront();syncTokenBadges();
@@ -546,6 +586,8 @@
   const ui=document.querySelector('#ui'),roster=document.querySelector('#roster');
   if(ui){observer=new MutationObserver(queueRefresh);observer.observe(ui,{attributes:true,attributeFilter:['hidden']});}
   if(roster){const o=new MutationObserver(queueRefresh);o.observe(roster,{childList:true,subtree:true});}
+  const acts=document.querySelector('#acts');
+  if(acts)new MutationObserver(labelRoll).observe(acts,{childList:true});
   return refresh();
  }
  window.SkylineOriginsPremiumLab=Object.freeze({apply,refresh,sceneCount:()=>isReady()&&S3.centers?.beach?.originsPremiumCount||0});
