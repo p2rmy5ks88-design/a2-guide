@@ -3,8 +3,8 @@ on:
   pull_request:
     paths:
       - 'skyline-estates/circuit-tabletop-lab.html'
-      - 'skyline-estates/lib/circuit-tabletop-life.css'
-      - 'skyline-estates/lib/circuit-tabletop-life.js'
+      - 'skyline-estates/circuit-tabletop-life.css'
+      - 'skyline-estates/circuit-tabletop-life.js'
       - 'skyline-estates/tests/circuit-tabletop-browser.cjs'
       - '.github/workflows/circuit-tabletop-redesign.yml'
   workflow_dispatch:
@@ -22,7 +22,7 @@ jobs:
       - name: Verify tabletop browser test syntax
         run: |
           node --check skyline-estates/tests/circuit-tabletop-browser.cjs
-          node --check skyline-estates/lib/circuit-tabletop-life.js
+          node --check skyline-estates/circuit-tabletop-life.js
       - name: Confirm Classic and Circuit rules remain present
         run: |
           test -f skyline-estates/game.html
@@ -52,11 +52,11 @@ jobs:
           needle = '<script src="./lib/circuit-rules.js"></script>'
           assert html.count(needle) == 1
           html = html.replace(needle, '<script>\n' + rules + '\n</script>')
-          css_needle = '<link rel="stylesheet" href="./lib/circuit-tabletop-life.css">'
-          js_needle = '<script src="./lib/circuit-tabletop-life.js"></script>'
+          css_needle = '<link rel="stylesheet" href="./circuit-tabletop-life.css">'
+          js_needle = '<script src="./circuit-tabletop-life.js"></script>'
           assert html.count(css_needle) == html.count(js_needle) == 1
-          css = Path('skyline-estates/lib/circuit-tabletop-life.css').read_text()
-          life = Path('skyline-estates/lib/circuit-tabletop-life.js').read_text()
+          css = Path('skyline-estates/circuit-tabletop-life.css').read_text()
+          life = Path('skyline-estates/circuit-tabletop-life.js').read_text()
           html = html.replace(css_needle, '<style>\n' + css + '\n</style>')
           html = html.replace(js_needle, '<script>\n' + life + '\n</script>')
           out = Path('tabletop-playable')
