@@ -142,7 +142,7 @@ var EVENT_NAMES={O3:"City Event",O8:"City Event",O13:"City Event",O18:"City Even
 var $=function(q){return document.querySelector(q)};
 var escapeHTML=function(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];})};
 var store={get:function(k){try{return localStorage.getItem(k)}catch(e){return null}},put:function(k,v){try{localStorage.setItem(k,v)}catch(e){}},del:function(k){try{localStorage.removeItem(k)}catch(e){}}};
-var s=null,selected="O0",plan="stay",busy=false,aiRunning=false,visualPos={},tiles={},lastDice=[1,1],zoom=.74,panX=0,panY=20,drag=null,suppressClickUntil=0,toastTimer=null;
+var s=null,selected="O0",plan="stay",busy=false,aiRunning=false,visualPos={},tiles={},lastDice=[1,1],zoom=.62,panX=0,panY=-8,drag=null,suppressClickUntil=0,toastTimer=null;
 var corners=function(n){var out=[];for(var x=0;x<n-1;x++)out.push([x,0]);for(var y=0;y<n-1;y++)out.push([n-1,y]);for(var x=n-1;x>0;x--)out.push([x,n-1]);for(var y=n-1;y>0;y--)out.push([0,y]);return out;};
 var outer=corners(6),inner=corners(4);var locations={};
 outer.forEach(function(p,i){locations["O"+i]=[70+p[0]*112,70+p[1]*112]});
@@ -170,10 +170,16 @@ function boardCreate(){var root=$("#tiles");root.innerHTML="";
    tiles[n.id]=el;root.appendChild(el);
  });
 }
-function camera(){var st=$("#boardStage");st.style.transform="translate(-50%,-50%) translate("+Math.round(panX)+"px,"+Math.round(panY)+"px) rotateX(25deg) rotateZ(-3deg) scale("+zoom+")"}
-function center(onToken){panX=0;panY=12;
+function camera(){var st=$("#boardStage");st.style.transform="translate(-50%,-50%) translate("+Math.round(panX)+"px,"+Math.round(panY)+"px) rotateX(29deg) rotateZ(-3deg) scale("+zoom+")"}
+function center(onToken){panX=0;panY=-8;
  if(onToken&&s){var p=locations[visualPos[0]||s.players[0].pos];if(p){panX=(360-p[0])*zoom*.75;panY=(360-p[1])*zoom*.5}}
  camera();}
+// Frame the complete board between the player HUD and action panel on every landscape viewport.
+function fitCamera(){
+ var avail=window.innerWidth-$("#hud").offsetWidth-$("#actionSide").offsetWidth-56;
+ zoom=Math.max(.48,Math.min(1.02,(window.innerHeight-45)/630,Math.max(250,avail)/760));
+ center(false);
+}
 function focusMovingPlayer(pid){if(!s)return;var p=locations[visualPos[pid]||s.players[pid].pos];if(!p)return;panX=(360-p[0])*zoom*.75;panY=(360-p[1])*zoom*.5;camera();}
 function paintTiles(){if(!s)return;var v=SC.view(s);v.nodes.forEach(function(n){var tile=tiles[n.id];if(!tile)return;
  tile.classList.toggle("selected",selected===n.id);tile.classList.toggle("current",v.players[v.turn]&&v.players[v.turn].pos===n.id);
@@ -273,7 +279,7 @@ function start(fresh){var raw=fresh?null:store.get(PREVIEW_SAVE),parsed=raw?SC.r
  else s=SC.newMatch({seed:(Date.now()>>>0),length:"standard",fx:true,players:[{name:"You"},{name:"Kofi",level:"normal"},{name:"Mei",level:"normal"},{name:"Lucas",level:"normal"}]});
  SC.drain(s);
  for(var i=0;i<s.players.length;i++)visualPos[i]=s.players[i].pos;
- selected=s.players[s.turn].pos;busy=false;plan="stay";lastDice=[1,1];render();center(false);kickAI();
+ selected=s.players[s.turn].pos;busy=false;plan="stay";lastDice=[1,1];render();fitCamera();kickAI();
 }
 $("#zoomIn").addEventListener("click",function(){zoom=Math.min(1.55,zoom+.12);camera()});
 $("#zoomOut").addEventListener("click",function(){zoom=Math.max(.48,zoom-.12);camera()});
@@ -284,7 +290,7 @@ viewport.addEventListener("pointermove",function(e){if(!drag)return;var dx=e.cli
 viewport.addEventListener("pointerup",function(){if(drag&&drag.moved)suppressClickUntil=Date.now()+200;drag=null;viewport.classList.remove("dragging")});
 viewport.addEventListener("wheel",function(e){e.preventDefault();zoom=Math.max(.48,Math.min(1.55,zoom+(e.deltaY<0?.06:-.06)));camera()},{passive:false});
 window.addEventListener("keydown",function(e){if(e.key==="Escape"){$("#selectedCard").innerHTML="";}if(e.key==="+"||e.key==="="){zoom=Math.min(1.55,zoom+.08);camera()}if(e.key==="-"){zoom=Math.max(.48,zoom-.08);camera()}});
-boardCreate();start(false);
+window.addEventListener("resize",fitCamera);boardCreate();start(false);
 window.__circuitTabletop=Object.freeze({state:function(){return s},view:function(){return SC.view(s)},select:function(id){if(!tiles[id])return false;selected=id;render();return true},zoom:function(z){zoom=Math.max(.48,Math.min(1.55,z));camera()},reset:function(){start(true)}});
 })();
 </script>
