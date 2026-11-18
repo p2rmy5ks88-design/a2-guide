@@ -38,8 +38,8 @@
   // Skyline's existing Surround system can override theme colours after
   // applyTheme(). Correct the real Node materials AFTER that cascade.
   // This avoids the pale peach giant island seen in the first Retina render.
-  S3.islandMat.c=hex('#183e52');S3.rimMat.c=hex('#91673c');
-  S3.slabMat.c=hex('#65442c');S3.trimMat.c=hex('#30241f');
+  S3.islandMat.c=hex('#183e52');S3.rimMat.c=hex('#775535');
+  S3.slabMat.c=hex('#503a2b');S3.trimMat.c=hex('#2b211c');
   S3.waterMat.c=hex('#0c5076');S3.waterMat.spec=.52;
   // The original oversized decagonal island obscures the waterfront. Origins
   // is an elegant square game-board *over* water, not a dark polygon island.
@@ -104,7 +104,7 @@
   // Harbours on the upper background; realistic water stays clear around
   // the foreground board. Lightweight mesh budget for mobile Safari.
   let count=0;
-  for(const [k,x,z] of [[0,-8.6,-13.4],[1,0,-14.4],[2,8.6,-13.3]]){
+  for(const [k,x,z] of [[0,-8.2,-10.1],[1,0,-10.8],[2,8.2,-10.1]]){
    const q=new Node().at(x,-.90,z);
    q.add(N(g.box,quayMat,0,.14,0).sc(4.55,.23,3.4));
    q.add(N(g.box,pier,0,.27,1.44).sc(4.5,.085,.35));
@@ -133,7 +133,7 @@
   }
   // A few anchored miniature white boats add waterfront life; they are
   // presentation-only and do not impersonate player tokens.
-  for(const [x,z,ang] of [[-4.9,-10.5,.4],[5.5,-9.9,-.5],[0,-9.6,-.2]]){
+  for(const [x,z,ang] of [[-4.9,-8.4,.4],[5.5,-8.2,-.5],[0,-8.0,-.2]]){
    const boat=new Node().at(x,-.74,z).rot(0,ang,0);
    boat.add(N(g.box,nav,0,.15,0).sc(.92,.22,.36));
    boat.add(N(g.box,deep,-.08,.29,0).sc(.44,.16,.28));
@@ -294,7 +294,7 @@
    // rather than a dramatic near-horizontal board filling the whole screen.
    // One-time lab camera only; user-driven orbit/zoom is not overwritten.
    if(typeof camGoal==='function'){
-    camMode='board';camGoal([0,0,0],0,19.1,1.04,16);
+    camMode='board';camGoal([0,0,0],0,19.1,.78,16);
     premiumCameraSet=true;
    }
   }
