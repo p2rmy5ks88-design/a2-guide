@@ -62,3 +62,40 @@
  #circuitLivingWorld *,#board .lifeBoardDetails *,#board .lifeParkGlow,
  #innerGarden .lifeFountain *,#parkTrees .tree,.tile.lifeBuild .model,.tile.lifePurchase,.tile.lifeEvent,.pawn.turn{animation:none!important}
 }
+/* Retina legibility pass: all text remains vector-rendered HTML/CSS, with deliberate
+   high-contrast labels instead of faded, raster-image signage. */
+#board .tile .name{
+  color:#15283d;
+  font-weight:900;
+  text-shadow:none;
+  text-rendering:optimizeLegibility;
+}
+#board .tile.property .name{
+  font-size:11px;line-height:1.08;letter-spacing:0;
+  background:linear-gradient(180deg,#fff9ea 0%,#f4d9ac 100%);
+  border-top-color:#997b54;
+}
+#board .tile.property .price{
+  color:#13283e;
+  font-size:13px;font-weight:900;letter-spacing:-.18px;
+  text-shadow:none;
+  background:#fae5bd;
+}
+#board .tile .stripe{border-bottom:2px solid #8f6b3b}
+#board .tile .model{border-width:3px;filter:drop-shadow(0 1px 0 #12294144)}
+#boardStage.detailInspect .tile.property .name{
+  font-size:11.5px;line-height:1.1;letter-spacing:.05px;
+}
+#boardStage.detailInspect .tile.property .price{
+  font-size:13.5px;
+}
+#boardStage.detailInspect .tile.selected{outline:2px solid #ffedac;outline-offset:2px}
+#selectedCard h3{font-size:15px;line-height:1.2;color:#ffe7ad}
+#selectedCard .desc{font-size:12px;line-height:1.42;color:#eef2e9}
+#selectedCard .badges span{font-size:11px;font-weight:900}
+#activeCash,.die{font-variant-numeric:tabular-nums}
+#tableViewport{background:transparent}
+@media(min-resolution:2dppx){
+ #board .tile .name,#board .tile .price{font-synthesis:none}
+ #board .tile .name{letter-spacing:0}
+}
