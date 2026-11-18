@@ -100,6 +100,7 @@ button:disabled{opacity:.46;cursor:default}
 #selectedCard .desc{font-size:11px;color:#d9e7df;line-height:1.35}
 #selectedCard .badges{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}
 #selectedCard .badges span{background:#31546a;padding:3px 7px;border-radius:8px;color:#e9f3eb;font-size:10px;font-weight:850}
+.buildList{max-height:clamp(105px,28vh,200px);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:0 5px 7px 0}
 #topRibbon{position:absolute;top:9px;left:50%;transform:translateX(-50%);padding:5px 17px;border-radius:20px;background:#0d2239c7;border:1px solid #edc7786b;z-index:48;font-size:11px;letter-spacing:1.1px;font-weight:900;color:#ffe3a5;pointer-events:none}
 #previewMark{position:absolute;bottom:7px;right:10px;z-index:30;font-size:9px;color:#fff6ceae;font-weight:800;letter-spacing:.7px}
 #dice{display:flex;justify-content:center;gap:8px;margin:10px 0 6px}
@@ -215,19 +216,22 @@ function renderActions(){if(!s)return;var v=SC.view(s),pd=SC.pending(s),me=s.pla
  else if(pd&&pd.type==="build"){
   html+='<h2>Build or finish</h2><p>Upgrade your properties or end your turn.</p>';
   var opts=pd.options.filter(function(x){return x.type==="build"});
-  if(opts.length)html+='<div style="max-height:100px;overflow-y:auto">'+opts.slice(0,6).map(function(b){return button("Build "+escapeHTML(nameOf(b.node))+" · SC "+fmt(b.cost),"build:"+b.node,"secondary")}).join("")+'</div>';
+  if(opts.length)html+='<div class="buildList" aria-label="Available property upgrades">'+opts.map(function(b){return button("Build "+escapeHTML(nameOf(b.node))+" · SC "+fmt(b.cost),"build:"+b.node,"secondary")}).join("")+'</div>';
   html+=button("End turn","end","coral");
  }else html+='<h2>Player turn</h2><p>Waiting for the next move.</p>';
  html+='<div id="controlsInfo">Drag to explore the board · tap a property to inspect</div>';
  var side=$("#actionCard");if(side.dataset.state!==html){side.innerHTML=html;side.dataset.state=html;}
  side.querySelectorAll("[data-action]").forEach(function(b){b.addEventListener("click",function(){actUI(b.dataset.action)})});
 }
-function render(){if(!s)return;paintTiles();paintTokens();renderRoster();renderActions();renderSelected();}
+function render(){if(!s)return;renderActions();paintTiles();paintTokens();renderRoster();renderSelected();}
 function sleep(ms){return new Promise(function(resolve){setTimeout(resolve,ms)})}
 async function perform(action){if(busy||!s||s.over)return;var pd=SC.pending(s);if(!pd||pd.player!==s.turn)return;
- busy=true;var start=Object.assign({},visualPos),before=s.players.map(function(p){return p.pos});
+ busy=true;var start=Object.assign({},visualPos),turnBefore=s.turn;
  try{
-  SC.act(s,pd.player,action);var events=SC.drain(s);
+  SC.act(s,pd.player,action);
+  // Commit the authoritative move before playing visual steps: reloading Safari mid-animation must not roll back a purchase or roll.
+  store.put(PREVIEW_SAVE,SC.serialize(s));
+  var events=SC.drain(s);
   var d=events.find(function(e){return e.t==="roll"});if(d)lastDice=d.dice;
   for(var k=0;k<events.length;k++){
     var e=events[k];
@@ -239,7 +243,7 @@ async function perform(action){if(busy||!s||s.over)return;var pd=SC.pending(s);i
   }
   s.players.forEach(function(p,i){visualPos[i]=p.pos});
   if(events.some(function(e){return e.t==="step"}))focusMovingPlayer(pd.player);
-  store.put(PREVIEW_SAVE,SC.serialize(s));
+  if(s.turn!==turnBefore)plan="stay";
   selected=s.players[s.turn].pos;render();
  }catch(err){visualPos=start;toast("Move could not complete: "+err.message);console.error(err);}
  finally{busy=false;render()}
