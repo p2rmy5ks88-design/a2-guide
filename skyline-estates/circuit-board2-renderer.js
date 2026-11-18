@@ -299,8 +299,8 @@ export function create(canvas,{layout,spec,camera:cam0,tier:tierName=pickTier(),
  const rimShape=rounded(T*1.0,T*.15);rimShape.holes.push(rounded(T*.86,T*.1));const rimGeo=new THREE.ExtrudeGeometry(rimShape,{depth:3.6,bevelEnabled:false,curveSegments:4});rimGeo.rotateX(-Math.PI/2);
  const inlayGeo=new THREE.PlaneGeometry(T*.73,T*.73);inlayGeo.rotateX(-Math.PI/2);
  const giltFrameGeo=new THREE.PlaneGeometry(T*.83,T*.83);giltFrameGeo.rotateX(-Math.PI/2);
- const giltFrameMat=new THREE.MeshStandardMaterial({color:'#D9A64A',metalness:tier.shadows?.65:.12,roughness:.32,emissive:'#68451B',emissiveIntensity:.18});
- const tileMat={property:new THREE.MeshStandardMaterial({color:'#D5A778',roughness:.82}),junction:new THREE.MeshStandardMaterial({color:'#32697C',roughness:.7}),event:new THREE.MeshStandardMaterial({color:'#B96839',roughness:.7})};
+ const giltFrameMat=new THREE.MeshStandardMaterial({color:'#F2BE63',metalness:tier.shadows?.68:.16,roughness:.26,emissive:'#9D6022',emissiveIntensity:.22});
+ const tileMat={property:new THREE.MeshStandardMaterial({color:'#FFF0D8',roughness:.44,metalness:.04}),junction:new THREE.MeshStandardMaterial({color:'#F8EBD9',roughness:.55,metalness:.04}),event:new THREE.MeshStandardMaterial({color:'#F6D5B0',roughness:.53,metalness:.05})};
  const junctionRim=new THREE.MeshStandardMaterial({color:P.ivory,roughness:.4,emissive:'#4a4230',emissiveIntensity:.25}),eventRim=new THREE.MeshStandardMaterial({color:P.warning,roughness:.4,emissive:'#5a3a10',emissiveIntensity:.4});
  const ownerRimMat=DECISIONS.players.map(p=>new THREE.MeshStandardMaterial({color:p.c,roughness:.45,emissive:p.c,emissiveIntensity:.18}));
  const tile={};
