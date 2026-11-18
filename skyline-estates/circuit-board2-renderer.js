@@ -90,9 +90,28 @@ export function create(canvas,{layout,spec,camera:cam0,tier:tierName=pickTier(),
  const waterTex=canvasTex(256,256,(ctx,w,h)=>{ctx.fillStyle=P.deepWater;ctx.fillRect(0,0,w,h);const r=rng(7);ctx.strokeStyle='rgba(222,248,250,.32)';ctx.lineWidth=1.4;for(let i=0;i<70;i++){const x=r()*w,y=r()*h,l=6+r()*16;ctx.beginPath();ctx.moveTo(x-l,y);ctx.quadraticCurveTo(x,y-3,x+l,y);ctx.stroke()}},{repeat:[14,14]});
  const water=new THREE.Mesh(new THREE.PlaneGeometry(R*12,R*12),new THREE.MeshStandardMaterial({map:waterTex,color:'#FFFFFF',roughness:.27,metalness:.04}));water.rotation.x=-Math.PI/2;water.position.y=-7;water.receiveShadow=!!tier.shadows;env.add(water);
  const platR=R+T*.95;
- const platTop=canvasTex(1024,1024,(ctx,w,h)=>{const g=ctx.createRadialGradient(w/2,h/2,w*.1,w/2,h/2,w/2);g.addColorStop(0,'#E4B778');g.addColorStop(1,'#A36E41');ctx.fillStyle=g;ctx.fillRect(0,0,w,h);
-  ctx.strokeStyle='rgba(127,96,67,.16)';ctx.lineWidth=2;for(let i=0;i<48;i++){const a=i*Math.PI/24;ctx.beginPath();ctx.moveTo(w/2+Math.cos(a)*w*.08,h/2+Math.sin(a)*w*.08);ctx.lineTo(w/2+Math.cos(a)*w*.5,h/2+Math.sin(a)*w*.5);ctx.stroke()}
-  for(const k of [.2,.32,.45]){ctx.beginPath();ctx.arc(w/2,h/2,w*k,0,7);ctx.stroke()}});
+ // The approved image has WATER visible between its real road rings,
+ // not the schematic prototype's unbroken brown platform floor.
+ // This modifies scenery only; legal tiles, bridge geometry and saves remain.
+ const platTop=canvasTex(1024,1024,(ctx,w,h)=>{
+  const g=ctx.createRadialGradient(w*.40,h*.39,w*.05,w*.52,h*.50,w*.71);
+  g.addColorStop(0,'#247c97');g.addColorStop(.38,'#146682');
+  g.addColorStop(.72,'#0b4e70');g.addColorStop(1,'#092d51');
+  ctx.fillStyle=g;ctx.fillRect(0,0,w,h);
+  const r=rng(110983);
+  for(let i=0;i<3300;i++){
+   const x=r()*w,y=r()*h,len=2+r()*19,shine=r();
+   ctx.strokeStyle=shine>.91?'rgba(255,209,125,.35)':
+    shine>.49?'rgba(158,224,239,.23)':'rgba(8,39,62,.24)';
+   ctx.lineWidth=.7+r()*1.3;ctx.beginPath();ctx.moveTo(x,y);
+   ctx.quadraticCurveTo(x+len*.43,y-2,x+len,y-.5);ctx.stroke();
+  }
+  const light=ctx.createRadialGradient(w/2,h/2,0,w/2,h/2,w*.49);
+  light.addColorStop(.7,'rgba(255,192,99,0)');
+  light.addColorStop(.95,'rgba(255,207,139,.14)');
+  light.addColorStop(1,'rgba(255,207,139,0)');
+  ctx.fillStyle=light;ctx.fillRect(0,0,w,h);
+ });
  const platform=new THREE.Mesh(new THREE.CylinderGeometry(platR,platR+3,8,128),[new THREE.MeshStandardMaterial({color:'#BD8851',roughness:.78}),new THREE.MeshStandardMaterial({map:platTop,roughness:.82}),new THREE.MeshStandardMaterial({color:'#754525',roughness:.82})]);
  platform.position.y=-4;platform.receiveShadow=!!tier.shadows;env.add(platform);
  const rim=new THREE.Mesh(new THREE.TorusGeometry(platR+.5,1.2,8,160),new THREE.MeshStandardMaterial({color:P.ivory,roughness:.4,metalness:.4,emissive:'#3a3424',emissiveIntensity:.3}));rim.rotation.x=Math.PI/2;env.add(rim);
