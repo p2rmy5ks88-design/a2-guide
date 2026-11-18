@@ -78,6 +78,8 @@ let browser,server;
    assert(rollLayout.fullyVisible,'the complete Roll Dice button stays visible on landscape iPhone and desktop: '+JSON.stringify(rollLayout));
    assert(rollLayout.noScroll,'the Ready to roll panel does not hide its buttons behind a vertical scroll: '+JSON.stringify(rollLayout));
    assert(rollLayout.detailVisible,'the selected property detail panel remains visible beneath Ready to roll: '+JSON.stringify(rollLayout));
+   if(vp.h<=410)assert.equal(await p.locator('#actionCard #controlsInfo').isVisible(),false,
+     'extra-short landscape hides the redundant roll hint instead of clipping it');
    const frame=await p.evaluate(()=>{const r=document.querySelector('#boardStage').getBoundingClientRect();return{top:r.top,bottom:r.bottom,left:r.left,right:r.right,screenHeight:innerHeight}});
    assert(frame.top>=-24&&frame.bottom<=vp.h+24,'board corners stay visible in landscape, not cut off by huge default zoom: '+JSON.stringify(frame));
    const text=await p.locator('#tiles').textContent();
@@ -237,7 +239,7 @@ let browser,server;
      assert.equal(errors.length,0,'no runtime exceptions during roll, reload, setup, victory or route decision');
    }
    assert.deepEqual(errors,[],'browser free of page errors '+vp.id);
-   total+=59;
+   total+=60;
    await context.close();
  }
  // Career parity: access stays behind the existing dual feature flags.
