@@ -59,9 +59,14 @@ const types={'.html':'text/html','.css':'text/css','.js':'text/javascript','.jso
    const review=await subframe.evaluate(()=>{
     const before=JSON.stringify({players:G.players,own:G.own,round:G.round,turn:G.turn});
     const res=window.SkylineOriginsPremiumLab.refresh();
+    const tokenChildren=tok3.map(t=>t?.kids.length||0);
+    const tokenTypes=tok3.map(t=>t?.originsPremiumIdentity?.kids?.[3]?.kids?.[2]?.geo);
+    window.SkylineOriginsPremiumLab.refresh();
+    const markersStable=tok3.every((t,i)=>!!t?.originsPremiumIdentity&&t.kids.length===tokenChildren[i]);
+    const markersUnique=new Set(tokenTypes).size===4;
     const after=JSON.stringify({players:G.players,own:G.own,round:G.round,turn:G.turn});
     const board=S3.boardCanvas,canvas=document.querySelector('#gl');
-    return {...res,sameGame:before===after,rootClass:document.documentElement.classList.contains('origins-premium-v1'),
+    return {...res,markersStable,markersUnique,sameGame:before===after,rootClass:document.documentElement.classList.contains('origins-premium-v1'),
      water:THEMES.beach.water,cell:BOARDS.beach.cell,mark:!!document.querySelector('#originsPremiumMark'),
      harbourCount:S3.centers.beach?.originsHarbourCount||0,
      oversizedIslandVisible:ROOT.kids.some(n=>n.visible!==false&&(n.mat===S3.islandMat||n.mat===S3.rimMat)),
@@ -85,12 +90,15 @@ const types={'.html':'text/html','.css':'text/css','.js':'text/javascript','.jso
    assert.equal(review.cell,'#fff0d6','ivory board tiles have a richer luxury palette');
    assert.equal(review.mark,true);
    assert.equal(review.roster,4);
+   assert.equal(review.tokens,4,'four actual moving pieces have strong physical identifiers');
+   assert(review.markersStable,'visual refresh does not duplicate token geometry');
+   assert(review.markersUnique,'all four markers are different 3D silhouette shapes');
    assert(review.stats.includes('Properties')&&review.stats.includes('Skyline Cash'),'the new live HUD reads real match values');
    assert(review.stats.includes(review.expectedCash),'new portfolio uses the same actual displayed currency units as the original roster');
    assert.deepEqual(review.gameKeys,initial.saves,'the premium visual patch writes neither the Board 1 nor Circuit saves');
    assert(review.gameView.w/review.gameView.cssw>=(vp.dpr>1?1.7:.9),
      'WebGL backing resolution is suitable for the tested DPR tier: '+JSON.stringify(review.gameView));
-   checks+=16;
+   checks+=19;
    await page.waitForTimeout(5200); // let legitimate achievement popups clear before the layout snapshot
    assert.equal(await frame.locator('#acts .bigb').count(),1,'the actual game Roll Dice action is visible inside the styled HUD');checks++;
    const cover=await subframe.evaluate(()=>{
