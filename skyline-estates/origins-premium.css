@@ -54,6 +54,7 @@ html.origins-premium-v1 #roster .pc{
  font-variant-numeric:tabular-nums;
 }
 html.origins-premium-v1 #roster .pn{font-weight:900}
+html.origins-premium-v1 #roster .nowtag{display:none!important}
 html.origins-premium-v1 #roster .pg i{box-shadow:0 0 0 1px #f1cb78b8}
 html.origins-premium-v1 #tools{
  top:max(8px,env(safe-area-inset-top,0px));
@@ -199,7 +200,7 @@ html.origins-premium-v1 #originsPremiumProgress{
  html.origins-premium-v1 #roster .pn{font-size:9px;max-width:98px}
  html.origins-premium-v1 #roster .pc{font-size:12px}
  html.origins-premium-v1 #originsPremiumStats{top:56px;width:146px;padding:7px 8px;font-size:9px}
- html.origins-premium-v1 #originsPremiumProgress{bottom:4px;max-width:30vw;overflow:hidden;text-overflow:ellipsis}
+ html.origins-premium-v1 #originsPremiumProgress{display:none}
  html.origins-premium-v1 #acts .bigb:not(.end){width:130px;height:50px;font-size:12px}
  html.origins-premium-v1 #prompt{top:9px;max-width:36vw}
 }
