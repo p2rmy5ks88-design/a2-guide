@@ -63,6 +63,8 @@ const types={'.html':'text/html','.css':'text/css','.js':'text/javascript','.jso
     const board=S3.boardCanvas,canvas=document.querySelector('#gl');
     return {...res,sameGame:before===after,rootClass:document.documentElement.classList.contains('origins-premium-v1'),
      water:THEMES.beach.water,cell:BOARDS.beach.cell,mark:!!document.querySelector('#originsPremiumMark'),
+     harbourCount:S3.centers.beach?.originsHarbourCount||0,
+     oversizedIslandVisible:ROOT.kids.some(n=>n.visible!==false&&(n.mat===S3.islandMat||n.mat===S3.rimMat)),
      stats:document.querySelector('#originsPremiumStats')?.textContent,
      expectedCash:typeof fmt==='function'?fmt(G.players[0].cash):null,
      roster:document.querySelectorAll('#roster .pcard').length,
@@ -71,6 +73,8 @@ const types={'.html':'text/html','.css':'text/css','.js':'text/javascript','.jso
    });
    assert.equal(review.ready,true,'actual WebGL scene initialized');
    assert.equal(review.buildings,15,'fifteen additional distinct landmark buildings surround the civic plaza');
+   assert.equal(review.harbourCount,15,'fifteen real waterfront backdrop towers accompany the main board');
+   assert.equal(review.oversizedIslandVisible,false,'the oversized polygon no longer covers the blue water surrounding the 40-space square');
    assert.equal(review.sameGame,true,'visual refresh never changes ownership, players or turns');
    assert.equal(review.rootClass,true,'premium look only activates inside the isolated lab');
    assert.equal(review.water,'#0c5578','approved deep-blue water is used in actual 3D game materials');
@@ -82,7 +86,7 @@ const types={'.html':'text/html','.css':'text/css','.js':'text/javascript','.jso
    assert.deepEqual(review.gameKeys,initial.saves,'the premium visual patch writes neither the Board 1 nor Circuit saves');
    assert(review.gameView.w/review.gameView.cssw>=(vp.dpr>1?1.7:.9),
      'WebGL backing resolution is suitable for the tested DPR tier: '+JSON.stringify(review.gameView));
-   checks+=12;
+   checks+=14;
    await page.waitForTimeout(5200); // let legitimate achievement popups clear before the layout snapshot
    assert.equal(await frame.locator('#acts .bigb').count(),1,'the actual game Roll Dice action is visible inside the styled HUD');checks++;
    const cover=await subframe.evaluate(()=>{
