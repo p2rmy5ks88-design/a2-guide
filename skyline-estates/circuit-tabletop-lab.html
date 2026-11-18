@@ -89,6 +89,9 @@ button:disabled{opacity:.46;cursor:default}
 .rPlayer.now{color:#fff}
 #roundStamp{margin-top:9px;font-weight:900;color:#dfc08a;font-size:12px}
 #hudActions{margin-top:8px;display:flex;gap:5px}
+#viewActions{margin-top:6px;display:flex;gap:5px}
+#viewActions .miniBtn{min-height:30px;padding:6px 4px;white-space:nowrap;font-size:11px}
+#viewActions .miniBtn[aria-pressed=true]{background:#ecd18b;color:#172738;border-color:#ffe4a8}
 .miniBtn{border:1px solid #d8c59376;background:#0e2945d9;border-radius:12px;color:#fff4dc;padding:8px;font-size:11px;font-weight:850;flex:1;box-shadow:0 3px 7px #06142768}
 #actionSide{position:absolute;right:max(13px,env(safe-area-inset-right));top:max(13px,env(safe-area-inset-top));bottom:max(10px,env(safe-area-inset-bottom));width:205px;z-index:60;display:flex;flex-direction:column;gap:7px}
 #actionCard{border-radius:17px;padding:13px 13px 10px;background:linear-gradient(150deg,#13263ded,#172f46ef);border:1px solid #efc8758c;box-shadow:var(--shadow);overflow-y:auto;max-height:100%;scrollbar-width:thin}
@@ -130,7 +133,7 @@ button:disabled{opacity:.46;cursor:default}
   </div>
  </div>
  <div id="topRibbon">SKYLINE ESTATES · CIRCUIT TABLETOP</div>
- <aside id="hud"><div class="hudCard"><div class="hudBrand">SKYLINE ESTATES</div><div class="hudSmall" id="activeLabel">YOUR TURN</div><div id="activeName">You</div><div id="activeCash">SC 1,500</div><div id="roundStamp">Round 1</div><div id="roster"></div></div><div id="hudActions"><button class="miniBtn" id="zoomOut" title="Zoom out">− Zoom</button><button class="miniBtn" id="zoomIn" title="Zoom in">+ Zoom</button><button class="miniBtn" id="centerBtn">Center</button></div></aside>
+ <aside id="hud"><div class="hudCard"><div class="hudBrand">SKYLINE ESTATES</div><div class="hudSmall" id="activeLabel">YOUR TURN</div><div id="activeName">You</div><div id="activeCash">SC 1,500</div><div id="roundStamp">Round 1</div><div id="roster"></div></div><div id="hudActions"><button class="miniBtn" id="zoomOut" title="Zoom out">− Zoom</button><button class="miniBtn" id="zoomIn" title="Zoom in">+ Zoom</button><button class="miniBtn" id="centerBtn">Center</button></div><div id="viewActions"><button class="miniBtn" id="detailBtn" aria-pressed="false" title="Zoom in to a selected property">Inspect</button><button class="miniBtn" id="overviewBtn" title="Restore whole-board camera">Full board</button></div></aside>
  <aside id="actionSide"><div id="actionCard" aria-live="polite"></div><div id="selectedCard"></div></aside>
  <div id="eventToast" role="status"></div><div id="previewMark">INTERACTIVE REDESIGN LAB · NOT THE LIVE GAME</div>
 </div>
@@ -152,7 +155,7 @@ var EVENT_NAMES={O3:"City Event",O8:"City Event",O13:"City Event",O18:"City Even
 var $=function(q){return document.querySelector(q)};
 var escapeHTML=function(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];})};
 var store={get:function(k){try{return localStorage.getItem(k)}catch(e){return null}},put:function(k,v){try{localStorage.setItem(k,v)}catch(e){}},del:function(k){try{localStorage.removeItem(k)}catch(e){}}};
-var s=null,selected="O0",plan="stay",busy=false,aiRunning=false,visualPos={},tiles={},lastDice=[1,1],zoom=.62,panX=0,panY=-8,drag=null,suppressClickUntil=0,toastTimer=null,pinch=null;
+var s=null,selected="O0",plan="stay",busy=false,aiRunning=false,visualPos={},tiles={},lastDice=[1,1],zoom=.62,panX=0,panY=-8,drag=null,suppressClickUntil=0,toastTimer=null,pinch=null,detailMode=false,overviewZoom=.62;
 var corners=function(n){var out=[];for(var x=0;x<n-1;x++)out.push([x,0]);for(var y=0;y<n-1;y++)out.push([n-1,y]);for(var x=n-1;x>0;x--)out.push([x,n-1]);for(var y=n-1;y>0;y--)out.push([0,y]);return out;};
 var outer=corners(6),inner=corners(4);var locations={};
 outer.forEach(function(p,i){locations["O"+i]=[70+p[0]*112,70+p[1]*112]});
@@ -175,12 +178,22 @@ function boardCreate(){var root=$("#tiles");root.innerHTML="";
    if(n.type==="junction")innerHTML+='<div class="price">SKY BRIDGE</div>';
    if(n.type==="event")innerHTML+='<div class="price">PICK A CARD</div>';
    el.innerHTML=innerHTML;
-   el.addEventListener("click",function(){if(Date.now()<suppressClickUntil)return;selected=n.id;paintTiles();renderSelected();});
+   el.addEventListener("click",function(){if(Date.now()<suppressClickUntil)return;selected=n.id;paintTiles();renderSelected();if(detailMode)inspectSelected();});
    el.addEventListener("keydown",function(e){if(e.key==="Enter"||e.key===" "){selected=n.id;paintTiles();renderSelected();}});
    tiles[n.id]=el;root.appendChild(el);
  });
 }
-function camera(){var st=$("#boardStage");st.style.transform="translate(-50%,-50%) translate("+Math.round(panX)+"px,"+Math.round(panY)+"px) rotateX(29deg) rotateZ(-3deg) scale("+zoom+")"}
+function camera(){var st=$("#boardStage");
+ st.style.transform="translate(-50%,-50%) translate("+Math.round(panX)+"px,"+Math.round(panY)+"px) rotateX("+(detailMode?12:29)+"deg) rotateZ("+(detailMode?-1:-3)+"deg) scale("+zoom+")";
+ st.classList.toggle("detailInspect",detailMode);
+ $("#detailBtn").setAttribute("aria-pressed",String(detailMode));
+}
+function inspectSelected(){
+ if(!s)return;var p=locations[selected];
+ detailMode=true;zoom=Math.max(1.14,zoom);
+ if(p){panX=(360-p[0])*zoom*.82;panY=(360-p[1])*zoom*.74;}camera();
+}
+function showFullBoard(){detailMode=false;zoom=overviewZoom;center(false);}
 function center(onToken){panX=0;panY=-8;
  if(onToken&&s){var p=locations[visualPos[0]||s.players[0].pos];if(p){panX=(360-p[0])*zoom*.75;panY=(360-p[1])*zoom*.5}}
  camera();}
@@ -188,7 +201,7 @@ function center(onToken){panX=0;panY=-8;
 function fitCamera(){
  var avail=window.innerWidth-$("#hud").offsetWidth-$("#actionSide").offsetWidth-56;
  zoom=Math.max(.48,Math.min(1.02,(window.innerHeight-45)/630,Math.max(250,avail)/800));
- center(false);
+ overviewZoom=zoom;detailMode=false;center(false);
 }
 function focusMovingPlayer(pid){if(!s)return;var p=locations[visualPos[pid]||s.players[pid].pos];if(!p)return;panX=(360-p[0])*zoom*.75;panY=(360-p[1])*zoom*.5;camera();}
 function paintTiles(){if(!s)return;var v=SC.view(s);v.nodes.forEach(function(n){var tile=tiles[n.id];if(!tile)return;
@@ -298,6 +311,8 @@ function start(fresh){var raw=fresh?null:store.get(PREVIEW_SAVE),parsed=raw?SC.r
 $("#zoomIn").addEventListener("click",function(){zoom=Math.min(1.55,zoom+.12);camera()});
 $("#zoomOut").addEventListener("click",function(){zoom=Math.max(.48,zoom-.12);camera()});
 $("#centerBtn").addEventListener("click",function(){center(true)});
+$("#detailBtn").addEventListener("click",function(){inspectSelected()});
+$("#overviewBtn").addEventListener("click",function(){showFullBoard()});
 var viewport=$("#tableViewport");
 viewport.addEventListener("pointerdown",function(e){if(e.button!==0)return;drag={x:e.clientX,y:e.clientY,cx:panX,cy:panY,moved:false};if(!e.target.closest(".tile"))viewport.setPointerCapture(e.pointerId);});
 viewport.addEventListener("pointermove",function(e){if(!drag||pinch)return;var dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(Math.abs(dx)+Math.abs(dy)>5){drag.moved=true;viewport.classList.add("dragging");}panX=drag.cx+dx;panY=drag.cy+dy;camera();});
@@ -311,7 +326,7 @@ viewport.addEventListener("touchcancel",function(){pinch=null},{passive:true});
 viewport.addEventListener("wheel",function(e){e.preventDefault();zoom=Math.max(.48,Math.min(1.55,zoom+(e.deltaY<0?.06:-.06)));camera()},{passive:false});
 window.addEventListener("keydown",function(e){if(e.key==="Escape"){$("#selectedCard").innerHTML="";}if(e.key==="+"||e.key==="="){zoom=Math.min(1.55,zoom+.08);camera()}if(e.key==="-"){zoom=Math.max(.48,zoom-.08);camera()}});
 window.addEventListener("resize",fitCamera);boardCreate();start(false);
-window.__circuitTabletop=Object.freeze({state:function(){return s},view:function(){return SC.view(s)},select:function(id){if(!tiles[id])return false;selected=id;render();return true},zoom:function(z){zoom=Math.max(.48,Math.min(1.55,z));camera()},reset:function(){start(true)}});
+window.__circuitTabletop=Object.freeze({state:function(){return s},view:function(){return SC.view(s)},select:function(id){if(!tiles[id])return false;selected=id;render();if(detailMode)inspectSelected();return true},inspect:inspectSelected,overview:showFullBoard,zoom:function(z){zoom=Math.max(.48,Math.min(1.55,z));camera()},reset:function(){start(true)}});
 })();
 </script>
 </body></html>
