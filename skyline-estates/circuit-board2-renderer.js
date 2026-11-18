@@ -193,7 +193,7 @@ export function create(canvas,{layout,spec,camera:cam0,tier:tierName=pickTier(),
    new THREE.PlaneGeometry(w*.95,3.8),
    new THREE.MeshBasicMaterial({map:plaqueMap,side:THREE.DoubleSide,toneMapped:false}));
   plaqueMesh.position.set(0,7.6,d*.5+.38);
-  pavilion.add(plaqueMesh);
+  plaqueMesh.userData.circuitPlaque=true;pavilion.add(plaqueMesh);
 
   pavilion.position.set(0,0,0);env.add(pavilion);}
 
@@ -571,7 +571,7 @@ export function create(canvas,{layout,spec,camera:cam0,tier:tierName=pickTier(),
    if(!o.isMesh)return;
    const materials=Array.isArray(o.material)?o.material:[o.material];
    if(materials.some(m=>m?.map===canalTex))canalSurfaces++;
-   if(materials.some(m=>m?.map===plaqueMap))plaqueSurfaces++;
+   if(o.userData.circuitPlaque===true)plaqueSurfaces++;
   });
   return {waterChannel:canalSurfaces>0,centralLandmarkPlaque:plaqueSurfaces>0,
    backdropBuildings:env.userData.circuitBackdropBuildings||0,
