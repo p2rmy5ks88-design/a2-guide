@@ -163,8 +163,27 @@ export function create(canvas,{layout,spec,camera:cam0,tier:tierName=pickTier(),
   // Larger oval glass dome and gilded meridian ribs, the focal landmark in
   // the approved Circuit City image. Pure decoration inside the civic park.
   const domeR=Math.min(w*.42,d*.72);
+  // Baked individual glazed panels and structural mullions: the approved
+  // landmark is an illuminated glass civic dome, never a plain cyan sphere.
+  const domeGlass=canvasTex(1024,512,(ctx,w,h)=>{
+   const g=ctx.createLinearGradient(0,0,w,h);
+   g.addColorStop(0,'#15385f');g.addColorStop(.42,'#2e85aa');
+   g.addColorStop(.75,'#76c2d0');g.addColorStop(1,'#153f65');
+   ctx.fillStyle=g;ctx.fillRect(0,0,w,h);
+   const dx=w/32,dy=h/12;
+   for(let j=0;j<12;j++)for(let i=0;i<32;i++){
+    ctx.fillStyle=(i*7+j*11)%8<3?'#F9DFA03c':'#0c3c654a';
+    ctx.fillRect(i*dx+4,j*dy+4,dx-8,dy-8);
+   }
+   ctx.lineWidth=5;ctx.strokeStyle='#E7BE76';
+   for(let i=0;i<=32;i++){ctx.beginPath();ctx.moveTo(i*dx,0);ctx.lineTo(i*dx,h);ctx.stroke()}
+   ctx.lineWidth=3;ctx.strokeStyle='#C5EBE7';
+   for(let j=0;j<=12;j++){ctx.beginPath();ctx.moveTo(0,j*dy);ctx.lineTo(w,j*dy);ctx.stroke()}
+  });
+  const domeMat=new THREE.MeshStandardMaterial({map:domeGlass,color:'#DEF6EE',
+   metalness:.25,roughness:.18,emissive:'#195572',emissiveIntensity:.2});
   const dome=new THREE.Mesh(
-   new THREE.SphereGeometry(domeR,32,16,0,Math.PI*2,0,Math.PI/2),glazing);
+   new THREE.SphereGeometry(domeR,48,20,0,Math.PI*2,0,Math.PI/2),domeMat);
   dome.scale.set(1.12,.88,.90);dome.position.set(0,14.4,0);
   dome.castShadow=!!tier.shadows;pavilion.add(dome);
   const domeRib=new THREE.MeshStandardMaterial({color:'#F5CD80',metalness:.8,
@@ -176,7 +195,7 @@ export function create(canvas,{layout,spec,camera:cam0,tier:tierName=pickTier(),
    const a=Math.PI*k/7,dx=Math.cos(a)*domeR*1.08,dz=Math.sin(a)*domeR*.85;
    const bow=new THREE.QuadraticBezierCurve3(
     new THREE.Vector3(-dx,14.6,-dz),
-    new THREE.Vector3(0,14.6+domeR*.91,0),
+    new THREE.Vector3(0,14.6+domeR*1.02,0),
     new THREE.Vector3(dx,14.6,dz));
    pavilion.add(new THREE.Mesh(new THREE.TubeGeometry(bow,18,.16,5,false),domeRib));
   }
@@ -457,6 +476,7 @@ export function create(canvas,{layout,spec,camera:cam0,tier:tierName=pickTier(),
    for(const a of set)for(const b of [SC.next(a),SC.LINKS[a]].filter(Boolean))if(set.has(b))out.push([a,b])}return out}
  // ---------- labels (DOM, crisp 12 pt; approved rules) ----------
  const labelLayer=document.createElement('div');labelLayer.className='c3-labels';labelLayer.setAttribute('aria-hidden','true');canvas.parentElement.appendChild(labelLayer);
+ const civicLabel=document.createElement('div');civicLabel.className='b2-civic-name';civicLabel.textContent='CIRCUIT CITY';civicLabel.setAttribute('aria-hidden','true');civicLabel.hidden=true;canvas.parentElement.appendChild(civicLabel);
  // ---------- camera + sizing ----------
  let W=1,Hh=1,scale=1;
  // Zoom (320 pt fallback): a uniform 2D magnification of the validated projection about `focus` (overview screen
@@ -540,7 +560,13 @@ export function create(canvas,{layout,spec,camera:cam0,tier:tierName=pickTier(),
  // ---------- render ----------
  let dirty=true,t0=0;const frames=[];
  function render(now=performance.now()){if(tier.water){waterTex.offset.x=(now/60000)%1;waterTex.offset.y=(now/90000)%1;canalTex.offset.x=(now/165000)%1;dirty=true}
-  if(!dirty)return false;const a=performance.now();renderer.render(scene,camera);dirty=false;frames.push(performance.now()-a);if(frames.length>240)frames.shift();return true}
+  if(!dirty)return false;
+  // Crisp physical landmark name tracks the actual 3D camera and disappears
+  // in Strategy mode so no button, route or property selection is obstructed.
+  const pin=new THREE.Vector3(0,4,innerR*.40).project(camera);
+  civicLabel.hidden=camNow.pitch<25||pin.z>1||pin.z< -1;
+  if(!civicLabel.hidden){civicLabel.style.left=(rect.x+(pin.x+1)*W*.5).toFixed(1)+'px';civicLabel.style.top=(rect.y+(1-pin.y)*Hh*.5).toFixed(1)+'px'}
+  const a=performance.now();renderer.render(scene,camera);dirty=false;frames.push(performance.now()-a);if(frames.length>240)frames.shift();return true}
  // ---------- adaptive quality ----------
  // Evaluated on time, not frame count, so a very slow device still adapts quickly: every 2 s window (≥ 3 frames; gaps over 5 s, e.g. a hidden tab, are ignored) with
  // p95 frame interval over 20 ms counts as over budget; two in a row drop one tier (then render scale on Low).
