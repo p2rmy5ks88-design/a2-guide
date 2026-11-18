@@ -4,6 +4,16 @@
 ## Game identity
 Board 2 must feel like a tangible, beautifully produced real-estate board game. Retain authoritative **32 spaces / 20 properties / four bridges**, Stay vs Sky Bridge route choices, deterministic Skyline Circuit rules and clear property/owner information. This is not a numbered dashboard, artificial simulation, or the square Board 1 geometry.
 
+## Immutable owner-approved art authority (18 November 2026)
+The supplied **Skyline Circuit** golden-hour image is the fixed visual reference. This is an implementation, not a redesign brief. Do not replace the ring board with a numbered simulation, a map, or a different camera/layout aesthetic. The visual target is:
+
+- Complete **two-ring circular elevated city board** with rich chocolate road structure, saturated blue/teal water channels between the rings, four golden/lighted bridge links, and landscaped waterfront.
+- A dominant **oval grid-glass CIRCUIT CITY** landmark, illuminated architectural features, miniature buildings, docked boats and a vivid warm metropolitan backdrop.
+- Deep navy and gilded premium panels to the left/right, polished readable state and an unmistakably large gold Roll Dice control; the **living board must occupy most of the iPhone landscape screen**.
+- Crisp ivory tiles with vivid blue, gold, green and red ownership/district cues, strong physical board depth and Retina-level label/tile sharpness; no washed-out shading or generic brown simulator floor.
+
+**Visual vs functional distinction:** the concept illustration uses decorative place labels and more granular colourful districts than the authoritative rules. Continue to display *only the genuine* 32 rules spaces, four bridges and four scoring districts; never render dummy selectable roads or claim artwork-only values as gameplay data. The production UI must be bound to real game state. Reference images are **not** playable proof. Keep the final visual comparison against the user's supplied image as an explicit manual gate.
+
 ## Premium rendering
 - **Physical geometry:** two thick chocolate-brown boulevards, ivory/gold accents, physically raised plot bases with brass-framed enamel inserts, central civic plaza and fountain, gold-trimmed glass pavilion, water and waterfront architecture.
 - **Saturated district coding:** Harbour royal blue `#1989D0`; Civic gold `#F5B629`; Verdant green `#22A565`; Neon red `#E34B42`. Keep them clearly distinguished by shape/symbol and district legend where necessary, not color alone.
