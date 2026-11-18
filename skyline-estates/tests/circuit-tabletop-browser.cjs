@@ -56,6 +56,15 @@ let browser,server;
      await p.evaluate(snapshot=>{__circuitTabletop.state().own=JSON.parse(snapshot);__circuitTabletop.select('O1')},beforeCity);
    }
    if(vp.id==='iphone'){
+     // Late-game regression: all legal upgrades must remain available in the scrollable build tray.
+     await p.evaluate(()=>{
+       const state=__circuitTabletop.state();
+       state.phase='build';state.players[state.turn].cash=50000;
+       SkylineCircuit.PROPS.slice(0,11).forEach(id=>{state.own[id]={o:state.turn,h:0}});
+       __circuitTabletop.select('O1');
+     });
+     assert.equal(await p.locator('[data-action^="build:"]').count(),11,'all 11 legal upgrades are available, not just the first six');
+     await p.evaluate(()=>__circuitTabletop.reset());
      await p.locator('[data-action="cross"]').click();
      const phase=await p.evaluate(()=>__circuitTabletop.state().phase);
      assert.equal(phase,'roll','route choice never mutates rules before roll');
@@ -66,7 +75,14 @@ let browser,server;
      const afterRoll=await p.evaluate(()=>({turns:__circuitTabletop.state().players[0].st.turns,pos:__circuitTabletop.state().players[0].pos}));
      assert.equal(afterRoll.turns,1,'human action updates authentic game state');
      assert.notEqual(afterRoll.pos,'O0','physical pawn moves from its starting space');
-     assert.equal(errors.length,0,'no runtime exceptions during roll');
+     // A fresh page must resume the authoritative move (also persisted before the visual animation).
+     const saved=await p.evaluate(()=>JSON.parse(localStorage.getItem('skylineCircuitTabletopRebootSave')));
+     assert.equal(saved.state.players[0].st.turns,1,'turn is persisted to the preview save slot');
+     assert.equal(saved.state.players[0].pos,afterRoll.pos,'saved position matches completed move');
+     await p.reload({waitUntil:'load'});
+     await p.waitForFunction(()=>window.__circuitTabletop && document.querySelectorAll('.pawn').length===4);
+     assert.equal(await p.evaluate(()=>__circuitTabletop.state().players[0].pos),afterRoll.pos,'reload resumes the actual last move');
+     assert.equal(errors.length,0,'no runtime exceptions during roll and reload');
    }
    assert.deepEqual(errors,[],'browser free of page errors '+vp.id);
    total+=9;
