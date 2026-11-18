@@ -200,7 +200,16 @@ function completeCareer(){
  if(!CAREER_MODE||!s||!s.over||!s.meta||!s.meta.career||!s.meta.matchId||completedCareer.has(s.meta.matchId))return false;
  var id=s.meta.matchId;
  var receipt=SC.careerFacts(s,{ownerSeat:0,endedAt:Date.now()});
- store.put("skylineCareerInbox:"+id,JSON.stringify(receipt));
+ var key="skylineCareerInbox:"+id,payload=JSON.stringify(receipt);
+ // Commit the Career receipt BEFORE clearing the original Circuit save.
+ // A full/blocked localStorage must never silently discard a finished match.
+ try{
+  localStorage.setItem(key,payload);
+  if(localStorage.getItem(key)!==payload)throw Error("receipt verification failed");
+ }catch(err){
+  toast("Career result could not be saved. Keep this game open and check Safari storage.");
+  return false;
+ }
  // Same ownership boundary as Circuit Alpha: after a career match completes,
  // only its Circuit save is cleared; Career imports the receipt on next launch.
  store.del(PREVIEW_SAVE);
