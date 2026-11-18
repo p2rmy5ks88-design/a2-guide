@@ -71,8 +71,9 @@ html.origins-premium-v1 #tools .tb{
 html.origins-premium-v1 #tools .tb svg{width:19px;height:19px}
 html.origins-premium-v1 #tools .tb.on{background:linear-gradient(#ffde8b,#d69a3d)!important;color:#17263a!important}
 html.origins-premium-v1 #prompt{
- top:max(8px,env(safe-area-inset-top,0px));
- max-width:clamp(185px,37vw,365px);
+ top:max(8px,env(safe-area-inset-top,0px))!important;
+ left:50%!important;right:auto!important;transform:translateX(-50%)!important;
+ max-width:clamp(185px,35vw,330px);
  padding:6px 11px;
  border-radius:13px;
  font-size:11px;
