@@ -72,7 +72,7 @@ const types={'.html':'text/html','.css':'text/css','.js':'text/javascript','.jso
    assert.equal(review.buildings,15,'fifteen additional distinct landmark buildings surround the civic plaza');
    assert.equal(review.sameGame,true,'visual refresh never changes ownership, players or turns');
    assert.equal(review.rootClass,true,'premium look only activates inside the isolated lab');
-   assert.equal(review.water,'#12648b','approved deep-blue water is used in actual 3D game materials');
+   assert.equal(review.water,'#0c5578','approved deep-blue water is used in actual 3D game materials');
    assert.equal(review.cell,'#fff0d6','ivory board tiles have a richer luxury palette');
    assert.equal(review.mark,true);
    assert.equal(review.roster,4);
