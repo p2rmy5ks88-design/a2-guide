@@ -39,10 +39,11 @@ const root=path.resolve(__dirname,'../..'),out=process.env.BOARD2_SHOTS||null,en
    assert(start.art.backdropBuildings>=18,'the premium 3D waterfront skyline exists in each quality tier');
    assert.equal(start.art.realSpaces,32,'art-only changes preserve every real stop and tile');
    assert.equal(start.art.realBridges,4,'every validated Stay/Cross bridge remains intact');
+   assert.equal(start.art.physicalBridgeArches,8,'the four real bridges have paired elevated gold/glass 3D arches');
    if(vp.name==='iphone')assert(start.r.pixelRatio>=2.4,'main iPhone uses a true 2.5x WebGL canvas rather than a blurry 1.5x upscale');
    assert.equal(await p.evaluate(()=>localStorage.getItem('skylineCircuitSave')),null,'Board 1/Career slot is never overwritten');
    assert.equal(await p.evaluate(()=>localStorage.getItem('skylineCircuitTabletopRebootSave')),null,'Board 1 practice slot is untouched');
-   checks+=15;
+   checks+=16;
    await p.locator('#cx-city-view').click({noWaitAfter:true});
    await p.waitForFunction(()=>window.__circuitBoard2.city()&&window.__circuitUI.r3().camera.pitch>35,null,{timeout:9000});
    await p.waitForFunction(()=>window.__circuitUI.r3().envelopeReport().length===20,null,{timeout:18000});
