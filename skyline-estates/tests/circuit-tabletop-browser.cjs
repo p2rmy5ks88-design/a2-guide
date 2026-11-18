@@ -132,6 +132,7 @@ let browser,server;
      await p.waitForFunction(()=>!document.querySelector('#moveCounter').hidden,null,{timeout:10000});
      const counter=await p.locator('#moveCounter').innerText();
      assert(counter.includes(' / ')&&counter.includes(' spaces'),'on-screen movement counter shows the step number');
+     assert((await p.locator('#actionCard').innerText()).includes('On the move'),'dice controls cannot remain visible after pawn movement starts');
      assert.equal(await p.locator('#boardStage').evaluate(el=>el.style.transform),cameraBeforeDice,'rolling dice never moves or rescales the board');
      // Capture the actual moving token and numbered progress on an iPhone-sized screen.
      if(out)await p.screenshot({path:path.join(out,engine+'-iphone-readable-move.png'),fullPage:false});
@@ -211,7 +212,7 @@ let browser,server;
      assert.equal(errors.length,0,'no runtime exceptions during roll, reload, setup, victory or route decision');
    }
    assert.deepEqual(errors,[],'browser free of page errors '+vp.id);
-   total+=47;
+   total+=48;
    await context.close();
  }
  // Career parity: access stays behind the existing dual feature flags.
