@@ -5,7 +5,7 @@
 (function(){
  'use strict';
  if(window.SkylineOriginsPremiumLab)return;
- let ready=false,observer=null,refreshQueued=false,premiumCameraSet=false;
+ let ready=false,observer=null,refreshQueued=false,premiumCameraSet=false,premiumDprConfigured=false;
  const skin={
    sky:'linear-gradient(180deg,#0e2339 0%,#24617b 48%,#102a42 100%)',
    fogC:'#718a89',fog:[26,65],skyL:'#b1c6d6',gnd:'#78563a',
@@ -105,7 +105,7 @@
   // the foreground board. Lightweight mesh budget for mobile Safari.
   let count=0;
   for(const [k,x,z] of [[0,-8.2,-10.1],[1,0,-10.8],[2,8.2,-10.1]]){
-   const q=new Node().at(x,-.90,z);
+   const q=new Node().at(x,-.90,z).sc(.55);
    q.add(N(g.box,quayMat,0,.14,0).sc(4.55,.23,3.4));
    q.add(N(g.box,pier,0,.27,1.44).sc(4.5,.085,.35));
    q.add(N(g.box,sand,0,.27,-1.42).sc(4.5,.08,.35));
@@ -134,7 +134,7 @@
   // A few anchored miniature white boats add waterfront life; they are
   // presentation-only and do not impersonate player tokens.
   for(const [x,z,ang] of [[-4.9,-8.4,.4],[5.5,-8.2,-.5],[0,-8.0,-.2]]){
-   const boat=new Node().at(x,-.74,z).rot(0,ang,0);
+   const boat=new Node().at(x,-.74,z).rot(0,ang,0).sc(.7);
    boat.add(N(g.box,nav,0,.15,0).sc(.92,.22,.36));
    boat.add(N(g.box,deep,-.08,.29,0).sc(.44,.16,.28));
    boat.add(N(g.box,pier,.43,.18,0).sc(.12,.09,.42));
@@ -300,6 +300,15 @@
   }
   // A real game should select its own edition as before. This showcase only
   // recolours the established Lagos beach edition, not other editions.
+  // Retina-first review quality: 2.5× native WebGL backbuffer on 3×
+  // iPhones, while preserving Skyline's existing automatic performance
+  // downgrade. Never re-force quality after a thermal/frame-time downgrade.
+  if(!premiumDprConfigured){
+   premiumDprConfigured=true;
+   if(typeof BOARD_RES!=='undefined'&&typeof COARSE!=='undefined'&&COARSE&&window.devicePixelRatio>=2.5){
+    BOARD_RES.level=2.5;BOARD_RES.ceiling=2.5;
+   }
+  }
   deepenActualScene();paintPremiumCityGround();decorateWaterfront();
   const b=addArchitecture();stats();return{ready:true,buildings:b,waterfront:!!S3.centers?.beach?.originsHarbourAdded,boardCount:40};
  }
