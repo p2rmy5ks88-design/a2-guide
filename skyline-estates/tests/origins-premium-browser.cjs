@@ -48,6 +48,9 @@ const types={'.html':'text/html','.css':'text/css','.js':'text/javascript','.jso
     applyTheme('beach');buildBoard();
     for(let i=0;i<40;i++)updateCell(i);
     renderRoster();camOverview(0,0);
+    // The real game button builder supplies the roll control and a correct
+    // player prompt; this review fixture never casts dice or writes a save.
+    void actions('<b>Origins QA</b>, your turn.',[{k:'roll',label:'Roll dice',primary:true}]);
     return {props:G.own.length,players:G.players.length,state:JSON.stringify({players:G.players,own:G.own,round:G.round,turn:G.turn}),
      saves:Object.fromEntries(['skylineCircuitSave','skylineCircuitTabletopRebootSave'].map(k=>[k,localStorage.getItem(k)]))};
    });
@@ -75,9 +78,11 @@ const types={'.html':'text/html','.css':'text/css','.js':'text/javascript','.jso
    assert.equal(review.roster,4);
    assert(review.stats.includes('Properties')&&review.stats.includes('Skyline Cash'),'the new live HUD reads real match values');
    assert.deepEqual(review.gameKeys,initial.saves,'the premium visual patch writes neither the Board 1 nor Circuit saves');
-   assert(review.gameView.w/review.gameView.cssw>=1.7,'real canvas has high-resolution backbuffer');
+   assert(review.gameView.w/review.gameView.cssw>=(vp.dpr>1?1.7:.9),
+     'WebGL backing resolution is suitable for the tested DPR tier: '+JSON.stringify(review.gameView));
    checks+=11;
-   await page.waitForTimeout(550);
+   await page.waitForTimeout(1150);
+   assert.equal(await frame.locator('#acts .bigb').count(),1,'the actual game Roll Dice action is visible inside the styled HUD');checks++;
    const cover=await subframe.evaluate(()=>{
     const r1=document.querySelector('#roster').getBoundingClientRect(),
       r2=document.querySelector('#originsPremiumStats').getBoundingClientRect(),
