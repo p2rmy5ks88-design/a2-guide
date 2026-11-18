@@ -5,17 +5,17 @@
 (function(){
  'use strict';
  if(window.SkylineOriginsPremiumLab)return;
- let ready=false,observer=null,refreshQueued=false;
+ let ready=false,observer=null,refreshQueued=false,premiumCameraSet=false;
  const skin={
-   sky:'linear-gradient(180deg,#142a45 0%,#2f6678 47%,#112a43 100%)',
+   sky:'linear-gradient(180deg,#0e2339 0%,#24617b 48%,#102a42 100%)',
    fogC:'#718a89',fog:[26,65],skyL:'#b1c6d6',gnd:'#78563a',
    sun:['#ffd18b',.72],L:[-.52,.7,.33],
-   water:'#12648b',wave:1,island:'#b59566',rim:'#e9bd7b',
+   water:'#0c5578',wave:1,island:'#244456',rim:'#c49a5d',
    cloud:'#f4cb96',cloudEm:.19,night:0,palms:1,mount:0,fx:''
  };
  const board={
    cell:'#fff0d6',line:'#76502b',text:'#1c2741',frame:'#c89b55',
-   slab:'#a36b39',trim:'#53351e',pave:'#d7c6a7',plot:'#d2bf9b',
+   slab:'#84522e',trim:'#382316',pave:'#d7c6a7',plot:'#d2bf9b',
    road:'#425a62',lane:'#fff0d0',gold:'#e8b459',
    logo:['#ffd268','#152c48'],ribbon:['#174e70','#ffe7ac'],
    tag:'SKYLINE ORIGINS • GOLDEN HOUR'
@@ -37,10 +37,10 @@
   if(!isReady()||!S3.centers||!S3.centers.beach)return 0;
   const group=S3.centers.beach;if(group.originsPremiumAdded)return group.originsPremiumCount||0;
   const geo=S3.geo;
-  const gold=mat('#f1bf72',{spec:.86,em:.25}),bronze=mat('#7b4c28',{spec:.45}),
-        glass=mat('#4a91b5',{spec:.88,em:.16}),azure=mat('#2476a9',{spec:.88,em:.14}),
-        warm=mat('#fff1b8',{em:1.15,unlit:1}),
-        white=mat('#f0dfbf',{spec:.44}),stone=mat('#bca27d',{spec:.24});
+  const gold=mat('#e7b364',{spec:.88,em:.13}),bronze=mat('#704529',{spec:.45}),
+        glass=mat('#225b83',{spec:.91,em:.08}),azure=mat('#347fa8',{spec:.83,em:.09}),
+        warm=mat('#ffd68c',{em:.85,unlit:1}),
+        white=mat('#dac7a6',{spec:.44}),stone=mat('#ad9374',{spec:.24});
   const loci=[
    [-2.92,-2.72,1.42,.46],[-2.20,-2.6,1.86,.51],[-1.38,-2.52,2.55,.54],
    [-.32,-2.91,1.55,.43],[.82,-2.72,2.34,.5],[2.06,-2.59,1.95,.53],
@@ -137,6 +137,15 @@
  function refresh(){
   ensureHud();
   if(!isReady())return{ready:false,buildings:0};
+  if(!premiumCameraSet&&typeof G!=='undefined'&&G&&!document.querySelector('#ui')?.hidden){
+   // Board 1 reference: full 40-square perimeter in frame, gently isometric
+   // rather than a dramatic near-horizontal board filling the whole screen.
+   // One-time lab camera only; user-driven orbit/zoom is not overwritten.
+   if(typeof camGoal==='function'){
+    camMode='board';camGoal([0,0,0],0,19.4,1.16,16);
+    premiumCameraSet=true;
+   }
+  }
   // A real game should select its own edition as before. This showcase only
   // recolours the established Lagos beach edition, not other editions.
   const b=addArchitecture();stats();return{ready:true,buildings:b,boardCount:40};
