@@ -164,6 +164,46 @@
         glass=mat('#225b83',{spec:.91,em:.08}),azure=mat('#347fa8',{spec:.83,em:.09}),
         warm=mat('#ffd68c',{em:.85,unlit:1}),
         white=mat('#dac7a6',{spec:.44}),stone=mat('#ad9374',{spec:.24});
+  // Baked 512px facade maps: actual textured 3D towers, detailed at 2.5×
+  // iPhone WebGL resolution without hundreds of additional draw calls.
+  // Each window has mullions, reflected blue sky, warm apartment lights and
+  // small limestone/gold lintels rather than cartoon solid-colour walls.
+  const facadeMap=(mode)=>{
+   const C=cnv(512,512,(ctx,w,h)=>{
+    const stone=mode==='stone',brick=mode==='brick';
+    const grad=ctx.createLinearGradient(0,0,512,512);
+    grad.addColorStop(0,stone?'#eed4a1':brick?'#c88d71':'#19476c');
+    grad.addColorStop(.52,stone?'#be9e74':brick?'#955b54':'#246f93');
+    grad.addColorStop(1,stone?'#a98860':brick?'#794747':'#123557');
+    ctx.fillStyle=grad;ctx.fillRect(0,0,w,h);
+    const cols=stone||brick?4:6,rows=stone?8:10;
+    for(let j=0;j<rows;j++)for(let k=0;k<cols;k++){
+     const x=22+k*(w-44)/cols,y=15+j*(h-30)/rows,
+       ww=(w-44)/cols*.72,hh=(h-30)/rows*.71,lit=(k*19+j*7+mode.length)%8<3;
+     ctx.fillStyle=stone?'#b88750':brick?'#68403d':'#0b2d4a';
+     ctx.fillRect(x-5,y-5,ww+10,hh+10);
+     const win=ctx.createLinearGradient(x,y,x+ww,y+hh);
+     win.addColorStop(0,lit?'#f4dfad':'#6ebcd3');
+     win.addColorStop(.48,lit?'#b8926c':'#2b779a');
+     win.addColorStop(1,lit?'#8d643b':'#123f63');
+     ctx.fillStyle=win;ctx.fillRect(x,y,ww,hh);
+     ctx.fillStyle=lit?'#ffebb37a':'#b9f7f270';
+     ctx.fillRect(x+ww*.10,y+hh*.08,ww*.09,hh*.77);
+     ctx.fillStyle='#14294488';ctx.fillRect(x+ww*.49,y,2,hh);
+     ctx.fillStyle=stone?'#f1d3a1':brick?'#db9a75':'#8dd1dc';
+     ctx.fillRect(x-5,y+hh+2,ww+10,3);
+    }
+    // Crisp repeating floor rails complement the actual physical crowns.
+    for(let j=0;j<rows;j++){
+     const y=13+j*(h-30)/rows;
+     ctx.fillStyle=stone?'#f2d4a47d':brick?'#e0a98488':'#7dbadf65';
+     ctx.fillRect(0,y,512,3);
+    }
+   });
+   return mat('#ffffff',{tex:texFrom(C),spec:mode==='glass'?.85:.38,em:mode==='glass'?.085:.04});
+  };
+  const facadeGlass=facadeMap('glass'),facadeStone=facadeMap('stone'),
+   facadeBrick=facadeMap('brick');
   const loci=[
    [-2.92,-2.72,1.42,.46],[-2.20,-2.6,1.86,.51],[-1.38,-2.52,2.55,.54],
    [-.32,-2.91,1.55,.43],[.82,-2.72,2.34,.5],[2.06,-2.59,1.95,.53],
@@ -181,7 +221,7 @@
     roof=mat('#344f66',{spec:.5}),dusk=mat('#5bb6cf',{spec:.8,em:.14});
   for(let i=0;i<loci.length;i++){
    const [x,z,h,w]=loci[i],b=new Node().at(x,0,z),kind=i%5;
-   const main=kind===0?ivory:kind===1?glassDeep:kind===2?warmBrick:kind===3?glassLight:glass;
+   const main=kind===0?facadeStone:kind===2?facadeBrick:facadeGlass;
    const high=h*(kind===2?.85:1);
    const ww=w*(kind===0?1.05:1),dd=w*(kind===3?.79:1);
    // Gold-footed parcel with steps, so towers sit in a designed city block.
