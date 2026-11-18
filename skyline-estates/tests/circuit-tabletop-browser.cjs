@@ -30,6 +30,7 @@ let browser,server;
    await p.waitForFunction(()=>window.__circuitTabletop && document.querySelectorAll('.tile').length===32);
    assert.equal(await p.locator('.tile').count(),32,'all physical squares are rendered');
    assert.equal(await p.locator('.pawn').count(),4,'four player pawns are rendered');
+   assert.equal(await p.locator('#moveCounter').isVisible(),false,'movement counter stays hidden until a real dice path is playing');
    assert.equal(await p.locator('#circuitLivingWorld .lifeTower').count(),9,'living waterfront skyline is rendered');
    assert.equal(await p.locator('#circuitLivingWorld').getAttribute('data-developed'),'0','city starts undeveloped, without fake ownership lighting');
    assert.equal(await p.locator('.lifeCar').count(),2,'miniature moving vehicles are in the board world');
@@ -124,8 +125,25 @@ let browser,server;
      await p.locator('[data-action="cross"]').click();
      const phase=await p.evaluate(()=>__circuitTabletop.state().phase);
      assert.equal(phase,'roll','route choice never mutates rules before roll');
+     const cameraBeforeDice=await p.locator('#boardStage').evaluate(el=>el.style.transform);
+     const pawnTransition=await p.locator('.pawn').first().evaluate(el=>parseFloat(getComputedStyle(el).transitionDuration));
+     assert(pawnTransition>=.3,'pawn moves at a legible pace rather than snapping between squares');
      await p.locator('[data-action="roll"]').click();
-     await p.waitForFunction(()=>!document.querySelector('#actionCard').textContent.includes('On the move'),{timeout:30000});
+     await p.waitForFunction(()=>!document.querySelector('#moveCounter').hidden,null,{timeout:10000});
+     const counter=await p.locator('#moveCounter').innerText();
+     assert(counter.includes(' / ')&&counter.includes(' spaces'),'on-screen movement counter shows the step number');
+     assert((await p.locator('#actionCard').innerText()).includes('On the move'),'dice controls cannot remain visible after pawn movement starts');
+     assert.equal(await p.locator('#boardStage').evaluate(el=>el.style.transform),cameraBeforeDice,'rolling dice never moves or rescales the board');
+     // Capture the actual moving token and numbered progress on an iPhone-sized screen.
+     if(out)await p.screenshot({path:path.join(out,engine+'-iphone-readable-move.png'),fullPage:false});
+     await p.waitForFunction(()=>document.querySelector('#moveCounter').hidden,null,{timeout:30000});
+     assert.equal(await p.locator('#boardStage').evaluate(el=>el.style.transform),cameraBeforeDice,'the board remains stationary after pawn animation finishes');
+     assert.equal(await p.locator('#boardCaption').isVisible(),true,'board title returns when the countdown finishes');
+     const positionBeforeSafariResize=await p.locator('#boardStage').evaluate(el=>el.style.transform);
+     // iOS Safari browser chrome can change the viewport height without a rotation.
+     await p.setViewportSize({width:vp.w,height:vp.h-9});
+     assert.equal(await p.locator('#boardStage').evaluate(el=>el.style.transform),positionBeforeSafariResize,'Safari toolbar height changes do not reset the board camera');
+     await p.setViewportSize({width:vp.w,height:vp.h});
      const pending=await p.evaluate(()=>SkylineCircuit.pending(__circuitTabletop.state()));
      assert(pending&&['buy','build'].includes(pending.type),'roll enters a genuine buy or build decision');
      const afterRoll=await p.evaluate(()=>({turns:__circuitTabletop.state().players[0].st.turns,pos:__circuitTabletop.state().players[0].pos}));
@@ -194,7 +212,7 @@ let browser,server;
      assert.equal(errors.length,0,'no runtime exceptions during roll, reload, setup, victory or route decision');
    }
    assert.deepEqual(errors,[],'browser free of page errors '+vp.id);
-   total+=40;
+   total+=48;
    await context.close();
  }
  // Career parity: access stays behind the existing dual feature flags.
