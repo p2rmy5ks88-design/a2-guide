@@ -206,8 +206,14 @@ async function open(){
  const row=b=>`<div class="cr-row cr-${b.status}"><div><b>${b.tier} · ${esc(b.name)}</b> <small>${esc(b.difficulty)} · ${esc(b.strategy)}</small><br><small>${esc(b.preview.headline)}</small>${b.status==='playable'?`<br><small>Mastery level ${b.mastery.level} · ${b.mastery.qualifiedWins} qualifying wins · ${b.mastery.matches} matches</small>`:''}${b.requirements.length&&!b.unlocked?`<ul>${b.requirements.map(r=>`<li>${esc(r.label)}: ${r.have} / ${r.need}</li>`).join('')}</ul>`:''}</div><span>${b.status==='playable'?'Play':b.status==='unlocked-preview'?'Unlocked · coming soon':b.status==='locked'?'Locked':'Locked'}</span></div>`;
  const k=await modal({cls:'wide career-preview',html:`<div class="mh">Skyline Career <small>(preview build)</small></div><div class="mtxt">${v.map(row).join('')}</div>`,
   btns:[{k:'quick',label:'Origins · Quick 20'},{k:'standard',label:'Origins · Standard 30',primary:true},{k:'extended',label:'Origins · Extended 40'},{k:'unlimited',label:'Origins · Unlimited'},
-   ...(circuit&&circuit.playable?[{k:'circuit:standard',label:'Circuit alpha · Standard'},{k:'circuit:extended',label:'Circuit alpha · Extended'},{k:'circuit:quick',label:'Circuit alpha · Quick (experimental, XP only)'}]:[]),{k:null,label:'Close'}]});
- if(k&&k.startsWith('circuit:'))location.href='./circuit-alpha.html?career=1&length='+k.slice(8);
+   ...(circuit&&circuit.playable?[
+    {k:'circuit:standard',label:'Circuit Living Board · Standard'},
+    {k:'circuit:extended',label:'Circuit Living Board · Extended'},
+    {k:'circuit:quick',label:'Circuit Living Board · Quick (experimental, XP only)'},
+    {k:'circuit-legacy:standard',label:'Circuit legacy board · fallback'}
+   ]:[]),{k:null,label:'Close'}]});
+ if(k&&k.startsWith('circuit:'))location.href='./circuit-tabletop-lab.html?career=1&length='+k.slice(8);
+ else if(k&&k.startsWith('circuit-legacy:'))location.href='./circuit-alpha.html?career=1&length='+k.slice(15);
  else if(k)startOrigins(k);
 }
 if(enabled){
