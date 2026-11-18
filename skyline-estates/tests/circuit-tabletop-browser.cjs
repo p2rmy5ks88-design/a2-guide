@@ -175,10 +175,26 @@ let browser,server;
      });
      assert.equal(await p.locator('[data-action="route:stay"]').count(),1,'after-roll route phase shows a real stay action');
      assert.equal(await p.locator('[data-action="route:cross"]').count(),1,'after-roll route phase shows a real connector action');
-     assert.equal(errors.length,0,'no runtime exceptions during roll, reload, setup or route decision');
+     await p.evaluate(()=>{
+       const s=__circuitTabletop.state();
+       s.phase='build';s.move=null;s.clock={pid:0,since:1};
+       __circuitTabletop.select('O1');
+     });
+     assert.equal(await p.locator('.victoryClock').count(),1,'victory clock is visible before the match ends');
+     await p.evaluate(()=>{
+       const s=__circuitTabletop.state();
+       s.over=true;s.phase='over';s.winner=0;s.endReason='round-limit';
+       __circuitTabletop.select('O1');
+     });
+     assert.equal(await p.locator('.resultRow').count(),4,'the final scoreboard includes every player');
+     assert.equal(await p.locator('[data-action="new"]').count(),1,'finished game offers a real replay flow');
+     await p.locator('[data-action="new"]').click();
+     assert(await p.locator('#matchSetup').isVisible(),'replay opens the new match configuration');
+     await p.locator('#matchCancel').click();
+     assert.equal(errors.length,0,'no runtime exceptions during roll, reload, setup, victory or route decision');
    }
    assert.deepEqual(errors,[],'browser free of page errors '+vp.id);
-   total+=37;
+   total+=40;
    await context.close();
  }
  console.log('PASS: '+engine+' Circuit physical tabletop interactive smoke tests; '+total+' checks on four viewports');
