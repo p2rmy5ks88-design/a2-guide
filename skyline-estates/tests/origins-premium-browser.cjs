@@ -81,7 +81,7 @@ const types={'.html':'text/html','.css':'text/css','.js':'text/javascript','.jso
    assert(review.gameView.w/review.gameView.cssw>=(vp.dpr>1?1.7:.9),
      'WebGL backing resolution is suitable for the tested DPR tier: '+JSON.stringify(review.gameView));
    checks+=11;
-   await page.waitForTimeout(1150);
+   await page.waitForTimeout(5200); // let legitimate achievement popups clear before the layout snapshot
    assert.equal(await frame.locator('#acts .bigb').count(),1,'the actual game Roll Dice action is visible inside the styled HUD');checks++;
    const cover=await subframe.evaluate(()=>{
     const r1=document.querySelector('#roster').getBoundingClientRect(),
