@@ -21,8 +21,9 @@ button:disabled{opacity:.46;cursor:default}
 #board:after{position:absolute;inset:-19px;content:"";pointer-events:none;border:4px solid #eab762;border-radius:25px;box-shadow:0 1px 0 #fbe2a5}
 #innerGarden{position:absolute;left:274px;top:274px;width:172px;height:172px;border:8px solid #a78556;border-radius:8px;background:radial-gradient(ellipse at 50% 47%,#50a283 0 17%,#267b77 18% 26%,#d9c6a4 27% 31%,#8bba75 32% 67%,#4e8d4f 68%);box-shadow:0 7px 5px #261d1594,inset 0 0 0 4px #f8e5bb}
 #innerGarden:after{content:"";position:absolute;left:47px;top:46px;width:62px;height:62px;border:4px solid #f7e0a5;border-radius:50%;background:radial-gradient(circle,#d2f9f4 0 16%,#44a8bb 18% 58%,#1b6986 60%);box-shadow:0 3px 9px #12303a99}
-#parkLogo{position:absolute;top:280px;left:280px;width:160px;text-align:center;z-index:2;pointer-events:none}
-#parkLogo b{display:block;font-size:22px;letter-spacing:2px;color:#fff4ce;text-shadow:0 3px 5px #123c30,1px 1px #153228}
+#innerGarden:before{content:"";position:absolute;left:63px;top:-16px;height:58px;width:36px;border:3px solid #f6dfaf;background:repeating-linear-gradient(90deg,#416e88 0 8px,#9fd1c6 8px 10px),repeating-linear-gradient(0deg,#4f8195 0 9px,#f5dda8 9px 12px);box-shadow:4px 4px 0 #244b66,6px 8px 8px #1e3c427a;transform:skewY(-4deg)}
+#parkLogo{position:absolute;top:345px;left:280px;width:160px;text-align:center;z-index:2;pointer-events:none}
+#parkLogo b{display:block;font-size:18px;letter-spacing:1.5px;color:#fff4ce;text-shadow:0 3px 5px #123c30,1px 1px #153228}
 #parkLogo small{font-size:12px;letter-spacing:4px;color:#ffffe1;text-shadow:0 2px 4px #163128;font-weight:900}
 #parkTrees{position:absolute;left:278px;top:278px;width:165px;height:165px;pointer-events:none}
 .tree{position:absolute;width:23px;height:23px;border-radius:50%;background:radial-gradient(circle at 32% 28%,#b5d766,#3e904e 55%,#1f5c39 80%);box-shadow:5px 7px 1px #0c412445,0 2px 0 3px #3b5536}
@@ -38,11 +39,12 @@ button:disabled{opacity:.46;cursor:default}
 .tile.selected{border:3px solid #fff0a3;box-shadow:0 0 0 3px #cc873f,2px 5px 0 #9a5d35,0 9px 16px #151e2980;z-index:12}
 .tile.current{box-shadow:0 0 0 3px #e9aa36,2px 5px 0 #7c4f25,0 9px 19px #152420a3}
 .tile .stripe{position:absolute;top:0;left:0;right:0;height:13px;background:var(--district);border-bottom:2px solid #d7b67a;box-shadow:inset 0 2px #ffffff3b;border-radius:1px}
-.tile .name{position:absolute;left:6px;right:6px;top:18px;height:32px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:11px;line-height:1.05;font-weight:900;letter-spacing:.15px;text-transform:uppercase;text-shadow:0 1px #fff9eb}
-.tile .price{position:absolute;bottom:5px;left:3px;right:3px;text-align:center;font-size:13px;font-weight:950;letter-spacing:-.3px;color:#1c2735;text-shadow:0 1px #fff5cf}
+.tile .name{position:absolute;left:6px;right:6px;top:18px;height:32px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:11px;line-height:1.05;font-weight:900;letter-spacing:.15px;text-transform:uppercase;text-shadow:0 1px #fff9eb}.tile.property .name{top:64px;height:23px;font-size:10px;line-height:1.02;letter-spacing:.1px}
+.tile .price{position:absolute;bottom:5px;left:3px;right:3px;text-align:center;font-size:13px;font-weight:950;letter-spacing:-.3px;color:#1c2735;text-shadow:0 1px #fff5cf}.tile.property .price{bottom:2px;font-size:12px}
 .tile .stamp{position:absolute;right:5px;top:53px;font-size:9px;font-weight:900;color:#51605c}
-.tile .lot{position:absolute;left:50%;top:55px;transform:translateX(-50%);width:48px;height:27px;background:linear-gradient(#c1dd9d,#70b381);border:2px solid #e3cba1;box-shadow:0 2px #376d4e,1px 4px #294e3b66;border-radius:2px}
-.tile .lot:after{content:"";position:absolute;left:16px;top:6px;width:15px;height:15px;border-radius:50%;background:#2b7959;box-shadow:2px 2px #15563f}
+.tile .lot{position:absolute;left:50%;top:21px;transform:translateX(-50%) skewX(-6deg);width:54px;height:39px;background:linear-gradient(155deg,#d1c6a2,#91b783);border:2px solid #f2dcb2;box-shadow:0 3px 0 #57865c,3px 6px 2px #3450388f;border-radius:2px}
+.tile .lot:before{content:"";position:absolute;left:8px;bottom:5px;width:20px;height:26px;border:2px solid #f8e2b3;border-bottom:4px solid #a3b4a1;background:repeating-linear-gradient(0deg,#3f7183 0 5px,#e2d6b0 5px 7px);box-shadow:3px 3px 0 #1e4f62,4px 5px 5px #253c3d91}
+.tile .lot:after{content:"";position:absolute;right:5px;top:6px;width:17px;height:17px;border-radius:50%;background:radial-gradient(circle at 33% 28%,#b6cf77 0,#3d9254 45%,#1b6040 83%);box-shadow:2px 4px 0 #2b5739}
 .tile.special{background:linear-gradient(135deg,#e3eed8,#bbd7c2 54%,#77ac9b)}
 .tile.special .stripe{background:linear-gradient(90deg,#2f7290,#68b9b2)}
 .tile.special .name{top:34px;font-size:12px}
@@ -53,8 +55,8 @@ button:disabled{opacity:.46;cursor:default}
 .tile.event .specialIcon{top:18px}
 .tile.owned{border-color:var(--owner,#e5b362)}
 .tile .ownerBand{position:absolute;inset:auto 0 0;height:8px;background:var(--owner);border-top:1px solid #fff8}
-.tile .towers{position:absolute;left:50%;top:49px;transform:translateX(-50%);width:64px;height:50px;pointer-events:none}
-.model{position:absolute;left:50%;bottom:10px;width:43px;transform:translateX(-50%);height:var(--height,28px);background:repeating-linear-gradient(0deg,transparent 0 9px,#0a29319a 9px 11px),repeating-linear-gradient(90deg,#547f8c 0 7px,#b6deca 7px 9px,#406a7b 9px 15px);border:3px solid #e9d3a4;border-bottom:5px solid #435d6e;box-shadow:4px 4px 0 #1c4659,7px 7px 8px #071b315a}
+.tile .towers{position:absolute;left:50%;top:12px;transform:translateX(-50%);width:64px;height:65px;pointer-events:none}
+.model{position:absolute;left:50%;bottom:7px;width:43px;transform:translateX(-50%);height:var(--height,28px);background:repeating-linear-gradient(0deg,transparent 0 9px,#0a29319a 9px 11px),repeating-linear-gradient(90deg,#547f8c 0 7px,#b6deca 7px 9px,#406a7b 9px 15px);border:3px solid #e9d3a4;border-bottom:5px solid #435d6e;box-shadow:4px 4px 0 #1c4659,7px 7px 8px #071b315a}
 .model:before{position:absolute;top:-10px;left:-2px;content:"";height:9px;width:100%;background:linear-gradient(110deg,#f9df91,#bc9256);transform:skewX(-25deg);border:1px solid #735940}
 .model:after{position:absolute;top:-4px;left:100%;content:"";height:100%;width:9px;background:repeating-linear-gradient(#294d61 0 11px,#517f95 11px 16px);transform:skewY(-45deg);transform-origin:left top}
 .model.level1{--height:22px;width:37px;background:#d2bb94;box-shadow:4px 4px #856b4e}
