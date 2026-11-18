@@ -53,7 +53,17 @@ let browser,server;
    assert.equal(await p.locator('[data-action="roll"]').count(),1,'real human roll action');
    await p.locator('[data-node="O1"]').click({force:true});
    assert((await p.locator('#selectedCard').innerText()).includes('Marina Avenue'),'tap selects a named property');
+   assert.equal(await p.locator('#detailBtn').count(),1,'near-flat inspection camera is available');
    const before=await p.locator('#boardStage').getAttribute('style');
+   await p.locator('#detailBtn').click();
+   assert.equal(await p.locator('#detailBtn').getAttribute('aria-pressed'),'true','Inspect mode announces its state');
+   assert(await p.locator('#boardStage').evaluate(el=>el.classList.contains('detailInspect')),'Inspect switches to a close reading view');
+   assert((await p.locator('#boardStage').getAttribute('style')).includes('rotateX(12deg)'),'close view uses gentler tilt for sharp property text');
+   const labelPx=await p.locator('[data-node="O1"] .name').evaluate(el=>parseFloat(getComputedStyle(el).fontSize));
+   assert(labelPx>=11.5,'inspection street labels retain vector text at readable CSS size');
+   if(out&&vp.id==='iphone'){fs.mkdirSync(out,{recursive:true});await p.screenshot({path:path.join(out,engine+'-'+vp.id+'-retina-inspect.png'),fullPage:false})}
+   await p.locator('#overviewBtn').click();
+   assert.equal(await p.locator('#detailBtn').getAttribute('aria-pressed'),'false','full-board camera restores the standard viewing angle');
    await p.locator('#zoomIn').click();const after=await p.locator('#boardStage').getAttribute('style');
    assert.notEqual(after,before,'board zoom is functional');
    if(out&&vp.id==='iphone'){fs.mkdirSync(out,{recursive:true});await p.screenshot({path:path.join(out,engine+'-'+vp.id+'-zoomed.png'),fullPage:false})}
@@ -62,7 +72,15 @@ let browser,server;
    const restored=await p.locator('#boardStage').getAttribute('style');
    const scaleOf=s=>Number(s.match(/scale\(([^)]+)\)/)[1]);
    assert(Math.abs(scaleOf(restored)-scaleOf(before))<1e-6,'zooming back restores the approved full-board scale');
-   if(out){fs.mkdirSync(out,{recursive:true});await p.screenshot({path:path.join(out,engine+'-'+vp.id+'-tabletop.png'),fullPage:false})}
+   if(out){
+     fs.mkdirSync(out,{recursive:true});
+     const imagePath=path.join(out,engine+'-'+vp.id+'-tabletop.png');
+     await p.screenshot({path:imagePath,fullPage:false});
+     const buffer=fs.readFileSync(imagePath);
+     const dpr=vp.id==='desktop'?1:3;
+     assert.equal(buffer.readUInt32BE(16),vp.w*dpr,'screenshot width contains native 3x browser device pixels');
+     assert.equal(buffer.readUInt32BE(20),vp.h*dpr,'screenshot height contains native 3x browser device pixels');
+   }
    if(out&&vp.id==='iphone'){
      const beforeCity=await p.evaluate(()=>{
        const state=__circuitTabletop.state(),save=JSON.stringify(state.own);
