@@ -99,3 +99,17 @@
  #board .tile .name,#board .tile .price{font-synthesis:none}
  #board .tile .name{letter-spacing:0}
 }
+
+
+/* District-scale illumination responds to real in-match owned property stages.
+   The launch view remains identical until actual development happens. */
+#circuitLivingWorld .lifeTower.cityLit{
+  border-top-color:#ffe2a3;
+  box-shadow:3px -3px 0 #1f3946,0 0 13px #edc28b36;
+}
+#circuitLivingWorld .lifeTower.cityLit:after{
+  filter:brightness(1.48) saturate(1.18);
+  background:repeating-linear-gradient(0deg,transparent 0 13px,#ffe59a8e 13px 15px,transparent 15px 19px);
+}
+#board .lifeBoardDetails .lifeCar.first{animation-duration:var(--traffic-first,31s)}
+#board .lifeBoardDetails .lifeCar.second{animation-duration:var(--traffic-second,38s)}
