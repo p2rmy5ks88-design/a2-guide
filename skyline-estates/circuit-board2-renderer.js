@@ -181,10 +181,24 @@ export function create(canvas,{layout,spec,camera:cam0,tier:tierName=pickTier(),
    pavilion.add(new THREE.Mesh(new THREE.TubeGeometry(bow,18,.16,5,false),domeRib));
   }
   add(new THREE.CylinderGeometry(1.1,1.5,1.7,12),bronze,0,14.4+domeR*.91+.8,0);
-  pavilion.position.set(0,0,-innerR*.42);env.add(pavilion);}
+  // A real physical plaque mounted on the playable 3D landmark — readable
+  // in the City camera, while never substituting for the game rules.
+  const plaqueMap=canvasTex(512,128,(ctx,w,h)=>{
+   ctx.fillStyle='#14263B';ctx.fillRect(0,0,w,h);
+   ctx.strokeStyle='#F7CE7E';ctx.lineWidth=11;ctx.strokeRect(8,8,w-16,h-16);
+   ctx.fillStyle='#FFE5AC';ctx.textAlign='center';ctx.textBaseline='middle';
+   ctx.font='bold 66px Georgia,serif';ctx.fillText('CIRCUIT CITY',w/2,h/2+3);
+  });
+  const plaqueMesh=new THREE.Mesh(
+   new THREE.PlaneGeometry(w*.95,3.8),
+   new THREE.MeshBasicMaterial({map:plaqueMap,side:THREE.DoubleSide,toneMapped:false}));
+  plaqueMesh.position.set(0,7.6,d*.5+.38);
+  pavilion.add(plaqueMesh);
 
- const pool=new THREE.Mesh(new THREE.CylinderGeometry(innerR*.3,innerR*.3,2.2,64),new THREE.MeshStandardMaterial({color:P.waterHighlight,roughness:.2,metalness:.2}));pool.position.y=.3;env.add(pool);
- const poolRim=new THREE.Mesh(new THREE.TorusGeometry(innerR*.3,.9,8,64),new THREE.MeshStandardMaterial({color:P.ivory,roughness:.5}));poolRim.rotation.x=Math.PI/2;poolRim.position.y=1.5;env.add(poolRim);
+  pavilion.position.set(0,0,0);env.add(pavilion);}
+
+ const pool=new THREE.Mesh(new THREE.CylinderGeometry(innerR*.3,innerR*.3,2.2,64),new THREE.MeshStandardMaterial({color:P.waterHighlight,roughness:.2,metalness:.2}));pool.position.set(innerR*.55,.3,innerR*.20);env.add(pool);
+ const poolRim=new THREE.Mesh(new THREE.TorusGeometry(innerR*.3,.9,8,64),new THREE.MeshStandardMaterial({color:P.ivory,roughness:.5}));poolRim.rotation.x=Math.PI/2;poolRim.position.set(innerR*.55,1.5,innerR*.20);env.add(poolRim);
  for(let i=0;i<4;i++){const a=i*Math.PI/2+Math.PI/4,len=innerR*.62;const path=new THREE.Mesh(new THREE.BoxGeometry(len,.6,3.2),new THREE.MeshStandardMaterial({color:'#FFF0CF',roughness:.9}));path.position.set(Math.cos(a)*(innerR*.33+len/2),1.2,Math.sin(a)*(innerR*.33+len/2));path.rotation.y=-a;env.add(path)}
  // trees: instanced, decorative RNG
  if(tier.trees){const r=rng(11),n=tier.trees,foliage=new THREE.InstancedMesh(new THREE.IcosahedronGeometry(1,1),new THREE.MeshStandardMaterial({color:'#3A9250',roughness:.85,flatShading:true}),n),trunk=new THREE.InstancedMesh(new THREE.CylinderGeometry(.25,.32,1,6),new THREE.MeshStandardMaterial({color:'#856343'}),n);
@@ -227,7 +241,7 @@ export function create(canvas,{layout,spec,camera:cam0,tier:tierName=pickTier(),
   const coastZ=-platR-18;
   const coast=new THREE.Mesh(
    new THREE.BoxGeometry(platR*2.42,2.5,42),
-   new THREE.MeshStandardMaterial({color:'#9A866B',roughness:.92}));
+   new THREE.MeshStandardMaterial({color:'#274F57',roughness:.9}));
   coast.position.set(0,-5.55,coastZ);env.add(coast);
   const quayLine=new THREE.Mesh(
    new THREE.BoxGeometry(platR*2.45,1.0,1.5),
@@ -247,10 +261,10 @@ export function create(canvas,{layout,spec,camera:cam0,tier:tierName=pickTier(),
     sx:.7,sy:.7,sz:.7});
   }
   const metropolitanGlass=new THREE.MeshStandardMaterial({
-   map:facade('glass',tierName==='low'?1:2),color:'#F3E6D1',
+   map:facade('glass',tierName==='low'?1:2),color:'#8ACFE5',
    roughness:.23,metalness:.18,emissive:'#233F63',emissiveIntensity:.19});
   const metropolitanStone=new THREE.MeshStandardMaterial({
-   map:facade('stone',tierName==='low'?1:2),color:'#FFE3B0',
+   map:facade('stone',tierName==='low'?1:2),color:'#F6DCB7',
    roughness:.64,metalness:.06,emissive:'#705331',emissiveIntensity:.12});
   inst(new THREE.BoxGeometry(1,1,1),metropolitanGlass,glassCity,{pick:false});
   inst(new THREE.BoxGeometry(1,1,1),metropolitanStone,stoneCity,{pick:false});
@@ -263,9 +277,9 @@ export function create(canvas,{layout,spec,camera:cam0,tier:tierName=pickTier(),
  // garden: hedge ring, lamp posts and fountain jets
  {const r=rng(41),hedges=[],jets=[];for(let i=0;i<48;i++){const a=i/48*Math.PI*2;if(i%12===1||i%12===2)continue;hedges.push({x:Math.cos(a)*(innerR-2),y:1.6,z:Math.sin(a)*(innerR-2),sx:5.5,sy:1.6,sz:1.6,ry:-a+Math.PI/2})}
   inst(new THREE.BoxGeometry(1,1,1),new THREE.MeshStandardMaterial({color:'#3D8D58',roughness:.95}),hedges);
-  for(let i=0;i<8;i++){const a=i*Math.PI/4;jets.push({x:Math.cos(a)*innerR*.18,y:3,z:Math.sin(a)*innerR*.18,sx:.5,sy:5,sz:.5})}jets.push({x:0,y:4.5,z:0,sx:1.2,sy:8,sz:1.2});
+  for(let i=0;i<8;i++){const a=i*Math.PI/4;jets.push({x:innerR*.55+Math.cos(a)*innerR*.18,y:3,z:innerR*.20+Math.sin(a)*innerR*.18,sx:.5,sy:5,sz:.5})}jets.push({x:innerR*.55,y:4.5,z:innerR*.20,sx:1.2,sy:8,sz:1.2});
   inst(new THREE.CylinderGeometry(1,1,1,6),new THREE.MeshStandardMaterial({color:'#dff3ff',emissive:'#9fd8ff',emissiveIntensity:.6,transparent:true,opacity:.85}),jets);
-  const statue=new THREE.Mesh(new THREE.CylinderGeometry(innerR*.06,innerR*.09,3,8),new THREE.MeshStandardMaterial({color:P.ivory,roughness:.4}));statue.position.y=1.6;env.add(statue)}
+  const statue=new THREE.Mesh(new THREE.CylinderGeometry(innerR*.06,innerR*.09,3,8),new THREE.MeshStandardMaterial({color:P.ivory,roughness:.4}));statue.position.set(-innerR*.63,1.6,innerR*.20);env.add(statue)}
  // Sunlit civic park: a low walking circuit, colourful planting beds and timber benches.
  // Everything is decorative and below the adjacent street and building sightlines.
  {const walk=new THREE.Mesh(new THREE.RingGeometry(innerR*.68,innerR*.72,96),
@@ -310,7 +324,10 @@ export function create(canvas,{layout,spec,camera:cam0,tier:tierName=pickTier(),
   if(n.type==='property'){const d=DECISIONS.districts[n.quadrant];// Un-tonemapped enamel district inlay: blue, gold, green and red retain their full saturated identity.
    // Two independent plates produce a visibly raised brass-framed enamel plot
    // instead of the flat colour blocks from the schematic prototype.
-   const gilt=new THREE.Mesh(giltFrameGeo,giltFrameMat);gilt.position.y=4.21;grp.add(gilt);
+   const districtBand=new THREE.Mesh(rimGeo,new THREE.MeshBasicMaterial({
+     color:d.accent,toneMapped:false}));
+    districtBand.position.y=.28;grp.add(districtBand);
+    const gilt=new THREE.Mesh(giltFrameGeo,giltFrameMat);gilt.position.y=4.21;grp.add(gilt);
    const inlay=new THREE.Mesh(inlayGeo,new THREE.MeshBasicMaterial({color:d.accent,toneMapped:false}));inlay.position.y=4.27;grp.add(inlay);
    const ownerRim=new THREE.Mesh(rimGeo,ownerRimMat[0]);ownerRim.visible=false;ownerRim.userData.dynamic=true;grp.add(ownerRim);rec.ownerRim=ownerRim;
    const sym=new THREE.Mesh(new THREE.PlaneGeometry(T*.42,T*.42).rotateX(-Math.PI/2),decal(d.symbol,d.accent));sym.position.y=4.4;sym.userData.dynamic=true;grp.add(sym);rec.plotSymbol=sym;
