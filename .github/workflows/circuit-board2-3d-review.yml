@@ -3,8 +3,8 @@ on:
   pull_request:
     paths:
       - 'skyline-estates/circuit-board2-lab.html'
-      - 'skyline-estates/lib/circuit-board2-ui.js'
-      - 'skyline-estates/lib/circuit-board2-renderer.js'
+      - 'skyline-estates/circuit-board2-ui.js'
+      - 'skyline-estates/circuit-board2-renderer.js'
       - 'skyline-estates/tests/circuit-board2-browser.cjs'
       - '.github/workflows/circuit-board2-3d-review.yml'
   workflow_dispatch:
@@ -21,7 +21,7 @@ jobs:
           node-version: '22'
       - name: Validate isolated Board 2 sources and rules
         run: |
-          node --check skyline-estates/lib/circuit-board2-ui.js
+          node --check skyline-estates/circuit-board2-ui.js
           node --check skyline-estates/tests/circuit-board2-browser.cjs
           node skyline-estates/tests/circuit-rules.cjs
           python3 skyline-estates/build.py --check
