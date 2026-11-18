@@ -116,7 +116,28 @@ export function create(canvas,{layout,spec,camera:cam0,tier:tierName=pickTier(),
  // central civic garden (decorative)
  const innerR=Math.min(...SC.NODES.filter(n=>n.ring==='I').map(n=>Math.hypot(G.nodes[n.id].x,G.nodes[n.id].y)))-T*.72;
  const plaza=new THREE.Mesh(new THREE.RingGeometry(ringGapIn0(),ringGapOut0(),128),new THREE.MeshStandardMaterial({color:'#B78A60',roughness:.9}));plaza.rotation.x=-Math.PI/2;plaza.position.y=.08;plaza.receiveShadow=!!tier.shadows;env.add(plaza);
- const garden=new THREE.Mesh(new THREE.CylinderGeometry(innerR,innerR,2,96),new THREE.MeshStandardMaterial({color:'#318950',roughness:.95}));garden.position.y=0;garden.receiveShadow=!!tier.shadows;env.add(garden);
+ const garden=new THREE.Mesh(new THREE.CylinderGeometry(innerR,innerR,2,96),new THREE.MeshStandardMaterial({color:'#176C41',roughness:.96}));garden.position.y=0;garden.receiveShadow=!!tier.shadows;env.add(garden);
+ // Board 2's unmistakable civic landmark: physical plinth, glass gallery,
+ // six limestone columns and a low glazed dome. All parts are real meshes,
+ // live behind the fountain, and never intersect a legal street or bridge.
+ // A small silhouette remains readable even in the battery-saving Low tier.
+ {const pavilion=new THREE.Group(),w=innerR*.59,d=innerR*.26;
+  const limestone=new THREE.MeshStandardMaterial({color:'#FFF0D4',roughness:.76}),
+   bronze=new THREE.MeshStandardMaterial({color:'#E8B75F',metalness:tier.shadows?.62:.12,roughness:.28,emissive:'#7B5119',emissiveIntensity:.17}),
+   glazing=new THREE.MeshStandardMaterial({color:'#75C7E5',metalness:tier.shadows?.35:.04,roughness:.21,emissive:'#33799C',emissiveIntensity:.24,transparent:true,opacity:.96});
+  const add=(geometry,material,x,y,z)=>{const m=new THREE.Mesh(geometry,material);m.position.set(x,y,z);m.castShadow=!!tier.shadows;m.receiveShadow=!!tier.shadows;pavilion.add(m);return m};
+  add(new THREE.BoxGeometry(w*1.13,2,d*1.22),limestone,0,2.15,0);
+  add(new THREE.BoxGeometry(w,8.1,d),glazing,0,7.5,0);
+  for(const x of [-w*.42,0,w*.42])for(const z of [-d*.45,d*.45]){
+   add(new THREE.CylinderGeometry(1.2,1.35,9.2,8),limestone,x,7.5,z);
+   add(new THREE.CylinderGeometry(1.8,1.8,.65,8),bronze,x,12.2,z)}
+  add(new THREE.BoxGeometry(w*1.07,1.8,d*1.15),limestone,0,12.9,0);
+  add(new THREE.BoxGeometry(w*.9,.55,d*.96),bronze,0,14,0);
+  const dome=new THREE.Mesh(new THREE.SphereGeometry(Math.min(w*.25,d*.78),20,10,0,Math.PI*2,0,Math.PI/2),glazing);
+  dome.position.set(0,14.4,0);dome.castShadow=!!tier.shadows;pavilion.add(dome);
+  add(new THREE.CylinderGeometry(1.5,1.9,2.1,10),bronze,0,14.4+Math.min(w*.25,d*.78)+1,0);
+  pavilion.position.set(0,0,-innerR*.42);env.add(pavilion);}
+
  const pool=new THREE.Mesh(new THREE.CylinderGeometry(innerR*.3,innerR*.3,2.2,64),new THREE.MeshStandardMaterial({color:P.waterHighlight,roughness:.2,metalness:.2}));pool.position.y=.3;env.add(pool);
  const poolRim=new THREE.Mesh(new THREE.TorusGeometry(innerR*.3,.9,8,64),new THREE.MeshStandardMaterial({color:P.ivory,roughness:.5}));poolRim.rotation.x=Math.PI/2;poolRim.position.y=1.5;env.add(poolRim);
  for(let i=0;i<4;i++){const a=i*Math.PI/2+Math.PI/4,len=innerR*.62;const path=new THREE.Mesh(new THREE.BoxGeometry(len,.6,3.2),new THREE.MeshStandardMaterial({color:'#FFF0CF',roughness:.9}));path.position.set(Math.cos(a)*(innerR*.33+len/2),1.2,Math.sin(a)*(innerR*.33+len/2));path.rotation.y=-a;env.add(path)}
@@ -190,7 +211,9 @@ export function create(canvas,{layout,spec,camera:cam0,tier:tierName=pickTier(),
  function rounded(w,r){const s=new THREE.Shape(),h=w/2;s.moveTo(-h+r,-h);s.lineTo(h-r,-h);s.quadraticCurveTo(h,-h,h,-h+r);s.lineTo(h,h-r);s.quadraticCurveTo(h,h,h-r,h);s.lineTo(-h+r,h);s.quadraticCurveTo(-h,h,-h,h-r);s.lineTo(-h,-h+r);s.quadraticCurveTo(-h,-h,-h+r,-h);return s}
  const tileGeo=new THREE.ExtrudeGeometry(rounded(T*.92,T*.12),{depth:3,bevelEnabled:true,bevelSize:.6,bevelThickness:.6,bevelSegments:1,curveSegments:4});tileGeo.rotateX(-Math.PI/2);
  const rimShape=rounded(T*1.0,T*.15);rimShape.holes.push(rounded(T*.86,T*.1));const rimGeo=new THREE.ExtrudeGeometry(rimShape,{depth:3.6,bevelEnabled:false,curveSegments:4});rimGeo.rotateX(-Math.PI/2);
- const inlayGeo=new THREE.PlaneGeometry(T*.7,T*.7);inlayGeo.rotateX(-Math.PI/2);
+ const inlayGeo=new THREE.PlaneGeometry(T*.73,T*.73);inlayGeo.rotateX(-Math.PI/2);
+ const giltFrameGeo=new THREE.PlaneGeometry(T*.83,T*.83);giltFrameGeo.rotateX(-Math.PI/2);
+ const giltFrameMat=new THREE.MeshStandardMaterial({color:'#D9A64A',metalness:tier.shadows?.65:.12,roughness:.32,emissive:'#68451B',emissiveIntensity:.18});
  const tileMat={property:new THREE.MeshStandardMaterial({color:'#D5A778',roughness:.82}),junction:new THREE.MeshStandardMaterial({color:'#32697C',roughness:.7}),event:new THREE.MeshStandardMaterial({color:'#B96839',roughness:.7})};
  const junctionRim=new THREE.MeshStandardMaterial({color:P.ivory,roughness:.4,emissive:'#4a4230',emissiveIntensity:.25}),eventRim=new THREE.MeshStandardMaterial({color:P.warning,roughness:.4,emissive:'#5a3a10',emissiveIntensity:.4});
  const ownerRimMat=DECISIONS.players.map(p=>new THREE.MeshStandardMaterial({color:p.c,roughness:.45,emissive:p.c,emissiveIntensity:.18}));
@@ -199,7 +222,10 @@ export function create(canvas,{layout,spec,camera:cam0,tier:tierName=pickTier(),
   const base=new THREE.Mesh(tileGeo,tileMat[n.type]);base.receiveShadow=base.castShadow=!!tier.shadows;base.userData.pick={kind:1,i:idx[n.id]};grp.add(base);
   const rec={grp,base,decals:{}};tile[n.id]=rec;
   if(n.type==='property'){const d=DECISIONS.districts[n.quadrant];// Un-tonemapped enamel district inlay: blue, gold, green and red retain their full saturated identity.
-   const inlay=new THREE.Mesh(inlayGeo,new THREE.MeshBasicMaterial({color:d.accent,toneMapped:false}));inlay.position.y=4.25;grp.add(inlay);
+   // Two independent plates produce a visibly raised brass-framed enamel plot
+   // instead of the flat colour blocks from the schematic prototype.
+   const gilt=new THREE.Mesh(giltFrameGeo,giltFrameMat);gilt.position.y=4.21;grp.add(gilt);
+   const inlay=new THREE.Mesh(inlayGeo,new THREE.MeshBasicMaterial({color:d.accent,toneMapped:false}));inlay.position.y=4.27;grp.add(inlay);
    const ownerRim=new THREE.Mesh(rimGeo,ownerRimMat[0]);ownerRim.visible=false;ownerRim.userData.dynamic=true;grp.add(ownerRim);rec.ownerRim=ownerRim;
    const sym=new THREE.Mesh(new THREE.PlaneGeometry(T*.42,T*.42).rotateX(-Math.PI/2),decal(d.symbol,d.accent));sym.position.y=4.4;sym.userData.dynamic=true;grp.add(sym);rec.plotSymbol=sym;
    // district symbol on the building base (corner), shown once developed
@@ -346,6 +372,17 @@ export function create(canvas,{layout,spec,camera:cam0,tier:tierName=pickTier(),
     if(rec.building)rec.building.traverse(o=>{if(o.isMesh)parts.push(o)})}
    for(const o of parts)o.visible=true;dynMerged=mergeByMaterial(parts,{shadows:!!tier.shadows});scene.add(dynMerged);
    for(const o of parts){o.visible=false;if(o.userData.pick)o.userData.pickOnly=true}}
+  // In the architectural showcase, draw the actual physical stage meshes.
+  // It is intentionally a REVIEW-ONLY display. The match state and save
+  // remain untouched; Strategy View returns to the validated merged path.
+  // Direct meshes also avoid a merged-multi-material limitation on low-end
+  // Safari GPUs which made most city-preview architecture disappear.
+  const direct=!!model.cityShowcase;
+  if(dynMerged)dynMerged.visible=!direct;
+  for(const id of SC.PROPS){
+   const b=tile[id].building;if(!b)continue;
+   b.traverse(o=>{if(o.isMesh){o.visible=direct;if(o.userData.pick)o.userData.pickOnly=!direct}});
+  }
   // tokens (2×2 slots; hop arc while moving)
   const counts={};for(const t of tokens)t.visible=false;
   for(const tk of model.tokens){const slot=counts[tk.node]=(counts[tk.node]??-1)+1;const a=SS.tokenPoint(G,tk.node,slot%4);let x=a.x,y=a.y,z=G.tokenH/2+4.2;
