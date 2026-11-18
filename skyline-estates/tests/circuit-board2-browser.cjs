@@ -49,6 +49,8 @@ const root=path.resolve(__dirname,'../..'),out=process.env.BOARD2_SHOTS||null,en
    assert.equal(await p.locator('[data-plan]').count(),0,'Strategy route buttons are disabled during city inspection');
    assert.equal(await p.locator('#b2-left').count(),1,'City View has explicit orbit controls');
    assert.equal(await p.locator('#b2-zoom-in').count(),1,'City View has explicit zoom controls');
+   await p.waitForFunction(()=>{const e=document.querySelector('.b2-civic-name');return !!e&&!e.hidden&&e.textContent==='CIRCUIT CITY'},{},{timeout:9000});
+   assert.equal(await p.locator('.b2-civic-name').count(),1,'retina city landmark has one live 3D-anchored label');
    const before=await p.evaluate(()=>JSON.stringify(__circuitUI.state()));
    await p.locator('#b2-right').click();
    assert.equal(await p.evaluate(()=>__circuitBoard2.orbit()),14,'Orbit button actually changes the WebGL camera yaw');
@@ -88,12 +90,13 @@ const root=path.resolve(__dirname,'../..'),out=process.env.BOARD2_SHOTS||null,en
     const f=path.join(out,engine+'-'+vp.name+'-city.png');await p.screenshot({path:f});
     const buf=fs.readFileSync(f);assert.equal(buf.readUInt32BE(16),vp.width*vp.dpr);assert.equal(buf.readUInt32BE(20),vp.height*vp.dpr);
    }
-   checks+=22;
+   checks+=23;
    await p.locator('#cx-city-view').click({noWaitAfter:true});
    await p.waitForFunction(()=>!window.__circuitBoard2.city()&&window.__circuitUI.r3().camera.pitch===0,null,{timeout:9000});
    assert.equal(await p.evaluate(()=>__circuitBoard2.orbit()),0,'returning to Strategy resets yaw');
    await p.waitForFunction(()=>window.__circuitUI.r3().envelopeReport().length===0,null,{timeout:10000});
    assert.equal(await p.evaluate(()=>__circuitBoard2.preview()),-1,'leaving City View resets every visual-only stage preview');
+   await p.waitForFunction(()=>document.querySelector('.b2-civic-name')?.hidden===true,{},{timeout:9000});
    assert.equal(await p.evaluate(()=>__circuitBoard2.showcase()),false,'returning to Strategy turns off skyline showcase');
    assert.equal(await p.locator('#cx-roll').count(),1,'real dice action is restored');
    assert.equal(await p.evaluate(()=>localStorage.getItem('skylineCareerInbox:circuit-board2-lab')),null,'preview never writes Career results');
@@ -102,7 +105,7 @@ const root=path.resolve(__dirname,'../..'),out=process.env.BOARD2_SHOTS||null,en
    assert.equal(await p.evaluate(()=>__circuitBoard2.orbit()),0,'dice movement cannot start an orbit');
    assert.equal(await p.evaluate(()=>localStorage.getItem('skylineCircuitSave')),null,'Career save remains untouched after a roll');
    assert.equal(errors.length,0,'no JavaScript errors during true WebGL interaction');
-   checks+=7;
+   checks+=8;
    await ctx.close();
   }
  }finally{await browser.close();await new Promise(r=>server.close(r))}
