@@ -15,7 +15,7 @@ const SC=window.SkylineCircuit,SS=window.SkylineCircuitScreen;
 export const DECISIONS={routes:{stay:'#F2C457',cross:'#70F0C2',casing:'#0B1633'},
  players:[{c:'#FF7A59',shape:'circle'},{c:'#4C7DFF',shape:'square'},{c:'#F8F6EF',shape:'triangle'},{c:'#E055C8',shape:'hex'}],
  districts:[{name:'Harbour Quarter',accent:'#1989D0',symbol:'wave'},{name:'Civic Heights',accent:'#F5B629',symbol:'sun'},{name:'Verdant Mile',accent:'#22A565',symbol:'leaf'},{name:'Neon Exchange',accent:'#E34B42',symbol:'spark'}],
- palette:{navy:'#0B1633',deepWater:'#08768F',waterHighlight:'#28B5C6',gold:'#F2C457',ivory:'#FFF0D0',stone:'#E6D4B4',warning:'#F3B45C'}};
+ palette:{navy:'#0B1633',deepWater:'#073B56',waterHighlight:'#28B5C6',gold:'#F2C457',ivory:'#FFF0D0',stone:'#E6D4B4',warning:'#F3B45C'}};
 // Quality tiers (CIRCUIT-V2-REVIEW.md §4). Changes are visual only.
 export const TIERS={low:{shadows:0,trees:0,glow:false,water:false,maxScale:1.5,antialias:false},
  medium:{shadows:1024,trees:90,glow:false,water:false,maxScale:2.5,antialias:true},
@@ -72,8 +72,8 @@ function disposeGroup(g){if(!g)return;g.traverse(o=>{if(o.isMesh)o.geometry.disp
 export function create(canvas,{layout,spec,camera:cam0,tier:tierName=pickTier(),onTierChange=null}={}){
  const P=DECISIONS.palette;let tier=TIERS[tierName];
  let renderer;try{renderer=new THREE.WebGLRenderer({canvas,antialias:tier.antialias,alpha:false,powerPreference:'high-performance',preserveDrawingBuffer:new URLSearchParams(location.search).get('test')==='1'})}catch(e){return null}
- renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.0;
- renderer.shadowMap.enabled=!!tier.shadows;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.setClearColor('#73BAD0');
+ renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=.92;
+ renderer.shadowMap.enabled=!!tier.shadows;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.setClearColor('#092C42');
  const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera();camera.updateProjectionMatrix=()=>{};// projection is set explicitly
  const G=SS.geometry(layout,spec),T=G.tile;let C=null,rect=null,camNow={...cam0};
  const nodeIds=Object.keys(G.nodes),idx=Object.fromEntries(nodeIds.map((id,i)=>[id,i]));
@@ -82,18 +82,18 @@ export function create(canvas,{layout,spec,camera:cam0,tier:tierName=pickTier(),
  if(tier.shadows){const pm=new THREE.PMREMGenerator(renderer),es=new THREE.Scene();const sky=canvasTex(16,256,(ctx,w,h)=>{const g=ctx.createLinearGradient(0,0,0,h);g.addColorStop(0,'#74B7D3');g.addColorStop(.45,'#B7D9E2');g.addColorStop(.52,'#FFE2AE');g.addColorStop(.68,'#E3AF82');g.addColorStop(1,'#8CB7C8');ctx.fillStyle=g;ctx.fillRect(0,0,w,h)});
   es.add(new THREE.Mesh(new THREE.SphereGeometry(100,32,16),new THREE.MeshBasicMaterial({map:sky,side:THREE.BackSide})));scene.environment=pm.fromScene(es,.02).texture;scene.environmentIntensity=.56;pm.dispose()}
  // ---------- lights ----------
- const hemi=new THREE.HemisphereLight('#E6F5FF','#A88564',.76);scene.add(hemi);
- const sun=new THREE.DirectionalLight('#FFE3A7',2.45);sun.position.copy(V(-420,-150,380));sun.target.position.set(0,0,0);scene.add(sun,sun.target);
+ const hemi=new THREE.HemisphereLight('#CBEFFF','#9F6944',.8);scene.add(hemi);
+ const sun=new THREE.DirectionalLight('#FFE2A0',2.18);sun.position.copy(V(-420,-150,380));sun.target.position.set(0,0,0);scene.add(sun,sun.target);
  if(tier.shadows){sun.castShadow=true;sun.shadow.mapSize.set(tier.shadows,tier.shadows);const sc=sun.shadow.camera;sc.left=-R*1.3;sc.right=R*1.3;sc.top=R*1.3;sc.bottom=-R*1.3;sc.near=10;sc.far=1400;sun.shadow.bias=-.0008;sun.shadow.normalBias=.38}
  // ---------- environment ----------
  const env=new THREE.Group();scene.add(env);
  const waterTex=canvasTex(256,256,(ctx,w,h)=>{ctx.fillStyle=P.deepWater;ctx.fillRect(0,0,w,h);const r=rng(7);ctx.strokeStyle='rgba(222,248,250,.32)';ctx.lineWidth=1.4;for(let i=0;i<70;i++){const x=r()*w,y=r()*h,l=6+r()*16;ctx.beginPath();ctx.moveTo(x-l,y);ctx.quadraticCurveTo(x,y-3,x+l,y);ctx.stroke()}},{repeat:[14,14]});
  const water=new THREE.Mesh(new THREE.PlaneGeometry(R*12,R*12),new THREE.MeshStandardMaterial({map:waterTex,color:'#FFFFFF',roughness:.27,metalness:.04}));water.rotation.x=-Math.PI/2;water.position.y=-7;water.receiveShadow=!!tier.shadows;env.add(water);
  const platR=R+T*.95;
- const platTop=canvasTex(1024,1024,(ctx,w,h)=>{const g=ctx.createRadialGradient(w/2,h/2,w*.1,w/2,h/2,w/2);g.addColorStop(0,'#EBC997');g.addColorStop(1,'#B88759');ctx.fillStyle=g;ctx.fillRect(0,0,w,h);
+ const platTop=canvasTex(1024,1024,(ctx,w,h)=>{const g=ctx.createRadialGradient(w/2,h/2,w*.1,w/2,h/2,w/2);g.addColorStop(0,'#E4B778');g.addColorStop(1,'#A36E41');ctx.fillStyle=g;ctx.fillRect(0,0,w,h);
   ctx.strokeStyle='rgba(127,96,67,.16)';ctx.lineWidth=2;for(let i=0;i<48;i++){const a=i*Math.PI/24;ctx.beginPath();ctx.moveTo(w/2+Math.cos(a)*w*.08,h/2+Math.sin(a)*w*.08);ctx.lineTo(w/2+Math.cos(a)*w*.5,h/2+Math.sin(a)*w*.5);ctx.stroke()}
   for(const k of [.2,.32,.45]){ctx.beginPath();ctx.arc(w/2,h/2,w*k,0,7);ctx.stroke()}});
- const platform=new THREE.Mesh(new THREE.CylinderGeometry(platR,platR+3,8,128),[new THREE.MeshStandardMaterial({color:'#C69A6D',roughness:.85}),new THREE.MeshStandardMaterial({map:platTop,roughness:.9}),new THREE.MeshStandardMaterial({color:'#A77B57'})]);
+ const platform=new THREE.Mesh(new THREE.CylinderGeometry(platR,platR+3,8,128),[new THREE.MeshStandardMaterial({color:'#BD8851',roughness:.78}),new THREE.MeshStandardMaterial({map:platTop,roughness:.82}),new THREE.MeshStandardMaterial({color:'#754525',roughness:.82})]);
  platform.position.y=-4;platform.receiveShadow=!!tier.shadows;env.add(platform);
  const rim=new THREE.Mesh(new THREE.TorusGeometry(platR+.5,1.2,8,160),new THREE.MeshStandardMaterial({color:P.ivory,roughness:.4,metalness:.4,emissive:'#3a3424',emissiveIntensity:.3}));rim.rotation.x=Math.PI/2;env.add(rim);
  // ring roads through node centres (closed strips), ivory edge markings
@@ -324,7 +324,19 @@ export function create(canvas,{layout,spec,camera:cam0,tier:tierName=pickTier(),
  // ---------- tokens ----------
  const tokenGeo={circle:new THREE.CylinderGeometry(G.tokenR,G.tokenR,G.tokenH,32),square:new THREE.BoxGeometry(G.tokenR*1.7,G.tokenH,G.tokenR*1.7),triangle:new THREE.CylinderGeometry(G.tokenR*1.18,G.tokenR*1.18,G.tokenH,3),hex:new THREE.CylinderGeometry(G.tokenR*1.02,G.tokenR*1.02,G.tokenH,6)};
  const tokens=DECISIONS.players.map((p,i)=>{const g=new THREE.Group();const m=new THREE.Mesh(tokenGeo[p.shape],new THREE.MeshStandardMaterial({color:p.c,roughness:.35,metalness:.1,emissive:p.c,emissiveIntensity:.15}));
-  const o=new THREE.Mesh(tokenGeo[p.shape],new THREE.MeshBasicMaterial({color:'#0B1633',side:THREE.BackSide}));o.scale.setScalar(1.22);g.add(o,m);m.castShadow=!!tier.shadows;g.traverse(x=>{if(x.isMesh)x.userData.pick={kind:3,i}});g.visible=false;scene.add(g);return g});
+  const o=new THREE.Mesh(tokenGeo[p.shape],new THREE.MeshBasicMaterial({color:'#0B1633',side:THREE.BackSide}));o.scale.setScalar(1.22);g.add(o,m);m.castShadow=!!tier.shadows;
+  // Board 1's approved identity convention carries into the real 3D city:
+  // Y/K/M/L badges remain screen-facing, even when pawns share a junction.
+  const initial=['Y','K','M','L'][i];
+  const texture=canvasTex(128,128,(ctx,w,h)=>{
+    ctx.clearRect(0,0,w,h);ctx.beginPath();ctx.arc(64,64,57,0,Math.PI*2);
+    ctx.fillStyle='#10263d';ctx.fill();ctx.lineWidth=11;ctx.strokeStyle=p.c;ctx.stroke();
+    ctx.fillStyle='#fff6db';ctx.font='900 74px -apple-system,Arial,sans-serif';
+    ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(initial,64,69);
+  });
+  const badge=new THREE.Sprite(new THREE.SpriteMaterial({map:texture,transparent:true,depthTest:false,depthWrite:false,toneMapped:false}));
+  badge.position.y=G.tokenH*.9+3;badge.scale.set(G.tokenR*2.5,G.tokenR*2.5,1);badge.renderOrder=32;g.add(badge);
+  g.traverse(x=>{if(x.isMesh)x.userData.pick={kind:3,i}});g.visible=false;scene.add(g);return g});
  // ---------- route previews and networks (ribbons above the tiles) ----------
  const overlay=new THREE.Group();scene.add(overlay);
  function ribbon(pts,width,y,color,{dash=null,opacity=1,order=5}={}){const grp=new THREE.Group();const segs=[];if(dash){let acc=0,on=true,cur=[pts[0]];for(let i=1;i<pts.length;i++){let a=pts[i-1];const b=pts[i];let l=Math.hypot(b.x-a.x,b.y-a.y);
