@@ -70,6 +70,8 @@ const types={'.html':'text/html','.css':'text/css','.js':'text/javascript','.jso
      water:THEMES.beach.water,cell:BOARDS.beach.cell,mark:!!document.querySelector('#originsPremiumMark'),
      harbourCount:S3.centers.beach?.originsHarbourCount||0,
      neighbourhoodCount:S3.centers.beach?.originsTownhouses||0,
+     waterTexture:!!S3.originsWaterTex&&S3.waterMat.tex===S3.originsWaterTex,
+     screenMarkerCount:document.querySelectorAll('#originsTokenMarkers .originsTokenBadge').length,
      oversizedIslandVisible:ROOT.kids.some(n=>n.visible!==false&&(n.mat===S3.islandMat||n.mat===S3.rimMat)),
      stats:document.querySelector('#originsPremiumStats')?.textContent,
      expectedCash:typeof fmt==='function'?fmt(G.players[0].cash):null,
@@ -83,6 +85,8 @@ const types={'.html':'text/html','.css':'text/css','.js':'text/javascript','.jso
    assert.equal(review.buildings,15,'fifteen additional distinct landmark buildings surround the civic plaza');
    assert.equal(review.harbourCount,15,'fifteen real waterfront backdrop towers accompany the main board');
    assert.equal(review.neighbourhoodCount,8,'eight residential buildings enrich the real 3D city');
+   assert(review.waterTexture,'the existing 3D ocean mesh has a rippled teal/gold water texture');
+   assert.equal(review.screenMarkerCount,4,'all four real player pieces receive camera-projected labels');
    assert.equal(review.oversizedIslandVisible,false,'the oversized polygon no longer covers the blue water surrounding the 40-space square');
    assert(Math.abs(review.premiumCameraPitch-.78)<.005,'default Origins camera is lower and more isometric for stronger building depth');
    assert(review.rollBackground.includes('239, 103, 102'),'approved red Roll Dice action overrides the original gold theme: '+review.rollBackground);
@@ -100,9 +104,21 @@ const types={'.html':'text/html','.css':'text/css','.js':'text/javascript','.jso
    assert.deepEqual(review.gameKeys,initial.saves,'the premium visual patch writes neither the Board 1 nor Circuit saves');
    assert(review.gameView.w/review.gameView.cssw>=(vp.dpr>1?1.7:.9),
      'WebGL backing resolution is suitable for the tested DPR tier: '+JSON.stringify(review.gameView));
-   checks+=20;
+   checks+=22;
    await page.waitForTimeout(5200); // let legitimate achievement popups clear before the layout snapshot
    assert.equal(await frame.locator('#acts .bigb').count(),1,'the actual game Roll Dice action is visible inside the styled HUD');checks++;
+   const markerLayout=await subframe.evaluate(()=>{
+    const chips=Array.from(document.querySelectorAll('#originsTokenMarkers .originsTokenBadge'));
+    const rects=chips.filter(el=>!el.hidden).map(el=>el.getBoundingClientRect());
+    const noOverlap=rects.every((a,i)=>rects.slice(i+1).every(b=>
+     a.right<=b.left+1||b.right<=a.left+1||a.bottom<=b.top+1||b.bottom<=a.top+1));
+    return {visible:rects.length,noOverlap,
+     inViewport:rects.every(v=>v.left>=0&&v.top>=0&&v.right<=innerWidth&&v.bottom<=innerHeight)};
+   });
+   assert.equal(markerLayout.visible,4,'all four player labels are visible');
+   assert(markerLayout.noOverlap,'grouped token labels must not overlap: '+JSON.stringify(markerLayout));
+   assert(markerLayout.inViewport,'all player labels fit within landscape: '+JSON.stringify(markerLayout));
+   checks+=3;
    const cover=await subframe.evaluate(()=>{
     const r1=document.querySelector('#roster').getBoundingClientRect(),
       r2=document.querySelector('#originsPremiumStats').getBoundingClientRect(),
