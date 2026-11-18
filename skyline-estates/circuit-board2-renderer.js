@@ -611,14 +611,15 @@ export function create(canvas,{layout,spec,camera:cam0,tier:tierName=pickTier(),
  // QA introspects real physical meshes rather than relying on stylesheet names
  // or approving the artwork merely because CI captured a screenshot.
  function artReport(){
-  let canalSurfaces=0,plaqueSurfaces=0;
+  let canalSurfaces=0,waterUnderlay=0,plaqueSurfaces=0;
   scene.traverse(o=>{
    if(!o.isMesh)return;
    const materials=Array.isArray(o.material)?o.material:[o.material];
    if(materials.some(m=>m?.map===canalTex))canalSurfaces++;
+   if(materials.some(m=>m?.map===platTop))waterUnderlay++;
    if(o.userData.circuitPlaque===true)plaqueSurfaces++;
   });
-  return {waterChannel:canalSurfaces>0,centralLandmarkPlaque:plaqueSurfaces>0,
+  return {waterChannel:canalSurfaces>0,blueWaterUnderlay:waterUnderlay>0,centralLandmarkPlaque:plaqueSurfaces>0,
    backdropBuildings:env.userData.circuitBackdropBuildings||0,
    realSpaces:SC.NODES.length,realBridges:Object.keys(SC.LINKS).filter(k=>k[0]==='O').length};
  }
