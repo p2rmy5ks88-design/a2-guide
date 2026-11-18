@@ -39,13 +39,27 @@ let R3=null,R3tried=false,camCur=null;
 let zf=null,zoom=null,planFocused='';const CINEMATIC={pitch:15,dist:5};
 // Owner-review City View: explicitly non-interactive. Strategy View remains the only decision camera.
 const CITY_REVIEW={pitch:38,dist:5.65};let cityReview=false;
-let orbitYaw=0,cityDistance=5.65,citySelection=null;
+let orbitYaw=0,cityDistance=5.65,citySelection=null,previewStage=-1;
 const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
 function cityOrbit(delta){if(!R3||!cityReview)return;orbitYaw=clamp(orbitYaw+delta,-55,55);R3.setOrbitYaw(orbitYaw);dirty=true;render();}
 function cityZoom(delta){if(!R3||!cityReview)return;cityDistance=clamp(cityDistance+delta,4.65,7.3);dirty=true;render();}
 function cityInspect(id){
  if(!R3||!cityReview||!s||!id)return;
- citySelection=id;R3.setSpotlight(id);dirty=true;render();
+ citySelection=id;R3.setSpotlight(id);
+ applyStagePreview();dirty=true;render();
+}
+function applyStagePreview(){
+ stagesOverride=null;
+ if(!cityReview||!citySelection||previewStage<0)return;
+ const node=SC.NODES.find(n=>n.id===citySelection);
+ if(!node||node.type!=='property')return;
+ stagesOverride={[citySelection]:previewStage};
+ dirty=true;
+}
+function cityStagePreview(value){
+ if(!R3||!cityReview)return;
+ previewStage=clamp(Number(value),-1,4);
+ applyStagePreview();render();
 }
 const SYMS=['wave','sun','leaf','spark'],DCOL=['#1989D0','#F5B629','#22A565','#E34B42'];
 const symSvg=(q,sz=14)=>{const c=DCOL[q],k=SYMS[q];const body=k==='wave'?'<path d="M1 5c2-3 4 3 6 0s4 3 6 0M1 10c2-3 4 3 6 0s4 3 6 0" fill="none" stroke-width="1.6"/>':k==='sun'?'<circle cx="7" cy="7" r="2.6"/><path d="M7 1v2M7 11v2M1 7h2M11 7h2M2.8 2.8l1.4 1.4M9.8 9.8l1.4 1.4M2.8 11.2l1.4-1.4M9.8 4.2l1.4-1.4" stroke-width="1.4"/>':k==='leaf'?'<path d="M2 12C1 5 6 2 12 2c0 6-3 11-10 10z"/>':'<path d="M7 1l1.5 4.5L13 7l-4.5 1.5L7 13l-1.5-4.5L1 7l4.5-1.5z"/>';
@@ -77,7 +91,7 @@ function setupScreen(){const saved=store.get(BOARD2_SAVE),r=saved?SC.restore(sav
  $('#cx-start').onclick=()=>{const length=document.querySelector('input[name=len]:checked').value,levels=[...document.querySelectorAll('[data-lv]')].map(e=>e.value);
   const seed=q.get('seed')?+q.get('seed'):(()=>{const a=new Uint32Array(1);crypto.getRandomValues(a);return a[0]})(),startedAt=Date.now();
   begin(SC.newMatch({seed,length,fx:true,players:[{name:'You'},...levels.map((level,i)=>({name:'Computer '+(i+1),level}))],meta:{matchId:'circuit-'+seed.toString(36)+'-'+startedAt.toString(36),startedAt,career:opts.career}}))}}
-async function begin(state){cityReview=false;orbitYaw=0;cityDistance=5.65;citySelection=null;s=state;s.cfg.fx=true;$('#cx-setup').hidden=true;$('#cx-game').hidden=false;anim={queue:[],cur:null,t0:0,tokens:{}};notes=[];tally=null;
+async function begin(state){cityReview=false;orbitYaw=0;cityDistance=5.65;citySelection=null;previewStage=-1;stagesOverride=null;s=state;s.cfg.fx=true;$('#cx-setup').hidden=true;$('#cx-game').hidden=false;anim={queue:[],cur:null,t0:0,tokens:{}};notes=[];tally=null;
  for(const p of s.players)anim.tokens[p.id]={node:p.pos};
  if(opts.renderer==='3d'&&!R3tried){R3tried=true;try{const m=window.SkylineCircuitRenderer3D||await import(window.__circuitRendererURL||'./circuit-board2-renderer.js');R3=m.create($('#cx-board'),{layout,camera:cam,onTierChange:t=>{notes.unshift({t:'Graphics quality lowered to '+t+' for smoother play',kind:'quality'});render()}})}catch(e){R3=null;console.warn('3D renderer unavailable, using 2D',e)}}
  camCur={...cam};resize();enqueue();save();if(!looping){looping=true;loop()}}
@@ -220,16 +234,23 @@ function render(){if(!s)return;const v=SC.view(s),pd=v.pending,me=pd?s.players[p
    <button id="b2-zoom-out" title="Zoom out">−</button><button id="b2-zoom-in" title="Zoom in">+</button></div>
    <p class="cx-k" id="b2-camera-readout">Orbit ${Math.round(orbitYaw)}° · zoom ${cityDistance.toFixed(1)}</p>
    <div class="b2-spotlight" role="status">${node?`<b>${esc(friendlyName(node.id))}</b>
-    <p>${esc(DISTRICT_NAMES[node.quadrant])} · ${node.type==='property'?`${esc(node.stageName)} · Price SC ${node.price} · ${node.owner<0?'Unowned':esc(name(node.owner))}`:esc(node.type)}</p>`:'<b>Select a street or property</b><p>Watch it light up and inspect its ownership, stage and district.</p>'}</div></div>`;
+    <p>${esc(DISTRICT_NAMES[node.quadrant])} · ${node.type==='property'?`${esc(node.stageName)} · Price SC ${node.price} · ${node.owner<0?'Unowned':esc(name(node.owner))}`:esc(node.type)}</p>`:'<b>Select a street or property</b><p>Watch it light up and inspect its ownership, stage and district.</p>'}</div>
+   ${node&&node.type==='property'?`<label class="b2-stage-label" for="b2-preview-stage">3D building preview <small>(not a purchase)</small></label>
+    <select id="b2-preview-stage">
+      <option value="-1" ${previewStage<0?'selected':''}>Actual match stage</option>
+      ${['Plot','Low-rise','Mid-rise','High-rise','Skyscraper'].map((level,i)=>`<option value="${i}" ${previewStage===i?'selected':''}>${level}</option>`).join('')}
+    </select>`:''}
+   </div>`;
  }
  if(R3)h+=`<div class="cx-sect"><button id="cx-city-view" aria-pressed="${cityReview}" title="${cityReview?'Return to decisions':'Explore interactive 3D city'}">${cityReview?'← Strategy View':'Explore 3D City'}</button></div>`;
  const A=$('#cx-actions');if(A.dataset.h!==h){A.innerHTML=h;A.dataset.h=h;wire()}}
 function wire(){const on=(sel,f)=>{const e=$(sel);if(e)e.onclick=f};
  on('#cx-city-view',()=>{if(!R3)return;cityReview=!cityReview;if(cityReview&&zoom)overview();
-  if(!cityReview){citySelection=null;orbitYaw=0;R3.setOrbitYaw(0);R3.setSpotlight(null);camCur={...cam};R3.setCamera(camCur);C=R3.C}
+  if(!cityReview){citySelection=null;orbitYaw=0;previewStage=-1;stagesOverride=null;R3.setOrbitYaw(0);R3.setSpotlight(null);camCur={...cam};R3.setCamera(camCur);C=R3.C}
   dirty=true;render()});
  on('#b2-left',()=>cityOrbit(-14));on('#b2-right',()=>cityOrbit(14));
  on('#b2-zoom-in',()=>cityZoom(-.45));on('#b2-zoom-out',()=>cityZoom(.45));
+ const stageSelect=$('#b2-preview-stage');if(stageSelect)stageSelect.onchange=()=>cityStagePreview(stageSelect.value);
  document.querySelectorAll('[data-plan]').forEach(b=>b.onclick=()=>{if(cityReview){cityReview=false;dirty=true;render();return}plan=b.dataset.plan;dirty=true;render()});
  on('#cx-roll',()=>{tally=null;act({type:'roll',via:plan})});on('#cx-buy',()=>act({type:'buy'}));on('#cx-pass',()=>act({type:'pass'}));
  on('#cx-end',()=>act({type:'end'}));on('#cx-zoom',()=>{if(cityReview){cityReview=false;dirty=true;render();return}if(zoom)overview();else planFocus()});on('#cx-skip',skip);on('#cx-again',()=>{s=null;setupScreen()});
@@ -262,7 +283,7 @@ document.addEventListener('DOMContentLoaded',()=>{setupScreen();const cv=$('#cx-
   const id=hit(e.clientX,e.clientY);if(id){notes.unshift({t:`${friendlyName(id)}: ${describe(id)}`,kind:'inspect'});notes=notes.slice(0,6);render()}})});
 function describe(id){const n=SC.view(s).nodes.find(x=>x.id===id);if(n.type!=='property')return n.type==='junction'?`junction, connector to ${n.link}`:'event space';return `${n.owner>=0?name(n.owner):'Bank'} · ${n.stageName} · rent ${n.rent||Math.round(n.price*.12)}`}
 // Test and measurement hooks (no effect on the match).
-window.__circuitBoard2=Object.freeze({orbit:()=>orbitYaw,city:()=>cityReview,selected:()=>citySelection,zoom:()=>cityDistance,saveKey:BOARD2_SAVE,orbitBy:cityOrbit,inspect:cityInspect});
+window.__circuitBoard2=Object.freeze({orbit:()=>orbitYaw,city:()=>cityReview,selected:()=>citySelection,zoom:()=>cityDistance,preview:()=>previewStage,previewStage:cityStagePreview,saveKey:BOARD2_SAVE,orbitBy:cityOrbit,inspect:cityInspect});
 window.__circuitUI=Object.freeze({load:state=>{SC.drain(state);return begin(state)}, // review/tests: show a prepared rules state
  present:events=>{anim.queue.push(...events);dirty=true}, // presentation-only (tests): never reaches the rules
  state:()=>s,view:()=>SC.view(s),busy:()=>!!busy(),skip,hudRects,boardRect,overlay:()=>overlay,
