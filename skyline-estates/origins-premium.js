@@ -342,7 +342,14 @@
  // Water refinement: one baked texture, no per-frame allocations or additional
  // render meshes. The original animated water surface, board and physics stay put.
  function paintDetailedWater(){
-  if(!isReady()||S3.originsWaterTex)return !!S3?.originsWaterTex;
+  if(!isReady())return false;
+  if(S3.originsWaterTex){
+   // The base game reapplies theme colours on turn/board transitions.
+   // Reassert the approved ocean texture without reallocating GPU memory.
+   S3.waterMat.tex=S3.originsWaterTex;S3.waterMat.c=hex('#ffffff');
+   S3.waterMat.unlit=1;S3.waterMat.spec=.42;S3.waterMat.wave=1;
+   return true;
+  }
   const texture=cnv(1024,1024,(c,w,h)=>{
    const g=c.createLinearGradient(0,0,w,h);
    g.addColorStop(0,'#0a4867');g.addColorStop(.43,'#116a84');
