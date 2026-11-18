@@ -303,6 +303,33 @@
   group.originsPremiumAdded=true;group.originsPremiumCount=loci.length;
   return loci.length;
  }
+
+ // Unique physical markers follow the REAL moving tokens, including across
+ // moves and board rebuilds. This is visual-only and never changes inventory.
+ function markPhysicalTokens(){
+  if(!isReady()||typeof G==='undefined'||!G?.players||
+     typeof tok3==='undefined'||!Array.isArray(tok3))return 0;
+  const geo=S3.geo;let marked=0;
+  for(const player of G.players){
+   const token=tok3[player.id];if(!token)continue;
+   if(!token.originsPremiumIdentity){
+    const ink=mat('#101f36',{spec:.38}),enamel=mat(player.col||'#f2c457',{spec:.82,em:.46}),
+     ivory=mat('#fff3d2',{spec:.72,em:.20}),identity=new Node();
+    identity.add(N(geo.cyl8,ink,0,-.008,0).sc(.38,.018,.38));
+    identity.add(N(geo.torus,enamel,0,.045,0).sc(.37,.37,.065).rot(Math.PI/2,0,0));
+    identity.add(N(geo.torus,ivory,0,.055,0).sc(.28,.28,.038).rot(Math.PI/2,0,0));
+    // Four distinct raised silhouettes: round / square / triangle / octagon.
+    const flag=new Node().at(.27,0,-.20);
+    flag.add(N(geo.cyl8,ink,0,.19,0).sc(.055,.38,.055));
+    flag.add(N(geo.cyl8,ivory,0,.38,0).sc(.145,.045,.145));
+    const shape=[geo.sph,geo.box,geo.cone4,geo.cyl8][player.id%4];
+    flag.add(N(shape,enamel,0,.48,0).sc(.145,.17,.145));
+    identity.add(flag);token.add(identity);token.originsPremiumIdentity=identity;
+   }
+   marked++;
+  }
+  return marked;
+ }
  function ensureHud(){
   document.documentElement.classList.add('origins-premium-v1');
   if(!document.querySelector('#originsPremiumMark')){
@@ -363,7 +390,7 @@
    }
   }
   deepenActualScene();paintPremiumCityGround();decorateWaterfront();
-  const b=addArchitecture();stats();return{ready:true,buildings:b,waterfront:!!S3.centers?.beach?.originsHarbourAdded,boardCount:40};
+  const b=addArchitecture(),tokens=markPhysicalTokens();stats();return{ready:true,buildings:b,tokens,waterfront:!!S3.centers?.beach?.originsHarbourAdded,boardCount:40};
  }
  function queueRefresh(){
   if(refreshQueued)return;refreshQueued=true;
