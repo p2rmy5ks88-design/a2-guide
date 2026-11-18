@@ -244,7 +244,22 @@ let browser,server;
      __circuitTabletop.select('O1');
    });
    assert.equal(await p.locator('[data-action="end"]').count(),1,'Career match offers the authentic End Turn rules action');
+   // Simulate a Safari storage quota failure on the receipt key, but not on the
+   // ordinary Circuit save. Match completion MUST preserve the original save.
+   await p.evaluate(()=>{
+     const orig=Storage.prototype.setItem;
+     Storage.prototype.setItem=function(key,val){
+       if(String(key).startsWith('skylineCareerInbox:'))throw new DOMException('Storage full','QuotaExceededError');
+       return orig.call(this,key,val);
+     };
+   });
    await p.locator('[data-action="end"]').click();
+   await p.waitForFunction(()=>__circuitTabletop.state().over,{timeout:15000});
+   assert.equal(await p.evaluate(id=>localStorage.getItem('skylineCareerInbox:'+id),info.meta.matchId),null,'failed receipt storage does not create false Career progress');
+   assert(await p.evaluate(()=>Boolean(localStorage.getItem('skylineCircuitSave'))),'failed receipt storage preserves the completed Circuit save');
+   // The fresh Safari document restores native storage and finishes the
+   // pending receipt exactly once without replaying the match.
+   await p.reload({waitUntil:'load'});
    await p.waitForFunction(id=>Boolean(localStorage.getItem('skylineCareerInbox:'+id)),info.meta.matchId,{timeout:15000});
    const receipt=await p.evaluate(id=>({
      fact:JSON.parse(localStorage.getItem('skylineCareerInbox:'+id)),
@@ -259,7 +274,7 @@ let browser,server;
    assert.equal(receipt.save,null,'completed Career matches clear only their Circuit save');
    assert.equal(receipt.practice,null,'Career receipts do not write to the practice slot');
    assert.equal(errors.length,0,'Career mode completes with no page errors');
-   await ctx.close();total+=15;
+   await ctx.close();total+=17;
  }
  console.log('PASS: '+engine+' Circuit physical tabletop interactive smoke tests; '+total+' checks on four viewports');
 })().catch(e=>{console.error(e);process.exitCode=1}).finally(async()=>{if(browser)await browser.close();if(server)server.close()});
