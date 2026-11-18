@@ -38,8 +38,8 @@ let R3=null,R3tried=false,camCur=null;
 // 320 pt fallback (validated in CIRCUIT-ALPHA.md): active whenever overview target spacing is below 44 pt.
 let zf=null,zoom=null,planFocused='';const CINEMATIC={pitch:15,dist:5};
 // Owner-review City View: explicitly non-interactive. Strategy View remains the only decision camera.
-const CITY_REVIEW={pitch:46,dist:5.85};let cityReview=false;
-let orbitYaw=0,cityDistance=5.85,citySelection=null,previewStage=-1,cityShowcase=false;
+const CITY_REVIEW={pitch:53,dist:6.55};let cityReview=false;
+let orbitYaw=0,cityDistance=CITY_REVIEW.dist,citySelection=null,previewStage=-1,cityShowcase=false;
 const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
 function cityOrbit(delta){if(!R3||!cityReview)return;orbitYaw=clamp(orbitYaw+delta,-55,55);R3.setOrbitYaw(orbitYaw);dirty=true;render();}
 function cityZoom(delta){if(!R3||!cityReview)return;cityDistance=clamp(cityDistance+delta,4.65,7.3);dirty=true;render();}
@@ -97,7 +97,7 @@ function setupScreen(){const saved=store.get(BOARD2_SAVE),r=saved?SC.restore(sav
  $('#cx-start').onclick=()=>{const length=document.querySelector('input[name=len]:checked').value,levels=[...document.querySelectorAll('[data-lv]')].map(e=>e.value);
   const seed=q.get('seed')?+q.get('seed'):(()=>{const a=new Uint32Array(1);crypto.getRandomValues(a);return a[0]})(),startedAt=Date.now();
   begin(SC.newMatch({seed,length,fx:true,players:[{name:'You'},...levels.map((level,i)=>({name:['Kofi','Mei','Lucas'][i]||('CPU '+(i+1)),level}))],meta:{matchId:'circuit-'+seed.toString(36)+'-'+startedAt.toString(36),startedAt,career:opts.career}}))}}
-async function begin(state){cityReview=false;orbitYaw=0;cityDistance=5.85;citySelection=null;previewStage=-1;cityShowcase=false;stagesOverride=null;s=state;s.cfg.fx=true;$('#cx-setup').hidden=true;$('#cx-game').hidden=false;anim={queue:[],cur:null,t0:0,tokens:{}};notes=[];tally=null;
+async function begin(state){cityReview=false;orbitYaw=0;cityDistance=CITY_REVIEW.dist;citySelection=null;previewStage=-1;cityShowcase=false;stagesOverride=null;s=state;s.cfg.fx=true;$('#cx-setup').hidden=true;$('#cx-game').hidden=false;anim={queue:[],cur:null,t0:0,tokens:{}};notes=[];tally=null;
  for(const p of s.players)anim.tokens[p.id]={node:p.pos};
  if(opts.renderer==='3d'&&!R3tried){R3tried=true;try{const m=window.SkylineCircuitRenderer3D||await import(window.__circuitRendererURL||'./circuit-board2-renderer.js');R3=m.create($('#cx-board'),{layout,camera:cam,onTierChange:t=>{notes.unshift({t:'Graphics quality lowered to '+t+' for smoother play',kind:'quality'});render()}})}catch(e){R3=null;console.warn('3D renderer unavailable, using 2D',e)}}
  camCur={...cam};resize();enqueue();save();if(!looping){looping=true;loop()}}
@@ -199,8 +199,8 @@ function draw2d(){const cv=$('#cx-board'),ctx=cv.getContext('2d'),dpr=cv.width/M
 // ---------- HUD (placeholder composition; one panel per interaction state) ----------
 function render(){if(!s)return;const v=SC.view(s),pd=v.pending,me=pd?s.players[pd.player]:null;
  const cur=v.players[s.turn],standings=[...v.players].sort((a,b)=>b.influence-a.influence),leader=standings[0],nextSeat=v.order[(v.orderIdx+1)%v.order.length];
- $('#cx-players').innerHTML=`<div class="cx-cur" style="--pc:${COLORS[cur.id]}"><span class="cx-badge">${tokSvg(cur.id,20)}</span><div class="cx-curtx"><div class="cx-k">${cur.id===0?'Your turn':'Turn'}</div><b>${esc(cur.name)}</b><div class="cx-money${pulse('cash'+cur.id,cur.cash)}">Cash <b>${cur.cash}</b></div></div></div>
- <div class="cx-sect"><div class="cx-row"><span class="cx-k">Influence</span><span class="cx-k">Target <b class="cx-t">${v.target}</b>${s.cfg.length==='quick'?' · Quick':''}</span></div>
+ $('#cx-players').innerHTML=`<header class="b2-career"><strong>Skyline Estates</strong><h1>Skyline Circuit</h1><small>Career Board 2 · Normal</small></header><div class="cx-cur" style="--pc:${COLORS[cur.id]}"><span class="cx-badge">${tokSvg(cur.id,20)}</span><div class="cx-curtx"><div class="cx-k">${cur.id===0?'Your turn':'Turn'}</div><b>${esc(cur.name)}</b><div class="cx-money${pulse('cash'+cur.id,cur.cash)}">Cash <b>${cur.cash}</b></div></div></div>
+ <div class="cx-sect"><div class="cx-row"><span class="cx-k">Influence standings</span><span class="cx-k">Target <b class="cx-t">${v.target}</b>${s.cfg.length==='quick'?' · Quick':''}</span></div>
  ${standings.map((p,r)=>{const pct=Math.min(100,100*p.influence/v.target),clock=v.clock&&v.clock.pid===p.id;return`<div class="cx-p ${p.id===s.turn?'cx-turn':''} ${p.out?'cx-out':''} ${r===0&&p.influence>0?'cx-lead':''}" style="--pc:${COLORS[p.id]}"><span class="cx-rank">${r+1}</span>${tokSvg(p.id)}<span class="cx-n1">${esc(p.name)}${p.level?` <span class="cx-k">${esc(p.level[0].toUpperCase()+p.level.slice(1))}</span>`:''}</span><span class="cx-iv${pulse('inf'+p.id,p.influence)}">${p.influence}</span></div>
   <div class="cx-bar" role="progressbar" aria-label="${esc(p.name)} influence" aria-valuenow="${p.influence}" aria-valuemax="${v.target}"><span style="width:${pct}%;background:${COLORS[p.id]}"></span>${clock?'<em class="cx-clockmark">holding target</em>':''}</div>`}).join('')}</div>
  <div class="cx-sect cx-order"><div class="cx-row"><span>Round <b>${v.round}</b> / ${v.rounds}</span></div><div class="cx-chips">${v.order.map(i=>`<span class="cx-chip ${i===s.turn?'now':''} ${i===nextSeat&&i!==s.turn?'next':''}" style="--pc:${COLORS[i]}">${tokSvg(i)}</span>`).join('<span class="cx-k">›</span>')}</div><div class="cx-k">Order reverses each round</div></div>`;
@@ -219,7 +219,7 @@ function render(){if(!s)return;const v=SC.view(s),pd=v.pending,me=pd?s.players[p
   const pv=v.preview,fj=pv.firstJunction,chance=Math.round(100*pv[plan].junctionChance);
   h+=`<div class="cx-panel" data-state="roll"><h2>Your route</h2><div class="cx-seg" role="radiogroup" aria-label="Route plan"><button role="radio" aria-checked="${plan==='stay'}" data-plan="stay" class="cx-stay"><i aria-hidden="true"></i><span>Stay<small>on ring</small></span></button><button role="radio" aria-checked="${plan==='cross'}" data-plan="cross" class="cx-cross"><i aria-hidden="true"></i><span>Cross<small>by bridge</small></span></button></div>
    <p>${fj?`First junction <b>${esc(friendlyName(fj.node))}</b>${fj.stepsAway?` · ${fj.stepsAway} step${fj.stepsAway===1?'':'s'}`:' · here'}`:''}</p><p class="cx-k">${chance?`Plan applies on ${chance}% of rolls. Dots show likely landings, not certainties.`:'No junction can be reached this roll — the plan has no effect.'}</p>
-   <button id="cx-roll" class="cx-primary"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><rect x="1.5" y="1.5" width="15" height="15" rx="3.5" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="6" cy="6" r="1.4" fill="currentColor"/><circle cx="12" cy="12" r="1.4" fill="currentColor"/><circle cx="9" cy="9" r="1.4" fill="currentColor"/></svg> Roll</button></div>`}
+   <button id="cx-roll" class="cx-primary"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><rect x="1.5" y="1.5" width="15" height="15" rx="3.5" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="6" cy="6" r="1.4" fill="currentColor"/><circle cx="12" cy="12" r="1.4" fill="currentColor"/><circle cx="9" cy="9" r="1.4" fill="currentColor"/></svg> Roll Dice</button></div>`}
  else if(pd&&pd.type==='buy'){// 3. buy
   const n=v.nodes.find(x=>x.id===pd.node);
   const after=JSON.parse(JSON.stringify(s));after.own[pd.node]={o:pd.player,h:0};const sizeAfter=(SC.networks(after,pd.player).find(x=>x.props.includes(pd.node))||{size:1}).size;
@@ -252,6 +252,7 @@ function render(){if(!s)return;const v=SC.view(s),pd=v.pending,me=pd?s.players[p
  }
  if(R3)h+=`<div class="cx-sect"><button id="cx-city-view" aria-pressed="${cityReview}" title="${cityReview?'Return to decisions':'Explore interactive 3D city'}">${cityReview?'← Strategy View':'Explore 3D City'}</button></div>`;
  const A=$('#cx-actions');A.classList.toggle('b2-city-mode',cityReview);
+ A.classList.toggle('b2-roll-mode',!cityReview&&!busy()&&pd?.type==='roll'&&!me.ai);
  if(A.dataset.h!==h){A.innerHTML=h;A.dataset.h=h;wire()}}
 function wire(){const on=(sel,f)=>{const e=$(sel);if(e)e.onclick=f};
  on('#cx-city-view',()=>{if(!R3)return;cityReview=!cityReview;if(cityReview&&zoom)overview();

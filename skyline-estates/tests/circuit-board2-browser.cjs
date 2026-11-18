@@ -14,7 +14,7 @@ const root=path.resolve(__dirname,'../..'),out=process.env.BOARD2_SHOTS||null,en
   });
  });
  await new Promise(r=>server.listen(0,'127.0.0.1',r));
- const browser=await({chromium,webkit}[engine]).launch({headless:true,...(engine==='chromium'?{executablePath:process.env.CHROME_PATH||undefined}:{})});
+ const browser=await({chromium,webkit}[engine]).launch({headless:true,...(engine==='chromium'?{executablePath:process.env.CHROME_PATH||undefined,args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']}:{})});
  let checks=0;try{
   for(const vp of [{name:'iphone',width:956,height:440,dpr:3},{name:'small',width:844,height:390,dpr:3},{name:'desktop',width:1366,height:768,dpr:1}]){
    const ctx=await browser.newContext({viewport:{width:vp.width,height:vp.height},deviceScaleFactor:vp.dpr,hasTouch:vp.dpr>1,serviceWorkers:'block',reducedMotion:'reduce'});
@@ -57,7 +57,7 @@ const root=path.resolve(__dirname,'../..'),out=process.env.BOARD2_SHOTS||null,en
    await p.locator('#b2-right').click();
    assert.equal(await p.evaluate(()=>__circuitBoard2.orbit()),14,'Orbit button actually changes the WebGL camera yaw');
    await p.locator('#b2-zoom-in').click();
-   assert((await p.evaluate(()=>__circuitBoard2.zoom()))<5.65,'Zoom button changes City View distance');
+   assert((await p.evaluate(()=>__circuitBoard2.zoom()))<6.55,'Zoom button changes City View distance');
    await p.evaluate(()=>__circuitBoard2.inspect('O1'));
    assert.equal(await p.evaluate(()=>__circuitBoard2.selected()),'O1','3D building inspection selects the intended street');
    assert((await p.locator('.b2-spotlight').innerText()).includes('Marina Avenue'),'building detail displays real street names, not raw tile IDs');
@@ -102,6 +102,7 @@ const root=path.resolve(__dirname,'../..'),out=process.env.BOARD2_SHOTS||null,en
    assert.equal(await p.evaluate(()=>__circuitBoard2.showcase()),false,'returning to Strategy turns off skyline showcase');
    assert.equal(await p.locator('#cx-roll').count(),1,'real dice action is restored');
    assert.equal(await p.evaluate(()=>localStorage.getItem('skylineCareerInbox:circuit-board2-lab')),null,'preview never writes Career results');
+   if(out)await p.screenshot({path:path.join(out,engine+'-'+vp.name+'-strategy.png')});
    await p.locator('#cx-roll').click();
    await p.waitForFunction(()=>window.__circuitUI.state().players[0].st.turns===1,null,{timeout:10000});
    assert.equal(await p.evaluate(()=>__circuitBoard2.orbit()),0,'dice movement cannot start an orbit');

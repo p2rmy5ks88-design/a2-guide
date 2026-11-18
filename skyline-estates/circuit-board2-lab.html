@@ -1,8 +1,7 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0E1A2E"><title>Skyline Circuit — Board 2 Interactive 3D City Lab</title>
-<!-- Skyline Circuit playable alpha: a separate page. It does not load or change game.html, Classic or Harbour Ring
-     saves; it writes only skylineCircuitSave and, for Career matches, one skylineCareerInbox:<matchId> entry. -->
+<!-- Standalone Circuit visual review. Match progress uses skylineCircuitBoard2PracticeSave. -->
 <style>
 :root{--sal:0px;--sar:0px;--sat:0px;--sab:0px;--navy:#0B1633;--panel:#101E35;--raised:#172A43;--gold:#F2C457;--mint:#70F0C2;--ink:#F8F6EF;--muted:#B6C5D1;--warn:#F3B45C;color-scheme:dark}
 *{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--navy);color:var(--ink);font:600 12px/1.3 -apple-system,system-ui,sans-serif;overflow:hidden;font-variant-numeric:tabular-nums lining-nums}
@@ -70,8 +69,6 @@ select,button{font:inherit}button{min-height:44px;min-width:44px;border-radius:1
 #cx-roll{margin-top:8px}
 #cx-city-view{width:100%;background:#224e60;color:#e4fff4;border-color:#86d9c0;font-weight:900}
 #cx-city-view[aria-pressed=true]{background:#eed091;color:#112a3d;border-color:#fff0b9}
-#b2-title{position:fixed;top:max(10px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:12;pointer-events:none;color:#ffe7a5;background:#102e44e3;border:1px solid #f1ce7e9a;border-radius:24px;padding:6px 14px;font:900 11px/1 -apple-system,system-ui,sans-serif;letter-spacing:1.4px;white-space:nowrap}
-#b2-foot{position:fixed;bottom:max(7px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);z-index:12;pointer-events:none;background:#0c2b40db;border:1px solid #caa76666;border-radius:18px;color:#ffe8b5;font:800 10px/1.2 -apple-system,system-ui,sans-serif;padding:5px 11px;white-space:nowrap}
 .b2-orbit{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin:8px 0}
 .b2-orbit button{padding:0;min-width:0;min-height:44px;border:1px solid #a8d9d0;background:#183e53;font-size:23px;font-weight:900;color:#ffe6ac}
 .b2-spotlight{padding:8px 7px;margin-top:6px;border-left:3px solid #ffcb66;border-radius:7px;background:#23536a90;min-height:57px;overflow-wrap:anywhere}
@@ -95,59 +92,22 @@ select,button{font:inherit}button{min-height:44px;min-width:44px;border-radius:1
 #cx-actions .cx-panel[data-state="roll"] .cx-k{font-size:11px}
 #cx-setup{max-width:640px;background:linear-gradient(150deg,#14344c,#0b1931);border:1px solid #d4b16b;border-radius:16px;margin:9px auto;height:calc(100% - 18px)}
 #cx-setup h1{color:#ffe8b0}
-@media(max-height:470px){#cx-players,#cx-actions{padding:8px;margin-top:5px;margin-bottom:5px}.cx-cur{padding:5px}.cx-sect{margin-top:6px;padding-top:4px}#b2-title{padding:4px 10px;top:3px;font-size:10px}#b2-foot{bottom:3px;padding:3px 9px}}
-@media(max-width:760px){#cx-game{--hudL:133px;--hudR:165px}#cx-players,#cx-actions{padding:6px;margin-left:3px;margin-right:3px}.b2-orbit{gap:2px}}
-@media(prefers-reduced-motion:reduce){#cx-players,#cx-actions{backdrop-filter:none}}
-
-/* Approved Circuit visual authority: luxurious but FUNCTIONAL HUD.
-   The live board is still the renderer, not a flattened concept screenshot. */
-#cx-players,#cx-actions{
- background:linear-gradient(165deg,#183250f5 0%,#0c1b34f5 61%,#091629fa 100%);
- border:1.5px solid #f3c879c7;
- box-shadow:0 4px 0 #8d5b2b4d,0 8px 25px #000a16a6,
-   inset 0 0 0 1px #ffe4a124;
- backdrop-filter:none;
+@media(max-height:470px){#cx-players,#cx-actions{padding:8px;margin-top:5px;margin-bottom:5px}.cx-cur{padding:5px}.cx-sect{margin-top:6px;padding-top:4px}#cx-players .b2-career{
+ text-align:center;padding:6px 0 10px;color:#fff0c5;border-bottom:1px solid #f7c87780;margin-bottom:9px;
 }
-#cx-players .cx-cur{
- background:linear-gradient(135deg,#213e5b,#142b43);
- border-color:#f6d17c88;
- box-shadow:0 2px 8px #07142599,inset 0 1px 0 #ffffff15;
+.b2-career strong{font:700 11px/1.2 Georgia,serif;text-transform:uppercase;letter-spacing:.08em}
+.b2-career h1{font:700 clamp(16px,2vw,26px)/1.05 Georgia,serif;margin:4px 0}
+.b2-career small{
+ display:inline-block;background:linear-gradient(#ffe6a6,#b77a35);color:#26190a;
+ border:1px solid #ffe5ae;border-radius:12px;padding:3px 6px;font-weight:800;
 }
-#cx-players .cx-row b,#cx-players .cx-iv{color:#ffe09c}
-#cx-actions .cx-panel h2{color:#ffdf92;text-shadow:0 1px 1px #050e19}
-#cx-roll{
- min-height:50px;margin-top:8px;
- border:2px solid #ffeab2;border-radius:15px;
- background:linear-gradient(180deg,#fff0b9 0%,#ffda72 29%,#eeb34a 77%,#c98923 100%);
- box-shadow:0 3px 0 #80501f,0 5px 12px #061222ba,inset 0 2px 2px #fff6d6;
- color:#182236;text-transform:uppercase;font:900 16px/1.1 -apple-system,system-ui,sans-serif;
+#cx-actions.b2-roll-mode{padding-bottom:72px}
+#cx-actions.b2-roll-mode #cx-roll{
+ position:fixed;right:calc(max(var(--sar),env(safe-area-inset-right)) + 18px);
+ bottom:calc(max(var(--sab),env(safe-area-inset-bottom)) + 16px);
+ width:calc(var(--hudR) - 36px);
 }
-#cx-roll:active{transform:translateY(2px);box-shadow:0 1px 0 #80501f,inset 0 2px 3px #ad7425}
-#b2-title{
- display:flex;align-items:center;justify-content:center;gap:7px;
- max-width:calc(100vw - 340px);
- border:1px solid #f6c97c;border-radius:13px;
- padding:5px 11px;
- color:#fff1c1;background:linear-gradient(180deg,#132b45f2,#0b1a31f5);
- box-shadow:0 4px 13px #000b1cba,inset 0 1px 0 #ffdf8d55;
- letter-spacing:0;text-shadow:0 1px 2px #091220;
-}
-#b2-title strong{font:900 11px/1 Georgia,serif;color:#ffd375;letter-spacing:.7px}
-#b2-title span{font:900 12px/1.2 -apple-system,system-ui,sans-serif;color:#fff2cc;letter-spacing:.5px}
-#b2-title small{font:800 9px/1.2 -apple-system,system-ui,sans-serif;color:#eac684;letter-spacing:.5px}
-#b2-foot{background:#0b1e37e8;color:#ffdd96;border:1px solid #e2ba71aa;
- box-shadow:0 2px 8px #06162990;font-weight:900;letter-spacing:.5px}
-@media(max-width:1000px){
- #b2-title{max-width:calc(100vw - 340px);gap:5px;padding:4px 7px}
- #b2-title strong{display:none}
- #b2-title span{font-size:11px}
- #b2-title small{font-size:8px}
-}
-@media(max-width:760px){
- #b2-title small{display:none}
- #b2-title{max-width:calc(100vw - 304px)}
- #cx-roll{font-size:13px;min-height:44px}
-}
+@media(max-width:760px){#cx-roll{font-size:13px;min-height:44px}}
 
 /* Circuit City physical landmark — projected from the REAL 3D camera.
    Crisp at iPhone Retina scale, never a clickable or gameplay-blocking layer. */
@@ -164,8 +124,6 @@ select,button{font:inherit}button{min-height:44px;min-width:44px;border-radius:1
 .b2-civic-name[hidden]{display:none!important}
 @media(max-width:760px){.b2-civic-name{font-size:9px;padding:3px 6px}}
 </style></head><body>
-<div id="b2-title"><strong>SKYLINE ESTATES</strong><span>SKYLINE CIRCUIT</span><small>CAREER BOARD 2 OF 4 · NORMAL</small></div>
-<div id="b2-foot" aria-hidden="true">CIRCUIT CITY · 32 PLAYABLE SPACES · FOUR STRATEGIC BRIDGES</div>
 <div id="cx-setup" hidden></div>
 <div id="cx-game" hidden><aside id="cx-players" aria-label="Players"></aside><canvas id="cx-board" aria-label="Circuit board"></canvas><aside id="cx-actions" aria-label="Actions"></aside></div>
 <script>window.__circuitAccessAllowed=true; // Standalone Board 2 research only: isolated saves and no Career eligibility.</script>

@@ -113,7 +113,7 @@ export function create(canvas,{layout,spec,camera:cam0,tier:tierName=pickTier(),
   ctx.fillStyle=light;ctx.fillRect(0,0,w,h);
  });
  const platform=new THREE.Mesh(new THREE.CylinderGeometry(platR,platR+3,8,128),[new THREE.MeshStandardMaterial({color:'#BD8851',roughness:.78}),new THREE.MeshStandardMaterial({map:platTop,roughness:.82}),new THREE.MeshStandardMaterial({color:'#754525',roughness:.82})]);
- platform.position.y=-4;platform.receiveShadow=!!tier.shadows;env.add(platform);
+ platform.position.y=-9;platform.receiveShadow=!!tier.shadows;env.add(platform);
  const rim=new THREE.Mesh(new THREE.TorusGeometry(platR+.5,1.2,8,160),new THREE.MeshStandardMaterial({color:P.ivory,roughness:.4,metalness:.4,emissive:'#3a3424',emissiveIntensity:.3}));rim.rotation.x=Math.PI/2;env.add(rim);
  // ring roads through node centres (closed strips), ivory edge markings
  function strip(points,width,y,mat,closed=true){const pos=[],ind=[];const n=points.length;for(let i=0;i<n;i++){const a=closed?points[(i-1+n)%n]:points[Math.max(0,i-1)],b=points[i],c=closed?points[(i+1)%n]:points[Math.min(n-1,i+1)];let tx=c.x-a.x,ty=c.y-a.y;const l=Math.hypot(tx,ty)||1;tx/=l;ty/=l;
@@ -128,9 +128,26 @@ export function create(canvas,{layout,spec,camera:cam0,tier:tierName=pickTier(),
   O:new THREE.MeshStandardMaterial({color:'#4A2D22',roughness:.93,side:THREE.DoubleSide}),
   I:new THREE.MeshStandardMaterial({color:'#5A3828',roughness:.93,side:THREE.DoubleSide})
  };
- const markMat=new THREE.MeshBasicMaterial({color:P.ivory,transparent:true,opacity:.85,side:THREE.DoubleSide});
+ const markMat=new THREE.MeshStandardMaterial({color:'#F4CA75',roughness:.34,metalness:.49,
+  emissive:'#BC6E27',emissiveIntensity:.32,side:THREE.DoubleSide});
+ const seawallMat=new THREE.MeshStandardMaterial({color:'#93623E',roughness:.62,metalness:.12,side:THREE.DoubleSide});
+ function seawall(points){
+  const positions=[],indices=[];
+  for(const {x,y} of points)positions.push(x,.25,y,x,-4.7,y);
+  for(let i=0;i<points.length;i++){
+   const a=2*i,b=2*((i+1)%points.length);
+   indices.push(a,b,a+1,a+1,b,b+1);
+  }
+  const geometry=new THREE.BufferGeometry();
+  geometry.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
+  geometry.setIndex(indices);
+  geometry.computeVertexNormals();
+  const wall=new THREE.Mesh(geometry,seawallMat);
+  wall.receiveShadow=!!tier.shadows;
+  return wall;
+ }
  for(const r of ['O','I']){const pts=smooth(ringPts(r));const road=strip(pts,T*1.1,.15,roadMat[r]);road.receiveShadow=!!tier.shadows;env.add(road);
-  for(const s of [-1,1]){const off=pts.map((p,i)=>{const a=pts[(i-1+pts.length)%pts.length],c=pts[(i+1)%pts.length];let tx=c.x-a.x,ty=c.y-a.y;const l=Math.hypot(tx,ty);return{x:p.x-ty/l*s*T*.6,y:p.y+tx/l*s*T*.6}});env.add(strip(off,1.1,.3,markMat))}}
+  for(const s of [-1,1]){const off=pts.map((p,i)=>{const a=pts[(i-1+pts.length)%pts.length],c=pts[(i+1)%pts.length];let tx=c.x-a.x,ty=c.y-a.y;const l=Math.hypot(tx,ty);return{x:p.x-ty/l*s*T*.6,y:p.y+tx/l*s*T*.6}});env.add(seawall(off),strip(off,1.1,.3,markMat))}}
  const ringGapIn0=()=>Math.min(...SC.NODES.filter(n=>n.ring==='I').map(n=>Math.hypot(G.nodes[n.id].x,G.nodes[n.id].y)))+T*.62,ringGapOut0=()=>R-T*.62;
  // central civic garden (decorative)
  const innerR=Math.min(...SC.NODES.filter(n=>n.ring==='I').map(n=>Math.hypot(G.nodes[n.id].x,G.nodes[n.id].y)))-T*.72;
@@ -154,7 +171,7 @@ export function create(canvas,{layout,spec,camera:cam0,tier:tierName=pickTier(),
  const canal=new THREE.Mesh(new THREE.RingGeometry(ringGapIn0(),ringGapOut0(),128),
   new THREE.MeshStandardMaterial({map:canalTex,color:'#FFFFFF',roughness:.24,
    metalness:.11,emissive:'#06405a',emissiveIntensity:.12,side:THREE.DoubleSide}));
- canal.rotation.x=-Math.PI/2;canal.position.y=.08;
+ canal.rotation.x=-Math.PI/2;canal.position.y=-3.6;
  canal.receiveShadow=!!tier.shadows;canal.userData.circuitCanal=true;env.add(canal);
  const canalEdgeMat=new THREE.MeshStandardMaterial({
   color:'#E5B65D',metalness:.62,roughness:.31,emissive:'#8C541D',emissiveIntensity:.23});
@@ -162,26 +179,32 @@ export function create(canvas,{layout,spec,camera:cam0,tier:tierName=pickTier(),
   const edge=new THREE.Mesh(new THREE.TorusGeometry(rr,.43,6,144),canalEdgeMat);
   edge.rotation.x=Math.PI/2;edge.position.y=.27;env.add(edge);
  }
- const garden=new THREE.Mesh(new THREE.CylinderGeometry(innerR,innerR,2,96),new THREE.MeshStandardMaterial({color:'#176C41',roughness:.96}));garden.position.y=0;garden.receiveShadow=!!tier.shadows;env.add(garden);
+ const garden=new THREE.Mesh(new THREE.CylinderGeometry(innerR,innerR,6,96),new THREE.MeshStandardMaterial({color:'#176C41',roughness:.96}));garden.position.y=-2;garden.receiveShadow=!!tier.shadows;env.add(garden);
  // Board 2's unmistakable civic landmark: physical plinth, glass gallery,
  // six limestone columns and a low glazed dome. All parts are real meshes,
  // live behind the fountain, and never intersect a legal street or bridge.
  // A small silhouette remains readable even in the battery-saving Low tier.
- {const pavilion=new THREE.Group(),w=innerR*.94,d=innerR*.55;
+ {const pavilion=new THREE.Group(),w=innerR*1.22,d=innerR*.79;
   const limestone=new THREE.MeshStandardMaterial({color:'#FFF0D4',roughness:.76}),
    bronze=new THREE.MeshStandardMaterial({color:'#E8B75F',metalness:tier.shadows?.62:.12,roughness:.28,emissive:'#7B5119',emissiveIntensity:.17}),
    glazing=new THREE.MeshStandardMaterial({color:'#75C7E5',metalness:tier.shadows?.35:.04,roughness:.21,emissive:'#33799C',emissiveIntensity:.24,transparent:true,opacity:.96});
   const add=(geometry,material,x,y,z)=>{const m=new THREE.Mesh(geometry,material);m.position.set(x,y,z);m.castShadow=!!tier.shadows;m.receiveShadow=!!tier.shadows;pavilion.add(m);return m};
-  add(new THREE.BoxGeometry(w*1.13,2,d*1.22),limestone,0,2.15,0);
-  add(new THREE.BoxGeometry(w,8.1,d),glazing,0,7.5,0);
-  for(const x of [-w*.42,0,w*.42])for(const z of [-d*.45,d*.45]){
-   add(new THREE.CylinderGeometry(1.2,1.35,9.2,8),limestone,x,7.5,z);
-   add(new THREE.CylinderGeometry(1.8,1.8,.65,8),bronze,x,12.2,z)}
-  add(new THREE.BoxGeometry(w*1.07,1.8,d*1.15),limestone,0,12.9,0);
-  add(new THREE.BoxGeometry(w*.9,.55,d*.96),bronze,0,14,0);
+  const oval=(radius,height,xScale,zScale,material,y)=>{
+   const mesh=add(new THREE.CylinderGeometry(radius,radius,height,64),material,0,y,0);
+   mesh.scale.set(xScale,1,zScale);
+  };
+  oval(1,2,w*.565,d*.61,limestone,2.15);
+  oval(1,8.1,w*.5,d*.5,glazing,7.5);
+  for(let i=0;i<20;i++){
+   const a=i/20*Math.PI*2;
+   add(new THREE.CylinderGeometry(.19,.27,9.2,8),bronze,Math.cos(a)*w*.5,7.5,Math.sin(a)*d*.5);
+  }
+  oval(1,1.3,w*.54,d*.54,limestone,12.9);
+  oval(1,.55,w*.52,d*.52,bronze,14);
   // Larger oval glass dome and gilded meridian ribs, the focal landmark in
   // the approved Circuit City image. Pure decoration inside the civic park.
-  const domeR=Math.min(w*.42,d*.72);
+  const domeR=w*.5;
+  const ovalRatio=d/w;
   // Baked individual glazed panels and structural mullions: the approved
   // landmark is an illuminated glass civic dome, never a plain cyan sphere.
   const domeGlass=canvasTex(1024,512,(ctx,w,h)=>{
@@ -203,22 +226,23 @@ export function create(canvas,{layout,spec,camera:cam0,tier:tierName=pickTier(),
    metalness:.25,roughness:.18,emissive:'#195572',emissiveIntensity:.2});
   const dome=new THREE.Mesh(
    new THREE.SphereGeometry(domeR,48,20,0,Math.PI*2,0,Math.PI/2),domeMat);
-  dome.scale.set(1.12,.88,.90);dome.position.set(0,14.4,0);
+  dome.scale.set(1,.72,ovalRatio);dome.position.set(0,14.4,0);
   dome.castShadow=!!tier.shadows;pavilion.add(dome);
   const domeRib=new THREE.MeshStandardMaterial({color:'#F5CD80',metalness:.8,
    roughness:.3,emissive:'#B37932',emissiveIntensity:.27});
   const baseRing=new THREE.Mesh(new THREE.TorusGeometry(domeR,.24,6,52),domeRib);
-  baseRing.rotation.x=Math.PI/2;baseRing.scale.set(1.14,.90,1);
+  baseRing.rotation.x=Math.PI/2;baseRing.scale.set(1,ovalRatio,1);
   baseRing.position.y=14.55;pavilion.add(baseRing);
-  for(let k=0;k<7;k++){
-   const a=Math.PI*k/7,dx=Math.cos(a)*domeR*1.08,dz=Math.sin(a)*domeR*.85;
-   const bow=new THREE.QuadraticBezierCurve3(
-    new THREE.Vector3(-dx,14.6,-dz),
-    new THREE.Vector3(0,14.6+domeR*1.02,0),
-    new THREE.Vector3(dx,14.6,dz));
-   pavilion.add(new THREE.Mesh(new THREE.TubeGeometry(bow,18,.16,5,false),domeRib));
+  for(let k=0;k<8;k++){
+   const a=Math.PI*k/8;
+   const points=Array.from({length:21},(_,i)=>{
+    const t=i/20*Math.PI;
+    return new THREE.Vector3(Math.cos(a)*Math.cos(t)*domeR,
+     14.45+Math.sin(t)*domeR*.72,Math.sin(a)*Math.cos(t)*domeR*ovalRatio);
+   });
+   pavilion.add(new THREE.Mesh(new THREE.TubeGeometry(
+    new THREE.CatmullRomCurve3(points),20,.15,5,false),domeRib));
   }
-  add(new THREE.CylinderGeometry(1.1,1.5,1.7,12),bronze,0,14.4+domeR*.91+.8,0);
   // A real physical plaque mounted on the playable 3D landmark — readable
   // in the City camera, while never substituting for the game rules.
   const plaqueMap=canvasTex(512,128,(ctx,w,h)=>{
@@ -254,8 +278,6 @@ export function create(canvas,{layout,spec,camera:cam0,tier:tierName=pickTier(),
  {const r=rng(21),blocks=[],roofs=[],lamps=[];const blockMat=new THREE.MeshStandardMaterial({map:facade('masonry',tierName!=='low'?2:1),color:'#F8E5C7',roughness:.68,metalness:.03}),roofMat=new THREE.MeshStandardMaterial({color:'#C98554',roughness:.65,metalness:.07});
   // outer promenade: low shops and townhouses between the boulevard and the waterfront
   for(let i=0;i<120;i++){const a=i/120*Math.PI*2+r()*.02,d=outerEdge+3+r()*(platR-outerEdge-9);const w=3.2+r()*2.6,h=2.2+r()*3.2;blocks.push({x:Math.cos(a)*d,y:h/2,z:Math.sin(a)*d,sx:w,sy:h,sz:w*.8,ry:-a})}
-  // between the rings: low civic blocks and pocket parks, kept clear of the bridges
-  for(let i=0;i<70;i++){const a=i/70*Math.PI*2+r()*.03;if(nearJunction(a,9))continue;const d=ringGapIn+2.5+r()*(ringGapOut-ringGapIn-5);const w=2.6+r()*2.2,h=1.4+r()*2.2;blocks.push({x:Math.cos(a)*d,y:h/2,z:Math.sin(a)*d,sx:w,sy:h,sz:w,ry:-a})}
   inst(new THREE.BoxGeometry(1,1,1),blockMat,blocks,{shadows:!!tier.shadows});
   for(const b of blocks)roofs.push({...b,y:b.sy+.15,sy:.3,sx:b.sx*.9,sz:b.sz*.9});inst(new THREE.BoxGeometry(1,1,1),roofMat,roofs);
   // street lamps along both boulevards (warm points)
@@ -521,7 +543,14 @@ export function create(canvas,{layout,spec,camera:cam0,tier:tierName=pickTier(),
  // coordinates), exactly SS.zoomed(); folded into the projection matrix so drawing, labels and taps agree.
  let zoom=null,Cview=null;
  function setZoom(z){zoom=z?{factor:z.factor,focus:{x:z.focus.x,y:z.focus.y}}:null;setCamera(camNow);if(lastModel)update(lastModel);dirty=true}
- function setCamera(c){camNow={pitch:c.pitch,dist:c.dist};C=SS.camera(G,camNow,rect);const p=camNow.pitch*Math.PI/180;
+ function setCamera(c){camNow={pitch:c.pitch,dist:c.dist};
+  // In City View, fit the quay and bridge arches as well as the playable
+  // tiles. Strategy retains the validated projection and touch geometry.
+  const inset=Math.max(0,(camNow.dist-5.6)*.22)*Math.min(rect.w,rect.h)*Math.min(1,camNow.pitch/53);
+  C=SS.camera(G,camNow,{x:rect.x+inset*.7,y:rect.y+inset*.3,
+   w:Math.max(1,rect.w-inset*1.4),h:Math.max(1,rect.h-inset)});
+  C.rect=rect;
+  const p=camNow.pitch*Math.PI/180;
   // Board 2: a real user-directed yaw orbit only in the non-decision City View.
   // 0° yaw is bit-for-bit the validated strategy projection of Circuit alpha.
   const a=yaw*Math.PI/180;
