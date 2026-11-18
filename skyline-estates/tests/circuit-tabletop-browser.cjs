@@ -30,6 +30,14 @@ let browser,server;
    await p.waitForFunction(()=>window.__circuitTabletop && document.querySelectorAll('.tile').length===32);
    assert.equal(await p.locator('.tile').count(),32,'all physical squares are rendered');
    assert.equal(await p.locator('.pawn').count(),4,'four player pawns are rendered');
+   assert.deepEqual(await p.locator('.pawnTag').allTextContents(),['Y','K','M','L'],'every playing token has a unique, recognizable player initial');
+   const pieces=await p.locator('.pawn').evaluateAll(items=>items.map(el=>({
+     name:el.getAttribute('aria-label'),color:el.style.getPropertyValue('--player'),
+     badgeWidth:parseFloat(getComputedStyle(el.querySelector('.pawnTag')).width)
+   })));
+   assert.deepEqual(pieces.map(x=>x.name),['You playing token','Kofi playing token','Mei playing token','Lucas playing token'],'player pieces keep the correct name labels');
+   assert.equal(new Set(pieces.map(x=>x.color)).size,4,'the four token colors remain distinct');
+   assert(pieces.every(x=>x.badgeWidth>=23),'visible player initials have a legible colored badge');
    assert.equal(await p.locator('#moveCounter').isVisible(),false,'movement counter stays hidden until a real dice path is playing');
    assert.equal(await p.locator('#circuitLivingWorld .lifeTower').count(),9,'living waterfront skyline is rendered');
    assert.equal(await p.locator('#circuitLivingWorld').getAttribute('data-developed'),'0','city starts undeveloped, without fake ownership lighting');
@@ -53,6 +61,25 @@ let browser,server;
    assert.equal(await p.locator('.tile.property').count(),20,'all land property spaces present');
    assert.equal(await p.locator('.tile.event').count(),4,'four City Events present');
    assert.equal(await p.locator('.tile.special').count(),8,'eight Skyline junction squares present');
+   const cameraAtStart=await p.locator('#boardStage').evaluate(el=>el.style.transform);
+   assert(cameraAtStart.includes('rotateX(23deg)')&&cameraAtStart.includes('rotateZ(-1deg)'),'default camera is a nearly square, gently tilted physical tabletop');
+   assert.equal(await p.locator('#tableViewport').evaluate(el=>getComputedStyle(el).perspective),'1900px','softened perspective removes exaggerated board bend');
+   const rollLayout=await p.evaluate(()=>{
+     const panel=document.querySelector('#actionCard'),button=panel.querySelector('[data-action="roll"]'),
+       detail=document.querySelector('#selectedCard'),card=panel.getBoundingClientRect(),
+       roll=button&&button.getBoundingClientRect(),detailBox=detail.getBoundingClientRect();
+     return {compact:panel.classList.contains('rollMode'),
+       fullyVisible:!!roll&&roll.top>=card.top-2&&roll.bottom<=card.bottom+2&&roll.bottom<innerHeight-4,
+       noScroll:panel.scrollHeight<=panel.clientHeight+3,
+       detailVisible:detailBox.top>=card.bottom-1&&detailBox.top<innerHeight-8,
+       scrollHeight:panel.scrollHeight,clientHeight:panel.clientHeight};
+   });
+   assert(rollLayout.compact,'compact layout activates only for Ready to roll');
+   assert(rollLayout.fullyVisible,'the complete Roll Dice button stays visible on landscape iPhone and desktop: '+JSON.stringify(rollLayout));
+   assert(rollLayout.noScroll,'the Ready to roll panel does not hide its buttons behind a vertical scroll: '+JSON.stringify(rollLayout));
+   assert(rollLayout.detailVisible,'the selected property detail panel remains visible beneath Ready to roll: '+JSON.stringify(rollLayout));
+   if(vp.h<=410)assert.equal(await p.locator('#actionCard #controlsInfo').isVisible(),false,
+     'extra-short landscape hides the redundant roll hint instead of clipping it');
    const frame=await p.evaluate(()=>{const r=document.querySelector('#boardStage').getBoundingClientRect();return{top:r.top,bottom:r.bottom,left:r.left,right:r.right,screenHeight:innerHeight}});
    assert(frame.top>=-24&&frame.bottom<=vp.h+24,'board corners stay visible in landscape, not cut off by huge default zoom: '+JSON.stringify(frame));
    const text=await p.locator('#tiles').textContent();
@@ -212,7 +239,7 @@ let browser,server;
      assert.equal(errors.length,0,'no runtime exceptions during roll, reload, setup, victory or route decision');
    }
    assert.deepEqual(errors,[],'browser free of page errors '+vp.id);
-   total+=48;
+   total+=60;
    await context.close();
  }
  // Career parity: access stays behind the existing dual feature flags.
