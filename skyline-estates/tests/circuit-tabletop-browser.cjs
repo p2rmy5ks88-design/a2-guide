@@ -197,5 +197,84 @@ let browser,server;
    total+=40;
    await context.close();
  }
+ // Career parity: access stays behind the existing dual feature flags.
+ // No successful access may silently convert a Career request into practice.
+ {
+   const ctx=await browser.newContext({viewport:{width:956,height:440},deviceScaleFactor:3,serviceWorkers:'block'});
+   const p=await ctx.newPage();
+   const errors=[];p.on('pageerror',e=>errors.push(String(e)));
+   await p.goto(url+'?career=1&length=extended',{waitUntil:'load'});
+   assert((await p.locator('#actionCard').innerText()).includes('Career unavailable'),'Career entry is rejected when existing flags are disabled');
+   assert.equal(await p.evaluate(()=>Boolean(window.__circuitTabletop)),false,'blocked Career does not start a practice game');
+   assert.equal(await p.evaluate(()=>localStorage.getItem('skylineCircuitSave')),null,'blocked Career does not touch existing Circuit saves');
+   await ctx.close();
+   total+=3;
+ }
+ {
+   const ctx=await browser.newContext({viewport:{width:956,height:440},deviceScaleFactor:3,serviceWorkers:'block'});
+   const p=await ctx.newPage();
+   const errors=[];p.on('pageerror',e=>errors.push(String(e)));
+   await p.addInitScript(()=>{
+     localStorage.setItem('skylineFeature.career','on');
+     localStorage.setItem('skylineFeature.circuitAlpha','on');
+   });
+   await p.goto(url+'?career=1&length=extended',{waitUntil:'load'});
+   await p.waitForFunction(()=>window.__circuitTabletop && document.querySelectorAll('.pawn').length===4);
+   const info=await p.evaluate(()=>{
+     const s=__circuitTabletop.state();
+     return {mode:__circuitTabletop.careerMode(),length:s.cfg.length,meta:s.meta,legacy:localStorage.getItem('skylineCircuitSave'),tabletop:localStorage.getItem('skylineCircuitTabletopRebootSave')};
+   });
+   assert.equal(info.mode,true,'qualifying Circuit requests open in Career mode');
+   assert.equal(info.length,'extended','Career match receives the requested match length');
+   assert.equal(info.meta.career,true,'Career match includes real career metadata');
+   assert(/^circuit-/.test(info.meta.matchId)&&info.meta.startedAt>0,'Career receipts have a unique match id and starting time');
+   assert(info.legacy&&JSON.parse(info.legacy).state.meta.matchId===info.meta.matchId,'Career shares the original Circuit alpha save slot');
+   assert.equal(info.tabletop,null,'Career does not write to the isolated tabletop practice save');
+   await p.reload({waitUntil:'load'});
+   await p.waitForFunction(()=>window.__circuitTabletop && window.__circuitTabletop.careerMode());
+   assert.equal(await p.evaluate(()=>__circuitTabletop.state().meta.matchId),info.meta.matchId,'an in-progress Career save resumes after Safari reload');
+   // Force a valid rules-driven round limit at the next HUMAN End Turn. No debug
+   // completion hook exists on the board; only SC.act may end a real match.
+   await p.evaluate(()=>{
+     const s=__circuitTabletop.state();
+     s.order=[1,2,3,0];s.orderIdx=3;
+     s.turn=0;s.phase='build';s.round=s.cfg.rounds;s.bought={};s.built={};s.clock=null;
+     s.players[0].inf=20;
+     s.players.slice(1).forEach((player,i)=>player.inf=10-i);
+     __circuitTabletop.select('O1');
+   });
+   assert.equal(await p.locator('[data-action="end"]').count(),1,'Career match offers the authentic End Turn rules action');
+   // Simulate a Safari storage quota failure on the receipt key, but not on the
+   // ordinary Circuit save. Match completion MUST preserve the original save.
+   await p.evaluate(()=>{
+     const orig=Storage.prototype.setItem;
+     Storage.prototype.setItem=function(key,val){
+       if(String(key).startsWith('skylineCareerInbox:'))throw new DOMException('Storage full','QuotaExceededError');
+       return orig.call(this,key,val);
+     };
+   });
+   await p.locator('[data-action="end"]').click();
+   await p.waitForFunction(()=>__circuitTabletop.state().over,{timeout:15000});
+   assert.equal(await p.evaluate(id=>localStorage.getItem('skylineCareerInbox:'+id),info.meta.matchId),null,'failed receipt storage does not create false Career progress');
+   assert(await p.evaluate(()=>Boolean(localStorage.getItem('skylineCircuitSave'))),'failed receipt storage preserves the completed Circuit save');
+   // The fresh Safari document restores native storage and finishes the
+   // pending receipt exactly once without replaying the match.
+   await p.reload({waitUntil:'load'});
+   await p.waitForFunction(id=>Boolean(localStorage.getItem('skylineCareerInbox:'+id)),info.meta.matchId,{timeout:15000});
+   const receipt=await p.evaluate(id=>({
+     fact:JSON.parse(localStorage.getItem('skylineCareerInbox:'+id)),
+     save:localStorage.getItem('skylineCircuitSave'),
+     practice:localStorage.getItem('skylineCircuitTabletopRebootSave')
+   }),info.meta.matchId);
+   assert.equal(receipt.fact.matchId,info.meta.matchId,'Career completion uses the original match id');
+   assert.equal(receipt.fact.board,'circuit','Career receipt is for the Circuit board');
+   assert.equal(receipt.fact.length,'extended','Career receipt reports the actual match length');
+   assert.equal(receipt.fact.ownerHuman,true,'Career receipt identifies the real human seat');
+   assert.equal(receipt.fact.over,true,'Career receipt is only written for completed matches');
+   assert.equal(receipt.save,null,'completed Career matches clear only their Circuit save');
+   assert.equal(receipt.practice,null,'Career receipts do not write to the practice slot');
+   assert.equal(errors.length,0,'Career mode completes with no page errors');
+   await ctx.close();total+=17;
+ }
  console.log('PASS: '+engine+' Circuit physical tabletop interactive smoke tests; '+total+' checks on four viewports');
 })().catch(e=>{console.error(e);process.exitCode=1}).finally(async()=>{if(browser)await browser.close();if(server)server.close()});

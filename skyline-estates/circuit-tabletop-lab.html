@@ -171,7 +171,18 @@ button:disabled{opacity:.46;cursor:default}
 (function(){
 "use strict";
 var SC=window.SkylineCircuit;if(!SC){document.querySelector("#actionCard").textContent="Circuit rules are unavailable";return;}
-var PREVIEW_SAVE="skylineCircuitTabletopRebootSave";var COLORS=["#f58653","#4d93de","#42bd88","#b774e0"];
+var params=new URLSearchParams(location.search),wantsCareer=params.get("career")==="1";
+var careerEnabled=false;
+try{careerEnabled=localStorage.getItem("skylineFeature.career")==="on"&&localStorage.getItem("skylineFeature.circuitAlpha")==="on"}catch(e){}
+var CAREER_MODE=wantsCareer&&careerEnabled;
+if(wantsCareer&&!CAREER_MODE){
+ document.querySelector("#actionCard").innerHTML='<h2>Career unavailable</h2><p>Skyline Career and Circuit preview must both be enabled to play a qualifying Career match. Your existing Circuit save is untouched.</p><a href="./index.html" class="actionBtn secondary">Back to Skyline Estates</a>';
+ document.querySelector("#matchBtn").disabled=true;
+ document.querySelector("#lifeMotionToggle").disabled=true;
+ return;
+}
+var PREVIEW_SAVE=CAREER_MODE?SC.SAVE_KEY:"skylineCircuitTabletopRebootSave";
+var COLORS=["#f58653","#4d93de","#42bd88","#b774e0"];
 var DISTRICTS=["Harbour Quarter","Civic Heights","Garden Mile","Neon Exchange"];
 var ACCENTS=["#1e99c2","#efc04b","#39a66b","#e77755"];
 var STREET={
@@ -184,6 +195,27 @@ var $=function(q){return document.querySelector(q)};
 var escapeHTML=function(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];})};
 var store={get:function(k){try{return localStorage.getItem(k)}catch(e){return null}},put:function(k,v){try{localStorage.setItem(k,v)}catch(e){}},del:function(k){try{localStorage.removeItem(k)}catch(e){}}};
 var s=null,selected="O0",plan="stay",busy=false,aiRunning=false,visualPos={},tiles={},lastDice=[1,1],zoom=.62,panX=0,panY=-8,drag=null,suppressClickUntil=0,toastTimer=null,pinch=null,detailMode=false,overviewZoom=.62;
+var completedCareer=new Set();
+function completeCareer(){
+ if(!CAREER_MODE||!s||!s.over||!s.meta||!s.meta.career||!s.meta.matchId||completedCareer.has(s.meta.matchId))return false;
+ var id=s.meta.matchId;
+ var receipt=SC.careerFacts(s,{ownerSeat:0,endedAt:Date.now()});
+ var key="skylineCareerInbox:"+id,payload=JSON.stringify(receipt);
+ // Commit the Career receipt BEFORE clearing the original Circuit save.
+ // A full/blocked localStorage must never silently discard a finished match.
+ try{
+  localStorage.setItem(key,payload);
+  if(localStorage.getItem(key)!==payload)throw Error("receipt verification failed");
+ }catch(err){
+  toast("Career result could not be saved. Keep this game open and check Safari storage.");
+  return false;
+ }
+ // Same ownership boundary as Circuit Alpha: after a career match completes,
+ // only its Circuit save is cleared; Career imports the receipt on next launch.
+ store.del(PREVIEW_SAVE);
+ completedCareer.add(id);
+ return true;
+}
 var corners=function(n){var out=[];for(var x=0;x<n-1;x++)out.push([x,0]);for(var y=0;y<n-1;y++)out.push([n-1,y]);for(var x=n-1;x>0;x--)out.push([x,n-1]);for(var y=n-1;y>0;y--)out.push([0,y]);return out;};
 var outer=corners(6),inner=corners(4);var locations={};
 outer.forEach(function(p,i){locations["O"+i]=[70+p[0]*112,70+p[1]*112]});
@@ -267,7 +299,9 @@ function renderSelected(){if(!s)return;var v=SC.view(s),n=v.nodes.find(function(
  else html+=n.type==="event"?"Draw a City Event when you land here.":"Use the skyline bridge to travel between boulevards."+'</div>';
  $("#selectedCard").innerHTML=html;
 }
-function renderActions(){if(!s)return;var v=SC.view(s),pd=SC.pending(s),me=s.players[s.turn],human=!me.ai&&!busy;var html='<div class="tag">SKYLINE CIRCUIT · BOARD 1</div>';
+function renderActions(){if(!s)return;var v=SC.view(s),pd=SC.pending(s),me=s.players[s.turn],human=!me.ai&&!busy;
+ var html='<div class="tag">SKYLINE CIRCUIT · '+(CAREER_MODE?"CAREER":"BOARD 1 · PRACTICE")+'</div>';
+ if(CAREER_MODE&&(!s.meta||!s.meta.career))html+='<div class="victoryClock">This older saved match was started as practice. It will not be recorded as a Career result.</div>';
  if(v.clock&&!s.over){
   var contender=s.players[v.clock.pid];
   html+='<div class="victoryClock" role="status"><b>'+escapeHTML(contender.name)+'</b> leads the circuit. Keep the lead until the end of round '+v.clock.winsAtEndOfRound+' to win.</div>';
@@ -277,6 +311,7 @@ function renderActions(){if(!s)return;var v=SC.view(s),pd=SC.pending(s),me=s.pla
   html+='<h2>🏆 '+escapeHTML(s.players[s.winner].name)+' wins!</h2>';
   html+='<p>Final results · '+v.round+' rounds · '+(s.endReason==="round-limit"?"round limit":s.endReason==="last-solvent"?"last player standing":"influence lead")+'</p>';
   html+='<div class="resultsList">'+ordered.map(function(p,i){return '<div class="resultRow" style="--player:'+COLORS[p.id]+'"><strong>'+(i+1)+'. '+escapeHTML(p.name)+'</strong><b>'+fmt(p.influence)+' pts</b><small>SC '+fmt(p.netWorth)+' value</small></div>'}).join("")+'</div>';
+  if(CAREER_MODE)html+='<p>Completed Career matches are recorded when you return to Skyline Estates.</p><a href="./index.html" class="actionBtn secondary">Return to Career</a>';
   html+=button("Play again","new","coral");
 }
  else if(me.ai||busy){html+='<h2>'+(busy?"On the move":"Computer turn")+'</h2><p>Watch the pieces move along the board. Your next turn starts automatically.</p>'; }
@@ -327,6 +362,7 @@ async function perform(action){if(busy||!s||s.over)return;var pd=SC.pending(s);i
   if(s.turn!==turnBefore)plan="stay";
   selected=s.players[s.turn].pos;render();
   if(window.SkylineCircuitLife)lifeEvents.forEach(function(ev){window.SkylineCircuitLife.pulse(ev.kind,ev.node)});
+  if(s.over)completeCareer();
  }catch(err){visualPos=start;toast("Move could not complete: "+err.message);console.error(err);}
  finally{busy=false;render()}
  if(!s.over)kickAI();
@@ -354,14 +390,18 @@ function actUI(a){
 function start(fresh,settings){var raw=fresh?null:store.get(PREVIEW_SAVE),parsed=raw?SC.restore(raw):null;
  if(parsed&&parsed.ok)s=parsed.state;
  else{
-  var length=settings&&["standard","extended","quick"].includes(settings.length)?settings.length:"standard";
+  var length=settings&&["standard","extended","quick"].includes(settings.length)?settings.length:["standard","extended","quick"].includes(params.get("length"))?params.get("length"):"standard";
   var count=settings&&Number.isInteger(settings.count)?Math.max(1,Math.min(3,settings.count)):3;
   var level=settings&&["easy","normal","hard"].includes(settings.level)?settings.level:"normal";
   var players=[{name:"You"}];
   ["Kofi","Mei","Lucas"].slice(0,count).forEach(function(name){players.push({name:name,level:level})});
   var seed=new Uint32Array(1);try{crypto.getRandomValues(seed)}catch(e){seed[0]=Date.now()>>>0}
-  s=SC.newMatch({seed:seed[0],length:length,fx:true,players:players});
-  // New-match setup is a local practice game. Career results remain on the existing gated Circuit route.
+  var meta=null;if(CAREER_MODE){var startedAt=Date.now();
+   meta={matchId:"circuit-"+seed[0].toString(36)+"-"+startedAt.toString(36),startedAt:startedAt,career:true};
+  }
+  s=SC.newMatch({seed:seed[0],length:length,fx:true,players:players,meta:meta});
+  // Career mode shares the authoritative Circuit save key with the original
+  // alpha, while practice mode remains in a completely independent slot.
  }
  SC.drain(s);
  // Save the match settings and starting state, not just the first roll.
@@ -369,12 +409,12 @@ function start(fresh,settings){var raw=fresh?null:store.get(PREVIEW_SAVE),parsed
  store.put(PREVIEW_SAVE,SC.serialize(s));
  visualPos={};for(var i=0;i<s.players.length;i++)visualPos[i]=s.players[i].pos;
  $("#tokens").replaceChildren(); // clear retired player tokens when reducing the number of opponents
- selected=s.players[s.turn].pos;busy=false;plan="stay";lastDice=[1,1];render();fitCamera();kickAI();
+ selected=s.players[s.turn].pos;busy=false;plan="stay";lastDice=[1,1];render();fitCamera();if(s.over)completeCareer();else kickAI();
 }
 function openMatchSetup(){
  if(busy||aiRunning){toast("Finish the current move before changing match settings");return}
  var panel=$("#matchSetup");
- $("#matchLength").value=s&&s.cfg.length||"standard";
+ $("#matchLength").value=s&&s.cfg.length||(["standard","extended","quick"].includes(params.get("length"))?params.get("length"):"standard");
  $("#matchOpponents").value=String(s?Math.max(1,s.players.length-1):3);
  $("#matchDifficulty").value=s&&s.players[1]&&s.players[1].level||"normal";
  panel.hidden=false;$("#matchLength").focus();
@@ -386,7 +426,9 @@ $("#matchSetup").addEventListener("click",function(e){if(e.target===e.currentTar
 $("#matchForm").addEventListener("submit",function(e){
  e.preventDefault();if(busy||aiRunning){toast("Finish the current move first");return}
  var cfg={length:$("#matchLength").value,count:Number($("#matchOpponents").value),level:$("#matchDifficulty").value};
- // Delete only the standalone tabletop save; never touch Classic, Harbour Ring or Circuit Alpha saves.
+ // In Career mode, an explicitly confirmed New Match replaces only the
+ // Circuit alpha save key, exactly as the existing Circuit setup does.
+ // Practice mode still uses only the isolated tabletop key.
  store.del(PREVIEW_SAVE);
  $("#matchSetup").hidden=true;start(true,cfg);
 });
@@ -409,7 +451,7 @@ viewport.addEventListener("touchcancel",function(){pinch=null},{passive:true});
 viewport.addEventListener("wheel",function(e){e.preventDefault();zoom=Math.max(.48,Math.min(1.55,zoom+(e.deltaY<0?.06:-.06)));camera()},{passive:false});
 window.addEventListener("keydown",function(e){if(e.key==="Escape"){if(!$("#matchSetup").hidden){closeMatchSetup();return}$("#selectedCard").innerHTML="";}if(e.key==="+"||e.key==="="){zoom=Math.min(1.55,zoom+.08);camera()}if(e.key==="-"){zoom=Math.max(.48,zoom-.08);camera()}});
 window.addEventListener("resize",fitCamera);boardCreate();start(false);
-window.__circuitTabletop=Object.freeze({state:function(){return s},view:function(){return SC.view(s)},select:function(id){if(!tiles[id])return false;selected=id;render();if(detailMode)inspectSelected();return true},inspect:inspectSelected,overview:showFullBoard,zoom:function(z){zoom=Math.max(.48,Math.min(1.55,z));camera()},reset:function(){start(true)},settings:openMatchSetup});
+window.__circuitTabletop=Object.freeze({state:function(){return s},view:function(){return SC.view(s)},select:function(id){if(!tiles[id])return false;selected=id;render();if(detailMode)inspectSelected();return true},inspect:inspectSelected,overview:showFullBoard,zoom:function(z){zoom=Math.max(.48,Math.min(1.55,z));camera()},reset:function(){start(true)},settings:openMatchSetup,careerMode:function(){return CAREER_MODE}});
 })();
 </script>
 </body></html>
