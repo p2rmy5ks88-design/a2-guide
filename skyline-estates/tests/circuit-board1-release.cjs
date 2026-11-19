@@ -5,12 +5,10 @@ const root=path.resolve(__dirname,'..');
 const get=p=>fs.readFileSync(path.join(root,p),'utf8');
 const career=get('lib/career.js'),tabletop=get('circuit-tabletop-lab.html');
 const manifest=get('offline-assets.js'),sw=get('sw.js'),build=get('build.py');
-assert(career.includes("location.href='./circuit-tabletop-lab.html?career=1&length='+k.slice(8)"),
- 'Career Circuit selection routes to the living board and carries the selected match length');
-assert(career.includes("location.href='./circuit-alpha.html?career=1&length='+k.slice(15)"),
- 'Legacy Circuit fallback remains directly playable');
-assert(career.includes('circuit&&circuit.playable?'),
- 'Living Board is not exposed before existing Career requirements are met');
+assert(career.includes("circuit:'./circuit-production-lab.html'")&&career.includes("location.href=page[bid]+'?career=1&length='+encodeURIComponent(len)"),
+ 'Career Circuit selection routes to the production board and carries the selected match length');
+assert(career.includes('const boardBtns=(b,name)=>b&&b.playable?'),
+ 'Board buttons are not exposed before existing Career requirements are met');
 assert(tabletop.includes('var CAREER_MODE=wantsCareer&&careerEnabled'),
  'Living Board still requires existing Career and Circuit flags');
 assert(tabletop.includes('var PREVIEW_SAVE=CAREER_MODE?SC.SAVE_KEY:"skylineCircuitTabletopRebootSave"'),

@@ -19,15 +19,15 @@ const run=(host,flags={},blockedStorage=false)=>{
  vm.runInNewContext(m[1],context,{timeout:1000});
  return {allow:window.__circuitAccessAllowed,hidden:panel.hidden,notice:panel.innerHTML};
 };
-const both={'skylineFeature.career':'on','skylineFeature.circuitAlpha':'on'};
+// Owner decision 19 Nov 2026: Career and Circuit are on for everyone; 'off' on either flag still closes it.
 for(const host of ['example.com','p2rmy5ks88-design.github.io','203.0.113.5']){
- const none=run(host);
- assert.equal(none.allow,false,host+' default blocked');
- assert.equal(none.hidden,false,'blocked visitors see an explanation');
- assert(none.notice.includes('Back to Skyline Estates'),'return link present');
- assert.equal(run(host,{'skylineFeature.career':'on'}).allow,false,'single flag cannot unlock');
- assert.equal(run(host,{'skylineFeature.circuitAlpha':'on'}).allow,false,'single flag cannot unlock');
- assert.equal(run(host,both).allow,true,'both Career and alpha flags allow preview');
+ assert.equal(run(host).allow,true,host+' open by default');
+ for(const f of ['skylineFeature.career','skylineFeature.circuitAlpha']){
+  const off=run(host,{[f]:'off'});
+  assert.equal(off.allow,false,f+'=off blocks');
+  assert.equal(off.hidden,false,'blocked visitors see an explanation');
+  assert(off.notice.includes('Back to Skyline Estates'),'return link present');
+ }
  assert.equal(run(host,{},true).allow,false,'storage failure must fail closed');
 }
 for(const host of ['localhost','127.0.0.1','192.168.1.42','10.0.0.21','172.16.0.2','172.31.255.254','::1','[::1]']){
@@ -35,6 +35,6 @@ for(const host of ['localhost','127.0.0.1','192.168.1.42','10.0.0.21','172.16.0.
  assert.equal(run(host,{},true).allow,true,'local QA works with storage disabled '+host);
 }
 for(const host of ['172.15.0.2','172.32.0.2','192.169.1.1','198.51.100.7']){
- assert.equal(run(host).allow,false,'public origin not misclassified: '+host);
+ assert.equal(run(host,{'skylineFeature.career':'off'}).allow,false,'public origin not misclassified: '+host);
 }
-console.log('PASS: Circuit preview soft gate blocks public default, requires dual opt-in, preserves private-LAN device QA');
+console.log('PASS: Circuit preview soft gate is on by default, honours either off switch, preserves private-LAN device QA');
