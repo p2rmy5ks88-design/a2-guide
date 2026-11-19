@@ -1,0 +1,641 @@
+{
+ "board": "empire_44",
+ "total_spaces": 44,
+ "spaces": [
+  {
+   "index": 0,
+   "type": "start",
+   "label": "EMPIRE START",
+   "group": null,
+   "position": [
+    -0.863,
+    0.55,
+    9.285
+   ],
+   "yaw": -3.1357,
+   "rules_zone": null,
+   "corridor": true
+  },
+  {
+   "index": 1,
+   "type": "property",
+   "label": "LUXURY",
+   "group": "luxury",
+   "position": [
+    -2.589,
+    0.55,
+    9.309
+   ],
+   "yaw": -3.1388,
+   "rules_zone": "residential",
+   "corridor": false
+  },
+  {
+   "index": 2,
+   "type": "property",
+   "label": "LUXURY",
+   "group": "luxury",
+   "position": [
+    -4.312,
+    0.55,
+    9.226
+   ],
+   "yaw": 3.0165,
+   "rules_zone": "residential",
+   "corridor": false
+  },
+  {
+   "index": 3,
+   "type": "chance",
+   "label": "CHANCE",
+   "group": null,
+   "position": [
+    -6.014,
+    0.55,
+    8.934
+   ],
+   "yaw": 2.9333,
+   "rules_zone": null,
+   "corridor": true
+  },
+  {
+   "index": 4,
+   "type": "property",
+   "label": "LUXURY",
+   "group": "luxury",
+   "position": [
+    -7.67,
+    0.55,
+    8.455
+   ],
+   "yaw": 2.7703,
+   "rules_zone": "residential",
+   "corridor": true
+  },
+  {
+   "index": 5,
+   "type": "property",
+   "label": "TRADE",
+   "group": "trade",
+   "position": [
+    -9.171,
+    0.55,
+    7.613
+   ],
+   "yaw": 2.4988,
+   "rules_zone": "transport",
+   "corridor": true
+  },
+  {
+   "index": 6,
+   "type": "property",
+   "label": "TRADE",
+   "group": "trade",
+   "position": [
+    -10.432,
+    0.55,
+    6.439
+   ],
+   "yaw": 2.2819,
+   "rules_zone": "transport",
+   "corridor": false
+  },
+  {
+   "index": 7,
+   "type": "property",
+   "label": "TRADE",
+   "group": "trade",
+   "position": [
+    -11.395,
+    0.55,
+    5.011
+   ],
+   "yaw": 2.0276,
+   "rules_zone": "transport",
+   "corridor": false
+  },
+  {
+   "index": 8,
+   "type": "trade",
+   "label": "TRADE",
+   "group": null,
+   "position": [
+    -11.878,
+    0.55,
+    3.361
+   ],
+   "yaw": 1.7201,
+   "rules_zone": null,
+   "corridor": true
+  },
+  {
+   "index": 9,
+   "type": "property",
+   "label": "TRADE",
+   "group": "trade",
+   "position": [
+    -12.001,
+    0.55,
+    1.64
+   ],
+   "yaw": 1.5818,
+   "rules_zone": "transport",
+   "corridor": false
+  },
+  {
+   "index": 10,
+   "type": "property",
+   "label": "TRADE",
+   "group": "trade",
+   "position": [
+    -11.931,
+    0.55,
+    -0.084
+   ],
+   "yaw": 1.4603,
+   "rules_zone": "transport",
+   "corridor": false
+  },
+  {
+   "index": 11,
+   "type": "property",
+   "label": "TRADE",
+   "group": "trade",
+   "position": [
+    -11.632,
+    0.55,
+    -1.783
+   ],
+   "yaw": 1.3389,
+   "rules_zone": "transport",
+   "corridor": true
+  },
+  {
+   "index": 12,
+   "type": "property",
+   "label": "INNOVATION",
+   "group": "innovation",
+   "position": [
+    -11.161,
+    0.55,
+    -3.443
+   ],
+   "yaw": 1.2622,
+   "rules_zone": "commercial",
+   "corridor": true
+  },
+  {
+   "index": 13,
+   "type": "market",
+   "label": "MARKET",
+   "group": null,
+   "position": [
+    -10.572,
+    0.55,
+    -5.066
+   ],
+   "yaw": 1.1688,
+   "rules_zone": null,
+   "corridor": true
+  },
+  {
+   "index": 14,
+   "type": "property",
+   "label": "INNOVATION",
+   "group": "innovation",
+   "position": [
+    -9.758,
+    0.55,
+    -6.584
+   ],
+   "yaw": 0.9621,
+   "rules_zone": "commercial",
+   "corridor": false
+  },
+  {
+   "index": 15,
+   "type": "property",
+   "label": "INNOVATION",
+   "group": "innovation",
+   "position": [
+    -8.602,
+    0.55,
+    -7.862
+   ],
+   "yaw": 0.7237,
+   "rules_zone": "commercial",
+   "corridor": false
+  },
+  {
+   "index": 16,
+   "type": "property",
+   "label": "INNOVATION",
+   "group": "innovation",
+   "position": [
+    -7.197,
+    0.55,
+    -8.859
+   ],
+   "yaw": 0.5049,
+   "rules_zone": "commercial",
+   "corridor": false
+  },
+  {
+   "index": 17,
+   "type": "property",
+   "label": "INNOVATION",
+   "group": "innovation",
+   "position": [
+    -5.601,
+    0.55,
+    -9.505
+   ],
+   "yaw": 0.2665,
+   "rules_zone": "commercial",
+   "corridor": false
+  },
+  {
+   "index": 18,
+   "type": "dice",
+   "label": "DICE",
+   "group": null,
+   "position": [
+    -3.902,
+    0.55,
+    -9.795
+   ],
+   "yaw": 0.0818,
+   "rules_zone": null,
+   "corridor": true
+  },
+  {
+   "index": 19,
+   "type": "property",
+   "label": "INNOVATION",
+   "group": "innovation",
+   "position": [
+    -2.179,
+    0.55,
+    -9.765
+   ],
+   "yaw": -0.1361,
+   "rules_zone": "commercial",
+   "corridor": false
+  },
+  {
+   "index": 20,
+   "type": "property",
+   "label": "INNOVATION",
+   "group": "innovation",
+   "position": [
+    -0.514,
+    0.55,
+    -9.321
+   ],
+   "yaw": -0.3629,
+   "rules_zone": "commercial",
+   "corridor": false
+  },
+  {
+   "index": 21,
+   "type": "property",
+   "label": "FINANCE",
+   "group": "finance",
+   "position": [
+    1.041,
+    0.55,
+    -8.575
+   ],
+   "yaw": -0.5698,
+   "rules_zone": "commercial",
+   "corridor": false
+  },
+  {
+   "index": 22,
+   "type": "property",
+   "label": "FINANCE",
+   "group": "finance",
+   "position": [
+    2.121,
+    0.55,
+    -7.247
+   ],
+   "yaw": -0.9906,
+   "rules_zone": "commercial",
+   "corridor": false
+  },
+  {
+   "index": 23,
+   "type": "trade",
+   "label": "TRADE",
+   "group": null,
+   "position": [
+    3.442,
+    0.55,
+    -6.934
+   ],
+   "yaw": 0.8729,
+   "rules_zone": null,
+   "corridor": true
+  },
+  {
+   "index": 24,
+   "type": "property",
+   "label": "FINANCE",
+   "group": "finance",
+   "position": [
+    4.36,
+    0.55,
+    -8.394
+   ],
+   "yaw": 1.0173,
+   "rules_zone": "commercial",
+   "corridor": false
+  },
+  {
+   "index": 25,
+   "type": "property",
+   "label": "FINANCE",
+   "group": "finance",
+   "position": [
+    5.537,
+    0.55,
+    -9.614
+   ],
+   "yaw": 0.3478,
+   "rules_zone": "commercial",
+   "corridor": false
+  },
+  {
+   "index": 26,
+   "type": "property",
+   "label": "FINANCE",
+   "group": "finance",
+   "position": [
+    7.246,
+    0.55,
+    -9.71
+   ],
+   "yaw": -0.1336,
+   "rules_zone": "commercial",
+   "corridor": false
+  },
+  {
+   "index": 27,
+   "type": "property",
+   "label": "FINANCE",
+   "group": "finance",
+   "position": [
+    8.904,
+    0.55,
+    -9.25
+   ],
+   "yaw": -0.4115,
+   "rules_zone": "commercial",
+   "corridor": false
+  },
+  {
+   "index": 28,
+   "type": "chance",
+   "label": "CHANCE",
+   "group": null,
+   "position": [
+    10.29,
+    0.55,
+    -8.247
+   ],
+   "yaw": -0.8433,
+   "rules_zone": null,
+   "corridor": true
+  },
+  {
+   "index": 29,
+   "type": "property",
+   "label": "FINANCE",
+   "group": "finance",
+   "position": [
+    11.237,
+    0.55,
+    -6.809
+   ],
+   "yaw": -1.1037,
+   "rules_zone": "commercial",
+   "corridor": false
+  },
+  {
+   "index": 30,
+   "type": "property",
+   "label": "FINANCE",
+   "group": "finance",
+   "position": [
+    11.858,
+    0.55,
+    -5.201
+   ],
+   "yaw": -1.3198,
+   "rules_zone": "commercial",
+   "corridor": true
+  },
+  {
+   "index": 31,
+   "type": "property",
+   "label": "CULTURE",
+   "group": "culture",
+   "position": [
+    12.137,
+    0.55,
+    -3.5
+   ],
+   "yaw": -1.4806,
+   "rules_zone": "landmark",
+   "corridor": true
+  },
+  {
+   "index": 32,
+   "type": "property",
+   "label": "CULTURE",
+   "group": "culture",
+   "position": [
+    12.197,
+    0.55,
+    -1.775
+   ],
+   "yaw": -1.598,
+   "rules_zone": "landmark",
+   "corridor": false
+  },
+  {
+   "index": 33,
+   "type": "chance",
+   "label": "CHANCE",
+   "group": null,
+   "position": [
+    12.01,
+    0.55,
+    -0.06
+   ],
+   "yaw": -1.7403,
+   "rules_zone": null,
+   "corridor": true
+  },
+  {
+   "index": 34,
+   "type": "property",
+   "label": "CULTURE",
+   "group": "culture",
+   "position": [
+    11.675,
+    0.55,
+    1.633
+   ],
+   "yaw": -1.7747,
+   "rules_zone": "landmark",
+   "corridor": false
+  },
+  {
+   "index": 35,
+   "type": "property",
+   "label": "CULTURE",
+   "group": "culture",
+   "position": [
+    11.377,
+    0.55,
+    3.333
+   ],
+   "yaw": -1.727,
+   "rules_zone": "landmark",
+   "corridor": false
+  },
+  {
+   "index": 36,
+   "type": "property",
+   "label": "CULTURE",
+   "group": "culture",
+   "position": [
+    11.02,
+    0.55,
+    5.021
+   ],
+   "yaw": -1.8696,
+   "rules_zone": "landmark",
+   "corridor": true
+  },
+  {
+   "index": 37,
+   "type": "property",
+   "label": "RESIDENTIAL",
+   "group": "residential",
+   "position": [
+    10.234,
+    0.55,
+    6.547
+   ],
+   "yaw": -2.2172,
+   "rules_zone": "residential",
+   "corridor": true
+  },
+  {
+   "index": 38,
+   "type": "trade",
+   "label": "TRADE",
+   "group": null,
+   "position": [
+    9.051,
+    0.55,
+    7.8
+   ],
+   "yaw": -2.4313,
+   "rules_zone": null,
+   "corridor": true
+  },
+  {
+   "index": 39,
+   "type": "property",
+   "label": "RESIDENTIAL",
+   "group": "residential",
+   "position": [
+    7.635,
+    0.55,
+    8.781
+   ],
+   "yaw": -2.651,
+   "rules_zone": "residential",
+   "corridor": false
+  },
+  {
+   "index": 40,
+   "type": "property",
+   "label": "RESIDENTIAL",
+   "group": "residential",
+   "position": [
+    6.009,
+    0.55,
+    9.344
+   ],
+   "yaw": -2.9375,
+   "rules_zone": "residential",
+   "corridor": false
+  },
+  {
+   "index": 41,
+   "type": "property",
+   "label": "RESIDENTIAL",
+   "group": "residential",
+   "position": [
+    4.298,
+    0.55,
+    9.565
+   ],
+   "yaw": -3.0646,
+   "rules_zone": "residential",
+   "corridor": false
+  },
+  {
+   "index": 42,
+   "type": "property",
+   "label": "RESIDENTIAL",
+   "group": "residential",
+   "position": [
+    2.574,
+    0.55,
+    9.575
+   ],
+   "yaw": 3.052,
+   "rules_zone": "residential",
+   "corridor": false
+  },
+  {
+   "index": 43,
+   "type": "market",
+   "label": "MARKET",
+   "group": null,
+   "position": [
+    0.86,
+    0.55,
+    9.371
+   ],
+   "yaw": 3.0304,
+   "rules_zone": null,
+   "corridor": true
+  }
+ ],
+ "up": "+Y",
+ "rules_zones": {
+  "commercial": [
+   "Finance",
+   "Innovation"
+  ],
+  "residential": [
+   "Residential",
+   "Luxury"
+  ],
+  "transport": [
+   "Trade",
+   "track corridors"
+  ],
+  "landmark": [
+   "Culture",
+   "Empire Tower"
+  ]
+ }
+}

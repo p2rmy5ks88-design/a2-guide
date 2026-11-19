@@ -1,0 +1,116 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0B1633"><title>Skyline Empire — Board 4 Interactive 3D Lab (prototype rules)</title>
+<!-- Standalone local review entry. Prototype ruleset empire-p1 (EMPIRE.md). Own save slot skylineEmpireSave. Not linked from the game, Career or service worker. -->
+<link rel="stylesheet" href="presentation/skyline-board-hud.css"><style>
+[hidden]{display:none!important}#setup{max-width:560px;margin:0 auto;height:100%;overflow:auto;padding:max(14px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) 14px max(16px,env(safe-area-inset-left));font:500 13px/1.35 -apple-system,system-ui,sans-serif}
+#setup h1{font-size:20px;margin:6px 0}#setup h1 small{display:block;color:var(--gold);font-size:12px}#setup fieldset{border:1px solid #ffffff22;border-radius:8px;margin:8px 0}#setup label{display:inline-flex;align-items:center;gap:6px;min-height:36px;margin-right:12px}
+#setup button{font:inherit;min-height:44px;border-radius:10px;border:1px solid #F2C45766;background:#0B1633;color:var(--ink);padding:0 12px}#setup .gold{background:linear-gradient(180deg,#F6D27A,#E2A93A);color:#1b1405;border:0;font-weight:800}.warn{color:#ff9d8f}
+dialog{background:linear-gradient(180deg,#1b2f4b,#0f1d33);color:var(--ink);border:1px solid var(--gold);border-radius:14px;max-width:min(420px,92vw);padding:12px}dialog::backdrop{background:#000a}dialog h3{margin:0 0 6px;color:var(--gold)}dialog .btns{display:flex;gap:8px;justify-content:flex-end;margin-top:10px}
+dialog button{font:inherit;min-height:44px;min-width:44px;border-radius:10px;border:1px solid #F2C45766;background:#0B1633;color:var(--ink);padding:0 12px}dialog .gold{background:linear-gradient(180deg,#F6D27A,#E2A93A);color:#1b1405;border:0;font-weight:800}input[type=range]{width:100%}
+#toast{position:absolute;left:50%;top:3.2rem;transform:translateX(-50%);background:#0B1633ee;border:1px solid var(--gold);border-radius:10px;padding:6px 10px;max-width:50%;pointer-events:none;z-index:3}
+#loading{position:absolute;inset:0;display:grid;place-items:center;background:#0B1633cc;font-size:14px;text-align:center;padding:10px;z-index:5}
+.sk-map svg{width:100%;height:auto;display:block}.sk-bar{height:.4rem;border-radius:3px;background:#ffffff1a;margin:.15rem 0}.sk-bar span{display:block;height:100%;border-radius:3px;background:linear-gradient(90deg,#e2a93a,#f6d27a)}
+.sk-dots{display:flex;gap:.25rem;align-items:center;margin:.2rem 0}.sk-dots i{flex:1;height:.55rem;border-radius:999px;background:#ffffff22;box-shadow:inset 0 0 0 1px #ffffff55}.sk-dots i.on{background:radial-gradient(circle,#fff6c9,#e2a93a);box-shadow:0 0 6px #f6d27a}
+.dice{font-size:1.4rem;letter-spacing:2px;color:#fff}.log div{border-top:1px solid #ffffff10;padding:.1rem 0}
+</style></head><body>
+<section id="setup">
+ <h1>Skyline Empire <small>Board 4 · Advanced · interactive 3D lab</small></h1>
+ <p class="warn">Prototype rules <b>empire-p1</b> (art-matched island loop): every number is provisional and awaiting owner approval (see EMPIRE.md). Local review entry only: no Career, other saves or released game are changed.</p>
+ <fieldset><legend>Players</legend><label><input type="radio" name="np" value="2"> 2</label><label><input type="radio" name="np" value="3"> 3</label><label><input type="radio" name="np" value="4" checked> 4</label><span class="muted">You + computer players (legal actions only)</span></fieldset>
+ <fieldset><legend>Match length (experimental)</legend><label><input type="radio" name="len" value="quick"> Quick 15</label><label><input type="radio" name="len" value="standard" checked> Standard 20</label><label><input type="radio" name="len" value="extended"> Extended 28</label></fieldset>
+ <fieldset><legend>Graphics</legend><label><input type="radio" name="q" value="low"> Low</label><label><input type="radio" name="q" value="medium"> Medium</label><label><input type="radio" name="q" value="high" checked> High</label></fieldset>
+ <button id="start" class="gold">Start match</button> <button id="resume" hidden>Resume saved match</button> <span id="saveinfo" class="muted"></span>
+</section>
+<section id="game" class="sk-hud" hidden>
+ <div id="stage"><canvas id="board" aria-label="Skyline Empire 3D board. Tap a space to inspect it."></canvas><div id="toast" hidden></div><div id="loading">Loading the Empire island…</div></div>
+ <div class="sk-top"><span class="sk-pill" id="round"></span><span class="sk-pill" id="trend"></span></div>
+ <aside id="left" class="sk-col sk-left" aria-label="Empire map, victory and landmarks"><div class="sk-scroll" id="leftscroll"></div></aside>
+ <aside id="right" class="sk-col sk-right" aria-label="Market, milestones and actions"><div class="sk-scroll" id="rightscroll"></div>
+  <div class="sk-dock" id="dock"><div class="sk-views" id="viewbtns"><button id="v-over">Overview</button><button id="v-insp">Inspect</button></div><div id="primary"></div><div id="actions"></div></div></aside>
+ <div class="sk-strip" id="players" aria-label="Players"></div>
+</section>
+<dialog id="dlg"><h3 id="dlg-t"></h3><div id="dlg-b"></div><div class="btns" id="dlg-btns"></div></dialog>
+<script src="lib/career-empire-rules.js"></script>
+<script type="module">
+import {createEmpireRenderer,PLAYER_COLORS} from './empire-production-renderer.js';
+import * as H from './presentation/skyline-board-hud.js';
+const E=window.SkylineEmpire,$=id=>document.getElementById(id),Q=new URLSearchParams(location.search),SPEED=Q.get('speed')==='fast'?45:Q.get('speed')==='instant'?0:200;
+let s=null,r3=null,busy=false,sel=null;const human=0;
+const shape=(i,sz=22)=>{const c=PLAYER_COLORS[i];return `<svg class="sw" style="width:${sz}px;height:${sz}px" viewBox="0 0 22 22" aria-hidden="true">${[`<polygon points="11,2 20,20 2,20" fill="${c}"/>`,`<rect x="3" y="3" width="16" height="16" rx="2" fill="${c}"/>`,`<circle cx="11" cy="11" r="9" fill="${c}"/>`,`<polygon points="11,1 21,11 11,21 1,11" fill="${c}"/>`][i]}</svg>`};
+const fmt=H.fmt,pct_unused=v=>{const d=Math.round((v-1)*100);return `<span class="${d>0?'up':d<0?'down':''}">${d>0?'▲ +':d<0?'▼ ':''}${d}%</span>`};
+function save(){try{localStorage.setItem(E.SAVE_KEY,E.serialize(s))}catch{}}
+function savedState(){try{const raw=localStorage.getItem(E.SAVE_KEY);if(!raw)return null;const r=E.restore(raw);return r.ok&&r.state.phase!=='over'?r.state:null}catch{return null}}
+{const sv=savedState();if(sv){$('resume').hidden=false;$('saveinfo').textContent=`Round ${sv.round}/${sv.cfg.rounds}`}}
+$('start').onclick=()=>{const np=+document.querySelector('[name=np]:checked').value,len=document.querySelector('[name=len]:checked').value,seed=+(Q.get('seed')||Date.now()%1e9);
+ s=E.newMatch({seed,length:len,players:np,ai:Array.from({length:np},(_,i)=>i!==0),names:['You','Investor AI','Trader AI','Builder AI'].slice(0,np)});boot()};
+$('resume').onclick=()=>{s=savedState();if(s)boot()};
+async function boot(){$('setup').hidden=true;$('game').hidden=false;save();
+ try{r3=await createEmpireRenderer($('board'),{quality:Q.get('quality')||document.querySelector('[name=q]:checked').value,onPick:id=>{if(!busy){sel=id;render()}}})}
+ catch(e){$('loading').textContent='Could not load the local Empire models: '+e.message+' — see EMPIRE-3D.md for the asset copy step.';$('loading').dataset.error=e.message;console.error(e);return}
+ $('loading').hidden=true;fit();addEventListener('resize',fit);render();loop()}
+const short=()=>innerHeight<400;
+function buildPanels(){$('leftscroll').innerHTML=H.brand('Skyline Empire','Advanced board')+H.panel('p-map','The Empire map','map')+H.panel('p-victory','Victory','trophy',{open:!short()})+H.panel('p-land','Landmarks','temple',{open:!short()})+H.panel('p-log','Match log','book',{open:false});
+ $('rightscroll').innerHTML='<span class="sk-badge dark">Career · Board 4 · Advanced</span>'+H.panel('p-market','Market strategy','chart')+H.panel('p-ms','Milestone progress','flag')+H.panel('p-neg','Negotiation','shake',{open:!short()})+H.panel('p-sel','Selected space','globe',{open:!short()})}
+buildPanels();
+function fit(){const c=$('board');r3?.resize({x:0,y:0,w:c.clientWidth,h:c.clientHeight,free:H.freeArea(c)})}
+const ZC={luxury:'#F2B533',trade:'#F08A28',innovation:'#28BEDC',finance:'#3C78E6',culture:'#AA5ADC',residential:'#50BE6E'};
+const ZXY={innovation:[-6,-5],finance:[5.8,-5.6],trade:[-8.2,1.6],culture:[7.6,.6],luxury:[-1.8,5.6],residential:[5,5.4]};
+function hexAt(x,y,r){return Array.from({length:6},(_,i)=>{const a=Math.PI/3*i+Math.PI/6;return (x+r*Math.cos(a)).toFixed(1)+','+(y+r*Math.sin(a)).toFixed(1)}).join(' ')}
+function render(){const v=E.view(s),pd=E.pending(s),my=pd&&pd.player===human&&(pd.kind==='roll'||pd.kind==='invest');r3.sync(v);r3.select(sel);
+ const lead=v.phase==='over'?v.winner:E.ranking(s)[0]?.id;
+ $('round').textContent=v.phase==='over'?'Match over':`Round ${v.round} / ${v.rounds}`;$('trend').innerHTML=`Market <b class="${v.market.trend==='Bullish'?'up':v.market.trend==='Bearish'?'down':''}">${v.market.trend}</b>`;
+ // left: empire map (zones coloured, ring = majority holder), victory, landmarks, log
+ $('p-map-b').innerHTML=`<div class="sk-map"><svg viewBox="-12 -9 24 17">${v.zones.map(z=>{const[x,y]=ZXY[z.id],m=z.majority;return `<polygon points="${hexAt(x,y,2.9)}" fill="${ZC[z.id]}" fill-opacity=".85" stroke="${m>=0?PLAYER_COLORS[m]:'#F6E7B8'}" stroke-width="${m>=0?.7:.25}"/><polygon points="${hexAt(0,-.6,1.6)}" fill="#F2C457"/>`}).join('')}</svg></div>
+  <div class="sk-small">Asymmetric island · ${E.ZONES.length} zones in 4 economic systems</div>${v.zones.map(z=>`<div class="sk-row sk-small"><span><span style="color:${ZC[z.id]}">■</span> ${E.ZONES.find(x=>x.id===z.id).name.replace(' Zone','')}</span><b>${z.majority>=0?v.players[z.majority].name:'—'}</b></div>`).join('')}`;
+ $('p-victory-b').innerHTML=`<div class="sk-small">Complete all three Empire milestones and lead net worth by ${Math.round((s.cfg.leadFactor-1)*100)}% at a milestone check (every ${s.cfg.scoringEvery} rounds from round ${s.cfg.minWinRound}). Otherwise the highest final score at round ${v.rounds} wins.</div>`;
+ const tw=v.tower;const holder=z=>{const m=v.zones.find(x=>x.id===z).majority;return m>=0?v.players[m].name:'Unclaimed'};
+ $('p-land-b').innerHTML=`<div class="sk-row"><span>Empire Tower <span class="sk-muted">(final landmark)</span></span><b>${tw.stage}/5</b></div><div class="sk-bar"><span style="width:${tw.stage>=5?100:(tw.stage+tw.funded/s.cfg.towerStageCost[tw.stage])*20}%"></span></div>
+  <div class="sk-muted sk-small">${tw.stage>=5?'Complete':E.STAGES[tw.stage]+' under construction · '+H.fmt(tw.funded)+' / '+H.fmt(s.cfg.towerStageCost[tw.stage])}</div>
+  <div class="sk-row sk-small"><span>Civic Centre · Culture</span><b>${holder('culture')}</b></div><div class="sk-row sk-small"><span>Innovation Hub · Innovation</span><b>${holder('innovation')}</b></div><div class="sk-row sk-small"><span>Trade Port · Trade</span><b>${holder('trade')}</b></div>`;
+ $('p-log-b').innerHTML='<div class="log sk-small sk-muted">'+v.log.slice().reverse().map(l=>`<div>R${l.r}: ${l.msg}</div>`).join('')+'</div>';
+ // right: market, milestones, negotiation, selection
+ const pct=x=>{const d=Math.round((x-1)*100);return `<b class="${d>0?'up':d<0?'down':''}">${d>0?'▲ +':d<0?'▼ ':''}${d}%</b>`},pctCost=x=>{const d=Math.round((x-1)*100);return `<b class="${d>0?'down':d<0?'up':''}">${d>0?'▲ +':d<0?'▼ ':''}${d}%</b>`};
+ const avgD=E.SYSTEMS.reduce((a,k)=>a+v.market.demand[k],0)/4;
+ $('p-market-b').innerHTML=E.SYSTEMS.map(k=>`<div class="sk-row"><span>${k[0].toUpperCase()+k.slice(1)} demand</span>${pct(v.market.demand[k])}</div>`).join('')+`<div class="sk-row"><span>Build cost</span>${pctCost(v.market.cost)}</div><div class="sk-row"><span>Rental yield</span>${pct(avgD)}</div><div class="sk-row"><span>Market trend</span><b class="${v.market.trend==='Bullish'?'up':v.market.trend==='Bearish'?'down':''}">${v.market.trend}</b></div>${v.market.event?`<div class="sk-muted sk-small">${v.market.event.msg}</div>`:''}`;
+ const me=v.players[human].milestones,done=['economic','development','influence'].filter(k=>me[k].done).length;
+ $('p-ms-b').innerHTML=`<div class="sk-row"><span>Empire milestones</span><b>${done} / 3</b></div><div class="sk-dots">${[0,1,2].map(i=>`<i class="${i<done?'on':''}"></i>`).join('')}</div>`+H.checks([[me.economic.done,`Economic strength <span class="sk-muted">${H.fmt(me.economic.value)} / ${H.fmt(me.economic.target)}</span>`],[me.development.done,`Development <span class="sk-muted">${me.development.value}/${me.development.target} stages + a ${me.development.needsHigh}</span>`],[me.influence.done,`Strategic influence <span class="sk-muted">${me.influence.value} / ${me.influence.target}</span>`]]);
+ const L=my&&pd.kind==='invest'?E.legal(s,human):[];const offs=L.filter(a=>a.type==='offer'&&(!sel||a.node===sel));
+ $('p-neg-b').innerHTML=(v.offer?`<div class="sk-small"><b>${v.players[v.offer.from].name}</b> offers ${H.fmt(v.offer.amount)} for ${E.BY[v.offer.node].name}</div>`:'')+
+  (offs.length?offs.slice(0,2).map(a=>`<button data-offer="${a.node}" ${a.blocked?'disabled':''} style="width:100%;margin:.15rem 0">Offer for ${E.BY[a.node].name} · min ${H.fmt(a.min)}</button>${a.blocked?`<div class="sk-muted sk-small">${a.blocked}</div>`:''}`).join(''):`<div class="sk-muted sk-small">Make offers for rival sites in the zone you land in, or for any site after visiting a Negotiation Desk.</div>`);
+ const n=sel&&E.BY[sel],site=n&&v.sites.find(x=>x.id===sel);
+ $('p-sel-b').innerHTML=n?`<b>${n.name}</b><div class="sk-muted sk-small">${n.type==='property'?E.ZONES.find(z=>z.id===n.zone).name+' · '+n.system:{start:'Empire Start · payday '+s.cfg.payday,chance:'City Event · seeded, bounded',negotiate:'Negotiation Desk',market:'Market Exchange · dividend',dice:'Fortune Roll · d6 × 25'}[n.type]}</div>`+
+  (site?`<div class="sk-row"><span>Owner</span><b>${site.owner>=0?v.players[site.owner].name:'Unowned'}</b></div><div class="sk-row"><span>Stage</span><b data-stage>${site.stageName}</b></div><div class="sk-row"><span>Price</span><b>${H.fmt(site.price)}</b></div><div class="sk-row"><span>Rent now</span><b>${H.fmt(site.rent)}</b></div>`+H.stages(['Plot','Low','Mid','High','Sky'],site.owner>=0?site.stage:-1):''):'<div class="sk-muted sk-small">Tap a space on the board to inspect it.</div>';
+ // bottom: player cards
+ $('players').innerHTML=H.cards(v.players,{colors:PLAYER_COLORS,avatars:H.AVATARS,turn:v.phase==='over'?-1:v.turn,lead,lines:p=>[['Cash',H.short(p.cash)],['Worth',H.short(p.worth)]]});
+ // dock: primary + actions
+ const A=[];let P='';
+ if(v.phase==='over'){P=`<div><b>${v.players[v.winner].name} wins</b> · ${({milestones:'all three milestones with the lead','round-limit':'highest final score','last-standing':'last solvent player'})[v.endReason]}</div>`+E.ranking(s).map((r,i)=>`<div class="sk-small">${i+1}. ${s.players[r.id].name} · ${r.score.toLocaleString('en')}</div>`).join('')+'<button id="again" class="gold" style="width:100%">New match</button>'}
+ else if(!my)P=`<div class="sk-muted">${s.players[pd.player].name} is deciding…</div><div class="sk-pill sk-small" style="text-align:center">Round ${v.round} / ${v.rounds}</div>`;
+ else if(pd.kind==='roll')P=`<button id="roll" class="gold sk-roll">🎲 ROLL DICE</button><div class="sk-pill sk-small" style="text-align:center">Round ${v.round} / ${v.rounds}</div>`;
+ else{const p=s.players[human];P=`<div class="sk-row"><span>Rolled</span><b class="dice">${p.lastRoll?p.lastRoll.map(d=>'⚀⚁⚂⚃⚄⚅'[d-1]).join(''):''}</b></div><div class="sk-muted sk-small">${p.invest} investment action${p.invest===1?'':'s'} left</div>`;
+  for(const a of L){if(a.type==='buy'||a.type==='auction')A.push(`<button data-act="${a.type}" ${a.blocked?'disabled':''} class="${a.type==='buy'&&!a.blocked?'gold':''}">${a.type==='buy'?'Buy · '+H.fmt(a.price):'Auction (min '+H.fmt(a.min)+')'}</button>${a.blocked?`<div class="why">${a.blocked}</div>`:''}`)}
+  const devs=L.filter(a=>a.type==='develop'&&(!sel||a.node===sel));for(const a of devs.filter(a=>!a.blocked).slice(0,2).concat(devs.filter(a=>a.blocked&&a.node===sel).slice(0,1)))A.push(`<button data-dev="${a.node}" ${a.blocked?'disabled':''}>Build ${E.STAGES[a.stage]}<span>${H.fmt(a.price)}</span></button>${a.blocked?`<div class="why">${a.blocked}</div>`:''}`);
+  const f=L.find(a=>a.type==='fund');if(f)A.push(`<button id="fund" ${f.blocked?'disabled':''}>Invest in Empire Tower<span>≥${H.fmt(f.min)}</span></button>${f.blocked?`<div class="why">${f.blocked}</div>`:''}`);
+  const e=L.find(a=>a.type==='end');A.push(`<button id="end" ${e.blocked?'disabled':''}>End turn</button>${e.blocked?`<div class="why">${e.blocked}</div>`:''}`)}
+ $('primary').innerHTML=P;$('actions').innerHTML=A.join('');
+ const q=(x,f)=>document.querySelectorAll(x).forEach(f);
+ if($('roll'))$('roll').onclick=roll;q('[data-act]',b=>b.onclick=()=>run({type:b.dataset.act,node:s.players[human].pos}));q('[data-dev]',b=>b.onclick=()=>run({type:'develop',node:b.dataset.dev}));
+ q('[data-offer]',b=>b.onclick=()=>offer(b.dataset.offer));if($('fund'))$('fund').onclick=fund;if($('end'))$('end').onclick=()=>{sel=null;run({type:'end'})};if($('again'))$('again').onclick=()=>{localStorage.removeItem(E.SAVE_KEY);location.reload()}}
+function toast(m){const t=$('toast');t.textContent=m;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>t.hidden=true,2600)}
+function run(a,pid=human){const r=E.act(s,pid,a);if(!r.ok)toast(r.error);save();render();setTimeout(()=>loop.wake?.(),0);return r}
+async function animate(pid,from){const path=s.players[pid].path||[];let prev=from;if(SPEED)for(const id of path){await r3.moveToken(pid,prev,id,SPEED);prev=id}}
+async function roll(){if(busy)return;busy=true;try{const from=s.players[human].pos;const r=E.act(s,human,{type:'roll'});if(!r.ok){toast(r.error);return}await animate(human,from);sel=s.players[human].pos;save()}finally{busy=false;render();setTimeout(()=>loop.wake?.(),0)}}
+function dialog(title,body,buttons){return new Promise(res=>{const d=$('dlg');$('dlg-t').textContent=title;$('dlg-b').innerHTML=body;$('dlg-btns').innerHTML='';for(const[l,v,c]of buttons){const b=document.createElement('button');b.textContent=l;if(c)b.className=c;b.onclick=()=>{d.close();res(v)};$('dlg-btns').append(b)}d.showModal()})}
+$('dlg').addEventListener('input',e=>{if(e.target.type==='range')$(e.target.id+'v').textContent='SC '+e.target.value});$('dlg').addEventListener('cancel',e=>e.preventDefault());
+async function fund(){const f=E.legal(s,human).find(a=>a.type==='fund'&&!a.blocked);if(!f)return;const v=await dialog('Invest in the Empire Tower',`<p>Shared landmark. Every SC ${s.cfg.towerInfluencePer} invested earns 1 influence. ${fmt(f.need)} completes the current stage.</p><input type="range" id="amt" min="${f.min}" max="${f.max}" value="${f.min}"><div>Invest: <b id="amtv">SC ${f.min}</b></div>`,[['Cancel',null],['Invest','go','gold']]);if(v==='go')run({type:'fund',amount:+$('amt').value})}
+async function offer(node){const a=E.legal(s,human).find(x=>x.type==='offer'&&x.node===node);if(!a||a.blocked)return;const v=await dialog('Negotiation offer',`<p>Offer to buy <b>${E.BY[node].name}</b> from <b>${s.players[a.to].name}</b>. Paid only if accepted.</p><input type="range" id="amt" min="${a.min}" max="${a.max}" value="${Math.min(a.max,Math.ceil(a.min*1.35))}"><div>Offer: <b id="amtv"></b></div>`,[['Cancel',null],['Send offer','go','gold']]);if(v==='go')run({type:'offer',node,amount:+$('amt').value})}
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+async function loop(){for(;;){if(!s||s.phase==='over'){render();return}const pd=E.pending(s);
+ if(pd.player===human){if(pd.kind==='bid'){const A=s.auction;const v=await dialog('Sealed auction',`<p><b>${E.BY[A.node].name}</b> · list ${fmt(E.BY[A.node].price)}. Minimum bid ${fmt(A.min)}.</p><input type="range" id="bid" min="${A.min}" max="${Math.max(A.min,s.players[human].cash)}" value="${A.min}"><div>Bid: <b id="bidv">SC ${A.min}</b></div>`,[['Pass','pass'],['Place bid','bid','gold']]);run(v==='bid'?{type:'bid',amount:+$('bid').value}:{type:'bid-pass'});continue}
+  if(pd.kind==='respond'){const O=s.offer;const v=await dialog('Offer received',`<p><b>${s.players[O.from].name}</b> offers <b>${fmt(O.amount)}</b> for your <b>${E.BY[O.node].name}</b>.</p>`,[['Decline','decline'],['Accept','accept','gold']]);run({type:v});continue}
+  await new Promise(r=>{loop.wake=r});continue}
+ busy=true;try{const a=E.ai(s,pd.player),from=s.players[pd.player].pos,r=E.act(s,pd.player,a);if(!r.ok)throw Error('AI illegal action '+r.error);if(a.type==='roll')await animate(pd.player,from);else if(SPEED)await wait(SPEED);save();render()}finally{busy=false}}}
+window.__empireLab={state:()=>s,r3:()=>r3,busy:()=>busy,select:id=>{sel=id;render()}};
+$('v-over').onclick=()=>r3.setView({focus:null,zoom:1});$('v-insp').onclick=()=>{if(sel)r3.setView({focus:sel,zoom:2.4})};
+</script></body></html>
