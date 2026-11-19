@@ -17,7 +17,7 @@ export function createOriginsRenderer(canvas,{read,onSquare,onError=console.erro
  let pixelRatio=Math.min(devicePixelRatio,tier==='high'?3:tier==='low'?1.5:2),mode='board',running=true,last=0,dirty=true,frame=0;
  renderer.setPixelRatio(pixelRatio);renderer.shadowMap.enabled=tier!=='low';renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.shadowMap.autoUpdate=false;
  const camera=new THREE.PerspectiveCamera(36,1,.1,120),reflectionCamera=camera.clone(),target=new THREE.Vector3(0,.1,0);
- const waterfront=createWaterReflections({scene,camera,getRenderer:()=>renderer,enabled:tier!=='low'});
+ const waterfront=createWaterReflections({scene,camera,getRenderer:()=>renderer,enabled:tier!=='low',getExclusions:()=>[...tokens,...dice,...nativeDice]});
  const ambient=new THREE.HemisphereLight('#b9d5ee','#716046',.75);scene.add(ambient);
  const sun=new THREE.DirectionalLight('#ffd294',2.7);sun.position.set(-9,14,7);sun.castShadow=tier!=='low';sun.shadow.mapSize.set(tier==='high'?2048:1024,tier==='high'?2048:1024);Object.assign(sun.shadow.camera,{left:-12,right:12,top:12,bottom:-12,near:.5,far:42});sun.shadow.normalBias=.026;sun.shadow.bias=-.00015;scene.add(sun);
  const fill=new THREE.DirectionalLight('#b2d9ef',.65);fill.position.set(9,7,-7);scene.add(fill);
@@ -87,7 +87,7 @@ const key=JSON.stringify([v.ownership,v.players.map(p=>[p.id,p.out,p.color])]);i
    if(s.type==='prop'){const b=assetPack?assetPack.cloneStage(o.stage):A.building(o.stage===5?'financial':'residential',Math.min(5,o.stage+1),i%3);const sc=assetPack?.44:.4;b.scale.setScalar(sc);b.position.set(x,assetPack?.19:.18,z);b.rotation.y=assetPack?assetPack.layout[i].yaw:(i<10?0:i<20?-Math.PI/2:i<30?Math.PI:Math.PI/2);group.userData.fadeMaterials=[];const cloned=new Map();b.traverse(n=>{if(!n.isMesh)return;const copy=m=>{if(!cloned.has(m)){const c=m.clone();c.userData.original={opacity:c.opacity,transparent:c.transparent,depthWrite:c.depthWrite};cloned.set(m,c);group.userData.fadeMaterials.push(c);}return cloned.get(m);};n.material=Array.isArray(n.material)?n.material.map(copy):copy(n.material);});group.add(b);}
    const ao=new THREE.Mesh(new THREE.PlaneGeometry(.85,.8),contactMat);ao.rotation.x=-Math.PI/2;ao.position.set(x,.133,z);group.add(ao);group.userData.ownedResources=[ownerMat,markerMat,ownerMarker.geometry,ownerBase.geometry,ao.geometry,...(group.userData.fadeMaterials||[])];dynamic.add(group);buildings.set(i,group);
   });
-  shadowDirty=true;dirty=true;
+  waterfront.invalidate();shadowDirty=true;dirty=true;
  }
  function resize(){const w=canvas.clientWidth,h=canvas.clientHeight;if(!w||!h)return;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();const usable=read()?.viewport||{left:0,right:0,top:0,bottom:0},availableW=Math.max(.3,1-(usable.left+usable.right)/w),availableH=Math.max(.3,1-(usable.top+usable.bottom)/h);const elevation=mode==='board'?.62:.52,yaw=0,angle=camera.fov*Math.PI/360;
   const distance=Math.max(11.6/(2*Math.tan(angle)*camera.aspect*availableW),11.6*Math.sin(elevation)/(2*Math.tan(angle)*availableH))*1.16;
