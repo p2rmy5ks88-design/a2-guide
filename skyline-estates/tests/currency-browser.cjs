@@ -36,7 +36,7 @@ const check=(name,ok)=>{assert.ok(ok,name);report.checks.push(name);console.log(
   // Real progression APIs, not opening a screen.
   const rewards=await p.evaluate(()=>{
    run=async()=>{};keyReveal=async()=>{};const flags={},S=season();S.sxp=3000;S.cf={};S.cp={};S.prem=true;
-   const b=SkylineEarnedCash.balance(),coins=PREF.coins;flags.season=claimTier(5,false)&&SkylineEarnedCash.balance()===b+40&&PREF.coins===coins+150;flags.seasonRepeat=!claimTier(5,false)&&SkylineEarnedCash.balance()===b+40;claimTier(10,true);flags.premium=SkylineEarnedCash.balance()===b+40;
+   const b=SkylineEarnedCash.balance(),coins=PREF.coins;flags.season=claimTier(5,false)&&SkylineEarnedCash.balance()===b+40&&PREF.coins===coins+tierReward(5,false).coins;flags.seasonRepeat=!claimTier(5,false)&&SkylineEarnedCash.balance()===b+40;claimTier(10,true);flags.premium=SkylineEarnedCash.balance()===b+40;
    const W=weekly();W.list=['games5'];W.prog={games5:4};W.done={};const wc=PREF.coins,wx=season().sxp;weeklyAdd('games',1);flags.weekly=SkylineEarnedCash.balance()===b+65&&PREF.coins===wc+WEEK_COINS&&season().sxp===wx+WEEK_SXP;weeklyAdd('games',1);flags.weeklyRepeat=SkylineEarnedCash.balance()===b+65;
    FAST=false;newGame({cash:1600,set:{city:'lagos',mode:'classic',perks:false},players:[{name:'Human',tok:TOKENS[0],col:PCOL[0],ai:false},{name:'AI',tok:TOKENS[1],col:PCOL[1],ai:true}]});G.owner=0;
    const D=daily();D.list=['buy5','rent300','houses3'];D.done={};D.best={};Object.assign(st(G.players[0]),{buys:5,rent:300,houses:3});const dc=PREF.coins,dx=PREF.xp;missionScan(false);flags.daily=SkylineEarnedCash.balance()===b+80&&PREF.coins>=dc+3*MISSION_COINS&&PREF.xp>=dx+3*MISSION_XP;missionScan(false);flags.dailyRepeat=SkylineEarnedCash.balance()===b+80;

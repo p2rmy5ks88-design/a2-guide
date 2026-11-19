@@ -4017,7 +4017,7 @@ function centerCalabar(g){const geo=S3.geo,M=S3.M;
 const CITY_CENTERS={abuja:centerAbuja,ph:centerPH,warri:centerWarri,enugu:centerEnugu,calabar:centerCalabar};
 
 /* ================= PLAYER PROFILE: COINS, ITEMS, TOKENS, ACHIEVEMENTS ================= */
-/* Everything here is saved on this device in PREF. Coins are earned by playing; coin packs can be bought in the app. */
+/* Everything here is saved on this device in PREF. Coins are earned by playing; coin packs appear only when App Store purchases are switched on. */
 const COIN='🪙';
 PREF.coins=PREF.coins==null?250:PREF.coins;PREF.inv=Object.assign({tok:{},fin:{},dice:{},surr:{},country:{},city:{}},PREF.inv||{});
 PREF.eq=Object.assign({fin:null,dice:'classic',surr:null},PREF.eq||{});PREF.tokLv=PREF.tokLv||{};PREF.boostGames=PREF.boostGames||0;
@@ -4107,7 +4107,7 @@ function grantTokenMastery(g,w,coins=0){if(!g||!g.over||g.sim||FAST)return null;
 /* ================= COLLECTION ECONOMY ================= */
 const TOKEN_UPGRADE=[null,{coins:0,wins:0},{coins:300,wins:1},{coins:900,wins:3},{coins:2400,wins:8},{coins:6000,wins:20},{coins:12000,wins:40}];
 const ESTATE_UPGRADE=[null,{coins:0,wins:0},{coins:200,wins:1},{coins:600,wins:3},{coins:1600,wins:6},{coins:4000,wins:12}];
-function gameCoinReward(won,rank,bonus=0){const base=won?400:rank===1?175:100;return Math.round(base*(1+Math.max(0,Math.min(.5,Number.isFinite(bonus)?bonus:0))))}
+function gameCoinReward(won,rank,bonus=0){const base=won?500:rank===1?220:125;return Math.round(base*(1+Math.max(0,Math.min(.5,Number.isFinite(bonus)?bonus:0))))}
 function careerWins(profile=PREF){return Object.keys(TOKEN_INFO).reduce((n,t)=>n+masteryCount(profile.tokWins?.[t]),0)}
 function collectEstate(p,i){if(!trackable()||SQ[i]?.t!=='prop'||G.own[i]?.o!==p.id||G.players.find(q=>!q.ai&&(!G.online||q.uid===NET.me))?.id!==p.id)return;const city=G.set.city||'lagos';PREF.estateOwned=PREF.estateOwned||{};PREF.estateOwned[city]=Array.from(new Set([...(PREF.estateOwned[city]||[]),i]));savePref()}
 function estateForCity(city,profile=PREF){return Object.fromEntries(Object.entries(profile.estateRarity?.[city]||{}).filter(([k,v])=>/^([0-9]|[1-3][0-9])$/.test(k)&&Number.isInteger(v)&&v>=1&&v<=5))}
@@ -4770,7 +4770,7 @@ const LVL_REWARDS=[[3,'Golden badge','Your player badge glows gold.'],[4,'Barrel
 const hasLvl=n=>lvlOf(PREF.xp)>=n;
 let XPGAME=0,XPLOG=[],COINLOG=[];
 function addXP(n,why){if(!n)return;const before=lvlOf(PREF.xp);PREF.xp+=n;XPGAME+=n;if(why)XPLOG.push([why,n]);seasonXP(n);savePref();xpFloat(n);const after=lvlOf(PREF.xp);
-  if(after>before){const coins=50+after*10;const rw=LVL_REWARDS.find(r=>r[0]===after);const nc=COUNTRIES.filter(C=>C.lvl===after);
+  if(after>before){const coins=60+after*12;const rw=LVL_REWARDS.find(r=>r[0]===after);const nc=COUNTRIES.filter(C=>C.lvl===after);
     achQ.push({name:`Level ${after}: ${rankOf(after)}`,lvl:1,reward:null,xpText:[`+${coins} ${COIN}`,rw?`Unlocked: ${rw[1]}`:'',nc.length?'New: '+nc.map(C=>C.flag+' '+C.name).join(', '):''].filter(Boolean).join(' · ')});addCoins(coins,`Level ${after}`);achShow();achBump()}}
 function xpFloat(n){if(FAST)return;const f=el('div','xpfloat',`+${n} XP`);document.body.append(f);setTimeout(()=>f.remove(),1600)}
 
@@ -4795,7 +4795,7 @@ const seasonTierNow=()=>Math.min(TIERS,Math.floor(season().sxp/TIER_XP));
 /* Skyline Gala rewards: an item every few tiers on both tracks, a free board style, and a season-only avatar frame at the top */
 const GALA_FREE={3:{coins:250},6:{dice:'mint'},9:{coins:300,boost:2},12:{fin:'ruby'},15:{fin:'chrome'},18:{coins:400,boost:2},21:{dice:'midnight'},24:{fin:'obsidian'},27:{coins:600,boost:3},30:{surr:'marble'},33:{coins:700},36:{dice:'gold'},40:{coins:1500,boost:5}};
 const GALA_PREM={1:{coins:500},4:{dice:'candy'},7:{coins:400,boost:2},10:{fin:'neon'},13:{surr:'garden'},16:{coins:600,boost:3},19:{dice:'marble'},22:{surr:'ice'},25:{fin:'crystal'},28:{surr:'confetti'},31:{fin:'gold'},34:{surr:'lava'},37:{coins:2000,boost:5},40:{surr:'skydeck',frame:'gala',coins:2500}};
-function tierReward(i,prem){const T=prem?GALA_PREM:GALA_FREE;if(T[i])return T[i];if(prem)return i%5===0?{coins:250}:{coins:100};return i%5===0?{coins:150,boost:1}:{coins:60}}
+function tierReward(i,prem){const T=prem?GALA_PREM:GALA_FREE;if(T[i])return T[i];if(prem)return i%5===0?{coins:250}:{coins:100};return i%5===0?{coins:190,boost:1}:{coins:75}}
 function tierText(r){const o=[];if(r.coins)o.push(`${r.coins} ${COIN}`);if(r.boost)o.push(`${r.boost}× 2× XP`);if(r.fin)o.push(FINISHES.find(f=>f.id===r.fin).name+' finish');if(r.dice)o.push(DICE_SKINS.find(f=>f.id===r.dice).name+' dice');if(r.surr)o.push(SURROUND_PREMIUM.find(f=>f.id===r.surr).name);if(r.frame)o.push('Skyline Gala frame');return o.join(' + ')}
 function tierIcon(r){return r.frame?'👑':r.surr?SURROUND_PREMIUM.find(f=>f.id===r.surr).icon:r.fin?'✨':r.dice?'🎲':r.boost?'⚡':COIN}
 function claimTier(i,prem){const S=season(),box=prem?S.cp:S.cf;if(box[i]||seasonTierNow()<i||(prem&&!S.prem))return false;box[i]=1;const r=tierReward(i,prem);
@@ -4806,7 +4806,7 @@ const WEEKLY=[
   {id:'wins3',n:'Win 3 games',g:3,k:'wins'},{id:'games5',n:'Finish 5 games',g:5,k:'games'},{id:'countries2',n:'Play in 2 different countries',g:2,k:'countries'},
   {id:'houses15',n:'Build 15 houses',g:15,k:'houses'},{id:'rent3000',n:'Collect {m3000} in rent',g:3000,k:'rent',money:1},{id:'trades4',n:'Complete 4 trades',g:4,k:'trades'},
   {id:'auctions3',n:'Win 3 auctions',g:3,k:'auctions'},{id:'towers3',n:'Build 3 towers',g:3,k:'towers'},{id:'online2',n:'Finish 2 online games',g:2,k:'online'},{id:'strategic2-v1',n:'Finish 2 qualifying Strategic Event matches',g:2,k:'qualifiedStrategic'},{id:'pulse2-v1',n:'Finish 2 qualifying Market Pulse matches',g:2,k:'qualifiedPulse'}];
-const WEEK_SXP=400,WEEK_COINS=60;
+const WEEK_SXP=400,WEEK_COINS=80;
 function weekNo(){return Math.floor((Date.now()-SEASON_EPOCH)/(7*864e5))}
 function weekly(){const S=season(),w=weekNo();if(!S.wk||S.wk.w<w){const r=seeded(w*13+5),pick=[];while(pick.length<3){const m=WEEKLY[Math.floor(r()*WEEKLY.length)];if(!pick.includes(m.id))pick.push(m.id)}S.wk={w,list:pick,prog:{},done:{},cs:[]};savePref()}return S.wk}
 function weeklyAdd(k,n){const W=weekly();W.list.forEach(id=>{const m=WEEKLY.find(x=>x.id===id);if(m.k!==k||W.done[id])return;W.prog[id]=(W.prog[id]||0)+n;if(W.prog[id]>=m.g){W.done[id]=1;achQ.push({name:'Weekly: '+loc(m.n),icon:'🗓️',kind:'Weekly challenge',xp:WEEK_SXP,coins:WEEK_COINS});season().sxp+=WEEK_SXP;addCoins(WEEK_COINS,'Weekly challenge');achShow()}});savePref()}
@@ -4869,7 +4869,7 @@ const MISSIONS=[
   {id:'go5',n:'Pass Start 5 times in one game',g:5,f:p=>st(p).go},
   {id:'city',n:'Finish a game in a different country from your last one',g:1,end:1,away:1},
   {id:'hotel',n:'Build a tower',g:1,f:p=>st(p).hotels}];
-const MISSION_XP=150,MISSION_COINS=30;
+const MISSION_XP=150,MISSION_COINS=40,DAILY_BONUS_COINS=80;
 const today=()=>{const d=new Date();return d.getUTCFullYear()+'-'+(d.getUTCMonth()+1)+'-'+d.getUTCDate()};
 const dayNum=s=>{const[a,b,c]=s.split('-').map(Number);return Math.round(new Date(a,b-1,c).getTime()/864e5)};
 function daily(){const D=PREF.daily,t=today();if(D.date!==t&&!(D.date&&dayNum(D.date)>dayNum(t))){const r=seeded(dayNum(t)*7+3);const pool=MISSIONS;const pick=[];
@@ -4878,7 +4878,7 @@ function missionScan(final,winner){if(!trackable())return;const D=daily();const 
   D.list.forEach(id=>{if(D.done[id])return;const m=MISSIONS.find(x=>x.id===id);let v=0;
     if(m.end){if(!final)return;v=m.win?(winner&&hum.includes(winner)?1:0):m.away?(PREF.lastCountry&&countryOf(cityNow()).key!==PREF.lastCountry?1:0):1}else v=Math.max(...hum.map(p=>m.f(p)||0));
     D.best[id]=Math.max(D.best[id]||0,v);if(v>=m.g){D.done[id]=1;streakMark();achQ.push({name:'Daily mission: '+loc(m.n),xp:MISSION_XP,coins:MISSION_COINS,daily:1});addXP(MISSION_XP,'Daily: '+loc(m.n));addCoins(MISSION_COINS);achShow()}});
-  if(!D.bonus&&D.list.every(id=>D.done[id])){D.bonus=true;achQ.push({name:'All daily missions done!',xp:250,coins:60,daily:1});addXP(250,'Daily bonus');addCoins(60,'Daily bonus');achShow()}savePref()}
+  if(!D.bonus&&D.list.every(id=>D.done[id])){D.bonus=true;achQ.push({name:'All daily missions done!',xp:250,coins:DAILY_BONUS_COINS,daily:1});addXP(250,'Daily bonus');addCoins(DAILY_BONUS_COINS,'Daily bonus');achShow()}savePref()}
 function streakMark(){const D=PREF.daily,t=today();if(D.streakDay===t)return;D.streak=(D.streakDay&&dayNum(t)-dayNum(D.streakDay)===1)?(D.streak||0)+1:1;D.streakDay=t;PREF.stats.streakBest=Math.max(PREF.stats.streakBest||0,D.streak);const b=Math.min(500,50*D.streak);if(D.streak>1){achQ.push({name:`${D.streak}-day streak 🔥`,xp:b,coins:Math.min(100,10*D.streak),daily:1});addXP(b,`${D.streak}-day streak`);addCoins(Math.min(100,10*D.streak))}achBump()}
 function streakNow(){const D=PREF.daily;if(!D.streakDay)return 0;return dayNum(today())-dayNum(D.streakDay)<=1?D.streak||0:0}
 
@@ -5318,8 +5318,15 @@ const IAP={ready:false,store:null,
 /* Coin packs are offered only when the App Store purchase path is live (never on web, and not in builds
    released without in-app purchases). Earning and spending coins in play is unaffected. */
 const COIN_SALES=()=>!!window.SkylineCloud?.purchasesReady?.();
-const EARN_COINS='Earn coins by winning games, levelling up, daily missions, season tiers and league promotions.';
-function earnCoinsInfo(need){return modal({html:`<div class="mh">${COIN} Earn coins</div><div class="mtxt">${need?`You need ${nfmt(need)} more coins. `:''}${EARN_COINS}</div>`,btns:[{k:'x',label:'OK',primary:true}]})}
+const EARN_COINS='Earn coins by finishing board games, daily goals, weekly challenges, the season track, levels, leagues and awards.';
+const EARN_ROWS=()=>[
+ ['🏆','Finish board games',`Win +${gameCoinReward(true,0)}, second place +${gameCoinReward(false,1)}, other finishes +${gameCoinReward(false,2)}. Token mastery can add up to 50% more.`],
+ ['📅','Daily goals',`+${MISSION_COINS} coins for each of today’s three goals, +${DAILY_BONUS_COINS} bonus for all three, and a streak bonus of up to +100.`],
+ ['🎯','Weekly challenges',`+${WEEK_COINS} coins and ${WEEK_SXP} season XP for each weekly challenge.`],
+ ['🎁','Season track',`Every XP you earn moves you up the season. Free tiers pay ${tierReward(1,false).coins}–600 coins.`],
+ ['⭐','Levels, leagues and awards','Level ups, league promotions, achievements, city medals and City Champion frames all pay coins.']];
+function earnCoinsInfo(need){return modal({cls:'coinguide',html:`<div class="mh">${COIN} Skyline Coins</div><div class="cgsub">How to earn and use your rewards</div>${need>0?`<div class="cgneed">You need ${nfmt(need)} more coins.</div>`:''}<ul class="cglist">${EARN_ROWS().map(([i,t,d])=>`<li><span class="cgi" aria-hidden="true">${i}</span><div><b>${t}</b><small>${d}</small></div></li>`).join('')}</ul><div class="cgnote">Coins are earned by playing. No ads and no purchase needed. Spend them on tokens, finishes, dice, surrounds and upgrades. They are separate from the cash you use to buy streets during a match.</div>`,btns:[{k:'daily',label:'Today’s goals'},{k:'x',label:'OK',primary:true}]}).then(r=>{if(r==='daily')homeTab('daily');return r})}
+(function(){const st=document.createElement('style');st.textContent='.mp.coinguide{width:min(760px,94vw);max-width:94vw;max-height:calc(100dvh - 16px);overflow-y:auto;-webkit-overflow-scrolling:touch;padding-top:12px;padding-bottom:12px}.coinguide .mh{margin-bottom:2px}.coinguide .cgsub{opacity:.75;margin:0 0 6px;font-size:13px}.coinguide .cgneed{font-weight:700;color:#e1bc66;margin-bottom:6px}.coinguide .cglist{list-style:none;margin:0;padding:0;display:grid;gap:6px;text-align:left}@media (min-width:600px){.coinguide .cglist{grid-template-columns:1fr 1fr}.coinguide .cglist li:last-child{grid-column:1/-1}}.coinguide .cglist li{display:flex;gap:10px;align-items:flex-start;padding:6px 10px;border-radius:12px;background:rgba(255,255,255,.06)}.coinguide .cgi{font-size:20px;line-height:1.2;flex:0 0 26px;text-align:center}.coinguide .cglist b{display:block;font-size:14px}.coinguide .cglist small{display:block;opacity:.8;font-size:12.5px;line-height:1.35}.coinguide .mbar{position:sticky;bottom:-12px;margin-bottom:-12px;padding:8px 0 12px;background:linear-gradient(to bottom,rgba(22,36,60,0),#16243c 30%);z-index:1}.coinguide .cgnote{margin-top:8px;font-size:12.5px;opacity:.8;text-align:left}.earnlink{margin:8px auto 0;display:block;background:none;border:1px solid rgba(225,188,102,.6);color:#e1bc66;border-radius:999px;padding:8px 16px;min-height:44px;font:inherit;font-weight:700;cursor:pointer}';document.head.appendChild(st)})();
 /* ---- name filter for names shown to other people (online and leaderboards) ---- */
 const BAD_WORDS=['fuck','shit','cunt','bitch','nigg','fag','whore','slut','dick','cock','pussy','rape','nazi','hitler','retard','bastard','wank','twat','porn','sex'];
 function cleanName(s){s=String(s||'').replace(/[<>]/g,'').trim().slice(0,12);const flat=s.toLowerCase().replace(/[^a-z]/g,'').replace(/0/g,'o');return !s||BAD_WORDS.some(w=>flat.includes(w))?'Player':s}
@@ -5630,7 +5637,8 @@ let SHOP_TICK=null;
 function paneShop(T){let tab=setup.shopTab||'daily';if(tab==='surr'&&!setup.shopTabSet)tab='daily';
   const tabs=[['daily','Daily'],['surr','Surrounds'],['fin','Finishes'],['dice','Dice'],['boost','Boosts'],['coins','Coins']].filter(([k])=>k!=='coins'||COIN_SALES());if(tab==='coins'&&!COIN_SALES())tab='daily';
   T.innerHTML=`<div class="shophead"><h2>Shop</h2><div class="shoptabs" role="tablist">${tabs.map(([k,l])=>`<button class="stab${k===tab?' on':''}" role="tab" aria-selected="${k===tab}" data-k="${k}">${l}</button>`).join('')}</div></div><div class="shopbody"></div>
-    <div class="small shopnote">Nothing in the shop is random: you always see exactly what you get.</div>`;
+    <div class="small shopnote">Nothing in the shop is random: you always see exactly what you get.</div><button class="earnlink" id="shEarn">${COIN} How to earn coins</button>`;
+  T.querySelector('#shEarn').onclick=()=>earnCoinsInfo();
   T.querySelectorAll('.shoptabs button').forEach(b=>b.onclick=()=>{setup.shopTab=b.dataset.k;setup.shopTabSet=1;paneShop(T)});
   const B=T.querySelector('.shopbody'),redraw=()=>paneShop(T);clearInterval(SHOP_TICK);
   if(tab==='daily'){const D=dailyPicks(),showB=!PREF.starterDone&&COIN_SALES();
@@ -6288,7 +6296,8 @@ paneCustom=function(T){const oldStep=T.dataset.customStep,oldScroll=T.scrollTop,
     return `<div class="goal${d?' done':''}"><div class="gi"><b>${esc(loc(m.n))}</b><small>${m.end?'Counts when the game ends.':'Progress counts within one game.'}</small><span class="gbar"><i style="width:${pct}%"></i></span><em>${m.money?`${fmt(v)} / ${fmt(m.g)}`:`${v} / ${m.g}`}</em></div>
       <div class="grw"><span>+${MISSION_XP} XP</span><span>+${MISSION_COINS} coins</span></div>${d?'<span class="gst ok">✓ Rewarded</span>':'<button class="gst go" data-play="1">▶ Play</button>'}</div>`}).join('');
   mc.innerHTML=`<div class="gh"><h3>Today’s goals</h3><span>${done} of 3 complete · new goals at 00:00 UTC</span></div>${goals}
-    <div class="goal bonus${D.bonus?' done':''}"><div class="gi"><b>Finish all three goals</b><small>Complete today’s goals to earn a bonus.</small></div><div class="grw"><span>+250 XP</span><span>+60 coins</span></div><span class="gdots">${D.list.map(id=>`<i class="${D.done[id]?'on':''}"></i>`).join('')}</span></div>`;
+    <div class="goal bonus${D.bonus?' done':''}"><div class="gi"><b>Finish all three goals</b><small>Complete today’s goals to earn a bonus.</small></div><div class="grw"><span>+250 XP</span><span>+${DAILY_BONUS_COINS} coins</span></div><span class="gdots">${D.list.map(id=>`<i class="${D.done[id]?'on':''}"></i>`).join('')}</span></div>`;
+  mc.insertAdjacentHTML('beforeend',`<button class="earnlink" id="dEarn">${COIN} How to earn coins</button>`);mc.querySelector('#dEarn').onclick=()=>earnCoinsInfo();
   mc.querySelectorAll('[data-play]').forEach(b=>b.onclick=()=>{homeTab('play');setTimeout(()=>{const q=$('#qAI');if(q)q.click()},50)});
   if(wc){const sk=el('div','card streak',`<div class="gh"><h3>${s}-day streak</h3><span>Finish a daily goal each day to keep it going</span></div><div class="sdots">${[1,2,3,4,5,6,7].map(d=>`<span class="${d<=s%7||(s>=7&&s%7===0)?'on':''}"><i>${d<=s%7||(s>=7&&s%7===0)?'✓':''}</i><small>Day ${d}</small></span>`).join('')}</div>`);wc.before(sk);
     const side=el('div','dside');wc.before(side);side.append(sk,wc)}}}
@@ -6370,7 +6379,7 @@ function wsHTML(sel){const tl=tokLv(sel),next=TOKEN_LV[tl+1],un=tokenUnlocked(se
     <div class="wsbody"><div><table class="wscmp"><thead><tr><th></th><th>${R.name}</th>${next?`<th>${next.name}</th>`:''}</tr></thead><tbody>${rows}</tbody></table>${later.length?`<small class="wslater">Later tiers add: ${esc(later.join(', '))}</small>`:''}</div>
       ${next?`<div class="wsneed"><b>Upgrade needs</b>${needs.map(n=>`<div class="${n.ok?'ok':'no'}"><i>${n.ok?'✓':'✗'}</i><span>${esc(n.txt)}<small>${esc(n.sub)}</small></span></div>`).join('')}
         <div class="wsafter">Coins after upgrading <b class="${after<0?'neg':''}">${after<0?`${nfmt(-after)} short`:nfmt(after)}</b></div>
-        <button class="sm warn wsbtn" id="tUp"${tierReqMet(sel,tl+1)?'':' disabled'}>${ready?`Upgrade to ${next.name}`:tierReqMet(sel,tl+1)?'Get coins to upgrade':'Not ready yet'} ${fmtC(next.cost)}</button></div>`
+        <button class="sm warn wsbtn" id="tUp"${tierReqMet(sel,tl+1)?'':' disabled'}>${ready?`Upgrade to ${next.name}`:tierReqMet(sel,tl+1)?(COIN_SALES()?'Get coins to upgrade':'Earn coins to upgrade'):'Not ready yet'} ${fmtC(next.cost)}</button></div>`
       :'<div class="wsneed wsmax"><b>Chaotic: the highest tier ✨</b><small>This token has every perk there is.</small></div>'}</div></div>`}
 paneTokens=function(T){const all=TOKENS.concat(NEW_TOKENS);let sel=setup.slots[0].tok;
   const draw=()=>{const tl=tokLv(sel),next=TOKEN_LV[tl+1],info=TOKEN_INFO[sel];

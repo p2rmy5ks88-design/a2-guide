@@ -185,14 +185,14 @@ html.light .hr-score b.a{color:#8a5a10}html.light .hr-score b.b{color:#b3263a}
 let s=null,root=null,me=0,ai=1,view={tok:null,sheet:null,tab:'feed',seen:0,auto:false,speed:1},timer=null,tick=null,built=new Set(),plotOwners=new Map(),plotClaims=new Map(),buildingRises=new Map();
 const SAVE_KEY='skylineRingSave',TIMER_KEY='skylineRingTimer';let TURN_MS=25000;
 /* Rewards (owner decision 11 Nov 2026: live, same scale as an offline 1 vs computer match).
-   Paid once per finished match: XP (game + win + rent), Coins (400 win / 175 loss), trophies (+30 win / -8 loss),
+   Paid once per finished match: XP (game + win + rent), Coins (500 win / 220 loss), trophies (+30 win / -8 loss),
    games and wins in stats and weekly challenges, and saved SC through the same wallet rules and anti-farming
    limits as other offline matches (minimum rounds, activity and minutes, 3 paid matches a day).
    Abandoned matches pay nothing. */
 let scWallet=null;const walletApi=()=>{try{return scWallet||(scWallet=window.SkylineSCWallet&&SkylineSCWallet.create(localStorage))}catch(e){return null}};
 const T=f=>{try{return f()}catch(e){return undefined}};
 function payRewards(){if(!s||!s.over||s.rewarded)return null;s.rewarded=true;const P=s.players[me],won=s.winner===me&&!P.bankrupt,st=P.st||{};
-  const r={won,xp:50+(won?200:0)+Math.min(200,Math.round((st.rentIn||0)/10)),coins:T(()=>gameCoinReward(won,won?0:1))||(won?400:175),tr:won?30:-8,sc:0};
+  const r={won,xp:50+(won?200:0)+Math.min(200,Math.round((st.rentIn||0)/10)),coins:T(()=>gameCoinReward(won,won?0:1))||(won?500:220),tr:won?30:-8,sc:0};
   T(()=>addXP(r.xp,won?'Harbour Ring win':'Harbour Ring match'));
   T(()=>{PREF.coins=(PREF.coins||0)+r.coins;if(typeof COINLOG!=='undefined')COINLOG.push([won?'Harbour Ring win':'Harbour Ring',r.coins]);refreshCoins()});
   T(()=>addTrophies(r.tr));
