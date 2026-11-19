@@ -3,7 +3,7 @@
 `dominion-production-lab.html` + `dominion-production-renderer.js`. All presentation reads the rules through `SkylineDominion.view()`; the renderer never changes the match.
 
 ## Assets
-Claude's supplied Dominion pack is copied locally into `assets/dominion-local/` and **is not committed**: the owner has not yet approved publishing it, so the folder is excluded via `.git/info/exclude`. To reproduce, copy these from `SkylineEstates_Dominion_Empire_3D1.zip`:
+Claude's supplied Dominion pack is copied locally into `assets/dominion-local/` and is committed as an owner-approved runtime subset (see `assets/dominion-local/ASSET-PROVENANCE.md`). To reproduce, copy these from `SkylineEstates_Dominion_Empire_3D1.zip`:
 - `boards/board_dominion_48.glb` (art-matched 48-space hexagonal board, 91k triangles)
 - `layouts/dominion_48.json`
 - `environments/dominion_waterfront_city.glb` (247k triangles)
