@@ -1,0 +1,687 @@
+{
+ "board": "origins_40",
+ "spaces": [
+  {
+   "index": 0,
+   "number": 1,
+   "type": "corner",
+   "label": "GO",
+   "group": null,
+   "position": [
+    -5.3,
+    0.1,
+    5.3
+   ],
+   "yaw": 2.3562,
+   "size": [
+    1.6,
+    1.6
+   ]
+  },
+  {
+   "index": 1,
+   "number": 2,
+   "type": "property",
+   "label": "ORANGE",
+   "group": "orange",
+   "position": [
+    -5.3,
+    0.1,
+    4.0
+   ],
+   "yaw": 1.5708,
+   "size": [
+    1.0,
+    1.6
+   ]
+  },
+  {
+   "index": 2,
+   "number": 3,
+   "type": "property",
+   "label": "YELLOW",
+   "group": "yellow",
+   "position": [
+    -5.3,
+    0.1,
+    3.0
+   ],
+   "yaw": 1.5708,
+   "size": [
+    1.0,
+    1.6
+   ]
+  },
+  {
+   "index": 3,
+   "number": 4,
+   "type": "property",
+   "label": "YELLOW",
+   "group": "yellow",
+   "position": [
+    -5.3,
+    0.1,
+    2.0
+   ],
+   "yaw": 1.5708,
+   "size": [
+    1.0,
+    1.6
+   ]
+  },
+  {
+   "index": 4,
+   "number": 5,
+   "type": "property",
+   "label": "YELLOW",
+   "group": "yellow",
+   "position": [
+    -5.3,
+    0.1,
+    1.0
+   ],
+   "yaw": 1.5708,
+   "size": [
+    1.0,
+    1.6
+   ]
+  },
+  {
+   "index": 5,
+   "number": 6,
+   "type": "property",
+   "label": "YELLOW",
+   "group": "yellow",
+   "position": [
+    -5.3,
+    0.1,
+    0.0
+   ],
+   "yaw": 1.5708,
+   "size": [
+    1.0,
+    1.6
+   ]
+  },
+  {
+   "index": 6,
+   "number": 7,
+   "type": "chance",
+   "label": "CHANCE",
+   "group": null,
+   "position": [
+    -5.3,
+    0.1,
+    -1.0
+   ],
+   "yaw": 1.5708,
+   "size": [
+    1.0,
+    1.6
+   ]
+  },
+  {
+   "index": 7,
+   "number": 8,
+   "type": "property",
+   "label": "PURPLE",
+   "group": "purple",
+   "position": [
+    -5.3,
+    0.1,
+    -2.0
+   ],
+   "yaw": 1.5708,
+   "size": [
+    1.0,
+    1.6
+   ]
+  },
+  {
+   "index": 8,
+   "number": 9,
+   "type": "property",
+   "label": "PURPLE",
+   "group": "purple",
+   "position": [
+    -5.3,
+    0.1,
+    -3.0
+   ],
+   "yaw": 1.5708,
+   "size": [
+    1.0,
+    1.6
+   ]
+  },
+  {
+   "index": 9,
+   "number": 10,
+   "type": "property",
+   "label": "PURPLE",
+   "group": "purple",
+   "position": [
+    -5.3,
+    0.1,
+    -4.0
+   ],
+   "yaw": 1.5708,
+   "size": [
+    1.0,
+    1.6
+   ]
+  },
+  {
+   "index": 10,
+   "number": 11,
+   "type": "corner",
+   "label": "FREE PARKING",
+   "group": null,
+   "position": [
+    -5.3,
+    0.1,
+    -5.3
+   ],
+   "yaw": 0.7854,
+   "size": [
+    1.6,
+    1.6
+   ]
+  },
+  {
+   "index": 11,
+   "number": 12,
+   "type": "property",
+   "label": "PURPLE",
+   "group": "purple",
+   "position": [
+    -4.0,
+    0.1,
+    -5.3
+   ],
+   "yaw": -0.0,
+   "size": [
+    1.0,
+    1.6
+   ]
+  },
+  {
+   "index": 12,
+   "number": 13,
+   "type": "property",
+   "label": "PURPLE",
+   "group": "purple",
+   "position": [
+    -3.0,
+    0.1,
+    -5.3
+   ],
+   "yaw": -0.0,
+   "size": [
+    1.0,
+    1.6
+   ]
+  },
+  {
+   "index": 13,
+   "number": 14,
+   "type": "property",
+   "label": "LAVENDER",
+   "group": "lavender",
+   "position": [
+    -2.0,
+    0.1,
+    -5.3
+   ],
+   "yaw": -0.0,
+   "size": [
+    1.0,
+    1.6
+   ]
+  },
+  {
+   "index": 14,
+   "number": 15,
+   "type": "property",
+   "label": "CYAN",
+   "group": "cyan",
+   "position": [
+    -1.0,
+    0.1,
+    -5.3
+   ],
+   "yaw": -0.0,
+   "size": [
+    1.0,
+    1.6
+   ]
+  },
+  {
+   "index": 15,
+   "number": 16,
+   "type": "tax",
+   "label": "CITY TAX",
+   "group": null,
+   "position": [
+    0.0,
+    0.1,
+    -5.3
+   ],
+   "yaw": -0.0,
+   "size": [
+    1.0,
+    1.6
+   ]
+  },
+  {
+   "index": 16,
+   "number": 17,
+   "type": "property",
+   "label": "RED",
+   "group": "red",
+   "position": [
+    1.0,
+    0.1,
+    -5.3
+   ],
+   "yaw": -0.0,
+   "size": [
+    1.0,
+    1.6
+   ]
+  },
+  {
+   "index": 17,
+   "number": 18,
+   "type": "property",
+   "label": "PINK",
+   "group": "pink",
+   "position": [
+    2.0,
+    0.1,
+    -5.3
+   ],
+   "yaw": -0.0,
+   "size": [
+    1.0,
+    1.6
+   ]
+  },
+  {
+   "index": 18,
+   "number": 19,
+   "type": "property",
+   "label": "RED",
+   "group": "red",
+   "position": [
+    3.0,
+    0.1,
+    -5.3
+   ],
+   "yaw": -0.0,
+   "size": [
+    1.0,
+    1.6
+   ]
+  },
+  {
+   "index": 19,
+   "number": 20,
+   "type": "property",
+   "label": "RED",
+   "group": "red",
+   "position": [
+    4.0,
+    0.1,
+    -5.3
+   ],
+   "yaw": -0.0,
+   "size": [
+    1.0,
+    1.6
+   ]
+  },
+  {
+   "index": 20,
+   "number": 21,
+   "type": "corner",
+   "label": "GO TO HOLD",
+   "group": null,
+   "position": [
+    5.3,
+    0.1,
+    -5.3
+   ],
+   "yaw": -0.7854,
+   "size": [
+    1.6,
+    1.6
+   ]
+  },
+  {
+   "index": 21,
+   "number": 22,
+   "type": "property",
+   "label": "RED",
+   "group": "red",
+   "position": [
+    5.3,
+    0.1,
+    -4.0
+   ],
+   "yaw": -1.5708,
+   "size": [
+    1.0,
+    1.6
+   ]
+  },
+  {
+   "index": 22,
+   "number": 23,
+   "type": "property",
+   "label": "PINK",
+   "group": "pink",
+   "position": [
+    5.3,
+    0.1,
+    -3.0
+   ],
+   "yaw": -1.5708,
+   "size": [
+    1.0,
+    1.6
+   ]
+  },
+  {
+   "index": 23,
+   "number": 24,
+   "type": "property",
+   "label": "PINK",
+   "group": "pink",
+   "position": [
+    5.3,
+    0.1,
+    -2.0
+   ],
+   "yaw": -1.5708,
+   "size": [
+    1.0,
+    1.6
+   ]
+  },
+  {
+   "index": 24,
+   "number": 25,
+   "type": "airport",
+   "label": "AIRPORT",
+   "group": null,
+   "position": [
+    5.3,
+    0.1,
+    -1.0
+   ],
+   "yaw": -1.5708,
+   "size": [
+    1.0,
+    1.6
+   ]
+  },
+  {
+   "index": 25,
+   "number": 26,
+   "type": "property",
+   "label": "GREEN",
+   "group": "green",
+   "position": [
+    5.3,
+    0.1,
+    0.0
+   ],
+   "yaw": -1.5708,
+   "size": [
+    1.0,
+    1.6
+   ]
+  },
+  {
+   "index": 26,
+   "number": 27,
+   "type": "property",
+   "label": "GREEN",
+   "group": "green",
+   "position": [
+    5.3,
+    0.1,
+    1.0
+   ],
+   "yaw": -1.5708,
+   "size": [
+    1.0,
+    1.6
+   ]
+  },
+  {
+   "index": 27,
+   "number": 28,
+   "type": "property",
+   "label": "GREEN",
+   "group": "green",
+   "position": [
+    5.3,
+    0.1,
+    2.0
+   ],
+   "yaw": -1.5708,
+   "size": [
+    1.0,
+    1.6
+   ]
+  },
+  {
+   "index": 28,
+   "number": 29,
+   "type": "property",
+   "label": "GREEN",
+   "group": "green",
+   "position": [
+    5.3,
+    0.1,
+    3.0
+   ],
+   "yaw": -1.5708,
+   "size": [
+    1.0,
+    1.6
+   ]
+  },
+  {
+   "index": 29,
+   "number": 30,
+   "type": "property",
+   "label": "BLUE",
+   "group": "blue",
+   "position": [
+    5.3,
+    0.1,
+    4.0
+   ],
+   "yaw": -1.5708,
+   "size": [
+    1.0,
+    1.6
+   ]
+  },
+  {
+   "index": 30,
+   "number": 31,
+   "type": "corner",
+   "label": "JAIL",
+   "group": null,
+   "position": [
+    5.3,
+    0.1,
+    5.3
+   ],
+   "yaw": -2.3562,
+   "size": [
+    1.6,
+    1.6
+   ]
+  },
+  {
+   "index": 31,
+   "number": 32,
+   "type": "property",
+   "label": "BLUE",
+   "group": "blue",
+   "position": [
+    4.0,
+    0.1,
+    5.3
+   ],
+   "yaw": -3.1416,
+   "size": [
+    1.0,
+    1.6
+   ]
+  },
+  {
+   "index": 32,
+   "number": 33,
+   "type": "chance",
+   "label": "CHANCE",
+   "group": null,
+   "position": [
+    3.0,
+    0.1,
+    5.3
+   ],
+   "yaw": -3.1416,
+   "size": [
+    1.0,
+    1.6
+   ]
+  },
+  {
+   "index": 33,
+   "number": 34,
+   "type": "property",
+   "label": "CYAN",
+   "group": "cyan",
+   "position": [
+    2.0,
+    0.1,
+    5.3
+   ],
+   "yaw": -3.1416,
+   "size": [
+    1.0,
+    1.6
+   ]
+  },
+  {
+   "index": 34,
+   "number": 35,
+   "type": "property",
+   "label": "CYAN",
+   "group": "cyan",
+   "position": [
+    1.0,
+    0.1,
+    5.3
+   ],
+   "yaw": -3.1416,
+   "size": [
+    1.0,
+    1.6
+   ]
+  },
+  {
+   "index": 35,
+   "number": 36,
+   "type": "train",
+   "label": "METRO",
+   "group": null,
+   "position": [
+    0.0,
+    0.1,
+    5.3
+   ],
+   "yaw": -3.1416,
+   "size": [
+    1.0,
+    1.6
+   ]
+  },
+  {
+   "index": 36,
+   "number": 37,
+   "type": "property",
+   "label": "ORANGE",
+   "group": "orange",
+   "position": [
+    -1.0,
+    0.1,
+    5.3
+   ],
+   "yaw": -3.1416,
+   "size": [
+    1.0,
+    1.6
+   ]
+  },
+  {
+   "index": 37,
+   "number": 38,
+   "type": "tax",
+   "label": "LUXURY TAX",
+   "group": null,
+   "position": [
+    -2.0,
+    0.1,
+    5.3
+   ],
+   "yaw": -3.1416,
+   "size": [
+    1.0,
+    1.6
+   ]
+  },
+  {
+   "index": 38,
+   "number": 39,
+   "type": "property",
+   "label": "RED",
+   "group": "red",
+   "position": [
+    -3.0,
+    0.1,
+    5.3
+   ],
+   "yaw": -3.1416,
+   "size": [
+    1.0,
+    1.6
+   ]
+  },
+  {
+   "index": 39,
+   "number": 40,
+   "type": "property",
+   "label": "RED",
+   "group": "red",
+   "position": [
+    -4.0,
+    0.1,
+    5.3
+   ],
+   "yaw": -3.1416,
+   "size": [
+    1.0,
+    1.6
+   ]
+  }
+ ],
+ "units": "1 unit = side-space width",
+ "up": "+Y"
+}

@@ -24,7 +24,7 @@ const STREET={
  I0:'Marina Link',I1:'Harbour Plaza',I2:'Pier Heights',I3:'Civic Link',I4:'Civic Crown',
  I5:'Golden Mile',I6:'Garden Link',I7:'Canopy Square',I8:'Emerald Terrace',
  I9:'Metro Link',I10:'Neon Towers',I11:'Lantern Lane'};
-const friendlyName=id=>STREET[id]||id;
+const friendlyName=id=>STREET[id]||id;if(window.__circuitProduction)window.__circuitFriendlyName=friendlyName;
 const LEVELS={easy:'Easy · picks routes at random',normal:'Normal · plans its routes',hard:'Hard · plans its routes (same as Normal in this alpha)'};
 const LENGTH_TEXT={standard:'Standard · target 300, up to 40 rounds',extended:'Extended · target 480, up to 60 rounds',quick:'Quick · experimental · target 200 · mastery XP only, never unlocks'};
 const REASON={'not-owned':'Not yours','max-stage':'Already a Skyscraper','one-stage-per-turn':'Already built this turn','bought-this-turn':'Bought this turn — build next turn',
@@ -49,6 +49,7 @@ function cityInspect(id){
  applyStagePreview();dirty=true;render();
 }
 function applyStagePreview(){
+ if(window.__circuitProduction){stagesOverride=null;return;}
  stagesOverride=null;if(!cityReview)return;
  const sample={};
  if(cityShowcase)for(const node of SC.NODES)if(node.type==='property')
@@ -74,7 +75,7 @@ const pips=st=>`<span class="cx-pips" role="img" aria-label="Stage ${SC.STAGES[s
 let prevVals={};const pulse=(key,val)=>{const ch=prevVals[key]!==undefined&&prevVals[key]!==val;prevVals[key]=val;return ch?' cx-pulse':''};
 const tokSvg=(i,sz=12)=>{const c=PLAYERS[i].c,sh=PLAYERS[i].shape;const body=sh==='circle'?'<circle cx="6" cy="6" r="5"/>':sh==='square'?'<rect x="1.5" y="1.5" width="9" height="9"/>':sh==='triangle'?'<path d="M6 .8 11.2 10.6H.8z"/>':'<path d="M11 6 8.5 10.3h-5L1 6l2.5-4.3h5z"/>';return`<svg class="cx-tok" width="${sz}" height="${sz}" viewBox="0 0 12 12" fill="${c}" stroke="#0B1633" stroke-width="1.4" aria-hidden="true">${body}</svg>`};
 const SPEED={normal:{step:430,cross:550,ai:550,hold:900},fast:{step:200,cross:260,ai:220,hold:380},instant:{step:0,cross:0,ai:0,hold:0}};
-let s=null,layout=SC.referenceLayout(),G=SS.geometry(layout),C=null,cam=SS.CAMERAS[opts.camera]||SS.CAMERAS.top,plan='stay';
+let s=null,layout=window.__circuitProductionLayout||SC.referenceLayout(),G=SS.geometry(layout),C=null,cam=window.__circuitProduction&&opts.camera==='approved'?{pitch:48,dist:4.5}:SS.CAMERAS[opts.camera]||SS.CAMERAS.top,plan='stay';
 let anim={queue:[],cur:null,t0:0,tokens:{}},notes=[],tally=null,dirty=true,overlay={},timer=null,stagesOverride=null;
 // ---------- storage ----------
 const store={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v);return true}catch(e){return false}},del:k=>{try{localStorage.removeItem(k)}catch(e){}}};
@@ -107,7 +108,7 @@ function hudRects(){return['#cx-players','#cx-actions'].map(sel=>{const e=$(sel)
 function boardRect(){const r=$('#cx-board').getBoundingClientRect();return{x:r.left,y:r.top,w:r.width,h:r.height}}
 function resize(){if(R3){R3.resize(boardRect());R3.setCamera(camCur||cam);
   // decide the fallback from the measured overview spacing at the decision camera
-  if(!camCur||camCur.pitch===cam.pitch){const base=R3.baseC,t=SS.touch(G,base).minCentreDistance;zf=t<SS.MIN_TOUCH?{factor:Math.max(1,Math.ceil(SS.MIN_TOUCH/t*1.05*20)/20),overview:t}:null;
+  if(!camCur||camCur.pitch===cam.pitch){const base=R3.baseC,t=SS.touch(G,base).minCentreDistance;zf=t<SS.MIN_TOUCH?{factor:Math.min(window.__circuitProduction?2:Infinity,Math.max(1,Math.ceil(SS.MIN_TOUCH/t*1.05*20)/20)),overview:t}:null;
    if(!zf&&zoom){zoom=null;R3.setZoom(null)}else if(zoom)setZoomFocus(zoom.focus)}
   C=R3.C;dirty=true;return}
  const cv=$('#cx-board'),r=boardRect(),dpr=Math.min(2,window.devicePixelRatio||1);cv.width=Math.round(r.width||r.w)*dpr;cv.height=Math.round(r.height||r.h)*dpr;
@@ -115,7 +116,7 @@ function resize(){if(R3){R3.resize(boardRect());R3.setCamera(camCur||cam);
 function setZoomFocus(f){if(!R3||!zf)return;const base=R3.baseC;zoom={factor:zf.factor,focus:SS.clampFocus(base,G,zf.factor,f)};R3.setZoom(zoom);C=R3.C;dirty=true;render()}
 function overview(){if(!R3)return;zoom=null;R3.setZoom(null);C=R3.C;dirty=true;render()}
 // Route decision focus: centre between the token and its first junction (validated for all 32 positions).
-function planFocus(){if(!zf||!s)return;const me=s.players[s.turn];let at=me.pos,k=0;while(k<12&&SC.NODES.find(n=>n.id===at).type!=='junction'){at=SC.next(at);k++}
+function planFocus(){if(window.__circuitProduction||!zf||!s)return;const me=s.players[s.turn];let at=me.pos,k=0;while(k<12&&SC.NODES.find(n=>n.id===at).type!=='junction'){at=SC.next(at);k++}
  const base=R3.baseC,a=base.project({...G.nodes[me.pos],z:0}),j=base.project({...G.nodes[at],z:0});setZoomFocus({x:(a.x+j.x)/2,y:(a.y+j.y)/2})}
 // Cinematic camera: up to 15° during movement and celebrations, 0° for every decision (approved V2 decision 4).
 function cameraStep(dt){if(!R3||!camCur)return;if(zoom&&busy())overview(); // movement plays on the whole board
@@ -199,7 +200,7 @@ function draw2d(){const cv=$('#cx-board'),ctx=cv.getContext('2d'),dpr=cv.width/M
 // ---------- HUD (placeholder composition; one panel per interaction state) ----------
 function render(){if(!s)return;const v=SC.view(s),pd=v.pending,me=pd?s.players[pd.player]:null;
  const cur=v.players[s.turn],standings=[...v.players].sort((a,b)=>b.influence-a.influence),leader=standings[0],nextSeat=v.order[(v.orderIdx+1)%v.order.length];
- $('#cx-players').innerHTML=`<header class="b2-career"><strong>Skyline Estates</strong><h1>Skyline Circuit</h1><small>Career Board 2 · Normal</small></header><div class="cx-cur" style="--pc:${COLORS[cur.id]}"><span class="cx-badge">${tokSvg(cur.id,20)}</span><div class="cx-curtx"><div class="cx-k">${cur.id===0?'Your turn':'Turn'}</div><b>${esc(cur.name)}</b><div class="cx-money${pulse('cash'+cur.id,cur.cash)}">Cash <b>${cur.cash}</b></div></div></div>
+ $('#cx-players').innerHTML=`<header class="b2-career"><strong>Skyline Estates</strong><h1>Skyline Circuit</h1><small>Career Board 2 · ${window.__circuitProduction?'Practice match':'Normal'}</small></header><div class="cx-cur" style="--pc:${COLORS[cur.id]}"><span class="cx-badge">${tokSvg(cur.id,20)}</span><div class="cx-curtx"><div class="cx-k">${cur.id===0?'Your turn':'Turn'}</div><b>${esc(cur.name)}</b><div class="cx-money${pulse('cash'+cur.id,cur.cash)}">Cash <b>${cur.cash}</b></div></div></div>
  <div class="cx-sect"><div class="cx-row"><span class="cx-k">Influence standings</span><span class="cx-k">Target <b class="cx-t">${v.target}</b>${s.cfg.length==='quick'?' · Quick':''}</span></div>
  ${standings.map((p,r)=>{const pct=Math.min(100,100*p.influence/v.target),clock=v.clock&&v.clock.pid===p.id;return`<div class="cx-p ${p.id===s.turn?'cx-turn':''} ${p.out?'cx-out':''} ${r===0&&p.influence>0?'cx-lead':''}" style="--pc:${COLORS[p.id]}"><span class="cx-rank">${r+1}</span>${tokSvg(p.id)}<span class="cx-n1">${esc(p.name)}${p.level?` <span class="cx-k">${esc(p.level[0].toUpperCase()+p.level.slice(1))}</span>`:''}</span><span class="cx-iv${pulse('inf'+p.id,p.influence)}">${p.influence}</span></div>
   <div class="cx-bar" role="progressbar" aria-label="${esc(p.name)} influence" aria-valuenow="${p.influence}" aria-valuemax="${v.target}"><span style="width:${pct}%;background:${COLORS[p.id]}"></span>${clock?'<em class="cx-clockmark">holding target</em>':''}</div>`}).join('')}</div>
@@ -251,15 +252,19 @@ function render(){if(!s)return;const v=SC.view(s),pd=v.pending,me=pd?s.players[p
    </div>`;
  }
  if(R3)h+=`<div class="cx-sect"><button id="cx-city-view" aria-pressed="${cityReview}" title="${cityReview?'Return to decisions':'Explore interactive 3D city'}">${cityReview?'← Strategy View':'Explore 3D City'}</button></div>`;
+ if(window.__circuitProduction){
+  const focus=v.players[0],owned=v.nodes.filter(n=>n.type==='property'&&n.owner===focus.id);
+  h+=`<section class="cx-sect cx-live-districts" aria-label="Your live district portfolio"><h2>Your districts</h2>${DISTRICT_NAMES.map((label,q)=>{const props=owned.filter(n=>n.quadrant===q);return `<div class="cx-district-row" data-district="${q}" data-owned="${props.length}"><span>${symSvg(q,14)} ${esc(label)}</span><b>${props.length} / ${SC.DISTRICTS[q].length}</b></div>`}).join('')}<p class="cx-k">${owned.length} properties · ${focus.networks.filter(n=>n.size>=2).length} connected networks</p><p class="cx-k">Next round: <b>+${focus.nextTally?.total||0}</b> influence</p></section>`;
+ }
  const A=$('#cx-actions');A.classList.toggle('b2-city-mode',cityReview);
  A.classList.toggle('b2-roll-mode',!cityReview&&!busy()&&pd?.type==='roll'&&!me.ai);
- if(A.dataset.h!==h){A.innerHTML=h;A.dataset.h=h;wire()}}
+ if(A.dataset.h!==h){if(window.__circuitProduction)document.querySelectorAll('[data-circuit-action]').forEach(e=>e.remove());A.innerHTML=h;A.dataset.h=h;if(window.__circuitProduction){for(const e of A.querySelectorAll('#cx-roll,#cx-end')){e.dataset.circuitAction='true';document.querySelector('#cx-game').append(e);}}wire()}}
 function wire(){const on=(sel,f)=>{const e=$(sel);if(e)e.onclick=f};
  on('#cx-city-view',()=>{if(!R3)return;cityReview=!cityReview;if(cityReview&&zoom)overview();
   if(!cityReview){citySelection=null;orbitYaw=0;previewStage=-1;cityShowcase=false;stagesOverride=null;R3.setOrbitYaw(0);R3.setSpotlight(null);camCur={...cam};R3.setCamera(camCur);C=R3.C}
   else { // The owner-approved city concept is the entry view; the clear toggle
     // lets players inspect true purchased buildings instead at any time.
-    cityShowcase=true;applyStagePreview();
+    cityShowcase=!window.__circuitProduction;applyStagePreview();
   }
   dirty=true;render()});
  on('#b2-left',()=>cityOrbit(-14));on('#b2-right',()=>cityOrbit(14));
@@ -277,7 +282,7 @@ function hit(x,y){if(cityReview)return null;if(R3&&camCur&&camCur.pitch!==cam.pi
 window.addEventListener('resize',()=>{if(s)resize()});
 // Re-measure whenever the board's box changes (layout settling, rotation, safe-area changes).
 let lastBox='';try{new ResizeObserver(()=>{const r=boardRect(),k=[r.x,r.y,r.w,r.h].map(Math.round).join();if(s&&k!==lastBox){lastBox=k;resize()}}).observe(document.getElementById('cx-board')||document.body)}catch(e){}
-document.addEventListener('DOMContentLoaded',()=>{setupScreen();const cv=$('#cx-board');let down=null,lastTap=0;
+function circuitDOMReady(){setupScreen();const cv=$('#cx-board');let down=null,lastTap=0;
  cv.addEventListener('pointerdown',e=>{down={x:e.clientX,y:e.clientY,moved:0,focus:zoom?{...zoom.focus}:null,yaw:orbitYaw};try{cv.setPointerCapture(e.pointerId)}catch(x){}});
  cv.addEventListener('pointermove',e=>{if(!down)return;const dx=e.clientX-down.x,dy=e.clientY-down.y;down.moved=Math.max(down.moved,Math.hypot(dx,dy));
   if(cityReview&&R3&&down.moved>6){orbitYaw=clamp(down.yaw+dx*.18,-55,55);R3.setOrbitYaw(orbitYaw);dirty=true;}
@@ -294,7 +299,8 @@ document.addEventListener('DOMContentLoaded',()=>{setupScreen();const cv=$('#cx-
   if(d.moved>6)return;const now=performance.now(),dbl=now-lastTap<300;lastTap=now;
   if(zf&&!zoom){if(!(camCur&&camCur.pitch!==cam.pitch))setZoomFocus({x:e.clientX,y:e.clientY});return}   // overview: a tap opens the zoom there
   if(zoom&&dbl){overview();return}
-  const id=hit(e.clientX,e.clientY);if(id){notes.unshift({t:`${friendlyName(id)}: ${describe(id)}`,kind:'inspect'});notes=notes.slice(0,6);render()}})});
+  const id=hit(e.clientX,e.clientY);if(id){notes.unshift({t:`${friendlyName(id)}: ${describe(id)}`,kind:'inspect'});notes=notes.slice(0,6);render()}})}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',circuitDOMReady);else circuitDOMReady();
 function describe(id){const n=SC.view(s).nodes.find(x=>x.id===id);if(n.type!=='property')return n.type==='junction'?`junction, connector to ${n.link}`:'event space';return `${n.owner>=0?name(n.owner):'Bank'} · ${n.stageName} · rent ${n.rent||Math.round(n.price*.12)}`}
 // Test and measurement hooks (no effect on the match).
 window.__circuitBoard2=Object.freeze({orbit:()=>orbitYaw,city:()=>cityReview,selected:()=>citySelection,zoom:()=>cityDistance,preview:()=>previewStage,previewStage:cityStagePreview,showcase:()=>cityShowcase,toggleShowcase:toggleCityShowcase,saveKey:BOARD2_SAVE,orbitBy:cityOrbit,inspect:cityInspect});

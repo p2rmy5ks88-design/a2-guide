@@ -1,0 +1,57 @@
+{
+ "sun": {
+  "direction": [
+   0.62,
+   -0.34,
+   0.7
+  ],
+  "color": [
+   1.0,
+   0.68,
+   0.38
+  ],
+  "intensity": 4.2
+ },
+ "sky_fill": {
+  "direction": [
+   -0.5,
+   -0.6,
+   -0.62
+  ],
+  "color": [
+   0.5,
+   0.58,
+   0.88
+  ],
+  "intensity": 1.0
+ },
+ "ambient": [
+  0.3,
+  0.25,
+  0.26
+ ],
+ "sky_gradient": {
+  "zenith": [
+   18,
+   28,
+   62
+  ],
+  "mid": [
+   92,
+   82,
+   120
+  ],
+  "horizon": [
+   250,
+   176,
+   104
+  ]
+ },
+ "bloom": {
+  "threshold": 0.86,
+  "radius_px": 12,
+  "intensity": 0.6
+ },
+ "exposure": 1.05,
+ "tonemapping": "ACES Filmic"
+}

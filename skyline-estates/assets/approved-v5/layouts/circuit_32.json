@@ -1,0 +1,514 @@
+{
+ "board": "circuit_32",
+ "total_spaces": 32,
+ "outer": 20,
+ "inner": 12,
+ "spaces": [
+  {
+   "ring": "outer",
+   "index": 0,
+   "type": "hub",
+   "label": "BRIDGE HUB",
+   "group": null,
+   "district": null,
+   "position": [
+    -0.0,
+    0.42,
+    6.3
+   ],
+   "yaw": 3.1416,
+   "connects_to": [
+    "inner",
+    0
+   ]
+  },
+  {
+   "ring": "outer",
+   "index": 1,
+   "type": "property",
+   "label": "TECH CORRIDORS",
+   "group": "green",
+   "district": "Tech Corridors",
+   "position": [
+    -1.9468,
+    0.42,
+    5.9917
+   ],
+   "yaw": 3.4558,
+   "connects_to": null
+  },
+  {
+   "ring": "outer",
+   "index": 2,
+   "type": "chance",
+   "label": "CHANCE",
+   "group": null,
+   "district": null,
+   "position": [
+    -3.703,
+    0.42,
+    5.0968
+   ],
+   "yaw": 3.7699,
+   "connects_to": null
+  },
+  {
+   "ring": "outer",
+   "index": 3,
+   "type": "property",
+   "label": "TECH CORRIDORS",
+   "group": "green",
+   "district": "Tech Corridors",
+   "position": [
+    -5.0968,
+    0.42,
+    3.703
+   ],
+   "yaw": 4.0841,
+   "connects_to": null
+  },
+  {
+   "ring": "outer",
+   "index": 4,
+   "type": "property",
+   "label": "MARKET STREETS",
+   "group": "red",
+   "district": "Market Streets",
+   "position": [
+    -5.9917,
+    0.42,
+    1.9468
+   ],
+   "yaw": 4.3982,
+   "connects_to": null
+  },
+  {
+   "ring": "outer",
+   "index": 5,
+   "type": "hub",
+   "label": "BRIDGE HUB",
+   "group": null,
+   "district": null,
+   "position": [
+    -6.3,
+    0.42,
+    0.0
+   ],
+   "yaw": 4.7124,
+   "connects_to": [
+    "inner",
+    3
+   ]
+  },
+  {
+   "ring": "outer",
+   "index": 6,
+   "type": "property",
+   "label": "MARKET STREETS",
+   "group": "red",
+   "district": "Market Streets",
+   "position": [
+    -5.9917,
+    0.42,
+    -1.9468
+   ],
+   "yaw": 5.0265,
+   "connects_to": null
+  },
+  {
+   "ring": "outer",
+   "index": 7,
+   "type": "transit",
+   "label": "METRO",
+   "group": null,
+   "district": null,
+   "position": [
+    -5.0968,
+    0.42,
+    -3.703
+   ],
+   "yaw": 5.3407,
+   "connects_to": null
+  },
+  {
+   "ring": "outer",
+   "index": 8,
+   "type": "property",
+   "label": "GRAND BOULEVARDS",
+   "group": "purple",
+   "district": "Grand Boulevards",
+   "position": [
+    -3.703,
+    0.42,
+    -5.0968
+   ],
+   "yaw": 5.6549,
+   "connects_to": null
+  },
+  {
+   "ring": "outer",
+   "index": 9,
+   "type": "property",
+   "label": "GRAND BOULEVARDS",
+   "group": "purple",
+   "district": "Grand Boulevards",
+   "position": [
+    -1.9468,
+    0.42,
+    -5.9917
+   ],
+   "yaw": 5.969,
+   "connects_to": null
+  },
+  {
+   "ring": "outer",
+   "index": 10,
+   "type": "hub",
+   "label": "BRIDGE HUB",
+   "group": null,
+   "district": null,
+   "position": [
+    -0.0,
+    0.42,
+    -6.3
+   ],
+   "yaw": 6.2832,
+   "connects_to": [
+    "inner",
+    6
+   ]
+  },
+  {
+   "ring": "outer",
+   "index": 11,
+   "type": "property",
+   "label": "FINANCIAL DISTRICTS",
+   "group": "blue",
+   "district": "Financial Districts",
+   "position": [
+    1.9468,
+    0.42,
+    -5.9917
+   ],
+   "yaw": 6.5973,
+   "connects_to": null
+  },
+  {
+   "ring": "outer",
+   "index": 12,
+   "type": "tax",
+   "label": "CITY TAX",
+   "group": null,
+   "district": null,
+   "position": [
+    3.703,
+    0.42,
+    -5.0968
+   ],
+   "yaw": 6.9115,
+   "connects_to": null
+  },
+  {
+   "ring": "outer",
+   "index": 13,
+   "type": "property",
+   "label": "FINANCIAL DISTRICTS",
+   "group": "blue",
+   "district": "Financial Districts",
+   "position": [
+    5.0968,
+    0.42,
+    -3.703
+   ],
+   "yaw": 7.2257,
+   "connects_to": null
+  },
+  {
+   "ring": "outer",
+   "index": 14,
+   "type": "property",
+   "label": "WATERFRONT ZONES",
+   "group": "teal",
+   "district": "Waterfront Zones",
+   "position": [
+    5.9917,
+    0.42,
+    -1.9468
+   ],
+   "yaw": 7.5398,
+   "connects_to": null
+  },
+  {
+   "ring": "outer",
+   "index": 15,
+   "type": "hub",
+   "label": "BRIDGE HUB",
+   "group": null,
+   "district": null,
+   "position": [
+    6.3,
+    0.42,
+    -0.0
+   ],
+   "yaw": 7.854,
+   "connects_to": [
+    "inner",
+    9
+   ]
+  },
+  {
+   "ring": "outer",
+   "index": 16,
+   "type": "property",
+   "label": "WATERFRONT ZONES",
+   "group": "teal",
+   "district": "Waterfront Zones",
+   "position": [
+    5.9917,
+    0.42,
+    1.9468
+   ],
+   "yaw": 8.1681,
+   "connects_to": null
+  },
+  {
+   "ring": "outer",
+   "index": 17,
+   "type": "chance",
+   "label": "CHANCE",
+   "group": null,
+   "district": null,
+   "position": [
+    5.0968,
+    0.42,
+    3.703
+   ],
+   "yaw": 8.4823,
+   "connects_to": null
+  },
+  {
+   "ring": "outer",
+   "index": 18,
+   "type": "property",
+   "label": "CULTURAL QUARTERS",
+   "group": "gold",
+   "district": "Cultural Quarters",
+   "position": [
+    3.703,
+    0.42,
+    5.0968
+   ],
+   "yaw": 8.7965,
+   "connects_to": null
+  },
+  {
+   "ring": "outer",
+   "index": 19,
+   "type": "property",
+   "label": "CULTURAL QUARTERS",
+   "group": "gold",
+   "district": "Cultural Quarters",
+   "position": [
+    1.9468,
+    0.42,
+    5.9917
+   ],
+   "yaw": 9.1106,
+   "connects_to": null
+  },
+  {
+   "ring": "inner",
+   "index": 0,
+   "type": "hub",
+   "label": "BRIDGE HUB",
+   "group": null,
+   "district": null,
+   "position": [
+    -0.0,
+    0.42,
+    3.85
+   ],
+   "yaw": 3.1416,
+   "connects_to": [
+    "outer",
+    0
+   ]
+  },
+  {
+   "ring": "inner",
+   "index": 1,
+   "type": "property",
+   "label": "TECH CORRIDORS",
+   "group": "green",
+   "district": "Tech Corridors",
+   "position": [
+    -1.925,
+    0.42,
+    3.3342
+   ],
+   "yaw": 3.6652,
+   "connects_to": null
+  },
+  {
+   "ring": "inner",
+   "index": 2,
+   "type": "property",
+   "label": "TECH CORRIDORS",
+   "group": "green",
+   "district": "Tech Corridors",
+   "position": [
+    -3.3342,
+    0.42,
+    1.925
+   ],
+   "yaw": 4.1888,
+   "connects_to": null
+  },
+  {
+   "ring": "inner",
+   "index": 3,
+   "type": "hub",
+   "label": "BRIDGE HUB",
+   "group": null,
+   "district": null,
+   "position": [
+    -3.85,
+    0.42,
+    0.0
+   ],
+   "yaw": 4.7124,
+   "connects_to": [
+    "outer",
+    5
+   ]
+  },
+  {
+   "ring": "inner",
+   "index": 4,
+   "type": "property",
+   "label": "GRAND BOULEVARDS",
+   "group": "purple",
+   "district": "Grand Boulevards",
+   "position": [
+    -3.3342,
+    0.42,
+    -1.925
+   ],
+   "yaw": 5.236,
+   "connects_to": null
+  },
+  {
+   "ring": "inner",
+   "index": 5,
+   "type": "property",
+   "label": "GRAND BOULEVARDS",
+   "group": "purple",
+   "district": "Grand Boulevards",
+   "position": [
+    -1.925,
+    0.42,
+    -3.3342
+   ],
+   "yaw": 5.7596,
+   "connects_to": null
+  },
+  {
+   "ring": "inner",
+   "index": 6,
+   "type": "hub",
+   "label": "BRIDGE HUB",
+   "group": null,
+   "district": null,
+   "position": [
+    -0.0,
+    0.42,
+    -3.85
+   ],
+   "yaw": 6.2832,
+   "connects_to": [
+    "outer",
+    10
+   ]
+  },
+  {
+   "ring": "inner",
+   "index": 7,
+   "type": "property",
+   "label": "FINANCIAL DISTRICTS",
+   "group": "blue",
+   "district": "Financial Districts",
+   "position": [
+    1.925,
+    0.42,
+    -3.3342
+   ],
+   "yaw": 6.8068,
+   "connects_to": null
+  },
+  {
+   "ring": "inner",
+   "index": 8,
+   "type": "property",
+   "label": "FINANCIAL DISTRICTS",
+   "group": "blue",
+   "district": "Financial Districts",
+   "position": [
+    3.3342,
+    0.42,
+    -1.925
+   ],
+   "yaw": 7.3304,
+   "connects_to": null
+  },
+  {
+   "ring": "inner",
+   "index": 9,
+   "type": "hub",
+   "label": "BRIDGE HUB",
+   "group": null,
+   "district": null,
+   "position": [
+    3.85,
+    0.42,
+    -0.0
+   ],
+   "yaw": 7.854,
+   "connects_to": [
+    "outer",
+    15
+   ]
+  },
+  {
+   "ring": "inner",
+   "index": 10,
+   "type": "property",
+   "label": "WATERFRONT ZONES",
+   "group": "teal",
+   "district": "Waterfront Zones",
+   "position": [
+    3.3342,
+    0.42,
+    1.925
+   ],
+   "yaw": 8.3776,
+   "connects_to": null
+  },
+  {
+   "ring": "inner",
+   "index": 11,
+   "type": "property",
+   "label": "CULTURAL QUARTERS",
+   "group": "gold",
+   "district": "Cultural Quarters",
+   "position": [
+    1.925,
+    0.42,
+    3.3342
+   ],
+   "yaw": 8.9012,
+   "connects_to": null
+  }
+ ],
+ "units": "world units",
+ "up": "+Y"
+}
