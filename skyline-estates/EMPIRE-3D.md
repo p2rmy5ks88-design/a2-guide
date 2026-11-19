@@ -3,7 +3,7 @@
 `empire-production-lab.html` + `empire-production-renderer.js`, with the shared HUD `presentation/skyline-board-hud.{css,js}` and `presentation/board-camera-fit.js`. All presentation reads `SkylineEmpire.view()`.
 
 ## Assets
-Claude's supplied Empire pack is copied into `assets/empire-local/` and **is not committed**: publishing needs owner approval, so the folder is excluded via `.git/info/exclude`. From `SkylineEstates_Dominion_Empire_3D2.zip`, copy:
+Claude's supplied Empire pack is copied into `assets/empire-local/` and is committed as an owner-approved runtime subset (see `assets/empire-local/ASSET-PROVENANCE.md`). From `SkylineEstates_Dominion_Empire_3D2.zip`, copy:
 - `boards/board_empire_44.glb`
 - `environments/empire_bay_skyline.glb`
 - `layouts/empire_44.json`
