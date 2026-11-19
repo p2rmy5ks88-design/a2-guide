@@ -129,7 +129,7 @@ const key=JSON.stringify([v.ownership,v.players.map(p=>[p.id,p.out,p.color])]);i
   // Match the supplied rig in linear-light intensities; preserve the source files.
   const rig=pack.lighting;sun.color.setRGB(...rig.sun.color);sun.intensity=rig.sun.intensity*.62;sun.position.fromArray(rig.sun.direction).multiplyScalar(-20);
   fill.color.setRGB(...rig.sky_fill.color);fill.intensity=rig.sky_fill.intensity*.55;ambient.intensity=.32;fill.position.fromArray(rig.sky_fill.direction).multiplyScalar(-20);
-  ambient.groundColor.setRGB(...rig.ambient);renderer.toneMappingExposure=rig.exposure*.9;
+  ambient.groundColor.setRGB(...rig.ambient);renderer.toneMappingExposure=rig.exposure*.98;
   const gradient=rig.sky_gradient,toHex=a=>'#'+a.map(n=>n.toString(16).padStart(2,'0')).join('');
   const sky=A.texture((c,s)=>{const g=c.createLinearGradient(0,0,0,s);g.addColorStop(0,toHex(gradient.zenith));g.addColorStop(.48,toHex(gradient.mid));g.addColorStop(.62,toHex(gradient.horizon));g.addColorStop(1,'#171e33');c.fillStyle=g;c.fillRect(0,0,s,s);},256);
   const skyMesh=envScene.children[0];skyMesh.material.map=sky;skyMesh.material.needsUpdate=true;
