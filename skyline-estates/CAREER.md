@@ -3,7 +3,7 @@
 Status: **live for everyone** (owner decision 19 Nov 2026). Career has its own button on the main screen beside Game Modes. `?career=off` still turns it off on a device (no UI, no profile writes); `?career=on` turns it back on.
 
 ### 19 Nov 2026 release
-- All four boards are in Career with the unchanged sequential unlock guide (table below). Circuit opens `circuit-production-lab.html`; Dominion (`dominion-p1`, DOMINION.md) and Empire (`empire-p1`, EMPIRE.md) open their own boards. Their rules are the owner-approved prototype values.
+- All four boards are in Career with the unchanged sequential unlock guide (table below). Origins opens `origins-career.html`: the real Classic game (same rules, saves and Career recording) shown on the approved Origins 3D board; leaving the match returns to the main screen. Play Solo keeps the classic board. Circuit opens `circuit-production-lab.html`; Dominion (`dominion-p1`, DOMINION.md) and Empire (`empire-p1`, EMPIRE.md) open their own boards. Their rules are the owner-approved prototype values.
 - **Circuit district challenge** (new, needed by the Dominion unlock): finish a Career Circuit match holding 3+ of a district's 5 properties. One challenge per district (`circuit-district-0..3`), each counted once ever.
 - **Dominion negotiation challenge**: an accepted offer at or above list price that gives you district control (`dominion-negotiated-control`).
 - Board pages report finished matches through the existing Career inbox; `record()` also stores the board challenges that came with a counted match.

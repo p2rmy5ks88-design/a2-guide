@@ -21,10 +21,11 @@ fs.copyFileSync(path.join(src,'home-redesign.js'),path.join(www,'home-redesign.j
 // coach/: Skyline Coach natural voice clips (Voice A, ~10 MB), bundled so they play offline in the app.
 // realistic riders: three.js modules, character models, animations and portraits
 for(const d of ['lib','photos','art','items','avatars','living','coach'].filter(d=>fs.existsSync(path.join(src,d))))fs.cpSync(path.join(src,d),path.join(www,d),{recursive:true});
-// Career boards 2–4 (owner decision 19 Nov 2026: Career on for everyone, larger app accepted). Each board is its own page
+// Career boards 1–4: Origins uses origins-career.html with the approved 3D board (owner decisions 19 Nov 2026: Career on for everyone, larger app accepted). Each board is its own page
 // beside index.html, with its 3D runtime models (assets/approved-v5, dominion-local, empire-local) and shared presentation code.
 for(const f of ['circuit-production-lab.html','circuit-production.css','circuit-production-renderer.js','circuit-board2-ui.js','circuit-board2-renderer.js',
- 'dominion-production-lab.html','dominion-production-renderer.js','empire-production-lab.html','empire-production-renderer.js'])fs.copyFileSync(path.join(src,f),path.join(www,f));
+ 'dominion-production-lab.html','dominion-production-renderer.js','empire-production-lab.html','empire-production-renderer.js',
+ 'origins-career.html','origins-production-adapter.js','origins-production.css','origins-production-renderer.js'])fs.copyFileSync(path.join(src,f),path.join(www,f));
 for(const d of ['presentation','assets/approved-v5','assets/dominion-local','assets/empire-local'])fs.cpSync(path.join(src,d),path.join(www,d),{recursive:true});
 // Feature UI only: retain the native board/camera and account/purchase bridges.
 fs.mkdirSync(path.join(www,'web'),{recursive:true});
