@@ -8,7 +8,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
 const assert=require('node:assert/strict'),http=require('node:http'),fs=require('node:fs'),path=require('node:path');
 const root=path.resolve(__dirname,'../..'),game=path.join(root,'skyline-estates');
 const MB=1048576,BUDGET={
-  appMB:100,            // whole native app bundle (www); 82 MB on 9 Nov 2026
+  appMB:260,            // whole native app bundle (www); 82 MB on 9 Nov 2026; 239 MB on 19 Nov 2026 with the 3D Circuit/Dominion/Empire boards (owner accepted the larger app)
   firstLoadMB:9,        // what a new web visitor downloads before the home screen appears
   gameHtmlKB:1200,      // the single game source
   bootMs:12000,         // page open → home screen ready (CI headless, no GPU)

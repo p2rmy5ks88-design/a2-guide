@@ -193,7 +193,7 @@ button:disabled{opacity:.46;cursor:default}
 var SC=window.SkylineCircuit;if(!SC){document.querySelector("#actionCard").textContent="Circuit rules are unavailable";return;}
 var params=new URLSearchParams(location.search),wantsCareer=params.get("career")==="1";
 var careerEnabled=false;
-try{careerEnabled=localStorage.getItem("skylineFeature.career")==="on"&&localStorage.getItem("skylineFeature.circuitAlpha")==="on"}catch(e){}
+try{careerEnabled=localStorage.getItem("skylineFeature.career")!=="off"&&localStorage.getItem("skylineFeature.circuitAlpha")!=="off"}catch(e){}
 var CAREER_MODE=wantsCareer&&careerEnabled;
 if(wantsCareer&&!CAREER_MODE){
  document.querySelector("#actionCard").innerHTML='<h2>Career unavailable</h2><p>Skyline Career and Circuit preview must both be enabled to play a qualifying Career match. Your existing Circuit save is untouched.</p><a href="./index.html" class="actionBtn secondary">Back to Skyline Estates</a>';

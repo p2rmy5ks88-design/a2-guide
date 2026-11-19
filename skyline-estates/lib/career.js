@@ -35,12 +35,16 @@ const BOARDS=Object.freeze([
    building:'Owning a street allows Low-rise; higher stages need connected properties.',victory:'Reach and hold an influence target.',status:'in-development',design:null}},
  {id:'dominion',tier:3,name:'Skyline Dominion',difficulty:'Intermediate',strategy:'Territory and negotiation',playable:false,ruleset:null,
   requires:[{kind:'qualifiedWins',board:'circuit',count:2},{kind:'challenges',board:'circuit',tag:'district',count:3}],lengths:[],
-  preview:{headline:'Contest districts and negotiate for control.',geometry:'Hexagonal district network (design pending)',movement:'Action points across connected districts',
-   building:'Owning a site allows basic development; advanced buildings need district control.',victory:'Hold the required districts or lead on control points.',status:'planned',design:null}},
+  // Released with prototype rules (owner decision 19 Nov 2026): DOMINION.md, ruleset dominion-p1. Quick is experimental.
+  alpha:{ruleset:'dominion-p1',lengths:['standard','extended','quick'],experimental:['quick'],defaultLength:'standard'},
+  preview:{headline:'Contest districts and negotiate for control.',geometry:'48-space hexagonal track, eight district territories, Central District and contest exchanges',movement:'Action points across connected districts',
+   building:'Owning a site allows basic development; advanced buildings need district control.',victory:'Hold the required districts or lead on control points.',status:'released-prototype',design:'dominion-production-lab.html'}},
  {id:'empire',tier:4,name:'Skyline Empire',difficulty:'Advanced',strategy:'Investment and economic control',playable:false,ruleset:null,
   requires:[{kind:'qualifiedWins',board:'dominion',count:2},{kind:'challenges',board:'dominion',tag:'negotiation',count:1}],lengths:[],
-  preview:{headline:'Invest across zones and complete your empire.',geometry:'Asymmetric connected economic zones (design pending)',movement:'Strategic movement between zones',
-   building:'Higher buildings need supporting investment and infrastructure.',victory:'Complete three empire milestones and keep the lead.',status:'planned',design:null}}
+  // Released with prototype rules (owner decision 19 Nov 2026): EMPIRE.md, ruleset empire-p1. Quick is experimental.
+  alpha:{ruleset:'empire-p1',lengths:['standard','extended','quick'],experimental:['quick'],defaultLength:'standard'},
+  preview:{headline:'Invest across zones and complete your empire.',geometry:'44-space island loop through six zones around the Empire Tower',movement:'Strategic movement between zones',
+   building:'Higher buildings need supporting investment and infrastructure.',victory:'Complete three empire milestones and keep the lead.',status:'released-prototype',design:'empire-production-lab.html'}}
 ].map(b=>Object.freeze({...b,requires:Object.freeze(b.requires.map(r=>Object.freeze({...r}))),preview:Object.freeze({...b.preview})})));
 const BY_ID=Object.fromEntries(BOARDS.map(b=>[b.id,b]));
 const int=(v,lo=0)=>Number.isSafeInteger(v)&&v>=lo?v:0;
@@ -122,8 +126,10 @@ function record(s,f,ctx={},now=Date.now()){
  t.matches++;t.qualified++;t.xp+=MASTERY.matchXp+MASTERY.qualifiedXp;if(f.won){t.wins++;t.xp+=MASTERY.winXp}if(q.winCounts)t.qualifiedWins++;
  t.bestScore=Math.max(t.bestScore,int(Math.round(f.score||0)));t.lastAt=now;
  s.receipts.push([f.matchId,f.startedAt]);while(s.receipts.length>QUALIFY.maxReceipts)s.floor=Math.max(s.floor,s.receipts.shift()[1]);
+ // Board challenges earned in this match (ids validated; each counted once ever).
+ const ch=[];for(const c of Array.isArray(f.challenges)?f.challenges.slice(0,8):[]){if(!c||!ID.test(c.id)||typeof c.tag!=='string')continue;const b=s.challenges[f.board]=s.challenges[f.board]||{};if(b[c.id])continue;b[c.id]={tag:c.tag.slice(0,40),at:now};ch.push(c.id)}
  const unlocked=evaluate(s,ctx,now);
- return{ok:true,qualifiedWin:q.winCounts,experimental:q.experimental,won:!!f.won,unlocked,xp:t.xp,level:masteryLevel(t.xp)};
+ return{ok:true,challenges:ch,qualifiedWin:q.winCounts,experimental:q.experimental,won:!!f.won,unlocked,xp:t.xp,level:masteryLevel(t.xp)};
 }
 function completeTutorial(s,board,ctx={},now=Date.now()){if(s.readOnly||!BY_ID[board])return [];s.tutorials[board]=now||1;return evaluate(s,ctx,now)}
 // Board challenges (Circuit district, Dominion negotiation) are recorded by future board modules through this call.
@@ -157,13 +163,14 @@ return Object.freeze({VERSION,BOARDS,LENGTHS,CATEGORIES,QUALIFY,MASTERY,fresh,no
 if(typeof window==='undefined'||typeof PREF==='undefined'||window.SkylineCareer)return;
 const C=window.SkylineCareerCore,FLAG='skylineFeature.career';
 // Disabled by default. Enable for testing with ?career=on (persists on this device) and disable with ?career=off.
-function flagOn(){try{const q=new URLSearchParams(location.search).get('career');if(q==='on')localStorage.setItem(FLAG,'on');else if(q==='off')localStorage.removeItem(FLAG);return localStorage.getItem(FLAG)==='on'}catch(e){return false}}
+// On for everyone since 19 Nov 2026 (owner decision). ?career=off turns it off on this device, ?career=on back on.
+function flagOn(){try{const q=new URLSearchParams(location.search).get('career');if(q==='on')localStorage.removeItem(FLAG);else if(q==='off')localStorage.setItem(FLAG,'off');return localStorage.getItem(FLAG)!=='off'}catch(e){return true}}
 const enabled=flagOn();
 // Circuit playable alpha: a second flag (?circuitAlpha=on/off), only meaningful with Career on.
 const ALPHA='skylineFeature.circuitAlpha';
-function alphaOn(){try{const q=new URLSearchParams(location.search).get('circuitAlpha');if(q==='on')localStorage.setItem(ALPHA,'on');else if(q==='off')localStorage.removeItem(ALPHA);return localStorage.getItem(ALPHA)==='on'}catch(e){return false}}
+function alphaOn(){try{const q=new URLSearchParams(location.search).get('circuitAlpha');if(q==='on')localStorage.removeItem(ALPHA);else if(q==='off')localStorage.setItem(ALPHA,'off');return localStorage.getItem(ALPHA)!=='off'}catch(e){return true}}
 const circuitAlpha=enabled&&alphaOn();
-const ctx=()=>({originsTutorialDone:!!PREF.tutDone,alphaBoards:circuitAlpha?['circuit']:[]});
+const ctx=()=>({originsTutorialDone:!!PREF.tutDone,alphaBoards:circuitAlpha?['circuit','dominion','empire']:[]});
 function load(){return C.normalize(PREF.career)}
 // Before recording, read the saved profile again: another tab or a restored backup may already hold this match.
 function loadStored(){try{const raw=JSON.parse(localStorage.getItem(PKEY)||'null');if(raw&&raw.career)return C.normalize(raw.career)}catch(e){}return load()}
@@ -202,23 +209,29 @@ function startOrigins(length='standard'){
 // Temporary functional entry point (testing only, flag on). The final Career screen comes from the approved design package.
 async function open(){
  try{ingest()}catch(e){}
- const v=C.view(load(),ctx()),circuit=v.find(b=>b.id==='circuit');
+ const v=C.view(load(),ctx()),circuit=v.find(b=>b.id==='circuit'),dominion=v.find(b=>b.id==='dominion'),empire=v.find(b=>b.id==='empire');
+ const boardBtns=(b,name)=>b&&b.playable?[{k:b.id+':standard',label:name+' · Standard'},{k:b.id+':extended',label:name+' · Extended'},{k:b.id+':quick',label:name+' · Quick (experimental, XP only)'}]:[];
  const row=b=>`<div class="cr-row cr-${b.status}"><div><b>${b.tier} · ${esc(b.name)}</b> <small>${esc(b.difficulty)} · ${esc(b.strategy)}</small><br><small>${esc(b.preview.headline)}</small>${b.status==='playable'?`<br><small>Mastery level ${b.mastery.level} · ${b.mastery.qualifiedWins} qualifying wins · ${b.mastery.matches} matches</small>`:''}${b.requirements.length&&!b.unlocked?`<ul>${b.requirements.map(r=>`<li>${esc(r.label)}: ${r.have} / ${r.need}</li>`).join('')}</ul>`:''}</div><span>${b.status==='playable'?'Play':b.status==='unlocked-preview'?'Unlocked · coming soon':b.status==='locked'?'Locked':'Locked'}</span></div>`;
- const k=await modal({cls:'wide career-preview',html:`<div class="mh">Skyline Career <small>(preview build)</small></div><div class="mtxt">${v.map(row).join('')}</div>`,
+ const k=await modal({cls:'wide career-preview',html:`<div class="mh">Skyline Career</div><div class="mtxt">${v.map(row).join('')}</div>`,
   btns:[{k:'quick',label:'Origins · Quick 20'},{k:'standard',label:'Origins · Standard 30',primary:true},{k:'extended',label:'Origins · Extended 40'},{k:'unlimited',label:'Origins · Unlimited'},
-   ...(circuit&&circuit.playable?[
-    {k:'circuit:standard',label:'Circuit Living Board · Standard'},
-    {k:'circuit:extended',label:'Circuit Living Board · Extended'},
-    {k:'circuit:quick',label:'Circuit Living Board · Quick (experimental, XP only)'},
-    {k:'circuit-legacy:standard',label:'Circuit legacy board · fallback'}
-   ]:[]),{k:null,label:'Close'}]});
- if(k&&k.startsWith('circuit:'))location.href='./circuit-tabletop-lab.html?career=1&length='+k.slice(8);
- else if(k&&k.startsWith('circuit-legacy:'))location.href='./circuit-alpha.html?career=1&length='+k.slice(15);
+   ...boardBtns(circuit,'Circuit'),...boardBtns(dominion,'Dominion'),...boardBtns(empire,'Empire'),{k:null,label:'Close'}]});
+ const page={circuit:'./circuit-production-lab.html',dominion:'./dominion-production-lab.html',empire:'./empire-production-lab.html'},[bid,len]=(k||'').split(':');
+ if(page[bid]&&len)location.href=page[bid]+'?career=1&length='+encodeURIComponent(len);
  else if(k)startOrigins(k);
 }
 if(enabled){
  const st=document.createElement('style');st.textContent='.career-preview .cr-row{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid #ffffff22}.career-preview .cr-row ul{margin:4px 0 0 18px;padding:0;font-size:12px}.career-preview .cr-row span{flex:none;font-weight:700;color:#f4d28b}.career-preview .cr-locked-hidden{opacity:.55}';document.head.append(st);
  const oldP=paneP;paneP=function(T){const r=oldP.apply(this,arguments);try{const list=T.querySelector('.hd-gm-list')||T;if(!T.querySelector('#crOpen')){const b=document.createElement('button');b.type='button';b.id='crOpen';b.className=list.classList.contains('hd-gm-list')?'hd-gm-item':'challenge-overview';b.innerHTML='<span class="tx"><b>Skyline Career</b><small>Preview build · four boards</small></span>';b.onclick=()=>{sfx('tap');open()};list.prepend(b)}}catch(e){}return r};
+}
+// Main-screen Career button (owner request 19 Nov 2026): a third action under Play Solo and Game Modes.
+if(enabled&&typeof homeTab==='function'){
+ const st=document.createElement('style');st.textContent='#title .hd-stage.v2 .hd-actions.has-career{display:grid!important;grid-template-columns:1fr 1fr;column-gap:calc(1.2*var(--hd-u,8px));align-items:center}#title .hd-stage.v2 .hd-actions.has-career>.hd-main{grid-column:1/-1}#title .hd-stage.v2 .hd-actions.has-career>.hd-gmbtn{width:100%!important;min-width:0}#title .hd-stage.v2 .hd-career small{margin-left:4px;font-size:.78em;color:#f2cf78;font-weight:600}#title .hd-stage.v2 .hd-gm{grid-column:1/-1}';document.head.append(st);
+ const priorHome=homeTab;homeTab=function(){const r=priorHome.apply(this,arguments);try{const acts=document.querySelector('#title .hd-stage.v2 .hd-actions');
+  if(acts&&!acts.querySelector('#hdCareer')){const v=C.view(load(),ctx()),open1=v.filter(b=>b.unlocked).length;const b=document.createElement('button');b.type='button';b.id='hdCareer';b.className='hd-gmbtn hd-career';
+   b.setAttribute('aria-label','Career mode, '+open1+' of '+v.length+' boards unlocked');
+   b.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 18 5 7l4.5 4.5L12 5l2.5 6.5L19 7l2 11zm0 2h18v2H3z"/></svg><span>Career</span><small>'+open1+' / '+v.length+'</small>';
+   b.onclick=()=>{try{sfx('tap')}catch(e){}open()};acts.append(b);acts.classList.add('has-career')}}catch(e){console.warn('Career button',e)}return r};
+ try{if(typeof setup!=='undefined'&&setup.tab==='play'&&document.querySelector('#title .hd-stage.v2'))homeTab('play')}catch(e){}
 }
 // With the flag off every entry point is inert: nothing is read into the UI and nothing is written to the profile.
 const off=()=>({ok:false,reason:'career-disabled'});
