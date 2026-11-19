@@ -110,7 +110,7 @@ const TYPES={'.html':'text/html','.js':'text/javascript','.css':'text/css','.jso
   if(OUT)await p.screenshot({path:path.join(OUT,'ring-844-result.png')});
   const saved=await p.evaluate(()=>HarbourRing.saved());assert.equal(saved,null);ok('a finished match leaves no save behind');
   const rw=await p.evaluate(b=>{const s=HarbourRing.state(),r=s.reward;return{r,coins:PREF.coins-b.coins,games:PREF.stats.games-b.games,shown:!!document.querySelector('#hr .hr-rew'),again:(()=>{const x=s.rewarded;return x})()}},before);
-  assert.ok(rw.r&&rw.r.xp>=50&&rw.coins>=rw.r.coins&&rw.r.coins>=175&&rw.games===1&&rw.shown,JSON.stringify(rw));
+  assert.ok(rw.r&&rw.r.xp>=50&&rw.coins>=rw.r.coins&&rw.r.coins>=220&&rw.games===1&&rw.shown,JSON.stringify(rw));
   ok(`a finished match pays once: +${rw.r.xp} XP, +${rw.r.coins} Coins, ${rw.r.tr>0?'+':''}${rw.r.tr} trophies, shown on the result screen`);
   await p.click('#hr [data-a="home"]');await p.locator('#hr').waitFor({state:'detached'});
   const after=await p.evaluate(()=>({coins:PREF.coins,save:localStorage.getItem('skylineSave'),home:!!document.querySelector('#title .hd-stage'),active:HarbourRing.active()}));
