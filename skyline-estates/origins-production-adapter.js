@@ -1,4 +1,4 @@
-/* Local preview only. Presentation adapter; rules and storage remain in game.html. */
+/* Career Board 1 presentation adapter (origins-career.html); rules and storage remain in game.html. */
 (async function(){
  'use strict';
  if(window.SkylineOriginsProduction)return;
@@ -7,7 +7,7 @@
  document.documentElement.classList.add('origins-production');
  const hud=document.createElement('div');hud.id='originsProductionHud';hud.innerHTML=`
   <div id="orgAssetStatus" role="status">Loading local 3D assets…</div>
-  <aside id="orgCareer"><div class="orgBrand"><span aria-hidden="true">▂▅▇▆▃</span><b>SKYLINE<br>ESTATES</b><small>Career Mode · Local preview</small></div><button id="orgBoardOne"><em>1</em><span>Skyline Origins<small>Live match · 40 spaces</small></span></button><div class="orgOtherBoards"><span>2 <b>Skyline Circuit</b></span><span>3 <b>Skyline Dominion</b></span><span>4 <b>Skyline Empire</b></span></div></aside>
+  <aside id="orgCareer"><div class="orgBrand"><span aria-hidden="true">▂▅▇▆▃</span><b>SKYLINE<br>ESTATES</b><small>Career Mode</small></div><button id="orgBoardOne"><em>1</em><span>Skyline Origins<small>Live match · 40 spaces</small></span></button><div class="orgOtherBoards"><span>2 <b>Skyline Circuit</b></span><span>3 <b>Skyline Dominion</b></span><span>4 <b>Skyline Empire</b></span></div></aside>
   <header id="orgHeading"><h1>Skyline Origins</h1><p>The Property Development Classic</p><span id="orgRound"></span></header>
   <aside id="orgPortfolio" aria-label="Live match portfolio"></aside>
   <section id="orgFootnotes"><div><b>Board Overview</b><span>40 perimeter spaces · Buy, develop and trade · Highest net worth wins</span></div><div id="orgGroups"><b>Property Groups</b></div><div id="orgStages"><b>Development Progression</b><span>Lot → Mid-rise (1–2) → High-rise (3–4) → Skyscraper (5)</span></div></section>
@@ -33,6 +33,8 @@
  visualViewport?.addEventListener('resize',()=>{viewport=null;renderer?.resize();});
  function read(){
   if(typeof G==='undefined'||!G||document.querySelector('#title')?.hidden!==true)return{active:false};
+  // Between matches (or while one is being set up) the classic scene and tokens may not exist yet.
+  if(typeof S3==='undefined'||!S3||!S3.dice||G.players.some(p=>!tok3[p.id]))return{active:false};
   const you=G.players.find(p=>!p.ai)||G.players[0];let developed=0,owned=0;
   for(const o of G.own)if(o.o===you.id){owned++;developed+=o.h||0;}
   const hudKey=[G.set.ai,G.set.mode,G.turn,G.round,G.phase,owned,developed,you.cash,netWorth(you),G.over].join('|');
@@ -47,7 +49,7 @@
    squares:SQ.map((s,i)=>({name:s.n,type:s.t,color:GC[s.g]||({go:'#77bca3',jail:'#b5c7de',free:'#9fcbd1',gojail:'#a6c8df',chance:'#a6d1de',esusu:'#d3c1dc',tax:'#dae0e2',rail:'#b6cbd8',util:'#c8d9e3'}[s.t]||'#c6d2d8'),price:s.p?fmt(s.p):'',rect:rect(i)})),
    ownership:G.own.map(o=>({owner:o.o,stage:o.h,mortgaged:o.m})),
    players:G.players.map(p=>({id:p.id,color:p.col,out:p.bankrupt,node:tok3[p.id],textureURL:'./items/board/tok-'+TOK_SLUG[p.tok]+'.webp',world:tok3[p.id]?.p?.slice()||[wx(tokenXY(p)[0]),0,wz(tokenXY(p)[1])]})),
-   dice:G.lastDice||null,diceSkin:diceSkin().id,nativeDice:[...S3.dice,S3.sdie].filter(Boolean),cosmeticKey:JSON.stringify(PREF.eq)};
+   dice:G.lastDice||null,diceSkin:diceSkin().id,nativeDice:S3&&S3.dice?[...S3.dice,S3.sdie].filter(Boolean):[],cosmeticKey:JSON.stringify(PREF.eq)};
  }
  try{renderer=mod.createOriginsRenderer(canvas,{read,onSquare:i=>{if(!document.querySelector('#modals').children.length)showSquare(i);}});}catch(e){canvas.remove();document.documentElement.classList.remove('origins-production');throw e;}
  const originalDrawScene=drawScene;drawScene=function(time){if(!G||!document.querySelector('#title').hidden)return originalDrawScene(time);};

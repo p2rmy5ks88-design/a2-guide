@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+<title>Skyline Origins — Career</title>
+<style>
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#0b1930;color:#fff2d8;font-family:system-ui,-apple-system,Arial,sans-serif}
+#originsGame{position:fixed;inset:0;width:100%;height:100%;border:0;display:block}
+#status{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);color:#ffe8b5;font-weight:850;font-size:13px;text-align:center}
+</style>
+</head>
+<body>
+<div id="status" role="status">Loading Skyline Origins…</div>
+<iframe title="Skyline Origins Career match" id="originsGame" src="about:blank" allow="autoplay"></iframe>
+<script>
+/* Career Board 1 (owner decision 19 Nov 2026): Career → Origins plays the real Classic game
+   (same rules, saves and Career recording in game.html) with the approved Origins 3D board.
+   The presentation adapter is applied only inside this page, so Play Solo keeps the classic board. */
+(()=>{
+ const q=new URLSearchParams(location.search),lengths=['quick','standard','extended','unlimited'];
+ const length=lengths.includes(q.get('length'))?q.get('length'):'standard';
+ const iframe=document.querySelector('#originsGame'),status=document.querySelector('#status');
+ const home=()=>location.replace('./index.html');
+ let started=false;
+ iframe.addEventListener('load',()=>{
+  const w=iframe.contentWindow,d=iframe.contentDocument;
+  if(!d||!d.head||!/index\.html/.test(w.location.pathname)){home();return}
+  try{
+   const link=d.createElement('link');link.rel='stylesheet';link.href='./origins-production.css';d.head.append(link);
+   const script=d.createElement('script');script.src='./origins-production-adapter.js';
+   script.addEventListener('load',()=>{status.hidden=true});
+   script.addEventListener('error',()=>{status.hidden=true});
+   d.body.append(script);
+  }catch(e){status.hidden=true}
+  // Leaving the match (Home, quit or the end-of-match screen's exit) returns to the normal main screen.
+  const watch=setInterval(()=>{
+   try{
+    // G is a script-level let in the game, so it is read through the frame's own scope.
+    const g=w.eval("typeof G==='undefined'||!G?null:{career:G.set&&G.set.career,over:!!G.over}");
+    if(g&&g.career==='origins'&&!g.over)started=true;
+    const title=d.querySelector('#title'),onTitle=!!title&&!title.hidden&&getComputedStyle(title).display!=='none';
+    if(started&&onTitle&&(!g||g.over||g.career!=='origins')){clearInterval(watch);home()}
+   }catch(e){}
+  },700);
+ });
+ iframe.src='./index.html?careerOrigins='+encodeURIComponent(length);
+})();
+</script>
+</body>
+</html>

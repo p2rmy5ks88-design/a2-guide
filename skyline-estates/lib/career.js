@@ -217,8 +217,15 @@ async function open(){
    ...boardBtns(circuit,'Circuit'),...boardBtns(dominion,'Dominion'),...boardBtns(empire,'Empire'),{k:null,label:'Close'}]});
  const page={circuit:'./circuit-production-lab.html',dominion:'./dominion-production-lab.html',empire:'./empire-production-lab.html'},[bid,len]=(k||'').split(':');
  if(page[bid]&&len)location.href=page[bid]+'?career=1&length='+encodeURIComponent(len);
- else if(k)startOrigins(k);
+ else if(k){if(ORIGINS_FRAME)startOrigins(k);else location.href='./origins-career.html?length='+encodeURIComponent(k)}
 }
+// Career Board 1 page (owner decision 19 Nov 2026): origins-career.html loads this game with the approved Origins 3D board
+// and ?careerOrigins=<length>; the match starts here so rules, saves and Career recording are unchanged.
+const ORIGINS_FRAME=(()=>{try{return ['quick','standard','extended','unlimited'].includes(new URLSearchParams(location.search).get('careerOrigins'))}catch(e){return false}})();
+if(enabled&&ORIGINS_FRAME){const len=new URLSearchParams(location.search).get('careerOrigins');let tries=0;
+ const go=()=>{if(++tries>150)return;if(typeof setup==='undefined'||!setup.slots||typeof startFromSetup!=='function'||!document.querySelector('#title .home')){setTimeout(go,200);return}
+  try{if(!startOrigins(len))(window.top||window).location.replace('./index.html')}catch(e){setTimeout(go,300)}};
+ setTimeout(go,400)}
 if(enabled){
  const st=document.createElement('style');st.textContent='.career-preview .cr-row{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid #ffffff22}.career-preview .cr-row ul{margin:4px 0 0 18px;padding:0;font-size:12px}.career-preview .cr-row span{flex:none;font-weight:700;color:#f4d28b}.career-preview .cr-locked-hidden{opacity:.55}';document.head.append(st);
  const oldP=paneP;paneP=function(T){const r=oldP.apply(this,arguments);try{const list=T.querySelector('.hd-gm-list')||T;if(!T.querySelector('#crOpen')){const b=document.createElement('button');b.type='button';b.id='crOpen';b.className=list.classList.contains('hd-gm-list')?'hd-gm-item':'challenge-overview';b.innerHTML='<span class="tx"><b>Skyline Career</b><small>Preview build · four boards</small></span>';b.onclick=()=>{sfx('tap');open()};list.prepend(b)}}catch(e){}return r};

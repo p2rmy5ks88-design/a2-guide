@@ -41,6 +41,15 @@ const TYPES={'.html':'text/html','.js':'text/javascript','.css':'text/css','.jso
   const after=await p.evaluate(()=>({inbox:Object.keys(localStorage).filter(k=>k.startsWith('skylineCareerInbox:')).length,d:SkylineCareer.state().find(b=>b.id==='dominion').mastery,last:SkylineCareer.inbox()}));
   assert.equal(after.inbox,0);assert.equal(after.d.matches,1,JSON.stringify(after.last));ok('back on the main screen the Dominion match is recorded once in Career');
   await p.goto(base+'empire-production-lab.html?career=1&length=standard');assert.equal(await p.locator('#careernote').count(),1);ok('Empire page also accepts Career matches');
+  // Career Board 1: Origins plays the real Classic game on the approved Origins 3D board, then returns to the main screen.
+  await p.goto(base+'index.html');await p.waitForSelector('#hdCareer');await p.locator('#hdCareer').click();
+  await Promise.all([p.waitForURL(/origins-career\.html\?length=quick$/),p.locator('#modals button',{hasText:'Origins · Quick'}).click()]);
+  let fr=null;for(let i=0;i<120&&!fr;i++){await p.waitForTimeout(500);const f=p.frames().find(x=>/index\.html\?careerOrigins=quick/.test(x.url()));if(f&&await f.evaluate(()=>typeof G!=='undefined'&&!!(G&&G.set&&G.set.career==='origins')).catch(()=>false))fr=f}
+  assert.ok(fr,'Origins Career match did not start');
+  const og=await fr.evaluate(()=>({len:G.set.careerLength,rounds:G.set.rounds,mode:G.set.mode,board:document.documentElement.classList.contains('origins-production'),canvas:!!document.querySelector('#originsProductionCanvas'),label:(document.querySelector('#orgCareer')||{}).textContent||''}));
+  assert.deepEqual([og.len,og.rounds,og.mode,og.board,og.canvas],['quick',20,'timed',true,true],JSON.stringify(og));assert.ok(!/preview/i.test(og.label),og.label);
+  await p.waitForTimeout(3000);await p.screenshot({path:path.join(out,engine+'-origins-career.png')});ok('Origins opens a Career match (Quick 20) on the approved Origins 3D board');
+  await fr.evaluate(()=>{G.over=true;showTitle()});await p.waitForURL(/\/index\.html$/,{timeout:15000});await p.waitForSelector('#hdCareer');ok('leaving the Origins match returns to the main screen');
   await context.close();
   assert.equal(errors.length,0,errors.join('\n'));ok('no browser errors');
  }finally{await browser.close();server.close()}
