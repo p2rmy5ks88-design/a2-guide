@@ -1,5 +1,6 @@
 // Skyline Career in the real game (Chromium, or WebKit with VISUAL_ENGINE=webkit):
-// flag off = no UI and no profile writes; flag on = temporary entry point, Origins career matches are today's game,
+// Career is on for everyone by default (owner decision 19 Nov 2026) with a main-screen Career button; ?career=off still gives
+// no UI and no profile writes; flag on = Career entry, Origins career matches are today's game,
 // qualifying wins unlock Circuit, nothing else in the profile changes, saves and reloads keep working.
 'use strict';
 const {chromium,webkit}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
@@ -23,10 +24,16 @@ const PREFS={nick:'Career QA',nickSet:true,welcomed:1,tutDone:1,coach:{pre:1,pos
   const w=won?G.players[0]:G.players[1];G.progDone=false;progressGameEnd(w);const r=SkylineCareer.last();G=null;return r},[id,won,ai]);
  const snapshot=p=>p.evaluate(()=>{const P=JSON.parse(localStorage.getItem(PKEY));return JSON.stringify({cach:P.cach,champ:P.champ,spot:P.spot,challengeClaims:P.challengeClaims,coins:P.coins,xp:P.xp,trophies:P.trophies,stats:P.stats,tokLv:P.tokLv,inv:P.inv}).replace(/1[0-9]{12}/g,'T')});// timestamps masked
 
- // ---- Flag off (default) ----
+ // ---- Default: on for everyone, with its own main-screen button ----
  let {context,p}=await session('');
+ assert.equal(await p.evaluate(()=>SkylineCareer.enabled),true);
+ await p.evaluate(()=>homeTab('play'));await p.waitForTimeout(200);assert.equal(await p.locator('#hdCareer').count(),1);
+ const cb=await p.locator('#hdCareer').boundingBox();assert.ok(cb&&cb.height>=44);ok('career is on by default with a Career button on the main screen');
+ await context.close();
+ // ---- Flag off (?career=off) ----
+ ({context,p}=await session('?career=off'));
  assert.equal(await p.evaluate(()=>SkylineCareer.enabled),false);
- await p.evaluate(()=>homeTab('play'));await p.waitForTimeout(200);assert.equal(await p.locator('#crOpen').count(),0);ok('career is off by default and adds no menu entry');
+ await p.evaluate(()=>homeTab('play'));await p.waitForTimeout(200);assert.equal(await p.locator('#crOpen').count(),0);assert.equal(await p.locator('#hdCareer').count(),0);ok('?career=off adds no menu entry or button');
  // What Game Modes holds, and what tapping Pass & Play does, with the flag off (compared with the flag on below).
  const modes=async()=>p.evaluate(()=>[...document.querySelectorAll('.hd-gm-list>button')].map(b=>b.id));
  const passPlay=async()=>{await p.evaluate(()=>homeTab('play'));await p.waitForTimeout(150);await p.evaluate(()=>document.querySelector('#qPP').click());await p.waitForTimeout(300);
@@ -70,12 +77,12 @@ const PREFS={nick:'Career QA',nickSet:true,welcomed:1,tutDone:1,coach:{pre:1,pos
  const easy=await fixture(p,'match-on-easy',true,'easy');assert.ok(easy.ok&&!easy.qualifiedWin);
  const loss=await fixture(p,'match-on-loss',false);assert.ok(loss.ok&&!loss.won);ok('duplicates rejected; Easy-only wins and losses earn mastery but not unlocks');
  const r2=await fixture(p,'match-on-2',true);assert.deepEqual(r2.unlocked,['circuit']);
- assert.equal(await p.evaluate(()=>SkylineCareer.state()[1].status),'unlocked-preview');ok('two qualifying wins (tutorial already done) unlock Circuit as a preview');
+ assert.equal(await p.evaluate(()=>SkylineCareer.state()[1].status),'playable');ok('two qualifying wins (tutorial already done) unlock Circuit, playable now');
  const short=await p.evaluate(()=>{GEN++;FAST=true;newGame({cash:1600,set:{city:'lagos',mode:'timed',rounds:30,career:'origins'},players:[0,1].map(i=>({name:'S'+i,tok:TOKENS[i],col:PCOL[i],ai:i>0,owner:i===0}))});FAST=false;G.masteryId='too-short';G.round=12;G.over=true;G.players[0].st={buys:5};SkylineSCWallet.create(localStorage).start('too-short',{});G.progDone=false;progressGameEnd(G.players[0]);const r=SkylineCareer.last();G=null;return r});
  assert.equal(short.reason,'too-short');ok('a match finished under two minutes does not count');
  await p.reload();await p.waitForFunction(()=>window.SkylineCareer&&!document.querySelector('#boot'));
  const after=await p.evaluate(()=>SkylineCareer.state().map(b=>[b.id,b.status,b.mastery.qualifiedWins,b.mastery.matches]));
- assert.deepEqual(after[0],['origins','playable',2,4]);assert.equal(after[1][1],'unlocked-preview');ok('career progress survives a reload');
+ assert.deepEqual(after[0],['origins','playable',2,4]);assert.equal(after[1][1],'playable');ok('career progress survives a reload');
  await p.goto(base+'?career=off');await p.waitForFunction(()=>window.SkylineCareer&&!document.querySelector('#boot'));
  assert.equal(await p.evaluate(()=>SkylineCareer.enabled),false);assert.ok(await p.evaluate(()=>!!JSON.parse(localStorage.getItem(PKEY)).career));ok('?career=off turns the flag off and keeps stored progress');
  await context.close();

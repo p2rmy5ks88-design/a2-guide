@@ -206,7 +206,9 @@ function careerFacts(s,{ownerSeat=0,endedAt=Date.now(),online=false,assisted=fal
  const order=['easy','normal','hard'],aiLevel=levels.length?levels.reduce((a,b)=>order.indexOf(b)<order.indexOf(a)?b:a):null; // weakest opponent decides
  return{board:'circuit',length:s.cfg.length,ruleset:RULESET,matchId:s.meta?s.meta.matchId:'',startedAt:s.meta?s.meta.startedAt:NaN,endedAt,sim:!!sim,fast:false,online:!!online,assisted:!!assisted,
   over:!!s.over,ownerHuman:!!me&&!me.ai,rounds:s.round,activity:me?me.st.buys+me.st.builds:0,won:s.over&&s.winner===ownerSeat,score:me?me.inf:0,
-  aiOpponents:levels.length,aiLevel,experimental:!!(s.cfg.length&&LENGTHS[s.cfg.length].experimental)}}
+  aiOpponents:levels.length,aiLevel,experimental:!!(s.cfg.length&&LENGTHS[s.cfg.length].experimental),
+  // District challenge (owner decision 19 Nov 2026, feeds the Dominion unlock): finish a Career match holding 3+ of a district's 5 properties.
+  challenges:me?DISTRICTS.map((ids,q)=>ids.filter(id=>s.own[id]&&s.own[id].o===ownerSeat).length>=3?{id:'circuit-district-'+q,tag:'district'}:null).filter(Boolean):[]}}
 // ---------- board layout check (for the visual design hand-off) ----------
 // A layout maps every node ID to board-plane coordinates (top view: x right, y toward the viewer / screen-down).
 // layout = {unit:'pt', nodes:{O0:{x,y},...}, minSpacing?:number}. Returns {ok, errors[], warnings[], stats}.

@@ -21,7 +21,7 @@ const BALANCE=Object.freeze({
  targetByPlayers:{2:3,3:3,4:3}, holdChecks:2, minWinRound:6,                   // early victory
  rounds:16,                                                        // finite cap (from the earlier proposal; not approved)
  aiBuyReserve:150, aiBuildReserve:220, aiContestBreak:2.5, aiContestPlain:1.2});
-const LENGTHS=Object.freeze({quick:Object.freeze({rounds:12,experimental:true}),standard:Object.freeze({rounds:16,experimental:true}),extended:Object.freeze({rounds:24,experimental:true})});
+const LENGTHS=Object.freeze({quick:Object.freeze({rounds:12,experimental:true}),standard:Object.freeze({rounds:16,experimental:false}),extended:Object.freeze({rounds:24,experimental:false})});
 const STAGES=Object.freeze(['Plot','Low-rise','Mid-rise','High-rise','Skyscraper']);
 
 // ---------- topology (follows the approved Dominion artwork; positions live in the presentation layout) ----------
@@ -85,8 +85,8 @@ function exchangeReach(s,pid,d){const p=s.players[pid];return p.exchange&&CONTES
 function newMatch(opts={}){
  const seed=(opts.seed>>>0)||1,cfg={...BALANCE,...(opts.length&&LENGTHS[opts.length]?{rounds:LENGTHS[opts.length].rounds}:{}),...(opts.cfg||{})};
  const names=opts.names||['You','Investor AI','Trader AI','Builder AI'],n=Math.max(2,Math.min(4,opts.players||names.length));
- const s={ruleset:RULESET,version:VERSION,seed,rng:seed,cfg,round:1,turn:0,idx:0,turns:0,phase:'act',winner:null,endReason:null,
-  players:Array.from({length:n},(_,i)=>({id:i,name:names[i]||'Player '+(i+1),ai:opts.ai?!!opts.ai[i]:i>0,cash:cfg.startCash,pos:'S0',
+ const s={ruleset:RULESET,version:VERSION,seed,rng:seed,cfg:{...cfg,length:opts.length&&LENGTHS[opts.length]?opts.length:'standard'},meta:opts.meta||null,round:1,turn:0,idx:0,turns:0,phase:'act',winner:null,endReason:null,
+  players:Array.from({length:n},(_,i)=>({id:i,st:{buys:0,builds:0,wins:0},name:names[i]||'Player '+(i+1),ai:opts.ai?!!opts.ai[i]:i>0,cash:cfg.startCash,pos:'S0',
    ap:0,out:false,cp:0,hold:0,exchange:null,visited:[],built:[],offered:[],contests:0})),
   own:Object.fromEntries(PROPS.map(id=>[id,{o:-1,h:0,cool:0}])),auction:null,offer:null,checks:[],challenges:[],log:[]};
  // Seeded first player (shown before the match), then the start rotates each round.
@@ -155,9 +155,9 @@ function act(s,pid,a){
  switch(a.type){
  case'move':{p.ap-=s.cfg.moveCost;p.pos=a.to;if(CONTEST_DISTRICTS[a.to])p.exchange=a.to;trackEffect(s,p,a.to);if(p.out)break;const o=owner(s,a.to);
   if(o>=0&&o!==pid){const r=rent(s,a.to);pay(s,pid,o,r);log(s,`${p.name} pays ${r} toll to ${s.players[o].name}`)}break}
- case'buy':p.ap-=s.cfg.actionCost;p.cash-=ok.price;s.own[a.node].o=pid;log(s,`${p.name} buys ${BY[a.node].name} for ${ok.price}`);break;
- case'develop':p.ap-=s.cfg.actionCost;p.cash-=ok.price;s.own[a.node].h++;p.built.push(a.node);log(s,`${p.name} builds ${STAGES[s.own[a.node].h]} on ${BY[a.node].name}`);break;
- case'contest':{p.ap-=s.cfg.actionCost;p.contests++;const prev=s.own[a.node].o;pay(s,pid,prev,ok.price);if(p.out)break;
+ case'buy':p.st&&p.st.buys++;p.ap-=s.cfg.actionCost;p.cash-=ok.price;s.own[a.node].o=pid;log(s,`${p.name} buys ${BY[a.node].name} for ${ok.price}`);break;
+ case'develop':p.st&&p.st.builds++;p.ap-=s.cfg.actionCost;p.cash-=ok.price;s.own[a.node].h++;p.built.push(a.node);log(s,`${p.name} builds ${STAGES[s.own[a.node].h]} on ${BY[a.node].name}`);break;
+ case'contest':{p.st&&p.st.wins++;p.ap-=s.cfg.actionCost;p.contests++;const prev=s.own[a.node].o;pay(s,pid,prev,ok.price);if(p.out)break;
   s.own[a.node].o=pid;s.own[a.node].cool=s.round+s.cfg.contestCooldown;log(s,`${p.name} wins contested ${BY[a.node].name} from ${s.players[prev].name} for ${ok.price}`);break}
  case'auction':{p.ap-=s.cfg.actionCost;const order=s.players.map((_,i)=>(pid+i)%s.players.length).filter(i=>!s.players[i].out);
   s.auction={node:a.node,min:ok.min,bids:{},waiting:order,by:pid};s.phase='auction';log(s,`${p.name} opens an auction for ${BY[a.node].name}`);break}
@@ -175,7 +175,7 @@ function act(s,pid,a){
 
 function closeAuction(s){const A=s.auction;s.auction=null;s.phase='act';let best=-1,amt=0;
  for(const[k,v]of Object.entries(A.bids)){const i=+k;if(v>amt){best=i;amt=v}} // ties keep the earlier bidder (seat order from opener)
- if(best>=0&&owner(s,A.node)<0){s.players[best].cash-=amt;s.own[A.node].o=best;log(s,`${s.players[best].name} wins the auction for ${BY[A.node].name} at ${amt}`)}else log(s,'Auction closes with no valid bid')}
+ if(best>=0&&owner(s,A.node)<0){const W=s.players[best];W.st&&W.st.wins++;W.cash-=amt;s.own[A.node].o=best;log(s,`${s.players[best].name} wins the auction for ${BY[A.node].name} at ${amt}`)}else log(s,'Auction closes with no valid bid')}
 
 // Turn order rotates: round r starts with seat (r-1) mod n, so no seat always acts first before scoring.
 function endTurn(s){const n=s.players.length;s.turns++;s.idx=(s.idx||0)+1;
@@ -222,6 +222,14 @@ function pathTo(s,from,to){const prev={[from]:null},q=[from];while(q.length){con
  const path=[];let c=to;while(c&&c!==from){path.unshift(c);c=prev[c]}return path}
 const firstStep=(s,from,to)=>pathTo(s,from,to)[0];
 
+const SCORE=(s,p)=>p.cp;
+// Career facts for a finished match (read by lib/career.js through the localStorage inbox). The computer players use the
+// single 'normal' policy. Activity = buys + builds + contests/auction wins by the owner.
+function careerFacts(s,{ownerSeat=0,endedAt=Date.now()}={}){const me=s.players[ownerSeat],st=me&&me.st||{};const ais=s.players.filter(p=>p.ai&&p.id!==ownerSeat).length;
+ return{board:'dominion',length:s.cfg.length||'standard',ruleset:RULESET,matchId:s.meta?s.meta.matchId:'',startedAt:s.meta?s.meta.startedAt:NaN,endedAt,sim:false,fast:false,online:false,assisted:false,
+  over:s.phase==='over',ownerHuman:!!me&&!me.ai,rounds:s.round,activity:(st.buys||0)+(st.builds||0)+(st.wins||0),won:s.phase==='over'&&s.winner===ownerSeat,score:me?SCORE(s,me):0,
+  aiOpponents:ais,aiLevel:ais?'normal':null,experimental:!!(LENGTHS[s.cfg.length||'standard']||{}).experimental,
+  challenges:(s.challenges||[]).filter(c=>c.player===ownerSeat).map(c=>({id:c.id,tag:c.tag}))}}
 // ---------- views & saves ----------
 function view(s){return{ruleset:s.ruleset,round:s.round,rounds:s.cfg.rounds,turn:s.turn,phase:s.phase,winner:s.winner,endReason:s.endReason,
  players:s.players.map(p=>({id:p.id,name:p.name,ai:p.ai,cash:p.cash,pos:p.pos,ap:p.ap,out:p.out,cp:p.cp,hold:p.hold,districts:controlled(s,p.id),worth:netWorth(s,p)})),
@@ -234,5 +242,5 @@ function restore(json){try{const s=typeof json==='string'?JSON.parse(json):json;
 function hash(s){let h=2166136261;const str=serialize(s);for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619)}return(h>>>0).toString(16)}
 function runAI(s,limit=4000){let n=0;while(s.phase!=='over'&&n++<limit){const pd=pending(s);const r=act(s,pd.player,ai(s,pd.player));if(!r.ok)throw Error('AI illegal: '+r.error)}return s}
 
-return Object.freeze({target,NEED,TRACK,GATES,CONTEST_PAIRS,CONTEST_DISTRICTS,EVENTS,RULESET,VERSION,SAVE_KEY,BALANCE,LENGTHS,STAGES,DISTRICTS,NODES,BY,EDGES,NEIGH,PROPS,SITES,
+return Object.freeze({careerFacts,target,NEED,TRACK,GATES,CONTEST_PAIRS,CONTEST_DISTRICTS,EVENTS,RULESET,VERSION,SAVE_KEY,BALANCE,LENGTHS,STAGES,DISTRICTS,NODES,BY,EDGES,NEIGH,PROPS,SITES,
  newMatch,legal,pending,act,ai,view,serialize,restore,hash,runAI,ranking,controller,controlled,rent,stageCost,contestPrice,netWorth,pathTo})});

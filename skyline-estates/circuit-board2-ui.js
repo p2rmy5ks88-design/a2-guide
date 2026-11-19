@@ -31,7 +31,7 @@ const REASON={'not-owned':'Not yours','max-stage':'Already a Skyscraper','one-st
  'needs-network-2':'Needs 2 connected properties','needs-network-3':'Needs 3 connected properties','needs-network-3-both-rings':'Needs 3 connected properties on both rings','cannot-afford':'Not enough cash'};
 const CARD={grant:'City grant: +150',fund:'Development fund: +100',festival:'Festival: +6 influence',inspection:'Inspection: −3 influence',tax:'City tax: 10% of cash',toll:'Toll: −50',repairs:'Repairs: 25 per building stage',rentday:'Rent day: every other player pays you 30'};
 const q=new URLSearchParams(location.search);
-const opts={speed:q.get('speed')||'normal',camera:q.get('camera')||'top',perf:q.get('perf')==='1',career:false,renderer:q.get('renderer')||'3d'};
+const opts={speed:q.get('speed')||'normal',camera:q.get('camera')||'top',perf:q.get('perf')==='1',career:q.get('career')==='1'&&(()=>{try{return localStorage.getItem('skylineFeature.career')!=='off'}catch(e){return true}})(),renderer:q.get('renderer')||'3d'};
 const reducedMotion=(()=>{try{return matchMedia('(prefers-reduced-motion: reduce)').matches}catch(e){return false}})();
 // 3D renderer (lib/circuit-renderer-3d.js) with the 2D placeholder as fallback when WebGL is unavailable or ?renderer=2d.
 let R3=null,R3tried=false,camCur=null;
@@ -84,7 +84,7 @@ function save(){if(window.__circuitBenchAuto||q.get('bench')==='1')return;if(s&&
 // ---------- setup ----------
 function setupScreen(){const saved=store.get(BOARD2_SAVE),r=saved?SC.restore(saved):null;
  $('#cx-setup').hidden=false;$('#cx-game').hidden=true;
- $('#cx-setup').innerHTML=`<h1>Skyline Circuit <small>Board 2 · 3D City Lab</small></h1>
+ $('#cx-setup').innerHTML=`<h1>Skyline Circuit <small>Board 2 · ${opts.career?'Career match':'3D City Lab'}</small></h1>
  <p class="cx-note">Board 2 research lab · real interactive 3D dual-ring tabletop. Plan routes in Strategy View; inspect buildings, drag to orbit and zoom in City View. Your Board 1 and Career saves are never touched.</p>
  ${r&&r.ok?`<button id="cx-resume" class="cx-primary">Resume match (round ${r.state.round})</button>`:r&&r.reason==='newer-version'?'<p class="cx-warn">A saved Circuit match from a newer version is kept untouched.</p>':''}
  <fieldset><legend>Match length</legend>${['standard','extended','quick'].map(k=>`<label><input type="radio" name="len" value="${k}" ${k===(['standard','extended','quick'].includes(q.get('length'))?q.get('length'):'standard')?'checked':''}> ${esc(LENGTH_TEXT[k])}</label>`).join('')}</fieldset>

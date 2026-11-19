@@ -42,8 +42,14 @@ const fmt=H.fmt,pct_unused=v=>{const d=Math.round((v-1)*100);return `<span class
 function save(){try{localStorage.setItem(E.SAVE_KEY,E.serialize(s))}catch{}}
 function savedState(){try{const raw=localStorage.getItem(E.SAVE_KEY);if(!raw)return null;const r=E.restore(raw);return r.ok&&r.state.phase!=='over'?r.state:null}catch{return null}}
 {const sv=savedState();if(sv){$('resume').hidden=false;$('saveinfo').textContent=`Round ${sv.round}/${sv.cfg.rounds}`}}
+const CAREER=Q.get('career')==='1'&&(()=>{try{return localStorage.getItem('skylineFeature.career')!=='off'}catch(e){return true}})();
+if(Q.get('length')){const r=document.querySelector(`[name=len][value="${Q.get('length')}"]`);if(r)r.checked=true}
+if(CAREER){const n=document.createElement('p');n.className='muted';n.id='careernote';n.textContent='Career match: Standard and Extended wins against the computer count toward Career unlocks; Quick earns mastery XP only. The result is added when you return to Skyline Estates.';$('start').before(n)}
+// Report a finished Career match once through the Career inbox (read by lib/career.js on the main screen).
+let reported=null;function reportCareer(){if(!s||s.phase!=='over'||!s.meta||!s.meta.career||reported===s.meta.matchId)return;reported=s.meta.matchId;
+ try{const f=E.careerFacts(s,{ownerSeat:0,endedAt:Date.now()});localStorage.setItem('skylineCareerInbox:'+f.matchId,JSON.stringify(f));localStorage.removeItem(E.SAVE_KEY)}catch(e){console.warn('Career report',e)}}
 $('start').onclick=()=>{const np=+document.querySelector('[name=np]:checked').value,len=document.querySelector('[name=len]:checked').value,seed=+(Q.get('seed')||Date.now()%1e9);
- s=E.newMatch({seed,length:len,players:np,ai:Array.from({length:np},(_,i)=>i!==0),names:['You','Investor AI','Trader AI','Builder AI'].slice(0,np)});boot()};
+ s=E.newMatch({seed,length:len,players:np,meta:CAREER?{career:true,matchId:'empire-'+seed.toString(36)+'-'+Date.now().toString(36),startedAt:Date.now()}:null,ai:Array.from({length:np},(_,i)=>i!==0),names:['You','Investor AI','Trader AI','Builder AI'].slice(0,np)});boot()};
 $('resume').onclick=()=>{s=savedState();if(s)boot()};
 async function boot(){$('setup').hidden=true;$('game').hidden=false;save();
  try{r3=await createEmpireRenderer($('board'),{quality:Q.get('quality')||document.querySelector('[name=q]:checked').value,onPick:id=>{if(!busy){sel=id;render()}}})}
@@ -106,7 +112,7 @@ $('dlg').addEventListener('input',e=>{if(e.target.type==='range')$(e.target.id+'
 async function fund(){const f=E.legal(s,human).find(a=>a.type==='fund'&&!a.blocked);if(!f)return;const v=await dialog('Invest in the Empire Tower',`<p>Shared landmark. Every SC ${s.cfg.towerInfluencePer} invested earns 1 influence. ${fmt(f.need)} completes the current stage.</p><input type="range" id="amt" min="${f.min}" max="${f.max}" value="${f.min}"><div>Invest: <b id="amtv">SC ${f.min}</b></div>`,[['Cancel',null],['Invest','go','gold']]);if(v==='go')run({type:'fund',amount:+$('amt').value})}
 async function offer(node){const a=E.legal(s,human).find(x=>x.type==='offer'&&x.node===node);if(!a||a.blocked)return;const v=await dialog('Negotiation offer',`<p>Offer to buy <b>${E.BY[node].name}</b> from <b>${s.players[a.to].name}</b>. Paid only if accepted.</p><input type="range" id="amt" min="${a.min}" max="${a.max}" value="${Math.min(a.max,Math.ceil(a.min*1.35))}"><div>Offer: <b id="amtv"></b></div>`,[['Cancel',null],['Send offer','go','gold']]);if(v==='go')run({type:'offer',node,amount:+$('amt').value})}
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
-async function loop(){for(;;){if(!s||s.phase==='over'){render();return}const pd=E.pending(s);
+async function loop(){for(;;){if(!s||s.phase==='over'){reportCareer();render();return}const pd=E.pending(s);
  if(pd.player===human){if(pd.kind==='bid'){const A=s.auction;const v=await dialog('Sealed auction',`<p><b>${E.BY[A.node].name}</b> · list ${fmt(E.BY[A.node].price)}. Minimum bid ${fmt(A.min)}.</p><input type="range" id="bid" min="${A.min}" max="${Math.max(A.min,s.players[human].cash)}" value="${A.min}"><div>Bid: <b id="bidv">SC ${A.min}</b></div>`,[['Pass','pass'],['Place bid','bid','gold']]);run(v==='bid'?{type:'bid',amount:+$('bid').value}:{type:'bid-pass'});continue}
   if(pd.kind==='respond'){const O=s.offer;const v=await dialog('Offer received',`<p><b>${s.players[O.from].name}</b> offers <b>${fmt(O.amount)}</b> for your <b>${E.BY[O.node].name}</b>.</p>`,[['Decline','decline'],['Accept','accept','gold']]);run({type:v});continue}
   await new Promise(r=>{loop.wake=r});continue}

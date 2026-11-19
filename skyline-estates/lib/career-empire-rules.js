@@ -21,7 +21,7 @@ const BALANCE=Object.freeze({
  marketStep:.05, marketMin:.8, marketMax:1.25,                     // seeded random walk per economic system
  rounds:20, auctionMinFactor:.5,
  aiBuyReserve:180, aiBuildReserve:260, aiTowerReserve:600});
-const LENGTHS=Object.freeze({quick:Object.freeze({rounds:15,experimental:true}),standard:Object.freeze({rounds:20,experimental:true}),extended:Object.freeze({rounds:28,experimental:true})});
+const LENGTHS=Object.freeze({quick:Object.freeze({rounds:15,experimental:true}),standard:Object.freeze({rounds:20,experimental:false}),extended:Object.freeze({rounds:28,experimental:false})});
 const STAGES=Object.freeze(['Plot','Low-rise','Mid-rise','High-rise','Skyscraper']);
 
 // ---------- topology: the approved Empire artwork's single winding loop (44 spaces, from empire_44.json) ----------
@@ -72,9 +72,9 @@ function milestones(s,p){const M=s.cfg.milestones,worth=netWorth(s,p),st=stagesB
 function newMatch(opts={}){
  const seed=(opts.seed>>>0)||1,cfg={...BALANCE,...(opts.length&&LENGTHS[opts.length]?{rounds:LENGTHS[opts.length].rounds}:{}),...(opts.cfg||{})};
  const names=opts.names||['You','Investor AI','Trader AI','Builder AI'],n=Math.max(2,Math.min(4,opts.players||names.length));
- const s={ruleset:RULESET,version:VERSION,seed,rng:seed,cfg,round:1,turn:0,idx:0,turns:0,phase:'roll',winner:null,endReason:null,
+ const s={ruleset:RULESET,version:VERSION,seed,rng:seed,cfg:{...cfg,length:opts.length&&LENGTHS[opts.length]?opts.length:'standard'},meta:opts.meta||null,round:1,turn:0,idx:0,turns:0,phase:'roll',winner:null,endReason:null,
   market:{demand:Object.fromEntries(SYSTEMS.map(k=>[k,1])),cost:1,trend:'Steady',event:null},
-  players:Array.from({length:n},(_,i)=>({id:i,name:names[i]||'Player '+(i+1),ai:opts.ai?!!opts.ai[i]:i>0,cash:cfg.startCash,pos:'E0',out:false,
+  players:Array.from({length:n},(_,i)=>({id:i,st:{buys:0,builds:0,wins:0},name:names[i]||'Player '+(i+1),ai:opts.ai?!!opts.ai[i]:i>0,cash:cfg.startCash,pos:'E0',out:false,
    influence:0,towerFund:0,invest:0,offered:[],desk:false,lastRoll:null})),
   own:Object.fromEntries(PROPS.map(id=>[id,{o:-1,h:0}])),tower:{stage:0,funded:0,by:{}},auction:null,offer:null,checks:[],log:[]};
  s.first=Math.floor(rnd(s)*n);s.turn=s.first;marketEvent(s);startTurn(s);return s}
@@ -125,11 +125,11 @@ function act(s,pid,a){const L=legal(s,pid),ok=L.find(x=>x.type===a.type&&!x.bloc
  case'roll':{const d1=1+Math.floor(rnd(s)*6),d2=1+Math.floor(rnd(s)*6),from=BY[p.pos].idx,to=(from+d1+d2)%N;p.lastRoll=[d1,d2];p.path=[];
   for(let k=1;k<=d1+d2;k++)p.path.push('E'+((from+k)%N));if(to<from||from+d1+d2>=N){p.cash+=s.cfg.payday;log(s,`${p.name} passes Empire Start: +${s.cfg.payday}`)}
   p.pos='E'+to;p.decided=false;s.phase='invest';log(s,`${p.name} rolls ${d1}+${d2} to ${BY[p.pos].name}`);land(s,p);break}
- case'buy':p.cash-=ok.price;s.own[a.node].o=pid;p.decided=true;log(s,`${p.name} buys ${BY[a.node].name} for ${ok.price}`);break;
+ case'buy':p.st&&p.st.buys++;p.cash-=ok.price;s.own[a.node].o=pid;p.decided=true;log(s,`${p.name} buys ${BY[a.node].name} for ${ok.price}`);break;
  case'auction':{p.decided=true;const order=s.players.map((_,i)=>(pid+i)%s.players.length).filter(i=>!s.players[i].out);
   s.auction={node:a.node,min:ok.min,bids:{},waiting:order,order:order.slice()};s.phase='auction';log(s,`${p.name} auctions ${BY[a.node].name}`);break}
  case'bid':case'bid-pass':{const A=s.auction;let b=a.type==='bid'?Math.max(0,Math.min(p.cash,Math.floor(a.amount||0))):0;if(b<A.min)b=0;A.bids[pid]=b;A.waiting.shift();if(!A.waiting.length)closeAuction(s);break}
- case'develop':p.invest--;p.cash-=ok.price;s.own[a.node].h++;log(s,`${p.name} builds ${STAGES[s.own[a.node].h]} on ${BY[a.node].name}`);break;
+ case'develop':p.st&&p.st.builds++;p.invest--;p.cash-=ok.price;s.own[a.node].h++;log(s,`${p.name} builds ${STAGES[s.own[a.node].h]} on ${BY[a.node].name}`);break;
  case'fund':{const amt=Math.max(ok.min,Math.min(ok.max,Math.floor(a.amount||ok.min)));p.invest--;p.cash-=amt;p.towerFund+=amt;s.tower.funded+=amt;s.tower.by[pid]=(s.tower.by[pid]||0)+amt;
   const gain=Math.floor(amt/s.cfg.towerInfluencePer);p.influence+=gain;log(s,`${p.name} invests ${amt} in the Empire Tower (+${gain} influence)`);
   if(s.tower.funded>=s.cfg.towerStageCost[s.tower.stage]){s.tower.stage++;s.tower.funded=0;log(s,`Empire Tower reaches ${STAGES[s.tower.stage-1+1]||'completion'}`)}break}
@@ -146,7 +146,7 @@ function land(s,p){const n=BY[p.pos];
   p.cash+=div;log(s,`${p.name} collects a ${best} dividend of ${div}`)}
  else if(n.type==='dice'){const r=1+Math.floor(rnd(s)*6);p.cash+=r*25;log(s,`${p.name} Fortune Roll ${r}: +${r*25}`)}}
 function closeAuction(s){const A=s.auction;s.auction=null;s.phase='invest';let best=-1,amt=0;for(const k of A.order){const v=A.bids[k]||0;if(v>amt){best=k;amt=v}} // ties: earliest in bidding order (opener first)
- if(best>=0&&owner(s,A.node)<0){s.players[best].cash-=amt;s.own[A.node].o=best;log(s,`${s.players[best].name} wins the auction at ${amt}`)}else log(s,'Auction closes with no valid bid')}
+ if(best>=0&&owner(s,A.node)<0){const W=s.players[best];W.st&&W.st.wins++;W.cash-=amt;s.own[A.node].o=best;log(s,`${s.players[best].name} wins the auction at ${amt}`)}else log(s,'Auction closes with no valid bid')}
 function endTurn(s){const n=s.players.length;s.turns++;s.idx++;
  const advance=()=>{if(s.idx>=n){roundEnd(s);if(s.phase==='over')return false;s.idx=0}return true};
  if(!advance())return;const first=(s.first+s.round-1)%n;let guard=0;while(s.players[(first+s.idx)%n].out){s.idx++;if(!advance()||guard++>8)return}
@@ -178,6 +178,14 @@ function ai(s,pid){const L=legal(s,pid).filter(x=>!x.blocked),p=s.players[pid],f
  if(off)return{type:'offer',node:off.x.node,amount:Math.ceil(off.x.min*1.35)};
  return{type:'end'}}
 
+const SCORE=(s,p)=>score(s,p);
+// Career facts for a finished match (read by lib/career.js through the localStorage inbox). The computer players use the
+// single 'normal' policy. Activity = buys + builds + contests/auction wins by the owner.
+function careerFacts(s,{ownerSeat=0,endedAt=Date.now()}={}){const me=s.players[ownerSeat],st=me&&me.st||{};const ais=s.players.filter(p=>p.ai&&p.id!==ownerSeat).length;
+ return{board:'empire',length:s.cfg.length||'standard',ruleset:RULESET,matchId:s.meta?s.meta.matchId:'',startedAt:s.meta?s.meta.startedAt:NaN,endedAt,sim:false,fast:false,online:false,assisted:false,
+  over:s.phase==='over',ownerHuman:!!me&&!me.ai,rounds:s.round,activity:(st.buys||0)+(st.builds||0)+(st.wins||0),won:s.phase==='over'&&s.winner===ownerSeat,score:me?SCORE(s,me):0,
+  aiOpponents:ais,aiLevel:ais?'normal':null,experimental:!!(LENGTHS[s.cfg.length||'standard']||{}).experimental,
+  challenges:[]}}
 // ---------- views & saves ----------
 function view(s){return{ruleset:s.ruleset,round:s.round,rounds:s.cfg.rounds,turn:s.turn,phase:s.phase,winner:s.winner,endReason:s.endReason,market:JSON.parse(JSON.stringify(s.market)),tower:{...s.tower},
  players:s.players.map(p=>({id:p.id,name:p.name,ai:p.ai,cash:p.cash,pos:p.pos,out:p.out,influence:p.influence,invest:p.invest,lastRoll:p.lastRoll,worth:netWorth(s,p),score:score(s,p),milestones:milestones(s,p)})),
@@ -188,5 +196,5 @@ function restore(json){try{const s=typeof json==='string'?JSON.parse(json):json;
  if(s.version>VERSION)return{ok:false,error:'Save from a newer version (left untouched)'};if(!Array.isArray(s.players)||!s.own||!s.market||PROPS.some(id=>!s.own[id])||s.players.some(p=>!BY[p.pos]))return{ok:false,error:'Corrupted save'};return{ok:true,state:s}}catch(e){return{ok:false,error:'Corrupted save'}}}
 function hash(s){let h=2166136261;const str=serialize(s);for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619)}return(h>>>0).toString(16)}
 function runAI(s,limit=8000){let n=0;while(s.phase!=='over'&&n++<limit){const pd=pending(s);const r=act(s,pd.player,ai(s,pd.player));if(!r.ok)throw Error('AI illegal: '+r.error+' '+JSON.stringify(ai(s,pd.player)))}if(s.phase!=='over')throw Error('stall');return s}
-return Object.freeze({RULESET,VERSION,SAVE_KEY,BALANCE,LENGTHS,STAGES,ZONES,SYSTEMS,TRACK,NODES,BY,PROPS,SITES,MAJ,EVENTS,
+return Object.freeze({careerFacts,RULESET,VERSION,SAVE_KEY,BALANCE,LENGTHS,STAGES,ZONES,SYSTEMS,TRACK,NODES,BY,PROPS,SITES,MAJ,EVENTS,
  newMatch,legal,pending,act,ai,view,serialize,restore,hash,runAI,ranking,score,milestones,majority,rent,stageCost,netWorth,hasInfra})});

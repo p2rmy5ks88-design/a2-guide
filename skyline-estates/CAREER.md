@@ -1,6 +1,14 @@
 # Skyline Career — Phase A foundation
 
-Status: Phase A, behind a feature flag that is **off by default**. With the flag off nothing changes for players: no menu entry, no profile writes.
+Status: **live for everyone** (owner decision 19 Nov 2026). Career has its own button on the main screen beside Game Modes. `?career=off` still turns it off on a device (no UI, no profile writes); `?career=on` turns it back on.
+
+### 19 Nov 2026 release
+- All four boards are in Career with the unchanged sequential unlock guide (table below). Circuit opens `circuit-production-lab.html`; Dominion (`dominion-p1`, DOMINION.md) and Empire (`empire-p1`, EMPIRE.md) open their own boards. Their rules are the owner-approved prototype values.
+- **Circuit district challenge** (new, needed by the Dominion unlock): finish a Career Circuit match holding 3+ of a district's 5 properties. One challenge per district (`circuit-district-0..3`), each counted once ever.
+- **Dominion negotiation challenge**: an accepted offer at or above list price that gives you district control (`dominion-negotiated-control`).
+- Board pages report finished matches through the existing Career inbox; `record()` also stores the board challenges that came with a counted match.
+- The iPhone/Android app now packages the board pages and their 3D runtime assets (`skyline-estates-app/scripts/build-web.mjs`).
+- Tests: `tests/career-boards-browser.cjs` (main-screen button → board → result recorded), plus the updated `tests/career-browser.cjs`.
 
 - Code: `lib/career.js` (DOM-free core + browser glue), loaded after `home-redesign.js`.
 - Tests: `tests/career-model.cjs` (core), `tests/career-browser.cjs` (real game, Chromium and WebKit), `tests/origins-round-study.cjs` (Origins balance guard rails from the pre-development study).
