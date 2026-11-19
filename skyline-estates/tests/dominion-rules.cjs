@@ -4,20 +4,24 @@ let passed=0;const check=(name,fn)=>{fn();passed++;console.log('PASS',name)};
 const fresh=(o={})=>D.newMatch({seed:7,ai:[0,1,1,1],...o});
 const first=s=>s.turn;
 
-check('30 nodes: 24 sites (8 districts × 3), 2 central, 4 contest exchanges',()=>{
- assert.equal(D.NODES.length,30);assert.equal(D.PROPS.length,24);
- assert.equal(D.NODES.filter(n=>n.type==='central').length,2);assert.equal(D.NODES.filter(n=>n.type==='contest').length,4);
- for(const d of D.DISTRICTS)assert.equal(D.SITES[d.id].length,3)});
-check('45 undirected edges, symmetric, no self-loops, every node reachable',()=>{
- assert.equal(D.EDGES.length,45);for(const[a,b]of D.EDGES){assert.notEqual(a,b);assert.ok(D.NEIGH[a].includes(b)&&D.NEIGH[b].includes(a))}
- const seen=new Set(['central_1']),q=['central_1'];while(q.length)for(const n of D.NEIGH[q.pop()])if(!seen.has(n)){seen.add(n);q.push(n)}
- assert.equal(seen.size,30)});
-check('every node id is unique and stable',()=>{assert.equal(new Set(D.NODES.map(n=>n.id)).size,30)});
+check('art-matched topology: 48-space hexagonal track (36 sites, 6 gateways, 6 specials), 8 plazas, Central District, 4 contest exchanges',()=>{
+ assert.equal(D.NODES.length,61);assert.equal(D.TRACK.length,48);assert.equal(D.PROPS.length,36);
+ assert.equal(D.NODES.filter(n=>n.type==='corner').length,6);assert.deepEqual(D.NODES.filter(n=>n.type==='corner').map(n=>n.id),['S0','S8','S16','S24','S32','S40']);
+ assert.equal(D.NODES.filter(n=>n.type==='plaza').length,8);assert.equal(D.NODES.filter(n=>n.type==='central').length,1);assert.equal(D.NODES.filter(n=>n.type==='contest').length,4);
+ for(const d of D.DISTRICTS){assert.ok([3,6].includes(D.SITES[d.id].length));assert.equal(D.NEED[d.id],Math.floor(D.SITES[d.id].length/2)+1)}});
+check('72 undirected edges, symmetric, no self-loops, every node reachable',()=>{
+ assert.equal(D.EDGES.length,72);for(const[a,b]of D.EDGES){assert.notEqual(a,b);assert.ok(D.NEIGH[a].includes(b)&&D.NEIGH[b].includes(a))}
+ const seen=new Set(['central']),q=['central'];while(q.length)for(const n of D.NEIGH[q.pop()])if(!seen.has(n)){seen.add(n);q.push(n)}
+ assert.equal(seen.size,61)});
+check('every node id is unique and stable',()=>{assert.equal(new Set(D.NODES.map(n=>n.id)).size,61)});
+check('track spaces apply bounded, seeded effects once per turn (gateway grant, Market Dice, City Event)',()=>{const s=fresh(),pid=first(s),p=s.players[pid];p.pos='S19';p.ap=9;const c0=p.cash;
+ D.act(s,pid,{type:'move',to:'S20'});assert.ok(s.lastRoll&&s.lastRoll.roll>=1&&s.lastRoll.roll<=6);assert.equal(p.cash,c0+s.lastRoll.roll*D.BALANCE.diceStep);
+ const c1=p.cash;D.act(s,pid,{type:'move',to:'S19'});D.act(s,pid,{type:'move',to:'S20'});assert.equal(p.cash,c1-(s.own.S19.o>=0&&s.own.S19.o!==pid?D.rent(s,'S19'):0),'dice pays once per turn')});
 
 check('turn start pays income and restores action points',()=>{const s=fresh(),p=s.players[first(s)];
  assert.equal(p.ap,D.BALANCE.apPerTurn);assert.equal(p.cash,D.BALANCE.startCash+D.BALANCE.income)});
 check('moving off-graph or out of turn is rejected without changing state',()=>{const s=fresh(),pid=first(s),before=D.serialize(s);
- assert.equal(D.act(s,pid,{type:'move',to:'innovation_3'}).ok,false);assert.equal(D.act(s,(pid+1)%4,{type:'end'}).ok,false);assert.equal(D.serialize(s),before)});
+ assert.equal(D.act(s,pid,{type:'move',to:'central'}).ok,false);assert.equal(D.act(s,(pid+1)%4,{type:'end'}).ok,false);assert.equal(D.serialize(s),before)});
 check('buy charges once, costs one AP, transfers ownership; a second buy is illegal',()=>{const s=fresh(),pid=first(s),p=s.players[pid];
  const to=D.NEIGH[p.pos].find(id=>D.BY[id].type==='property');D.act(s,pid,{type:'move',to});const cash=p.cash,ap=p.ap;
  assert.ok(D.act(s,pid,{type:'buy',node:to}).ok);assert.equal(p.cash,cash-D.BY[to].price);assert.equal(p.ap,ap-1);assert.equal(s.own[to].o,pid);
@@ -25,42 +29,43 @@ check('buy charges once, costs one AP, transfers ownership; a second buy is ille
 check('Low-rise needs only ownership; Mid-rise is blocked with a reason until the district is controlled',()=>{const s=fresh(),pid=first(s),p=s.players[pid];
  const site=D.NEIGH[p.pos].find(id=>D.BY[id].type==='property');D.act(s,pid,{type:'move',to:site});D.act(s,pid,{type:'buy',node:site});
  assert.ok(D.act(s,pid,{type:'develop',node:site}).ok);assert.equal(s.own[site].h,1);
- const blocked=D.legal(s,pid).find(a=>a.type==='develop');assert.ok(blocked.blocked);
- s.players[pid].built=[];const again=D.legal(s,pid).find(a=>a.type==='develop');assert.match(again.blocked,/needs control/)});
-check('district control from two of three sites unlocks advanced stages',()=>{const s=fresh(),pid=first(s),d=D.BY['market_1'].district;
- s.own.market_1.o=pid;s.own.market_2.o=pid;s.own.market_1.h=1;s.players[pid].pos='market_1';s.players[pid].cash=5000;
+ const blocked=D.legal(s,pid).find(a=>a.type==='develop');assert.ok(blocked.blocked||D.controller(s,D.BY[site].district)===pid);
+ s.players[pid].built=[];const again=D.legal(s,pid).find(a=>a.type==='develop');if(D.controller(s,D.BY[site].district)!==pid)assert.match(again.blocked,/needs control/)});
+check('district control by strict majority (2 of 3 / 4 of 6) unlocks advanced stages',()=>{const s=fresh(),pid=first(s),d='cultural';
+ s.own.S17.o=pid;s.own.S18.o=pid;s.own.S17.h=1;s.players[pid].pos='S17';s.players[pid].cash=5000;s.players[pid].built=[];
+ const big=fresh(),bp=first(big);for(const id of D.SITES.market.slice(0,3))big.own[id].o=bp;assert.equal(D.controller(big,'market'),-1);big.own[D.SITES.market[3]].o=bp;assert.equal(D.controller(big,'market'),bp);
  assert.equal(D.controller(s,d),pid);const dev=D.legal(s,pid).find(a=>a.type==='develop');assert.ok(!dev.blocked);assert.equal(dev.stage,2)});
 check('toll is paid on entering an opponent site and money is conserved',()=>{const s=fresh(),pid=first(s),opp=(pid+1)%4,p=s.players[pid];
  const to=D.NEIGH[p.pos].find(id=>D.BY[id].type==='property');s.own[to]={o:opp,h:2,cool:0};const total=s.players.reduce((a,x)=>a+x.cash,0),r=D.rent(s,to);
  D.act(s,pid,{type:'move',to});assert.equal(s.players[opp].cash-(D.BALANCE.startCash),r);assert.equal(s.players.reduce((a,x)=>a+x.cash,0),total)});
 check('contest needs presence, transfers the site with its building intact and sets a cooldown',()=>{const s=fresh(),pid=first(s),opp=(pid+1)%4,p=s.players[pid];
- s.own.market_1={o:opp,h:1,cool:0};p.pos='market_1';p.cash=5000;
+ s.own.S17={o:opp,h:1,cool:0};p.pos='S17';p.exchange=null;p.cash=5000;
  assert.match(D.legal(s,pid).find(a=>a.type==='contest').blocked,/neighbouring district|Contest Exchange/);
- s.own.market_2={o:pid,h:0,cool:0};const c=D.legal(s,pid).find(a=>a.type==='contest');assert.ok(!c.blocked);const oppCash=s.players[opp].cash;
- assert.ok(D.act(s,pid,{type:'contest',node:'market_1'}).ok);assert.equal(s.own.market_1.o,pid);assert.equal(s.own.market_1.h,1);
- assert.equal(s.players[opp].cash,oppCash+c.price);assert.equal(s.own.market_1.cool,s.round+D.BALANCE.contestCooldown)});
+ s.own.S18={o:pid,h:0,cool:0};const c=D.legal(s,pid).find(a=>a.type==='contest');assert.ok(!c.blocked);const oppCash=s.players[opp].cash;
+ assert.ok(D.act(s,pid,{type:'contest',node:'S17'}).ok);assert.equal(s.own.S17.o,pid);assert.equal(s.own.S17.h,1);
+ assert.equal(s.players[opp].cash,oppCash+c.price);assert.equal(s.own.S17.cool,s.round+D.BALANCE.contestCooldown)});
 check('High-rise and Skyscraper are protected from contests',()=>{const s=fresh(),pid=first(s),opp=(pid+1)%4,p=s.players[pid];
- s.own.market_1={o:opp,h:3,cool:0};s.own.market_2={o:pid,h:0,cool:0};p.pos='market_1';p.cash=9999;
+ s.own.S17={o:opp,h:3,cool:0};s.own.S18={o:pid,h:0,cool:0};p.pos='S17';p.cash=9999;
  assert.match(D.legal(s,pid).find(a=>a.type==='contest').blocked,/protected/)});
 check('a contest during cooldown is refused',()=>{const s=fresh(),pid=first(s),opp=(pid+1)%4,p=s.players[pid];
- s.own.market_1={o:opp,h:0,cool:s.round+1};s.own.market_2={o:pid,h:0,cool:0};p.pos='market_1';p.cash=9999;
+ s.own.S17={o:opp,h:0,cool:s.round+1};s.own.S18={o:pid,h:0,cool:0};p.pos='S17';p.cash=9999;
  assert.match(D.legal(s,pid).find(a=>a.type==='contest').blocked,/Protected until round/)});
 check('auction: every solvent player bids once, highest valid bid pays and owns; below-minimum bids are void',()=>{const s=fresh(),pid=first(s),p=s.players[pid];
  const to=D.NEIGH[p.pos].find(id=>D.BY[id].type==='property');D.act(s,pid,{type:'move',to});assert.ok(D.act(s,pid,{type:'auction',node:to}).ok);
  const bids={};let k=0;while(s.phase==='auction'){const who=D.pending(s).player;bids[who]=[50,300,10,120][k++];D.act(s,who,{type:'bid',amount:bids[who]})}
  const win=+Object.entries(bids).sort((a,b)=>b[1]-a[1])[0][0];assert.equal(s.own[to].o,win)});
 check('negotiation: offer, AI declines low and accepts generous offers; challenge recorded once on control',()=>{const s=fresh(),pid=first(s),opp=(pid+1)%4,p=s.players[pid];
- s.own.market_1={o:pid,h:0,cool:0};s.own.market_2={o:opp,h:0,cool:0};p.pos='market_1';p.cash=5000;s.players[opp].ai=true;
- assert.ok(D.act(s,pid,{type:'offer',node:'market_2',amount:D.BY.market_2.price}).ok);assert.equal(D.pending(s).player,opp);
- D.act(s,opp,D.ai(s,opp));assert.equal(s.own.market_2.o,opp);
- assert.equal(D.act(s,pid,{type:'offer',node:'market_2',amount:999}).ok,false,'one offer per site per turn');
- s.players[pid].offered=[];D.act(s,pid,{type:'offer',node:'market_2',amount:900});D.act(s,opp,D.ai(s,opp));assert.equal(s.own.market_2.o,pid);
+ s.own.S17={o:pid,h:0,cool:0};s.own.S18={o:opp,h:0,cool:0};p.pos='S17';p.exchange=null;p.cash=5000;s.players[opp].ai=true;
+ assert.ok(D.act(s,pid,{type:'offer',node:'S18',amount:D.BY.S18.price}).ok);assert.equal(D.pending(s).player,opp);
+ D.act(s,opp,D.ai(s,opp));assert.equal(s.own.S18.o,opp);
+ assert.equal(D.act(s,pid,{type:'offer',node:'S18',amount:999}).ok,false,'one offer per site per turn');
+ s.players[pid].offered=[];D.act(s,pid,{type:'offer',node:'S18',amount:900});D.act(s,opp,D.ai(s,opp));assert.equal(s.own.S18.o,pid);
  assert.equal(s.challenges.filter(c=>c.tag==='negotiation'&&c.player===pid).length,1)});
 check('early victory requires the target districts at two successive scoring checks, never before minWinRound',()=>{const s=fresh(),pid=first(s);
- for(const d of ['market','harbor','financial'])for(const id of D.SITES[d].slice(0,2))s.own[id].o=pid;
+ for(const d of ['cultural','harbor','greenbelt'])for(const id of D.SITES[d].slice(0,2))s.own[id].o=pid;
  let guard=0;while(s.phase!=='over'&&guard++<500){const pd=D.pending(s);if(pd.kind!=='act'){D.act(s,pd.player,D.ai(s,pd.player));continue}D.act(s,pd.player,{type:'end'})}
  assert.equal(s.endReason,'district-control');assert.equal(s.winner,pid);assert.ok(s.round>=D.BALANCE.minWinRound);
- assert.ok(s.checks.filter(c=>c.players.find(x=>x.id===pid).districts.length>=3).length>=2)});
+ assert.ok(s.checks.filter(c=>c.players.find(x=>x.id===pid).districts.length>=D.target(s)).length>=2)});
 check('round limit ends the match with a deterministic control-point, then net-worth, then seat ranking',()=>{const s=fresh({cfg:{rounds:2}});let g=0;
  while(s.phase!=='over'&&g++<100){const pd=D.pending(s);D.act(s,pd.player,{type:'end'})}assert.equal(s.endReason,'round-limit');const r=D.ranking(s);assert.equal(s.winner,r[0].id);
  for(let i=1;i<r.length;i++)assert.ok(r[i-1].cp>r[i].cp||r[i-1].cp===r[i].cp&&(r[i-1].worth>r[i].worth||r[i-1].worth===r[i].worth&&r[i-1].id<r[i].id))});

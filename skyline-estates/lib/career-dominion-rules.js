@@ -8,44 +8,60 @@
    State is plain JSON: ruleset, version, seed, RNG state, players, ownership, stages, turn state, scoring and
    any pending auction/offer all live in it, so a save resumes exactly. */
 (function(root,factory){const m=factory();if(typeof module==='object'&&module.exports)module.exports=m;else root.SkylineDominion=m})(typeof self!=='undefined'?self:this,function(){'use strict';
-const RULESET='dominion-p0',VERSION=1,SAVE_KEY='skylineDominionSave';
+const RULESET='dominion-p1',VERSION=1,SAVE_KEY='skylineDominionSave';
 
 // ---------- provisional balance table (all values PROPOSED / TEST-ONLY, see DOMINION.md §4) ----------
 const BALANCE=Object.freeze({
- startCash:1200, apPerTurn:5, moveCost:1, actionCost:1,           // action points
- income:80, incomePerDistrict:40,                                  // paid at the start of each own turn
+ startCash:1200, apPerTurn:7, moveCost:1, actionCost:1,           // action points
+ income:80, incomePerDistrict:40, gatewayGrant:30, diceStep:20,                                  // paid at the start of each own turn
  buildFactor:.6, rentMult:[.12,.3,.6,1.0,1.6],                     // rent = price × rentMult[stage]; stage 0 = Plot
- controlNeed:2,                                                    // sites (of 3) needed to control a district
  contestMult:1.25, contestMaxStage:2, contestCooldown:2,            // contested acquisition (Mid-rise+ protected)
  auctionMinFactor:.5, offerMinFactor:1.0,
  scoringEvery:2, cpPerDistrict:3, cpPerAdvanced:1,                 // control points at scoring rounds
- targetByPlayers:{2:4,3:4,4:3}, holdChecks:2, minWinRound:6,                   // early victory
+ targetByPlayers:{2:3,3:3,4:3}, holdChecks:2, minWinRound:6,                   // early victory
  rounds:16,                                                        // finite cap (from the earlier proposal; not approved)
  aiBuyReserve:150, aiBuildReserve:220, aiContestBreak:2.5, aiContestPlain:1.2});
 const LENGTHS=Object.freeze({quick:Object.freeze({rounds:12,experimental:true}),standard:Object.freeze({rounds:16,experimental:true}),extended:Object.freeze({rounds:24,experimental:true})});
 const STAGES=Object.freeze(['Plot','Low-rise','Mid-rise','High-rise','Skyscraper']);
 
-// ---------- topology (proposed 30-node network; positions live in the presentation layout) ----------
+// ---------- topology (follows the approved Dominion artwork; positions live in the presentation layout) ----------
+// 48-space hexagonal outer track S0–S47 (gold corner badges at S0, S8, S16, S24, S32, S40), eight district plazas
+// H_<district>, the Central District hub and four contest exchanges C1–C4 (the red shields between districts).
 const DISTRICTS=Object.freeze([
- {id:'innovation',name:'Innovation District',price:180},{id:'cultural',name:'Cultural District',price:140},
- {id:'market',name:'Market District',price:110},{id:'harbor',name:'Harbor District',price:110},
- {id:'financial',name:'Financial District',price:180},{id:'greenbelt',name:'Greenbelt District',price:80},
- {id:'heritage',name:'Heritage District',price:80},{id:'global',name:'Global Boulevard',price:140}]);
-const NODES=[],BY={};
-NODES.push({id:'central_1',type:'central',district:'central',name:'Central Exchange East'},{id:'central_2',type:'central',district:'central',name:'Central Exchange West'});
-for(const d of DISTRICTS)for(let k=1;k<=3;k++)NODES.push({id:`${d.id}_${k}`,type:'property',district:d.id,slot:k,name:`${d.name.split(' ')[0]} ${['Gate','Row','Point'][k-1]}`,price:d.price+(k===1?20:0)});
-for(let k=1;k<=4;k++)NODES.push({id:'contest_'+k,type:'contest',district:'contest',name:'Contest Exchange '+k});
+ {id:'innovation',name:'Innovation District',price:170},{id:'cultural',name:'Cultural District',price:130},
+ {id:'market',name:'Market District',price:110},{id:'harbor',name:'Harbor District',price:120},
+ {id:'financial',name:'Financial District',price:180},{id:'greenbelt',name:'Greenbelt District',price:90},
+ {id:'heritage',name:'Heritage District',price:100},{id:'global',name:'Global Boulevard',price:150}]);
+const DNAME=Object.fromEntries(DISTRICTS.map(d=>[d.id,d.name]));
+// Track spaces in order (type:district); taken from the artwork-matched asset layout (dominion_48.json).
+const TRACK=('corner:heritage property:heritage property:heritage property:heritage chance property:global property:global property:global corner:global '+
+ 'property:innovation property:innovation property:innovation square property:innovation property:innovation property:innovation corner:cultural '+
+ 'property:cultural property:cultural property:cultural dice property:market property:market property:market corner:market '+
+ 'property:market property:market property:market chance property:harbor property:harbor property:harbor corner:harbor '+
+ 'property:financial property:financial property:financial trade property:financial property:financial property:financial corner:greenbelt '+
+ 'property:greenbelt property:greenbelt property:greenbelt square property:heritage property:heritage property:heritage').split(' ');
+const NODES=[],BY={},STREET=['Gate','Row','Point','Walk','Square','Quay'];const seenD={};
+TRACK.forEach((t,i)=>{const[type,d]=t.split(':');const n={id:'S'+i,type,district:d||null,track:i};
+ if(type==='property'){const k=seenD[d]=(seenD[d]||0)+1;n.name=`${DNAME[d].replace(/ District| Boulevard/,'')} ${STREET[k-1]}`;n.price=DISTRICTS.find(x=>x.id===d).price+10*((k-1)%3)}
+ else n.name=type==='corner'?`${DNAME[d].replace(/ District| Boulevard/,'')} Gateway`:{chance:'City Event',dice:'Market Dice',trade:'Negotiation Desk',square:'Contest Square'}[type];
+ n.district=d||'track';NODES.push(n)});
+for(const d of DISTRICTS)NODES.push({id:'H_'+d.id,type:'plaza',district:d.id,name:d.name+' Plaza'});
+NODES.push({id:'central',type:'central',district:'central',name:'Central District'});
+const CONTEST_PAIRS=[['global','innovation'],['heritage','global'],['cultural','market'],['financial','greenbelt']];
+CONTEST_PAIRS.forEach((pr,i)=>NODES.push({id:'C'+(i+1),type:'contest',district:'contest',name:'Contest Exchange '+(i+1),reach:pr}));
 for(const n of NODES)BY[n.id]=n;
-const EDGES=[['central_1','central_2']];
-const ORDER=DISTRICTS.map(d=>d.id),EAST=new Set(['cultural','market','harbor','financial']);
-ORDER.forEach((d,i)=>{const nx=ORDER[(i+1)%8];EDGES.push([d+'_1',d+'_2'],[d+'_1',d+'_3'],[d+'_2',d+'_3'],[d+'_1',EAST.has(d)?'central_1':'central_2']);
- const via={global:'contest_1',cultural:'contest_2',financial:'contest_3',heritage:'contest_4'}[d];
- if(via)EDGES.push([d+'_2',via],[via,nx+'_3']);else EDGES.push([d+'_2',nx+'_3'])});
+const GATES={innovation:'S11',cultural:'S19',market:'S22',harbor:'S29',financial:'S35',greenbelt:'S43',heritage:'S46',global:'S5'};
+const EDGES=[];for(let i=0;i<48;i++)EDGES.push(['S'+i,'S'+((i+1)%48)]);
+for(const d of DISTRICTS)EDGES.push(['H_'+d.id,'central'],['H_'+d.id,GATES[d.id]]);
+CONTEST_PAIRS.forEach((pr,i)=>EDGES.push(['C'+(i+1),'H_'+pr[0]],['C'+(i+1),'H_'+pr[1]]));
 const NEIGH=Object.fromEntries(NODES.map(n=>[n.id,[]]));for(const[a,b]of EDGES){NEIGH[a].push(b);NEIGH[b].push(a)}
+const ORDER=DISTRICTS.map(d=>d.id);
 const PROPS=NODES.filter(n=>n.type==='property').map(n=>n.id);
 const SITES=Object.fromEntries(ORDER.map(d=>[d,PROPS.filter(id=>BY[id].district===d)]));
-const CONTEST_DISTRICTS=Object.fromEntries(NODES.filter(n=>n.type==='contest').map(n=>[n.id,[...new Set(NEIGH[n.id].map(x=>BY[x].district))]]));
-
+const NEED=Object.fromEntries(ORDER.map(d=>[d,Math.floor(SITES[d].length/2)+1]));   // strict majority: 2 of 3, 4 of 6
+// Districts reachable for contests/offers from a contest exchange, a perimeter Contest Square or the Negotiation Desk.
+const trackNear=(i,r)=>[...new Set(Array.from({length:2*r+1},(_,k)=>BY['S'+((i+k-r+48)%48)].district).filter(d=>DNAME[d]))];
+const CONTEST_DISTRICTS={...Object.fromEntries(CONTEST_PAIRS.map((pr,i)=>['C'+(i+1),pr])),S12:trackNear(12,4),S44:trackNear(44,4),S36:ORDER.slice()};
 // ---------- RNG (state kept in s.rng) ----------
 function rnd(s){s.rng=(s.rng+0x6D2B79F5)>>>0;let t=s.rng;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return((t^(t>>>14))>>>0)/4294967296}
 
@@ -53,15 +69,16 @@ function rnd(s){s.rng=(s.rng+0x6D2B79F5)>>>0;let t=s.rng;t=Math.imul(t^(t>>>15),
 const owner=(s,id)=>s.own[id]?s.own[id].o:-1;
 const stageCost=(s,id)=>Math.ceil(BY[id].price*s.cfg.buildFactor);
 const rent=(s,id)=>{const o=s.own[id];return o&&o.o>=0?Math.round(BY[id].price*s.cfg.rentMult[o.h]):0};
-const controller=(s,d)=>{for(const p of s.players){if(p.out)continue;if(SITES[d].filter(id=>owner(s,id)===p.id).length>=s.cfg.controlNeed)return p.id}return -1};
+const controller=(s,d)=>{for(const p of s.players){if(p.out)continue;if(SITES[d].filter(id=>owner(s,id)===p.id).length>=NEED[d])return p.id}return -1};
 const controlled=(s,pid)=>ORDER.filter(d=>controller(s,d)===pid);
 const sitesOf=(s,pid)=>PROPS.filter(id=>owner(s,id)===pid);
 const netWorth=(s,p)=>p.cash+sitesOf(s,p.id).reduce((a,id)=>a+BY[id].price+s.own[id].h*stageCost(s,id),0);
 const contestPrice=(s,id)=>Math.round(s.cfg.contestMult*(BY[id].price+s.own[id].h*stageCost(s,id)));
 const cur=s=>s.players[s.turn];
 const log=(s,msg)=>{s.log.push({r:s.round,t:s.turn,msg});if(s.log.length>200)s.log.shift()};
-const ADJ_D=Object.fromEntries(ORDER.map(d=>[d,new Set(SITES[d].flatMap(id=>NEIGH[id]).map(x=>BY[x].district).filter(x=>x!==d&&x!=='central'&&x!=='contest'))]));
-for(const[c,ds]of Object.entries(CONTEST_DISTRICTS)){ADJ_D[ds[0]].add(ds[1]);ADJ_D[ds[1]].add(ds[0])}
+// neighbouring districts: next to each other along the track, or joined through an inner contest exchange
+const ADJ_D=Object.fromEntries(ORDER.map(d=>[d,new Set()]));for(let i=0;i<48;i++){const a=BY['S'+i].district,b=BY['S'+((i+1)%48)].district,c=BY['S'+((i+2)%48)].district;for(const[x,y]of[[a,b],[a,c]])if(DNAME[x]&&DNAME[y]&&x!==y){ADJ_D[x].add(y);ADJ_D[y].add(x)}}
+for(const pr of CONTEST_PAIRS){ADJ_D[pr[0]].add(pr[1]);ADJ_D[pr[1]].add(pr[0])}
 const presence=(s,pid,d)=>sitesOf(s,pid).some(id=>BY[id].district===d||ADJ_D[d].has(BY[id].district))||exchangeReach(s,pid,d);
 function exchangeReach(s,pid,d){const p=s.players[pid];return p.exchange&&CONTEST_DISTRICTS[p.exchange]?.includes(d)}
 
@@ -69,14 +86,14 @@ function newMatch(opts={}){
  const seed=(opts.seed>>>0)||1,cfg={...BALANCE,...(opts.length&&LENGTHS[opts.length]?{rounds:LENGTHS[opts.length].rounds}:{}),...(opts.cfg||{})};
  const names=opts.names||['You','Investor AI','Trader AI','Builder AI'],n=Math.max(2,Math.min(4,opts.players||names.length));
  const s={ruleset:RULESET,version:VERSION,seed,rng:seed,cfg,round:1,turn:0,idx:0,turns:0,phase:'act',winner:null,endReason:null,
-  players:Array.from({length:n},(_,i)=>({id:i,name:names[i]||'Player '+(i+1),ai:opts.ai?!!opts.ai[i]:i>0,cash:cfg.startCash,pos:i%2?'central_2':'central_1',
-   ap:0,out:false,cp:0,hold:0,exchange:null,built:[],offered:[],contests:0})),
+  players:Array.from({length:n},(_,i)=>({id:i,name:names[i]||'Player '+(i+1),ai:opts.ai?!!opts.ai[i]:i>0,cash:cfg.startCash,pos:'S0',
+   ap:0,out:false,cp:0,hold:0,exchange:null,visited:[],built:[],offered:[],contests:0})),
   own:Object.fromEntries(PROPS.map(id=>[id,{o:-1,h:0,cool:0}])),auction:null,offer:null,checks:[],challenges:[],log:[]};
  // Seeded first player (shown before the match), then the start rotates each round.
- s.first=Math.floor(rnd(s)*n);s.turn=s.first;s.players.forEach((p,i)=>{p.pos=((i-s.first+n)%n)%2?'central_2':'central_1'});
+ s.first=Math.floor(rnd(s)*n);s.turn=s.first;s.players.forEach((p,i)=>{p.pos=({2:['S0','S24'],3:['S0','S16','S32'],4:['S0','S24','S16','S40']})[n][(i-s.first+n)%n]});
  startTurn(s);return s}
 
-function startTurn(s){const p=cur(s);const pay=s.cfg.income+s.cfg.incomePerDistrict*controlled(s,p.id).length;p.cash+=pay;p.ap=s.cfg.apPerTurn;p.exchange=BY[p.pos].type==='contest'?p.pos:null;p.built=[];p.offered=[];p.contests=0;log(s,`${p.name} receives ${pay}`)}
+function startTurn(s){const p=cur(s);const pay=s.cfg.income+s.cfg.incomePerDistrict*controlled(s,p.id).length;p.cash+=pay;p.ap=s.cfg.apPerTurn;p.exchange=CONTEST_DISTRICTS[p.pos]?p.pos:null;p.visited=[];p.built=[];p.offered=[];p.contests=0;log(s,`${p.name} receives ${pay}`)}
 
 // ---------- legality ----------
 function legal(s,pid){
@@ -123,13 +140,20 @@ function raise(s,p,need){ // sell buildings (highest first) then sites to the ba
 function bankrupt(s,p,to){p.out=true;p.cash=0;for(const id of sitesOf(s,p.id))s.own[id]={o:-1,h:0,cool:0};log(s,`${p.name} is bankrupt`);
  const alive=s.players.filter(x=>!x.out);if(alive.length===1)finish(s,alive[0].id,'last-standing')}
 
+// ---------- track spaces (bounded, seeded, once per space per turn) ----------
+const EVENTS=Object.freeze([{k:'grant',cash:100,msg:'City grant +100'},{k:'levy',cash:-60,msg:'Infrastructure levy −60'},{k:'festival',cash:60,msg:'District festival +60'},{k:'express',ap:1,msg:'Express transit +1 AP'}]);
+function trackEffect(s,p,id){const n=BY[id];if(!['chance','dice','corner'].includes(n.type)||p.visited.includes(id))return;p.visited.push(id);
+ if(n.type==='corner'){p.cash+=s.cfg.gatewayGrant;log(s,`${p.name} passes ${n.name}: +${s.cfg.gatewayGrant}`);return}
+ if(n.type==='dice'){const roll=1+Math.floor(rnd(s)*6);p.cash+=roll*s.cfg.diceStep;s.lastRoll={player:p.id,roll};log(s,`${p.name} rolls ${roll} at Market Dice: +${roll*s.cfg.diceStep}`);return}
+ const e=EVENTS[Math.floor(rnd(s)*EVENTS.length)];s.lastEvent={player:p.id,...e};log(s,`${p.name}: ${e.msg}`);if(e.ap)p.ap+=e.ap;if(e.cash>0)p.cash+=e.cash;if(e.cash<0)pay(s,p.id,-1,-e.cash)}
+
 // ---------- actions ----------
 function act(s,pid,a){
  const L=legal(s,pid),ok=L.find(x=>x.type===a.type&&!x.blocked&&(x.to===undefined||a.to===undefined||x.to===a.to)&&(x.node===undefined||a.node===undefined||x.node===a.node));
  if(!ok)return{ok:false,error:(L.find(x=>x.type===a.type&&x.blocked&&(a.node===undefined||x.node===a.node))||{}).blocked||'Illegal action'};
  const p=s.players[pid];
  switch(a.type){
- case'move':{p.ap-=s.cfg.moveCost;p.pos=a.to;if(BY[a.to].type==='contest')p.exchange=a.to;const o=owner(s,a.to);
+ case'move':{p.ap-=s.cfg.moveCost;p.pos=a.to;if(CONTEST_DISTRICTS[a.to])p.exchange=a.to;trackEffect(s,p,a.to);if(p.out)break;const o=owner(s,a.to);
   if(o>=0&&o!==pid){const r=rent(s,a.to);pay(s,pid,o,r);log(s,`${p.name} pays ${r} toll to ${s.players[o].name}`)}break}
  case'buy':p.ap-=s.cfg.actionCost;p.cash-=ok.price;s.own[a.node].o=pid;log(s,`${p.name} buys ${BY[a.node].name} for ${ok.price}`);break;
  case'develop':p.ap-=s.cfg.actionCost;p.cash-=ok.price;s.own[a.node].h++;p.built.push(a.node);log(s,`${p.name} builds ${STAGES[s.own[a.node].h]} on ${BY[a.node].name}`);break;
@@ -210,5 +234,5 @@ function restore(json){try{const s=typeof json==='string'?JSON.parse(json):json;
 function hash(s){let h=2166136261;const str=serialize(s);for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619)}return(h>>>0).toString(16)}
 function runAI(s,limit=4000){let n=0;while(s.phase!=='over'&&n++<limit){const pd=pending(s);const r=act(s,pd.player,ai(s,pd.player));if(!r.ok)throw Error('AI illegal: '+r.error)}return s}
 
-return Object.freeze({target,RULESET,VERSION,SAVE_KEY,BALANCE,LENGTHS,STAGES,DISTRICTS,NODES,BY,EDGES,NEIGH,PROPS,SITES,
+return Object.freeze({target,NEED,TRACK,GATES,CONTEST_PAIRS,CONTEST_DISTRICTS,EVENTS,RULESET,VERSION,SAVE_KEY,BALANCE,LENGTHS,STAGES,DISTRICTS,NODES,BY,EDGES,NEIGH,PROPS,SITES,
  newMatch,legal,pending,act,ai,view,serialize,restore,hash,runAI,ranking,controller,controlled,rent,stageCost,contestPrice,netWorth,pathTo})});

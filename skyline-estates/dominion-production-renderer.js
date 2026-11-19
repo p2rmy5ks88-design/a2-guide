@@ -35,12 +35,26 @@ export async function createDominionRenderer(canvas,{quality='high',onPick=()=>{
   audit.files.push(file);audit.triangles[file]=Math.round(tris);return g.scene}
  const local=f=>new URL('./assets/dominion-local/'+f,import.meta.url).href,shared=f=>new URL('./assets/approved-v5/'+f,import.meta.url).href;
 
- const layout=await (await fetch(local('layouts/dominion_30.json'))).json();
- const POS=Object.fromEntries(layout.nodes.map(n=>[n.id,new THREE.Vector3(...n.position)]));
- const board=await load(local('boards/board_dominion_30.glb'),'board_dominion_30.glb');scene.add(board);
+ // Art-matched board: 48-space hexagonal track from the supplied layout; inner plazas, Central District and contest
+ // exchanges use the same constants the supplied board generator used (district plates on a ring, shields between them).
+ const layout=await (await fetch(local('layouts/dominion_48.json'))).json();
+ const POS={};for(const sp of layout.spaces)POS['S'+sp.index]=new THREE.Vector3(...sp.position);
+ const Rt=1.18*8.3,Rd=(Rt-.65-1.9)/2+1.9+.05,at=(deg,R,y)=>{const a=THREE.MathUtils.degToRad(deg);return new THREE.Vector3(R*Math.sin(a),y,-R*Math.cos(a))};
+ const DEG={innovation:0,cultural:45,market:90,harbor:135,financial:180,greenbelt:225,heritage:270,global:315};
+ for(const[d,deg]of Object.entries(DEG))POS['H_'+d]=at(deg,Rd,.42);POS.central=new THREE.Vector3(0,.38,1.25);
+ D.CONTEST_PAIRS.forEach((pr,i)=>{const a=DEG[pr[0]],b=DEG[pr[1]];let m=(a+b)/2;if(Math.abs(a-b)>180)m=(m+180)%360;POS['C'+(i+1)]=at(m,Rd+.2,.42)});
+ const board=await load(local('boards/board_dominion_48.glb'),'board_dominion_48.glb');scene.add(board);
+ // corridors for inner graph edges (track edges are the physical track itself)
+ const corridor=new THREE.Group(),pathMat=new THREE.MeshStandardMaterial({color:'#d8c39a',roughness:.7}),edgeMat=new THREE.MeshStandardMaterial({color:'#e8b64a',metalness:.9,roughness:.3,emissive:'#7a4a10',emissiveIntensity:.4});
+ for(const[a,b]of D.EDGES){if(a[0]==='S'&&b[0]==='S')continue;const p=POS[a],q=POS[b],len=Math.hypot(q.x-p.x,q.z-p.z),mid=p.clone().add(q).multiplyScalar(.5),yaw=Math.atan2(q.x-p.x,q.z-p.z);
+  const strip=new THREE.Mesh(new THREE.BoxGeometry(.26,.03,Math.max(.1,len-.7)),pathMat);strip.position.set(mid.x,.3,mid.z);strip.rotation.y=yaw;strip.receiveShadow=true;corridor.add(strip);
+  for(const sx of[-.14,.14]){const e=new THREE.Mesh(new THREE.BoxGeometry(.03,.05,Math.max(.1,len-.7)),edgeMat);e.position.set(mid.x+sx*Math.cos(yaw),.31,mid.z-sx*Math.sin(yaw));e.rotation.y=yaw;corridor.add(e)}}
+ scene.add(corridor);
  let city=null;if(tier.city){city=await load(local('environments/dominion_waterfront_city.glb'),'dominion_waterfront_city.glb');scene.add(city)}
  const stageModels=await Promise.all(STAGE_FILES.map(f=>load(shared('buildings/'+f+'.glb'),f+'.glb')));audit.materials=materials.size;
- const water=createWaterReflections({scene,camera,getRenderer:()=>renderer,enabled:tier.reflections&&!!city,maxWidth:768,getExclusions:()=>[dynamic]});if(city)water.register(city);
+ const water=createWaterReflections({scene,camera,getRenderer:()=>renderer,enabled:tier.reflections&&!!city,maxWidth:768,getExclusions:()=>[dynamic]});// Register the board first so its water meshes (sharing the water materials) are also hidden in the reflection pass,
+ // avoiding a framebuffer feedback loop; the city's sea is registered last and sets the mirror plane.
+ water.register(board);if(city)water.register(city);
 
  // ---- dynamic, state-bound layer (tokens, ownership, stages, selection, routes) ----
  const dynamic=new THREE.Group();scene.add(dynamic);
@@ -61,14 +75,14 @@ export async function createDominionRenderer(canvas,{quality='high',onPick=()=>{
 
  // ---- camera: fit the actual board bounds into the visible board rect (no automatic zoom) ----
  const boardBox=new THREE.Box3().setFromObject(board),boardSize=boardBox.getSize(new THREE.Vector3()),boardCenter=boardBox.getCenter(new THREE.Vector3());
- let view={pitch:44,yaw:0,zoom:1,focus:null},rect={x:0,y:0,w:canvas.clientWidth||1,h:canvas.clientHeight||1},dirty=true,anim=[],renders=0,selected=null;
+ let view={pitch:50,yaw:0,zoom:1,focus:null},rect={x:0,y:0,w:canvas.clientWidth||1,h:canvas.clientHeight||1},dirty=true,anim=[],renders=0,selected=null;
  // Fit by projecting the real board footprint corners (bounded search; same result every time, no animation).
- const fitPts=[];for(const y of [.35,1.6])for(const[x,z]of[[boardBox.min.x,boardBox.min.z],[boardBox.max.x,boardBox.min.z],[boardBox.min.x,boardBox.max.z],[boardBox.max.x,boardBox.max.z],[boardBox.min.x,boardCenter.z],[boardBox.max.x,boardCenter.z]])fitPts.push(new THREE.Vector3(x,y,z));
+ const fitPts=[];for(const y of [.4])for(const[x,z]of[[boardBox.min.x,boardBox.min.z],[boardBox.max.x,boardBox.min.z],[boardBox.min.x,boardBox.max.z],[boardBox.max.x,boardBox.max.z],[boardBox.min.x,boardCenter.z],[boardBox.max.x,boardCenter.z]])fitPts.push(new THREE.Vector3(x,y,z));
  function placeAt(dist,target){const pitch=THREE.MathUtils.degToRad(view.pitch),yaw=THREE.MathUtils.degToRad(view.yaw);
   camera.position.set(target.x+dist*Math.cos(pitch)*Math.sin(yaw),target.y+dist*Math.sin(pitch),target.z+dist*Math.cos(pitch)*Math.cos(yaw));camera.lookAt(target);camera.updateMatrixWorld()}
  function placeCamera(){camera.aspect=rect.w/rect.h;camera.updateProjectionMatrix();
-  const target=view.focus?POS[view.focus].clone():boardCenter.clone().setY(.4).add(new THREE.Vector3(0,0,.35));
-  let lo=2,hi=200;for(let i=0;i<40;i++){const mid=(lo+hi)/2;placeAt(mid,target);const ok=fitPts.every(p=>{const v=p.clone().project(camera);return Math.abs(v.x)<=.97&&Math.abs(v.y)<=.95});if(ok)hi=mid;else lo=mid}
+  const target=view.focus?POS[view.focus].clone():boardCenter.clone().setY(.4).add(new THREE.Vector3(0,0,-.2));
+  let lo=2,hi=200;for(let i=0;i<40;i++){const mid=(lo+hi)/2;placeAt(mid,target);const ok=fitPts.every(p=>{const v=p.clone().project(camera);return Math.abs(v.x)<=.985&&v.y<=.9&&v.y>=-.985});if(ok)hi=mid;else lo=mid}
   placeAt(hi/view.zoom,target);dirty=true}
  function resize(r){rect=r||{x:0,y:0,w:canvas.clientWidth,h:canvas.clientHeight};const dpr=Math.min(devicePixelRatio||1,tier.dpr);renderer.setPixelRatio(dpr);renderer.setSize(rect.w,rect.h,false);placeCamera()}
 
