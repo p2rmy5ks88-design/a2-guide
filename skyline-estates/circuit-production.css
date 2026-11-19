@@ -93,3 +93,20 @@ button{min-width:44px;min-height:44px;font-family:-apple-system,BlinkMacSystemFo
 #cx-players .b2-tiles b{font-size:9px}#cx-players .b2-tiles small{display:none}#cx-players .b2-tiles span.now small{display:inline;font-size:8px;color:#ffdc8b}
 #cx-players .b2-ref .b2-of{border:0!important;box-shadow:none!important}#cx-players .b2-feat h2{font-size:11.5px}
 #cx-players .b2-tiles span.now small{display:none}
+
+/* menu + panel sizes (owner request 19 Nov 2026) */
+#b2-menu-btn{position:fixed;z-index:8;top:calc(var(--cx-st) + 7px);left:50%;transform:translateX(-50%);width:44px;height:44px;border-radius:50%;border:1px solid #e6bc68;background:linear-gradient(#1b2f4cf2,#0b1a30f5);box-shadow:0 3px 10px #0009;display:grid;place-items:center;padding:0}
+#b2-menu{position:fixed;z-index:9;top:calc(var(--cx-st) + 56px);left:50%;transform:translateX(-50%);width:min(260px,70vw);padding:10px;border:1px solid #f2c457;border-radius:12px;background:linear-gradient(160deg,#16294af9,#0b1a30fc);box-shadow:0 8px 24px #000c;color:#e9eef6;font-size:12px;display:flex;flex-direction:column;gap:7px}
+#b2-menu[hidden]{display:none}#b2-menu h3{margin:0;color:#ffdc8b;font-size:14px}.b2-mlabel{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#b6c5d1}
+#b2-menu .b2-seg{display:flex;border:1px solid #f2c45788;border-radius:10px;overflow:hidden}#b2-menu .b2-seg button{flex:1;border:0;border-radius:0;background:transparent;color:#fff3d6;font-weight:700}
+#b2-menu .b2-seg button[aria-checked=true]{background:#f2c45733;box-shadow:inset 0 -3px 0 #f2c457}
+#b2-menu>button,#b2-menu .b2-mlink{display:flex;align-items:center;justify-content:center;min-height:44px;border:1px solid #f2c45766;border-radius:10px;background:#0b1633;color:#fff3d6;font-weight:700;text-decoration:none}
+#cx-game.b2-panels-compact #cx-players,#cx-game.b2-panels-compact #cx-actions{zoom:.8}
+#cx-game.b2-panels-compact .b2-me{zoom:.85}
+#cx-game.b2-panels-hidden #cx-players{display:none}
+#cx-game.b2-panels-hidden #cx-actions .b2-dist,#cx-game.b2-panels-hidden #cx-actions .b2-pos,#cx-game.b2-panels-hidden #cx-actions .b2-vic{display:none}
+#cx-game.b2-panels-hidden #cx-actions{top:auto;max-height:calc(100% - 140px);background:linear-gradient(130deg,#14233bd9,#08142ae0)}
+#cx-game.b2-panels-hidden .b2-me{width:auto}
+#cx-game.b2-panels-compact #cx-actions button,#cx-game.b2-panels-compact #cx-players button{min-height:55px}
+#cx-actions .cx-seg button{min-height:44px}
+#cx-game.b2-panels-hidden #cx-actions{padding-bottom:8px!important;height:auto}

@@ -256,7 +256,7 @@ function render(){if(!s)return;const v=SC.view(s),pd=v.pending,me=pd?s.players[p
  const A=$('#cx-actions');A.classList.toggle('b2-city-mode',cityReview);
  A.classList.toggle('b2-roll-mode',!cityReview&&!busy()&&pd?.type==='roll'&&!me.ai);
  if(A.dataset.h!==h){if(window.__circuitProduction)document.querySelectorAll('[data-circuit-action]').forEach(e=>e.remove());A.innerHTML=h;A.dataset.h=h;if(window.__circuitProduction){for(const e of A.querySelectorAll('#cx-roll,#cx-end')){e.dataset.circuitAction='true';document.querySelector('#cx-game').append(e);}}wire()}
- if(window.__circuitProduction)prodBar(v,zf)}
+ if(window.__circuitProduction){prodBar(v,zf);prodMenu()}}
 // ---------- production HUD (owner reference, 19 Nov 2026): presentation only; every figure comes from SC.view ----------
 const B2_AVATAR='avatars/small/skyline_avatar_01_96.png';let b2Pop=null;
 const ord=n=>n+(['th','st','nd','rd'][(n%100>>3^1)&&n%10]||'th');
@@ -290,6 +290,23 @@ function prodBar(v,zf){let bar=$('#b2-bar');if(!bar){bar=document.createElement(
   districts:()=>`<h3>Districts</h3>${DISTRICT_NAMES.map((d,q)=>{const props=v.nodes.filter(n=>n.type==='property'&&n.quadrant===q);return `<div class="b2-r"><span>${symSvg(q,12)} ${esc(d)}</span><b>${v.players.map(p=>`<i class="b2-dot" style="background:${COLORS[p.id]}"></i>${props.filter(n=>n.owner===p.id).length}`).join(' ')}</b></div>`}).join('')}`,
   objectives:()=>`<h3>Objectives</h3><p class="cx-k">Reach ${v.target} influence and keep the lead to the end of that round, or lead after round ${v.rounds}.</p>${standings.map((p,i)=>`<div class="b2-r"><span>${i+1}. <i class="b2-dot" style="background:${COLORS[p.id]}"></i> ${esc(p.name)}</span><b>${p.influence} / ${v.target}</b></div>`).join('')}`};
  pop.hidden=!b2Pop||cityReview;if(b2Pop&&!cityReview){const h=`<button class="b2-x" aria-label="Close">×</button>${body[b2Pop]()}`;if(pop.dataset.h!==h){pop.innerHTML=h;pop.dataset.h=h;pop.querySelector('.b2-x').onclick=()=>{b2Pop=null;render()}}}}
+// ---------- production menu: panel size (Full / Compact / Hidden) + match actions. Presentation only. ----------
+const B2_SIZES=['full','compact','hidden'];
+function b2Size(){try{const v=localStorage.getItem('skylineCircuitPanels');if(B2_SIZES.includes(v))return v}catch{}return innerWidth<760||innerHeight<380?'compact':'full'}
+function b2ApplySize(v){const g=$('#cx-game');for(const k of B2_SIZES)g.classList.toggle('b2-panels-'+k,k===v);try{localStorage.setItem('skylineCircuitPanels',v)}catch{}}
+function prodMenu(){if($('#b2-menu-btn'))return;const g=$('#cx-game');b2ApplySize(b2Size());
+ const btn=document.createElement('button');btn.id='b2-menu-btn';btn.setAttribute('aria-label','Menu');btn.setAttribute('aria-expanded','false');btn.innerHTML='<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" stroke="#F2C457" stroke-width="2.4" stroke-linecap="round"/></svg>';
+ const m=document.createElement('div');m.id='b2-menu';m.hidden=true;m.setAttribute('role','menu');
+ const draw=()=>{const cur=g.classList.contains('b2-panels-hidden')?'hidden':g.classList.contains('b2-panels-compact')?'compact':'full';
+  m.innerHTML=`<h3>Menu</h3><div class="b2-mlabel">Side panels</div><div class="b2-seg" role="radiogroup" aria-label="Side panel size">${[['full','Full'],['compact','Compact'],['hidden','Hide']].map(([k,l])=>`<button role="radio" aria-checked="${cur===k}" data-b2-size="${k}">${l}</button>`).join('')}</div>
+  <button data-b2-m="new">New match</button><a class="b2-mlink" href="./index.html">Back to Skyline Estates</a><p class="cx-k">Your match saves automatically on this device.</p>`;
+  m.querySelectorAll('[data-b2-size]').forEach(b=>b.onclick=()=>{b2ApplySize(b.dataset.b2Size);draw();resize()});
+  m.querySelector('[data-b2-m="new"]').onclick=()=>{if(confirmNew()){m.hidden=true;btn.setAttribute('aria-expanded','false');s=null;setupScreen()}}};
+ btn.onclick=()=>{m.hidden=!m.hidden;btn.setAttribute('aria-expanded',String(!m.hidden));if(!m.hidden)draw()};
+ document.addEventListener('pointerdown',e=>{if(!m.hidden&&!m.contains(e.target)&&!btn.contains(e.target)){m.hidden=true;btn.setAttribute('aria-expanded','false')}});
+ g.append(btn,m)}
+function confirmNew(){return !s||s.over||window.confirm('Start a new match? The current Circuit match will be replaced.')}
+
 function wire(){const on=(sel,f)=>{const e=$(sel);if(e)e.onclick=f};
  on('#cx-city-view',()=>{if(!R3)return;cityReview=!cityReview;if(cityReview&&zoom)overview();
   if(!cityReview){citySelection=null;orbitYaw=0;previewStage=-1;cityShowcase=false;stagesOverride=null;R3.setOrbitYaw(0);R3.setSpotlight(null);camCur={...cam};R3.setCamera(camCur);C=R3.C}
