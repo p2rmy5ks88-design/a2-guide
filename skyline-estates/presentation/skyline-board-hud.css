@@ -58,3 +58,5 @@ details.sk-panel,.sk-panel{background:linear-gradient(180deg,var(--panel2),var(-
 .sk-card{container-type:inline-size}
 @container (max-width:150px){.sk-card .v span{display:none}.sk-card .v{justify-content:flex-start}}
 @container (max-width:96px){.sk-card{grid-template-columns:minmax(0,1fr)}.sk-card img{display:none}}
+/* explicit icon sizes (WebKit sizes unsized inline SVGs to their container) */
+.sk-hud svg{max-width:100%}.sk-career svg{width:1rem;height:1rem;display:block}.sk-card .nm svg{width:.9rem;height:.9rem}.sk-check svg{width:1rem;height:1rem}

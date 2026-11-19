@@ -60,6 +60,7 @@ async function humanTurn(p){for(let i=0;i<4000;i++){if(await p.evaluate(()=>docu
   report.viewports.push({vp,buffer:lay.st.buffer,css:lay.st.css,pixelRatio:lay.st.pixelRatio,screenshot:[vp.width*vp.dpr,vp.height*vp.dpr],triangles:lay.st.triangles,calls:lay.st.calls});
   check(`${vp.name}: all 44 spaces inside the free board area (not under panels or player strip)`,lay.nodesIn===44);check(`${vp.name}: Roll Dice and view controls on screen and ≥44 CSS px tall`,lay.btn.length>=3&&lay.btn.every(b=>b.in&&b.h>=44),{bad:lay.btn.filter(b=>!(b.in&&b.h>=44))});
   check(`${vp.name}: no horizontal page overflow`,!lay.hScroll);
+  check(`${vp.name}: HUD icons stay icon-sized (no oversized SVGs)`,await p.evaluate(()=>[...document.querySelectorAll('.sk-col svg,.sk-strip svg')].every(e=>{const q=e.getBoundingClientRect();return q.height<=48||e.closest('.sk-map,.sk-stages')})));
   check(`${vp.name}: art sidebars (Empire map, victory, landmarks, market, milestones, negotiation) and four player cards present; card figures not clipped`,lay.panels&&lay.cards===4&&lay.fits&&lay.stripIn);await p.screenshot({path:path.join(out,`${engine}-${vp.name}.png`)});await ctx.close()}
  check('no page errors',report.errors.length===0,{errors:report.errors.slice(0,3)});
 }finally{fs.writeFileSync(path.join(out,`${engine}-report.json`),JSON.stringify(report,null,1));await browser.close()}console.log(`${report.checks.length} checks passed on ${engine}`)})().catch(e=>{console.error(e);process.exit(1)});
