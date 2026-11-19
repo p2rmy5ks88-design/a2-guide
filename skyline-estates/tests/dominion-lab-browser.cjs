@@ -72,6 +72,7 @@ const humanTurn=p=>p.waitForFunction(()=>{const s=__dominionLab.state();return s
   check(`${vp.name}: all 61 nodes inside the free board area (not under panels or player strip)`,lay.nodesIn===61);
   check(`${vp.name}: every visible action button is on screen and ≥44 CSS px tall`,lay.btn.length>0&&lay.btn.every(b=>b.in&&b.h>=44),{bad:lay.btn.filter(b=>!(b.in&&b.h>=44))});
   check(`${vp.name}: no horizontal page overflow`,!lay.hScroll);
+  check(`${vp.name}: HUD icons stay icon-sized (no oversized SVGs)`,await p.evaluate(()=>[...document.querySelectorAll('.sk-col svg,.sk-strip svg')].every(e=>{const q=e.getBoundingClientRect();return q.height<=48||e.closest('.sk-map,.sk-stages')})));
   check(`${vp.name}: art sidebars (career, mechanics, property groups, upgrades, negotiation) and four territory cards present; card figures not clipped`,lay.panels&&lay.cards===4&&lay.fits);
   await p.screenshot({path:path.join(out,`${engine}-${vp.name}.png`)});await ctx.close()}
  check('no page errors',report.errors.length===0,{errors:report.errors.slice(0,3)});
