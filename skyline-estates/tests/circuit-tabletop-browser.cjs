@@ -242,12 +242,13 @@ let browser,server;
    total+=60;
    await context.close();
  }
- // Career parity: access stays behind the existing dual feature flags.
+ // Career parity: Career is on by default (owner decision 19 Nov 2026); turning it off on a device still blocks entry.
  // No successful access may silently convert a Career request into practice.
  {
    const ctx=await browser.newContext({viewport:{width:956,height:440},deviceScaleFactor:3,serviceWorkers:'block'});
    const p=await ctx.newPage();
    const errors=[];p.on('pageerror',e=>errors.push(String(e)));
+   await p.addInitScript(()=>localStorage.setItem('skylineFeature.career','off'));
    await p.goto(url+'?career=1&length=extended',{waitUntil:'load'});
    assert((await p.locator('#actionCard').innerText()).includes('Career unavailable'),'Career entry is rejected when existing flags are disabled');
    assert.equal(await p.evaluate(()=>Boolean(window.__circuitTabletop)),false,'blocked Career does not start a practice game');

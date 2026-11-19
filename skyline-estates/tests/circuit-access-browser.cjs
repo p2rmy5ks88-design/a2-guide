@@ -36,25 +36,20 @@ const mime={'.html':'text/html','.js':'text/javascript','.css':'text/css','.json
      }));
      await context.close();return state;
    };
-   let r=await run({},'?career=1&circuitAlpha=on&bench=1');
-   assert.equal(r.allow,false,'public URL query alone cannot unlock');
-   assert.equal(r.initialized,false,'blocked public page cannot initialize match');
-   assert.equal(r.setupHidden,false,'blocked public visitor sees preview notice');
-   assert(r.notice.includes('preview is not enabled'),'public notice visible');
-   assert.equal(r.benchmark,false,'bench query cannot run when locked');
-   for(const flags of [
-     {'skylineFeature.career':'on'},
-     {'skylineFeature.circuitAlpha':'on'}
-   ]){
-     r=await run(flags);
-     assert.equal(r.allow,false,'one flag never unlocks');
-     assert.equal(r.initialized,false,'one flag keeps UI inert');
+   // Owner decision 19 Nov 2026: Career and Circuit are on for everyone; either flag set to 'off' closes the page.
+   let r=await run({});
+   assert.equal(r.allow,true,'public host open by default');
+   assert.equal(r.initialized,true,'default visitor loads Circuit UI');
+   assert.equal(r.start,true,'default visitor sees playable setup');
+   for(const flags of [{'skylineFeature.career':'off'},{'skylineFeature.circuitAlpha':'off'}]){
+     r=await run(flags,'?career=1&circuitAlpha=on&bench=1');
+     assert.equal(r.allow,false,'an off switch is not overridden by the URL');
+     assert.equal(r.initialized,false,'switched-off page cannot initialize match');
+     assert.equal(r.setupHidden,false,'switched-off visitor sees preview notice');
+     assert(r.notice.includes('preview is not enabled'),'notice visible');
+     assert.equal(r.benchmark,false,'bench query cannot run when off');
    }
-   r=await run({'skylineFeature.career':'on','skylineFeature.circuitAlpha':'on'});
-   assert.equal(r.allow,true,'both flags unlock on public host');
-   assert.equal(r.initialized,true,'approved opt-in loads Circuit UI');
-   assert.equal(r.start,true,'approved opt-in presents playable setup');
    assert.deepEqual(errors,[],'no browser page errors');
-   console.log('PASS: '+engine+' public preview gate denies direct URL / partial flags and allows dual opt-in');
+   console.log('PASS: '+engine+' Circuit is open by default and either off switch closes it');
  }finally{await browser.close()}
 })().catch(err=>{console.error(err);process.exitCode=1});
