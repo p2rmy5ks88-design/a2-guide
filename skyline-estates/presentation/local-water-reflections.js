@@ -1,9 +1,10 @@
 /* Local planar reflections for supplied horizontal waterfront meshes.
- * One bounded render target, refreshed only with a dirty scene; no extra idle RAF.
+ * One bounded render target, refreshed only for static-scene or camera changes.
+ * Moving tokens are excluded, preventing stale reflections and redundant GPU passes.
  * Source GLBs and their normal/ORM textures remain unchanged.
  */
 import * as THREE from '../lib/three.module.min.js';
-export function createWaterReflections({scene,camera,getRenderer,enabled=true,maxWidth=768}){
+export function createWaterReflections({scene,camera,getRenderer,enabled=true,maxWidth=768,getExclusions=()=>[]}){
  const surfaces=[],materials=new Set(),mirror=new THREE.PerspectiveCamera(),matrix=new THREE.Matrix4();
  let target=null,planeY=0,passes=0,lastTime=-Infinity,lastCamera='',lastViewport='',pending=true;
  const uniforms={localWaterReflection:{value:null},localWaterMatrix:{value:matrix},localWaterReady:{value:0}};
@@ -42,17 +43,18 @@ export function createWaterReflections({scene,camera,getRenderer,enabled=true,ma
   camera.updateMatrixWorld();const ck=camera.matrixWorld.elements.join(',')+'|'+camera.projectionMatrix.elements.join(',');
   const size=renderer.getDrawingBufferSize(new THREE.Vector2()),w=Math.min(maxWidth,size.x),h=Math.max(128,Math.round(w*size.y/size.x)),vp=w+'x'+h;
   if(vp!==lastViewport){target?.dispose();target=new THREE.WebGLRenderTarget(w,h,{type:THREE.HalfFloatType,depthBuffer:true});target.texture.name='Skyline local waterfront reflection';uniforms.localWaterReflection.value=target.texture;lastViewport=vp;pending=true;}
-  if(!pending&&!force&&ck===lastCamera&&now-lastTime<150)return;
+  if(!pending&&!force&&ck===lastCamera)return;
   position.setFromMatrixPosition(camera.matrixWorld);camera.getWorldDirection(forward);at.copy(position).add(forward);up.copy(camera.up);
   position.y=2*planeY-position.y;at.y=2*planeY-at.y;up.y=-up.y;
   mirror.position.copy(position);mirror.up.copy(up);mirror.lookAt(at);mirror.near=camera.near;mirror.far=camera.far;mirror.projectionMatrix.copy(camera.projectionMatrix);mirror.projectionMatrixInverse.copy(camera.projectionMatrixInverse);mirror.updateMatrixWorld();
   matrix.copy(bias).multiply(mirror.projectionMatrix).multiply(mirror.matrixWorldInverse);
-  const visible=surfaces.map(o=>o.visible),oldTarget=renderer.getRenderTarget(),oldClip=renderer.clippingPlanes,oldShadow=renderer.shadowMap.needsUpdate,oldBackground=scene.background;
+  const hidden=[...new Set([...surfaces,...getExclusions()].filter(Boolean))],visible=hidden.map(o=>o.visible),faded=[];scene.traverse(o=>{for(const m of (Array.isArray(o.material)?o.material:[o.material]))if(m?.userData.original&&m.opacity<m.userData.original.opacity){faded.push([m,m.opacity]);m.opacity=m.userData.original.opacity;}});
+  const oldTarget=renderer.getRenderTarget(),oldClip=renderer.clippingPlanes,oldShadow=renderer.shadowMap.needsUpdate,oldBackground=scene.background;
   try{
-   surfaces.forEach(o=>o.visible=false);scene.background=reflectionSky;clip.constant=-planeY;renderer.clippingPlanes=[clip];renderer.shadowMap.needsUpdate=false;
+   hidden.forEach(o=>o.visible=false);scene.background=reflectionSky;clip.constant=-planeY;renderer.clippingPlanes=[clip];renderer.shadowMap.needsUpdate=false;
    renderer.setRenderTarget(target);renderer.render(scene,mirror);uniforms.localWaterReady.value=1;passes++;
   }finally{
-   scene.background=oldBackground;renderer.setRenderTarget(oldTarget);renderer.clippingPlanes=oldClip;renderer.shadowMap.needsUpdate=oldShadow;surfaces.forEach((o,i)=>o.visible=visible[i]);
+   scene.background=oldBackground;renderer.setRenderTarget(oldTarget);renderer.clippingPlanes=oldClip;renderer.shadowMap.needsUpdate=oldShadow;hidden.forEach((o,i)=>o.visible=visible[i]);faded.forEach(([m,opacity])=>m.opacity=opacity);
   }
   pending=false;lastCamera=ck;lastTime=now;
  }

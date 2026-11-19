@@ -52,5 +52,5 @@ jobs:
         if: always() && steps.present.outputs.yes == 'true'
         with:
           name: rendered-${{ matrix.board }}-${{ matrix.engine }}
-          path: skyline-estates/test-results/
+          path: skyline-estates/test-results/${{ matrix.board }}-production/
           retention-days: 7
