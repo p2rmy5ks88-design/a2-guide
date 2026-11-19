@@ -1,0 +1,1 @@
+Runtime subset approved by the owner for repository inclusion (19 Nov 2026). Original source: SkylineEstates_Dominion_Empire_3D1.zip, SHA256 83ecfd1e616ec23588217e4c2e8909e424ed02fc435df337c07f886e31a87026. Contains only the art-matched Dominion board (48-space track), its layout and the waterfront city. Files copied unchanged. Physical iPhone performance unverified.

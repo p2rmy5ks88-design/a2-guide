@@ -1,0 +1,577 @@
+{
+ "board": "dominion_48",
+ "total_spaces": 48,
+ "spaces": [
+  {
+   "index": 0,
+   "type": "corner",
+   "label": "CHART",
+   "group": "heritage",
+   "position": [
+    -9.794,
+    0.48,
+    0.0
+   ]
+  },
+  {
+   "index": 1,
+   "type": "property",
+   "label": "HERITAGE",
+   "group": "heritage",
+   "position": [
+    -9.08,
+    0.42,
+    -1.237
+   ],
+   "yaw": 1.0472
+  },
+  {
+   "index": 2,
+   "type": "property",
+   "label": "HERITAGE",
+   "group": "heritage",
+   "position": [
+    -8.502,
+    0.42,
+    -2.238
+   ],
+   "yaw": 1.0472
+  },
+  {
+   "index": 3,
+   "type": "property",
+   "label": "HERITAGE",
+   "group": "heritage",
+   "position": [
+    -7.924,
+    0.42,
+    -3.24
+   ],
+   "yaw": 1.0472
+  },
+  {
+   "index": 4,
+   "type": "chance",
+   "label": "CHANCE",
+   "group": null,
+   "position": [
+    -7.346,
+    0.42,
+    -4.241
+   ],
+   "yaw": 1.0472
+  },
+  {
+   "index": 5,
+   "type": "property",
+   "label": "GLOBAL",
+   "group": "global",
+   "position": [
+    -6.767,
+    0.42,
+    -5.242
+   ],
+   "yaw": 1.0472
+  },
+  {
+   "index": 6,
+   "type": "property",
+   "label": "GLOBAL",
+   "group": "global",
+   "position": [
+    -6.189,
+    0.42,
+    -6.244
+   ],
+   "yaw": 1.0472
+  },
+  {
+   "index": 7,
+   "type": "property",
+   "label": "GLOBAL",
+   "group": "global",
+   "position": [
+    -5.611,
+    0.42,
+    -7.245
+   ],
+   "yaw": 1.0472
+  },
+  {
+   "index": 8,
+   "type": "corner",
+   "label": "BANK",
+   "group": "global",
+   "position": [
+    -4.897,
+    0.48,
+    -8.482
+   ]
+  },
+  {
+   "index": 9,
+   "type": "property",
+   "label": "INNOVATION",
+   "group": "innovation",
+   "position": [
+    -3.469,
+    0.42,
+    -8.482
+   ],
+   "yaw": -0.0
+  },
+  {
+   "index": 10,
+   "type": "property",
+   "label": "INNOVATION",
+   "group": "innovation",
+   "position": [
+    -2.313,
+    0.42,
+    -8.482
+   ],
+   "yaw": -0.0
+  },
+  {
+   "index": 11,
+   "type": "property",
+   "label": "INNOVATION",
+   "group": "innovation",
+   "position": [
+    -1.156,
+    0.42,
+    -8.482
+   ],
+   "yaw": -0.0
+  },
+  {
+   "index": 12,
+   "type": "contest",
+   "label": "CONTEST",
+   "group": null,
+   "position": [
+    0.0,
+    0.42,
+    -8.482
+   ],
+   "yaw": -0.0
+  },
+  {
+   "index": 13,
+   "type": "property",
+   "label": "INNOVATION",
+   "group": "innovation",
+   "position": [
+    1.156,
+    0.42,
+    -8.482
+   ],
+   "yaw": -0.0
+  },
+  {
+   "index": 14,
+   "type": "property",
+   "label": "INNOVATION",
+   "group": "innovation",
+   "position": [
+    2.313,
+    0.42,
+    -8.482
+   ],
+   "yaw": -0.0
+  },
+  {
+   "index": 15,
+   "type": "property",
+   "label": "INNOVATION",
+   "group": "innovation",
+   "position": [
+    3.469,
+    0.42,
+    -8.482
+   ],
+   "yaw": -0.0
+  },
+  {
+   "index": 16,
+   "type": "corner",
+   "label": "MASKS",
+   "group": "cultural",
+   "position": [
+    4.897,
+    0.48,
+    -8.482
+   ]
+  },
+  {
+   "index": 17,
+   "type": "property",
+   "label": "CULTURAL",
+   "group": "cultural",
+   "position": [
+    5.611,
+    0.42,
+    -7.245
+   ],
+   "yaw": -1.0472
+  },
+  {
+   "index": 18,
+   "type": "property",
+   "label": "CULTURAL",
+   "group": "cultural",
+   "position": [
+    6.189,
+    0.42,
+    -6.244
+   ],
+   "yaw": -1.0472
+  },
+  {
+   "index": 19,
+   "type": "property",
+   "label": "CULTURAL",
+   "group": "cultural",
+   "position": [
+    6.767,
+    0.42,
+    -5.242
+   ],
+   "yaw": -1.0472
+  },
+  {
+   "index": 20,
+   "type": "dice",
+   "label": "DICE",
+   "group": null,
+   "position": [
+    7.346,
+    0.42,
+    -4.241
+   ],
+   "yaw": -1.0472
+  },
+  {
+   "index": 21,
+   "type": "property",
+   "label": "MARKET",
+   "group": "market",
+   "position": [
+    7.924,
+    0.42,
+    -3.24
+   ],
+   "yaw": -1.0472
+  },
+  {
+   "index": 22,
+   "type": "property",
+   "label": "MARKET",
+   "group": "market",
+   "position": [
+    8.502,
+    0.42,
+    -2.238
+   ],
+   "yaw": -1.0472
+  },
+  {
+   "index": 23,
+   "type": "property",
+   "label": "MARKET",
+   "group": "market",
+   "position": [
+    9.08,
+    0.42,
+    -1.237
+   ],
+   "yaw": -1.0472
+  },
+  {
+   "index": 24,
+   "type": "corner",
+   "label": "CHART",
+   "group": "market",
+   "position": [
+    9.794,
+    0.48,
+    0.0
+   ]
+  },
+  {
+   "index": 25,
+   "type": "property",
+   "label": "MARKET",
+   "group": "market",
+   "position": [
+    9.08,
+    0.42,
+    1.237
+   ],
+   "yaw": -2.0944
+  },
+  {
+   "index": 26,
+   "type": "property",
+   "label": "MARKET",
+   "group": "market",
+   "position": [
+    8.502,
+    0.42,
+    2.238
+   ],
+   "yaw": -2.0944
+  },
+  {
+   "index": 27,
+   "type": "property",
+   "label": "MARKET",
+   "group": "market",
+   "position": [
+    7.924,
+    0.42,
+    3.24
+   ],
+   "yaw": -2.0944
+  },
+  {
+   "index": 28,
+   "type": "chance",
+   "label": "CHANCE",
+   "group": null,
+   "position": [
+    7.346,
+    0.42,
+    4.241
+   ],
+   "yaw": -2.0944
+  },
+  {
+   "index": 29,
+   "type": "property",
+   "label": "HARBOR",
+   "group": "harbor",
+   "position": [
+    6.767,
+    0.42,
+    5.242
+   ],
+   "yaw": -2.0944
+  },
+  {
+   "index": 30,
+   "type": "property",
+   "label": "HARBOR",
+   "group": "harbor",
+   "position": [
+    6.189,
+    0.42,
+    6.244
+   ],
+   "yaw": -2.0944
+  },
+  {
+   "index": 31,
+   "type": "property",
+   "label": "HARBOR",
+   "group": "harbor",
+   "position": [
+    5.611,
+    0.42,
+    7.245
+   ],
+   "yaw": -2.0944
+  },
+  {
+   "index": 32,
+   "type": "corner",
+   "label": "ANCHOR",
+   "group": "harbor",
+   "position": [
+    4.897,
+    0.48,
+    8.482
+   ]
+  },
+  {
+   "index": 33,
+   "type": "property",
+   "label": "FINANCIAL",
+   "group": "financial",
+   "position": [
+    3.469,
+    0.42,
+    8.482
+   ],
+   "yaw": -3.1416
+  },
+  {
+   "index": 34,
+   "type": "property",
+   "label": "FINANCIAL",
+   "group": "financial",
+   "position": [
+    2.313,
+    0.42,
+    8.482
+   ],
+   "yaw": -3.1416
+  },
+  {
+   "index": 35,
+   "type": "property",
+   "label": "FINANCIAL",
+   "group": "financial",
+   "position": [
+    1.156,
+    0.42,
+    8.482
+   ],
+   "yaw": -3.1416
+  },
+  {
+   "index": 36,
+   "type": "trade",
+   "label": "TRADE",
+   "group": null,
+   "position": [
+    0.0,
+    0.42,
+    8.482
+   ],
+   "yaw": -3.1416
+  },
+  {
+   "index": 37,
+   "type": "property",
+   "label": "FINANCIAL",
+   "group": "financial",
+   "position": [
+    -1.156,
+    0.42,
+    8.482
+   ],
+   "yaw": -3.1416
+  },
+  {
+   "index": 38,
+   "type": "property",
+   "label": "FINANCIAL",
+   "group": "financial",
+   "position": [
+    -2.313,
+    0.42,
+    8.482
+   ],
+   "yaw": -3.1416
+  },
+  {
+   "index": 39,
+   "type": "property",
+   "label": "FINANCIAL",
+   "group": "financial",
+   "position": [
+    -3.469,
+    0.42,
+    8.482
+   ],
+   "yaw": -3.1416
+  },
+  {
+   "index": 40,
+   "type": "corner",
+   "label": "LEAF",
+   "group": "greenbelt",
+   "position": [
+    -4.897,
+    0.48,
+    8.482
+   ]
+  },
+  {
+   "index": 41,
+   "type": "property",
+   "label": "GREENBELT",
+   "group": "greenbelt",
+   "position": [
+    -5.611,
+    0.42,
+    7.245
+   ],
+   "yaw": 2.0944
+  },
+  {
+   "index": 42,
+   "type": "property",
+   "label": "GREENBELT",
+   "group": "greenbelt",
+   "position": [
+    -6.189,
+    0.42,
+    6.244
+   ],
+   "yaw": 2.0944
+  },
+  {
+   "index": 43,
+   "type": "property",
+   "label": "GREENBELT",
+   "group": "greenbelt",
+   "position": [
+    -6.767,
+    0.42,
+    5.242
+   ],
+   "yaw": 2.0944
+  },
+  {
+   "index": 44,
+   "type": "contest",
+   "label": "CONTEST",
+   "group": null,
+   "position": [
+    -7.346,
+    0.42,
+    4.241
+   ],
+   "yaw": 2.0944
+  },
+  {
+   "index": 45,
+   "type": "property",
+   "label": "HERITAGE",
+   "group": "heritage",
+   "position": [
+    -7.924,
+    0.42,
+    3.24
+   ],
+   "yaw": 2.0944
+  },
+  {
+   "index": 46,
+   "type": "property",
+   "label": "HERITAGE",
+   "group": "heritage",
+   "position": [
+    -8.502,
+    0.42,
+    2.238
+   ],
+   "yaw": 2.0944
+  },
+  {
+   "index": 47,
+   "type": "property",
+   "label": "HERITAGE",
+   "group": "heritage",
+   "position": [
+    -9.08,
+    0.42,
+    1.237
+   ],
+   "yaw": 2.0944
+  }
+ ],
+ "up": "+Y"
+}
