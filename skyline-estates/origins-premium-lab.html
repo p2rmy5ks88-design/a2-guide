@@ -16,7 +16,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#0b1930;col
 </head>
 <body>
 <div id="status" role="status">Loading the real Skyline Origins game…</div>
-<iframe title="Skyline Origins live gameplay with unreleased premium visual review" id="originsGame" src="./index.html"></iframe>
+<iframe title="Skyline Origins live gameplay with unreleased premium visual review" id="originsGame" src="about:blank"></iframe>
 <div id="reviewLabel">ORIGINS VISUAL LAB · NOT LIVE</div>
 <script>
 (()=>{
@@ -25,13 +25,16 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#0b1930;col
   try{
    const d=iframe.contentDocument;
    if(!d||!d.head)throw Error('Cannot attach Origins preview skin');
-   const link=d.createElement('link');link.rel='stylesheet';link.href='./origins-premium.css';d.head.append(link);
-   const script=d.createElement('script');script.src='./origins-premium.js';
-   script.addEventListener('load',()=>{status.hidden=true;iframe.contentWindow.SkylineOriginsPremiumLab?.refresh()});
+   // Keep the existing draft intact; the new reconstruction is opt-in until validated.
+   const legacy=new URLSearchParams(location.search).get('production')!=='1';if(!legacy)document.querySelector('#reviewLabel').hidden=true;
+   const link=d.createElement('link');link.rel='stylesheet';link.href=legacy?'./origins-premium.css':'./origins-production.css';d.head.append(link);
+   const script=d.createElement('script');script.src=legacy?'./origins-premium.js':'./origins-production-adapter.js';
+   script.addEventListener('load',()=>{status.hidden=true;if(legacy)iframe.contentWindow.SkylineOriginsPremiumLab?.refresh()});
    script.addEventListener('error',()=>{status.textContent='Origins preview visual resources are unavailable'});
    d.body.append(script);
   }catch(e){status.textContent='Origins preview cannot load: '+e.message}
  });
+ const forwarded=new URLSearchParams();for(const key of ['quality','source']){const value=new URLSearchParams(location.search).get(key);if(value)forwarded.set(key,value);}iframe.src='./index.html'+(forwarded.size?'?'+forwarded:'');
 })();
 </script>
 </body>

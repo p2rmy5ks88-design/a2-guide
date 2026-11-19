@@ -1,0 +1,56 @@
+name: Approved board web visuals
+on:
+  pull_request:
+    paths:
+      - 'skyline-estates/*production*'
+      - 'skyline-estates/origins-premium-lab.html'
+      - 'skyline-estates/circuit-board2-ui.js'
+      - 'skyline-estates/presentation/**'
+      - 'skyline-estates/assets/approved-v5/**'
+      - 'skyline-estates/tests/*production-browser.cjs'
+      - '.github/workflows/approved-board-visuals.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  rendered-gameplay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        board: [origins, circuit]
+        engine: [chromium, webkit]
+    steps:
+      - uses: actions/checkout@v4
+      - id: present
+        name: Select board implemented by this branch
+        run: |
+          if test -f skyline-estates/tests/${{ matrix.board }}-production-browser.cjs; then echo 'yes=true' >> "$GITHUB_OUTPUT"; fi
+      - uses: actions/setup-node@v4
+        if: steps.present.outputs.yes == 'true'
+        with: {node-version: 22}
+      - name: Install browser runner
+        if: steps.present.outputs.yes == 'true'
+        run: npm install --prefix skyline-estates/tests --no-audit --no-fund
+      - name: Install browser engine
+        if: steps.present.outputs.yes == 'true'
+        run: npx --prefix skyline-estates/tests playwright install --with-deps ${{ matrix.engine }}
+      - name: Verify real rendered gameplay and saves
+        if: steps.present.outputs.yes == 'true'
+        env:
+          PRODUCTION_BASE_URL: http://127.0.0.1:8773/skyline-estates/
+          VISUAL_ORIGIN: http://127.0.0.1:8773/
+          VISUAL_ENGINE: ${{ matrix.engine }}
+          VISUAL_MATRIX: '1'
+          CHROME_PATH: /usr/bin/google-chrome
+          WEBKIT_DISABLE_DMABUF_RENDERER: '1'
+        run: |
+          python3 -m http.server 8773 --bind 127.0.0.1 > /tmp/approved-board-http.log 2>&1 &
+          node skyline-estates/tests/${{ matrix.board }}-production-browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always() && steps.present.outputs.yes == 'true'
+        with:
+          name: rendered-${{ matrix.board }}-${{ matrix.engine }}
+          path: skyline-estates/test-results/
+          retention-days: 7

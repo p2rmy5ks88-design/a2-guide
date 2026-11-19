@@ -1,0 +1,115 @@
+/* Native game DOM and actions retained; production-authoring preview only. */
+/* Live layout dimensions are also read by the camera fit. No device-name sizing. */
+.origins-production{--org-sl:max(env(safe-area-inset-left,0px),var(--preview-safe-left,0px));--org-sr:max(env(safe-area-inset-right,0px),var(--preview-safe-right,0px));--org-st:max(env(safe-area-inset-top,0px),var(--preview-safe-top,0px));--org-sb:max(env(safe-area-inset-bottom,0px),var(--preview-safe-bottom,0px))}
+.origins-production-active #gl{visibility:hidden!important}
+#originsProductionCanvas{position:fixed;inset:0;width:100%;height:100%;display:block;z-index:0;touch-action:manipulation}
+.origins-production #ui{z-index:4;pointer-events:none;text-shadow:0 1px 2px #02061199}
+.origins-production #ui button,.origins-production #ui nav,.origins-production #ui aside{pointer-events:auto}
+#originsProductionHud{position:fixed;inset:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px);pointer-events:none;color:#fff1d6}
+.origins-production #ui>#originsProductionHud{pointer-events:none!important}
+#orgAssetStatus{position:absolute;top:45%;left:25%;right:25%;padding:14px;background:#0b1930e8;border:1px solid #e6bd6f;border-radius:12px;text-align:center;pointer-events:none}
+#originsProductionHud button,.origins-production .tb{background:linear-gradient(#203049,#0c172b);border:1px solid #dcb86a;color:#fff1d6;box-shadow:inset 0 1px #fff3,0 3px 0 #5f4527;border-radius:12px;min-height:44px;font:800 12px system-ui}
+#orgCareer{position:absolute;left:6px;top:4px;width:137px}#orgCareer .orgBrand{text-align:center;color:#f7dfa2}.orgBrand>span{font-size:27px;display:block;letter-spacing:-3px;color:#e9bf67}.orgBrand>b{font:900 25px/.92 Georgia,serif;display:block;text-shadow:0 2px #100c08,1px 0 #d7ad65}.orgBrand>small{display:block;font:700 11px system-ui;margin-top:7px}
+#orgBoardOne{width:100%;display:flex;align-items:center;gap:7px;padding:5px;margin:16px 0 6px;text-align:left;background:linear-gradient(125deg,#d9a13d,#73582b)!important}#orgBoardOne em{font:bold 29px Georgia;background:#f9d475;color:#3c2911;padding:3px 8px;border-radius:7px;font-style:normal}#orgBoardOne small{display:block;font-size:10px;color:#fff3cf}
+.orgOtherBoards{display:grid;gap:6px}.orgOtherBoards>span{background:#101e32df;border:1px solid #7a7b83;border-radius:8px;padding:9px 7px;font:700 13px Georgia}.orgOtherBoards b{font:700 11px system-ui;margin-left:6px}
+#orgHeading{position:absolute;top:3px;left:28%;width:44%;text-align:center;pointer-events:none}#orgHeading h1{font:700 clamp(21px,2.8vw,40px)/1 Georgia,serif;margin:0;color:#fff0d0;text-shadow:0 2px 3px #0009}#orgHeading p{font-size:10px;margin:3px 0}#orgRound{display:inline-block;background:linear-gradient(#ffe1a1,#ce9a3d);color:#27200f;border:1px solid #ffe7b3;border-radius:13px;padding:3px 10px;font:800 10px system-ui}
+#orgPortfolio{position:absolute;right:6px;top:57px;width:157px;padding:8px 9px;background:linear-gradient(125deg,#192a42f5,#0a1428f2);border:1px solid #d9b771;border-radius:12px;box-shadow:0 5px 12px #0004}#orgPortfolio h2{font-size:12px;margin:0 0 8px;padding-bottom:7px;border-bottom:1px solid #f4cd7a55}#orgPortfolio p{display:flex;justify-content:space-between;gap:4px;font-size:10px;margin:5px 0}#orgPortfolio p b{color:#ffe19a;font-variant-numeric:tabular-nums}
+.origins-production #roster{position:fixed!important;right:6px!important;left:auto!important;top:195px!important;bottom:145px!important;width:157px!important;max-width:none!important;max-height:none!important;gap:4px!important;padding:5px!important;border:1px solid #d9b771;border-radius:12px;background:linear-gradient(#182a40f2,#0b1529f2);overflow:auto;scrollbar-width:thin}
+.origins-production #roster:before{content:'Players';font:800 12px system-ui;padding:2px 4px;color:#fff0ca}.origins-production #roster .pcard{min-height:43px!important;flex-shrink:0;padding:3px!important;border:1px solid #b59860!important;border-radius:9px!important;background:#10203a!important;box-shadow:none!important;transform:none!important}.origins-production #roster .pcard.cur{background:linear-gradient(115deg,#dba94c,#916d36)!important;color:#132138!important}.origins-production #roster .pt{width:30px!important;height:30px!important;font-size:20px!important}.origins-production #roster .pn{font-size:10px!important}.origins-production #roster .pc{font-size:12px!important}.origins-production #roster .pg{display:none}.origins-production #roster .nowtag{display:none}
+#orgDock{position:absolute;bottom:112px;left:20%;right:19%;display:flex;align-items:center;justify-content:center;gap:10px;pointer-events:auto}#orgDock>div{display:contents}#orgDock button{display:flex;align-items:center;justify-content:center;gap:5px;min-width:75px;padding:0 12px}#orgDock button svg{width:18px;height:18px}#orgDock #acts{position:static!important;inset:auto!important;display:flex!important;max-width:310px;background:transparent!important;border:0!important;padding:0!important;box-shadow:none!important;backdrop-filter:none!important;flex-wrap:wrap}#orgDock #acts .bigb{background:linear-gradient(#e34144,#b31330)!important;border:2px solid #f6ca6d!important;border-radius:24px!important;box-shadow:inset 0 2px #fff6,0 4px #744322!important;color:#fff5df!important;min-width:142px;min-height:53px;font-size:14px!important;white-space:nowrap}#orgDock #acts .pills{display:flex;gap:3px}#orgDock #acts .pill{min-width:44px!important;font-size:11px!important;min-height:44px!important;padding:4px 8px!important}#orgDock #acts .bigb span{font-size:14px}#orgDock .count{font-size:11px}
+#orgFootnotes{position:absolute;bottom:6px;left:6px;right:6px;height:91px;display:grid;grid-template-columns:25% 45% 30%;background:#c2a477;border:2px solid #f1d8a1;border-radius:12px;padding:5px;color:#fff2d8}#orgFootnotes>div{min-width:0;background:linear-gradient(#1d304b,#0e1c32);border:1px solid #e6ce9f;border-radius:8px;padding:8px;margin:0 3px;overflow:auto;scrollbar-width:thin}#orgFootnotes b{display:block;font:800 11px system-ui;margin-bottom:6px}#orgFootnotes span{font-size:10px;line-height:1.5}#orgGroups>div{display:flex;gap:4px;flex-wrap:wrap}#orgGroups span{border-top:4px solid var(--district);background:#0c1c31;padding:3px 5px;border-radius:5px;font-size:9px}#orgStages span{display:block;color:#f4cf83;font-weight:700}
+.origins-production #prompt{top:57px!important;left:50%!important;right:auto!important;transform:translateX(-50%)!important;background:#10223be6!important;max-width:34vw;min-height:26px;padding:5px 10px!important;border:1px solid #c6a56d;border-radius:10px;font-size:10px!important}.origins-production #prompt .sub{font-size:9px!important}.origins-production #tools{right:8px!important;top:6px!important;left:auto!important;display:flex;flex-direction:row!important;gap:6px!important}.origins-production #tools .tb{width:36px;height:36px;min-height:36px;border:1px solid #c5a66d;background:#13223a;border-radius:10px}.origins-production #tools .tb svg{width:18px;height:18px}.origins-production #turnClock{display:none!important}.origins-production #round{display:none!important}.origins-production #radio{bottom:106px!important;left:8px!important;max-width:17vw;font-size:9px!important}.origins-production #log{bottom:163px!important;font-size:10px!important;max-width:35vw!important}
+@media(max-height:500px){#orgCareer{width:135px}.orgBrand>b{font-size:23px}.orgBrand>span{font-size:24px}#orgBoardOne{margin-top:8px}.orgOtherBoards>span{padding:7px;font-size:12px}.orgOtherBoards b{font-size:10px}#orgPortfolio{top:51px;width:153px;padding:7px}#orgPortfolio p{font-size:9px;margin:4px 0}.origins-production #roster{top:184px!important;bottom:84px!important;width:153px!important}.origins-production #roster .pcard{min-height:40px!important}.origins-production #roster .pt{width:24px!important;height:24px!important;font-size:16px!important}#orgDock{bottom:51px;left:20%;right:18%;gap:6px}#orgDock button{min-width:60px;padding:0 8px;font-size:10px}#orgDock #acts .bigb{min-height:44px;min-width:130px}#orgFootnotes{height:39px;padding:2px;border-radius:8px}#orgFootnotes>div{padding:4px 6px;border-radius:5px}#orgFootnotes b{font-size:10px;margin:0}#orgFootnotes span{font-size:9px}#orgFootnotes>div:first-child>span,#orgStages>span{display:none}#orgGroups>div{flex-wrap:nowrap;white-space:nowrap}#orgGroups span{font-size:8px;padding:1px 4px}#orgView{min-width:44px!important;font-size:9px!important}.origins-production #log{bottom:101px!important}.origins-production #radio{bottom:52px!important}}
+@media(max-width:850px){#orgCareer{width:115px}.orgBrand>b{font-size:20px}.orgBrand>span{font-size:20px}.orgOtherBoards b{font-size:8px}#orgPortfolio{width:132px}.origins-production #roster{width:132px!important}#orgPortfolio p{font-size:8px}#orgDock{gap:4px}#orgDock button{min-width:44px;padding:0 6px}#orgBuild span,#orgManage span,#orgTrade span{font-size:9px}#orgHeading h1{font-size:22px}}
+/* Landscape refinement: retain the approved navy/gold composition, expose live content. */
+#originsProductionHud{inset:var(--org-st) var(--org-sr) var(--org-sb) var(--org-sl)}
+#originsProductionHud *{box-sizing:border-box}
+#orgHeading{left:23%;width:54%;top:4px}
+#orgHeading h1{font-size:clamp(22px,2.8vw,38px);line-height:1.05}
+#orgHeading p{font-size:10px;margin:2px 0 4px}
+#orgCareer{width:clamp(112px,14vw,160px)}
+#orgPortfolio{width:clamp(140px,16vw,184px);top:48px;min-height:0;padding:8px}
+#orgPortfolio h2{font-size:12px;margin:0 0 5px;padding-bottom:5px}
+#orgPortfolio p{font-size:10px;line-height:1.25;margin:5px 0}
+.origins-production #roster{top:calc(var(--org-st) + 166px)!important;bottom:calc(var(--org-sb) + 119px)!important;right:calc(var(--org-sr) + 6px)!important;width:clamp(140px,16vw,184px)!important;display:flex!important;flex-direction:column!important;gap:3px!important;padding:5px!important}
+.origins-production #roster:before{font-size:11px;padding:1px 3px}
+.origins-production #roster .pcard{min-height:36px!important;padding:2px 4px!important}
+.origins-production #roster .pt{width:28px!important;height:28px!important;font-size:18px!important}
+.origins-production #roster .pn{font-size:10px!important;white-space:nowrap}
+.origins-production #roster .pc{font-size:11px!important}
+#orgDock{bottom:69px;left:19%;right:18%;gap:7px;min-height:44px;flex-wrap:nowrap}
+#orgDock button{min-height:44px;min-width:58px;padding:0 8px;font-size:11px}
+#orgDock #acts{max-width:260px;flex-wrap:nowrap!important}
+#orgDock #acts .bigb{min-width:134px;min-height:48px;font-size:14px!important;border-radius:24px!important}
+#orgFootnotes{height:57px;grid-template-columns:24% 43% 33%;padding:3px;bottom:5px}
+#orgFootnotes>div{padding:5px 7px;overflow:auto}
+#orgFootnotes b{font-size:10px;margin:0 0 3px}
+#orgFootnotes span{font-size:9px;line-height:1.3}
+#orgFootnotes>div:first-child>span,#orgStages>span{display:block}
+#orgGroups>div{flex-wrap:nowrap;overflow-x:auto;padding-bottom:3px}
+#orgGroups span{flex:none;font-size:9px;padding:2px 4px}
+.origins-production #prompt{top:auto!important;bottom:124px!important;max-width:41vw;min-height:0;padding:4px 9px!important;font-size:10px!important;pointer-events:none}
+.origins-production #prompt .pt{display:none}
+.origins-production #radio{bottom:calc(var(--org-sb) + 70px)!important;left:calc(var(--org-sl) + 8px)!important;max-width:16vw}
+.origins-production #log{bottom:calc(var(--org-sb) + 153px)!important;max-width:30vw!important;pointer-events:none}
+.origins-production #tools{right:calc(var(--org-sr) + 7px)!important;top:calc(var(--org-st) + 3px)!important}
+.origins-production #tools .tb{width:44px!important;height:44px!important;min-height:44px!important}
+@media(max-height:500px){
+ #orgPortfolio{top:47px;padding:7px}#orgPortfolio h2{font-size:11px}#orgPortfolio p{margin:4px 0;font-size:9px}
+ .origins-production #roster{top:calc(var(--org-st) + 150px)!important;bottom:calc(var(--org-sb) + 119px)!important}
+ #orgCareer .orgBrand>b{font-size:22px}.orgBrand>span{font-size:23px}#orgBoardOne{margin-top:8px;min-height:49px;padding:4px}
+ .orgOtherBoards{gap:4px}.orgOtherBoards>span{padding:6px;font-size:12px}.orgOtherBoards b{font-size:10px}
+ #orgDock{gap:5px}#orgDock button{font-size:10px;padding:0 6px}#orgView{font-size:10px!important}
+}
+@media(max-width:800px){#orgDock{left:18%;right:19%;gap:3px}#orgDock button{min-width:44px;padding:0 4px}#orgDock #acts .bigb{min-width:112px}#orgHeading p{font-size:9px}#orgCareer{width:112px}.orgOtherBoards b{font-size:9px}#orgPortfolio{width:136px}.origins-production #roster{width:136px!important}#orgFootnotes{grid-template-columns:24% 43% 33%}}
+@media(max-height:390px){#orgCareer .orgBrand>span{display:none}#orgCareer .orgBrand>b{font-size:20px}#orgCareer .orgBrand>small{margin-top:3px}.orgOtherBoards>span{padding:4px}.origins-production #roster{top:calc(var(--org-st) + 144px)!important;bottom:calc(var(--org-sb) + 114px)!important}.origins-production #roster .pcard{min-height:32px!important}.origins-production #roster .pt{width:24px!important;height:24px!important}#orgDock{bottom:65px}#orgFootnotes{height:53px}.origins-production #prompt{bottom:115px!important}}
+/* Turn guidance belongs in the left HUD, not over the central architecture. */
+.origins-production #prompt{left:calc(var(--org-sl) + 7px)!important;top:calc(var(--org-st) + 297px)!important;bottom:auto!important;transform:none!important;width:clamp(110px,13vw,150px);max-width:none;max-height:67px;overflow:auto;pointer-events:auto}
+@media(max-height:390px){.origins-production #prompt{top:calc(var(--org-st) + 250px)!important;max-height:43px}}
+#originsProductionHud,.origins-production #prompt,.origins-production #roster{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
+#originsProductionHud button{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif!important}
+.origins-production #roster{min-height:0!important}
+.origins-production #roster .pcard{height:34px!important;min-height:34px!important;flex:0 0 34px!important}
+.origins-production #roster .pcard>*{min-width:0}
+.origins-production .achpop{max-width:min(340px,50vw);padding:7px 12px;border-radius:12px}
+.origins-production .achpop b{font-size:15px}.origins-production .achpop .trophy{font-size:25px}
+.origins-production #roster{bottom:calc(var(--org-sb) + 70px)!important;gap:1px!important;padding:3px!important}
+.origins-production #roster .pcard{height:44px!important;min-height:44px!important;flex:0 0 44px!important}
+.origins-production #roster .pg{display:none!important}
+.origins-production #prompt .pav{display:none!important}
+/* Safari toolbar height: retain usable controls and trade static panel height for board area. */
+@media(max-height:360px){
+ #orgHeading h1{font-size:20px}#orgHeading p{display:none}#orgRound{font-size:8px;padding:2px 7px}
+ #orgDock{bottom:38px}#orgFootnotes{height:29px;bottom:3px;padding:1px}
+ #orgFootnotes>div{display:flex;align-items:center;gap:5px;padding:2px 5px;white-space:nowrap;overflow:auto}
+ #orgFootnotes b{font-size:9px;margin:0;flex:none}#orgFootnotes span{font-size:8px}
+ #orgStages>b{display:none}.origins-production #prompt{top:calc(var(--org-st) + 209px)!important;max-height:42px}
+ .origins-production #roster{bottom:calc(var(--org-sb) + 42px)!important}
+ #orgCareer .orgBrand>small{font-size:9px}.orgOtherBoards>span{padding:3px}.orgOtherBoards b{font-size:9px}
+}
+/* Illustrated reference footer: original vector art, live district metadata. */
+.origins-production{--org-footer-height:clamp(78px,18vh,156px)}
+#orgFootnotes{height:var(--org-footer-height);grid-template-columns:25% 43% 32%;padding:5px;gap:4px;pointer-events:auto;box-shadow:0 4px 18px #020a1799}
+#orgFootnotes>div{margin:0;padding:7px 9px;overflow:hidden;border-radius:9px;min-height:0;display:flex;flex-direction:column;align-items:stretch;gap:0;white-space:normal}
+#orgFootnotes b{font:800 clamp(10px,1vw,14px)/1.2 system-ui;margin:0 0 5px;flex:none}
+.orgOverviewBody{display:flex;align-items:center;gap:8px;min-height:0;flex:1}
+#orgOverviewArt{width:37%;flex:none}#orgOverviewArt svg{display:block;width:100%;height:auto}
+.orgOverviewBody ul{margin:0;padding-left:12px;font:500 clamp(9px,.8vw,12px)/1.6 system-ui}
+#orgGroups .orgDistrictCards{display:flex;flex:1;min-height:0;gap:5px;overflow-x:auto;overflow-y:hidden;overscroll-behavior:contain;touch-action:pan-x;scrollbar-width:thin;padding:0 0 2px;scroll-snap-type:x proximity}
+#orgGroups .orgDistrictCard{flex:0 0 clamp(84px,11vw,154px);min-width:0;min-height:44px;padding:0!important;border:1px solid #f2d49a;border-radius:6px;overflow:hidden;display:flex;flex-direction:column;background:#12243a;scroll-snap-align:start;box-shadow:none}
+.orgDistrictCard strong{display:block;width:100%;font:800 clamp(9px,.8vw,12px)/1.2 system-ui;padding:3px 2px;background:var(--district);color:#fff;text-shadow:0 1px 2px #000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.orgDistrictCard svg{display:block;min-height:0;flex:1;width:100%}
+.orgDistrictCard small{font:600 clamp(8px,.7vw,10px)/1.2 system-ui;padding:2px;color:#fff0cf;white-space:nowrap}
+#orgStages>b{display:block}.orgStageTrack{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));flex:1;min-height:0;gap:5px;align-items:stretch}
+.orgStage{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;min-height:0;min-width:0;text-align:center}
+.orgStage svg{display:block;width:100%;flex:1;min-height:0;max-height:98px}
+.orgStage strong{font:800 clamp(8px,.85vw,12px)/1.15 system-ui;white-space:nowrap;color:#fff0d2}
+.orgStage small{font:500 clamp(8px,.65vw,10px)/1.2 system-ui;color:#e5d9bc;white-space:nowrap}
+.orgStage:not(:last-child):after{content:'›';position:absolute;right:-6px;top:42%;font:bold 19px system-ui;color:#f2cb7a}
+#orgDock{bottom:calc(var(--org-footer-height) + 18px)}
+.origins-production #roster{bottom:calc(var(--org-sb) + var(--org-footer-height) + 18px)!important}
+.origins-production #radio{bottom:calc(var(--org-sb) + var(--org-footer-height) + 19px)!important}
+.origins-production #log{bottom:calc(var(--org-sb) + var(--org-footer-height) + 75px)!important}
+@media(max-height:500px){#orgFootnotes{padding:3px;gap:3px}#orgFootnotes>div{padding:4px 5px}#orgFootnotes b{margin-bottom:3px}.orgOverviewBody{gap:2px}.orgOverviewBody ul{font-size:9px;line-height:1.35}.orgDistrictCard strong{padding:2px}.orgStageTrack{gap:3px}#orgDock{bottom:calc(var(--org-footer-height) + 13px)}}
+@media(max-height:360px){.origins-production{--org-footer-height:62px}#orgFootnotes>div{padding:3px 4px}#orgFootnotes b{font-size:9px;margin-bottom:1px}.orgOverviewBody ul{font-size:8px;line-height:1.2}#orgOverviewArt{width:32%}.orgDistrictCard strong{font-size:8px;padding:1px}.orgDistrictCard small{font-size:8px;padding:1px}.orgStage strong,.orgStage small{font-size:8px}.orgStage:not(:last-child):after{font-size:13px;right:-4px}.orgDistrictCard{min-height:44px!important}#orgDock{bottom:75px}}
+@media(max-height:360px){#orgFootnotes>div>b{display:none}#orgGroups .orgDistrictCards{padding-bottom:0}.orgStageTrack{gap:3px}}

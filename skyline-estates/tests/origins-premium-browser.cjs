@@ -54,7 +54,7 @@ const types={'.html':'text/html','.css':'text/css','.js':'text/javascript','.jso
     return {props:G.own.length,players:G.players.length,state:JSON.stringify({players:G.players,own:G.own,round:G.round,turn:G.turn}),
      saves:Object.fromEntries(['skylineCircuitSave','skylineCircuitTabletopRebootSave'].map(k=>[k,localStorage.getItem(k)]))};
    });
-   assert.equal(initial.props,40,'the board uses all original 40 Monopoly-style squares');
+   assert.equal(initial.props,40,'the board uses all original 40 Skyline Origins spaces');
    assert.equal(initial.players,4,'the four original gameplay seats remain');
    const review=await subframe.evaluate(()=>{
     const before=JSON.stringify({players:G.players,own:G.own,round:G.round,turn:G.turn});
