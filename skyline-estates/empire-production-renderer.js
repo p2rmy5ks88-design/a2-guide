@@ -5,6 +5,7 @@
 import * as THREE from './lib/three.module.min.js';
 import {GLTFLoader} from './lib/GLTFLoader.js';
 import {createWaterReflections} from './presentation/local-water-reflections.js';
+import {fitToFree} from './presentation/board-camera-fit.js';
 
 const E=window.SkylineEmpire;
 export const PLAYER_COLORS=['#FF7A59','#4C9DFF','#F4E7C2','#D45CE0'];
@@ -65,9 +66,8 @@ export async function createEmpireRenderer(canvas,{quality='high',onPick=()=>{}}
  const fitPts=[];for(const id of Object.keys(POS))fitPts.push(POS[id].clone().add(new THREE.Vector3(0,.2,0)));let view={pitch:46,yaw:0,zoom:1,focus:null},rect={x:0,y:0,w:canvas.clientWidth||1,h:canvas.clientHeight||1},dirty=true,anim=[],renders=0,selected=null;
  const centre=fitPts.reduce((a,p)=>a.add(p),new THREE.Vector3()).multiplyScalar(1/fitPts.length);
  function placeAt(d,t){const p=THREE.MathUtils.degToRad(view.pitch),y=THREE.MathUtils.degToRad(view.yaw);camera.position.set(t.x+d*Math.cos(p)*Math.sin(y),t.y+d*Math.sin(p),t.z+d*Math.cos(p)*Math.cos(y));camera.lookAt(t);camera.updateMatrixWorld()}
- function placeCamera(){camera.aspect=rect.w/rect.h;camera.updateProjectionMatrix();const t=view.focus?POS[view.focus].clone():centre.clone().setY(.6).add(new THREE.Vector3(0,0,-.4));let lo=2,hi=300;
-  for(let i=0;i<40;i++){const m=(lo+hi)/2;placeAt(m,t);if(fitPts.every(p=>{const v=p.clone().project(camera);return Math.abs(v.x)<=.95&&v.y<=.86&&v.y>=-.95}))hi=m;else lo=m}placeAt(hi/view.zoom,t);dirty=true}
- function resize(r){rect=r||{x:0,y:0,w:canvas.clientWidth,h:canvas.clientHeight};renderer.setPixelRatio(Math.min(devicePixelRatio||1,tier.dpr));renderer.setSize(rect.w,rect.h,false);placeCamera()}
+ function placeCamera(){const t=view.focus?POS[view.focus].clone():centre.clone().setY(.6);const around=c=>[[-2.2,-2.2],[2.2,-2.2],[-2.2,2.2],[2.2,2.2]].map(([x,z])=>c.clone().add(new THREE.Vector3(x,0,z)));fitToFree(THREE,camera,view.focus?around(POS[view.focus]):fitPts,rect,d=>placeAt(d,t));dirty=true}
+ function resize(r){rect=r||{x:0,y:0,w:canvas.clientWidth,h:canvas.clientHeight,free:rect.free};renderer.setPixelRatio(Math.min(devicePixelRatio||1,tier.dpr));renderer.setSize(rect.w,rect.h,false);placeCamera()}
 
  let lastView=null;
  function sync(v){lastView=v;
