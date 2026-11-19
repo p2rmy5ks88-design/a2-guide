@@ -6,6 +6,7 @@
 import * as THREE from './lib/three.module.min.js';
 import {GLTFLoader} from './lib/GLTFLoader.js';
 import {createWaterReflections} from './presentation/local-water-reflections.js';
+import {fitToFree} from './presentation/board-camera-fit.js';
 
 const D=window.SkylineDominion;
 export const PLAYER_COLORS=['#FF7A59','#4C9DFF','#F4E7C2','#D45CE0'];
@@ -80,11 +81,10 @@ export async function createDominionRenderer(canvas,{quality='high',onPick=()=>{
  const fitPts=[];for(const y of [.4])for(const[x,z]of[[boardBox.min.x,boardBox.min.z],[boardBox.max.x,boardBox.min.z],[boardBox.min.x,boardBox.max.z],[boardBox.max.x,boardBox.max.z],[boardBox.min.x,boardCenter.z],[boardBox.max.x,boardCenter.z]])fitPts.push(new THREE.Vector3(x,y,z));
  function placeAt(dist,target){const pitch=THREE.MathUtils.degToRad(view.pitch),yaw=THREE.MathUtils.degToRad(view.yaw);
   camera.position.set(target.x+dist*Math.cos(pitch)*Math.sin(yaw),target.y+dist*Math.sin(pitch),target.z+dist*Math.cos(pitch)*Math.cos(yaw));camera.lookAt(target);camera.updateMatrixWorld()}
- function placeCamera(){camera.aspect=rect.w/rect.h;camera.updateProjectionMatrix();
-  const target=view.focus?POS[view.focus].clone():boardCenter.clone().setY(.4).add(new THREE.Vector3(0,0,-.2));
-  let lo=2,hi=200;for(let i=0;i<40;i++){const mid=(lo+hi)/2;placeAt(mid,target);const ok=fitPts.every(p=>{const v=p.clone().project(camera);return Math.abs(v.x)<=.985&&v.y<=.9&&v.y>=-.985});if(ok)hi=mid;else lo=mid}
-  placeAt(hi/view.zoom,target);dirty=true}
- function resize(r){rect=r||{x:0,y:0,w:canvas.clientWidth,h:canvas.clientHeight};const dpr=Math.min(devicePixelRatio||1,tier.dpr);renderer.setPixelRatio(dpr);renderer.setSize(rect.w,rect.h,false);placeCamera()}
+ function placeCamera(){const target=view.focus?POS[view.focus].clone():boardCenter.clone().setY(.4);
+  const around=c=>[[-2.5,-2.5],[2.5,-2.5],[-2.5,2.5],[2.5,2.5]].map(([x,z])=>c.clone().add(new THREE.Vector3(x,0,z)));
+  fitToFree(THREE,camera,view.focus?around(POS[view.focus]):fitPts,rect,d=>placeAt(d,target));dirty=true}
+ function resize(r){rect=r||{x:0,y:0,w:canvas.clientWidth,h:canvas.clientHeight,free:rect.free};const dpr=Math.min(devicePixelRatio||1,tier.dpr);renderer.setPixelRatio(dpr);renderer.setSize(rect.w,rect.h,false);placeCamera()}
 
  // ---- state binding ----
  let lastView=null;

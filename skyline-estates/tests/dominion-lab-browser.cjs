@@ -27,7 +27,7 @@ const humanTurn=p=>p.waitForFunction(()=>{const s=__dominionLab.state();return s
   check('five stage models loaded (Plot, Low-rise, Mid-rise, High-rise, Skyscraper)',['dev_0_lot.glb','dev_1_midrise_L1.glb','dev_2_midrise_L2.glb','dev_4_highrise_L4.glb','dev_5_skyscraper_L5.glb'].every(f=>st.files.includes(f)));
   check('drawing buffer is native DPR × CSS board size (measured separately from screenshot size)',st.buffer[0]===Math.round(st.css[0]*Math.min(vp.dpr,3))&&st.buffer[1]===Math.round(st.css[1]*Math.min(vp.dpr,3)),{buffer:st.buffer,css:st.css});
   check('supplied track layout matches the rule track space-for-space (type and district)',await p.evaluate(()=>{const L=__dominionLab.r3().layout,D=SkylineDominion;return L.spaces.length===48&&L.spaces.every(sp=>{const[t,g]=D.TRACK[sp.index].split(':');return (t==='square'?'contest':t)===sp.type&&(g||null)===(sp.group||null)})}));
-  check('every node projects inside the board canvas at the default camera',await p.evaluate(()=>{const c=document.getElementById('board').getBoundingClientRect();return SkylineDominion.NODES.every(n=>{const q=__dominionLab.r3().project(n.id);return q.x>=c.left&&q.x<=c.right&&q.y>=c.top&&q.y<=c.bottom})}));
+  check('every node projects inside the free board area between the HUD panels',await p.evaluate(()=>{const b=document.getElementById('board').getBoundingClientRect(),L=document.querySelector('.sk-left').getBoundingClientRect(),R=document.querySelector('.sk-right').getBoundingClientRect(),c={left:L.right,right:R.left,top:b.top,bottom:document.querySelector('.sk-strip').getBoundingClientRect().top};return SkylineDominion.NODES.every(n=>{const q=__dominionLab.r3().project(n.id);return q.x>=c.left&&q.x<=c.right&&q.y>=c.top&&q.y<=c.bottom})}));
   await humanTurn(p);
   const idle=await p.evaluate(()=>__dominionLab.r3().stats().renders);await p.waitForTimeout(1200);check('no continuous idle rendering',await p.evaluate(()=>__dominionLab.r3().stats().renders)===idle);
   // tap an adjacent unowned site on the 3D board
@@ -64,13 +64,15 @@ const humanTurn=p=>p.waitForFunction(()=>{const s=__dominionLab.state();return s
  // ---------- viewport matrix: board, HUD and touch targets ----------
  for(const vp of VPS){const {ctx,p}=await open(browser,vp,base+'?seed=838&speed=fast&quality='+(vp.width<700?'medium':'high'));await p.click('#start');await started(p,vp);await humanTurn(p);
   const lay=await p.evaluate(()=>{const W=innerWidth,H=innerHeight,r=e=>e.getBoundingClientRect(),c=r(document.getElementById('board'));
-   const btn=[...document.querySelectorAll('#actions button,#viewbtns button')].filter(b=>b.offsetParent).map(b=>{const q=r(b);return{t:b.textContent.trim().slice(0,20),w:q.width,h:q.height,in:q.left>=0&&q.right<=W+.5&&q.top>=0&&q.bottom<=H+.5}});
-   const nodesIn=SkylineDominion.NODES.filter(n=>{const q=__dominionLab.r3().project(n.id);return q.x>=c.left&&q.x<=c.right&&q.y>=c.top&&q.y<=c.bottom}).length;
-   return{W,H,canvas:[c.width,c.height],nodesIn,btn,hScroll:document.documentElement.scrollWidth>W,st:__dominionLab.r3().stats()}});
+   const btn=[...document.querySelectorAll('#dock button')].filter(b=>b.offsetParent).map(b=>{const q=r(b);return{t:b.textContent.trim().slice(0,20),w:q.width,h:q.height,in:q.left>=0&&q.right<=W+.5&&q.top>=0&&q.bottom<=H+.5}});
+   const L2=r(document.querySelector('.sk-left')),R2=r(document.querySelector('.sk-right')),S2=r(document.querySelector('.sk-strip'));const nodesIn=SkylineDominion.NODES.filter(n=>{const q=__dominionLab.r3().project(n.id);return q.x>=L2.right&&q.x<=R2.left&&q.y>=c.top&&q.y<=S2.top}).length;
+   const panels=['p-career','p-mech','p-groups','p-up','p-neg','p-sel'].every(id=>document.getElementById(id)),cards=document.querySelectorAll('#players .sk-card').length,fits=[...document.querySelectorAll('#players .sk-card .v')].every(e=>e.scrollWidth<=e.clientWidth+1);
+   return{panels,cards,fits,W,H,canvas:[c.width,c.height],nodesIn,btn,hScroll:document.documentElement.scrollWidth>W,st:__dominionLab.r3().stats()}});
   report.viewports.push({vp,buffer:lay.st.buffer,css:lay.st.css,pixelRatio:lay.st.pixelRatio,screenshot:[vp.width*vp.dpr,vp.height*vp.dpr],triangles:lay.st.triangles,calls:lay.st.calls});
-  check(`${vp.name}: all 61 nodes inside the board area`,lay.nodesIn===61);
+  check(`${vp.name}: all 61 nodes inside the free board area (not under panels or player strip)`,lay.nodesIn===61);
   check(`${vp.name}: every visible action button is on screen and ≥44 CSS px tall`,lay.btn.length>0&&lay.btn.every(b=>b.in&&b.h>=44),{bad:lay.btn.filter(b=>!(b.in&&b.h>=44))});
   check(`${vp.name}: no horizontal page overflow`,!lay.hScroll);
+  check(`${vp.name}: art sidebars (career, mechanics, property groups, upgrades, negotiation) and four territory cards present; card figures not clipped`,lay.panels&&lay.cards===4&&lay.fits);
   await p.screenshot({path:path.join(out,`${engine}-${vp.name}.png`)});await ctx.close()}
  check('no page errors',report.errors.length===0,{errors:report.errors.slice(0,3)});
 }finally{fs.writeFileSync(path.join(out,`${engine}-report.json`),JSON.stringify(report,null,1));await browser.close()}

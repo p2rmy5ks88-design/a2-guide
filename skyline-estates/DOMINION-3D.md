@@ -17,6 +17,13 @@ The stage models come from the already-committed `assets/approved-v5/buildings/`
 
 Every material is checked at load time for normal, AO, roughness and metal maps.
 
+## HUD (shared with Empire; it follows the approved art's panel layout)
+`presentation/skyline-board-hud.{css,js}` and `presentation/board-camera-fit.js`:
+- **Left:** logo, board badge, Career Progression (registry order and difficulty; this page isn't linked to a profile, so no progress is claimed), Key Mechanics, Match log.
+- **Right:** Career badge, Property Groups (8 districts with group names and live ownership, majority needed, controller), Building Upgrades (5 stages, with the selected site's real stage highlighted), Negotiation Opportunity (live offer and offer buttons), Selected node, then an action dock (Overview/Inspect, Move, Buy, Auction, Build, Contest, End turn).
+- **Bottom:** Territory Control (Live) player cards with the game's existing avatars, cash, districts, CP and AP for the current player.
+- **Scaling:** panels collapse; sizes scale with viewport height. The camera fits the board into the free area between the panels, using a view offset so taps stay exact. Cards drop labels, then portraits, when narrow.
+
 ## Rendering
 - **Rendering on demand:** frames are drawn only on change, never in an idle loop (tested).
 - **Reflections:** the planar waterfront reflection is cached and refreshed only when the camera or the static scene changes, never per token frame. Board water is hidden during the reflection pass, which fixes a feedback loop that WebKit caught.
