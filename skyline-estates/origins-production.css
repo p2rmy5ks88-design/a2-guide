@@ -65,7 +65,7 @@
 @media(max-height:390px){#orgCareer .orgBrand>span{display:none}#orgCareer .orgBrand>b{font-size:20px}#orgCareer .orgBrand>small{margin-top:3px}.orgOtherBoards>span{padding:4px}.origins-production #roster{top:calc(var(--org-st) + 144px)!important;bottom:calc(var(--org-sb) + 114px)!important}.origins-production #roster .pcard{min-height:32px!important}.origins-production #roster .pt{width:24px!important;height:24px!important}#orgDock{bottom:65px}#orgFootnotes{height:53px}.origins-production #prompt{bottom:115px!important}}
 /* Turn guidance belongs in the left HUD, not over the central architecture. */
 .origins-production #prompt{left:calc(var(--org-sl) + 7px)!important;top:calc(var(--org-st) + 297px)!important;bottom:auto!important;transform:none!important;width:clamp(110px,13vw,150px);max-width:none;max-height:67px;overflow:auto;pointer-events:auto}
-@media(max-height:390px){.origins-production #prompt{top:calc(var(--org-st) + 250px)!important;max-height:43px}}
+@media(max-height:390px){.origins-production #prompt{top:calc(var(--org-st) + 238px)!important;max-height:32px}}
 #originsProductionHud,.origins-production #prompt,.origins-production #roster{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
 #originsProductionHud button{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif!important}
 .origins-production #roster{min-height:0!important}
