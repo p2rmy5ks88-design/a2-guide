@@ -298,7 +298,8 @@ function serialize(s){return JSON.stringify(s)}
 function restore(str){try{const s=typeof str==='string'?JSON.parse(str):clone(str);if(!s||s.ruleset!==RULESET||s.version!==VERSION||!Array.isArray(s.players)||s.own.length!==N)return{ok:false,error:'incompatible save'};return{ok:true,state:s}}catch(e){return{ok:false,error:'unreadable save'}}}
 function careerFacts(s,{ownerSeat=0,endedAt=Date.now()}={}){const owner=P(s,ownerSeat),m=s.meta||{};const st=owner.st;
  const challenges=Object.keys(DISTRICTS).filter(d=>fullDistrict(s,d,ownerSeat)).map(d=>({id:'cv-district-'+d,tag:'district'}));
- return{board:'circuit',ruleset:RULESET,length:s.cfg.length,matchId:m.matchId,startedAt:m.startedAt,endedAt,over:!!s.over,ownerHuman:!!owner&&!owner.ai,
+ const rank=s.results?Math.max(0,s.results.findIndex(r=>r.pid===ownerSeat)):null;
+ return{board:'circuit',ruleset:RULESET,rank,length:s.cfg.length,matchId:m.matchId,startedAt:m.startedAt,endedAt,over:!!s.over,ownerHuman:!!owner&&!owner.ai,
   rounds:Math.min(...s.players.filter(p=>!p.out||p.id===ownerSeat).map(p=>p.turns)),activity:st.buys+st.builds+st.trades+st.auctions+st.corners,
   won:s.winner===ownerSeat,score:cityValue(s,ownerSeat).total,aiOpponents:s.players.filter(p=>p.ai).length,aiLevel:'normal',experimental:LENGTHS[s.cfg.length].experimental,challenges}}
 return Object.freeze({RULESET,VERSION,SAVE_KEY,TILES,N,CORNERS,STATIONS,UTILITIES,DISTRICTS,DISTRICT_NAMES,DISTRICT_COLORS,STAGES,CARDS,CORNER_INFO,RULES:R,LENGTHS,

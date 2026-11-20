@@ -4,9 +4,8 @@ on:
     paths:
       - 'skyline-estates/lib/career.js'
       - 'skyline-estates/build.py'
-      - 'skyline-estates/circuit-tabletop-lab.html'
-      - 'skyline-estates/circuit-tabletop-life.css'
-      - 'skyline-estates/circuit-tabletop-life.js'
+      - 'skyline-estates/city-ventures.html'
+      - 'skyline-estates/city-ventures-renderer.js'
       - '.github/workflows/board1-generate-offline.yml'
   workflow_dispatch:
 permissions:
@@ -25,7 +24,7 @@ jobs:
           import json,pathlib,re
           p=pathlib.Path('skyline-estates/offline-assets.js').read_text()
           payload=json.loads(p.split('=',1)[1].strip().rstrip(';'))
-          required=['./circuit-tabletop-lab.html','./circuit-tabletop-life.css','./circuit-tabletop-life.js']
+          required=['./city-ventures.html','./city-ventures-renderer.js','./lib/city-ventures-rules.js','./lib/career.js']
           assert all(k in payload['files'] for k in required)
           print('BOARD1_EXPECTED_OFFLINE_VERSION='+payload['version'])
           PY

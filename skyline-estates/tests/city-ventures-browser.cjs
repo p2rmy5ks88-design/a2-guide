@@ -30,9 +30,15 @@ let n=0;const ok=m=>{n++;console.log('PASS',m)};
   await p.waitForSelector('#results:not([hidden])');await p.screenshot({path:path.join(out,engine+'-results.png')});
   const fact=await p.evaluate(()=>{const k=Object.keys(localStorage).find(k=>k.startsWith('skylineCareerInbox:'));return k&&JSON.parse(localStorage.getItem(k))});
   assert.ok(fact&&fact.board==='circuit'&&fact.ruleset==='city-ventures-v1'&&fact.length==='quick'&&fact.over,JSON.stringify(fact));assert.equal(await p.evaluate(()=>localStorage.getItem('skylineCityVenturesSave')),null);ok('the finished match is reported once to the Career inbox and the save is cleared');
+  const before=await p.evaluate(()=>{const P=JSON.parse(localStorage.getItem('skylinePrefs')||'{}');return{coins:P.coins??null}});
   // a fast test match can finish in under 2 minutes, which Career rightly refuses; age the start time like a real match
   await p.evaluate(()=>{const k=Object.keys(localStorage).find(k=>k.startsWith('skylineCareerInbox:'));const f=JSON.parse(localStorage.getItem(k));f.startedAt-=600000;localStorage.setItem(k,JSON.stringify(f))});
   await p.click('#resHome');await p.waitForURL(/index\.html/,{timeout:60000});await p.waitForFunction(()=>window.SkylineCareer&&SkylineCareer.raw().boards.circuit,null,{timeout:60000});
   assert.equal(await p.evaluate(()=>SkylineCareer.raw().boards.circuit.matches),1);ok('back on the main screen the match is recorded in Career');
+  const after=await p.evaluate(id=>({coins:PREF.coins,sc:(SkylineSCWallet.create(localStorage).view().transactions.find(t=>t.id==='board:'+id)||{}).amount||0}),fact.matchId);
+  const exp=await p.evaluate(f=>({coins:gameCoinReward(f.won,f.rank)*5,sc:5*(SkylineSCWallet.RULES.completion+(f.won?SkylineSCWallet.RULES.win:0))}),fact);
+  assert.equal(after.sc,exp.sc,'SC ×5');if(before.coins!=null)assert.equal(after.coins-before.coins,exp.coins,'coins ×5');
+  await p.waitForSelector('#modals .mp:has-text("City Ventures rewards")',{timeout:10000});await p.screenshot({path:path.join(out,engine+'-rewards.png')});
+  ok(`City Ventures pays 5× rewards: +${exp.coins} coins and +${exp.sc} SC (${fact.won?'win':'rank '+(fact.rank+1)})`);
   assert.deepEqual(errors,[]);ok('no browser errors');await context.close()}
  finally{await browser.close();server.close()}console.log(`CITY VENTURES BROWSER ${engine} ${n} checks`)})().catch(e=>{console.error(e);process.exit(1)});

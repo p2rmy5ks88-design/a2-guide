@@ -4,7 +4,6 @@ on:
     paths:
       - 'skyline-estates/*production*'
       - 'skyline-estates/origins-premium-lab.html'
-      - 'skyline-estates/circuit-board2-ui.js'
       - 'skyline-estates/presentation/**'
       - 'skyline-estates/assets/approved-v5/**'
       - 'skyline-estates/tests/*production-browser.cjs'
@@ -19,7 +18,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        board: [origins, circuit]
+        board: [origins]
         engine: [chromium, webkit]
     steps:
       - uses: actions/checkout@v4

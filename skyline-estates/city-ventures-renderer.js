@@ -3,6 +3,7 @@
    are real 3D objects built from board_topology_37_tiles.json (correct names, CC prices). Close follow camera per
    camera_spec.json: ~46° pitch, critically damped, eases round the hex corners, pinch zoom, drag to look around. */
 import * as THREE from './lib/three.module.min.js';
+import {GLTFLoader} from './lib/GLTFLoader.js';
 
 const ART='./assets/city-ventures/board-art.jpg';
 // Corner badge centres in the approved 1254 px artwork (START bottom, then clockwise as indexed).
@@ -19,7 +20,7 @@ function roundRect(g,x,y,w,h,r){g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,
 function wrap(g,text,x,y,maxW,lh){const words=String(text).split(' ');let line='',lines=[];for(const w of words){const t=line?line+' '+w:w;if(g.measureText(t).width>maxW&&line){lines.push(line);line=w}else line=t}lines.push(line);lines.forEach((l,k)=>g.fillText(l,x,y+k*lh));return lines.length}
 
 function tileTexture(t,colors,renderer){
- const W=300,H=620,c=document.createElement('canvas');c.width=W;c.height=H;const g=c.getContext('2d');
+ const W=300,H=620,X=2,c=document.createElement('canvas');c.width=W*X;c.height=H*X;const g=c.getContext('2d');g.scale(X,X);
  g.fillStyle='#f6efdc';g.fillRect(0,0,W,H);
  const band=t.district?colors[t.district]:null;
  if(band){g.fillStyle=band;g.fillRect(0,0,W,150);g.fillStyle='rgba(255,255,255,.18)';g.fillRect(0,0,W,20)}
@@ -37,10 +38,10 @@ function tileTexture(t,colors,renderer){
  const price=t.price?t.price+' CC':t.charge?'Pay '+t.charge+' CC':'';if(price)g.fillText(price,W/2,H-46);
  const tex=new THREE.CanvasTexture(c);tex.colorSpace=THREE.SRGBColorSpace;tex.anisotropy=renderer.capabilities.getMaxAnisotropy();return tex}
 function badgeTexture(t,renderer){
- const S=640,c=document.createElement('canvas');c.width=S;c.height=S;const g=c.getContext('2d');
+ const S=640,X=2,c=document.createElement('canvas');c.width=S*X;c.height=S*X;const g=c.getContext('2d');g.scale(X,X);
  g.beginPath();for(let k=0;k<6;k++){const a=Math.PI/3*k;const x=S/2+Math.cos(a)*S*.5,y=S/2+Math.sin(a)*S*.5;k?g.lineTo(x,y):g.moveTo(x,y)}g.closePath();g.clip();
  g.fillStyle=CORNER_COLORS[t.i];g.fillRect(0,0,S,S);
- const grd=g.createRadialGradient(S/2,S/2-40,40,S/2,S/2,S/2);grd.addColorStop(0,'rgba(255,255,255,.22)');grd.addColorStop(1,'rgba(0,0,0,.18)');g.fillStyle=grd;g.fillRect(0,0,S,S);
+ const grd=g.createRadialGradient(S/2,S/2-40,40,S/2,S/2,S/2);grd.addColorStop(0,'rgba(255,255,255,.1)');grd.addColorStop(1,'rgba(0,0,0,.22)');g.fillStyle=grd;g.fillRect(0,0,S,S);
  g.textAlign='center';g.fillStyle='#fff';g.font='96px "Apple Color Emoji","Segoe UI Emoji",sans-serif';g.fillText(CORNER_ICON[t.i],S/2,215);
  g.font='900 80px Georgia,"Times New Roman",serif';const words=t.name.toUpperCase().split(' ');
  g.strokeStyle='rgba(0,0,0,.35)';g.lineWidth=8;words.forEach((w,k)=>{const y=330+k*84;g.strokeText(w,S/2,y);g.fillStyle='#fff';g.fillText(w,S/2,y)});
@@ -54,15 +55,20 @@ function windowTexture(){const c=document.createElement('canvas');c.width=64;c.h
 export function createCityVenturesRenderer(canvas,{rules,onTile}={}){
  const CV=rules,TILES=CV.TILES;
  const renderer=new THREE.WebGLRenderer({canvas,antialias:true,powerPreference:'high-performance'});
- renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.08;
+ renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.NoToneMapping;
  renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
  const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)');
- let dpr=Math.min(devicePixelRatio||1,2.5);renderer.setPixelRatio(dpr);
+ const maxDpr=Math.min(devicePixelRatio||1,3);let dpr=maxDpr;renderer.setPixelRatio(dpr);
  const scene=new THREE.Scene();scene.background=new THREE.Color('#1a120c');scene.fog=new THREE.Fog('#1a120c',26,60);
  const camera=new THREE.PerspectiveCamera(40,1,.1,200);
- scene.add(new THREE.HemisphereLight('#fff4e0','#3a2a1a',1.25));
- const sun=new THREE.DirectionalLight('#ffe2b0',2.1);sun.position.set(-6,14,9);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-9,right:9,top:9,bottom:-9,near:1,far:40});sun.shadow.bias=-.0006;scene.add(sun);
- const lamp=new THREE.PointLight('#ffb866',18,22,1.6);lamp.position.set(7,6,-6);scene.add(lamp);
+ // Image-based light: a warm golden-hour studio so gold trim, glass and PBR buildings reflect properly.
+ {const env=new THREE.Scene(),cv=document.createElement('canvas');cv.width=16;cv.height=256;const g=cv.getContext('2d'),gr=g.createLinearGradient(0,0,0,256);gr.addColorStop(0,'#2b3d66');gr.addColorStop(.42,'#ffcf8a');gr.addColorStop(.55,'#ffe7c0');gr.addColorStop(1,'#3a2414');g.fillStyle=gr;g.fillRect(0,0,16,256);
+  const sky=new THREE.Mesh(new THREE.SphereGeometry(50,32,16),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(cv),side:THREE.BackSide}));env.add(sky);
+  for(const [x,y,z,c]of[[18,22,10,'#fff1d6'],[-20,14,-8,'#ffd79a'],[0,30,-18,'#ffffff']]){const m=new THREE.Mesh(new THREE.PlaneGeometry(14,8),new THREE.MeshBasicMaterial({color:c,side:THREE.DoubleSide}));m.position.set(x,y,z);m.lookAt(0,0,0);env.add(m)}
+  const pm=new THREE.PMREMGenerator(renderer);scene.environment=pm.fromScene(env,.04).texture;scene.environmentIntensity=.55;pm.dispose()}
+ scene.add(new THREE.HemisphereLight('#fff6ea','#4a3524',.55));
+ const sun=new THREE.DirectionalLight('#fff0d8',1.55);sun.position.set(-6,14,9);sun.castShadow=true;sun.shadow.mapSize.set(maxDpr>=2?4096:2048,maxDpr>=2?4096:2048);Object.assign(sun.shadow.camera,{left:-9,right:9,top:9,bottom:-9,near:1,far:40});sun.shadow.bias=-.0006;scene.add(sun);
+ const lamp=new THREE.PointLight('#ffc27a',8,22,1.6);lamp.position.set(7,6,-6);scene.add(lamp);
  // table
  const table=new THREE.Mesh(new THREE.PlaneGeometry(80,80),new THREE.MeshStandardMaterial({map:woodTexture(),roughness:.75,metalness:0}));table.rotation.x=-Math.PI/2;table.position.y=-.32;table.receiveShadow=true;scene.add(table);
 
@@ -70,11 +76,16 @@ export function createCityVenturesRenderer(canvas,{rules,onTile}={}){
  const corners=CORNER_PX.map(toWorld),center=new THREE.Vector3(0,0,0);
  const outline=corners.map(v=>v.clone().add(v.clone().setY(0).normalize().multiplyScalar(.95)));
  const shape=new THREE.Shape();outline.forEach((v,k)=>k?shape.lineTo(v.x,-v.z):shape.moveTo(v.x,-v.z));shape.closePath();
- const gold=new THREE.MeshStandardMaterial({color:'#d9a94a',metalness:.35,roughness:.38,emissive:'#3a2508',emissiveIntensity:.25});
+ const gold=new THREE.MeshStandardMaterial({color:'#e2b25a',metalness:.85,roughness:.28,envMapIntensity:1.15});
  const frame=new THREE.Mesh(new THREE.ExtrudeGeometry(shape,{depth:.3,bevelEnabled:true,bevelThickness:.08,bevelSize:.14,bevelSegments:3}),gold);frame.rotation.x=-Math.PI/2;frame.position.y=-.47;frame.castShadow=true;frame.receiveShadow=true;scene.add(frame);
- const artTex=new THREE.TextureLoader().load(ART,t=>{t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=renderer.capabilities.getMaxAnisotropy();dirty=true});
+ const artCanvas=document.createElement('canvas');artCanvas.width=artCanvas.height=2048;const artTex=new THREE.CanvasTexture(artCanvas);artTex.colorSpace=THREE.SRGBColorSpace;artTex.anisotropy=renderer.capabilities.getMaxAnisotropy();
+ {const img=new Image();img.onload=()=>{const g=artCanvas.getContext('2d'),K=2048/1254,px=v=>[(v.x*100+627)*K,(v.z*100+627)*K];g.drawImage(img,0,0,2048,2048);
+   // inner edge of the 3D tile ring: corners pulled toward the centre past the tile depth
+   const inner=corners.map(v=>v.clone().add(center.clone().sub(v).setY(0).normalize().multiplyScalar(1.32)));
+   g.save();g.beginPath();g.rect(0,0,2048,2048);inner.forEach((v,k)=>{const [x,y]=px(v);k?g.lineTo(x,y):g.moveTo(x,y)});g.closePath();g.fillStyle='#0f2340';g.fill('evenodd');
+   g.beginPath();inner.forEach((v,k)=>{const [x,y]=px(v);k?g.lineTo(x,y):g.moveTo(x,y)});g.closePath();g.lineWidth=14;g.strokeStyle='#d9a94a';g.stroke();g.restore();artTex.needsUpdate=true;dirty=true};img.src=ART}
  const topGeo=new THREE.ShapeGeometry(shape);{const pos=topGeo.attributes.position,uv=topGeo.attributes.uv;for(let k=0;k<pos.count;k++){const x=pos.getX(k),z=-pos.getY(k);uv.setXY(k,(x*100+627)/1254,1-(z*100+627)/1254)}uv.needsUpdate=true}
- const top=new THREE.Mesh(topGeo,new THREE.MeshStandardMaterial({map:artTex,roughness:.85}));top.rotation.x=-Math.PI/2;top.position.y=.005;top.receiveShadow=true;scene.add(top);
+ const top=new THREE.Mesh(topGeo,new THREE.MeshStandardMaterial({map:artTex,roughness:.9,envMapIntensity:.25}));top.rotation.x=-Math.PI/2;top.position.y=.005;top.receiveShadow=true;scene.add(top);
 
  // ---- spaces ----
  const tileMeshes=[],tileInfo=[],pick=[];
@@ -87,7 +98,7 @@ export function createCityVenturesRenderer(canvas,{rules,onTile}={}){
   for(let j=0;j<n;j++){const i=a+1+j,t=TILES[i],f=r+(j+.5)*(1-2*r)/n,pos=A.clone().lerp(B,f),w=(1-2*r)*L/n*.95;
    const grp=new THREE.Group();grp.position.copy(pos);grp.rotation.y=Math.atan2(-perp.x,-perp.z);
    const body=new THREE.Mesh(new THREE.BoxGeometry(w,.12,DEPTH),new THREE.MeshStandardMaterial({color:'#efe4c8',roughness:.7}));body.position.y=.06;body.castShadow=true;body.receiveShadow=true;grp.add(body);
-   const face=new THREE.Mesh(new THREE.PlaneGeometry(w*.96,DEPTH*.97),new THREE.MeshStandardMaterial({map:tileTexture(t,CV.DISTRICT_COLORS,renderer),roughness:.62}));face.rotation.x=-Math.PI/2;face.position.y=.122;face.receiveShadow=true;grp.add(face);
+   const face=new THREE.Mesh(new THREE.PlaneGeometry(w*.96,DEPTH*.97),new THREE.MeshStandardMaterial({map:tileTexture(t,CV.DISTRICT_COLORS,renderer),roughness:.85,envMapIntensity:.25}));face.rotation.x=-Math.PI/2;face.position.y=.122;face.receiveShadow=true;grp.add(face);
    const ring=new THREE.Mesh(new THREE.BoxGeometry(w*1.06,.1,DEPTH*1.04),new THREE.MeshStandardMaterial({color:'#ffffff',emissive:'#000',roughness:.4}));ring.position.y=.03;ring.visible=false;grp.add(ring);
    const glow=new THREE.Mesh(new THREE.PlaneGeometry(w*1.02,DEPTH*1.02),new THREE.MeshBasicMaterial({color:'#ffd36b',transparent:true,opacity:0,depthWrite:false}));glow.rotation.x=-Math.PI/2;glow.position.y=.125;grp.add(glow);
    scene.add(grp);body.userData.tile=i;face.userData.tile=i;pick.push(body,face);
@@ -98,14 +109,20 @@ export function createCityVenturesRenderer(canvas,{rules,onTile}={}){
   const rim=new THREE.Mesh(new THREE.CylinderGeometry(1.12,1.18,.2,6),gold);rim.position.y=.1;rim.rotation.y=Math.PI/2;rim.castShadow=true;grp.add(rim);
   const cap=new THREE.Mesh(new THREE.CylinderGeometry(1.0,1.0,.26,6),new THREE.MeshStandardMaterial({color:CORNER_COLORS[i],roughness:.45}));cap.position.y=.2;cap.rotation.y=Math.PI/2;cap.castShadow=true;grp.add(cap);
   // label: flat plane whose canvas top points to the board centre, so it reads upright from outside
-  const label=new THREE.Mesh(new THREE.PlaneGeometry(2.0,2.0),new THREE.MeshStandardMaterial({map:badgeTexture(t,renderer),transparent:true,alphaTest:.05,roughness:.45}));label.rotation.x=-Math.PI/2;label.position.y=.335;grp.add(label);label.userData.tile=i;pick.push(label);
+  const label=new THREE.Mesh(new THREE.PlaneGeometry(2.0,2.0),new THREE.MeshStandardMaterial({map:badgeTexture(t,renderer),transparent:true,alphaTest:.05,roughness:.6,envMapIntensity:.3}));label.rotation.x=-Math.PI/2;label.position.y=.335;grp.add(label);label.userData.tile=i;pick.push(label);
   const glow=new THREE.Mesh(new THREE.CircleGeometry(1.25,6),new THREE.MeshBasicMaterial({color:'#ffd36b',transparent:true,opacity:0,depthWrite:false}));glow.rotation.x=-Math.PI/2;glow.position.y=.36;grp.add(glow);
   scene.add(grp);cap.userData.tile=i;pick.push(cap);
   tileMeshes[i]={grp,glow,cap};tileInfo[i]={pos:P.clone(),inner:P.clone().add(inward.clone().multiplyScalar(.2)),outer:P.clone(),perp:inward,dir:new THREE.Vector3(-inward.z,0,inward.x),w:1.6}});
 
- // ---- buildings ----
- const winTex=windowTexture();
- function building(stage,color){const g=new THREE.Group(),m=new THREE.MeshStandardMaterial({color,map:winTex,roughness:.55,metalness:.05}),roof=new THREE.MeshStandardMaterial({color:'#e9d7a6',roughness:.5,metalness:.4});
+ // ---- buildings: the approved PBR development models (plot / low-rise / mid-rise / landmark) ----
+ const winTex=windowTexture(),proto=[],props={};const loader=new GLTFLoader(),base='./assets/approved-v5/';
+ const fit=(obj,w)=>{const b=new THREE.Box3().setFromObject(obj),size=b.getSize(new THREE.Vector3()),k=w/Math.max(size.x,size.z);obj.scale.setScalar(k);const b2=new THREE.Box3().setFromObject(obj);obj.position.y-=b2.min.y;const c=b2.getCenter(new THREE.Vector3());obj.position.x-=c.x;obj.position.z-=c.z;const g=new THREE.Group();g.add(obj);return g};
+ Promise.all(['dev_0_lot','dev_1_midrise_L1','dev_3_highrise_L3','dev_5_skyscraper_L5'].map(f=>loader.loadAsync(base+'buildings/'+f+'.glb').then(x=>x.scene))).then(list=>{list.forEach((sc,k)=>{sc.traverse(o=>{if(o.isMesh){o.castShadow=o.receiveShadow=true}});proto[k]=fit(sc,[.46,.4,.36,.32][k])});tileMeshes.forEach(T=>{if(T)T.key=null});if(view)sync(view)}).catch(e=>console.warn('City Ventures building models',e));
+ Promise.all(['palm','street_lamp'].map(f=>loader.loadAsync(base+'props/'+f+'.glb').then(x=>x.scene))).then(([palm,lamp])=>{props.palm=fit(palm,.5);props.lamp=fit(lamp,.12);
+  corners.forEach((P,k)=>{const inward=center.clone().sub(P).setY(0).normalize(),side=new THREE.Vector3(-inward.z,0,inward.x);
+   for(const sgn of[-1,1]){const p=props.palm.clone();p.position.copy(P.clone().add(inward.clone().multiplyScalar(-2.0)).add(side.clone().multiplyScalar(sgn*1.3)));p.position.y=-.32;p.rotation.y=k+sgn;p.scale.multiplyScalar(1.6);p.traverse(o=>{if(o.isMesh)o.castShadow=true});scene.add(p)}
+   const l=props.lamp.clone();l.position.copy(P.clone().add(inward.clone().multiplyScalar(-1.75)));l.position.y=-.32;l.scale.multiplyScalar(2.2);scene.add(l)});dirty=true}).catch(e=>console.warn('City Ventures props',e));
+ function building(stage,color){if(proto[stage]){const g=new THREE.Group(),m=proto[stage].clone(true);g.add(m);const pad=new THREE.Mesh(new THREE.BoxGeometry(.5,.025,.5),new THREE.MeshStandardMaterial({color,roughness:.5}));pad.position.y=.012;pad.receiveShadow=true;g.add(pad);m.position.y=.025;return g}const g=new THREE.Group(),m=new THREE.MeshStandardMaterial({color,map:winTex,roughness:.55,metalness:.05}),roof=new THREE.MeshStandardMaterial({color:'#e9d7a6',roughness:.5,metalness:.4});
   if(stage===0){const s=new THREE.Mesh(new THREE.CylinderGeometry(.02,.02,.32),roof);s.position.y=.16;const f=new THREE.Mesh(new THREE.BoxGeometry(.2,.12,.02),new THREE.MeshStandardMaterial({color}));f.position.set(.1,.27,0);g.add(s,f);return g}
   const h=[0,.3,.62,1.05][stage],w=stage===3?.3:.34;const b=new THREE.Mesh(new THREE.BoxGeometry(w,h,w),m);b.position.y=h/2;b.castShadow=true;g.add(b);
   if(stage===1){const r=new THREE.Mesh(new THREE.ConeGeometry(w*.78,.16,4),roof);r.rotation.y=Math.PI/4;r.position.y=h+.08;g.add(r)}
@@ -130,7 +147,7 @@ export function createCityVenturesRenderer(canvas,{rules,onTile}={}){
  let pinned=false,frameBias=.2,mode='follow',followPid=0,userZoom=1,userYaw=0,pushIn=1,dirty=true,lastT=performance.now();
  function yawFor(p){return Math.atan2(p.x,p.z)}
  function overviewGoal(){goal.target.set(0,0,.85);goal.yaw=0;goal.pitch=THREE.MathUtils.degToRad(57);const a=camera.aspect||1.9;goal.dist=Math.max(13.5,13.5*1.55/a)*1.02}
- function followGoal(p){const pos=p.clone();const out=pos.clone().setY(0).normalize();goal.target.copy(pos.clone().add(out.multiplyScalar(frameBias)));goal.yaw=yawFor(pos)+userYaw;goal.pitch=THREE.MathUtils.degToRad(46);goal.dist=6.2*userZoom/pushIn}
+ function followGoal(p){const pos=p.clone();const out=pos.clone().setY(0).normalize();goal.target.copy(pos.clone().add(out.multiplyScalar(frameBias)));goal.yaw=yawFor(pos)+userYaw;goal.pitch=THREE.MathUtils.degToRad(44);goal.dist=4.7*userZoom/pushIn}
  function angleLerp(a,b,t){let d=((b-a+Math.PI)%(2*Math.PI)+2*Math.PI)%(2*Math.PI)-Math.PI;return a+d*t}
  function applyCam(dt){const k=reduceMotion.matches?1:1-Math.exp(-dt/.18);cam.target.lerp(goal.target,k);cam.yaw=angleLerp(cam.yaw,goal.yaw,k);cam.pitch+=(goal.pitch-cam.pitch)*k;cam.dist+=(goal.dist-cam.dist)*k;
   const c=Math.cos(cam.pitch)*cam.dist;camera.position.set(cam.target.x+Math.sin(cam.yaw)*c,cam.target.y+Math.sin(cam.pitch)*cam.dist,cam.target.z+Math.cos(cam.yaw)*c);camera.lookAt(cam.target)}
@@ -192,7 +209,7 @@ export function createCityVenturesRenderer(canvas,{rules,onTile}={}){
    T.glow.material.opacity=op;T.glow.material.color.set(col)});
   tokens.forEach((t,k)=>{if(!t)return;const on=view&&view.turn&&view.turn.pid===k;const r=t.g.children[1];if(r&&r.material)r.material.emissiveIntensity=on?.6+.6*pulse:.25});
   renderer.render(scene,camera);
-  frames++;if(now-fpsT>3000){const fps=frames*1000/(now-fpsT);frames=0;fpsT=now;if(fps<38&&dpr>1.4){dpr=Math.max(1.25,dpr-.4);renderer.setPixelRatio(dpr);resize()}}}
+  frames++;if(now-fpsT>3000){const fps=frames*1000/(now-fpsT);frames=0;fpsT=now;if(fps<28&&dpr>2){dpr=Math.max(2,dpr-.5);renderer.setPixelRatio(dpr);resize()}}}
  resize();overviewGoal();Object.assign(cam,{target:goal.target.clone(),yaw:goal.yaw,pitch:goal.pitch,dist:goal.dist});requestAnimationFrame(loop);
  return{setFrameBias(v){frameBias=v;refreshGoal()},sync,moveToken,follow,focusTile,overview,highlight,resize,tileScreen:i=>{const v=tileInfo[i].pos.clone().project(camera);const r=canvas.getBoundingClientRect();return{x:(v.x+1)/2*r.width+r.left,y:(1-v.y)/2*r.height+r.top}},
   stats:()=>({dpr,mode,zoom:userZoom,camDist:cam.dist,tiles:tileMeshes.filter(Boolean).length,tokens:tokens.length}),mode:()=>mode,dispose(){running=false;renderer.dispose()}}}

@@ -21,4 +21,4 @@ check('two qualifying wins plus three district challenges unlock Dominion (seque
  for(const d of ['green','blue','pink'])C.completeChallenge(s,'circuit','cv-district-'+d,'district',ON);assert.ok(s.unlocked.dominion!=null)});
 check('owning a whole district at the end is reported as a district challenge',()=>{const s=CV.newMatch({seed:9,players:[{name:'You'},{name:'A',ai:true}],meta:{matchId:'m-1',startedAt:1}});
  for(const i of CV.DISTRICTS.green)s.own[i]={owner:0,stage:0,mortgaged:false};const f=CV.careerFacts(s,{ownerSeat:0});assert.deepEqual(f.challenges,[{id:'cv-district-green',tag:'district'}])});
-console.log('circuit-career: '+n+' checks passed (City Ventures as Career Board 2)');
+console.log('city-ventures-career: '+n+' checks passed (City Ventures as Career Board 2)');
