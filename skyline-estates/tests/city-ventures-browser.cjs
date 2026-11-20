@@ -30,6 +30,8 @@ let n=0;const ok=m=>{n++;console.log('PASS',m)};
   await p.waitForSelector('#results:not([hidden])');await p.screenshot({path:path.join(out,engine+'-results.png')});
   const fact=await p.evaluate(()=>{const k=Object.keys(localStorage).find(k=>k.startsWith('skylineCareerInbox:'));return k&&JSON.parse(localStorage.getItem(k))});
   assert.ok(fact&&fact.board==='circuit'&&fact.ruleset==='city-ventures-v1'&&fact.length==='quick'&&fact.over,JSON.stringify(fact));assert.equal(await p.evaluate(()=>localStorage.getItem('skylineCityVenturesSave')),null);ok('the finished match is reported once to the Career inbox and the save is cleared');
+  // a fast test match can finish in under 2 minutes, which Career rightly refuses; age the start time like a real match
+  await p.evaluate(()=>{const k=Object.keys(localStorage).find(k=>k.startsWith('skylineCareerInbox:'));const f=JSON.parse(localStorage.getItem(k));f.startedAt-=600000;localStorage.setItem(k,JSON.stringify(f))});
   await p.click('#resHome');await p.waitForURL(/index\.html/,{timeout:60000});await p.waitForFunction(()=>window.SkylineCareer&&SkylineCareer.raw().boards.circuit,null,{timeout:60000});
   assert.equal(await p.evaluate(()=>SkylineCareer.raw().boards.circuit.matches),1);ok('back on the main screen the match is recorded in Career');
   assert.deepEqual(errors,[]);ok('no browser errors');await context.close()}
