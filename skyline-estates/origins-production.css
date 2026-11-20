@@ -189,3 +189,31 @@
  .origins-production #orgCareer .orgBrand>b{font-size:17px}
  .origins-production #orgPortfolio{top:calc(var(--org-st) + 44px)!important}
 }
+
+
+/* 21 Nov actual Chromium/WebKit screenshot QA: short landscape footer had
+   clipped "40 spaces around the perimeter" copy. Replace the oversized
+   bullet stack with one readable line; keep all four stages/cards tappable. */
+@media (orientation:landscape) and (max-height:560px){
+ .origins-production{--org-footer-height:62px}
+ .origins-production #orgOverviewArt{width:32%;flex:0 0 32%}
+ .origins-production .orgOverviewBody{gap:5px;align-items:center}
+ .origins-production .orgOverviewBody ul{display:none!important}
+ .origins-production .orgOverviewBody::after{
+   content:'40 spaces · Buy, build & trade';
+   font:750 10px/1.25 -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+   color:#fff4d7;
+   max-width:62%;
+   overflow-wrap:normal;
+   text-wrap:balance;
+ }
+ .origins-production #orgFootnotes .orgStage svg{max-height:39px}
+ .origins-production #orgFootnotes .orgStage strong{font-size:10px}
+ .origins-production #orgFootnotes .orgStage small{font-size:9px}
+ .origins-production #orgDock{bottom:calc(var(--org-footer-height) + 13px)}
+}
+@media (orientation:landscape) and (max-height:360px){
+ .origins-production{--org-footer-height:56px}
+ .origins-production .orgOverviewBody::after{font-size:9px;line-height:1.15}
+ .origins-production #orgFootnotes .orgStage svg{max-height:30px}
+}
