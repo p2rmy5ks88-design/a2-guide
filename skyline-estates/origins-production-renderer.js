@@ -91,6 +91,7 @@ const key=JSON.stringify([v.ownership,v.players.map(p=>[p.id,p.out,p.color])]);i
  }
  // Camera follow (owner request 20 Nov 2026): like the classic board, ease in on the rolling dice and the moving token,
  // then ease back to the full board. Uses the player's existing camera setting (follow / whole board).
+ const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)');// iPhone Reduce Motion keeps the whole-board view.
  let base=null,followT=0,followLast=-1e9,followAt=0,followPrevDice='';const followPrevTok=[],followFocus=new THREE.Vector3(),followAim=new THREE.Vector3();
  function tokenWorld(p){return assetPack?[-p.world[2]*.99,p.world[1]+.21,p.world[0]*.99]:[-p.world[0],p.world[1]+.16,p.world[2]];}
  function applyCamera(){if(!base)return;const t=followT,d=base.dist*(1-.55*t);
@@ -100,7 +101,7 @@ const key=JSON.stringify([v.ownership,v.players.map(p=>[p.id,p.out,p.color])]);i
  function followCamera(v,now){if(!base)return;let moved=null;
   v.players.forEach((p,i)=>{const w=tokenWorld(p),o=followPrevTok[i];if(o&&!p.out&&Math.hypot(w[0]-o[0],w[2]-o[2])>.004)moved=w;followPrevTok[i]=w;});
   const dk=v.dice&&v.nativeDice.some(d=>d.visible)?JSON.stringify(v.nativeDice.map(d=>d.visible?d.r:0)):'';
-  if(v.follow!==false){if(dk&&dk!==followPrevDice){followAim.set(0,.45,0);followLast=now;}if(moved){followAim.set(moved[0],.2,moved[2]);followLast=now;}}
+  if(v.follow!==false&&!reduceMotion.matches){if(dk&&dk!==followPrevDice){followAim.set(0,.45,0);followLast=now;}if(moved){followAim.set(moved[0],.2,moved[2]);followLast=now;}}
   followPrevDice=dk;
   const want=now-followLast<1100?1:0,dt=Math.min(100,followAt?now-followAt:16);followAt=now;const before=followT;
   followT+=(want-followT)*Math.min(1,dt*(want?.006:.0028));if(Math.abs(followT-want)<.003)followT=want;
