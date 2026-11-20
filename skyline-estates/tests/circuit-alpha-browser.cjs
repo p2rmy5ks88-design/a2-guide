@@ -92,7 +92,7 @@ let n=0;const ok=m=>{n++;console.log('PASS',m)};const errors=[];let browser,serv
  // ---------- Career inbox → Career (game page, flags on) ----------
  const gp=await browser.newContext({viewport:{width:844,height:390},serviceWorkers:'block'}),g=await gp.newPage();g.on('pageerror',e=>errors.push(engine+' game: '+String(e)));await gp.route('https://**/*',r=>r.abort());
  const career={v:1,unlocked:{origins:0,circuit:1},boards:{},tutorials:{},challenges:{},receipts:[],floor:0};
- const good={board:'circuit',length:'standard',ruleset:'circuit-v0',matchId:'circuit-qa-1',startedAt:1000,endedAt:400000,sim:false,fast:false,online:false,assisted:false,over:true,ownerHuman:true,rounds:21,activity:9,won:true,score:301,aiOpponents:2,aiLevel:'normal',experimental:false};
+ const good={board:'circuit',length:'standard',ruleset:'city-ventures-v1',matchId:'circuit-qa-1',startedAt:1000,endedAt:400000,sim:false,fast:false,online:false,assisted:false,over:true,ownerHuman:true,rounds:21,activity:9,won:true,score:301,aiOpponents:2,aiLevel:'normal',experimental:false};
  const quick={...good,matchId:'circuit-qa-2',length:'quick',startedAt:2000,experimental:true};
  await g.addInitScript(([c,a,b])=>{if(!localStorage.getItem('skylinePrefs')){localStorage.setItem('skylinePrefs',JSON.stringify({nick:'QA',nickSet:true,welcomed:1,tutDone:1,coach:{pre:1,post:1},flat2d:true,rig:false,riders:false,career:c}));
   localStorage.setItem('skylineCareerInbox:circuit-qa-1',a);localStorage.setItem('skylineCareerInbox:circuit-qa-2',b);localStorage.setItem('skylineCareerInbox:circuit-qa-1b',a)}},[career,JSON.stringify(good),JSON.stringify(quick)]);
@@ -100,7 +100,7 @@ let n=0;const ok=m=>{n++;console.log('PASS',m)};const errors=[];let browser,serv
  const cr=await g.evaluate(()=>({inbox:SkylineCareer.inbox(),left:Object.keys(localStorage).filter(k=>k.startsWith('skylineCareerInbox:')),circuit:SkylineCareer.raw().boards.circuit,view:SkylineCareer.state().find(b=>b.id==='circuit')}));
  assert.deepEqual(cr.left,[]);assert.equal(cr.circuit.qualifiedWins,1);assert.equal(cr.circuit.wins,2);assert.equal(cr.circuit.xp,400);
  assert.equal(cr.inbox.find(x=>x.key==='circuit-qa-1b').reason,'duplicate');assert.equal(cr.inbox.find(x=>x.key==='circuit-qa-2').experimental,true);assert.equal(cr.view.status,'playable');
- ok('Career ingests Circuit results once: Standard win qualifies, Quick win gives XP only, a repeated match is refused, inbox emptied');
+ ok('Career ingests Board 2 (City Ventures) results once: Standard win qualifies, Quick win gives XP only, a repeated match is refused, inbox emptied');
  await gp.close();
  assert.deepEqual(errors,[]);console.log(`circuit-alpha-browser (${engine}): ${n} checks passed`);
  await browser.close();server.close();

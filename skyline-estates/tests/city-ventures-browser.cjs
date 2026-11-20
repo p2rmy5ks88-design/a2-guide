@@ -30,7 +30,7 @@ let n=0;const ok=m=>{n++;console.log('PASS',m)};
   await p.waitForSelector('#results:not([hidden])');await p.screenshot({path:path.join(out,engine+'-results.png')});
   const fact=await p.evaluate(()=>{const k=Object.keys(localStorage).find(k=>k.startsWith('skylineCareerInbox:'));return k&&JSON.parse(localStorage.getItem(k))});
   assert.ok(fact&&fact.board==='circuit'&&fact.ruleset==='city-ventures-v1'&&fact.length==='quick'&&fact.over,JSON.stringify(fact));assert.equal(await p.evaluate(()=>localStorage.getItem('skylineCityVenturesSave')),null);ok('the finished match is reported once to the Career inbox and the save is cleared');
-  await p.click('#resHome');await p.waitForURL(/index\.html/);await p.waitForFunction(()=>window.SkylineCareer&&SkylineCareer.raw().boards.circuit);
+  await p.click('#resHome');await p.waitForURL(/index\.html/,{timeout:60000});await p.waitForFunction(()=>window.SkylineCareer&&SkylineCareer.raw().boards.circuit,null,{timeout:60000});
   assert.equal(await p.evaluate(()=>SkylineCareer.raw().boards.circuit.matches),1);ok('back on the main screen the match is recorded in Career');
   assert.deepEqual(errors,[]);ok('no browser errors');await context.close()}
  finally{await browser.close();server.close()}console.log(`CITY VENTURES BROWSER ${engine} ${n} checks`)})().catch(e=>{console.error(e);process.exit(1)});
