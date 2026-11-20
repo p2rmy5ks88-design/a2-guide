@@ -52,10 +52,10 @@ const PREFS={nick:'Career QA',nickSet:true,welcomed:1,tutDone:1,coach:{pre:1,pos
  const onModes=await modes();assert.deepEqual(onModes,['crOpen',...offModes]);assert.deepEqual(await passPlay(),offPass);
  ok('every existing Game Modes entry is still there, in the same order, and Pass & Play behaves the same');
  const view=await p.evaluate(()=>SkylineCareer.state().map(b=>[b.id,b.status]));
- assert.deepEqual(view,[['origins','playable'],['circuit','locked'],['dominion','locked-hidden'],['empire','locked-hidden']]);ok('new player: Origins playable, Circuit locked with requirements, later boards hidden');
+ assert.deepEqual(view,[['origins','playable'],['circuit','locked'],['crossroads','locked-hidden'],['dominion','locked-hidden'],['empire','locked-hidden']]);ok('new player: Origins playable, Circuit locked with requirements, later boards hidden');
  // Origins = today's game: the set matches a Quick Play start except the two career tags.
  await p.evaluate(()=>{document.querySelector('#crOpen').click()});await p.waitForSelector('.career-cards');
- assert.equal(await p.locator('.career-cards .crc').count(),4);
+ assert.equal(await p.locator('.career-cards .crc').count(),5);
  await p.locator('.career-cards .crc-btn[data-board="origins"]').click();await p.locator('.career-lengths .crl[data-len="standard"]').click();await p.waitForFunction(()=>G&&G.set&&G.set.career==='origins');
  const career=await p.evaluate(()=>{const s={...G.set};delete s.career;delete s.careerLength;return {set:s,ai:G.players.map(q=>q.ai),cash:G.players.map(q=>q.cash).sort((x,y)=>x-y)}});
  // Let the opening Skyline Keys reveal finish (it reads the live match when it closes) before ending the match.

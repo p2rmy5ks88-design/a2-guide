@@ -15,15 +15,15 @@ const TYPES={'.html':'text/html','.js':'text/javascript','.css':'text/css','.jso
  try{
   const context=await browser.newContext({viewport:{width:844,height:390},deviceScaleFactor:2,hasTouch:true,serviceWorkers:'block'});await context.route('https://**/*',r=>r.abort());
   // Career already at Dominion: Origins and Circuit unlocked and Dominion unlocked by the guide (2 Circuit wins + 3 district challenges).
-  const career={v:1,unlocked:{origins:0,circuit:1,dominion:2},boards:{},tutorials:{origins:1},challenges:{circuit:{'circuit-district-0':{tag:'district',at:1},'circuit-district-1':{tag:'district',at:1},'circuit-district-2':{tag:'district',at:1}}},receipts:[],floor:0};
+  const career={v:1,unlocked:{origins:0,circuit:1,crossroads:1,dominion:2},boards:{},tutorials:{origins:1},challenges:{circuit:{'circuit-district-0':{tag:'district',at:1},'circuit-district-1':{tag:'district',at:1},'circuit-district-2':{tag:'district',at:1}}},receipts:[],floor:0};
   await context.addInitScript(v=>{if(!localStorage.getItem('skylinePrefs'))localStorage.setItem('skylinePrefs',v)},JSON.stringify({...PREFS,career}));
   const p=await context.newPage();p.on('pageerror',e=>errors.push(String(e)));p.on('dialog',d=>d.accept());
   await p.goto(base+'index.html');await p.waitForFunction(()=>window.SkylineCareer&&!document.querySelector('#boot'));await p.evaluate(()=>homeTab('play'));await p.waitForTimeout(400);
   assert.equal(await p.locator('#hdCareer').count(),1);await p.screenshot({path:path.join(out,engine+'-home.png')});ok('main screen shows the Career button');
   const st=await p.evaluate(()=>SkylineCareer.state().map(b=>[b.id,b.status]));
-  assert.deepEqual(st,[['origins','playable'],['circuit','playable'],['dominion','playable'],['empire','locked']]);ok('unlock order kept: Dominion playable after its requirements, Empire still locked');
+  assert.deepEqual(st,[['origins','playable'],['circuit','playable'],['crossroads','playable'],['dominion','playable'],['empire','locked']]);ok('unlock order kept: Dominion playable after its requirements, Empire still locked');
   await p.click('#hdCareer');await p.waitForTimeout(400);const labels=await p.evaluate(()=>[...document.querySelectorAll('#modals .crc-btn:not([disabled])')].map(b=>b.dataset.board));
-  assert.deepEqual(labels,['origins','circuit','dominion'],JSON.stringify(labels));assert.equal(await p.locator('#modals .crc').count(),4);
+  assert.deepEqual(labels,['origins','circuit','crossroads','dominion'],JSON.stringify(labels));assert.equal(await p.locator('#modals .crc').count(),5);
   const tiny=await p.evaluate(()=>[...document.querySelectorAll('#modals .crc-btn')].filter(b=>b.getBoundingClientRect().height<43.5).length);assert.equal(tiny,0,'Play buttons are at least 44pt');
   await p.screenshot({path:path.join(out,engine+'-career.png')});ok('Career shows four board cards: Origins, Circuit and Dominion playable, Empire locked');
   await p.locator('#modals .crc-btn[data-board="dominion"]').click();await p.locator('#modals .crl[data-len="quick"]').waitFor();await p.screenshot({path:path.join(out,engine+'-career-length.png')});await p.locator('#modals .crl[data-len="quick"]').click();await p.waitForURL(/dominion-production-lab\.html\?career=1&length=quick/);ok('Dominion button opens the Dominion board as a Career match');

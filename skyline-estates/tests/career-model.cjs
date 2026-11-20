@@ -10,8 +10,8 @@ const match=(id,o={})=>Object.assign({board:'origins',matchId:id,sim:false,fast:
 
 // Fresh state
 let s=C.fresh();let v=C.view(s);
-assert.deepEqual(v.map(b=>b.id),['origins','circuit','dominion','empire']);
-assert.deepEqual(v.map(b=>b.status),['playable','locked','locked-hidden','locked-hidden']);
+assert.deepEqual(v.map(b=>b.id),['origins','circuit','crossroads','dominion','empire']);
+assert.deepEqual(v.map(b=>b.status),['playable','locked','locked-hidden','locked-hidden','locked-hidden']);
 assert.ok(v[0].playable&&!v[1].playable&&v[1].requirements.length===2);ok('fresh career: Origins playable, later boards locked in order');
 assert.deepEqual(C.BOARDS[0].lengths,['quick','standard','extended','unlimited']);assert.equal(C.BOARDS[0].defaultLength,'standard');
 assert.deepEqual(C.LENGTHS.standard,{mode:'timed',rounds:30});assert.deepEqual(C.LENGTHS.unlimited,{mode:'classic'});ok('Origins lengths 20/30/40/Unlimited, Standard default');
@@ -44,10 +44,15 @@ assert.ok(s2.unlocked.circuit!=null);ok('the existing How to play tour counts as
 // Later boards stay sequential and use board challenges
 const s3=C.fresh();for(let i=0;i<3;i++)assert.ok(C.completeChallenge(s3,'circuit','d'+i,'district').ok);
 s3.boards.circuit={xp:0,matches:2,qualified:2,wins:2,qualifiedWins:2,bestScore:0,lastAt:0};
-assert.deepEqual(C.evaluate(s3),[],'Dominion cannot unlock before Circuit');assert.equal(s3.unlocked.dominion,undefined);
+assert.deepEqual(C.evaluate(s3),[],'Crossroads cannot unlock before Circuit');assert.equal(s3.unlocked.crossroads,undefined);
 C.completeTutorial(s3,'origins');s3.boards.origins={xp:0,matches:2,qualified:2,wins:2,qualifiedWins:2,bestScore:0,lastAt:0};
-assert.deepEqual(C.evaluate(s3),['circuit','dominion']);assert.equal(C.completeChallenge(s3,'circuit','d0','district').reason,'duplicate');
-ok('Dominion needs Circuit first, two Circuit wins and three district challenges');
+assert.deepEqual(C.evaluate(s3),['circuit','crossroads']);assert.equal(C.completeChallenge(s3,'circuit','d0','district').reason,'duplicate');
+ok('Crossroads (Board 3) needs City Ventures first, two City Ventures wins and three district challenges');
+for(let i=0;i<3;i++)C.completeChallenge(s3,'crossroads','l'+i,'landmark');assert.deepEqual(C.evaluate(s3),[]);
+s3.boards.crossroads={xp:0,matches:2,qualified:2,wins:2,qualifiedWins:2,bestScore:0,lastAt:0};assert.deepEqual(C.evaluate(s3),['dominion']);
+ok('Dominion (Board 4) needs two Crossroads wins and three claimed Landmarks');
+const old=C.normalize({v:1,unlocked:{origins:0,circuit:1,dominion:2},boards:{circuit:{qualifiedWins:2}},challenges:{circuit:{a:{tag:'district'},b:{tag:'district'},c:{tag:'district'}}}});
+assert.equal(C.view(old).find(b=>b.id==='dominion').unlocked,true);assert.deepEqual(C.evaluate(old),['crossroads']);ok('players who already unlocked Dominion keep it, and Crossroads opens for them too');
 
 // Persistence, normalisation, permanence, newer versions
 const round=C.normalize(JSON.parse(JSON.stringify(s)));assert.deepEqual(round,s);ok('state survives a JSON save/load round trip unchanged');

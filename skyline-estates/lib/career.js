@@ -33,13 +33,20 @@ const BOARDS=Object.freeze([
   requires:[{kind:'tutorial',board:'origins'},{kind:'qualifiedWins',board:'origins',count:2}],lengths:[],
   preview:{headline:'Six power corners change the market for everyone.',geometry:'37-space hexagon with six power corners',movement:'Dice around one clockwise route',
    building:'Own 2 of a district for Low/Mid-rise; all 3 for a Landmark.',victory:'Highest City Value after 18 turns.',status:'released',design:'city-ventures.html'}},
- {id:'dominion',tier:3,name:'Skyline Dominion',difficulty:'Intermediate',strategy:'Territory and negotiation',playable:false,ruleset:null,
+ // Board 3: Crossroads Capital — Landmark Chase (owner decision 21 Nov 2026), between City Ventures and Dominion.
+ // It takes over Dominion's old requirements; Dominion now needs Crossroads wins and claimed Landmarks.
+ {id:'crossroads',tier:3,name:'Crossroads Capital',difficulty:'Intermediate',strategy:'Landmark Chains',playable:false,ruleset:null,
+  alpha:{ruleset:'crossroads-lc-v1',lengths:['standard','quick'],experimental:['quick'],defaultLength:'standard'},
   requires:[{kind:'qualifiedWins',board:'circuit',count:2},{kind:'challenges',board:'circuit',tag:'district',count:3}],lengths:[],
+  preview:{headline:'Complete Landmark Chains and build a city legacy.',geometry:'33-space double loop with three shared hubs',movement:'Choose the Riverside or Highland loop at Start',
+   building:'Plot to House 4, then a Landmark Residence with the full colour group.',victory:'Most Legacy Points after 15 turns.',status:'released',design:'crossroads-capital.html'}},
+ {id:'dominion',tier:4,name:'Skyline Dominion',difficulty:'Advanced',strategy:'Territory and negotiation',playable:false,ruleset:null,
+  requires:[{kind:'qualifiedWins',board:'crossroads',count:2},{kind:'challenges',board:'crossroads',tag:'landmark',count:3}],lengths:[],
   // Released with prototype rules (owner decision 19 Nov 2026): DOMINION.md, ruleset dominion-p1. Quick is experimental.
   alpha:{ruleset:'dominion-p1',lengths:['standard','extended','quick'],experimental:['quick'],defaultLength:'standard'},
   preview:{headline:'Contest districts and negotiate for control.',geometry:'48-space hexagonal track, eight district territories, Central District and contest exchanges',movement:'Action points across connected districts',
    building:'Owning a site allows basic development; advanced buildings need district control.',victory:'Hold the required districts or lead on control points.',status:'released-prototype',design:'dominion-production-lab.html'}},
- {id:'empire',tier:4,name:'Skyline Empire',difficulty:'Advanced',strategy:'Investment and economic control',playable:false,ruleset:null,
+ {id:'empire',tier:5,name:'Skyline Empire',difficulty:'Expert',strategy:'Investment and economic control',playable:false,ruleset:null,
   requires:[{kind:'qualifiedWins',board:'dominion',count:2},{kind:'challenges',board:'dominion',tag:'negotiation',count:1}],lengths:[],
   // Released with prototype rules (owner decision 19 Nov 2026): EMPIRE.md, ruleset empire-p1. Quick is experimental.
   alpha:{ruleset:'empire-p1',lengths:['standard','extended','quick'],experimental:['quick'],defaultLength:'standard'},
@@ -170,7 +177,7 @@ const enabled=flagOn();
 const ALPHA='skylineFeature.circuitAlpha';
 function alphaOn(){try{const q=new URLSearchParams(location.search).get('circuitAlpha');if(q==='on')localStorage.removeItem(ALPHA);else if(q==='off')localStorage.setItem(ALPHA,'off');return localStorage.getItem(ALPHA)!=='off'}catch(e){return true}}
 const circuitAlpha=enabled&&alphaOn();
-const ctx=()=>({originsTutorialDone:!!PREF.tutDone,alphaBoards:circuitAlpha?['circuit','dominion','empire']:[]});
+const ctx=()=>({originsTutorialDone:!!PREF.tutDone,alphaBoards:circuitAlpha?['circuit','crossroads','dominion','empire']:[]});
 function load(){return C.normalize(PREF.career)}
 // Before recording, read the saved profile again: another tab or a restored backup may already hold this match.
 function loadStored(){try{const raw=JSON.parse(localStorage.getItem(PKEY)||'null');if(raw&&raw.career)return C.normalize(raw.career)}catch(e){}return load()}
@@ -186,14 +193,17 @@ function gather(w){
 let last=null,inbox=[];
 // City Ventures (Career Board 2) pays 5× the normal match rewards in coins and earned Skyline Cash (owner decision
 // 20 Nov 2026). Paid once per counted match (the Career receipt already refuses repeats and too-short matches).
-const BOARD_REWARD_X=5;let rewardNotes=[];
-function boardRewards(f){if(f.board!=='circuit'||f.ruleset!=='city-ventures-v1')return;
- const rank=Number.isInteger(f.rank)?f.rank:(f.won?0:2),coins=(typeof gameCoinReward==='function'?gameCoinReward(!!f.won,rank):(f.won?500:rank===1?220:125))*BOARD_REWARD_X;
- let sc=0;try{const W=window.SkylineSCWallet,R=W.RULES;sc=BOARD_REWARD_X*(R.completion+(f.won?R.win:0));if(!W.create(localStorage).record('board:'+f.matchId,sc,'match',(f.won?'City Ventures win':'City Ventures match')+' ×'+BOARD_REWARD_X,{matchId:f.matchId}))sc=0}catch(e){sc=0}
- if(typeof addCoins==='function')addCoins(coins,f.won?'City Ventures win ×5':'City Ventures ×5');
- rewardNotes.push({won:!!f.won,rank,coins,sc});
- setTimeout(()=>{if(!rewardNotes.length||typeof modal!=='function')return;const n=rewardNotes.splice(0);const c=n.reduce((a,x)=>a+x.coins,0),k=n.reduce((a,x)=>a+x.sc,0);
-  modal({html:`<div class="mh">💹 City Ventures rewards ×5</div><div class="mtxt">${n.some(x=>x.won)?'Your win':'Your match'} paid <b>+${c.toLocaleString('en-US')} coins</b>${k?` and <b>+${k.toLocaleString('en-US')} SC</b>`:''}.<br><small>City Ventures pays five times the usual match rewards.</small></div>`,btns:[{k:'x',label:'Great',primary:true}]})},1600)}
+// Bonus boards pay a multiple of the normal match coins and earned Skyline Cash (owner decisions: City Ventures ×5
+// on 20 Nov 2026, Crossroads Capital ×6 on 21 Nov 2026). Paid once per counted match (the Career receipt already
+// refuses repeats and too-short matches).
+const BOARD_REWARDS={'city-ventures-v1':{x:5,name:'City Ventures',icon:'💹'},'crossroads-lc-v1':{x:6,name:'Crossroads Capital',icon:'🏛'}};let rewardNotes=[];
+function boardRewards(f){const B=BOARD_REWARDS[f.ruleset];if(!B)return;const X=B.x;
+ const rank=Number.isInteger(f.rank)?f.rank:(f.won?0:2),coins=(typeof gameCoinReward==='function'?gameCoinReward(!!f.won,rank):(f.won?500:rank===1?220:125))*X;
+ let sc=0;try{const W=window.SkylineSCWallet,R=W.RULES;sc=X*(R.completion+(f.won?R.win:0));if(!W.create(localStorage).record('board:'+f.matchId,sc,'match',(f.won?B.name+' win':B.name+' match')+' ×'+X,{matchId:f.matchId}))sc=0}catch(e){sc=0}
+ if(typeof addCoins==='function')addCoins(coins,(f.won?B.name+' win ×':B.name+' ×')+X);
+ rewardNotes.push({won:!!f.won,rank,coins,sc,B});
+ setTimeout(()=>{if(!rewardNotes.length||typeof modal!=='function')return;const n=rewardNotes.splice(0);const c=n.reduce((a,x)=>a+x.coins,0),k=n.reduce((a,x)=>a+x.sc,0),b=n[n.length-1].B;
+  modal({html:`<div class="mh">${b.icon} ${b.name} rewards ×${b.x}</div><div class="mtxt">${n.some(x=>x.won)?'Your win':'Your match'} paid <b>+${c.toLocaleString('en-US')} coins</b>${k?` and <b>+${k.toLocaleString('en-US')} SC</b>`:''}.<br><small>${b.name} pays ${b.x===5?'five':b.x===6?'six':b.x} times the usual match rewards.</small></div>`,btns:[{k:'x',label:'Great',primary:true}]})},1600)}
 // Matches from separate board pages (Circuit alpha) arrive as one localStorage key per match, so two tabs can never
 // overwrite each other. Each key is recorded once (receipts reject repeats) and then removed. A newer-version
 // Career record is never written, and its inbox is left for that version.
@@ -233,13 +243,19 @@ function startOrigins(length='standard'){
 // Career screen (owner request 20 Nov 2026): one card per board with its own Play button, then a short length step.
 const LENGTH_CHOICES={
  circuit:[['standard','Standard','18 turns · counts for unlocks'],['quick','Quick','10 turns · mastery XP only']],
+ crossroads:[['standard','Standard','15 turns · counts for unlocks'],['quick','Quick','9 turns · mastery XP only']],
  origins:[['quick','Quick','20 rounds · about 15 min'],['standard','Standard','30 rounds · about 25 min'],['extended','Extended','40 rounds · about 35 min'],['unlimited','Unlimited','Play until one player is left']],
  alpha:[['standard','Standard','Full match · counts for unlocks'],['extended','Extended','Longer match · counts for unlocks'],['quick','Quick','Short practice · mastery XP only']]};
-const BOARD_RULES={circuit:`<b>Goal:</b> the highest City Value after 18 turns (Quick: 10). City Value = cash + property values + 80% of upgrades + 200 CC per full district + 150 CC per Landmark.<br><br>
+const BOARD_RULES={crossroads:`<b>Goal:</b> the most Legacy Points after 15 turns (Quick: 9).<br><br>
+<b>Landmark Chains:</b> pursue a three-stage brief; stamps come in order, one per action. A Ribbon Cutting pays +5 Legacy Points and 200 CC (+1 more on the Skybridge) and unveils a landmark in the city.<br><br>
+<b>The double loop:</b> at Start choose the Riverside or Highland loop. Both meet at the Skybridge Bonus, the Grand Exchange and Start / Payday (200 CC).<br><br>
+<b>Every landing matters:</b> acquire, reserve or auction; Open House or upgrade your own; Scout or deal after paying rent; Metro Express; City Moments; tax and fees can buy Legacy Points. Each chapter has a public City Headline worth bonus points.<br><br>
+<b>Score:</b> Legacy Points + 2 per colour group + 1 per House 3+ building + 1 per 500 CC net worth.<br><br>
+<b>Rewards:</b> Crossroads Capital pays <b>6× the usual match coins and SC</b>. Standard wins and claimed Landmarks unlock Skyline Dominion.`,circuit:`<b>Goal:</b> the highest City Value after 18 turns (Quick: 10). City Value = cash + property values + 80% of upgrades + 200 CC per full district + 150 CC per Landmark.<br><br>
 <b>Your turn:</b> roll, move round the hexagon, then buy the space or send it to auction. Own 2 of a district’s 3 properties to build Low-rise and Mid-rise; own all 3 for a Landmark (+25% district rent).<br><br>
 <b>The six power corners:</b> <b>Start</b> — 200 CC when you pass; land exactly for a Charter (cheaper build, purchase or rent). <b>Free Lounge</b> — Rent Shield or keep an Opportunity card. <b>Civic Review</b> — Development Drive (−20% builds) or Tenant Protection (−30% rent) for one round. <b>Market Boom</b> — one district’s rent +50% or −40% for one round. <b>Skyline Exchange</b> — open an auction or a Deal Desk trade (+50 CC each). <b>Transit Hub</b> — ride to any station for 75 CC or collect a Transit Dividend.<br><br>
 <b>Rewards:</b> City Ventures pays <b>5× the usual match coins and SC</b>. Standard wins count toward unlocking Skyline Dominion; owning a whole district at the end completes a district challenge.`};
-const BOARD_ICON={origins:'🏙️',circuit:'💹',dominion:'🏛️',empire:'👑'};
+const BOARD_ICON={origins:'🏙️',circuit:'💹',crossroads:'🌉',dominion:'🏛️',empire:'👑'};
 function boardCard(b){
  const play=b.status==='playable',done=b.mastery||{};
  const body=play?`<div class="crc-stats"><b>${done.qualifiedWins||0}</b> wins · <b>${done.matches||0}</b> played · Lv <b>${done.level||0}</b></div>`
@@ -260,7 +276,7 @@ async function open(){
  if(len==='back')return open();
  if(len==='rules'){await modal({cls:'wide career-rules',html:`<div class="mh">${BOARD_ICON[bid]||''} ${esc(b.name)} — How to play</div><div class="mtxt" style="text-align:left;font-size:14px;line-height:1.45">${BOARD_RULES[bid]}</div>`,btns:[{k:'x',label:'Got it',primary:true}]});return open()}
  if(!len)return;
- const page={circuit:'./city-ventures.html',dominion:'./dominion-production-lab.html',empire:'./empire-production-lab.html'};
+ const page={circuit:'./city-ventures.html',crossroads:'./crossroads-capital.html',dominion:'./dominion-production-lab.html',empire:'./empire-production-lab.html'};
  if(page[bid])location.href=page[bid]+'?career=1&length='+encodeURIComponent(len);
  else startOrigins(len);
 }
@@ -277,7 +293,7 @@ if(enabled&&ORIGINS_AUTOSTART){const len=new URLSearchParams(location.search).ge
   try{if(!startOrigins(len))(window.top||window).location.replace('./index.html')}catch(e){setTimeout(go,300)}};
  setTimeout(go,400)}
 if(enabled){
- const st=document.createElement('style');st.textContent='.career-cards{width:min(980px,96vw)!important;max-height:calc(100dvh - 16px);overflow-y:auto;padding-top:12px!important;padding-bottom:12px!important}.career-cards .mh{margin-bottom:0}@media(max-height:460px){.career-cards .crc-line{display:none}.career-cards .crc-intro{display:none}}.career-cards .crc-intro,.career-lengths .crc-intro{margin:-2px 0 10px;opacity:.75;font-size:13px}.career-cards .crc-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;text-align:left}@media(max-width:700px){.career-cards .crc-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}.career-cards .crc{display:flex;flex-direction:column;gap:3px;padding:10px 11px;border-radius:16px;background:linear-gradient(160deg,#20365a,#142339);border:1px solid #ffffff1f;min-width:0}.career-cards .crc.is-play{border-color:#e1bc66;box-shadow:0 0 0 1px #e1bc6655,0 6px 18px #0006}.career-cards .crc.is-locked{opacity:.72}.career-cards .crc-top{display:flex;justify-content:space-between;align-items:center}.career-cards .crc-icon{font-size:20px;line-height:1}.career-cards .crc-tier{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#e1bc66}.career-cards h3{margin:0;font-size:16px;line-height:1.15}.career-cards .crc-sub{margin:0;font-size:11.5px;opacity:.7}.career-cards .crc-line{margin:1px 0 4px;font-size:12px;line-height:1.3;opacity:.9}.career-cards .crc-stats{font-size:12px;opacity:.9;margin-top:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.career-cards .crc-stats b{color:#f4d28b}.career-cards .crc-req{list-style:none;margin:auto 0 0;padding:0;display:grid;gap:3px;font-size:11.5px}.career-cards .crc-req li{display:flex;justify-content:space-between;align-items:flex-start;gap:6px;opacity:.85;line-height:1.25}.career-cards .crc-req b{white-space:nowrap;flex:none}.career-cards .crc-req li.ok{color:#8fe0a8}.career-cards .crc-btn{flex:none;margin-top:6px;min-height:44px;border-radius:12px;border:0;font:inherit;font-weight:800;font-size:15px;cursor:pointer;background:linear-gradient(#f2d488,#d9a948);color:#1b1a14}.career-cards .crc-btn[disabled]{background:#ffffff14;color:#ffffffa0;cursor:default}.career-lengths .crl-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}.career-lengths .crl{position:relative;display:flex;flex-direction:column;gap:4px;align-items:flex-start;text-align:left;padding:14px;min-height:72px;border-radius:14px;border:1px solid #ffffff2a;background:#1b2d49;color:inherit;font:inherit;cursor:pointer}.career-lengths .crl b{font-size:17px}.career-lengths .crl small{opacity:.8;font-size:12.5px}.career-lengths .crl.rec{border-color:#e1bc66;background:#2a3b5c}.career-lengths .crl em{position:absolute;top:8px;right:10px;font-style:normal;font-size:10.5px;font-weight:800;color:#e1bc66;text-transform:uppercase;letter-spacing:.05em}.career-preview .cr-row{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid #ffffff22}.career-preview .cr-row ul{margin:4px 0 0 18px;padding:0;font-size:12px}.career-preview .cr-row span{flex:none;font-weight:700;color:#f4d28b}.career-preview .cr-locked-hidden{opacity:.55}';document.head.append(st);
+ const st=document.createElement('style');st.textContent='.career-cards{width:min(980px,96vw)!important;max-height:calc(100dvh - 16px);overflow-y:auto;padding-top:12px!important;padding-bottom:12px!important}.career-cards .mh{margin-bottom:0}@media(max-height:460px){.career-cards .crc-line{display:none}.career-cards .crc-intro{display:none}}.career-cards .crc-intro,.career-lengths .crc-intro{margin:-2px 0 10px;opacity:.75;font-size:13px}.career-cards .crc-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;text-align:left}@media(max-width:700px){.career-cards .crc-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}.career-cards .crc{display:flex;flex-direction:column;gap:3px;padding:10px 11px;border-radius:16px;background:linear-gradient(160deg,#20365a,#142339);border:1px solid #ffffff1f;min-width:0}.career-cards .crc.is-play{border-color:#e1bc66;box-shadow:0 0 0 1px #e1bc6655,0 6px 18px #0006}.career-cards .crc.is-locked{opacity:.72}.career-cards .crc-top{display:flex;justify-content:space-between;align-items:center}.career-cards .crc-icon{font-size:20px;line-height:1}.career-cards .crc-tier{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#e1bc66}.career-cards h3{margin:0;font-size:16px;line-height:1.15}.career-cards .crc-sub{margin:0;font-size:11.5px;opacity:.7}.career-cards .crc-line{margin:1px 0 4px;font-size:12px;line-height:1.3;opacity:.9}.career-cards .crc-stats{font-size:12px;opacity:.9;margin-top:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.career-cards .crc-stats b{color:#f4d28b}.career-cards .crc-req{list-style:none;margin:auto 0 0;padding:0;display:grid;gap:3px;font-size:11.5px}.career-cards .crc-req li{display:flex;justify-content:space-between;align-items:flex-start;gap:6px;opacity:.85;line-height:1.25}.career-cards .crc-req b{white-space:nowrap;flex:none}.career-cards .crc-req li.ok{color:#8fe0a8}.career-cards .crc-btn{flex:none;margin-top:6px;min-height:44px;border-radius:12px;border:0;font:inherit;font-weight:800;font-size:15px;cursor:pointer;background:linear-gradient(#f2d488,#d9a948);color:#1b1a14}.career-cards .crc-btn[disabled]{background:#ffffff14;color:#ffffffa0;cursor:default}.career-lengths .crl-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}.career-lengths .crl{position:relative;display:flex;flex-direction:column;gap:4px;align-items:flex-start;text-align:left;padding:14px;min-height:72px;border-radius:14px;border:1px solid #ffffff2a;background:#1b2d49;color:inherit;font:inherit;cursor:pointer}.career-lengths .crl b{font-size:17px}.career-lengths .crl small{opacity:.8;font-size:12.5px}.career-lengths .crl.rec{border-color:#e1bc66;background:#2a3b5c}.career-lengths .crl em{position:absolute;top:8px;right:10px;font-style:normal;font-size:10.5px;font-weight:800;color:#e1bc66;text-transform:uppercase;letter-spacing:.05em}.career-preview .cr-row{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid #ffffff22}.career-preview .cr-row ul{margin:4px 0 0 18px;padding:0;font-size:12px}.career-preview .cr-row span{flex:none;font-weight:700;color:#f4d28b}.career-preview .cr-locked-hidden{opacity:.55}';document.head.append(st);
  const oldP=paneP;paneP=function(T){const r=oldP.apply(this,arguments);try{const list=T.querySelector('.hd-gm-list')||T;if(!T.querySelector('#crOpen')){const b=document.createElement('button');b.type='button';b.id='crOpen';b.className=list.classList.contains('hd-gm-list')?'hd-gm-item':'challenge-overview';b.innerHTML='<span class="tx"><b>Skyline Career</b><small>Preview build · four boards</small></span>';b.onclick=()=>{sfx('tap');open()};list.prepend(b)}}catch(e){}return r};
 }
 // Main-screen Career button (owner request 19 Nov 2026): a third action under Play Solo and Game Modes.

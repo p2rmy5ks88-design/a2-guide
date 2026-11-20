@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0a1730">
+<title>Crossroads Capital — Landmark Chase</title>
+<style>
+:root{--navy-950:#09172c;--navy-900:#0b2342;--navy-800:#10345b;--navy-700:#17517f;--gold:#e1b451;--gold-300:#f6d987;--muted:#b9c8d8;--ok:#1d9655;--bad:#a62139;
+ --sl:env(safe-area-inset-left,0px);--sr:env(safe-area-inset-right,0px);--st:env(safe-area-inset-top,0px);--sb:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overflow:hidden;background:var(--navy-950);color:#fff;font-family:-apple-system,"SF Pro Text",Inter,"Segoe UI",Arial,sans-serif;-webkit-user-select:none;user-select:none;touch-action:none}
+[hidden]{display:none!important}
+#board{position:fixed;inset:0;width:100%;height:100%;display:block}
+.panel{background:linear-gradient(160deg,#10345bf2,#09172cf5);border:1.5px solid var(--gold);border-radius:16px;box-shadow:0 10px 26px #0009,inset 0 1px 0 #ffffff22}
+button{font:inherit;color:inherit;cursor:pointer}
+.btn{min-height:44px;border:1.5px solid var(--gold);border-radius:12px;background:linear-gradient(#225f92,#0b2a50);color:#fff;font-weight:750;padding:8px 14px;font-size:15px;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.btn:disabled{opacity:.45;cursor:default}
+.btn.primary{background:linear-gradient(#f9e08e,#d79a2b);color:#182337;border-color:#f6d987}
+.btn.go{background:linear-gradient(#39b86b,#08603b)}
+.btn.small{min-height:44px;padding:6px 10px;font-size:13px}
+/* top bar */
+#top{position:fixed;top:calc(var(--st) + 6px);left:calc(var(--sl) + 8px);right:calc(var(--sr) + 8px);display:flex;align-items:center;gap:8px;pointer-events:none;z-index:5}
+#top>*{pointer-events:auto}
+#brand{display:flex;flex-direction:column;line-height:1;padding:6px 12px;font-family:Georgia,"Times New Roman",serif;font-weight:900;letter-spacing:.04em;font-size:17px;color:var(--gold-300);text-shadow:0 2px 0 #0008}
+#brand small{font:700 9.5px -apple-system,Inter,Arial;letter-spacing:.14em;color:#fff;opacity:.85;margin-top:3px}
+#turnpill{padding:7px 12px;font-weight:800;font-size:13px}
+#effects{display:flex;gap:6px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:750;background:#09172ce6;border:1px solid #ffffff33}
+.chip.boom{border-color:#ff9a3c;color:#ffd2a6}.chip.correction{border-color:#5ab8ff;color:#bfe3ff}.chip.civic{border-color:#59e39a;color:#c4f5da}
+.grow{flex:1}
+.iconbtn{width:44px;height:44px;border-radius:12px;border:1.5px solid var(--gold);background:linear-gradient(#17517f,#0b2342);display:grid;place-items:center;font-size:19px}
+/* players */
+#players{position:fixed;left:calc(var(--sl) + 8px);top:calc(var(--st) + 62px);display:flex;flex-direction:column;gap:6px;z-index:4;transition:transform .25s,opacity .25s}
+.pl{display:grid;grid-template-columns:30px auto;column-gap:7px;align-items:center;padding:5px 10px 5px 6px;min-width:132px;border-radius:12px;background:#09172cdd;border:1.5px solid #ffffff26}
+.pl .av{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:16px;grid-row:span 2;border:2px solid var(--c)}
+.pl b{font-size:13px;white-space:nowrap}.pl span{font-size:12px;color:var(--gold-300);font-weight:750}
+.pl.on{border-color:var(--gold);box-shadow:0 0 0 2px #e1b45155,0 0 14px #e1b45166}
+.pl.out{opacity:.4}
+body.moving #players .pl{min-width:0}body.moving #players .pl b,body.moving #players .pl .val{display:none}
+/* right drawer */
+#side{position:fixed;right:calc(var(--sr) + 8px);top:calc(var(--st) + 62px);width:min(232px,30vw);display:flex;flex-direction:column;gap:6px;z-index:4;transition:transform .25s,opacity .25s}
+body.moving #side{transform:translateX(calc(100% + 20px));opacity:0}
+#tile{padding:0;overflow:hidden}
+#tile .band{height:8px}
+#tile .tb{padding:8px 10px 10px}
+#tile h3{margin:0 0 2px;font-size:15px}#tile .k{font-size:11.5px;color:var(--muted)}
+#tile dl{display:grid;grid-template-columns:1fr auto;gap:2px 8px;margin:6px 0 0;font-size:12.5px}#tile dt{color:var(--muted)}#tile dd{margin:0;font-weight:750;text-align:right}
+/* dock */
+#dock{position:fixed;right:calc(var(--sr) + 8px);bottom:calc(var(--sb) + 8px);display:flex;gap:6px;align-items:flex-end;z-index:6}
+#dock .main{min-width:150px;min-height:52px;font-size:17px}
+#dice{position:fixed;bottom:calc(var(--sb) + 10px);left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:3;pointer-events:none}
+.die{width:42px;height:42px;border-radius:9px;background:#fffaf0;box-shadow:inset 0 -3px 0 #d8cfbc,0 4px 10px #0007;display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr);padding:6px}
+.die i{width:8px;height:8px;border-radius:50%;background:#1d2433;place-self:center;visibility:hidden}
+.die.roll{animation:roll .45s ease}
+@keyframes roll{0%{transform:rotate(0) scale(.8)}50%{transform:rotate(200deg) scale(1.1)}100%{transform:rotate(360deg) scale(1)}}
+#help{position:fixed;left:calc(var(--sl) + 8px);bottom:calc(var(--sb) + 8px);z-index:4;display:flex;gap:6px}
+/* decision */
+#decision{position:fixed;left:50%;bottom:calc(var(--sb) + 8px);transform:translateX(-50%);width:min(560px,calc(100vw - 320px - var(--sl) - var(--sr)));min-width:300px;max-height:calc(100dvh - 120px);overflow:auto;padding:10px 12px 12px;z-index:8}
+#decision h2{margin:0;font-size:17px;display:flex;align-items:center;gap:8px}#decision .tag{margin:2px 0 8px;font-size:12.5px;color:var(--muted)}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.opt{min-height:56px;text-align:left;border-radius:12px;border:1.5px solid #ffffff3a;background:#17517f;padding:8px 10px;display:flex;flex-direction:column;gap:2px}
+.opt b{font-size:14.5px}.opt small{font-size:11.5px;color:#d6e2ee;line-height:1.3}
+.opt.pri{background:linear-gradient(#f9e08e,#d79a2b);color:#182337;border-color:#f6d987}.opt.pri small{color:#3b3220}
+.opt:disabled{opacity:.45}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.tilebtn{min-height:44px;border-radius:10px;border:1.5px solid #ffffff3a;background:#0b2342;padding:6px 10px;font-size:13px;font-weight:700;display:inline-flex;align-items:center;gap:6px}
+.tilebtn i{width:12px;height:12px;border-radius:3px;display:inline-block}
+.tilebtn.on{border-color:var(--gold);background:#2a4d78}
+.deal{display:grid;grid-template-columns:1fr 1fr;gap:8px}.deal h4{margin:4px 0;font-size:12.5px;color:var(--muted);font-weight:700}
+.stepper{display:flex;align-items:center;gap:6px;font-weight:800}.stepper button{width:44px;height:44px;border-radius:10px;border:1.5px solid #ffffff3a;background:#0b2342;font-size:18px}
+#toast{position:fixed;top:calc(var(--st) + 60px);left:50%;transform:translateX(-50%);padding:8px 14px;z-index:20;font-size:13.5px;font-weight:700;pointer-events:none;opacity:0;transition:opacity .2s}
+#toast.show{opacity:1}
+/* start / results */
+.screen{position:fixed;inset:0;z-index:30;display:grid;place-items:center;background:radial-gradient(circle at 50% 30%,#17517fcc,#09172cf7);padding:calc(var(--st) + 10px) calc(var(--sr) + 12px) calc(var(--sb) + 10px) calc(var(--sl) + 12px);overflow:auto}
+.card{width:min(560px,100%);padding:16px 18px}
+.card h1{margin:0;font-family:Georgia,serif;font-size:28px;color:var(--gold-300);letter-spacing:.03em}.card h1+p{margin:4px 0 12px;color:var(--muted)}
+.seg{display:flex;gap:8px;margin:6px 0 10px}.seg button{flex:1}
+.seg button.on{background:linear-gradient(#f9e08e,#d79a2b);color:#182337}
+table.res{width:100%;border-collapse:collapse;font-size:14px;margin:8px 0}table.res td{padding:6px 4px;border-bottom:1px solid #ffffff1f}table.res td:last-child{text-align:right;font-weight:800}
+#rules{position:fixed;inset:0;z-index:25;display:grid;place-items:center;background:#000a;padding:12px}
+#rules .card{max-height:calc(100dvh - 24px);overflow:auto;font-size:13.5px;line-height:1.45}#rules h3{margin:10px 0 2px;font-size:14px;color:var(--gold-300)}
+@media (max-height:430px){#players .pl{padding:3px 8px 3px 5px}.pl .av{width:26px;height:26px;font-size:14px}#side{width:min(210px,28vw)}#log{max-height:60px}#decision{max-height:calc(100dvh - 70px)}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+#chainCard{padding:8px 10px}#chainCard h4{margin:0 0 2px;font-size:11px;letter-spacing:.08em;color:var(--gold-300);text-transform:uppercase}
+#chainCard b{font-size:14px;display:block}#chainCard small{display:block;font-size:11.5px;color:var(--muted);margin-top:1px}
+.stamps{display:flex;gap:5px;margin-top:6px}.stamps i{flex:1;height:7px;border-radius:4px;background:#ffffff26}.stamps i.on{background:linear-gradient(90deg,#2bb875,#8ee6b0)}
+#headline{padding:7px 10px;font-size:12px}#headline b{color:var(--gold-300)}
+#foot{position:fixed;left:50%;bottom:calc(var(--sb) + 8px);transform:translateX(-50%);display:flex;gap:8px;align-items:center;z-index:3;pointer-events:none}
+#foot .pill{padding:6px 12px;font-size:12px;font-weight:750;pointer-events:none;white-space:nowrap}
+.pl .lp{color:#c9b6ff;font-weight:800}
+.chainopt{min-height:64px}.chainopt ol{margin:4px 0 0 16px;padding:0;font-size:11px;color:#d6e2ee;line-height:1.3}.opt.pri .chainopt ol,.opt.pri ol{color:#3b3220}
+.cards2{display:grid;grid-template-columns:1fr 1fr;gap:8px}.mcard{border:1.5px solid #ffffff3a;border-radius:12px;padding:8px;background:#0b2342}.mcard h5{margin:0 0 6px;font-size:13.5px;color:var(--gold-300)}
+.mcard .opt{min-height:48px;width:100%;margin-top:6px}
+#dice{bottom:calc(var(--sb) + 52px)}
+#help{flex-direction:column;align-items:stretch;width:118px}#decision{left:calc(var(--sl) + 136px);right:calc(var(--sr) + min(232px,30vw) + 16px);transform:none;width:auto;min-width:0}#headline{display:none}#help .btn{justify-content:flex-start}
+@media (max-height:400px){#help .btn{min-height:44px;padding:4px 10px}}
+</style>
+</head>
+<body>
+<canvas id="board" aria-label="Crossroads Capital 3D double-loop board. Tap a space to see its details."></canvas>
+<header id="top">
+ <div id="brand" class="panel">CROSSROADS CAPITAL<small>LANDMARK CHASE</small></div>
+ <div id="turnpill" class="panel">Chapter 1 · Turn 1 / 15</div>
+ <div id="effects"></div>
+ <span class="grow"></span>
+ <button class="iconbtn" id="viewBtn" aria-label="Show the whole board">🗺</button>
+ <button class="iconbtn" id="menuBtn" aria-label="Menu">☰</button>
+</header>
+<nav id="players" aria-label="Players"></nav>
+<aside id="side"><section id="tile" class="panel" hidden></section><section id="chainCard" class="panel"></section><section id="headline" class="panel" hidden></section></aside>
+<div id="dice" aria-hidden="true"><div class="die" id="d1"></div><div class="die" id="d2"></div></div>
+<div id="foot"><span class="pill panel" id="footChain"></span></div>
+<div id="help"><button class="btn small" id="buildBtn">🏗 Build</button><button class="btn small" id="dealBtn">🤝 Trade</button><button class="btn small" id="claimBtn">🎀 Chain</button></div>
+<div id="dock"><button class="btn primary main" id="mainBtn">🎲 Roll Dice</button></div>
+<section id="decision" class="panel" hidden role="dialog" aria-live="polite"></section>
+<div id="toast" class="panel" role="status"></div>
+<div id="menu" class="screen" hidden><div class="card panel"><h1>Menu</h1><p>Crossroads Capital — Landmark Chase</p>
+ <div class="row"><button class="btn" id="mRules">📖 Rules</button><button class="btn" id="mResume">▶ Resume</button><button class="btn" id="mNew">↻ New match</button><button class="btn" id="mHome">🏠 Skyline Estates</button></div></div></div>
+<div id="rules" hidden><div class="card panel"><h1>How to play</h1><p>Build the most celebrated city: most Legacy Points after 15 turns each (Quick: 9).</p>
+ <h3>Landmark Chains</h3>You always pursue one three-stage brief. Complete the stages in order (one stamp per action), then hold a <b>Ribbon Cutting</b> in your turn for +5 Legacy Points and 200 CC — +1 more if you claim it on the Skybridge. A landmark appears in the city and you pick a new brief.
+ <h3>The double loop</h3>From Start choose the <b>Riverside</b> (west) or <b>Highland</b> (east) loop. Both loops meet at the <b>Skybridge Bonus</b>, then the <b>Grand Exchange</b> and back to <b>Start / Payday</b> (200 CC once per roll).
+ <h3>Every landing matters</h3>Unowned: Acquire, Reserve (25% deposit) or Auction. Yours: Open House (+50) or Upgrade. A rival’s: pay rent, then Scout new briefs or offer a deal. Metro: Express to the other line (75) or Survey (+60). Events: choose one of two City Moments. Tax and fees trade cash for Legacy Points.
+ <h3>Chapters and Headlines</h3>Three chapters, each with a public City Headline: the first player to meet it wins bonus Legacy Points.
+ <h3>Final score</h3>Legacy Points + 2 per complete colour group + 1 per building at House 3 or higher + 1 per 500 CC of net worth.
+ <h3>Rewards</h3>Crossroads Capital pays 6× the usual match coins and Skyline Cash. In Career, Standard wins and claimed Landmarks unlock Skyline Dominion.
+ <div class="row"><button class="btn primary" id="rulesClose">Got it</button></div></div></div>
+<div id="start" class="screen" hidden><div class="card panel"><h1>Crossroads Capital</h1><p>Landmark Chase · 2–4 players · build a city legacy</p>
+ <div id="careerNote" hidden style="font-size:13px;color:#f6d987;margin-bottom:8px">Career Board 3: Standard wins against the computer count toward unlocking Skyline Dominion, and every Landmark you claim completes a landmark challenge. Pays 6× rewards.</div>
+ <div>Match length</div><div class="seg" id="lenSeg"><button class="btn on" data-len="standard">Standard · 15 turns</button><button class="btn" data-len="quick">Quick · 9 turns</button></div>
+ <div>Computer opponents</div><div class="seg" id="oppSeg"><button class="btn" data-n="1">1</button><button class="btn" data-n="2">2</button><button class="btn on" data-n="3">3</button></div>
+ <div class="row"><button class="btn primary" id="startBtn" style="flex:1;min-height:52px">▶ Start match</button><button class="btn" id="startRules">📖 Rules</button></div></div></div>
+<div id="results" class="screen" hidden><div class="card panel"><h1 id="resTitle">Match over</h1><p id="resSub"></p><table class="res" id="resTable"></table>
+ <div class="row"><button class="btn primary" id="resAgain">↻ Play again</button><button class="btn" id="resHome">🏠 Back to Skyline Estates</button></div></div></div>
+<script src="lib/crossroads-rules.js"></script>
+<script type="module">
+import {createCrossroadsRenderer,PLAYER_COLORS} from './crossroads-renderer.js';
+const CC=window.CrossroadsCapital,$=id=>document.getElementById(id),Q=new URLSearchParams(location.search);
+const CAREER=Q.get('career')==='1'&&(()=>{try{return localStorage.getItem('skylineFeature.career')!=='off'}catch(e){return true}})();
+const TOKEN_EMOJI={car:'🚗',boat:'⛵',plane:'✈️',train:'🚆'};
+const fmt=n=>Math.round(n).toLocaleString('en-US')+' CC';
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const wait=ms=>new Promise(r=>setTimeout(r,matchMedia('(prefers-reduced-motion: reduce)').matches?Math.min(ms,60):ms));
+let s=null,busy=false,selected=null,reported=null,speed=Q.get('speed')==='fast'?.25:1;
+const r3=createCrossroadsRenderer($('board'),{rules:CC,onTile:id=>{selected=id;showTile(id)}});
+window.__cc={state:()=>s,rules:CC,renderer:r3,act:(pid,a)=>doAct(pid,a),busy:()=>busy};
+
+// ---------- setup ----------
+let len=['standard','quick'].includes(Q.get('length'))?Q.get('length'):'standard',opp=3;
+function startScreen(){$('start').hidden=false;$('careerNote').hidden=!CAREER;
+ document.querySelectorAll('#lenSeg button').forEach(b=>{b.classList.toggle('on',b.dataset.len===len);b.onclick=()=>{len=b.dataset.len;startScreen()}});
+ document.querySelectorAll('#oppSeg button').forEach(b=>{b.classList.toggle('on',+b.dataset.n===opp);b.onclick=()=>{opp=+b.dataset.n;startScreen()}})}
+function newMatch(){const seed=+(Q.get('seed')||(Date.now()%1e9));const names=['You','Mia','Noah','Eva'];
+ s=CC.newMatch({seed,length:len,players:names.slice(0,opp+1).map((name,i)=>({name,ai:i>0,color:PLAYER_COLORS[i]})),meta:CAREER?{career:true,matchId:'crossroads-'+seed.toString(36)+'-'+Date.now().toString(36),startedAt:Date.now()}:null});
+ reported=null;$('start').hidden=true;$('results').hidden=true;save();r3.sync(CC.view(s));r3.follow(s.turn.pid);render();toast(s.players[s.turn.pid].name+' rolled highest and goes first');pump()}
+$('startBtn').onclick=newMatch;$('startRules').onclick=()=>$('rules').hidden=false;$('rulesClose').onclick=()=>$('rules').hidden=true;
+function save(){try{if(s&&!s.over)localStorage.setItem(CC.SAVE_KEY,CC.serialize(s));else localStorage.removeItem(CC.SAVE_KEY)}catch(e){}}
+function load(){try{const raw=localStorage.getItem(CC.SAVE_KEY);if(!raw)return null;const r=CC.restore(raw);if(!r.ok)return null;if(!!(r.state.meta&&r.state.meta.career)!==CAREER)return null;if(CAREER&&r.state.cfg.length!==len)return null;return r.state}catch(e){return null}}
+
+// ---------- HUD ----------
+function toast(t){const e=$('toast');e.textContent=t;e.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('show'),2300)}
+function showDice(d){if(!d)return;[$('d1'),$('d2')].forEach((el,k)=>{const v=d[k],pips={1:[5],2:[1,9],3:[1,5,9],4:[1,3,7,9],5:[1,3,5,7,9],6:[1,3,4,6,7,9]}[v];el.innerHTML=Array.from({length:9},(_,j)=>`<i style="visibility:${pips.includes(j+1)?'visible':'hidden'}"></i>`).join('');el.classList.remove('roll');void el.offsetWidth;el.classList.add('roll')})}
+const chainOf=p=>p.chain?CC.CHAINS[p.chain.card]:null;
+function render(){if(!s)return;const v=CC.view(s),me=s.players[0],pd=CC.pending(s);
+ $('turnpill').textContent=`Chapter ${s.chapter} · Turn ${Math.min(s.cfg.turns,me.turns+1)} / ${s.cfg.turns}`;
+ $('players').innerHTML=v.players.map(p=>`<div class="pl${p.id===s.turn.pid?' on':''}${p.out?' out':''}" style="--c:${p.color}"><span class="av" style="background:${p.color}33">${TOKEN_EMOJI[p.token]||'●'}</span><b>${esc(p.name)}</b><span>${fmt(p.cash)}<span class="val"> · <span class="lp">${p.lp} LP</span></span></span></div>`).join('');
+ const fx=[];if(me.voucher)fx.push(`<span class="chip">🧾 ${me.voucher.amount} CC voucher</span>`);if(me.reservation)fx.push(`<span class="chip">📌 ${esc(CC.BY[me.reservation.tile].name)} reserved</span>`);if(me.route)fx.push(`<span class="chip">➜ ${CC.LOOP_NAMES[me.route]} loop next</span>`);
+
+ const c=chainOf(me);
+ $('chainCard').innerHTML=c?`<h4>Landmark Chain</h4><b>${esc(c.name)}</b><small>${me.chain.stage>=3?'✅ Complete — Ribbon Cutting ready':'Next: '+esc(c.stages[me.chain.stage].label)}</small><div class="stamps">${[0,1,2].map(k=>`<i class="${k<me.chain.stage?'on':''}"></i>`).join('')}</div><small>Unveils: ${esc(c.landmark)} · ${me.completed.length} claimed</small>`:`<h4>Landmark Chain</h4><small>Choose a new brief</small>`;
+ const h=v.headline;if(h)fx.unshift(`<span class="chip civic" title="${esc(h.name)}">📰 ${esc(h.name)}${v.headlineWinner!=null?' · '+esc(s.players[v.headlineWinner].name):' · +'+h.first_claim_bonus_legacy_points+' LP'}</span>`);$('effects').innerHTML=fx.join('');$('headline').innerHTML=h?`<b>📰 ${esc(h.name)}</b><br><small>${v.headlineWinner!=null?'Won by '+esc(s.players[v.headlineWinner].name):'+'+h.first_claim_bonus_legacy_points+' LP to the first player who '+headlineText(h)}</small>`:'';
+ $('footChain').textContent=c?`${c.name} · ${me.chain.stage}/3`:'Choose a Landmark Chain';
+ const myTurn=s.turn.pid===0&&!s.over,mb=$('mainBtn');
+ if(s.over){mb.textContent='🏁 Results';mb.disabled=false;mb.className='btn primary main'}
+ else if(pd.kind==='roll'&&myTurn){mb.textContent='🎲 Roll Dice';mb.disabled=busy;mb.className='btn primary main'}
+ else if(pd.kind==='action'&&myTurn){mb.textContent='✓ End Turn';mb.disabled=busy;mb.className='btn go main'}
+ else{mb.textContent=isMine(pd)?'Choose above':`${s.players[(pd.kind==='trade'?pd.to:pd.pid)??s.turn.pid].name} is playing…`;mb.disabled=true;mb.className='btn main'}
+ const act=pd.kind==='action'&&myTurn&&!busy,L=act?CC.legal(s,0):[];
+ const nb=L.filter(x=>x.type==='build'||x.type==='redeem'||x.type==='completeReservation').length;$('buildBtn').disabled=!nb;$('buildBtn').textContent='🏗 Build'+(nb?' ('+nb+')':'');
+ $('dealBtn').disabled=!act;const cl=L.some(x=>x.type==='claim');$('claimBtn').disabled=!(act||myTurn);$('claimBtn').textContent=cl?'🎀 Ribbon!':'🎀 Chain';$('claimBtn').classList.toggle('primary',cl);
+ if(selected!=null)showTile(selected,true);decision()}
+function headlineText(h){return{first_upgrade_loop:'upgrades in '+(h.loop==='west'?'Riverside':'Highland'),first_purchase_loop:'buys in '+(h.loop==='west'?'Riverside':'Highland'),visit_both_metros:'visits both Metro stations',first_contract_claim:'claims a Landmark',two_distinct_open_houses:'holds two Open Houses',own_both_loops:'owns property on both loops',first_two_upgrades_chapter:'builds twice',first_trade_accepted:'closes a trade'}[h.condition]||'meets it'}
+function isMine(pd){return pd&&((pd.kind==='trade'&&pd.to===0)||(pd.kind!=='trade'&&pd.pid===0))}
+function showTile(id,quiet){const t=CC.BY[id],o=s&&s.own[id],el=$('tile');if(!t)return;el.hidden=false;
+ const color=t.group?CC.GROUP_COLORS[t.group]:t.type==='start'||t.type==='exchange'||t.type==='skybridge'?'#efc15c':'#cbbf9f';const rows=[];
+ if(t.price)rows.push(['Price',fmt(t.price)]);if(t.type==='property'){rows.push(['Base rent',fmt(t.rent)]);rows.push(['Build',fmt(t.build)+' / stage'])}
+ if(t.type==='utility')rows.push(['Rent','dice × 10 (× 18 with both)']);
+ if(o){rows.push(['Owner',s.players[o.owner].name+(o.mortgaged?' (mortgaged)':'')]);if(t.type==='property')rows.push(['Stage',CC.STAGES[o.stage||0]]);rows.push(['Rent now',fmt(CC.rent(s,id,s.turn.dice))])}
+ const kind=t.group?CC.GROUP_NAMES[t.group]+' · '+CC.LOOP_NAMES[t.loop]:{start:'Start / Payday',exchange:'Shared hub',skybridge:'Shared hub',metro:'Metro station',event:'City Moments',tax:'Pay 200 or 250 + 1 LP',fee:'Pay 150 + voucher or 200 + 1 LP',utility:'Utility'}[t.type]||t.type;
+ el.innerHTML=`<div class="band" style="background:${color}"></div><div class="tb"><h3>${esc(t.name)}</h3><div class="k">${esc(kind)}</div>${rows.length?`<dl>${rows.map(([a,b])=>`<dt>${a}</dt><dd>${esc(b)}</dd>`).join('')}</dl>`:''}</div>`;
+ if(!quiet)r3.highlight(id)}
+
+// ---------- decisions ----------
+let dealDraft=null;
+function panel(html){const d=$('decision');d.innerHTML=html;d.hidden=false;r3.setFrameBias(.75);return d}
+function hidePanel(){if(!$('decision').hidden)r3.setFrameBias(.2);$('decision').hidden=true}
+const opts=list=>`<div class="opts">${list.map(o=>`<button class="opt${o.pri?' pri':''}" data-a='${JSON.stringify(o.a).replace(/'/g,'&#39;')}'${o.dis?' disabled':''}><b>${o.label}</b>${o.sub?`<small>${o.sub}</small>`:''}</button>`).join('')}</div>`;
+const chainHtml=c=>`<ol>${CC.CHAINS[c].stages.map(st=>`<li>${esc(st.label)}</li>`).join('')}</ol>`;
+function decision(){if(!s||s.over||busy){if(!busy)hidePanel();return}const pd=CC.pending(s);
+ if(pd.kind==='roll'&&pd.pid===0&&s.players[0].pos==='START'&&!s.players[0].route&&!$('decision').dataset.sheet){bind(panel(`<h2>➜ Choose your loop</h2><div class="tag">From Start you can go round Riverside (west) or Highland (east). You can also roll and decide at the fork.</div>`+opts([{label:'Riverside loop',sub:'Lower prices · Millstone, Lakeside, Riverfront',a:{type:'route',route:'west'},pri:true},{label:'Highland loop',sub:'Premium · Pinecrest, Orchard, Summit',a:{type:'route',route:'east'}}])));return}
+ if(!isMine(pd)||pd.kind==='roll'||pd.kind==='action'){if(!dealDraft&&!$('decision').dataset.sheet)hidePanel();return}
+ $('decision').dataset.sheet='';const L=CC.legal(s,0),me=s.players[0];const has=t=>L.some(x=>x.type===t);let html='';
+ switch(pd.kind){
+  case'chain':html=`<h2>🎀 ${pd.why==='start'?'Choose your first Landmark Chain':pd.why==='claim'?'Choose your next Landmark Chain':'New project briefs'}</h2><div class="tag">Complete the three stages in order, then hold a Ribbon Cutting for +5 Legacy Points.</div>`+opts([...pd.offer.map((c,k)=>({label:CC.CHAINS[c].name+' · '+CC.CHAINS[c].landmark,sub:chainHtml(c),a:{type:'pickChain',card:c},pri:k===0})),...(has('keepChain')?[{label:'Keep current brief',sub:esc(chainOf(me).name)+' · '+me.chain.stage+'/3',a:{type:'keepChain'}}]:[])]);break;
+  case'route':html=`<h2>➜ Which loop?</h2><div class="tag">You reached Start with ${pd.steps} step${pd.steps===1?'':'s'} to go.</div>`+opts([{label:'Riverside loop',sub:'West',a:{type:'route',route:'west'},pri:true},{label:'Highland loop',sub:'East',a:{type:'route',route:'east'}}]);break;
+  case'buy':{const t=CC.BY[pd.tile],b=L.find(x=>x.type==='buy'),r=L.find(x=>x.type==='reserve');r3.focusTile(pd.tile);
+   html=`<h2>🏢 ${esc(t.name)}</h2><div class="tag">${t.group?CC.GROUP_NAMES[t.group]+' · '+CC.LOOP_NAMES[t.loop]+' · ':''}You have ${fmt(me.cash)}</div>`+opts([{label:b?`Acquire · ${fmt(t.price)}`:'Not enough cash',sub:t.type==='property'?`Rent ${t.rent} CC → ${t.rent*10} CC as a Landmark Residence`:'Rent = dice × 10 (× 18 with both utilities)',a:{type:'buy'},pri:!!b,dis:!b},...(r?[{label:`Reserve · ${fmt(r.cost)}`,sub:'25% deposit, buy it by the end of your next turn',a:{type:'reserve'}}]:[]),{label:'Auction',sub:'Everyone bids from '+fmt(Math.round(t.price*.5/10)*10),a:{type:'auction'}}]);break}
+  case'own':{const t=CC.BY[pd.tile],u=L.find(x=>x.type==='upgrade');r3.focusTile(pd.tile);html=`<h2>🏠 ${esc(t.name)}</h2><div class="tag">Your property · ${CC.STAGES[s.own[pd.tile].stage||0]}</div>`+opts([{label:u?`Upgrade · ${fmt(u.cost)}`:'Upgrade',sub:u?'to '+CC.STAGES[(s.own[pd.tile].stage||0)+1]:CC.canUpgrade(s,pd.tile,0).why||'Not enough cash',a:{type:'upgrade'},pri:!!u,dis:!u},{label:'Open House',sub:has('openHouse')?'+50 CC (once per chapter)':'Already held this chapter',a:{type:'openHouse'},dis:!has('openHouse')},{label:'Skip',a:{type:'skip'}}]);break}
+  case'ownUtil':html=`<h2>⚡ ${esc(CC.BY[pd.tile].name)}</h2><div class="tag">Your utility</div>`+opts([{label:'Efficiency Inspection',sub:'60 CC off your next upgrade',a:{type:'inspection'},pri:true},{label:'Income Credit',sub:'+50 CC',a:{type:'credit'}}]);break;
+  case'rival':{const t=CC.BY[pd.tile];r3.focusTile(pd.tile);html=`<h2>🏙 ${esc(t.name)}</h2><div class="tag">Owned by ${esc(s.players[pd.owner].name)} · rent paid</div>`+opts([{label:'Scout',sub:'See two new briefs and maybe swap',a:{type:'scout'}},{label:'Offer a Deal',sub:'Propose a trade to '+esc(s.players[pd.owner].name),a:{type:'deal'}},{label:'Continue',a:{type:'skip'},pri:true}]);break}
+  case'dealDesk':dealDraft=dealDraft||{to:pd.with,give:[],get:[],cash:0,desk:true};openDeal(true);return;
+  case'hub':{const t=CC.BY[pd.tile];r3.focusTile(pd.tile);const O={bonus:['Bonus Pay','+100 CC'],brief:['Project Brief','Swap your unfinished brief'],voucher:["Builders' Voucher",'100 CC off your next upgrade'],ribbon:['Ribbon Cutting','Claim your Landmark +1 extra LP'],grant:['City Grant','+180 CC'],commission:['Commission Desk','Claim your completed Landmark now'],design:['Design Desk','Swap your unfinished brief'],auction:['Property Auction','Auction any unowned property'],skip:['Continue','No action']};
+   html=`<h2>${t.type==='start'?'🏁':t.type==='exchange'?'🏛':'🌉'} ${esc(t.name)}</h2><div class="tag">${t.type==='start'?'Exact landing bonus':t.type==='exchange'?'Shared hub · you can also choose your next loop':'Shared hub'}</div>`+opts(L.map((x,k)=>({label:O[x.option][0],sub:O[x.option][1],a:x,pri:k===0}))) ;break}
+  case'pickAuction':html=`<h2>🔨 Property Auction</h2><div class="tag">Pick any unowned property</div><div class="row">${L.map(x=>{const t=CC.BY[x.tile];return`<button class="tilebtn" data-a='${JSON.stringify(x)}'><i style="background:${t.group?CC.GROUP_COLORS[t.group]:'#cbbf9f'}"></i>${esc(t.name)} · ${t.price} CC</button>`}).join('')}</div>`;break;
+  case'routePref':html=`<h2>➜ Next lap</h2><div class="tag">Pre-select the loop you’ll take after Start</div>`+opts([{label:'Riverside',a:{type:'route',route:'west'}},{label:'Highland',a:{type:'route',route:'east'}},{label:'Decide later',a:{type:'route',route:null},pri:true}]);break;
+  case'metro':html=`<h2>🚇 ${esc(CC.BY[pd.tile].name)}</h2><div class="tag">Public station</div>`+opts([...(has('express')?[{label:'Express Visit · 75 CC',sub:'Ride to the other Metro line',a:{type:'express'}}]:[]),{label:'Neighborhood Survey',sub:'+60 CC travel grant',a:{type:'survey'},pri:true}]);break;
+  case'event':html=`<h2>🃏 City Moments</h2><div class="tag">Choose one outcome</div><div class="cards2">${pd.cards.map(c=>{const m=CC.MOMENTS[c];return`<div class="mcard"><h5>${esc(m.name)}</h5><button class="opt" data-a='${JSON.stringify({type:'moment',card:c,choice:'a'})}'><small>${esc(m.choice_a)}</small></button><button class="opt" data-a='${JSON.stringify({type:'moment',card:c,choice:'b'})}'><small>${esc(m.choice_b)}</small></button></div>`}).join('')}</div>`;break;
+  case'tax':html=`<h2>💰 City Tax</h2>`+opts([{label:'Pay 200 CC',a:{type:'pay'},pri:true},{label:'Civic fund · 250 CC',sub:'+1 Legacy Point',a:{type:'contribute'},dis:!has('contribute')}]);break;
+  case'fee':html=`<h2>🧾 Development Fee</h2>`+opts([{label:'Pay 150 CC',sub:'Get a 100 CC upgrade voucher',a:{type:'pay'},pri:true},{label:'Pay 200 CC',sub:'+1 Legacy Point',a:{type:'contribute'},dis:!has('contribute')}]);break;
+  case'renovate':html=`<h2>🛠 Renovation Crew</h2><div class="tag">Upgrade one property for 100 CC less</div><div class="row">${L.filter(x=>x.type==='pickTile').map(x=>`<button class="tilebtn" data-a='${JSON.stringify(x)}'><i style="background:${CC.GROUP_COLORS[CC.BY[x.tile].group]}"></i>${esc(CC.BY[x.tile].name)} · ${Math.max(0,CC.BY[x.tile].build-100)} CC</button>`).join('')}</div><div class="row"><button class="btn" data-a='{"type":"skip"}'>Skip</button></div>`;break;
+  case'auction':{const t=CC.BY[pd.tile];r3.focusTile(pd.tile);html=`<h2>🔨 Auction · ${esc(t.name)}</h2><div class="tag">Price ${fmt(t.price)} · ${pd.highPid!=null?'Highest bid '+fmt(pd.high)+' by '+esc(s.players[pd.highPid].name):'Opening bid '+fmt(pd.open)} · You have ${fmt(me.cash)}</div>`+opts([...L.filter(x=>x.type==='bid').map((x,k)=>({label:`Bid ${fmt(x.amount)}`,a:x,pri:k===0})),{label:'Pass',a:{type:'pass'}}]);break}
+  case'trade':{const from=s.players[pd.from],g=pd.give||{},r=pd.get||{};const names=a=>(a.tiles||[]).map(id=>CC.BY[id].name).concat(a.cash?[fmt(a.cash)]:[]).join(', ')||'nothing';html=`<h2>🤝 ${esc(from.name)} offers a deal</h2><div class="tag">You get: <b>${esc(names(g))}</b><br>You give: <b>${esc(names(r))}</b></div>`+opts([{label:'Accept',a:{type:'accept'},pri:true},{label:'Decline',a:{type:'reject'}}]);break}
+  case'debt':html=`<h2>⚠️ You owe ${fmt(pd.amount)}</h2><div class="tag">${esc(pd.reason)} · You have ${fmt(me.cash)}</div><div class="row">${L.filter(x=>x.type!=='bankrupt').map(x=>`<button class="tilebtn" data-a='${JSON.stringify(x)}'>${x.type==='sell'?'Sell a building on':'Mortgage'} ${esc(CC.BY[x.tile].name)} +${x.value} CC</button>`).join('')}</div><div class="row"><button class="btn" style="border-color:#a62139" data-a='{"type":"bankrupt"}'>Declare bankruptcy</button></div>`;break}
+ if(!html)return hidePanel();bind(panel(html))}
+function bind(el){el.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>{const a=JSON.parse(b.dataset.a);dealDraft=null;$('decision').dataset.sheet='';doAct(0,a)})}
+function sheet(name,html){$('decision').dataset.sheet=name;const el=panel(html+`<div class="row"><button class="btn" id="sheetClose">Close</button></div>`);bind(el);$('sheetClose').onclick=()=>{$('decision').dataset.sheet='';hidePanel();render()};return el}
+$('buildBtn').onclick=()=>{const L=CC.legal(s,0).filter(x=>['build','redeem','completeReservation','waiveReservation'].includes(x.type));
+ sheet('build',`<h2>🏗 Build</h2><div class="tag">Plot → House 1–4 → Landmark Residence (needs the whole colour group)${s.players[0].voucher?' · voucher −'+s.players[0].voucher.amount+' CC':''}</div><div class="row">${L.map(x=>{if(x.type==='completeReservation')return`<button class="tilebtn" data-a='${JSON.stringify(x)}'>📌 Buy ${esc(CC.BY[s.players[0].reservation.tile].name)} · ${x.cost} CC</button>`;if(x.type==='waiveReservation')return`<button class="tilebtn" data-a='${JSON.stringify(x)}'>Release reservation</button>`;const t=CC.BY[x.tile],o=s.own[x.tile];return`<button class="tilebtn" data-a='${JSON.stringify(x)}'><i style="background:${CC.GROUP_COLORS[t.group]||'#cbbf9f'}"></i>${x.type==='redeem'?'Redeem '+esc(t.name):esc(t.name)+' → '+CC.STAGES[(o.stage||0)+1]} · ${x.cost} CC</button>`}).join('')}</div>`)};
+$('claimBtn').onclick=()=>{const me=s.players[0],c=chainOf(me),cl=CC.legal(s,0).some(x=>x.type==='claim');
+ sheet('contract',`<h2>🎀 ${c?esc(c.name):'Landmark Chain'}</h2><div class="tag">${c?'Unveils the '+esc(c.landmark)+' · '+me.chain.stage+'/3 stamps':'Choose a new brief'}</div>${c?`<div class="opts">${c.stages.map((st,k)=>`<div class="opt${k<me.chain.stage?' pri':''}"><b>${k<me.chain.stage?'✓':k+1+'.'} ${esc(st.label)}</b></div>`).join('')}</div>`:''}
+  ${cl?`<div class="row"><button class="btn primary" data-a='{"type":"claim"}'>🎀 Ribbon Cutting · +5 LP & 200 CC</button></div><div class="tag">Tip: claim it on the Skybridge instead for +1 extra LP.</div>`:''}<div class="tag">Landmarks claimed: ${me.completed.length?me.completed.map(id=>esc(CC.CHAINS.find(x=>x.id===id).landmark)).join(', '):'none yet'}</div>`)};
+$('dealBtn').onclick=()=>openDeal(false);
+function openDeal(desk){const others=s.players.filter(p=>p.id!==0&&!p.out);if(!others.length)return;dealDraft=dealDraft||{to:others[0].id,give:[],get:[],cash:0,desk};$('decision').dataset.sheet='deal';
+ const d=dealDraft,tr=id=>!s.own[id].stage,mine=CC.owned(s,0).filter(tr),theirs=CC.owned(s,d.to).filter(tr);
+ const chip=(id,arr,key)=>{const t=CC.BY[id];return`<button class="tilebtn${arr.includes(id)?' on':''}" data-k="${key}" data-i="${id}"><i style="background:${t.group?CC.GROUP_COLORS[t.group]:'#cbbf9f'}"></i>${esc(t.name)}</button>`};
+ const el=panel(`<h2>🤝 ${desk?'Offer a Deal':'Propose a trade'}</h2><div class="tag">Nobody can be forced to trade.</div>
+  <div class="row">${others.map(p=>`<button class="tilebtn${p.id===d.to?' on':''}" data-to="${p.id}"><i style="background:${p.color}"></i>${esc(p.name)}</button>`).join('')}</div>
+  <div class="deal"><div><h4>You give</h4><div class="row">${mine.map(i=>chip(i,d.give,'give')).join('')||'<small>No tradable property</small>'}</div></div><div><h4>You get</h4><div class="row">${theirs.map(i=>chip(i,d.get,'get')).join('')||'<small>No tradable property</small>'}</div></div></div>
+  <div class="row" style="align-items:center"><span>Cash</span><div class="stepper"><button data-c="-50" aria-label="Less cash">−</button><span>${d.cash>=0?'You pay '+fmt(d.cash):'You receive '+fmt(-d.cash)}</span><button data-c="50" aria-label="More cash">+</button></div></div>
+  <div class="row"><button class="btn primary" id="dealSend">Send offer</button><button class="btn" id="dealCancel">Cancel</button></div>`);
+ el.querySelectorAll('[data-to]').forEach(b=>b.onclick=()=>{d.to=+b.dataset.to;d.get=[];openDeal(desk)});
+ el.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{const arr=d[b.dataset.k],i=b.dataset.i,k=arr.indexOf(i);k<0?arr.push(i):arr.splice(k,1);openDeal(desk)});
+ el.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{d.cash=Math.max(-s.players[d.to].cash,Math.min(s.players[0].cash,d.cash+ +b.dataset.c));openDeal(desk)});
+ $('dealSend').onclick=()=>{const a={type:'offer',to:d.to,give:{tiles:d.give,cash:Math.max(0,d.cash)},get:{tiles:d.get,cash:Math.max(0,-d.cash)}};dealDraft=null;$('decision').dataset.sheet='';doAct(0,a)};
+ $('dealCancel').onclick=()=>{dealDraft=null;$('decision').dataset.sheet='';if(desk)doAct(0,{type:'cancel'});else{hidePanel();render()}}}
+
+// ---------- flow ----------
+$('mainBtn').onclick=()=>{if(!s)return;if(s.over)return showResults();const pd=CC.pending(s);if(pd.kind==='roll'&&pd.pid===0){$('decision').dataset.sheet='';doAct(0,{type:'roll'})}else if(pd.kind==='action'&&pd.pid===0){$('decision').dataset.sheet='';doAct(0,{type:'end'})}};
+async function doAct(pid,a){if(busy)return;busy=true;render();const r=CC.act(s,pid,a);if(!r.ok){busy=false;toast(r.error);render();return}
+ await play(r.events);save();busy=false;r3.sync(CC.view(s));render();if(!s.over)pump();else finishMatch()}
+async function play(events){for(const e of events){
+ if(e.type==='dice'){showDice(e.dice);await wait(380*speed)}
+ else if(e.type==='move'){document.body.classList.add('moving');r3.sync(CC.view(s));await r3.moveToken(e.pid,e.path,{express:!!e.express});document.body.classList.remove('moving')}
+ else if(e.type==='land'){selected=e.tile;showTile(e.tile,true);r3.focusTile(e.tile)}
+ else if(e.type==='rent'){toast(`${s.players[e.pid].name} paid ${fmt(e.amount)} rent to ${s.players[e.to].name}`);await wait(500*speed)}
+ else if(e.type==='stamp'){if(e.pid===0)toast(`✅ Stamp ${e.stage}/3 · ${CC.CHAINS.find(c=>c.id===e.chain).name}`);await wait(300*speed)}
+ else if(e.type==='landmark'){r3.sync(CC.view(s));toast(`🎀 ${s.players[e.pid].name} unveiled the ${e.landmark}!`);await wait(900*speed)}
+ else if(e.type==='headlineWon'){toast(`📰 ${s.players[e.pid].name} won ${CC.HEADLINES.find(h=>h.id===e.id).name}!`);await wait(700*speed)}
+ else if(e.type==='headline'){toast('📰 New headline: '+CC.HEADLINES.find(h=>h.id===e.id).name);await wait(600*speed)}
+ else if(e.type==='bought'||e.type==='built'||e.type==='trade'||e.type==='auction'||e.type==='reserved'){r3.sync(CC.view(s));if(e.type==='built'&&e.tile)r3.focusTile(e.tile);await wait(250*speed)}
+ else if(e.type==='turn'){r3.sync(CC.view(s));r3.follow(e.pid)}}}
+let pumping=false;
+async function pump(){if(pumping)return;pumping=true;try{for(;;){if(!s||s.over)break;const pd=CC.pending(s),who=pd.kind==='trade'?pd.to:pd.pid;if(who==null||!s.players[who].ai)break;
+  await wait((pd.kind==='roll'?650:520)*speed);const a=CC.ai(s,who);if(!a)break;const r=CC.act(s,who,a);if(!r.ok){console.warn('AI action rejected',a,r.error);break}
+  if(pd.kind==='trade'&&pd.to===who)toast(`${s.players[who].name} ${a.type==='accept'?'accepted':'declined'} your offer`);
+  busy=true;render();await play(r.events);busy=false;save();r3.sync(CC.view(s));render()}}finally{pumping=false}
+ if(s&&s.over)finishMatch();else render()}
+function finishMatch(){r3.sync(CC.view(s));reportCareer();setTimeout(showResults,900)}
+function showResults(){const res=s.results||[];$('results').hidden=false;$('resTitle').textContent=s.winner===0?'🏆 You win!':`${s.players[s.winner].name} wins`;
+ $('resSub').textContent=CAREER?(s.cfg.length==='quick'?'Quick matches earn mastery XP only. Rewards ×6 are paid in Skyline Estates.':'Rewards ×6 are paid when you return to Skyline Estates.'):'Legacy Points + colour groups + tall buildings + net worth.';
+ $('resTable').innerHTML=res.map((r,k)=>`<tr><td>${k+1}. ${esc(r.name)}${r.out?' (bankrupt)':''}</td><td>${r.lp} LP · ${r.chains} landmarks · +${r.groups+r.tall+r.worth} bonus</td><td>${r.total} LP</td></tr>`).join('')}
+function reportCareer(){if(!s||!s.over||!s.meta||!s.meta.career||reported===s.meta.matchId)return;reported=s.meta.matchId;
+ try{const f=CC.careerFacts(s,{ownerSeat:0,endedAt:Date.now()});localStorage.setItem('skylineCareerInbox:'+f.matchId,JSON.stringify(f));localStorage.removeItem(CC.SAVE_KEY)}catch(e){console.warn('Career report',e)}}
+$('resAgain').onclick=()=>{$('results').hidden=true;startScreen()};$('resHome').onclick=()=>location.href='./index.html';
+$('menuBtn').onclick=()=>$('menu').hidden=false;$('mResume').onclick=()=>$('menu').hidden=true;$('mRules').onclick=()=>{$('menu').hidden=true;$('rules').hidden=false};
+$('mNew').onclick=()=>{$('menu').hidden=true;try{localStorage.removeItem(CC.SAVE_KEY)}catch(e){}s=null;startScreen()};$('mHome').onclick=()=>location.href='./index.html';
+let overview=false;$('viewBtn').onclick=()=>{overview=!overview;r3.overview(overview);$('viewBtn').textContent=overview?'🎯':'🗺';$('viewBtn').setAttribute('aria-label',overview?'Return to your token':'Show the whole board')};
+const saved=load();if(saved){s=saved;r3.sync(CC.view(s));r3.follow(s.turn.pid);render();toast('Match resumed');pump()}else startScreen();
+</script>
+</body>
+</html>
