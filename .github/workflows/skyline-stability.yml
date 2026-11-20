@@ -98,6 +98,7 @@ jobs:
           t 'node skyline-estates/tests/circuit-sim.cjs'
           t 'node skyline-estates/tests/circuit-screen.cjs'
           t 'node skyline-estates/tests/circuit-career.cjs'
+          t 'node skyline-estates/tests/city-ventures-rules.cjs'
           t 'node skyline-estates/tests/circuit-design.cjs'
           t 'node skyline-estates/tests/circuit-design.cjs skyline-estates/design/v2/circuit-design-v2.json'
           t 'node skyline-estates/tests/tutorial-v2-browser.cjs'
@@ -326,6 +327,10 @@ jobs:
         if: (matrix.engine != 'webkit' || steps.wk.outcome == 'success')
         timeout-minutes: 5
         run: node skyline-estates/tests/career-browser.cjs
+      - name: "Visual: city-ventures-browser"
+        if: (matrix.engine != 'webkit' || steps.wk.outcome == 'success')
+        timeout-minutes: 12
+        run: node skyline-estates/tests/city-ventures-browser.cjs
       - name: "Visual: circuit-alpha-browser"
         if: (matrix.engine != 'webkit' || steps.wk.outcome == 'success')
         timeout-minutes: 10

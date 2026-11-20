@@ -5,8 +5,8 @@ const root=path.resolve(__dirname,'..');
 const get=p=>fs.readFileSync(path.join(root,p),'utf8');
 const career=get('lib/career.js'),tabletop=get('circuit-tabletop-lab.html');
 const manifest=get('offline-assets.js'),sw=get('sw.js'),build=get('build.py');
-assert(career.includes("circuit:'./circuit-production-lab.html'")&&career.includes("location.href=page[bid]+'?career=1&length='+encodeURIComponent(len)"),
- 'Career Circuit selection routes to the production board and carries the selected match length');
+assert(career.includes("circuit:'./city-ventures.html'")&&career.includes("location.href=page[bid]+'?career=1&length='+encodeURIComponent(len)"),
+ 'Career Board 2 (City Ventures) opens its page and carries the selected match length');
 assert(career.includes("if(!b||b.status!=='playable')return;")&&career.includes("${play?'':' disabled'}"),
  'Board buttons are not exposed before existing Career requirements are met');
 assert(tabletop.includes('var CAREER_MODE=wantsCareer&&careerEnabled'),

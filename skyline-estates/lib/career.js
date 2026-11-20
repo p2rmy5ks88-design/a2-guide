@@ -26,13 +26,13 @@ const BOARDS=Object.freeze([
   preview:{headline:'Buy streets, complete groups, build your skyline.',geometry:'40-space square perimeter',movement:'Dice around the perimeter',
    building:'A complete property group allows building; five stages from Plot to Skyscraper, built evenly.',victory:'Highest Championship score at the round limit, or last solvent player.',
    status:'playable',design:null}},
- {id:'circuit',tier:2,name:'Skyline Circuit',difficulty:'Normal',strategy:'Routes and connectivity',playable:false,ruleset:null,
-  // Playable alpha (owner approval 17 Nov 2026), only with ctx.alphaBoards including 'circuit'. Quick is experimental:
-  // it earns mastery XP but its wins never count toward unlocks.
-  alpha:{ruleset:'circuit-v0',lengths:['standard','extended','quick'],experimental:['quick'],defaultLength:'standard'},
+ // Board 2 is City Ventures — The Living Market (owner decision 20 Nov 2026, replaces Skyline Circuit). The id stays
+ // 'circuit' so existing Career records and unlocks carry over. Quick (10 turns) earns mastery XP only.
+ {id:'circuit',tier:2,name:'City Ventures',difficulty:'Normal',strategy:'Six power corners',playable:false,ruleset:null,
+  alpha:{ruleset:'city-ventures-v1',lengths:['standard','quick'],experimental:['quick'],defaultLength:'standard'},
   requires:[{kind:'tutorial',board:'origins'},{kind:'qualifiedWins',board:'origins',count:2}],lengths:[],
-  preview:{headline:'Choose your route and connect the city.',geometry:'Two connected rings with junctions (design pending)',movement:'Dice with route choices at junctions',
-   building:'Owning a street allows Low-rise; higher stages need connected properties.',victory:'Reach and hold an influence target.',status:'in-development',design:null}},
+  preview:{headline:'Six power corners change the market for everyone.',geometry:'37-space hexagon with six power corners',movement:'Dice around one clockwise route',
+   building:'Own 2 of a district for Low/Mid-rise; all 3 for a Landmark.',victory:'Highest City Value after 18 turns.',status:'released',design:'city-ventures.html'}},
  {id:'dominion',tier:3,name:'Skyline Dominion',difficulty:'Intermediate',strategy:'Territory and negotiation',playable:false,ruleset:null,
   requires:[{kind:'qualifiedWins',board:'circuit',count:2},{kind:'challenges',board:'circuit',tag:'district',count:3}],lengths:[],
   // Released with prototype rules (owner decision 19 Nov 2026): DOMINION.md, ruleset dominion-p1. Quick is experimental.
@@ -222,9 +222,10 @@ function startOrigins(length='standard'){
 // Temporary functional entry point (testing only, flag on). The final Career screen comes from the approved design package.
 // Career screen (owner request 20 Nov 2026): one card per board with its own Play button, then a short length step.
 const LENGTH_CHOICES={
+ circuit:[['standard','Standard','18 turns · counts for unlocks'],['quick','Quick','10 turns · mastery XP only']],
  origins:[['quick','Quick','20 rounds · about 15 min'],['standard','Standard','30 rounds · about 25 min'],['extended','Extended','40 rounds · about 35 min'],['unlimited','Unlimited','Play until one player is left']],
  alpha:[['standard','Standard','Full match · counts for unlocks'],['extended','Extended','Longer match · counts for unlocks'],['quick','Quick','Short practice · mastery XP only']]};
-const BOARD_ICON={origins:'🏙️',circuit:'🔄',dominion:'🏛️',empire:'👑'};
+const BOARD_ICON={origins:'🏙️',circuit:'💹',dominion:'🏛️',empire:'👑'};
 function boardCard(b){
  const play=b.status==='playable',done=b.mastery||{};
  const body=play?`<div class="crc-stats"><b>${done.qualifiedWins||0}</b> wins · <b>${done.matches||0}</b> played · Lv <b>${done.level||0}</b></div>`
@@ -239,12 +240,12 @@ async function open(){
   btns:[{k:null,label:'Close'}],onMount:(pn,close)=>pn.querySelectorAll('.crc-btn[data-board]:not([disabled])').forEach(b=>b.onclick=()=>{try{sfx('tap')}catch(e){}close(b.dataset.board)})});
  if(!bid)return;
  const b=v.find(x=>x.id===bid);if(!b||b.status!=='playable')return;
- const opts=bid==='origins'?LENGTH_CHOICES.origins:LENGTH_CHOICES.alpha;
+ const opts=LENGTH_CHOICES[bid]||LENGTH_CHOICES.alpha;
  const len=await modal({cls:'career-lengths',html:`<div class="mh">${BOARD_ICON[bid]||''} ${esc(b.name)}</div><p class="crc-intro">How long do you want to play?</p><div class="crl-grid">${opts.map(([k,name,desc],i)=>`<button type="button" class="crl${k==='standard'?' rec':''}" data-len="${k}"><b>${name}</b><small>${desc}</small>${k==='standard'?'<em>Recommended</em>':''}</button>`).join('')}</div>`,
   btns:[{k:'back',label:'Back'}],onMount:(pn,close)=>pn.querySelectorAll('.crl').forEach(x=>x.onclick=()=>{try{sfx('tap')}catch(e){}close(x.dataset.len)})});
  if(len==='back')return open();
  if(!len)return;
- const page={circuit:'./circuit-production-lab.html',dominion:'./dominion-production-lab.html',empire:'./empire-production-lab.html'};
+ const page={circuit:'./city-ventures.html',dominion:'./dominion-production-lab.html',empire:'./empire-production-lab.html'};
  if(page[bid])location.href=page[bid]+'?career=1&length='+encodeURIComponent(len);
  else startOrigins(len);
 }
