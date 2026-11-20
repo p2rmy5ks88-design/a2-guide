@@ -127,3 +127,65 @@
 
 /* Switched off between Career Origins matches (20 Nov 2026). */
 #originsProductionHud[hidden],#originsProductionCanvas[hidden]{display:none!important}
+
+
+/* Career Origins visual QA: compact, readable iPhone landscape without
+   touching Classic, Career saves or other boards. HUD elements stay tappable. */
+.origins-production #orgPortfolio,
+.origins-production #orgFootnotes>div,
+.origins-production #roster{
+ background-color:#0b1930;
+ color:#fff2d8;
+ text-shadow:none;
+}
+.origins-production #orgPortfolio p,
+.origins-production #orgRound,
+.origins-production .orgDistrictCard small{
+ font-variant-numeric:tabular-nums;
+}
+.origins-production .orgDistrictCard strong{
+ color:#fffef6;
+ text-shadow:0 1px 2px #071020,0 0 2px #071020;
+}
+.origins-production #orgFootnotes .orgStage strong{color:#fff7dd}
+.origins-production #orgFootnotes .orgStage small{color:#f3dfae}
+.origins-production #orgDock #acts .bigb{
+ color:#fffdf4!important;
+ text-shadow:0 1px 2px #3b0b15;
+}
+/* Other Career cards are not controls inside an active Origins match.
+   Hide their duplicate menu to return vertical space to game guidance. */
+@media (orientation:landscape) and (max-height:560px){
+ .origins-production{--org-footer-height:68px}
+ .origins-production #orgCareer .orgOtherBoards{display:none}
+ .origins-production #orgCareer .orgBrand>span{display:none}
+ .origins-production #orgCareer .orgBrand>b{font-size:20px;letter-spacing:-.2px}
+ .origins-production #orgCareer .orgBrand>small{margin-top:3px}
+ .origins-production #orgBoardOne{margin:7px 0 4px;min-height:44px}
+ .origins-production #prompt{
+  top:calc(var(--org-st) + 132px)!important;
+  bottom:auto!important;
+  max-height:64px!important;
+  overflow-y:auto;
+  font-size:11px!important;
+  line-height:1.25!important;
+ }
+ .origins-production #orgFootnotes{
+  height:var(--org-footer-height);
+  grid-template-columns:22% 47% 31%;
+  padding:3px;gap:3px;
+ }
+ .origins-production #orgFootnotes>div{padding:3px 5px}
+ .origins-production #orgFootnotes>div>b{display:none}
+ .origins-production .orgOverviewBody ul{font-size:10px;line-height:1.25}
+ .origins-production #orgGroups .orgDistrictCard{min-height:44px}
+ .origins-production #orgDock{bottom:calc(var(--org-footer-height) + 13px)}
+ .origins-production #radio{bottom:calc(var(--org-sb) + var(--org-footer-height) + 19px)!important}
+ .origins-production #log{bottom:calc(var(--org-sb) + var(--org-footer-height) + 72px)!important;max-height:30px!important;overflow:hidden}
+}
+/* Short browser viewport: never let the prompt cover the dice/action dock. */
+@media (orientation:landscape) and (max-height:370px){
+ .origins-production #prompt{top:calc(var(--org-st) + 110px)!important;max-height:40px!important}
+ .origins-production #orgCareer .orgBrand>b{font-size:17px}
+ .origins-production #orgPortfolio{top:calc(var(--org-st) + 44px)!important}
+}
