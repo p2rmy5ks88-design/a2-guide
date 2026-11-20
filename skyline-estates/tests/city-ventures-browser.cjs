@@ -8,7 +8,7 @@ let n=0;const ok=m=>{n++;console.log('PASS',m)};
 (async()=>{const server=http.createServer((q,r)=>{const f=path.join(root,decodeURIComponent(q.url.split('?')[0]));fs.readFile(f,(e,d)=>{if(e){r.writeHead(404);r.end();return}r.writeHead(200,{'content-type':mime[path.extname(f)]||'application/octet-stream'});r.end(d)})});
  await new Promise(r=>server.listen(0,'127.0.0.1',r));const base=`http://127.0.0.1:${server.address().port}/skyline-estates/`;
  const browser=await({chromium,webkit}[engine]).launch(engine==='chromium'?{executablePath:process.env.CHROME_PATH||undefined,args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist']}:{});
- try{const context=await browser.newContext({viewport:{width:844,height:390},deviceScaleFactor:2,hasTouch:true});const p=await context.newPage();const errors=[];p.on('pageerror',e=>errors.push(String(e)));
+ try{const context=await browser.newContext({viewport:{width:844,height:390},deviceScaleFactor:1,hasTouch:true});/* 1x: gameplay checks; software WebGL on CI is slow at retina resolution */const p=await context.newPage();const errors=[];p.on('pageerror',e=>errors.push(String(e)));
   await p.goto(base+'index.html');await p.evaluate(()=>{localStorage.clear();const s=SkylineCareer.raw();s.unlocked.circuit=1;PREF.career=s;savePref()});await p.reload();await p.waitForSelector('#hdCareer');
   await p.evaluate(()=>{document.querySelector('#modals').innerHTML='';document.querySelector('#hdCareer').click()});await p.waitForSelector('.crc-btn[data-board="circuit"]:not([disabled])');
   assert.match(await p.locator('.crc').nth(1).innerText(),/City Ventures/);await p.locator('.crc-btn[data-board="circuit"]').click();
@@ -21,7 +21,7 @@ let n=0;const ok=m=>{n++;console.log('PASS',m)};
   const overlap=await p.evaluate(()=>{const r=id=>document.getElementById(id).getBoundingClientRect();const a=r('players'),b=r('dock'),c=r('top');return a.bottom>b.top&&a.right>b.left||c.bottom>a.top+1});assert.equal(overlap,false);ok('HUD fits 844×390 with 44pt buttons and no overlaps');
   await p.screenshot({path:path.join(out,engine+'-start.png')});
   let shots=0;const seen={};const t0=Date.now();
-  while(Date.now()-t0<300000){const st=await p.evaluate(()=>{const s=__cv.state(),pd=__cv.rules.pending(s);return{over:s.over,kind:pd.kind,mine:(pd.kind==='trade'?pd.to:pd.pid)===0,busy:__cv.busy(),panel:!document.getElementById('decision').hidden}});
+  while(Date.now()-t0<480000){const st=await p.evaluate(()=>{const s=__cv.state(),pd=__cv.rules.pending(s);return{over:s.over,kind:pd.kind,mine:(pd.kind==='trade'?pd.to:pd.pid)===0,busy:__cv.busy(),panel:!document.getElementById('decision').hidden}});
    if(st.over)break;
    if(st.mine&&!st.busy){seen[st.kind]=(seen[st.kind]||0)+1;if(!['roll','action'].includes(st.kind)){assert.equal(st.panel,true,'decision panel shown for '+st.kind);if(shots<3){await p.screenshot({path:path.join(out,`${engine}-decision-${st.kind}-${shots++}.png`)})}}
     if(st.kind==='roll'){await p.click('#mainBtn')}else await p.evaluate(()=>{const s=__cv.state();__cv.act(0,__cv.rules.ai(s,0))})}

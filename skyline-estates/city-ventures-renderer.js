@@ -19,24 +19,40 @@ export const PLAYER_COLORS=['#e85d5d','#3f8fe0','#f1c32c','#4cbf6b'];
 function roundRect(g,x,y,w,h,r){g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath()}
 function wrap(g,text,x,y,maxW,lh){const words=String(text).split(' ');let line='',lines=[];for(const w of words){const t=line?line+' '+w:w;if(g.measureText(t).width>maxW&&line){lines.push(line);line=w}else line=t}lines.push(line);lines.forEach((l,k)=>g.fillText(l,x,y+k*lh));return lines.length}
 
+// Vector icons (no emoji) so labels stay crisp and saturated on every device.
+function icon(g,kind,x,y,sz,col){g.save();g.translate(x,y);g.scale(sz/100,sz/100);g.fillStyle=col;g.strokeStyle=col;g.lineWidth=8;g.lineJoin='round';g.lineCap='round';
+ const P=d=>g.fill(new Path2D(d));
+ switch(kind){
+  case'property':P('M18 92V40h26v52zM52 92V14h32v78z');g.fillStyle='rgba(255,255,255,.0)';g.globalCompositeOperation='destination-out';for(const [a,b]of[[24,48],[34,48],[24,62],[34,62],[24,76],[34,76],[58,24],[72,24],[58,40],[72,40],[58,56],[72,56],[58,72],[72,72]])g.fillRect(a,b,6,8);g.globalCompositeOperation='source-over';break;
+  case'transit':P('M22 12h56q10 0 10 10v48q0 10-10 10H22q-10 0-10-10V22q0-10 10-10zM22 26v22h56V26z');g.beginPath();g.moveTo(26,96);g.lineTo(36,80);g.moveTo(74,96);g.lineTo(64,80);g.stroke();g.globalCompositeOperation='destination-out';g.beginPath();g.arc(30,64,6,0,7);g.arc(70,64,6,0,7);g.fill();g.globalCompositeOperation='source-over';break;
+  case'power-grid':P('M58 4L18 56h28l-8 40 44-56H52z');break;
+  case'water-works':P('M50 6C38 30 20 46 20 64a30 30 0 0060 0C80 46 62 30 50 6z');break;
+  case'city-works':g.beginPath();g.arc(50,50,22,0,7);g.stroke();for(let k=0;k<8;k++){g.save();g.translate(50,50);g.rotate(k*Math.PI/4);g.fillRect(-7,-42,14,16);g.restore()}g.beginPath();g.arc(50,50,30,0,7);g.lineWidth=12;g.stroke();break;
+  case'event':g.save();g.translate(50,50);g.rotate(-.18);g.fillRect(-30,-38,52,72);g.restore();g.fillStyle='#fff';g.font='900 46px Georgia,serif';g.textAlign='center';g.fillText('?',46,64);break;
+  case'tax':g.beginPath();g.arc(50,54,34,0,7);g.fill();g.fillStyle='#fff';g.font='900 46px Georgia,serif';g.textAlign='center';g.fillText('¢',50,70);break;
+  case'fee':P('M24 8h52v84l-10-8-8 8-8-8-8 8-8-8-10 8z');g.fillStyle='#fff';for(const y of[28,44,60])g.fillRect(34,y,32,6);break}
+ g.restore()}
 function tileTexture(t,colors,renderer){
  const W=300,H=620,X=2,c=document.createElement('canvas');c.width=W*X;c.height=H*X;const g=c.getContext('2d');g.scale(X,X);
- g.fillStyle='#f6efdc';g.fillRect(0,0,W,H);
+ const navy='#0f1d33',gold='#c79a3e';
+ const bg=g.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#fffaf0');bg.addColorStop(1,'#f3e7cc');g.fillStyle=bg;g.fillRect(0,0,W,H);
  const band=t.district?colors[t.district]:null;
- if(band){g.fillStyle=band;g.fillRect(0,0,W,150);g.fillStyle='rgba(255,255,255,.18)';g.fillRect(0,0,W,20)}
- else{g.fillStyle='#e7dcc0';g.fillRect(0,0,W,110)}
- g.strokeStyle='#c9a24d';g.lineWidth=10;g.strokeRect(5,5,W-10,H-10);
- g.fillStyle='#1d2433';g.textAlign='center';g.textBaseline='alphabetic';
- const icon=t.type==='property'?'🏢':t.type==='utility'?(UTIL_ICON[t.id]||'⚡'):TYPE_ICON[t.type]||'';
- g.font='92px "Apple Color Emoji","Segoe UI Emoji",sans-serif';g.fillText(icon,W/2,band?118:96);
- const label=t.type==='event'?'Opportunity':t.name;
- g.font='800 50px -apple-system,"SF Pro Display",Inter,Arial,sans-serif';const lines=wrap(g,label,W/2,240,W-36,54);
- g.font='600 34px -apple-system,Inter,Arial,sans-serif';g.fillStyle='#4b5568';
- const sub=t.type==='transit'?'Transit':t.type==='utility'?'Utility':t.type==='tax'?'Tax':t.type==='fee'?'Fee':t.type==='event'?'Draw a card':'';
- if(sub)g.fillText(sub,W/2,240+lines*54+20);
- g.fillStyle='#1d2433';g.font='800 46px -apple-system,Inter,Arial,sans-serif';
- const price=t.price?t.price+' CC':t.charge?'Pay '+t.charge+' CC':'';if(price)g.fillText(price,W/2,H-46);
+ if(band){const b=g.createLinearGradient(0,0,0,170);b.addColorStop(0,band);b.addColorStop(1,shade(band,-.18));g.fillStyle=b;g.fillRect(0,0,W,170);g.fillStyle='rgba(255,255,255,.22)';g.fillRect(0,0,W,6);g.fillStyle=shade(band,-.35);g.fillRect(0,166,W,4);
+  icon(g,'property',W/2-46,30,92,'#ffffff')}
+ else{const kind=t.type==='utility'?t.id:t.type;icon(g,kind,W/2-48,26,96,t.type==='event'?'#7a3cc4':t.type==='transit'?'#1d4f8a':t.type==='utility'?(t.id==='water-works'?'#1f8fd6':t.id==='power-grid'?'#e0a10c':'#5b6676'):t.type==='tax'?'#c79a3e':'#8a5a2b')}
+ // gold double border
+ g.strokeStyle=gold;g.lineWidth=7;g.strokeRect(4,4,W-8,H-8);g.strokeStyle='rgba(199,154,62,.55)';g.lineWidth=2;g.strokeRect(14,14,W-28,H-28);
+ // name
+ const label=(t.type==='event'?'Opportunity':t.name).toUpperCase();g.fillStyle=navy;g.textAlign='center';g.textBaseline='alphabetic';
+ let fs=52;g.font=`900 ${fs}px -apple-system,"SF Pro Display","Helvetica Neue",Arial,sans-serif`;const words=label.split(' ');while(fs>34&&words.some(w=>g.measureText(w).width>W-40)){fs-=2;g.font=`900 ${fs}px -apple-system,"SF Pro Display","Helvetica Neue",Arial,sans-serif`}
+ const top=band?232:200;const lines=wrap(g,label,W/2,top,W-36,fs*1.05);
+ const sub=t.type==='transit'?'TRANSIT':t.type==='utility'?'UTILITY':t.type==='tax'?'TAX':t.type==='fee'?'FEE':t.type==='event'?'DRAW A CARD':t.district?(t.district.toUpperCase()+' DISTRICT'):'';
+ if(sub){g.font='800 24px -apple-system,"Helvetica Neue",Arial,sans-serif';g.fillStyle='#8a6a2a';g.letterSpacing='2px';g.fillText(sub,W/2,top+lines*fs*1.05+14);g.letterSpacing='0px'}
+ // price plate
+ const price=t.price?t.price+' CC':t.charge?'PAY '+t.charge+' CC':'';
+ if(price){g.fillStyle=navy;roundRect(g,26,H-118,W-52,76,16);g.fill();g.strokeStyle=gold;g.lineWidth=4;roundRect(g,26,H-118,W-52,76,16);g.stroke();g.fillStyle='#f6d987';g.font='900 46px -apple-system,"SF Pro Display","Helvetica Neue",Arial,sans-serif';g.fillText(price,W/2,H-64)}
  const tex=new THREE.CanvasTexture(c);tex.colorSpace=THREE.SRGBColorSpace;tex.anisotropy=renderer.capabilities.getMaxAnisotropy();return tex}
+function shade(hex,k){const n=parseInt(hex.slice(1),16);let r=n>>16,g=n>>8&255,b=n&255;const f=x=>Math.max(0,Math.min(255,Math.round(k<0?x*(1+k):x+(255-x)*k)));return'#'+[f(r),f(g),f(b)].map(v=>v.toString(16).padStart(2,'0')).join('')}
 function badgeTexture(t,renderer){
  const S=640,X=2,c=document.createElement('canvas');c.width=S*X;c.height=S*X;const g=c.getContext('2d');g.scale(X,X);
  g.beginPath();for(let k=0;k<6;k++){const a=Math.PI/3*k;const x=S/2+Math.cos(a)*S*.5,y=S/2+Math.sin(a)*S*.5;k?g.lineTo(x,y):g.moveTo(x,y)}g.closePath();g.clip();
@@ -98,7 +114,7 @@ export function createCityVenturesRenderer(canvas,{rules,onTile}={}){
   for(let j=0;j<n;j++){const i=a+1+j,t=TILES[i],f=r+(j+.5)*(1-2*r)/n,pos=A.clone().lerp(B,f),w=(1-2*r)*L/n*.95;
    const grp=new THREE.Group();grp.position.copy(pos);grp.rotation.y=Math.atan2(-perp.x,-perp.z);
    const body=new THREE.Mesh(new THREE.BoxGeometry(w,.12,DEPTH),new THREE.MeshStandardMaterial({color:'#efe4c8',roughness:.7}));body.position.y=.06;body.castShadow=true;body.receiveShadow=true;grp.add(body);
-   const face=new THREE.Mesh(new THREE.PlaneGeometry(w*.96,DEPTH*.97),new THREE.MeshStandardMaterial({map:tileTexture(t,CV.DISTRICT_COLORS,renderer),roughness:.85,envMapIntensity:.25}));face.rotation.x=-Math.PI/2;face.position.y=.122;face.receiveShadow=true;grp.add(face);
+   const ftex=tileTexture(t,CV.DISTRICT_COLORS,renderer);const face=new THREE.Mesh(new THREE.PlaneGeometry(w*.96,DEPTH*.97),new THREE.MeshStandardMaterial({map:ftex,emissiveMap:ftex,emissive:'#ffffff',emissiveIntensity:.38,roughness:.85,envMapIntensity:.2}));face.rotation.x=-Math.PI/2;face.position.y=.122;face.receiveShadow=true;grp.add(face);
    const ring=new THREE.Mesh(new THREE.BoxGeometry(w*1.06,.1,DEPTH*1.04),new THREE.MeshStandardMaterial({color:'#ffffff',emissive:'#000',roughness:.4}));ring.position.y=.03;ring.visible=false;grp.add(ring);
    const glow=new THREE.Mesh(new THREE.PlaneGeometry(w*1.02,DEPTH*1.02),new THREE.MeshBasicMaterial({color:'#ffd36b',transparent:true,opacity:0,depthWrite:false}));glow.rotation.x=-Math.PI/2;glow.position.y=.125;grp.add(glow);
    scene.add(grp);body.userData.tile=i;face.userData.tile=i;pick.push(body,face);
@@ -109,7 +125,7 @@ export function createCityVenturesRenderer(canvas,{rules,onTile}={}){
   const rim=new THREE.Mesh(new THREE.CylinderGeometry(1.12,1.18,.2,6),gold);rim.position.y=.1;rim.rotation.y=Math.PI/2;rim.castShadow=true;grp.add(rim);
   const cap=new THREE.Mesh(new THREE.CylinderGeometry(1.0,1.0,.26,6),new THREE.MeshStandardMaterial({color:CORNER_COLORS[i],roughness:.45}));cap.position.y=.2;cap.rotation.y=Math.PI/2;cap.castShadow=true;grp.add(cap);
   // label: flat plane whose canvas top points to the board centre, so it reads upright from outside
-  const label=new THREE.Mesh(new THREE.PlaneGeometry(2.0,2.0),new THREE.MeshStandardMaterial({map:badgeTexture(t,renderer),transparent:true,alphaTest:.05,roughness:.6,envMapIntensity:.3}));label.rotation.x=-Math.PI/2;label.position.y=.335;grp.add(label);label.userData.tile=i;pick.push(label);
+  const label=new THREE.Mesh(new THREE.PlaneGeometry(2.0,2.0),(()=>{const bt=badgeTexture(t,renderer);return new THREE.MeshStandardMaterial({map:bt,emissiveMap:bt,emissive:'#ffffff',emissiveIntensity:.3,transparent:true,alphaTest:.05,roughness:.6,envMapIntensity:.3})})());label.rotation.x=-Math.PI/2;label.position.y=.335;grp.add(label);label.userData.tile=i;pick.push(label);
   const glow=new THREE.Mesh(new THREE.CircleGeometry(1.25,6),new THREE.MeshBasicMaterial({color:'#ffd36b',transparent:true,opacity:0,depthWrite:false}));glow.rotation.x=-Math.PI/2;glow.position.y=.36;grp.add(glow);
   scene.add(grp);cap.userData.tile=i;pick.push(cap);
   tileMeshes[i]={grp,glow,cap};tileInfo[i]={pos:P.clone(),inner:P.clone().add(inward.clone().multiplyScalar(.2)),outer:P.clone(),perp:inward,dir:new THREE.Vector3(-inward.z,0,inward.x),w:1.6}});
@@ -162,7 +178,7 @@ export function createCityVenturesRenderer(canvas,{rules,onTile}={}){
    if(T.building){T.grp.remove(T.building);T.building=null}
    if(o){T.ring.visible=true;T.ring.material.color.set(v.players[o.owner].color||PLAYER_COLORS[o.owner]);T.ring.material.emissive.set(v.players[o.owner].color||PLAYER_COLORS[o.owner]);T.ring.material.emissiveIntensity=.35;
     if(TILES[i].type==='property'){const b=building(o.stage,CV.DISTRICT_COLORS[TILES[i].district]);b.position.set(0,.12,-DEPTH*.3);T.grp.add(b);T.building=b}
-    T.face.material.color.set(o.mortgaged?'#8a8a8a':'#ffffff')}else{T.ring.visible=false;T.face.material.color.set('#ffffff')}});
+    T.face.material.color.set(o.mortgaged?'#8a8a8a':'#ffffff');T.face.material.emissiveIntensity=o.mortgaged?.08:.38}else{T.ring.visible=false;T.face.material.color.set('#ffffff');T.face.material.emissiveIntensity=.38}});
   effects.market=v.market;effects.civic=v.civic;dirty=true}
  function placeTokens(){const counts={};tokens.forEach((t,k)=>{if(t&&view.players[k]&&!view.players[k].out)counts[t.tile]=(counts[t.tile]||0)+1});
   tokens.forEach((t,k)=>{if(!t)return;const p=slot(t.tile,k,counts[t.tile]);t.g.position.set(p.x,.13,p.z);t.g.rotation.y=Math.atan2(tileInfo[t.tile].dir.x,tileInfo[t.tile].dir.z)-Math.PI/2});dirty=true}

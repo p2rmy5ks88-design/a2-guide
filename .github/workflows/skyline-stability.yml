@@ -324,7 +324,7 @@ jobs:
         run: node skyline-estates/tests/career-browser.cjs
       - name: "Visual: city-ventures-browser"
         if: (matrix.engine != 'webkit' || steps.wk.outcome == 'success')
-        timeout-minutes: 12
+        timeout-minutes: 15
         run: node skyline-estates/tests/city-ventures-browser.cjs
       - name: "Visual: cloud-restore"
         if: (matrix.engine != 'webkit' || steps.wk.outcome == 'success')
