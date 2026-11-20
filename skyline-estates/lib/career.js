@@ -26,13 +26,13 @@ const BOARDS=Object.freeze([
   preview:{headline:'Buy streets, complete groups, build your skyline.',geometry:'40-space square perimeter',movement:'Dice around the perimeter',
    building:'A complete property group allows building; five stages from Plot to Skyscraper, built evenly.',victory:'Highest Championship score at the round limit, or last solvent player.',
    status:'playable',design:null}},
- {id:'circuit',tier:2,name:'Skyline Circuit',difficulty:'Normal',strategy:'Routes and connectivity',playable:false,ruleset:null,
-  // Playable alpha (owner approval 17 Nov 2026), only with ctx.alphaBoards including 'circuit'. Quick is experimental:
-  // it earns mastery XP but its wins never count toward unlocks.
-  alpha:{ruleset:'circuit-v0',lengths:['standard','extended','quick'],experimental:['quick'],defaultLength:'standard'},
+ // Board 2 is City Ventures — The Living Market (owner decision 20 Nov 2026, replaces Skyline Circuit). The id stays
+ // 'circuit' so existing Career records and unlocks carry over. Quick (10 turns) earns mastery XP only.
+ {id:'circuit',tier:2,name:'City Ventures',difficulty:'Normal',strategy:'Six power corners',playable:false,ruleset:null,
+  alpha:{ruleset:'city-ventures-v1',lengths:['standard','quick'],experimental:['quick'],defaultLength:'standard'},
   requires:[{kind:'tutorial',board:'origins'},{kind:'qualifiedWins',board:'origins',count:2}],lengths:[],
-  preview:{headline:'Choose your route and connect the city.',geometry:'Two connected rings with junctions (design pending)',movement:'Dice with route choices at junctions',
-   building:'Owning a street allows Low-rise; higher stages need connected properties.',victory:'Reach and hold an influence target.',status:'in-development',design:null}},
+  preview:{headline:'Six power corners change the market for everyone.',geometry:'37-space hexagon with six power corners',movement:'Dice around one clockwise route',
+   building:'Own 2 of a district for Low/Mid-rise; all 3 for a Landmark.',victory:'Highest City Value after 18 turns.',status:'released',design:'city-ventures.html'}},
  {id:'dominion',tier:3,name:'Skyline Dominion',difficulty:'Intermediate',strategy:'Territory and negotiation',playable:false,ruleset:null,
   requires:[{kind:'qualifiedWins',board:'circuit',count:2},{kind:'challenges',board:'circuit',tag:'district',count:3}],lengths:[],
   // Released with prototype rules (owner decision 19 Nov 2026): DOMINION.md, ruleset dominion-p1. Quick is experimental.
@@ -109,7 +109,7 @@ function qualify(f,ctx={}){
  if(f&&int(f.activity)<QUALIFY.minActivity)reasons.push('too-little-activity');
  const counts=reasons.length===0;
  // A qualifying win also needs at least one AI opponent on Normal or Hard (not an all-human or Easy-only table).
- // Experimental lengths (Circuit Quick) earn mastery XP only; the board definition decides, not the reported facts.
+ // Experimental lengths (City Ventures Quick) earn mastery XP only; the board definition decides, not the reported facts.
  const experimental=!!(alpha&&alpha.experimental.includes(f.length))||!!(f&&f.experimental);
  const winCounts=counts&&!experimental&&!!f.won&&f.aiOpponents>0&&QUALIFY.qualifyingAI.includes(f.aiLevel);
  return{counts,winCounts,experimental,reasons};
@@ -132,7 +132,7 @@ function record(s,f,ctx={},now=Date.now()){
  return{ok:true,challenges:ch,qualifiedWin:q.winCounts,experimental:q.experimental,won:!!f.won,unlocked,xp:t.xp,level:masteryLevel(t.xp)};
 }
 function completeTutorial(s,board,ctx={},now=Date.now()){if(s.readOnly||!BY_ID[board])return [];s.tutorials[board]=now||1;return evaluate(s,ctx,now)}
-// Board challenges (Circuit district, Dominion negotiation) are recorded by future board modules through this call.
+// Board challenges (City Ventures district, Dominion negotiation) are recorded by future board modules through this call.
 function completeChallenge(s,board,id,tag,ctx={},now=Date.now()){if(s.readOnly||!BY_ID[board]||!ID.test(id))return{ok:false};const c=s.challenges[board]=s.challenges[board]||{};if(c[id])return{ok:false,reason:'duplicate'};c[id]={tag:String(tag).slice(0,40),at:now};return{ok:true,unlocked:evaluate(s,ctx,now)}}
 // One read model for any Career interface: status, progress and preview data per board.
 function view(s,ctx={}){
@@ -184,13 +184,23 @@ function gather(w){
  return{board:G.set.career,matchId:G.masteryId,sim:!!G.sim,fast:!!FAST,online:!!G.online,assisted:!!G.scAssisted,over:!!G.over,ownerHuman:!!owner&&!owner.ai,
   startedAt,endedAt:Date.now(),rounds:G.round,activity,won:!!owner&&owner===w,score,aiOpponents:G.players.filter(p=>p.ai).length,aiLevel:G.set.ai}}
 let last=null,inbox=[];
+// City Ventures (Career Board 2) pays 5× the normal match rewards in coins and earned Skyline Cash (owner decision
+// 20 Nov 2026). Paid once per counted match (the Career receipt already refuses repeats and too-short matches).
+const BOARD_REWARD_X=5;let rewardNotes=[];
+function boardRewards(f){if(f.board!=='circuit'||f.ruleset!=='city-ventures-v1')return;
+ const rank=Number.isInteger(f.rank)?f.rank:(f.won?0:2),coins=(typeof gameCoinReward==='function'?gameCoinReward(!!f.won,rank):(f.won?500:rank===1?220:125))*BOARD_REWARD_X;
+ let sc=0;try{const W=window.SkylineSCWallet,R=W.RULES;sc=BOARD_REWARD_X*(R.completion+(f.won?R.win:0));if(!W.create(localStorage).record('board:'+f.matchId,sc,'match',(f.won?'City Ventures win':'City Ventures match')+' ×'+BOARD_REWARD_X,{matchId:f.matchId}))sc=0}catch(e){sc=0}
+ if(typeof addCoins==='function')addCoins(coins,f.won?'City Ventures win ×5':'City Ventures ×5');
+ rewardNotes.push({won:!!f.won,rank,coins,sc});
+ setTimeout(()=>{if(!rewardNotes.length||typeof modal!=='function')return;const n=rewardNotes.splice(0);const c=n.reduce((a,x)=>a+x.coins,0),k=n.reduce((a,x)=>a+x.sc,0);
+  modal({html:`<div class="mh">💹 City Ventures rewards ×5</div><div class="mtxt">${n.some(x=>x.won)?'Your win':'Your match'} paid <b>+${c.toLocaleString('en-US')} coins</b>${k?` and <b>+${k.toLocaleString('en-US')} SC</b>`:''}.<br><small>City Ventures pays five times the usual match rewards.</small></div>`,btns:[{k:'x',label:'Great',primary:true}]})},1600)}
 // Matches from separate board pages (Circuit alpha) arrive as one localStorage key per match, so two tabs can never
 // overwrite each other. Each key is recorded once (receipts reject repeats) and then removed. A newer-version
 // Career record is never written, and its inbox is left for that version.
 const INBOX='skylineCareerInbox:';
 function ingest(){if(!enabled)return [];const out=[];let keys=[];try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith(INBOX))keys.push(k)}}catch(e){return out}
  for(const k of keys.sort()){let s=loadStored();if(s.readOnly)break;let f=null;try{f=JSON.parse(localStorage.getItem(k))}catch(e){}
-  const r=f?C.record(s,f,ctx()):{ok:false,reason:'invalid'};if(r.ok)store(s);out.push({key:k.slice(INBOX.length),...r});try{localStorage.removeItem(k)}catch(e){}}
+  const r=f?C.record(s,f,ctx()):{ok:false,reason:'invalid'};if(r.ok){store(s);try{boardRewards(f)}catch(e){}}out.push({key:k.slice(INBOX.length),...r});try{localStorage.removeItem(k)}catch(e){}}
  inbox=inbox.concat(out).slice(-20);return out}
 if(enabled){try{ingest()}catch(e){}}
 if(enabled){
@@ -222,9 +232,14 @@ function startOrigins(length='standard'){
 // Temporary functional entry point (testing only, flag on). The final Career screen comes from the approved design package.
 // Career screen (owner request 20 Nov 2026): one card per board with its own Play button, then a short length step.
 const LENGTH_CHOICES={
+ circuit:[['standard','Standard','18 turns · counts for unlocks'],['quick','Quick','10 turns · mastery XP only']],
  origins:[['quick','Quick','20 rounds · about 15 min'],['standard','Standard','30 rounds · about 25 min'],['extended','Extended','40 rounds · about 35 min'],['unlimited','Unlimited','Play until one player is left']],
  alpha:[['standard','Standard','Full match · counts for unlocks'],['extended','Extended','Longer match · counts for unlocks'],['quick','Quick','Short practice · mastery XP only']]};
-const BOARD_ICON={origins:'🏙️',circuit:'🔄',dominion:'🏛️',empire:'👑'};
+const BOARD_RULES={circuit:`<b>Goal:</b> the highest City Value after 18 turns (Quick: 10). City Value = cash + property values + 80% of upgrades + 200 CC per full district + 150 CC per Landmark.<br><br>
+<b>Your turn:</b> roll, move round the hexagon, then buy the space or send it to auction. Own 2 of a district’s 3 properties to build Low-rise and Mid-rise; own all 3 for a Landmark (+25% district rent).<br><br>
+<b>The six power corners:</b> <b>Start</b> — 200 CC when you pass; land exactly for a Charter (cheaper build, purchase or rent). <b>Free Lounge</b> — Rent Shield or keep an Opportunity card. <b>Civic Review</b> — Development Drive (−20% builds) or Tenant Protection (−30% rent) for one round. <b>Market Boom</b> — one district’s rent +50% or −40% for one round. <b>Skyline Exchange</b> — open an auction or a Deal Desk trade (+50 CC each). <b>Transit Hub</b> — ride to any station for 75 CC or collect a Transit Dividend.<br><br>
+<b>Rewards:</b> City Ventures pays <b>5× the usual match coins and SC</b>. Standard wins count toward unlocking Skyline Dominion; owning a whole district at the end completes a district challenge.`};
+const BOARD_ICON={origins:'🏙️',circuit:'💹',dominion:'🏛️',empire:'👑'};
 function boardCard(b){
  const play=b.status==='playable',done=b.mastery||{};
  const body=play?`<div class="crc-stats"><b>${done.qualifiedWins||0}</b> wins · <b>${done.matches||0}</b> played · Lv <b>${done.level||0}</b></div>`
@@ -239,12 +254,13 @@ async function open(){
   btns:[{k:null,label:'Close'}],onMount:(pn,close)=>pn.querySelectorAll('.crc-btn[data-board]:not([disabled])').forEach(b=>b.onclick=()=>{try{sfx('tap')}catch(e){}close(b.dataset.board)})});
  if(!bid)return;
  const b=v.find(x=>x.id===bid);if(!b||b.status!=='playable')return;
- const opts=bid==='origins'?LENGTH_CHOICES.origins:LENGTH_CHOICES.alpha;
+ const opts=LENGTH_CHOICES[bid]||LENGTH_CHOICES.alpha;
  const len=await modal({cls:'career-lengths',html:`<div class="mh">${BOARD_ICON[bid]||''} ${esc(b.name)}</div><p class="crc-intro">How long do you want to play?</p><div class="crl-grid">${opts.map(([k,name,desc],i)=>`<button type="button" class="crl${k==='standard'?' rec':''}" data-len="${k}"><b>${name}</b><small>${desc}</small>${k==='standard'?'<em>Recommended</em>':''}</button>`).join('')}</div>`,
-  btns:[{k:'back',label:'Back'}],onMount:(pn,close)=>pn.querySelectorAll('.crl').forEach(x=>x.onclick=()=>{try{sfx('tap')}catch(e){}close(x.dataset.len)})});
+  btns:[{k:'back',label:'Back'},...(BOARD_RULES[bid]?[{k:'rules',label:'📖 How to play'}]:[])],onMount:(pn,close)=>pn.querySelectorAll('.crl').forEach(x=>x.onclick=()=>{try{sfx('tap')}catch(e){}close(x.dataset.len)})});
  if(len==='back')return open();
+ if(len==='rules'){await modal({cls:'wide career-rules',html:`<div class="mh">${BOARD_ICON[bid]||''} ${esc(b.name)} — How to play</div><div class="mtxt" style="text-align:left;font-size:14px;line-height:1.45">${BOARD_RULES[bid]}</div>`,btns:[{k:'x',label:'Got it',primary:true}]});return open()}
  if(!len)return;
- const page={circuit:'./circuit-production-lab.html',dominion:'./dominion-production-lab.html',empire:'./empire-production-lab.html'};
+ const page={circuit:'./city-ventures.html',dominion:'./dominion-production-lab.html',empire:'./empire-production-lab.html'};
  if(page[bid])location.href=page[bid]+'?career=1&length='+encodeURIComponent(len);
  else startOrigins(len);
 }

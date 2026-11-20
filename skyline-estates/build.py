@@ -18,7 +18,7 @@ head = '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="v
 head = head.replace('</head>', '<link rel="stylesheet" href="./lib/menu-presentation.css"><link rel="stylesheet" href="./lib/market-pulse.css"><link rel="stylesheet" href="./web/skyline-showcase.css"><link rel="stylesheet" href="./web/challenges.css"><link rel="stylesheet" href="./web/social.css"></head>')
 # Shared menu-only layer; original game.html retains all board/camera behavior.
 index = head + body + '<script src="./lib/menu-presentation.js"></script><script src="./web/skyline-showcase.js"></script></body></html>'
-core = ['index.html', 'web-play.html', 'web-correction.html', 'web-follow.html', 'web-board.html', 'web-menus.html', 'reference-redesign.js', 'home-redesign.js', 'manifest.webmanifest', 'privacy.html', 'circuit-alpha.html', 'circuit-tabletop-lab.html', 'circuit-tabletop-life.css', 'circuit-tabletop-life.js', 'icon-180.png', 'icon-192.png', 'icon-512.png']
+core = ['index.html', 'web-play.html', 'web-correction.html', 'web-follow.html', 'web-board.html', 'web-menus.html', 'reference-redesign.js', 'home-redesign.js', 'manifest.webmanifest', 'privacy.html', 'city-ventures.html', 'city-ventures-renderer.js', 'icon-180.png', 'icon-192.png', 'icon-512.png']
 assets = sorted(p.relative_to(here).as_posix() for folder in ['art','items','photos','lib','web','avatars','living'] for p in (here/folder).rglob('*') if p.is_file())
 files = core + assets
 texts = {'.html','.js','.mjs','.cjs','.json','.webmanifest','.txt','.css','.svg'}

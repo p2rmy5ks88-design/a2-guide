@@ -6,7 +6,7 @@
  const ui=document.querySelector('#ui'),canvas=document.createElement('canvas');canvas.id='originsProductionCanvas';canvas.setAttribute('aria-label','Skyline Origins real 3D board — tap a property to inspect');document.body.insertBefore(canvas,document.body.firstChild);
  const hud=document.createElement('div');hud.id='originsProductionHud';hud.innerHTML=`
   <div id="orgAssetStatus" role="status">Loading local 3D assets…</div>
-  <aside id="orgCareer"><div class="orgBrand"><span aria-hidden="true">▂▅▇▆▃</span><b>SKYLINE<br>ESTATES</b><small>Career Mode</small></div><button id="orgBoardOne"><em>1</em><span>Skyline Origins<small>Live match · 40 spaces</small></span></button><div class="orgOtherBoards"><span>2 <b>Skyline Circuit</b></span><span>3 <b>Skyline Dominion</b></span><span>4 <b>Skyline Empire</b></span></div></aside>
+  <aside id="orgCareer"><div class="orgBrand"><span aria-hidden="true">▂▅▇▆▃</span><b>SKYLINE<br>ESTATES</b><small>Career Mode</small></div><button id="orgBoardOne"><em>1</em><span>Skyline Origins<small>Live match · 40 spaces</small></span></button><div class="orgOtherBoards"><span>2 <b>City Ventures</b></span><span>3 <b>Skyline Dominion</b></span><span>4 <b>Skyline Empire</b></span></div></aside>
   <header id="orgHeading"><h1>Skyline Origins</h1><p>The Property Development Classic</p><span id="orgRound"></span></header>
   <aside id="orgPortfolio" aria-label="Live match portfolio"></aside>
   <section id="orgFootnotes"><div><b>Board Overview</b><span>40 perimeter spaces · Buy, develop and trade · Highest net worth wins</span></div><div id="orgGroups"><b>Property Groups</b></div><div id="orgStages"><b>Development Progression</b><span>Lot → Mid-rise (1–2) → High-rise (3–4) → Skyscraper (5)</span></div></section>
