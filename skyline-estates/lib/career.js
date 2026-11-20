@@ -199,12 +199,25 @@ if(enabled){
  const oldEnd=progressGameEnd;progressGameEnd=function(w){let s=null;
   try{if(G&&G.set&&G.set.career==='origins'){s=loadStored();if(!s.readOnly)PREF.career=s}}catch(e){s=null}
   const r=oldEnd.apply(this,arguments);
-  try{if(s){last=C.record(s,gather(w),ctx());if(last.ok)store(s)}}catch(e){last={ok:false,reason:'error',message:String(e)}}return r};
+  try{if(s){const f=gather(w);last=C.record(s,f,ctx());if(last.ok)store(s);setTimeout(()=>careerNote(last),2600)}}catch(e){last={ok:false,reason:'error',message:String(e)}}return r};
 }
+// After every Career Origins match the player is told whether it counted and what the next unlock needs (20 Nov 2026).
+const WHY={'not-career':'it was not a Career match','simulated':'it was simulated or fast-forwarded','online':'online matches do not count','assisted':'saved Skyline Cash was used to start it',
+ 'unfinished':'it was not finished','no-match-id':'it was not finished on this device','no-profile-owner':'no player profile owned it','too-short':'it lasted under 2 minutes',
+ 'too-few-rounds':'it ended before round 5','too-little-activity':'fewer than 3 buys, builds or trades were made','duplicate':'it was already recorded','error':'it could not be saved'};
+function careerNote(r){try{if(!r)return;const v=C.view(load(),ctx()),o=v.find(b=>b.id==='origins'),next=v.find(b=>!b.unlocked);
+ let head,body;
+ if(!r.ok){head='Not counted for Career';body='This match did not count because '+(WHY[r.reason]||r.reason)+'.'}
+ else if(r.won&&!r.qualifiedWin){head='Match counted, win not counted';body='Wins only count against Normal or Hard computer players.'}
+ else{const nu=(r.unlocked||[]).map(id=>(v.find(b=>b.id===(id.id||id))||{}).name).filter(Boolean);head=nu.length?nu.join(' and ')+' unlocked!':r.won?'Career win counted':'Career match counted';body=o?`Skyline Origins: ${o.mastery.qualifiedWins} qualifying win${o.mastery.qualifiedWins===1?'':'s'} · ${o.mastery.matches} match${o.mastery.matches===1?'':'es'}.`:''}
+ const tut=!!next&&(next.requirements||[]).some(q=>q.kind==='tutorial'&&q.have<q.need);
+ const req=next&&next.requirements?next.requirements.map(q=>`<li>${esc(q.label)}: ${q.have} / ${q.need}</li>`).join(''):'';
+ modal({cls:'career-note',html:`<div class="mh">${head}</div><div class="mtxt">${esc(body)}${next?`<br><br><b>To unlock ${esc(next.name)}:</b><ul>${req}</ul>`:'<br><br>All Career boards are unlocked.'}</div>`,btns:[...(tut?[{k:'tut',label:'Open tutorial'}]:[]),{k:'x',label:'OK',primary:true}]}).then(k=>{if(k==='tut'&&typeof openTutorial==='function')openTutorial()})}catch(e){}}
 // Start an Origins career match: today's Classic game, same players as Quick Play (you + 3 computer players).
 function startOrigins(length='standard'){
  const L=C.LENGTHS[length]||C.LENGTHS.standard,s=load();if(s.unlocked.origins==null)return false;
- const me=setup.slots[0],over=Object.assign({career:'origins',careerLength:length},L.mode==='timed'?{mode:'timed',rounds:L.rounds,championship:1}:{mode:'classic'});
+ ensureOriginsBoard();
+ const me=setup.slots[0],over=Object.assign({career:'origins',careerLength:length,ai:setup.ai==='easy'?'normal':setup.ai},L.mode==='timed'?{mode:'timed',rounds:L.rounds,championship:1}:{mode:'classic'});
  startFromSetup($('#pane')||document.body,setup.slots.map((x,i)=>({...x,type:i===0?'human':i<4?'ai':'off',tok:i===0?me.tok:x.tok})),over);return true}
 // Temporary functional entry point (testing only, flag on). The final Career screen comes from the approved design package.
 async function open(){
@@ -217,12 +230,17 @@ async function open(){
    ...boardBtns(circuit,'Circuit'),...boardBtns(dominion,'Dominion'),...boardBtns(empire,'Empire'),{k:null,label:'Close'}]});
  const page={circuit:'./circuit-production-lab.html',dominion:'./dominion-production-lab.html',empire:'./empire-production-lab.html'},[bid,len]=(k||'').split(':');
  if(page[bid]&&len)location.href=page[bid]+'?career=1&length='+encodeURIComponent(len);
- else if(k){if(ORIGINS_FRAME)startOrigins(k);else location.href='./origins-career.html?length='+encodeURIComponent(k)}
+ else if(k)startOrigins(k);
 }
-// Career Board 1 page (owner decision 19 Nov 2026): origins-career.html loads this game with the approved Origins 3D board
-// and ?careerOrigins=<length>; the match starts here so rules, saves and Career recording are unchanged.
-const ORIGINS_FRAME=(()=>{try{return ['quick','standard','extended','unlimited'].includes(new URLSearchParams(location.search).get('careerOrigins'))}catch(e){return false}})();
-if(enabled&&ORIGINS_FRAME){const len=new URLSearchParams(location.search).get('careerOrigins');let tries=0;
+// Career Board 1 (owner decisions 19–20 Nov 2026): Career Origins matches are shown on the approved Origins 3D board.
+// The board adapter is loaded once into this page and switches itself on only for Career Origins matches, so
+// Play Solo keeps the classic board and no page reload is needed between matches.
+function ensureOriginsBoard(){try{if(document.querySelector('#originsBoardCss')||window.SkylineOriginsProduction)return;window.SkylineOriginsProductionScope='career';
+ const l=document.createElement('link');l.id='originsBoardCss';l.rel='stylesheet';l.href='./origins-production.css';document.head.append(l);
+ const sc=document.createElement('script');sc.src='./origins-production-adapter.js';document.body.append(sc)}catch(e){}}
+// ?careerOrigins=<length> (from origins-career.html) starts a Career Origins match once the main screen is ready.
+const ORIGINS_AUTOSTART=(()=>{try{return ['quick','standard','extended','unlimited'].includes(new URLSearchParams(location.search).get('careerOrigins'))}catch(e){return false}})();
+if(enabled&&ORIGINS_AUTOSTART){const len=new URLSearchParams(location.search).get('careerOrigins');try{history.replaceState(null,'',location.pathname)}catch(e){}let tries=0;
  const go=()=>{if(++tries>150)return;if(typeof setup==='undefined'||!setup.slots||typeof startFromSetup!=='function'||!document.querySelector('#title .home')){setTimeout(go,200);return}
   try{if(!startOrigins(len))(window.top||window).location.replace('./index.html')}catch(e){setTimeout(go,300)}};
  setTimeout(go,400)}

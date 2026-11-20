@@ -41,15 +41,26 @@ const TYPES={'.html':'text/html','.js':'text/javascript','.css':'text/css','.jso
   const after=await p.evaluate(()=>({inbox:Object.keys(localStorage).filter(k=>k.startsWith('skylineCareerInbox:')).length,d:SkylineCareer.state().find(b=>b.id==='dominion').mastery,last:SkylineCareer.inbox()}));
   assert.equal(after.inbox,0);assert.equal(after.d.matches,1,JSON.stringify(after.last));ok('back on the main screen the Dominion match is recorded once in Career');
   await p.goto(base+'empire-production-lab.html?career=1&length=standard');assert.equal(await p.locator('#careernote').count(),1);ok('Empire page also accepts Career matches');
-  // Career Board 1: Origins plays the real Classic game on the approved Origins 3D board, then returns to the main screen.
-  await p.goto(base+'index.html');await p.waitForSelector('#hdCareer');await p.locator('#hdCareer').click();
-  await Promise.all([p.waitForURL(/origins-career\.html\?length=quick$/),p.locator('#modals button',{hasText:'Origins · Quick'}).click()]);
-  let fr=null;for(let i=0;i<120&&!fr;i++){await p.waitForTimeout(500);const f=p.frames().find(x=>/index\.html\?careerOrigins=quick/.test(x.url()));if(f&&await f.evaluate(()=>typeof G!=='undefined'&&!!(G&&G.set&&G.set.career==='origins')).catch(()=>false))fr=f}
-  assert.ok(fr,'Origins Career match did not start');
-  const og=await fr.evaluate(()=>({len:G.set.careerLength,rounds:G.set.rounds,mode:G.set.mode,board:document.documentElement.classList.contains('origins-production'),canvas:!!document.querySelector('#originsProductionCanvas'),label:(document.querySelector('#orgCareer')||{}).textContent||''}));
-  assert.deepEqual([og.len,og.rounds,og.mode,og.board,og.canvas],['quick',20,'timed',true,true],JSON.stringify(og));assert.ok(!/preview/i.test(og.label),og.label);
-  await p.waitForTimeout(3000);await p.screenshot({path:path.join(out,engine+'-origins-career.png')});ok('Origins opens a Career match (Quick 20) on the approved Origins 3D board');
-  await fr.evaluate(()=>{G.over=true;showTitle()});await p.waitForURL(/\/index\.html$/,{timeout:15000});await p.waitForSelector('#hdCareer');ok('leaving the Origins match returns to the main screen');
+  // Career Board 1: Origins plays the real Classic game on the approved Origins 3D board, in this page (no reload),
+  // and the classic board comes back for Play Solo afterwards.
+  await p.goto(base+'index.html');await p.waitForSelector('#hdCareer');await p.evaluate(()=>{PREF.ai='easy';setup.ai='easy'});await p.locator('#hdCareer').click();
+  await p.locator('#modals button',{hasText:'Origins · Quick'}).click();
+  await p.waitForFunction(()=>typeof G!=='undefined'&&G&&G.set&&G.set.career==='origins');
+  await p.waitForFunction(()=>window.SkylineOriginsProduction&&SkylineOriginsProduction.active(),null,{timeout:60000});
+  const og=await p.evaluate(()=>({url:location.pathname+location.search,len:G.set.careerLength,rounds:G.set.rounds,ai:G.set.ai,board:document.documentElement.classList.contains('origins-production'),canvas:!!document.querySelector('#originsProductionCanvas'),acts:document.querySelector('#acts').parentElement.id,label:(document.querySelector('#orgCareer')||{}).textContent||''}));
+  assert.deepEqual([og.url.endsWith('/index.html'),og.len,og.rounds,og.ai,og.board,og.canvas,og.acts],[true,'quick',20,'normal',true,true,'orgActs'],JSON.stringify(og));assert.ok(!/preview/i.test(og.label),og.label);
+  await p.waitForTimeout(3000);await p.screenshot({path:path.join(out,engine+'-origins-career.png')});ok('Origins opens a Career match (Quick 20, Normal AI) on the approved Origins 3D board in the same page');
+  await p.evaluate(()=>{G.over=true;clearSave();showTitle()});
+  await p.waitForFunction(()=>!SkylineOriginsProduction.active());
+  const back=await p.evaluate(()=>({url:location.pathname,board:document.documentElement.classList.contains('origins-production'),hud:document.querySelector('#originsProductionHud').hidden,acts:document.querySelector('#acts').parentElement.id,career:!!document.querySelector('#hdCareer')}));
+  assert.deepEqual(back,{url:back.url,board:false,hud:true,acts:back.acts,career:true});assert.ok(back.url.endsWith('/index.html'));assert.notEqual(back.acts,"orgActs");ok('leaving the match returns to the main screen without reloading and restores the classic layout');
+  await p.evaluate(()=>{const me=setup.slots[0];startFromSetup(document.body,setup.slots.map((x,i)=>({...x,type:i===0?'human':i<4?'ai':'off',tok:i===0?me.tok:x.tok})),{mode:'timed',rounds:20})});
+  await p.waitForFunction(()=>G&&!G.set.career);await p.waitForTimeout(1500);
+  assert.equal(await p.evaluate(()=>SkylineOriginsProduction.active()||document.documentElement.classList.contains('origins-production')),false);ok('Play Solo keeps the classic board');
+  await p.evaluate(()=>{G.over=true;clearSave();showTitle()});
+  await p.goto(base+'origins-career.html?length=extended');await p.waitForFunction(()=>typeof G!=='undefined'&&G&&G.set&&G.set.career==='origins'&&G.set.careerLength==='extended',null,{timeout:60000});
+  assert.ok((await p.evaluate(()=>location.pathname+location.search)).endsWith('/index.html'));ok('the old Origins Career address still starts a match, then clears itself from the address');
+  await p.evaluate(()=>{G.over=true;showTitle()});
   await context.close();
   assert.equal(errors.length,0,errors.join('\n'));ok('no browser errors');
  }finally{await browser.close();server.close()}

@@ -56,9 +56,7 @@ const PREFS={nick:'Career QA',nickSet:true,welcomed:1,tutDone:1,coach:{pre:1,pos
  // Origins = today's game: the set matches a Quick Play start except the two career tags.
  await p.evaluate(()=>{document.querySelector('#crOpen').click()});await p.waitForSelector('.career-preview');
  assert.equal(await p.locator('.career-preview .cr-row').count(),4);
- await Promise.all([p.waitForURL(/origins-career\.html\?length=standard$/),p.getByRole('button',{name:'Origins · Standard 30'}).click()]);ok('Career → Origins opens the approved Origins board page');
- await p.goto(base);await p.waitForFunction(()=>window.SkylineCareer&&!document.querySelector('#boot'));await p.waitForTimeout(400);
- await p.evaluate(()=>SkylineCareer.startOrigins('standard'));await p.waitForFunction(()=>G&&G.set&&G.set.career==='origins');
+ await p.getByRole('button',{name:'Origins · Standard 30'}).click();await p.waitForFunction(()=>G&&G.set&&G.set.career==='origins');
  const career=await p.evaluate(()=>{const s={...G.set};delete s.career;delete s.careerLength;return {set:s,ai:G.players.map(q=>q.ai),cash:G.players.map(q=>q.cash).sort((x,y)=>x-y)}});
  await p.evaluate(()=>{G.over=true;showTitle()});await p.waitForTimeout(200);
  await p.evaluate(()=>{const me=setup.slots[0];startFromSetup(document.body,setup.slots.map((s,i)=>({...s,type:i===0?'human':i<4?'ai':'off',tok:i===0?me.tok:s.tok})),{mode:'timed',rounds:30,championship:1})});
