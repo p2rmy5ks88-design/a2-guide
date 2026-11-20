@@ -66,7 +66,7 @@
     return result;
   }
   startWith=function(game){
-    const args=arguments,isFresh=fresh.delete(game),solo=isFresh&&game&&!game.online&&!game.sim&&!game.masteryId&&game.players.filter(p=>!p.ai).length===1&&!game.players.some(p=>p.uid);
+    const args=arguments,isFresh=fresh.delete(game),solo=isFresh&&game&&!game.online&&!game.sim&&!game.masteryId&&game.players.filter(p=>!p.ai).length===1&&!game.players.some(p=>p.uid)&&!(game.set&&game.set.career);// Career matches never spend the queued bonus (it would stop them counting); it stays queued.
     if(!(solo&&PREF.scBoostNext&&balance()>0))return begin(game,args);
     // Serialize spending across tabs. No-lock browsers keep the wallet usable but
     // cannot spend it; rewards remain unique immutable receipt keys.

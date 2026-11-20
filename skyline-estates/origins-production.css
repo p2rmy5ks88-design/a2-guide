@@ -124,3 +124,6 @@
 .origins-production #roster{max-height:calc(100% - var(--org-footer-height,79px) - 166px)!important;overflow-y:auto!important;overscroll-behavior:contain}
 .origins-production #radio{font-size:11px!important;max-height:32px}
 .origins-production #prompt{bottom:calc(var(--org-sb,0px) + var(--org-footer-height,79px) + 56px)!important;white-space:normal!important;font-size:10px!important;line-height:1.2!important}
+
+/* Switched off between Career Origins matches (20 Nov 2026). */
+#originsProductionHud[hidden],#originsProductionCanvas[hidden]{display:none!important}
