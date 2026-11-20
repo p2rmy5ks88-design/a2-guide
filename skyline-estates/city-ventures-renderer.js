@@ -127,9 +127,9 @@ export function createCityVenturesRenderer(canvas,{rules,onTile}={}){
 
  // ---- camera ----
  const cam={target:new THREE.Vector3(0,0,1),yaw:0,pitch:THREE.MathUtils.degToRad(46),dist:6.2},goal={target:new THREE.Vector3(0,0,1),yaw:0,pitch:cam.pitch,dist:6.2};
- let frameBias=.2,mode='follow',followPid=0,userZoom=1,userYaw=0,pushIn=1,dirty=true,lastT=performance.now();
+ let pinned=false,frameBias=.2,mode='follow',followPid=0,userZoom=1,userYaw=0,pushIn=1,dirty=true,lastT=performance.now();
  function yawFor(p){return Math.atan2(p.x,p.z)}
- function overviewGoal(){goal.target.set(0,0,.45);goal.yaw=0;goal.pitch=THREE.MathUtils.degToRad(57);const a=camera.aspect||1.9;goal.dist=Math.max(13.5,13.5*1.55/a)*.92}
+ function overviewGoal(){goal.target.set(0,0,.85);goal.yaw=0;goal.pitch=THREE.MathUtils.degToRad(57);const a=camera.aspect||1.9;goal.dist=Math.max(13.5,13.5*1.55/a)*1.02}
  function followGoal(p){const pos=p.clone();const out=pos.clone().setY(0).normalize();goal.target.copy(pos.clone().add(out.multiplyScalar(frameBias)));goal.yaw=yawFor(pos)+userYaw;goal.pitch=THREE.MathUtils.degToRad(46);goal.dist=6.2*userZoom/pushIn}
  function angleLerp(a,b,t){let d=((b-a+Math.PI)%(2*Math.PI)+2*Math.PI)%(2*Math.PI)-Math.PI;return a+d*t}
  function applyCam(dt){const k=reduceMotion.matches?1:1-Math.exp(-dt/.18);cam.target.lerp(goal.target,k);cam.yaw=angleLerp(cam.yaw,goal.yaw,k);cam.pitch+=(goal.pitch-cam.pitch)*k;cam.dist+=(goal.dist-cam.dist)*k;
@@ -151,15 +151,16 @@ export function createCityVenturesRenderer(canvas,{rules,onTile}={}){
   tokens.forEach((t,k)=>{if(!t)return;const p=slot(t.tile,k,counts[t.tile]);t.g.position.set(p.x,.13,p.z);t.g.rotation.y=Math.atan2(tileInfo[t.tile].dir.x,tileInfo[t.tile].dir.z)-Math.PI/2});dirty=true}
  const wait=ms=>new Promise(r=>setTimeout(r,ms));
  async function moveToken(pid,path,{express=false}={}){const t=tokens[pid];if(!t||!path.length)return;moving=true;followPid=pid;if(mode==='follow')pushIn=1;
+  if(pinned)overviewGoal();
   const step=reduceMotion.matches?0:express?110:230;
   for(const i of path){const from=t.g.position.clone(),to=slot(i,pid,1);const t0=performance.now();
    if(step){await new Promise(res=>{const tick=()=>{const k=Math.min(1,(performance.now()-t0)/step);const e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;t.g.position.lerpVectors(from,to,e);t.g.position.y=.13+Math.sin(Math.PI*k)*.35;
      const ahead=tileInfo[i].outer.clone();if(mode==='follow')followGoal(t.g.position.clone().lerp(ahead,.6));t.g.rotation.y=Math.atan2(to.x-from.x,to.z-from.z)-Math.PI/2;dirty=true;if(k<1)requestAnimationFrame(tick);else res()};tick()})}
    t.tile=i}
   moving=false;placeTokens();if(mode==='follow'){pushIn=1.13;followGoal(tileInfo[t.tile].pos)}await wait(reduceMotion.matches?0:220)}
- function follow(pid){followPid=pid;mode='follow';userYaw=0;pushIn=1;const t=tokens[pid];if(t)followGoal(tileInfo[t.tile].pos);dirty=true}
- function focusTile(i){mode='follow';pushIn=1.13;followGoal(tileInfo[i].pos);highlight(i);dirty=true}
- function overview(on=true){mode=on?'overview':'follow';if(on)overviewGoal();else follow(followPid);dirty=true}
+ function follow(pid){followPid=pid;if(pinned){dirty=true;return}mode='follow';userYaw=0;pushIn=1;const t=tokens[pid];if(t)followGoal(tileInfo[t.tile].pos);dirty=true}
+ function focusTile(i){if(pinned){highlight(i);return}mode='follow';pushIn=1.13;followGoal(tileInfo[i].pos);highlight(i);dirty=true}
+ function overview(on=true){pinned=on;mode=on?'overview':'follow';if(on)overviewGoal();else follow(followPid);dirty=true}
  function highlight(i){effects.highlight=i;dirty=true}
 
  // ---- input: tap, drag to look around, pinch zoom ----
