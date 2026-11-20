@@ -54,9 +54,9 @@ const PREFS={nick:'Career QA',nickSet:true,welcomed:1,tutDone:1,coach:{pre:1,pos
  const view=await p.evaluate(()=>SkylineCareer.state().map(b=>[b.id,b.status]));
  assert.deepEqual(view,[['origins','playable'],['circuit','locked'],['dominion','locked-hidden'],['empire','locked-hidden']]);ok('new player: Origins playable, Circuit locked with requirements, later boards hidden');
  // Origins = today's game: the set matches a Quick Play start except the two career tags.
- await p.evaluate(()=>{document.querySelector('#crOpen').click()});await p.waitForSelector('.career-preview');
- assert.equal(await p.locator('.career-preview .cr-row').count(),4);
- await p.getByRole('button',{name:'Origins · Standard 30'}).click();await p.waitForFunction(()=>G&&G.set&&G.set.career==='origins');
+ await p.evaluate(()=>{document.querySelector('#crOpen').click()});await p.waitForSelector('.career-cards');
+ assert.equal(await p.locator('.career-cards .crc').count(),4);
+ await p.locator('.career-cards .crc-btn[data-board="origins"]').click();await p.locator('.career-lengths .crl[data-len="standard"]').click();await p.waitForFunction(()=>G&&G.set&&G.set.career==='origins');
  const career=await p.evaluate(()=>{const s={...G.set};delete s.career;delete s.careerLength;return {set:s,ai:G.players.map(q=>q.ai),cash:G.players.map(q=>q.cash).sort((x,y)=>x-y)}});
  // Let the opening Skyline Keys reveal finish (it reads the live match when it closes) before ending the match.
  for(let i=0;i<40;i++){const open=await p.evaluate(()=>{const m=[...document.querySelectorAll('#modals .mp')].find(x=>/Skyline Keys/.test(x.textContent));if(m){const b=m.querySelector('.btn.pri');if(b)b.click()}return !!m||!G.keysShown});if(!open)break;await p.waitForTimeout(250)}await p.waitForTimeout(400);
