@@ -1,0 +1,51 @@
+name: Origins production visual QA (review only)
+on:
+  pull_request:
+    paths:
+      - 'skyline-estates/origins-production-renderer.js'
+      - 'skyline-estates/origins-production.css'
+      - 'skyline-estates/origins-production-adapter.js'
+      - 'skyline-estates/tests/origins-production-browser.cjs'
+      - '.github/workflows/origins-production-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  actual-origins-game:
+    name: Live Origins WebGL / ${{ matrix.engine }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        engine: [chromium, webkit]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install browser test dependencies
+        run: npm install --prefix skyline-estates/tests --no-audit --no-fund
+      - name: Install browser
+        run: npx --prefix skyline-estates/tests playwright install --with-deps ${{ matrix.engine }}
+      - name: Start isolated local game server
+        run: |
+          python3 -m http.server 8773 --bind 127.0.0.1 --directory . >"$RUNNER_TEMP/origins-http.log" 2>&1 &
+          echo $! >"$RUNNER_TEMP/origins-http.pid"
+          sleep 2
+      - name: Validate actual Career Origins match, 40 tiles, safe areas and camera
+        env:
+          VISUAL_ENGINE: ${{ matrix.engine }}
+          VISUAL_ORIGIN: http://127.0.0.1:8773/
+          PRODUCTION_BASE_URL: http://127.0.0.1:8773/skyline-estates/
+          ORIGINS_SHOTS: origins-production-review
+          VISUAL_MATRIX: ${{ matrix.engine == 'chromium' && '1' || '0' }}
+          WEBKIT_DISABLE_DMABUF_RENDERER: '1'
+        run: node skyline-estates/tests/origins-production-browser.cjs
+      - name: Upload real browser screenshots and diagnostic report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: origins-production-${{ matrix.engine }}-evidence
+          path: origins-production-review/
+          if-no-files-found: ignore
