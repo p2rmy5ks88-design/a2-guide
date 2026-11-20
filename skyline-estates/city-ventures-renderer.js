@@ -134,7 +134,7 @@ export function createCityVenturesRenderer(canvas,{rules,onTile}={}){
  const winTex=windowTexture(),proto=[],props={};const loader=new GLTFLoader(),base='./assets/approved-v5/';
  const fit=(obj,w)=>{const b=new THREE.Box3().setFromObject(obj),size=b.getSize(new THREE.Vector3()),k=w/Math.max(size.x,size.z);obj.scale.setScalar(k);const b2=new THREE.Box3().setFromObject(obj);obj.position.y-=b2.min.y;const c=b2.getCenter(new THREE.Vector3());obj.position.x-=c.x;obj.position.z-=c.z;const g=new THREE.Group();g.add(obj);return g};
  Promise.all(['dev_0_lot','dev_1_midrise_L1','dev_3_highrise_L3','dev_5_skyscraper_L5'].map(f=>loader.loadAsync(base+'buildings/'+f+'.glb').then(x=>x.scene))).then(list=>{list.forEach((sc,k)=>{sc.traverse(o=>{if(o.isMesh){o.castShadow=o.receiveShadow=true}});proto[k]=fit(sc,[.46,.4,.36,.32][k])});tileMeshes.forEach(T=>{if(T)T.key=null});if(view)sync(view)}).catch(e=>console.warn('City Ventures building models',e));
- Promise.all(['palm','street_lamp'].map(f=>loader.loadAsync(base+'props/'+f+'.glb').then(x=>x.scene))).then(([palm,lamp])=>{props.palm=fit(palm,.5);props.lamp=fit(lamp,.12);
+ Promise.all(['palm','street_lamp','yacht'].map(f=>loader.loadAsync(base+'props/'+f+'.glb').then(x=>x.scene))).then(([palm,lamp,yacht])=>{props.palm=fit(palm,.5);props.lamp=fit(lamp,.12);props.yacht=fit(yacht,.44);rebuildTokens();
   corners.forEach((P,k)=>{const inward=center.clone().sub(P).setY(0).normalize(),side=new THREE.Vector3(-inward.z,0,inward.x);
    for(const sgn of[-1,1]){const p=props.palm.clone();p.position.copy(P.clone().add(inward.clone().multiplyScalar(-2.0)).add(side.clone().multiplyScalar(sgn*1.3)));p.position.y=-.32;p.rotation.y=k+sgn;p.scale.multiplyScalar(1.6);p.traverse(o=>{if(o.isMesh)o.castShadow=true});scene.add(p)}
    const l=props.lamp.clone();l.position.copy(P.clone().add(inward.clone().multiplyScalar(-1.75)));l.position.y=-.32;l.scale.multiplyScalar(2.2);scene.add(l)});dirty=true}).catch(e=>console.warn('City Ventures props',e));
@@ -147,15 +147,45 @@ export function createCityVenturesRenderer(canvas,{rules,onTile}={}){
   return g}
 
  // ---- tokens ----
- const tokens=[];
- function makeToken(color,kind){const g=new THREE.Group(),m=new THREE.MeshStandardMaterial({color,roughness:.3,metalness:.45}),dark=new THREE.MeshStandardMaterial({color:'#20242c',roughness:.5}),chrome=new THREE.MeshStandardMaterial({color:'#e8e2d0',metalness:.9,roughness:.2});
-  const base=new THREE.Mesh(new THREE.CylinderGeometry(.24,.27,.06,32),chrome);base.position.y=.03;g.add(base);
-  const ring=new THREE.Mesh(new THREE.TorusGeometry(.27,.03,8,32),new THREE.MeshStandardMaterial({color,emissive:color,emissiveIntensity:.4}));ring.rotation.x=Math.PI/2;ring.position.y=.05;g.add(ring);
-  if(kind==='car'){const b=new THREE.Mesh(new THREE.BoxGeometry(.42,.13,.22),m);b.position.y=.15;const c=new THREE.Mesh(new THREE.BoxGeometry(.22,.1,.2),m);c.position.set(-.02,.26,0);g.add(b,c);for(const [x,z]of[[.13,.11],[-.13,.11],[.13,-.11],[-.13,-.11]]){const w=new THREE.Mesh(new THREE.CylinderGeometry(.055,.055,.04,12),dark);w.rotation.x=Math.PI/2;w.position.set(x,.1,z);g.add(w)}}
-  else if(kind==='boat'){const h=new THREE.Mesh(new THREE.CylinderGeometry(.06,.2,.14,4,1),m);h.scale.set(2,1,.8);h.rotation.y=Math.PI/4;h.position.y=.14;const mast=new THREE.Mesh(new THREE.CylinderGeometry(.015,.015,.4),chrome);mast.position.y=.38;const sail=new THREE.Mesh(new THREE.ConeGeometry(.14,.3,3),new THREE.MeshStandardMaterial({color:'#fffaf0'}));sail.position.set(.06,.38,0);g.add(h,mast,sail)}
-  else if(kind==='plane'){const f=new THREE.Mesh(new THREE.CapsuleGeometry(.06,.36,4,10),m);f.rotation.z=Math.PI/2;f.position.y=.22;const w=new THREE.Mesh(new THREE.BoxGeometry(.12,.02,.5),m);w.position.y=.22;const t=new THREE.Mesh(new THREE.BoxGeometry(.06,.14,.02),m);t.position.set(-.2,.3,0);g.add(f,w,t)}
-  else{const b=new THREE.Mesh(new THREE.BoxGeometry(.38,.18,.2),m);b.position.y=.17;const c=new THREE.Mesh(new THREE.CylinderGeometry(.05,.05,.14),dark);c.position.set(.12,.33,0);const cab=new THREE.Mesh(new THREE.BoxGeometry(.14,.12,.2),m);cab.position.set(-.12,.32,0);g.add(b,c,cab)}
-  g.traverse(o=>{if(o.isMesh)o.castShadow=true});g.scale.setScalar(1.25);return g}
+ const tokens=[];function rebuildTokens(){tokens.forEach((t,k)=>{if(!t||!view)return;const p=view.players[k];if((p.token||'')!=='boat')return;const pos=t.g.position.clone(),rot=t.g.rotation.y;scene.remove(t.g);t.g=makeToken(p.color||PLAYER_COLORS[k],'boat');t.g.position.copy(pos);t.g.rotation.y=rot;scene.add(t.g)});dirty=true}
+ // Detailed collectible game pieces (owner request 20 Nov 2026): clear-coated enamel in the player colour on a
+ // polished chrome plinth with a colour ring. Sailboat uses the approved yacht model.
+ function makeToken(color,kind){const g=new THREE.Group(),m=new THREE.Group();g.add(m);
+  const enamel=new THREE.MeshPhysicalMaterial({color,metalness:.25,roughness:.22,clearcoat:1,clearcoatRoughness:.08}),
+   chrome=new THREE.MeshStandardMaterial({color:'#e9e6df',metalness:1,roughness:.14}),gold=new THREE.MeshStandardMaterial({color:'#e2b25a',metalness:1,roughness:.22}),
+   glass=new THREE.MeshPhysicalMaterial({color:'#1b2a3d',metalness:.2,roughness:.05,clearcoat:1}),dark=new THREE.MeshStandardMaterial({color:'#17191d',roughness:.55}),
+   light=new THREE.MeshStandardMaterial({color:'#fff6d8',emissive:'#ffe9a8',emissiveIntensity:.9}),red=new THREE.MeshStandardMaterial({color:'#ff3b30',emissive:'#ff2a1f',emissiveIntensity:.6});
+  const add=(geo,mat,x=0,y=0,z=0,rx=0,ry=0,rz=0)=>{const o=new THREE.Mesh(geo,mat);o.position.set(x,y,z);o.rotation.set(rx,ry,rz);o.castShadow=true;m.add(o);return o};
+  // plinth
+  const plinth=new THREE.Mesh(new THREE.LatheGeometry([[0,0],[.25,0],[.265,.012],[.265,.045],[.245,.06],[.235,.075],[0,.075]].map(([x,y])=>new THREE.Vector2(x,y)),48),chrome);plinth.castShadow=true;g.add(plinth);
+  const ring=new THREE.Mesh(new THREE.TorusGeometry(.252,.016,12,64),new THREE.MeshStandardMaterial({color,emissive:color,emissiveIntensity:.4,metalness:.3,roughness:.3}));ring.rotation.x=Math.PI/2;ring.position.y=.04;g.add(ring);
+  m.position.y=.075;
+  if(kind==='car'){const sh=new THREE.Shape();sh.moveTo(-.2,.03);sh.lineTo(.2,.03);sh.quadraticCurveTo(.215,.03,.215,.06);sh.lineTo(.21,.095);sh.quadraticCurveTo(.2,.11,.16,.112);sh.lineTo(.08,.118);sh.quadraticCurveTo(.05,.18,.0,.185);sh.lineTo(-.09,.183);sh.quadraticCurveTo(-.13,.175,-.15,.12);sh.lineTo(-.19,.112);sh.quadraticCurveTo(-.215,.105,-.215,.07);sh.quadraticCurveTo(-.215,.03,-.2,.03);
+   const body=new THREE.ExtrudeGeometry(sh,{depth:.17,bevelEnabled:true,bevelThickness:.02,bevelSize:.015,bevelSegments:4,curveSegments:16});body.translate(0,0,-.085);add(body,enamel);
+   const win=new THREE.Shape();win.moveTo(.065,.122);win.quadraticCurveTo(.04,.172,.0,.176);win.lineTo(-.085,.174);win.quadraticCurveTo(-.118,.168,-.135,.124);win.closePath();const wg=new THREE.ExtrudeGeometry(win,{depth:.205,bevelEnabled:false});wg.translate(0,0,-.1025);add(wg,glass);
+   for(const [x,z]of[[.13,.1],[-.13,.1],[.13,-.1],[-.13,-.1]]){add(new THREE.CylinderGeometry(.048,.048,.04,28),dark,x,.048,z,Math.PI/2);add(new THREE.CylinderGeometry(.026,.026,.043,20),chrome,x,.048,z,Math.PI/2)}
+   for(const z of[.055,-.055]){add(new THREE.SphereGeometry(.016,12,8),light,.226,.08,z);add(new THREE.BoxGeometry(.008,.016,.03),red,-.228,.085,z)}
+   add(new THREE.BoxGeometry(.012,.02,.15),chrome,.232,.055,0)}
+  else if(kind==='boat'&&props.yacht){const y=props.yacht.clone(true);y.traverse(o=>{if(o.isMesh)o.castShadow=true});m.add(y);
+   const stripe=new THREE.Mesh(new THREE.TorusGeometry(.21,.01,8,48,Math.PI),enamel);stripe.rotation.set(Math.PI/2,0,0);stripe.position.y=.03;stripe.scale.set(1,.42,1);m.add(stripe)}
+  else if(kind==='boat'){const hull=new THREE.Shape();hull.moveTo(-.2,0);hull.lineTo(.16,0);hull.quadraticCurveTo(.24,.02,.26,.07);hull.lineTo(-.22,.07);hull.closePath();const hg=new THREE.ExtrudeGeometry(hull,{depth:.14,bevelEnabled:true,bevelThickness:.02,bevelSize:.02,bevelSegments:3});hg.translate(0,0,-.07);add(hg,enamel,0,.02,0);
+   add(new THREE.BoxGeometry(.18,.06,.1),new THREE.MeshPhysicalMaterial({color:'#fbfaf5',roughness:.3,clearcoat:1}),-.04,.12,0);add(new THREE.CylinderGeometry(.008,.01,.42,10),chrome,.02,.32,0);
+   const sail=new THREE.Shape();sail.moveTo(0,0);sail.lineTo(0,.36);sail.lineTo(-.18,0);sail.closePath();add(new THREE.ShapeGeometry(sail),new THREE.MeshStandardMaterial({color:'#fffdf6',side:THREE.DoubleSide}),.015,.13,0)}
+  else if(kind==='plane'){const fus=new THREE.LatheGeometry([[0,-.24],[.03,-.22],[.05,-.15],[.055,.05],[.05,.15],[.035,.21],[0,.25]].map(([x,y])=>new THREE.Vector2(x,y)),32);add(fus,enamel,0,.2,0,0,0,-Math.PI/2);
+   const wing=new THREE.Shape();wing.moveTo(.06,0);wing.lineTo(-.04,.25);wing.lineTo(-.09,.25);wing.lineTo(-.06,0);wing.closePath();const wgeo=new THREE.ExtrudeGeometry(wing,{depth:.012,bevelEnabled:true,bevelThickness:.004,bevelSize:.004,bevelSegments:2});
+   for(const sgn of[1,-1]){const w=add(wgeo,enamel,0,.195,0,-Math.PI/2*sgn,0,0);if(sgn<0)w.scale.z=-1;add(new THREE.CylinderGeometry(.022,.026,.09,20),chrome,.0,.17,.12*sgn,0,0,Math.PI/2)}
+   const tail=new THREE.Shape();tail.moveTo(0,0);tail.lineTo(-.06,.11);tail.lineTo(-.1,.11);tail.lineTo(-.08,0);tail.closePath();add(new THREE.ExtrudeGeometry(tail,{depth:.01,bevelEnabled:false}),enamel,-.15,.22,-.005);
+   for(const sgn of[1,-1])add(new THREE.BoxGeometry(.05,.008,.08),enamel,-.2,.205,.05*sgn);
+   add(new THREE.SphereGeometry(.035,20,12,0,Math.PI*2,0,Math.PI/2),glass,.17,.225,0,0,0,-.35);add(new THREE.CylinderGeometry(.005,.005,.17,8),chrome,0,.1,0)}
+  else{ // locomotive
+   add(new THREE.CylinderGeometry(.075,.075,.26,32),enamel,.03,.17,0,0,0,Math.PI/2);for(const x of[-.06,.03,.12])add(new THREE.TorusGeometry(.076,.008,8,32),gold,x,.17,0,0,Math.PI/2,0);
+   add(new THREE.CylinderGeometry(.078,.078,.012,32),gold,.165,.17,0,0,0,Math.PI/2);add(new THREE.SphereGeometry(.018,12,8),light,.175,.2,0);
+   add(new THREE.LatheGeometry([[.022,0],[.026,.06],[.04,.1],[.042,.11],[0,.11]].map(([x,y])=>new THREE.Vector2(x,y)),20),dark,.11,.24,0);add(new THREE.SphereGeometry(.03,16,10,0,Math.PI*2,0,Math.PI/2),gold,0,.245,0);
+   add(new THREE.BoxGeometry(.13,.15,.17),enamel,-.15,.2,0);add(new THREE.CylinderGeometry(.1,.1,.19,24,1,false,0,Math.PI),dark,-.15,.275,0,Math.PI/2,0,0);
+   add(new THREE.BoxGeometry(.02,.05,.12),glass,-.085,.23,0);add(new THREE.BoxGeometry(.3,.025,.15),dark,0,.085,0);
+   for(const x of[.12,.02,-.08])for(const z of[.08,-.08]){add(new THREE.CylinderGeometry(.045,.045,.02,24),new THREE.MeshStandardMaterial({color:'#b3261e',metalness:.4,roughness:.4}),x,.05,z,Math.PI/2);add(new THREE.CylinderGeometry(.018,.018,.024,12),chrome,x,.05,z,Math.PI/2)}
+   const cc=new THREE.Shape();cc.moveTo(0,0);cc.lineTo(.06,0);cc.lineTo(0,.06);cc.closePath();const ccg=new THREE.ExtrudeGeometry(cc,{depth:.14,bevelEnabled:false});ccg.translate(0,0,-.07);add(ccg,chrome,.17,.01,0)}
+  g.traverse(o=>{if(o.isMesh){o.castShadow=true}});g.scale.setScalar(1.3);g.userData.ring=ring;return g}
  function slot(i,pid,count){const T=tileInfo[i];const off=count>1?[[-.17,-.17],[.17,-.17],[-.17,.17],[.17,.17]][pid]:[0,0];return T.outer.clone().add(T.dir.clone().multiplyScalar(off[0])).add(T.perp.clone().multiplyScalar(off[1]))}
 
  // ---- camera ----
@@ -223,7 +253,7 @@ export function createCityVenturesRenderer(canvas,{rules,onTile}={}){
    if(effects.civic&&i===13){op=Math.max(op,.25+.2*pulse);col='#59e39a'}
    if(effects.market&&i===19){op=Math.max(op,.2+.2*pulse);col=effects.market.type==='boom'?'#ff9a3c':'#5ab8ff'}
    T.glow.material.opacity=op;T.glow.material.color.set(col)});
-  tokens.forEach((t,k)=>{if(!t)return;const on=view&&view.turn&&view.turn.pid===k;const r=t.g.children[1];if(r&&r.material)r.material.emissiveIntensity=on?.6+.6*pulse:.25});
+  tokens.forEach((t,k)=>{if(!t)return;const on=view&&view.turn&&view.turn.pid===k;const r=t.g.userData.ring;if(r&&r.material)r.material.emissiveIntensity=on?.6+.6*pulse:.25});
   renderer.render(scene,camera);
   frames++;if(now-fpsT>3000){const fps=frames*1000/(now-fpsT);frames=0;fpsT=now;if(fps<28&&dpr>2){dpr=Math.max(2,dpr-.5);renderer.setPixelRatio(dpr);resize()}}}
  resize();overviewGoal();Object.assign(cam,{target:goal.target.clone(),yaw:goal.yaw,pitch:goal.pitch,dist:goal.dist});requestAnimationFrame(loop);
