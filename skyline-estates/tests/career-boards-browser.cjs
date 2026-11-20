@@ -22,10 +22,11 @@ const TYPES={'.html':'text/html','.js':'text/javascript','.css':'text/css','.jso
   assert.equal(await p.locator('#hdCareer').count(),1);await p.screenshot({path:path.join(out,engine+'-home.png')});ok('main screen shows the Career button');
   const st=await p.evaluate(()=>SkylineCareer.state().map(b=>[b.id,b.status]));
   assert.deepEqual(st,[['origins','playable'],['circuit','playable'],['dominion','playable'],['empire','locked']]);ok('unlock order kept: Dominion playable after its requirements, Empire still locked');
-  await p.click('#hdCareer');await p.waitForTimeout(400);const labels=await p.evaluate(()=>[...document.querySelectorAll('#modals button')].map(b=>b.textContent.trim()));
-  assert.ok(labels.some(l=>l.startsWith('Circuit · Standard'))&&labels.some(l=>l.startsWith('Dominion · Standard'))&&!labels.some(l=>l.startsWith('Empire')),JSON.stringify(labels));
-  await p.screenshot({path:path.join(out,engine+'-career.png')});ok('Career lists Circuit and Dominion boards, not the locked Empire');
-  await p.locator('#modals button',{hasText:'Dominion · Quick'}).click();await p.waitForURL(/dominion-production-lab\.html\?career=1&length=quick/);ok('Dominion button opens the Dominion board as a Career match');
+  await p.click('#hdCareer');await p.waitForTimeout(400);const labels=await p.evaluate(()=>[...document.querySelectorAll('#modals .crc-btn:not([disabled])')].map(b=>b.dataset.board));
+  assert.deepEqual(labels,['origins','circuit','dominion'],JSON.stringify(labels));assert.equal(await p.locator('#modals .crc').count(),4);
+  const tiny=await p.evaluate(()=>[...document.querySelectorAll('#modals .crc-btn')].filter(b=>b.getBoundingClientRect().height<43.5).length);assert.equal(tiny,0,'Play buttons are at least 44pt');
+  await p.screenshot({path:path.join(out,engine+'-career.png')});ok('Career shows four board cards: Origins, Circuit and Dominion playable, Empire locked');
+  await p.locator('#modals .crc-btn[data-board="dominion"]').click();await p.locator('#modals .crl[data-len="quick"]').waitFor();await p.screenshot({path:path.join(out,engine+'-career-length.png')});await p.locator('#modals .crl[data-len="quick"]').click();await p.waitForURL(/dominion-production-lab\.html\?career=1&length=quick/);ok('Dominion button opens the Dominion board as a Career match');
   await p.goto(base+'dominion-production-lab.html?career=1&length=quick&speed=instant&quality=low&seed=77');
   assert.equal(await p.evaluate(()=>document.querySelector('[name=len]:checked').value),'quick');assert.equal(await p.locator('#careernote').count(),1);
   await p.click('#start');await p.waitForFunction(()=>document.getElementById('loading').hidden||document.getElementById('loading').dataset.error,null,{timeout:300000});
@@ -44,7 +45,7 @@ const TYPES={'.html':'text/html','.js':'text/javascript','.css':'text/css','.jso
   // Career Board 1: Origins plays the real Classic game on the approved Origins 3D board, in this page (no reload),
   // and the classic board comes back for Play Solo afterwards.
   await p.goto(base+'index.html');await p.waitForSelector('#hdCareer');await p.evaluate(()=>{PREF.ai='easy';setup.ai='easy'});await p.locator('#hdCareer').click();
-  await p.locator('#modals button',{hasText:'Origins · Quick'}).click();
+  await p.locator('#modals .crc-btn[data-board="origins"]').click();await p.locator('#modals .crl[data-len="quick"]').click();
   await p.waitForFunction(()=>typeof G!=='undefined'&&G&&G.set&&G.set.career==='origins');
   await p.waitForFunction(()=>window.SkylineOriginsProduction&&SkylineOriginsProduction.active(),null,{timeout:60000});
   const og=await p.evaluate(()=>({url:location.pathname+location.search,len:G.set.careerLength,rounds:G.set.rounds,ai:G.set.ai,board:document.documentElement.classList.contains('origins-production'),canvas:!!document.querySelector('#originsProductionCanvas'),acts:document.querySelector('#acts').parentElement.id,label:(document.querySelector('#orgCareer')||{}).textContent||''}));
