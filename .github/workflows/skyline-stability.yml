@@ -96,6 +96,7 @@ jobs:
           t 'node skyline-estates/tests/harbour-ring-browser.cjs'
           t 'node skyline-estates/tests/city-ventures-career.cjs'
           t 'node skyline-estates/tests/city-ventures-rules.cjs'
+          t 'node skyline-estates/tests/crossroads-rules.cjs'
           t 'node skyline-estates/tests/tutorial-v2-browser.cjs'
           t 'node skyline-estates/tests/living-board-render-scale.cjs'
           t 'node skyline-estates/tests/living-board-look-browser.cjs'
@@ -326,6 +327,10 @@ jobs:
         if: (matrix.engine != 'webkit' || steps.wk.outcome == 'success')
         timeout-minutes: 15
         run: node skyline-estates/tests/city-ventures-browser.cjs
+      - name: "Visual: crossroads-browser"
+        if: (matrix.engine != 'webkit' || steps.wk.outcome == 'success')
+        timeout-minutes: 15
+        run: node skyline-estates/tests/crossroads-browser.cjs
       - name: "Visual: cloud-restore"
         if: (matrix.engine != 'webkit' || steps.wk.outcome == 'success')
         timeout-minutes: 5

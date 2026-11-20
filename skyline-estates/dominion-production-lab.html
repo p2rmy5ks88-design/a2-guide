@@ -1,6 +1,6 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0B1633"><title>Skyline Dominion — Board 3 Interactive 3D Lab (prototype rules)</title>
+<meta name="theme-color" content="#0B1633"><title>Skyline Dominion — Board 4 Interactive 3D Lab (prototype rules)</title>
 <!-- Standalone local review entry. Prototype ruleset dominion-p1 (DOMINION.md). Uses its own save slot skylineDominionSave.
      Not linked from the game, Career or service worker. -->
 <link rel="stylesheet" href="presentation/skyline-board-hud.css"><style>
@@ -16,7 +16,7 @@ dialog button{font:inherit;min-height:44px;min-width:44px;border-radius:10px;bor
 .dice{font-size:1.4rem;letter-spacing:2px;color:#fff}.log div{border-top:1px solid #ffffff10;padding:.1rem 0}
 </style></head><body>
 <section id="setup">
- <h1>Skyline Dominion <small>Board 3 · Intermediate · interactive 3D lab</small></h1>
+ <h1>Skyline Dominion <small>Board 4 · Advanced · interactive 3D lab</small></h1>
  <p class="warn">Prototype rules <b>dominion-p1</b> (art-matched hexagonal track): every number is provisional and awaiting owner approval (see DOMINION.md). This page is a local review entry. It does not change Career progress, other saves or the released game.</p>
  <fieldset><legend>Players</legend><label><input type="radio" name="np" value="2"> 2</label><label><input type="radio" name="np" value="3"> 3</label><label><input type="radio" name="np" value="4" checked> 4</label><span class="muted">You + computer players (legal actions only)</span></fieldset>
  <fieldset><legend>Match length (experimental)</legend><label><input type="radio" name="len" value="quick"> Quick 12</label><label><input type="radio" name="len" value="standard" checked> Standard 16</label><label><input type="radio" name="len" value="extended"> Extended 24</label></fieldset>
@@ -58,7 +58,7 @@ async function boot(){$('setup').hidden=true;$('game').hidden=false;save();
  $('loading').hidden=true;fit();addEventListener('resize',fit);matchMedia('(orientation:landscape)').addEventListener?.('change',fit);render();loop()}
 const short=()=>innerHeight<400;
 function buildPanels(){$('leftscroll').innerHTML=H.brand('Skyline Dominion','Intermediate board')+H.panel('p-career','Career progression','crown')+H.panel('p-mech','Key mechanics (Dominion)','knight',{open:!short()})+H.panel('p-log','Match log','book',{open:false});
- $('rightscroll').innerHTML='<span class="sk-badge dark sk-small">Career · Board 3 · Intermediate</span>'+H.panel('p-groups','Property groups','globe')+H.panel('p-up','Building upgrades','bars',{open:!short()})+H.panel('p-neg','Negotiation opportunity','shake',{open:!short()})+H.panel('p-sel','Selected node','map',{open:!short()});
+ $('rightscroll').innerHTML='<span class="sk-badge dark sk-small">Career · Board 4 · Advanced</span>'+H.panel('p-groups','Property groups','globe')+H.panel('p-up','Building upgrades','bars',{open:!short()})+H.panel('p-neg','Negotiation opportunity','shake',{open:!short()})+H.panel('p-sel','Selected node','map',{open:!short()});
  $('p-career-b').innerHTML=H.career('dominion');
  $('p-mech-b').innerHTML=H.checks([[1,'Hexagonal district network','tick'],[1,'Contested acquisitions','tick'],[1,'Negotiate &amp; trade to gain control','tick'],[1,'District control &amp; influence (CP)','tick'],[1,'Connected districts with strategic value','tick'],[1,'Action points: '+(s?.cfg.apPerTurn||7)+' per turn','tick']])}
 buildPanels();
