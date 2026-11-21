@@ -1,0 +1,274 @@
+/* Skyline Estates approved replacement: genuine 3D GLB board, raycast tiles,
+   staged 3D buildings, independent 3D tokens and close-follow camera.
+   Uses board_core.glb + optional environment_detail.glb; no screenshots on meshes. */
+import * as THREE from '../lib/three.module.min.js';
+import {GLTFLoader} from '../lib/GLTFLoader.js';
+const TOKEN_KEYS=['lion','eagle','horse','ship'];
+const STRUCTURES=['stage_0_plot.glb','stage_1_lowrise.glb','stage_2_midrise.glb','stage_3_highrise.glb','stage_4_skyscraper.glb','stage_5_hotel.glb'];
+const PAWN_OFF=[[-.24,-.17],[.24,-.17],[-.24,.17],[.24,.17]];
+// A real surface grounds the scenery and keeps the background consistent as the camera moves.
+function createTableSurface(isEmpire) {
+ const canvas=document.createElement('canvas');
+ canvas.width=canvas.height=512;
+ const context=canvas.getContext('2d');
+ context.fillStyle=isEmpire?'#51301f':'#143b4b';
+ context.fillRect(0,0,512,512);
+ for(let row=0;row<512;row++){
+  const grain=Math.sin(row*.32)*.025+Math.sin(row*.091)*.018;
+  context.strokeStyle=grain>0?`rgba(255,215,163,${grain})`:`rgba(4,10,19,${-grain})`;
+  context.beginPath();
+  for(let x=0;x<=512;x+=8){
+   const y=row+Math.sin(x*.019+row*.05)*(isEmpire?5:1.5);
+   if(x===0)context.moveTo(x,y);else context.lineTo(x,y);
+  }
+  context.stroke();
+ }
+ const texture=new THREE.CanvasTexture(canvas);
+ texture.colorSpace=THREE.SRGBColorSpace;
+ texture.wrapS=texture.wrapT=THREE.RepeatWrapping;
+ texture.repeat.set(3,3);
+ const material=new THREE.MeshStandardMaterial({map:texture,roughness:isEmpire?.77:.68});
+ const surface=new THREE.Mesh(new THREE.PlaneGeometry(90,90),material);
+ surface.rotation.x=-Math.PI/2;
+ surface.position.y=-.85;
+ surface.receiveShadow=true;
+ return surface;
+}
+function addBox(group, material, size, position, yaw=0) {
+ const mesh=new THREE.Mesh(new THREE.BoxGeometry(...size),material);
+ mesh.position.set(...position);
+ mesh.rotation.y=yaw;
+ group.add(mesh);
+ return mesh;
+}
+
+function createWaterfrontDistrict() {
+ const district=new THREE.Group();
+ const stone=new THREE.MeshStandardMaterial({color:0x847460,roughness:.88});
+ const park=new THREE.MeshStandardMaterial({color:0x284536,roughness:1});
+ const light=new THREE.MeshBasicMaterial({color:0xffc971});
+ const blocks=new THREE.InstancedMesh(new THREE.BoxGeometry(),new THREE.MeshStandardMaterial({roughness:.65}),48);
+ const windows=new THREE.InstancedMesh(new THREE.BoxGeometry(),light,240);
+ const transform=new THREE.Object3D();
+ for(let side=0;side<6;side++){
+  const angle=(side+.5)*Math.PI/3;
+  const quay=new THREE.Group();
+  quay.rotation.y=-angle;
+  district.add(quay);
+  addBox(quay,stone,[4.9,.46,9.3],[15.4,-.64,0]);
+  addBox(quay,park,[4.1,.07,8.4],[15.55,-.37,0]);
+  addBox(quay,stone,[4.9,.19,1.05],[11.3,-.48,0]);
+  for(const z of [-.6,.6])addBox(quay,light,[4.9,.045,.045],[11.3,-.325,z]);
+  for(let lamp=0;lamp<8;lamp++){
+   const z=-4+lamp*1.14;
+   addBox(quay,stone,[.085,.46,.085],[13.17,-.16,z]);
+   addBox(quay,light,[.13,.14,.13],[13.17,.09,z]);
+  }
+  for(let lot=0;lot<8;lot++){
+   const index=side*8+lot;
+   const radial=14.1+(lot%2)*2.65;
+   const offset=(Math.floor(lot/2)-1.5)*1.95;
+   const height=.8+(index*13%17)*.13;
+   const x=Math.cos(angle)*radial-Math.sin(angle)*offset;
+   const z=Math.sin(angle)*radial+Math.cos(angle)*offset;
+   transform.position.set(x,height/2-.33,z);
+   transform.rotation.y=-angle;
+   transform.scale.set(.86,height,.96);
+   transform.updateMatrix();
+   blocks.setMatrixAt(index,transform.matrix);
+   blocks.setColorAt(index,new THREE.Color([0x475568,0x354352,0x756650][index%3]));
+   for(let floor=0;floor<5;floor++){
+    transform.position.set(x,-.33+height*(floor+1)/6,z);
+    transform.scale.set(.88,.045,.98);
+    transform.updateMatrix();
+    windows.setMatrixAt(index*5+floor,transform.matrix);
+   }
+  }
+ }
+ district.add(blocks,windows);
+ return district;
+}
+
+function createLandmarkDetail(isEmpire) {
+ const detail=new THREE.Group();
+ const gold=new THREE.MeshStandardMaterial({color:0xd9a548,metalness:.48,roughness:.32});
+ const stone=new THREE.MeshStandardMaterial({color:0xb39a72,roughness:.67});
+ const warmLight=new THREE.MeshBasicMaterial({color:0xffca72});
+ if(isEmpire){
+  for(const [radius,height] of [[.76,.43],[.72,1.12],[.82,1.65]]){
+   const ring=new THREE.Mesh(new THREE.TorusGeometry(radius,.065,8,36),gold);
+   ring.rotation.x=Math.PI/2;
+   ring.position.y=height;
+   detail.add(ring);
+  }
+  for(let index=0;index<10;index++){
+   const angle=index*Math.PI/5;
+   const jewel=new THREE.Mesh(new THREE.OctahedronGeometry(.12),new THREE.MeshStandardMaterial({
+    color:index%2?0xa02665:0x136bba,metalness:.35,roughness:.24
+   }));
+   jewel.position.set(Math.cos(angle)*.83,1.43,Math.sin(angle)*.83);
+   detail.add(jewel);
+   const jet=new THREE.Mesh(new THREE.SphereGeometry(.055,8,6),warmLight);
+   jet.position.set(Math.cos(angle)*1.25,.25,Math.sin(angle)*1.25);
+   detail.add(jet);
+  }
+  detail.rotation.y=Math.PI/10;
+ }else{
+  for(const sign of [-1,1]){
+   addBox(detail,stone,[.43,3.8,1.1],[sign*.96,2.4,.02]);
+   addBox(detail,gold,[.5,.18,1.17],[sign*.96,4.35,.02]);
+   for(let level=0;level<9;level++){
+    const y=1+level*.38;
+    for(const face of [-1,1])addBox(detail,warmLight,[.18,.075,.025],[sign*.96,y,face*.58]);
+   }
+   for(const z of [-.54,.54])addBox(detail,gold,[.064,4.5,.073],[sign*.58,3.1,z]);
+  }
+  const spire=new THREE.Mesh(new THREE.ConeGeometry(.19,1.05,4),gold);
+  spire.position.y=8.24;
+  detail.add(spire);
+ }
+ return detail;
+}
+export async function createBoard({canvas,source,board,base,onSelect=()=>{},quality='high'}){
+ const scene=new THREE.Scene();scene.background=new THREE.Color(board==='empire'?0x081829:0x111522);
+ scene.fog=new THREE.Fog(board==='empire'?0x112b41:0x343047,40,96);
+ const camera=new THREE.PerspectiveCamera(34,1,.12,240);camera.up.set(0,1,0);
+ const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false,powerPreference:'high-performance'});
+ renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.07;
+ renderer.shadowMap.enabled=quality!=='low';renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+ const hemi=new THREE.HemisphereLight(0xe5e9ff,0x5d442e,1.65),sun=new THREE.DirectionalLight(0xffd299,3.5);
+ sun.position.set(-9,24,15);sun.castShadow=quality!=='low';sun.shadow.mapSize.set(quality==='high'?2048:1024,quality==='high'?2048:1024);
+ Object.assign(sun.shadow.camera,{left:-22,right:22,top:22,bottom:-22,near:1,far:90});scene.add(hemi,sun,createTableSurface(board==='empire'));
+ const rim=new THREE.DirectionalLight(0x9ccaff,1.15);
+ rim.position.set(13,10,-16);scene.add(rim);
+ const loader=new GLTFLoader();const url=x=>base.replace(/\/$/,'')+'/'+x;
+ const load=x=>new Promise((resolve,reject)=>loader.load(url(x),g=>resolve(g.scene),undefined,reject));
+ if(board==='dominion'&&quality!=='low')scene.add(createWaterfrontDistrict());
+ const boardRoot=await load('board_core.glb');scene.add(boardRoot);
+ boardRoot.traverse(mesh=>{if(mesh.isMesh)mesh.receiveShadow=true});
+ // Keep tile textures readable and bright while environment retains real lighting.
+ boardRoot.traverse(o=>{if(o.isMesh&&/^TILE_\d{3}_/.test(o.name)){
+  const src=Array.isArray(o.material)?o.material[0]:o.material;
+  if(src?.map){src.map.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());const mat=new THREE.MeshBasicMaterial({map:src.map,toneMapped:false,fog:false,side:THREE.DoubleSide});o.material=mat;}
+ }});
+ let scenery=null;try{if(quality!=='low'){scenery=await load('environment_detail.glb');scene.add(scenery);scenery.traverse(mesh=>{if(mesh.isMesh)mesh.castShadow=true})}}catch(e){console.warn('Optional scene details unavailable',e)}
+ if(scenery)scene.add(createLandmarkDetail(board==='empire'));
+ const spaceMeshes=new Map(),clickable=[];
+ for(const tile of source.spaces){const mesh=boardRoot.getObjectByName(tile.raycast_node);if(!mesh)throw Error('3D board missing named tile mesh: '+tile.raycast_node);
+  mesh.userData.spaceId=tile.id;spaceMeshes.set(tile.id,mesh);clickable.push(mesh)}
+ const tokenRoots=[];for(let i=0;i<4;i++){
+  const mesh=await load('tokens/'+TOKEN_KEYS[i]+'.glb');
+  const bb=new THREE.Box3().setFromObject(mesh),dim=bb.getSize(new THREE.Vector3());
+  const norm=1.05/Math.max(dim.x,dim.y,dim.z,.01);mesh.scale.setScalar(norm);
+  const pawn=new THREE.Group();
+  pawn.add(mesh);
+  mesh.position.y=-bb.min.y*norm+.09;
+  const baseMaterial=new THREE.MeshStandardMaterial({
+   color:[0xe8a629,0x297ccc,0x228455,0x824db2][i],metalness:.22,roughness:.43
+  });
+  const baseMesh=new THREE.Mesh(new THREE.CylinderGeometry(.26,.31,.09,20),baseMaterial);
+  baseMesh.position.y=.045;
+  pawn.add(baseMesh);
+  pawn.userData.seat=i;tokenRoots.push(pawn);scene.add(pawn);
+ }
+ const structures=new Map(),prefabs=[];
+ for(let i=0;i<STRUCTURES.length;i++)try{prefabs[i]=await load('buildings/'+STRUCTURES[i])}catch(e){if(i<5)throw e}
+ const selectedMark=new THREE.Mesh(new THREE.RingGeometry(.42,.52,40),new THREE.MeshBasicMaterial({color:0xffe787,side:THREE.DoubleSide,transparent:true,opacity:.95,depthTest:false}));
+ selectedMark.rotation.x=-Math.PI/2;selectedMark.renderOrder=50;selectedMark.visible=false;scene.add(selectedMark);
+ const selectedDisc=new THREE.Mesh(new THREE.CircleGeometry(.38,32),new THREE.MeshBasicMaterial({color:0xffd96b,transparent:true,opacity:.12,depthTest:false,side:THREE.DoubleSide}));
+ selectedDisc.rotation.x=-Math.PI/2;selectedDisc.renderOrder=49;selectedDisc.visible=false;scene.add(selectedDisc);
+ const pawnAt=(idx,seat)=>{const tile=source.spaces[idx],o=PAWN_OFF[seat%4];return new THREE.Vector3(tile.pawn_anchor[0]+o[0],tile.pawn_anchor[1]+.03,tile.pawn_anchor[2]+o[1])};
+ const renderTokens=players=>players.forEach(p=>{const mesh=tokenRoots[p.id];if(!mesh)return;mesh.visible=!p.bankrupt;if(!mesh.userData.inMotion)mesh.position.copy(pawnAt(p.pos,p.id))});
+ const resetBuildings=properties=>{
+  for(const [i,p] of Object.entries(properties)){
+   const idx=+i;const old=structures.get(idx);if(p.owner<0){if(old){scene.remove(old);structures.delete(idx)}continue}
+   if(old?.userData.stage===p.stage&&old?.userData.owner===p.owner)continue;
+   if(old)scene.remove(old);
+   const prefab=prefabs[Math.min(p.stage,prefabs.length-1)];if(!prefab)continue;
+   const obj=prefab.clone(true),anchor=source.spaces[idx].build_anchor;
+   const bounds=new THREE.Box3().setFromObject(obj).getSize(new THREE.Vector3());obj.scale.setScalar(.67/Math.max(bounds.x,bounds.z,1));
+   obj.position.set(anchor[0],anchor[1],anchor[2]);
+   obj.userData={stage:p.stage,owner:p.owner};scene.add(obj);structures.set(idx,obj)
+  }
+  for(const [i,obj] of [...structures.entries()])if(!properties[i]||properties[i].owner<0){scene.remove(obj);structures.delete(i)}
+ };
+ let selected=0,mode='whole',moving=false,overviewZoom=1;
+ const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)');
+ const overviewCamera=camera.clone();
+ const target=new THREE.Vector3(0,.18,0),desiredPos=new THREE.Vector3();
+ let worldW=0,worldH=0,last=performance.now(),lastRender=0,raf=0;
+ const choose=idx=>{selected=idx;const tile=source.spaces[idx];selectedMark.visible=true;selectedDisc.visible=true;
+  selectedMark.position.set(tile.position[0],tile.position[1]+.092,tile.position[2]);selectedDisc.position.copy(selectedMark.position)};
+ const overview=()=>{mode='whole';target.set(...source.board_camera.target)};
+ const close=idx=>{choose(idx);mode='close';target.set(...source.spaces[idx].position);target.y=.38};
+ const calcEye=()=>{
+  if(mode==='whole')return new THREE.Vector3(...source.board_camera.overview_position);
+  const t=source.spaces[selected],nx=t.normal?.[0]??0,nz=t.normal?.[1]??-1;
+  const len=Math.hypot(nx,nz)||1,d=source.board_camera.close_follow_distance||8.4;
+  const a=(source.board_camera.close_follow_pitch_deg||48)*Math.PI/180;
+  return new THREE.Vector3(target.x+nx/len*d*Math.cos(a),target.y+d*Math.sin(a),target.z+nz/len*d*Math.cos(a));
+ };
+ function tick(now){
+  raf=requestAnimationFrame(tick);
+  if(document.hidden)return;
+  // High-density mobile canvases retain full DPR; idle scene is only refreshed
+  // at 20 fps rather than redrawing 3–4 million pixels at 60 fps.
+  const frameTime=moving?16:50;
+  if(now-lastRender<frameTime)return;
+  lastRender=now;
+  const dt=Math.min(.1,(now-last)/1000||.016);last=now;
+  const alpha=1-Math.exp(-dt*7);
+  desiredPos.copy(calcEye());camera.position.lerp(desiredPos,alpha);
+  const v=camera.userData.look||new THREE.Vector3(...source.board_camera.target);v.lerp(target,alpha);camera.userData.look=v;
+  const desiredZoom=mode==='whole'?overviewZoom:1;
+  camera.zoom=THREE.MathUtils.lerp(camera.zoom,desiredZoom,alpha);
+  camera.updateProjectionMatrix();
+  camera.up.set(0,1,0);camera.lookAt(v);camera.updateMatrixWorld();
+  selectedMark.material.opacity=.78+.18*Math.sin(now*.004);
+  renderer.render(scene,camera)
+ }
+ camera.position.set(...source.board_camera.overview_position);camera.lookAt(...source.board_camera.target);
+ const ray=new THREE.Raycaster(),ndc=new THREE.Vector2();
+ const onPointer=e=>{if(moving)return;const r=canvas.getBoundingClientRect();
+  ndc.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);
+  ray.setFromCamera(ndc,camera);
+  const hits=ray.intersectObjects(clickable,false);
+  if(hits.length){const idx=hits[0].object.userData.spaceId;choose(idx);onSelect(idx)}
+ };
+ canvas.addEventListener('pointerup',onPointer,{passive:true});
+ const resize=()=>{const r=canvas.getBoundingClientRect(),dpr=Math.min(devicePixelRatio||1,quality==='high'?3:quality==='medium'?2:1.5);
+  worldW=Math.max(1,r.width);worldH=Math.max(1,r.height);
+  renderer.setPixelRatio(dpr);renderer.setSize(worldW,worldH,false);camera.aspect=worldW/worldH;camera.updateProjectionMatrix();
+  overviewCamera.aspect=camera.aspect;
+  overviewCamera.position.set(...source.board_camera.overview_position);
+  overviewCamera.lookAt(...source.board_camera.target);
+  overviewCamera.updateMatrixWorld();
+  overviewCamera.updateProjectionMatrix();
+  const extent=new THREE.Vector2();
+  for(const tile of source.spaces){
+   const point=new THREE.Vector3(...tile.position).project(overviewCamera);
+   extent.x=Math.max(extent.x,Math.abs(point.x));
+   extent.y=Math.max(extent.y,Math.abs(point.y));
+  }
+  overviewZoom=Math.min(board==='empire'?1.32:1.04,.88/Math.max(extent.x,extent.y,.01));
+ };
+ addEventListener('resize',resize);resize();choose(0);raf=requestAnimationFrame(tick);
+ const sync=state=>{renderTokens(state.players);resetBuildings(state.properties);choose(state.selected)};
+ const move=async (seat,route,duration=135)=>{
+  const mesh=tokenRoots[seat];if(!mesh||!route?.length)return;
+  moving=true;mesh.userData.inMotion=true;
+  const track=seat===0&&!reduceMotion.matches;
+  try{let prev=mesh.position.clone();for(const tileId of route){const next=pawnAt(tileId,seat),start=performance.now();
+    if(track){choose(tileId);mode='close';}
+    await new Promise(done=>{const step=now=>{const t=Math.min(1,(now-start)/Math.max(20,duration)),k=t*t*(3-2*t);
+      mesh.position.lerpVectors(prev,next,k);mesh.position.y+=reduceMotion.matches?0:.26*Math.sin(Math.PI*k);
+      if(track)target.set(mesh.position.x,.4,mesh.position.z);
+      if(t<1)requestAnimationFrame(step);else done()};requestAnimationFrame(step)});
+    prev=next.clone();if(track)close(tileId);
+  }}finally{mesh.userData.inMotion=false;moving=false}
+ };
+ const projectTile=id=>{const t=source.spaces[id],p=new THREE.Vector3(...t.position).project(camera),r=canvas.getBoundingClientRect();return{x:r.left+(p.x+1)*r.width/2,y:r.top+(1-p.y)*r.height/2,visible:p.z>-1&&p.z<1}};
+ const stats=()=>({spaces:spaceMeshes.size,buffer:[canvas.width,canvas.height],css:[worldW,worldH],dpr:renderer.getPixelRatio(),selected,mode,playingAssets:!!boardRoot,detailAssets:!!scenery,tokens:tokenRoots.length,stagePrefabs:prefabs.filter(Boolean).length,structuresShown:structures.size,cameraUp:camera.up.toArray(),physicalDevice:false});
+ const destroy=()=>{cancelAnimationFrame(raf);canvas.removeEventListener('pointerup',onPointer);removeEventListener('resize',resize);renderer.dispose()};
+ return {source,boardRoot,scene,camera,renderer,spaceMeshes,sync,choose,overview,close,move,resize,projectTile,stats,destroy};
+}

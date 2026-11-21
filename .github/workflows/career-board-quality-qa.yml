@@ -1,0 +1,56 @@
+name: Career Boards 2–3 visual and gameplay QA
+on:
+  pull_request:
+    paths:
+      - 'skyline-estates/city-ventures-renderer.js'
+      - 'skyline-estates/crossroads-renderer.js'
+      - 'skyline-estates/tests/city-ventures-browser.cjs'
+      - 'skyline-estates/tests/crossroads-browser.cjs'
+      - '.github/workflows/career-board-quality-qa.yml'
+  workflow_dispatch:
+# A new commit supersedes old 3D screenshot matrices; avoid congesting CI.
+concurrency:
+  group: career-quality-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  actual-gameplay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        board: [city-ventures, crossroads]
+        engine: [chromium, webkit]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Playwright test dependencies
+        run: npm install --prefix skyline-estates/tests --no-audit --no-fund
+      - name: Install test browser
+        run: npx --prefix skyline-estates/tests playwright install --with-deps ${{ matrix.engine }}
+      - name: Browser test with real game and local 3D assets
+        env:
+          VISUAL_ENGINE: ${{ matrix.engine }}
+          VISUAL_ORIGIN: http://127.0.0.1:8790/
+          CHROME_PATH: /usr/bin/google-chrome
+          WEBKIT_DISABLE_DMABUF_RENDERER: '1'
+        run: |
+          set -e
+          case "${{ matrix.board }}" in
+            city-ventures) script=city-ventures-browser.cjs ;;
+            crossroads) script=crossroads-browser.cjs ;;
+          esac
+          python3 -m http.server 8790 --bind 127.0.0.1 --directory . >"$RUNNER_TEMP/career-http.log" 2>&1 &
+          node "skyline-estates/tests/$script"
+      - name: Save actual gameplay screenshots and diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: career-${{ matrix.board }}-${{ matrix.engine }}
+          path: skyline-estates/test-results/
+          if-no-files-found: ignore
+          retention-days: 7

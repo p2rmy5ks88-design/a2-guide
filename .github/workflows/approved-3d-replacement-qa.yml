@@ -1,0 +1,60 @@
+name: Approved 3D replacements – browser gameplay QA
+on:
+  push:
+    paths:
+      - 'skyline-estates/lib/approved-board-*.js'
+      - 'skyline-estates/approved-career-board.html'
+      - 'skyline-estates/presentation/approved-board.css'
+      - 'skyline-estates/tests/approved-board-browser.cjs'
+      - 'skyline-estates/assets/approved-replacements/**'
+      - '.github/workflows/approved-3d-replacement-qa.yml'
+  pull_request:
+    paths:
+      - 'skyline-estates/lib/approved-board-*.js'
+      - 'skyline-estates/approved-career-board.html'
+      - 'skyline-estates/presentation/approved-board.css'
+      - 'skyline-estates/tests/approved-board-browser.cjs'
+      - 'skyline-estates/assets/approved-replacements/**'
+      - '.github/workflows/approved-3d-replacement-qa.yml'
+permissions:
+  contents: read
+concurrency:
+  group: approved-replacement-browser-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  true-3d:
+    if: startsWith(github.head_ref, 'feat/approved-dominion-empire-') || startsWith(github.ref_name, 'feat/approved-dominion-empire-')
+    runs-on: ubuntu-latest
+    timeout-minutes: 32
+    strategy:
+      fail-fast: false
+      matrix:
+        board: [dominion, empire]
+        engine: [chromium, webkit]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install existing Skyline Playwright dependencies
+        run: npm install --prefix skyline-estates/tests --no-audit --no-fund
+      - name: Install test browser
+        run: npx --prefix skyline-estates/tests playwright install --with-deps ${{ matrix.engine }}
+      - name: Verify two real approved perimeter rulesets
+        run: node --test skyline-estates/tests/approved-board-rules.test.mjs
+      - name: Load actual GLB, roll, buy, build, select and resume in browser
+        env:
+          VISUAL_ENGINE: ${{ matrix.engine }}
+          BOARD: ${{ matrix.board }}
+          VISUAL_ORIGIN: http://127.0.0.1:8790/
+        run: |
+          python3 -m http.server 8790 --bind 127.0.0.1 --directory . >"$RUNNER_TEMP/approved-http.log" 2>&1 &
+          node skyline-estates/tests/approved-board-browser.cjs
+      - name: Save actual high-resolution screenshots and gameplay logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: approved-replacement-${{ matrix.board }}-${{ matrix.engine }}
+          path: skyline-estates/test-results/approved-${{ matrix.board }}-${{ matrix.engine }}
+          if-no-files-found: ignore
+          retention-days: 7

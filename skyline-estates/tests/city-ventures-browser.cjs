@@ -9,7 +9,7 @@ let n=0;const ok=m=>{n++;console.log('PASS',m)};
  await new Promise(r=>server.listen(0,'127.0.0.1',r));const base=`http://127.0.0.1:${server.address().port}/skyline-estates/`;
  const browser=await({chromium,webkit}[engine]).launch(engine==='chromium'?{executablePath:process.env.CHROME_PATH||undefined,args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist']}:{});
  try{const context=await browser.newContext({viewport:{width:844,height:390},deviceScaleFactor:1,hasTouch:true});/* 1x: gameplay checks; software WebGL on CI is slow at retina resolution */const p=await context.newPage();const errors=[];p.on('pageerror',e=>errors.push(String(e)));
-  await p.goto(base+'index.html');await p.evaluate(()=>{localStorage.clear();const s=SkylineCareer.raw();s.unlocked.circuit=1;PREF.career=s;savePref()});await p.reload();await p.waitForSelector('#hdCareer');
+  await p.goto(base+'index.html');await p.evaluate(()=>{localStorage.clear();const s=SkylineCareer.raw();s.unlocked.circuit=1;PREF.career=s;savePref()});await p.reload();await p.waitForSelector('#hdCareer');await p.waitForSelector('#boot',{state:'hidden',timeout:60000});
   await p.evaluate(()=>{document.querySelector('#modals').innerHTML='';document.querySelector('#hdCareer').click()});await p.waitForSelector('.crc-btn[data-board="circuit"]:not([disabled])');
   assert.match(await p.locator('.crc').nth(1).innerText(),/City Ventures/);await p.locator('.crc-btn[data-board="circuit"]').click();
   await p.locator('.crl[data-len="quick"]').waitFor();assert.deepEqual(await p.evaluate(()=>[...document.querySelectorAll('.crl')].map(b=>b.dataset.len)),['standard','quick']);
@@ -20,6 +20,51 @@ let n=0;const ok=m=>{n++;console.log('PASS',m)};
   const small=await p.evaluate(()=>[...document.querySelectorAll('button')].filter(b=>b.offsetParent&&b.getBoundingClientRect().height<43.5).map(b=>b.id||b.textContent.trim()));assert.deepEqual(small,[],'touch targets');
   const overlap=await p.evaluate(()=>{const r=id=>document.getElementById(id).getBoundingClientRect();const a=r('players'),b=r('dock'),c=r('top');return a.bottom>b.top&&a.right>b.left||c.bottom>a.top+1});assert.equal(overlap,false);ok('HUD fits 844×390 with 44pt buttons and no overlaps');
   await p.screenshot({path:path.join(out,engine+'-start.png')});
+
+  // Independent camera acceptance: the full-board view must be recoverable,
+  // followed by an upright, close three-quarter token view. Renderer-only UI
+  // controls are used here: no match state, money, movement or save is changed.
+  await p.evaluate(()=>__cv.renderer.overview(true));
+  await p.waitForFunction(()=>{const s=__cv.renderer.stats();return s.mode==='overview'&&s.goalDist>10&&Math.abs(s.camDist-s.goalDist)<.18},null,{timeout:90000});
+  const cameraOverview=await p.evaluate(()=>__cv.renderer.stats());
+  await p.evaluate(()=>__cv.renderer.overview(false));
+  await p.waitForFunction(()=>{const s=__cv.renderer.stats();return s.mode==='follow'&&s.goalDist<7&&Math.abs(s.camDist-s.goalDist)<.18},null,{timeout:90000});
+  const cameraFollow=await p.evaluate(()=>__cv.renderer.stats());
+  assert.ok(cameraOverview.camDist>cameraFollow.camDist*1.55,'camera overview vs close-follow distance: '+JSON.stringify({overview:cameraOverview.camDist,follow:cameraFollow.camDist}));
+  assert.ok(cameraOverview.mode==='overview'&&cameraFollow.mode==='follow'&&cameraFollow.camPitch>0.5&&cameraFollow.camPitch<1.2&&cameraFollow.cameraUp[1]>.999&&Math.abs(cameraFollow.cameraUp[0])<.001&&Math.abs(cameraFollow.cameraUp[2])<.001,'camera upright / modes: '+JSON.stringify({overview:cameraOverview,follow:cameraFollow}));
+  ok('camera can return to overview and smoothly follow a token upright');
+
+
+  // Phone landscape acceptance: the 956 x 440 CSS viewport corresponds to
+  // the iPhone 18 Pro Max aspect ratio; manually inject conservative cutouts
+  // without spoofing the device's GPU pixel ratio.
+  await p.setViewportSize({width:956,height:440});
+  await p.evaluate(()=>{const st=document.documentElement.style;st.setProperty('--sl','62px');st.setProperty('--sr','62px');st.setProperty('--sb','21px')});
+  // The moving token deliberately slides the sidebar offscreen. Wait for the
+  // CSS transition back before assessing its resting safe-area geometry.
+  await p.waitForFunction(()=>!document.body.classList.contains('moving'),null,{timeout:90000});
+  // SwiftShader can stall compositor frames past the 250ms CSS duration.
+  // Observe the actual sidebar geometry, not an arbitrary wall-clock delay.
+  await p.waitForFunction(()=>{
+   const r=document.getElementById('side').getBoundingClientRect();
+   return !document.body.classList.contains('moving') && r.left>=62 && r.right<=innerWidth-62+1 && r.bottom<=innerHeight+1;
+  },null,{polling:200,timeout:90000});
+  const phoneFit=await p.evaluate(()=>{
+   const box=id=>document.getElementById(id).getBoundingClientRect();
+   const players=box('players'),top=box('top'),side=box('side'),dock=box('dock'),help=box('help'),main=box('mainBtn');
+   const inPhone=(r,l=62,rPad=62)=>r.left>=l-1&&r.right<=innerWidth-rPad+1&&r.top>=0&&r.bottom<=innerHeight+1;
+   return {players:inPhone(players),top:inPhone(top),side:inPhone(side),dock:inPhone(dock),help:inPhone(help),main:inPhone(main),
+    noRosterDock:players.bottom<=dock.top+1||players.right<dock.left-1,noTopRoster:top.bottom<=players.top+1,
+    noRosterHelp:players.bottom<=help.top+1||players.right<help.left-1,
+    controls:[...document.querySelectorAll('button')].filter(b=>b.offsetParent&&!b.disabled).every(b=>b.getBoundingClientRect().height>=43.5)};
+  });
+  const sideDebug=await p.evaluate(()=>{const n=document.getElementById('side'),r=n.getBoundingClientRect();return{x:r.x,y:r.y,width:r.width,height:r.height,right:r.right,bottom:r.bottom,moving:document.body.classList.contains('moving'),transform:getComputedStyle(n).transform,viewport:[innerWidth,innerHeight]}});
+  assert.ok(Object.values(phoneFit).every(Boolean),'iPhone landscape fit/safe-area UI: '+JSON.stringify({phoneFit,sideDebug}));
+  ok('iPhone landscape 956×440 safe-area controls, roster and sidebars do not overlap');
+  await p.screenshot({timeout:90000,path:path.join(out,engine+'-iphone-landscape-safe.png')});
+  await p.evaluate(()=>{const st=document.documentElement.style;for(const v of ['--sl','--sr','--sb'])st.removeProperty(v)});
+  await p.setViewportSize({width:844,height:390});
+
   let shots=0;const seen={};const t0=Date.now();
   while(Date.now()-t0<480000){const st=await p.evaluate(()=>{const s=__cv.state(),pd=__cv.rules.pending(s);return{over:s.over,kind:pd.kind,mine:(pd.kind==='trade'?pd.to:pd.pid)===0,busy:__cv.busy(),panel:!document.getElementById('decision').hidden}});
    if(st.over)break;

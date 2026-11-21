@@ -119,7 +119,7 @@ export function createCrossroadsRenderer(canvas,{rules,onTile}={}){
   const solid=new THREE.Mesh(sectorSolid(loop,t0,t1,RI,RO,.11),new THREE.MeshStandardMaterial({color:'#efe4c8',roughness:.7}));solid.castShadow=solid.receiveShadow=true;grp.add(solid);
   const ftex=tileTexture(tileData(t),CC.GROUP_COLORS,renderer);
   // canvas top (v=1) toward the loop centre; u runs left→right as seen from outside the loop
-  const face=new THREE.Mesh(sectorGeometry(loop,t0,t1,RI+.03,RO-.03,16,2,loop==='west'),new THREE.MeshStandardMaterial({map:ftex,emissiveMap:ftex,emissive:'#ffffff',emissiveIntensity:.38,roughness:.85,envMapIntensity:.2}));face.position.y=.125;face.receiveShadow=true;grp.add(face);
+  const face=new THREE.Mesh(sectorGeometry(loop,t0,t1,RI+.03,RO-.03,16,2,loop==='west'),new THREE.MeshBasicMaterial({map:ftex,toneMapped:false,fog:false,side:THREE.DoubleSide}));face.position.y=.125;face.receiveShadow=true;grp.add(face);
   const ring=new THREE.Mesh(sectorSolid(loop,t0-.006,t1+.006,RI-.03,RO+.03,.09),new THREE.MeshStandardMaterial({color:'#ffffff',roughness:.4}));ring.position.y=-.01;ring.visible=false;grp.add(ring);
   const glow=new THREE.Mesh(sectorGeometry(loop,t0,t1,RI,RO,8,1,false),new THREE.MeshBasicMaterial({color:'#ffd36b',transparent:true,opacity:0,depthWrite:false}));glow.position.y=.13;grp.add(glow);
   solid.userData.tile=face.userData.tile=t.id;pick.push(solid,face);
@@ -129,7 +129,7 @@ export function createCrossroadsRenderer(canvas,{rules,onTile}={}){
  for(const id of['START','EXCHANGE','SKY']){const t=BY[id],P=HUB[id],grp=new THREE.Group();grp.position.copy(P);scene.add(grp);const r=id==='EXCHANGE'?1.18:1.02;
   const rim=new THREE.Mesh(new THREE.CylinderGeometry(r+.1,r+.16,.22,96),gold);rim.position.y=.1;rim.castShadow=rim.receiveShadow=true;grp.add(rim);
   const cap=new THREE.Mesh(new THREE.CylinderGeometry(r,r,.26,96),navy);cap.position.y=.13;grp.add(cap);
-  const face=new THREE.Mesh(new THREE.CircleGeometry(r,96),id==='EXCHANGE'?new THREE.MeshStandardMaterial({map:discTexture(ART+'exchange.jpg','#efc15c',renderer,()=>{dirty=true}),roughness:.8,envMapIntensity:.2}):(()=>{const ht=hubTexture(t,renderer);return new THREE.MeshStandardMaterial({map:ht,emissiveMap:ht,emissive:'#ffffff',emissiveIntensity:.3,roughness:.6})})());
+  const face=new THREE.Mesh(new THREE.CircleGeometry(r,96),id==='EXCHANGE'?new THREE.MeshStandardMaterial({map:discTexture(ART+'exchange.jpg','#efc15c',renderer,()=>{dirty=true}),roughness:.8,envMapIntensity:.2}):(()=>{const ht=hubTexture(t,renderer);return new THREE.MeshBasicMaterial({map:ht,toneMapped:false,side:THREE.DoubleSide})})());
   face.rotation.x=-Math.PI/2;face.position.y=.265;grp.add(face);
   const glow=new THREE.Mesh(new THREE.CircleGeometry(r+.14,96),new THREE.MeshBasicMaterial({color:'#ffd36b',transparent:true,opacity:0,depthWrite:false}));glow.rotation.x=-Math.PI/2;glow.position.y=.27;grp.add(glow);
   cap.userData.tile=face.userData.tile=rim.userData.tile=id;pick.push(cap,face,rim);
@@ -210,7 +210,7 @@ export function createCrossroadsRenderer(canvas,{rules,onTile}={}){
  function followGoal(p,id){const T=tileInfo[id]||{};const out=T.perp?T.perp.clone().negate():new THREE.Vector3(0,0,1);goal.target.copy(p.clone().add(out.multiplyScalar(frameBias)));const y=yawAt(id,p);lastYaw=y;goal.yaw=y+userYaw;goal.pitch=THREE.MathUtils.degToRad(43);goal.dist=4.9*userZoom/pushIn}
  function angleLerp(a,b,t){let d=((b-a+Math.PI)%(2*Math.PI)+2*Math.PI)%(2*Math.PI)-Math.PI;return a+d*t}
  function applyCam(dt){const k=reduceMotion.matches?1:1-Math.exp(-dt/.2);cam.target.lerp(goal.target,k);cam.yaw=angleLerp(cam.yaw,goal.yaw,k);cam.pitch+=(goal.pitch-cam.pitch)*k;cam.dist+=(goal.dist-cam.dist)*k;
-  const c=Math.cos(cam.pitch)*cam.dist;camera.position.set(cam.target.x+Math.sin(cam.yaw)*c,cam.target.y+Math.sin(cam.pitch)*cam.dist,cam.target.z+Math.cos(cam.yaw)*c);camera.lookAt(cam.target)}
+  const c=Math.cos(cam.pitch)*cam.dist;camera.up.set(0,1,0);camera.position.set(cam.target.x+Math.sin(cam.yaw)*c,cam.target.y+Math.sin(cam.pitch)*cam.dist,cam.target.z+Math.cos(cam.yaw)*c);camera.lookAt(cam.target)}
 
  // ---- state sync ----
  let view=null,moving=false;const effects={highlight:null};
@@ -221,7 +221,7 @@ export function createCrossroadsRenderer(canvas,{rules,onTile}={}){
    if(T.building){scene.remove(T.building);T.building=null}
    if(o){const col=v.players[o.owner].color||PLAYER_COLORS[o.owner];T.ring.visible=true;T.ring.material.color.set(col);T.ring.material.emissive=new THREE.Color(col);T.ring.material.emissiveIntensity=.35;
     if(t.type==='property'){const b=building(o.stage||0,CC.GROUP_COLORS[t.group]);const at=tileInfo[t.id].build;b.position.set(at.x,.125,at.z);b.rotation.y=yawAt(t.id,tileInfo[t.id].pos);scene.add(b);T.building=b}
-    T.face.material.color.set(o.mortgaged?'#8a8a8a':'#ffffff');T.face.material.emissiveIntensity=o.mortgaged?.08:.38}else{T.ring.visible=false;T.face.material.color.set('#ffffff');T.face.material.emissiveIntensity=.38}}
+    T.face.material.color.set(o.mortgaged?'#8a8a8a':'#ffffff');/* Unlit text remains readable; mortgage tint uses material.color. */}else{T.ring.visible=false;T.face.material.color.set('#ffffff');/* Unlit face returns to full readable contrast. */}}
   syncLandmarks(v.landmarks||[],v.players);dirty=true}
  function placeTokens(){const counts={};tokens.forEach((t,k)=>{if(t&&view.players[k]&&!view.players[k].out)counts[t.tile]=(counts[t.tile]||0)+1});
   tokens.forEach((t,k)=>{if(!t)return;const p=slot(t.tile,k,counts[t.tile]);t.g.position.set(p.x,baseY(t.tile),p.z);const d=tileInfo[t.tile].dir;t.g.rotation.y=Math.atan2(d.x,d.z)-Math.PI/2});dirty=true}
@@ -261,4 +261,4 @@ export function createCrossroadsRenderer(canvas,{rules,onTile}={}){
   renderer.render(scene,camera);frames++;if(now-fpsT>3000){const fps=frames*1000/(now-fpsT);frames=0;fpsT=now;if(fps<28&&dpr>2){dpr=Math.max(2,dpr-.5);renderer.setPixelRatio(dpr);resize()}}}
  resize();overviewGoal();Object.assign(cam,{target:goal.target.clone(),yaw:goal.yaw,pitch:goal.pitch,dist:goal.dist});requestAnimationFrame(loop);
  return{setFrameBias(v){frameBias=v;refreshGoal()},sync,moveToken,follow,focusTile,overview,highlight,resize,
-  stats:()=>({dpr,mode,zoom:userZoom,camDist:cam.dist,tiles:Object.keys(tileMeshes).length,tokens:tokens.length,landmarks:lmGroup.children.length}),mode:()=>mode,dispose(){running=false;renderer.dispose()}}}
+  stats:()=>({dpr,mode,zoom:userZoom,camDist:cam.dist,goalDist:goal.dist,camYaw:cam.yaw,camPitch:cam.pitch,cameraUp:camera.up.toArray(),tiles:Object.keys(tileMeshes).length,tokens:tokens.length,landmarks:lmGroup.children.length}),mode:()=>mode,dispose(){running=false;renderer.dispose()}}}

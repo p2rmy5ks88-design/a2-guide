@@ -1,0 +1,88 @@
+/* Actual 3D approved-asset browser test; never mocks tiles, camera, rules or saves. */
+'use strict';
+const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
+const {chromium,webkit}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
+const browserName=process.env.VISUAL_ENGINE||'chromium',board=process.env.BOARD||'dominion';
+const expected=board==='dominion'?48:32,seed=board==='dominion'?1:11;
+const origin=process.env.VISUAL_ORIGIN||'http://127.0.0.1:8790/';
+const output=process.env.OUTPUT_DIR||path.resolve(__dirname,'../test-results/approved-'+board+'-'+browserName);
+fs.mkdirSync(output,{recursive:true});const checks=[],errors=[];
+const ok=(name,value,extra)=>{assert.ok(value,name+' '+JSON.stringify(extra||''));checks.push(name);console.log('PASS',board,browserName,name)};
+(async()=>{
+ const browser=await({chromium,webkit}[browserName]).launch({headless:true,...(browserName==='chromium'?{args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']}:{})});
+ try {
+ const ctx=await browser.newContext({viewport:{width:956,height:440},deviceScaleFactor:3,hasTouch:true,isMobile:true,serviceWorkers:'block',reducedMotion:'no-preference'});
+ const p=await ctx.newPage();p.on('pageerror',e=>errors.push(String(e)));
+ const url=origin+'skyline-estates/approved-career-board.html?board='+board+'&autostart=1&seed='+seed+'&quality='+(browserName==='webkit'?'high':'low')+'&speed=instant';
+ await p.goto(url);
+ await p.waitForFunction(n=>window.__skylineApproved?.renderer()?.stats().spaces===n,expected,{timeout:120000});
+ const stats=await p.evaluate(()=>__skylineApproved.renderer().stats());
+ ok('real approved GLB board loads every individual tile',stats.spaces===expected&&stats.playingAssets);
+ ok('four independent 3D tokens and 5 building models loaded',stats.tokens===4&&stats.stagePrefabs>=5,stats);
+ ok('iPhone landscape rendering buffer matches actual canvas size and selected quality',stats.dpr>=(browserName==='webkit'?2.9:1.4)&&stats.css.every(n=>n>0)&&stats.buffer.every((n,i)=>Math.abs(n-Math.floor(stats.css[i]*stats.dpr))<=1),stats);
+ ok('camera stays upright',stats.cameraUp[1]===1&&stats.cameraUp[0]===0&&stats.cameraUp[2]===0);
+ await p.locator('#roll').click({timeout:30000});
+ await p.waitForFunction(()=>__skylineApproved.state().phase==='decide'&&!document.querySelector('#roll'),null,{timeout:120000});
+ const landing=await p.evaluate(()=>({pos:__skylineApproved.state().players[0].pos,view:__skylineApproved.renderer().stats().mode,tile:__skylineApproved.spaces[__skylineApproved.state().players[0].pos].name}));
+ ok('real 2d6 move ends at expected approved space',landing.pos===(board==='dominion'?2:3),landing);
+ ok('close-follow camera after landing',landing.view==='close',landing);
+ await p.locator('#buy').click({timeout:30000});
+ await p.waitForFunction(()=>Object.values(__skylineApproved.state().properties).some(v=>v.owner===0),null,{timeout:25000});
+ ok('purchase deducts actual Skyline Cash and assigns owner',await p.evaluate(()=>{const s=__skylineApproved.state();return s.properties[s.players[0].pos]?.owner===0&&s.players[0].cash<(s.board==='dominion'?1500000:2500000)}));
+ ok('purchased property physically displays a Stage 0 Plot',await p.evaluate(()=>__skylineApproved.renderer().stats().structuresShown>=1));
+ await p.locator('#build').click({timeout:30000});
+ ok('build applies a true property stage in the rules engine',await p.evaluate(()=>__skylineApproved.state().properties[__skylineApproved.state().players[0].pos]?.stage===1));
+ // Pick against a settled overview rather than stale coordinates from an easing close camera.
+ await p.locator('#whole').click();
+ await p.waitForFunction(()=>{const r=__skylineApproved.renderer(),eye=r.source.board_camera.overview_position;return r.camera.position.toArray().every((v,i)=>Math.abs(v-eye[i])<.01)},null,{timeout:15000});
+ const selected=await p.evaluate(()=>__skylineApproved.renderer().projectTile(6));
+ ok('board selection point projects onto real visible 3D tile',selected.visible&&selected.x>0&&selected.y>0,selected);
+ await p.touchscreen.tap(selected.x,selected.y);
+ await p.waitForFunction(()=>__skylineApproved.state().selected===6,null,{timeout:12000});
+ ok('real touch-pick raycasts tile 6 onto game selection',true);
+ await p.locator('#more').click();
+ ok('full details open without leaving live board',await p.locator('#detailsDrawer').isVisible());
+ await p.locator('#closeDetails').click();
+ await p.locator('#whole').click();
+ ok('whole board control sets overview camera',await p.evaluate(()=>__skylineApproved.renderer().stats().mode==='whole'));
+ await p.locator('#close').click();
+ ok('close view control restores nearby property view',await p.evaluate(()=>__skylineApproved.renderer().stats().mode==='close'));
+ const stateBefore=await p.evaluate(()=>({pos:__skylineApproved.state().players[0].pos,property:__skylineApproved.state().properties[__skylineApproved.state().players[0].pos]?.stage}));
+ const resumeUrl=origin+'skyline-estates/approved-career-board.html?board='+board+'&quality='+(browserName==='webkit'?'high':'low')+'&seed='+seed;
+ await p.goto(resumeUrl);await p.locator('#resume').waitFor({state:'visible',timeout:30000});await p.locator('#resume').click();
+ await p.waitForFunction(()=>window.__skylineApproved?.renderer()?.stats().spaces>0,null,{timeout:120000});
+ const stateAfter=await p.evaluate(()=>({pos:__skylineApproved.state().players[0].pos,property:__skylineApproved.state().properties[__skylineApproved.state().players[0].pos]?.stage}));
+ ok('resume restores exact new-board position and built property',stateBefore.pos===stateAfter.pos&&stateBefore.property===stateAfter.property);
+ const view=await p.evaluate(()=>({bodyOverflow:document.documentElement.scrollWidth>innerWidth+2,buttons:[...document.querySelectorAll('#right button')].filter(x=>!x.disabled).every(x=>x.getBoundingClientRect().height>=43.5)}));
+ ok('landscape controls fit and preserve 44pt hit targets',!view.bodyOverflow&&view.buttons,view);
+ await p.locator('#notice').waitFor({state:'hidden',timeout:15000});
+ await p.screenshot({path:path.join(output,board+'-956x440-gameplay.png'),timeout:90000,animations:'disabled'});
+ // Repeat safe-area geometry at 844x390 without changing match state.
+ await p.setViewportSize({width:844,height:390});
+ await p.evaluate(()=>{for(const [k,v]of Object.entries({'--safe-l':'47px','--safe-r':'47px','--safe-b':'21px'}))document.documentElement.style.setProperty(k,v)});
+ await p.waitForTimeout(400);
+ const fit=await p.evaluate(()=>{const ids=['boardBox','right','bottom','more'];return ids.map(id=>{const r=document.getElementById(id).getBoundingClientRect();return{id,x:r.left,right:r.right,top:r.top,bottom:r.bottom,ok:r.left>=46&&r.right<=innerWidth-46&&r.top>=0&&r.bottom<=innerHeight}})});
+ ok('844x390 iPhone safe-area board/HUD elements remain visible',fit.every(x=>x.ok),fit);
+ const tabletop=await p.evaluate(()=>{
+  const board=document.getElementById('boardBox').getBoundingClientRect();
+  const roster=document.getElementById('roster');
+  return {boardWidth:board.width,viewport:innerWidth,rosterHidden:getComputedStyle(roster).display==='none',players:document.querySelectorAll('#seatSummary .player-chip').length};
+ });
+ ok('board-first: substantial playable 3D area, four players in bottom strip, no redundant sidebar',tabletop.boardWidth>=tabletop.viewport*.58&&tabletop.rosterHidden&&tabletop.players===4,tabletop);
+ await p.screenshot({path:path.join(output,board+'-844x390-safe.png'),timeout:90000,animations:'disabled'});
+ await p.locator('#more').click();
+ p.once('dialog',dialog=>dialog.dismiss());
+ await p.locator('#endMatch').click();
+ ok('cancelling early finish keeps the match active',await p.evaluate(()=>__skylineApproved.state().phase!=='over'));
+ p.once('dialog',dialog=>dialog.accept());
+ await p.locator('#declareBankruptcy').click();
+ await p.locator('#finish').waitFor({state:'visible'});
+ ok('menu bankruptcy clears player property and produces final standings',await p.evaluate(()=>{
+  const s=__skylineApproved.state();
+  return s.endReason==='declared-bankruptcy'&&s.players[0].bankrupt&&s.winner!==0&&Object.values(s.properties).every(p=>p.owner!==0);
+ }));
+ ok('no JS page errors in interactive 3D gameplay',errors.length===0,errors);
+ fs.writeFileSync(path.join(output,'result.json'),JSON.stringify({board,browser:browserName,checks,errors,physicalDevice:false,stats},null,2));
+ console.log('PASSED',board,browserName,checks.length,'actual in-browser checks');
+ } finally { await browser.close(); }
+})().catch(e=>{console.error(e.stack||e);process.exitCode=1});

@@ -8,8 +8,7 @@
       temporary functional entry point. The final Career interface is ChatGPT's design and replaces the temporary one.
 
    Origins is today's Classic game, unchanged. A career match is an ordinary match started with set.career='origins'
-   (saves already accept extra set fields). Circuit, Dominion and Empire have no gameplay yet: they can be previewed
-   and unlocked, but not played. City Boards progression (city achievements, frames, Spotlight, objectives, country
+   (saves already accept extra set fields). Dominion and Empire now launch approved 48/32-space 3D boards, not the retired prototype rules. City Boards progression (city achievements, frames, Spotlight, objectives, country
    unlocks) is not read or written here. See skyline-estates/CAREER.md. */
 (function(root,factory){const core=factory();if(typeof module==='object'&&module.exports)module.exports=core;else root.SkylineCareerCore=core})(typeof self!=='undefined'?self:this,function(){'use strict';
 const VERSION=1;
@@ -40,18 +39,18 @@ const BOARDS=Object.freeze([
   requires:[{kind:'qualifiedWins',board:'circuit',count:2},{kind:'challenges',board:'circuit',tag:'district',count:3}],lengths:[],
   preview:{headline:'Complete Landmark Chains and build a city legacy.',geometry:'33-space double loop with three shared hubs',movement:'Choose the Riverside or Highland loop at Start',
    building:'Plot to House 4, then a Landmark Residence with the full colour group.',victory:'Most Legacy Points after 15 turns.',status:'released',design:'crossroads-capital.html'}},
- {id:'dominion',tier:4,name:'Skyline Dominion',difficulty:'Advanced',strategy:'Territory and negotiation',playable:false,ruleset:null,
+ {id:'dominion',tier:4,name:'Skyline Dominion',difficulty:'Advanced',strategy:'Hex Ring property trading',playable:false,ruleset:null,
   requires:[{kind:'qualifiedWins',board:'crossroads',count:2},{kind:'challenges',board:'crossroads',tag:'landmark',count:3}],lengths:[],
-  // Released with prototype rules (owner decision 19 Nov 2026): DOMINION.md, ruleset dominion-p1. Quick is experimental.
-  alpha:{ruleset:'dominion-p1',lengths:['standard','extended','quick'],experimental:['quick'],defaultLength:'standard'},
-  preview:{headline:'Contest districts and negotiate for control.',geometry:'48-space hexagonal track, eight district territories, Central District and contest exchanges',movement:'Action points across connected districts',
-   building:'Owning a site allows basic development; advanced buildings need district control.',victory:'Hold the required districts or lead on control points.',status:'released-prototype',design:'dominion-production-lab.html'}},
- {id:'empire',tier:5,name:'Skyline Empire',difficulty:'Expert',strategy:'Investment and economic control',playable:false,ruleset:null,
+  // Approved 48-space Hex Ring replacement; Quick remains experimental.
+  alpha:{ruleset:'skyline-approved-board-v1',lengths:['standard','extended','quick'],experimental:['quick'],defaultLength:'standard'},
+  preview:{headline:'Buy and upgrade royal properties around the Hex Ring.',geometry:'48-space flat-top hexagonal ring, six royal districts and central Dominion Tower',movement:'Roll two dice and move clockwise with visible 3D tokens',
+   building:'Build Plot, Low-rise, Mid-rise, High-rise and Skyscraper on properties you own.',victory:'Highest cash plus property and upgrade value after 12 / 18 / 24 rounds.',status:'replacement-review',design:'approved-career-board.html?board=dominion'}},
+ {id:'empire',tier:5,name:'Crown Empire',difficulty:'Expert',strategy:'Crown Plaza property trading',playable:false,ruleset:null,
   requires:[{kind:'qualifiedWins',board:'dominion',count:2},{kind:'challenges',board:'dominion',tag:'negotiation',count:1}],lengths:[],
-  // Released with prototype rules (owner decision 19 Nov 2026): EMPIRE.md, ruleset empire-p1. Quick is experimental.
-  alpha:{ruleset:'empire-p1',lengths:['standard','extended','quick'],experimental:['quick'],defaultLength:'standard'},
-  preview:{headline:'Invest across zones and complete your empire.',geometry:'44-space island loop through six zones around the Empire Tower',movement:'Strategic movement between zones',
-   building:'Higher buildings need supporting investment and infrastructure.',victory:'Complete three empire milestones and keep the lead.',status:'released-prototype',design:'empire-production-lab.html'}}
+  // Approved 32-space Crown Plaza replacement; Quick remains experimental.
+  alpha:{ruleset:'skyline-approved-board-v1',lengths:['standard','extended','quick'],experimental:['quick'],defaultLength:'standard'},
+  preview:{headline:'Build a royal property empire around Crown Plaza.',geometry:'32-space gold-framed crown board surrounding central royal gardens',movement:'Roll two dice and travel the clockwise royal-estate route',
+   building:'Upgrade owned properties through the Hotel stage for higher rent.',victory:'Highest cash plus property and upgrade value after 12 / 20 / 28 rounds.',status:'replacement-review',design:'approved-career-board.html?board=empire'}}
 ].map(b=>Object.freeze({...b,requires:Object.freeze(b.requires.map(r=>Object.freeze({...r}))),preview:Object.freeze({...b.preview})})));
 const BY_ID=Object.fromEntries(BOARDS.map(b=>[b.id,b]));
 const int=(v,lo=0)=>Number.isSafeInteger(v)&&v>=lo?v:0;
@@ -191,26 +190,35 @@ function gather(w){
  return{board:G.set.career,matchId:G.masteryId,sim:!!G.sim,fast:!!FAST,online:!!G.online,assisted:!!G.scAssisted,over:!!G.over,ownerHuman:!!owner&&!owner.ai,
   startedAt,endedAt:Date.now(),rounds:G.round,activity,won:!!owner&&owner===w,score,aiOpponents:G.players.filter(p=>p.ai).length,aiLevel:G.set.ai}}
 let last=null,inbox=[];
-// City Ventures (Career Board 2) pays 5× the normal match rewards in coins and earned Skyline Cash (owner decision
-// 20 Nov 2026). Paid once per counted match (the Career receipt already refuses repeats and too-short matches).
-// Bonus boards pay a multiple of the normal match coins and earned Skyline Cash (owner decisions: City Ventures ×5
-// on 20 Nov 2026, Crossroads Capital ×6 on 21 Nov 2026). Paid once per counted match (the Career receipt already
-// refuses repeats and too-short matches).
-const BOARD_REWARDS={'city-ventures-v1':{x:5,name:'City Ventures',icon:'💹'},'crossroads-lc-v1':{x:6,name:'Crossroads Capital',icon:'🏛'}};let rewardNotes=[];
-function boardRewards(f){const B=BOARD_REWARDS[f.ruleset];if(!B)return;const X=B.x;
+// Established board rewards apply to counted matches. Dominion and Empire pay for qualifying wins.
+const BOARD_REWARDS={
+ 'city-ventures-v1':{x:5,name:'City Ventures',icon:'💹'},
+ 'crossroads-lc-v1':{x:6,name:'Crossroads Capital',icon:'🏛'}
+};
+const APPROVED_WIN_REWARDS={
+ dominion:{x:7,name:'Skyline Dominion',icon:'🏛️'},
+ empire:{x:10,name:'Crown Empire',icon:'👑'}
+};
+let rewardNotes=[];
+function boardRewards(f,receipt){
+ const B=f.ruleset==='skyline-approved-board-v1'
+  ? (receipt.qualifiedWin&&APPROVED_WIN_REWARDS[f.board])
+  : BOARD_REWARDS[f.ruleset];
+ if(!B)return;
+ const X=B.x;
  const rank=Number.isInteger(f.rank)?f.rank:(f.won?0:2),coins=(typeof gameCoinReward==='function'?gameCoinReward(!!f.won,rank):(f.won?500:rank===1?220:125))*X;
  let sc=0;try{const W=window.SkylineSCWallet,R=W.RULES;sc=X*(R.completion+(f.won?R.win:0));if(!W.create(localStorage).record('board:'+f.matchId,sc,'match',(f.won?B.name+' win':B.name+' match')+' ×'+X,{matchId:f.matchId}))sc=0}catch(e){sc=0}
  if(typeof addCoins==='function')addCoins(coins,(f.won?B.name+' win ×':B.name+' ×')+X);
  rewardNotes.push({won:!!f.won,rank,coins,sc,B});
  setTimeout(()=>{if(!rewardNotes.length||typeof modal!=='function')return;const n=rewardNotes.splice(0);const c=n.reduce((a,x)=>a+x.coins,0),k=n.reduce((a,x)=>a+x.sc,0),b=n[n.length-1].B;
-  modal({html:`<div class="mh">${b.icon} ${b.name} rewards ×${b.x}</div><div class="mtxt">${n.some(x=>x.won)?'Your win':'Your match'} paid <b>+${c.toLocaleString('en-US')} coins</b>${k?` and <b>+${k.toLocaleString('en-US')} SC</b>`:''}.<br><small>${b.name} pays ${b.x===5?'five':b.x===6?'six':b.x} times the usual match rewards.</small></div>`,btns:[{k:'x',label:'Great',primary:true}]})},1600)}
+  modal({html:`<div class="mh">${b.icon} ${b.name} rewards ×${b.x}</div><div class="mtxt">${n.some(x=>x.won)?'Your win':'Your match'} paid <b>+${c.toLocaleString('en-US')} coins</b>${k?` and <b>+${k.toLocaleString('en-US')} SC</b>`:''}.<br><small>${b.name} pays ${b.x} times the usual rewards for this result.</small></div>`,btns:[{k:'x',label:'Great',primary:true}]})},1600)}
 // Matches from separate board pages (Circuit alpha) arrive as one localStorage key per match, so two tabs can never
 // overwrite each other. Each key is recorded once (receipts reject repeats) and then removed. A newer-version
 // Career record is never written, and its inbox is left for that version.
 const INBOX='skylineCareerInbox:';
 function ingest(){if(!enabled)return [];const out=[];let keys=[];try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith(INBOX))keys.push(k)}}catch(e){return out}
  for(const k of keys.sort()){let s=loadStored();if(s.readOnly)break;let f=null;try{f=JSON.parse(localStorage.getItem(k))}catch(e){}
-  const r=f?C.record(s,f,ctx()):{ok:false,reason:'invalid'};if(r.ok){store(s);try{boardRewards(f)}catch(e){}}out.push({key:k.slice(INBOX.length),...r});try{localStorage.removeItem(k)}catch(e){}}
+  const r=f?C.record(s,f,ctx()):{ok:false,reason:'invalid'};if(r.ok){store(s);try{boardRewards(f,r)}catch(e){}}out.push({key:k.slice(INBOX.length),...r});try{localStorage.removeItem(k)}catch(e){}}
  inbox=inbox.concat(out).slice(-20);return out}
 if(enabled){try{ingest()}catch(e){}}
 if(enabled){
@@ -246,7 +254,10 @@ const LENGTH_CHOICES={
  crossroads:[['standard','Standard','15 turns · counts for unlocks'],['quick','Quick','9 turns · mastery XP only']],
  origins:[['quick','Quick','20 rounds · about 15 min'],['standard','Standard','30 rounds · about 25 min'],['extended','Extended','40 rounds · about 35 min'],['unlimited','Unlimited','Play until one player is left']],
  alpha:[['standard','Standard','Full match · counts for unlocks'],['extended','Extended','Longer match · counts for unlocks'],['quick','Quick','Short practice · mastery XP only']]};
-const BOARD_RULES={crossroads:`<b>Goal:</b> the most Legacy Points after 15 turns (Quick: 9).<br><br>
+const winRewardRule=board=>`<br><br><b>Win rewards:</b> A qualifying Standard or Extended Career win pays <b>${APPROVED_WIN_REWARDS[board].x}× the usual win rewards</b> in Skyline Coins and Skyline Cash (SC). Return to Skyline Estates after the match to collect. Quick matches earn Career mastery XP only.`;
+const BOARD_RULES={dominion:`<b>Goal:</b> Finish with the highest combined value of match cash, properties and upgrades. Quick lasts 12 rounds, Standard 18 and Extended 24.<br><br><b>Your turn:</b> Roll two dice and move clockwise around 48 spaces. Passing GO pays 220,000 in match cash. Buy or auction unowned properties, pay rent on rival properties and make trade offers. An owned property starts as a Plot and can be upgraded through Skyscraper. District gateways pay 50,000 in match cash. Tap a tile to inspect it and use Whole Board or Close View to change the camera.<br><br><b>Unlock Crown Empire:</b> Earn two qualifying Dominion wins and complete one negotiation challenge by trading during a counted match.`+winRewardRule('dominion'),
+empire:`<b>Goal:</b> Finish with the highest combined value of match cash, properties and upgrades. Quick lasts 12 rounds, Standard 20 and Extended 28.<br><br><b>Your turn:</b> Roll two dice and move clockwise around 32 spaces. Passing START pays 350,000 in match cash. Buy, auction or trade property, and upgrade owned plots up to a Hotel to increase rent. Taxes and events can change your balance. Civic Review skips your next turn. Tap a tile to inspect it and use Whole Board or Close View to change the camera.`+winRewardRule('empire'),
+crossroads:`<b>Goal:</b> the most Legacy Points after 15 turns (Quick: 9).<br><br>
 <b>Landmark Chains:</b> pursue a three-stage brief; stamps come in order, one per action. A Ribbon Cutting pays +5 Legacy Points and 200 CC (+1 more on the Skybridge) and unveils a landmark in the city.<br><br>
 <b>The double loop:</b> at Start choose the Riverside or Highland loop. Both meet at the Skybridge Bonus, the Grand Exchange and Start / Payday (200 CC).<br><br>
 <b>Every landing matters:</b> acquire, reserve or auction; Open House or upgrade your own; Scout or deal after paying rent; Metro Express; City Moments; tax and fees can buy Legacy Points. Each chapter has a public City Headline worth bonus points.<br><br>
@@ -276,8 +287,8 @@ async function open(){
  if(len==='back')return open();
  if(len==='rules'){await modal({cls:'wide career-rules',html:`<div class="mh">${BOARD_ICON[bid]||''} ${esc(b.name)} — How to play</div><div class="mtxt" style="text-align:left;font-size:14px;line-height:1.45">${BOARD_RULES[bid]}</div>`,btns:[{k:'x',label:'Got it',primary:true}]});return open()}
  if(!len)return;
- const page={circuit:'./city-ventures.html',crossroads:'./crossroads-capital.html',dominion:'./dominion-production-lab.html',empire:'./empire-production-lab.html'};
- if(page[bid])location.href=page[bid]+'?career=1&length='+encodeURIComponent(len);
+ const page={circuit:'./city-ventures.html',crossroads:'./crossroads-capital.html',dominion:'./approved-career-board.html?board=dominion',empire:'./approved-career-board.html?board=empire'};
+ if(page[bid]){const u=new URL(page[bid],location.href);u.searchParams.set('career','1');u.searchParams.set('length',len);location.href=u.href;}
  else startOrigins(len);
 }
 // Career Board 1 (owner decisions 19–20 Nov 2026): Career Origins matches are shown on the approved Origins 3D board.

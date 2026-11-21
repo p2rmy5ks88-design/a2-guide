@@ -84,6 +84,32 @@ table.res{width:100%;border-collapse:collapse;font-size:14px;margin:8px 0}table.
 #rules .card{max-height:calc(100dvh - 24px);overflow:auto;font-size:13.5px;line-height:1.45}#rules h3{margin:10px 0 2px;font-size:14px;color:var(--gold-300)}
 @media (max-height:430px){#players .pl{padding:3px 8px 3px 5px}.pl .av{width:26px;height:26px;font-size:14px}#side{width:min(210px,28vw)}#log{max-height:60px}#decision{max-height:calc(100dvh - 70px)}}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+/* Readable disabled controls: fully opaque against animated 3D scenery.
+   Disabled state stays visually muted, without allowing trees or tile labels
+   to bleed through the action dock on iPhone landscape. */
+#help .btn:disabled,#dock .btn:disabled{
+ opacity:1;
+ background:linear-gradient(175deg,#1b3048,#0a1a30);
+ color:#bac5d5;
+ border-color:#827459;
+ text-shadow:0 1px 2px #07111e;
+ box-shadow:0 4px 14px #000a;
+ cursor:default;
+}
+
+/* Phone landscape safe-area: never let the current-property/log sidebar
+   extend over the bottom dice/action dock. It scrolls instead of clipping. */
+@media (orientation:landscape) and (max-height:500px){
+ #side{
+  bottom:calc(var(--sb) + 76px);
+  min-height:0;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  scrollbar-width:thin;
+ }
+ #side .panel{flex-shrink:0}
+}
 </style>
 </head>
 <body>
@@ -104,7 +130,7 @@ table.res{width:100%;border-collapse:collapse;font-size:14px;margin:8px 0}table.
 <section id="decision" class="panel" hidden role="dialog" aria-live="polite"></section>
 <div id="toast" class="panel" role="status"></div>
 <div id="menu" class="screen" hidden><div class="card panel"><h1>Menu</h1><p>City Ventures — The Living Market</p>
- <div class="row"><button class="btn" id="mRules">📖 Rules</button><button class="btn" id="mResume">▶ Resume</button><button class="btn" id="mNew">↻ New match</button><button class="btn" id="mHome">🏠 Skyline Estates</button></div></div></div>
+ <div class="row"><button class="btn" id="mRules">📖 Rules</button><button class="btn" id="mResume">▶ Resume</button><button class="btn" id="mNew">↻ New match</button><button class="btn" id="mBankrupt">Declare bankruptcy</button><button class="btn" id="mEnd">End game &amp; score</button><button class="btn" id="mHome">🏠 Skyline Estates</button></div></div></div>
 <div id="rules" hidden><div class="card panel"><h1>How to play</h1><p>Build the most valuable City Value in 18 turns (Quick: 10).</p>
  <h3>Your turn</h3>Roll, move, then buy the space you land on or send it to auction. Own 2 of a district’s 3 properties to build Low-rise and Mid-rise; own all 3 for a Landmark (+25% district rent).
  <h3>The six power corners</h3><b>Start</b> — pass for 200 CC; land exactly to pick a Charter. <b>Free Lounge</b> — Rent Shield or keep a card. <b>Civic Review</b> — Development Drive (−20% upgrades) or Tenant Protection (−30% rent) for a round. <b>Market Boom</b> — one district’s rent +50% or −40% for a round. <b>Skyline Exchange</b> — open an auction or a Deal Desk trade. <b>Transit Hub</b> — Express Route to any station or a Transit Dividend.
@@ -241,13 +267,23 @@ async function pump(){if(pumping)return;pumping=true;try{for(;;){if(!s||s.over)b
  if(s&&s.over)finishMatch();else render()}
 function finishMatch(){r3.sync(CV.view(s));reportCareer();setTimeout(showResults,900)}
 function showResults(){const res=s.results||[];const me=res.find(r=>r.pid===0);$('results').hidden=false;$('resTitle').textContent=s.winner===0?'🏆 You win!':`${s.players[s.winner].name} wins`;
- $('resSub').textContent=CAREER?(s.cfg.length==='quick'?'Quick matches earn mastery XP only.':s.winner===0?'This win counts for Career when you return to Skyline Estates.':'Matches you finish still earn Career mastery.'):'City Value = cash + properties + 80% of upgrades + district and Landmark bonuses.';
+ $('resSub').textContent=s.closedFromMenu?'Match ended early. Final standings are shown below.':CAREER?(s.cfg.length==='quick'?'Quick matches earn mastery XP only.':s.winner===0?'This win counts for Career when you return to Skyline Estates.':'Matches you finish still earn Career mastery.'):'City Value = cash + properties + 80% of upgrades + district and Landmark bonuses.';
  $('resTable').innerHTML=res.map((r,k)=>`<tr><td>${k+1}. ${esc(r.name)}${r.out?' (bankrupt)':''}</td><td>${r.sets} districts · ${r.landmarks} landmarks</td><td>${fmt(r.total)}</td></tr>`).join('')}
-function reportCareer(){if(!s||!s.over||!s.meta||!s.meta.career||reported===s.meta.matchId)return;reported=s.meta.matchId;
+function reportCareer(){if(!s||!s.over||s.closedFromMenu||!s.meta||!s.meta.career||reported===s.meta.matchId)return;reported=s.meta.matchId;
  try{const f=CV.careerFacts(s,{ownerSeat:0,endedAt:Date.now()});localStorage.setItem('skylineCareerInbox:'+f.matchId,JSON.stringify(f));localStorage.removeItem(CV.SAVE_KEY)}catch(e){console.warn('Career report',e)}}
-$('resAgain').onclick=()=>{$('results').hidden=true;startScreen()};$('resHome').onclick=()=>location.href='./index.html';
-$('menuBtn').onclick=()=>$('menu').hidden=false;$('mResume').onclick=()=>$('menu').hidden=true;$('mRules').onclick=()=>{$('menu').hidden=true;$('rules').hidden=false};
-$('mNew').onclick=()=>{$('menu').hidden=true;try{localStorage.removeItem(CV.SAVE_KEY)}catch(e){}s=null;startScreen()};$('mHome').onclick=()=>location.href='./index.html';
+$('resAgain').onclick=()=>{$('results').hidden=true;startScreen()};$('resHome').onclick=()=>location.href='./index.html?return=1';
+
+function closeFromMenu(bankruptcy){
+ if(!s||s.over||busy||pumping)return;
+ const question=bankruptcy?'Declare bankruptcy and return your properties to the bank?':'End this match now and score the current standings?';
+ if(!window.confirm(question+' Early finishes on this board do not award Career progress.'))return;
+ if(!CV.closeMatch(s,bankruptcy))return;
+ $('menu').hidden=true;save();render();finishMatch();
+}
+$('mBankrupt').onclick=()=>closeFromMenu(true);
+$('mEnd').onclick=()=>closeFromMenu(false);
+$('menuBtn').onclick=()=>{const disabled=!s||s.over||busy||pumping;$('mBankrupt').disabled=disabled;$('mEnd').disabled=disabled;$('menu').hidden=false};$('mResume').onclick=()=>$('menu').hidden=true;$('mRules').onclick=()=>{$('menu').hidden=true;$('rules').hidden=false};
+$('mNew').onclick=()=>{$('menu').hidden=true;try{localStorage.removeItem(CV.SAVE_KEY)}catch(e){}s=null;startScreen()};$('mHome').onclick=()=>location.href='./index.html?return=1';
 let overview=false;$('viewBtn').onclick=()=>{overview=!overview;r3.overview(overview);$('viewBtn').textContent=overview?'🎯':'🗺';$('viewBtn').setAttribute('aria-label',overview?'Follow the active player':'Show the whole board')};
 
 // ---------- boot ----------

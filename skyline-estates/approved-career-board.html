@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#08172d"><title>Skyline Estates — Approved Dominion & Empire Boards</title>
+<link rel="stylesheet" href="presentation/approved-board.css">
+</head><body>
+<main id="shell" aria-label="Interactive 3D Skyline Estates board game">
+<div id="bg"></div>
+<section id="boardBox"><canvas id="board" aria-label="3D property board; tap a tile to inspect and select it"></canvas></section>
+<header id="heading"><h1 id="gameName">SKYLINE ESTATES<small id="subtitle"></small></h1><p class="blurb" id="description"></p></header>
+<div id="hudTop"><span id="round" class="pill">Round 1</span><span id="turn" class="pill">🎲 Your turn</span></div>
+<div id="roster" aria-label="Players"></div>
+<button id="more" type="button" aria-controls="detailsDrawer" aria-expanded="false">☰ Game details</button>
+<aside id="detailsDrawer" hidden><h3>Game details</h3><div id="advancedInfo"></div><button id="declareBankruptcy">Declare bankruptcy</button><button id="endMatch">End game &amp; score</button><button id="closeDetails">▣ Back to board</button></aside>
+<aside id="right" aria-label="Selected space and game actions">
+ <section id="property" aria-live="polite"><div class="tile-line"></div><h2 id="propertyName">Select a space</h2><img id="propertyImage" class="mini" src="" alt="Property tile art" hidden><div id="propertyMeta"></div></section>
+ <div id="actionbox" aria-label="Turn actions"></div>
+</aside>
+<div id="bottom"><div id="seatSummary" style="display:contents"></div><nav id="cameraButtons" aria-label="3D board camera"><button id="whole" class="active">◈ Whole board</button><button id="close">⌕ Close view</button></nav></div>
+<div id="notice" role="status" hidden></div><div id="finish" hidden></div>
+<section id="setup"><div class="setupCard"><h1 id="setupTitle">Skyline Estates</h1><p id="setupDesc">Play the new approved board as an interactive 3D property-trading game.</p><label for="length">Match length</label> <select id="length"><option value="quick">Quick</option><option value="standard" selected>Standard</option><option value="extended">Extended</option></select><div class="setupActions"><button id="start">🎲 Start match</button><button id="resume" hidden>Resume match</button></div><p class="muted">Your legacy Career progress and previous saved game remain untouched during this replacement preview.</p></div></section>
+</main>
+<script type="module" src="lib/approved-board-app.js"></script>
+</body></html>

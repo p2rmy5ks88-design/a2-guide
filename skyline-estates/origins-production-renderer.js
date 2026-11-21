@@ -61,13 +61,41 @@ export function createOriginsRenderer(canvas,{read,onSquare,onError=console.erro
  const tileMats=[],buildings=new Map(),tokens=[],dice=[],nativeDice=[],tokenAdapter=createTokenAdapter({onChange:()=>{dirty=true;shadowDirty=true;}});
  const contactTex=A.texture((c,s)=>{const g=c.createRadialGradient(s/2,s/2,0,s/2,s/2,s/2);g.addColorStop(0,'rgba(0,0,0,.5)');g.addColorStop(.45,'rgba(0,0,0,.24)');g.addColorStop(1,'rgba(0,0,0,0)');c.fillStyle=g;c.fillRect(0,0,s,s)},128);
  const contactMat=new THREE.MeshBasicMaterial({map:contactTex,transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-1});
- function labelTexture(square,index,accent){return A.texture((c,s)=>{c.fillStyle='#f3ead7';c.fillRect(0,0,s,s);c.strokeStyle='#bfa26e';c.lineWidth=5;c.strokeRect(2,2,s-4,s-4);c.fillStyle=accent;c.fillRect(7,7,s-14,18);c.fillStyle='#172236';c.textAlign='center';c.font='800 76px Arial';let words=square.name.toUpperCase().split(' '),lines=[''];for(const w of words){let l=lines.length-1;if(c.measureText(lines[l]+w).width>s-38)lines.push(w+' ');else lines[l]+=w+' ';}const corner=index%10===0;lines.slice(0,3).forEach((t,k)=>c.fillText(t.trim(),s/2,s*(corner?.5:.29)+k*84));if(square.price){c.font='700 48px Arial';c.fillText(square.price,s/2,s-25);}else if(corner){c.font='800 100px Arial';c.fillText(index===0?'↗':index===10?'🔒':index===20?'☕':'↪',s/2,s*.28);}},512);}
+ function labelTexture(square,index,accent){
+  // Real SQ names and prices, using bright unlit ink under warm lighting.
+  return A.texture((c,s)=>{
+   c.fillStyle='#fff2dc';c.fillRect(0,0,s,s);
+   c.strokeStyle='#654826';c.lineWidth=8;c.strokeRect(5,5,s-10,s-10);
+   c.fillStyle=accent;c.fillRect(11,11,s-22,40);
+   c.textAlign='center';c.textBaseline='middle';c.fillStyle='#142239';
+   const words=String(square.name||'').trim().toUpperCase().split(/\s+/).filter(Boolean),maxWidth=s-46;
+   let font=72,lines=[];
+   // Reduce type size before truncating a real property or event title.
+   do{
+    c.font='900 '+font+'px Arial, sans-serif';lines=[''];
+    for(const word of words){const last=lines.length-1,next=(lines[last]?lines[last]+' ':'')+word;
+     if(lines[last]&&c.measureText(next).width>maxWidth)lines.push(word);else lines[last]=next;}
+    if(lines.length<=3&&lines.every(t=>c.measureText(t).width<=maxWidth))break;
+    font-=4;
+   }while(font>=36);
+   const corner=index%10===0,mid=s*(square.price ? .41 : corner ? .55 : .48),spacing=font*1.22;
+   lines.forEach((text,i)=>c.fillText(text,s/2,mid+(i-(lines.length-1)/2)*spacing,maxWidth));
+   if(square.price){
+    c.fillStyle='#152a44';c.fillRect(18,s-92,s-36,70);
+    c.fillStyle='#ffe4a7';c.font='800 54px Arial, sans-serif';
+    c.fillText(square.price,s/2,s-56,s-64);
+   }else if(corner){
+    c.fillStyle='#152a44';c.font='900 64px Arial, sans-serif';
+    c.fillText(index===0?'GO':index===10?'VISIT':index===20?'REST':'MOVE',s/2,s*.21,maxWidth);
+   }
+  },512);
+ }
  function buildTiles(v){v.squares.forEach((s,i)=>{let p=coord(s.rect);if(assetPack){const l=assetPack.layout[i],side=Math.floor(i/10),corner=i%10===0;p={x:l.position[0]*assetPack.scale,z:l.position[2]*assetPack.scale,w:(corner?l.size[0]:side%2?l.size[0]:l.size[1])*assetPack.scale,d:(corner?l.size[1]:side%2?l.size[1]:l.size[0])*assetPack.scale};}tilePositions[i]=p;const tile=new THREE.Group();tile.position.set(p.x,assetPack?.095:.04,p.z);tile.userData.square=i;const accent=new THREE.MeshStandardMaterial({color:s.color||'#b79145',roughness:.34,metalness:.12});const edge=A.roundBox(tile,accent,0,.0,0,p.w-.024,.13,p.d-.024,.035);pick.push(edge);edge.userData.square=i;
    const side=Math.floor(i/10),corner=i%10===0,vertical=side%2===0;
    // Neutral, camera-facing deed text occupies the outside of the tile. The
    // district-coloured inner surface stays separate for its actual development.
    const labelW=corner?p.w-.055:vertical?p.w*.59:p.w-.055,labelD=corner?p.d-.055:vertical?p.d-.055:p.d*.59;
-   const map=labelTexture(s,i,s.color||'#b79145'),face=new THREE.Mesh(new THREE.PlaneGeometry(labelW,labelD),new THREE.MeshStandardMaterial({map,roughness:.7,metalness:0}));face.rotation.x=-Math.PI/2;face.position.set(corner?0:side===0?-p.w*.2:side===2?p.w*.2:0,.072,corner?0:side===1?-p.d*.2:side===3?p.d*.2:0);
+   const map=labelTexture(s,i,s.color||'#b79145'),face=new THREE.Mesh(new THREE.PlaneGeometry(labelW,labelD),new THREE.MeshBasicMaterial({map,toneMapped:false,fog:false,depthWrite:true,polygonOffset:true,polygonOffsetFactor:-1}));face.rotation.x=-Math.PI/2;face.position.set(corner?0:side===0?-p.w*.2:side===2?p.w*.2:0,.072,corner?0:side===1?-p.d*.2:side===3?p.d*.2:0);
    tile.add(face);
    if(s.type==='prop'){
     const plotW=vertical?p.w*.35:p.w-.05,plotD=vertical?p.d-.05:p.d*.35;
@@ -92,21 +120,44 @@ const key=JSON.stringify([v.ownership,v.players.map(p=>[p.id,p.out,p.color])]);i
  // Camera follow (owner request 20 Nov 2026): like the classic board, ease in on the rolling dice and the moving token,
  // then ease back to the full board. Uses the player's existing camera setting (follow / whole board).
  const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)');// iPhone Reduce Motion keeps the whole-board view.
- let base=null,followT=0,followLast=-1e9,followAt=0,followPrevDice='';const followPrevTok=[],followFocus=new THREE.Vector3(),followAim=new THREE.Vector3();
+ let base=null,followT=0,followLast=-1e9,followAt=0,followPrevDice='',followYaw=0,aimYaw=0;
+ const followPrevTok=[],followFocus=new THREE.Vector3(),followAim=new THREE.Vector3();
  function tokenWorld(p){return assetPack?[-p.world[2]*.99,p.world[1]+.21,p.world[0]*.99]:[-p.world[0],p.world[1]+.16,p.world[2]];}
- function applyCamera(){if(!base)return;const t=followT,d=base.dist*(1-.55*t);
+ function sideYaw(x,z){
+  // Stable cardinal bearings along streets; turn smoothly when crossing corners.
+  if(Math.hypot(x,z)<.5)return 0;
+  return Math.round(Math.atan2(x,z)/(Math.PI/2))*(Math.PI/2);
+ }
+ function angleDelta(a,b){return Math.atan2(Math.sin(b-a),Math.cos(b-a));}
+ function applyCamera(){
+  if(!base)return;
+  const t=followT,d=base.dist*(1-.62*t),elev=base.elev+(.78-base.elev)*t,cos=Math.cos(elev);
   target.set(followFocus.x*t,.15+(followFocus.y-.15)*t,followFocus.z*t);
-  camera.position.set(target.x,target.y-.15+Math.sin(base.elev)*d,target.z+Math.cos(base.elev)*d);camera.lookAt(target);
-  camera.setViewOffset(base.w,base.h,-base.dx*(1-t),-base.dy*(1-t),base.w,base.h);}
- function followCamera(v,now){if(!base)return;let moved=null;
+  camera.up.set(0,1,0);
+  camera.position.set(target.x+Math.sin(followYaw)*cos*d,target.y+Math.sin(elev)*d,target.z+Math.cos(followYaw)*cos*d);
+  camera.lookAt(target);
+  // Preserve the live HUD-safe framing offset during close follow, too.
+  camera.setViewOffset(base.w,base.h,-base.dx,-base.dy,base.w,base.h);
+ }
+ function followCamera(v,now){
+  if(!base)return;
+  let moved=null;
   v.players.forEach((p,i)=>{const w=tokenWorld(p),o=followPrevTok[i];if(o&&!p.out&&Math.hypot(w[0]-o[0],w[2]-o[2])>.004)moved=w;followPrevTok[i]=w;});
   const dk=v.dice&&v.nativeDice.some(d=>d.visible)?JSON.stringify(v.nativeDice.map(d=>d.visible?d.r:0)):'';
-  if(v.follow!==false&&!reduceMotion.matches){if(dk&&dk!==followPrevDice){followAim.set(0,.45,0);followLast=now;}if(moved){followAim.set(moved[0],.2,moved[2]);followLast=now;}}
+  if(v.follow!==false&&!reduceMotion.matches){
+   if(dk&&dk!==followPrevDice){followAim.set(0,.45,0);aimYaw=0;followLast=now;}
+   if(moved){followAim.set(moved[0],.2,moved[2]);aimYaw=sideYaw(moved[0],moved[2]);followLast=now;}
+  }
   followPrevDice=dk;
-  const want=now-followLast<1100?1:0,dt=Math.min(100,followAt?now-followAt:16);followAt=now;const before=followT;
+  const want=now-followLast<1100?1:0,dt=Math.max(0,Math.min(100,followAt?now-followAt:16));
+  followAt=now;const before=followT;
   followT+=(want-followT)*Math.min(1,dt*(want?.006:.0028));if(Math.abs(followT-want)<.003)followT=want;
   if(followT===0)followFocus.copy(followAim);else followFocus.lerp(followAim,Math.min(1,dt*.008));
-  if(followT!==before||(followT>0&&moved)){applyCamera();dirty=true;}}
+  const desiredYaw=want?aimYaw:0,step=angleDelta(followYaw,desiredYaw)*Math.min(1,dt*.004);
+  followYaw+=step;
+  if(Math.abs(angleDelta(followYaw,desiredYaw))<.002)followYaw=desiredYaw;
+  if(followT!==before||Math.abs(step)>.0001||(followT>0&&moved)){applyCamera();dirty=true;}
+ }
  function resize(){const w=canvas.clientWidth,h=canvas.clientHeight;if(!w||!h)return;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();const usable=read()?.viewport||{left:0,right:0,top:0,bottom:0},availableW=Math.max(.3,1-(usable.left+usable.right)/w),availableH=Math.max(.3,1-(usable.top+usable.bottom)/h);const elevation=mode==='board'?.62:.52,yaw=0,angle=camera.fov*Math.PI/360;
   const distance=Math.max(11.6/(2*Math.tan(angle)*camera.aspect*availableW),11.6*Math.sin(elevation)/(2*Math.tan(angle)*availableH))*1.16;
   target.set(0,.15,0);camera.position.set(Math.sin(yaw)*distance,Math.sin(elevation)*distance,Math.cos(elevation)*distance);camera.lookAt(target);
@@ -156,7 +207,7 @@ const key=JSON.stringify([v.ownership,v.players.map(p=>[p.id,p.out,p.color])]);i
   assetGroup=new THREE.Group();pack.board.scale.setScalar(pack.scale);assetGroup.add(pack.board);pack.environment.scale.setScalar(pack.scale);assetGroup.add(pack.environment);water.visible=false;scene.add(assetGroup);waterfront.register(assetGroup);pack.board.updateMatrixWorld(true);
   // Actual dice use the separate supplied mesh and the real match's lastDice.
   for(let i=0;i<2;i++){const pivot=new THREE.Group(),die=pack.die.clone(true);die.position.y=-.2625;die.scale.setScalar(1.5);pivot.add(die);pivot.position.set(i?.34:-.34,.455,.0);scene.add(pivot);dice.push(pivot);}
-  stateKey='';boardBuilt=false;for(const o of [...tileGroup.children]){tileGroup.remove(o);o.traverse(n=>{if(n.isMesh)n.geometry.dispose()});}pick.length=0;tilePositions.length=0;resize();shadowDirty=true;
+  tileMats.forEach(m=>m.dispose());tileMats.length=0;stateKey='';boardBuilt=false;for(const o of [...tileGroup.children]){tileGroup.remove(o);o.traverse(n=>{if(n.isMesh)n.geometry.dispose()});}pick.length=0;tilePositions.length=0;resize();shadowDirty=true;
  }).catch(e=>{assetError=String(e);onError(e);});
  function occludedFarStreetLabels(){
   if(!assetPack)return[];const origin=camera.getWorldPosition(new THREE.Vector3()),probe=new THREE.Raycaster(),blocked=[];
@@ -166,5 +217,5 @@ const key=JSON.stringify([v.ownership,v.players.map(p=>[p.id,p.out,p.color])]);i
    if(hits.length)blocked.push({square:i,point:hits[0].point.toArray(),mesh:hits[0].object.name});
   }return blocked;
  }
- return {revision:'origins-production-local-8',occludedFarStreetLabels,mode(value){mode=value==='detail'?'detail':'board';resize();},resize,stats(){const sorted=[...times].sort((a,b)=>a-b);return{follow:+followT.toFixed(3),waterReflections:waterfront.stats(),renderCount,timingKind:'CPU render submission, not physical GPU timing',framing:{insets:read()?.viewport,corners:[-5.8,5.8].flatMap(x=>[-5.8,5.8].map(z=>{const q=new THREE.Vector3(x,0,z).project(camera);return{x:(q.x+1)*canvas.clientWidth/2,y:(1-q.y)*canvas.clientHeight/2};}))},exposure:renderer.toneMappingExposure,buffer:[canvas.width,canvas.height],css:[canvas.clientWidth,canvas.clientHeight],pixelRatio,tier,downgrades,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,p95:sorted.length?sorted[Math.floor(sorted.length*.95)]:null,physicalDevice:false,assets:A.audit(assetGroup||staticBatched),pack:assetPack?.report()||{loading:wantsPack,error:assetError},spaces:tilePositions.length,nativeCanvasTextures:tokenAdapter.nativeTextureCount(),diceSkin:rules?.diceSkin,diceVisualSource:rules?.diceSkin==='classic'?'supplied-classic':'native-owned-skin',ownedModels:buildings.size,deemphasizedDevelopments:[...buildings].filter(([,b])=>(b.userData.fadeMaterials||[]).some(m=>m.opacity<m.userData.original.opacity-.01)).map(([i])=>i),tokenMeshes:tokens.map(t=>t.userData.token.meshCount),tokenModes:tokens.map(t=>t.userData.token.illustrated?'illustrated':'3d'),realTime3D:true};},project(i){const p=tilePositions[i];if(!p)return null;const q=new THREE.Vector3(p.x,.15,p.z).project(camera);return{x:(q.x+1)*canvas.clientWidth/2,y:(1-q.y)*canvas.clientHeight/2};},dispose(){running=false;waterfront.dispose();renderer.dispose();reflection.dispose();envTarget.dispose();}};
+ return {revision:'origins-production-local-9',occludedFarStreetLabels,mode(value){mode=value==='detail'?'detail':'board';resize();},resize,stats(){const sorted=[...times].sort((a,b)=>a-b);return{follow:+followT.toFixed(3),followYaw:+followYaw.toFixed(3),cameraUp:camera.up.toArray(),waterReflections:waterfront.stats(),renderCount,timingKind:'CPU render submission, not physical GPU timing',framing:{insets:read()?.viewport,corners:[-5.8,5.8].flatMap(x=>[-5.8,5.8].map(z=>{const q=new THREE.Vector3(x,0,z).project(camera);return{x:(q.x+1)*canvas.clientWidth/2,y:(1-q.y)*canvas.clientHeight/2};}))},exposure:renderer.toneMappingExposure,buffer:[canvas.width,canvas.height],css:[canvas.clientWidth,canvas.clientHeight],pixelRatio,tier,downgrades,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,p95:sorted.length?sorted[Math.floor(sorted.length*.95)]:null,physicalDevice:false,assets:A.audit(assetGroup||staticBatched),pack:assetPack?.report()||{loading:wantsPack,error:assetError},spaces:tilePositions.length,nativeCanvasTextures:tokenAdapter.nativeTextureCount(),diceSkin:rules?.diceSkin,diceVisualSource:rules?.diceSkin==='classic'?'supplied-classic':'native-owned-skin',ownedModels:buildings.size,deemphasizedDevelopments:[...buildings].filter(([,b])=>(b.userData.fadeMaterials||[]).some(m=>m.opacity<m.userData.original.opacity-.01)).map(([i])=>i),tokenMeshes:tokens.map(t=>t.userData.token.meshCount),tokenModes:tokens.map(t=>t.userData.token.illustrated?'illustrated':'3d'),realTime3D:true};},project(i){const p=tilePositions[i];if(!p)return null;const q=new THREE.Vector3(p.x,.15,p.z).project(camera);return{x:(q.x+1)*canvas.clientWidth/2,y:(1-q.y)*canvas.clientHeight/2};},dispose(){running=false;waterfront.dispose();renderer.dispose();reflection.dispose();envTarget.dispose();}};
 }

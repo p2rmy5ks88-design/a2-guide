@@ -1,0 +1,2698 @@
+{
+  "schema_version": 1,
+  "title": "Skyline Dominion \u2014 The Hex Ring Board",
+  "board_id": "skyline_dominion_hex_ring",
+  "reference_status": "approved visual concept; procedural editable 3D reconstruction, not photographic conversion",
+  "world_coordinate_system": "Y-up metres; +Y upward, ground plane XZ",
+  "up": [
+    0,
+    1,
+    0
+  ],
+  "playable_spaces": 48,
+  "space_kind": "perimeter_loop",
+  "closed_loop": true,
+  "board_camera": {
+    "fov_deg": 34,
+    "target": [
+      0,
+      0.35,
+      0
+    ],
+    "overview_position": [
+      0,
+      20,
+      27
+    ],
+    "close_follow_distance": 8.4,
+    "close_follow_pitch_deg": 48,
+    "landscape_css_target": [
+      956,
+      440
+    ],
+    "supports_safe_areas": true
+  },
+  "spaces": [
+    {
+      "id": 0,
+      "key": "TILE_000_GO",
+      "name": "GO",
+      "kind": "start",
+      "price_sc": 0,
+      "palette": "gold",
+      "position": [
+        0.5406,
+        0.25,
+        -7.4911
+      ],
+      "tile_polygon_xz": [
+        [
+          0.0365,
+          -6.322
+        ],
+        [
+          0.876,
+          -6.322
+        ],
+        [
+          1.2,
+          -8.6603
+        ],
+        [
+          0.05,
+          -8.6603
+        ]
+      ],
+      "raycast_node": "TILE_000_GO",
+      "texture": "textures/tiles/TILE_000_GO.png",
+      "build_anchor": [
+        0.5778,
+        0.29,
+        -8.0055
+      ],
+      "pawn_anchor": [
+        0.5406,
+        0.48,
+        -7.4911
+      ],
+      "tangent": [
+        1.0,
+        0.0
+      ],
+      "normal": [
+        0.0058,
+        -1.0
+      ],
+      "neighbors": [
+        47,
+        1
+      ]
+    },
+    {
+      "id": 1,
+      "key": "TILE_001_ROYAL_FIRST_AVENUE",
+      "name": "Royal First Avenue",
+      "kind": "property",
+      "price_sc": 180000,
+      "palette": "gold",
+      "position": [
+        1.6219,
+        0.25,
+        -7.4911
+      ],
+      "tile_polygon_xz": [
+        [
+          0.949,
+          -6.322
+        ],
+        [
+          1.7885,
+          -6.322
+        ],
+        [
+          2.45,
+          -8.6603
+        ],
+        [
+          1.3,
+          -8.6603
+        ]
+      ],
+      "raycast_node": "TILE_001_ROYAL_FIRST_AVENUE",
+      "texture": "textures/tiles/TILE_001_ROYAL_FIRST_AVENUE.png",
+      "build_anchor": [
+        1.7333,
+        0.29,
+        -8.0055
+      ],
+      "pawn_anchor": [
+        1.6219,
+        0.48,
+        -7.4911
+      ],
+      "tangent": [
+        1.0,
+        0.0
+      ],
+      "normal": [
+        0.1484,
+        -0.9889
+      ],
+      "neighbors": [
+        0,
+        2
+      ]
+    },
+    {
+      "id": 2,
+      "key": "TILE_002_ROYAL_MARKET_LANE",
+      "name": "Royal Market Lane",
+      "kind": "property",
+      "price_sc": 220000,
+      "palette": "gold",
+      "position": [
+        2.7031,
+        0.25,
+        -7.4911
+      ],
+      "tile_polygon_xz": [
+        [
+          1.8615,
+          -6.322
+        ],
+        [
+          2.701,
+          -6.322
+        ],
+        [
+          3.7,
+          -8.6603
+        ],
+        [
+          2.55,
+          -8.6603
+        ]
+      ],
+      "raycast_node": "TILE_002_ROYAL_MARKET_LANE",
+      "texture": "textures/tiles/TILE_002_ROYAL_MARKET_LANE.png",
+      "build_anchor": [
+        2.8888,
+        0.29,
+        -8.0055
+      ],
+      "pawn_anchor": [
+        2.7031,
+        0.48,
+        -7.4911
+      ],
+      "tangent": [
+        1.0,
+        0.0
+      ],
+      "normal": [
+        0.2825,
+        -0.9593
+      ],
+      "neighbors": [
+        1,
+        3
+      ]
+    },
+    {
+      "id": 3,
+      "key": "TILE_003_ROYAL_BOULEVARD",
+      "name": "Royal Boulevard",
+      "kind": "property",
+      "price_sc": 260000,
+      "palette": "gold",
+      "position": [
+        3.7844,
+        0.25,
+        -7.4911
+      ],
+      "tile_polygon_xz": [
+        [
+          2.774,
+          -6.322
+        ],
+        [
+          3.6135,
+          -6.322
+        ],
+        [
+          4.95,
+          -8.6603
+        ],
+        [
+          3.8,
+          -8.6603
+        ]
+      ],
+      "raycast_node": "TILE_003_ROYAL_BOULEVARD",
+      "texture": "textures/tiles/TILE_003_ROYAL_BOULEVARD.png",
+      "build_anchor": [
+        4.0443,
+        0.29,
+        -8.0055
+      ],
+      "pawn_anchor": [
+        3.7844,
+        0.48,
+        -7.4911
+      ],
+      "tangent": [
+        1.0,
+        0.0
+      ],
+      "normal": [
+        0.4018,
+        -0.9157
+      ],
+      "neighbors": [
+        2,
+        4
+      ]
+    },
+    {
+      "id": 4,
+      "key": "TILE_004_ROYAL_EXCHANGE",
+      "name": "Royal Exchange",
+      "kind": "market",
+      "price_sc": 0,
+      "palette": "cream",
+      "position": [
+        4.5953,
+        0.25,
+        -7.0229
+      ],
+      "tile_polygon_xz": [
+        [
+          3.6683,
+          -6.2904
+        ],
+        [
+          4.088,
+          -5.5633
+        ],
+        [
+          5.6,
+          -7.621
+        ],
+        [
+          5.025,
+          -8.617
+        ]
+      ],
+      "raycast_node": "TILE_004_ROYAL_EXCHANGE",
+      "texture": "textures/tiles/TILE_004_ROYAL_EXCHANGE.png",
+      "build_anchor": [
+        4.9109,
+        0.29,
+        -7.5052
+      ],
+      "pawn_anchor": [
+        4.5953,
+        0.48,
+        -7.0229
+      ],
+      "tangent": [
+        0.5,
+        0.866
+      ],
+      "normal": [
+        0.5038,
+        -0.8638
+      ],
+      "neighbors": [
+        3,
+        5
+      ]
+    },
+    {
+      "id": 5,
+      "key": "TILE_005_ROYAL_TERRACE",
+      "name": "Royal Terrace",
+      "kind": "property",
+      "price_sc": 300000,
+      "palette": "gold",
+      "position": [
+        5.1359,
+        0.25,
+        -6.0865
+      ],
+      "tile_polygon_xz": [
+        [
+          4.1245,
+          -5.5001
+        ],
+        [
+          4.5443,
+          -4.7731
+        ],
+        [
+          6.225,
+          -6.5385
+        ],
+        [
+          5.65,
+          -7.5344
+        ]
+      ],
+      "raycast_node": "TILE_005_ROYAL_TERRACE",
+      "texture": "textures/tiles/TILE_005_ROYAL_TERRACE.png",
+      "build_anchor": [
+        5.4886,
+        0.29,
+        -6.5045
+      ],
+      "pawn_anchor": [
+        5.1359,
+        0.48,
+        -6.0865
+      ],
+      "tangent": [
+        0.5,
+        0.866
+      ],
+      "normal": [
+        0.5999,
+        -0.8
+      ],
+      "neighbors": [
+        4,
+        6
+      ]
+    },
+    {
+      "id": 6,
+      "key": "TILE_006_ROYAL_GARDENS",
+      "name": "Royal Gardens",
+      "kind": "property",
+      "price_sc": 340000,
+      "palette": "gold",
+      "position": [
+        5.6766,
+        0.25,
+        -5.1501
+      ],
+      "tile_polygon_xz": [
+        [
+          4.5808,
+          -4.7099
+        ],
+        [
+          5.0005,
+          -3.9829
+        ],
+        [
+          6.85,
+          -5.456
+        ],
+        [
+          6.275,
+          -6.4519
+        ]
+      ],
+      "raycast_node": "TILE_006_ROYAL_GARDENS",
+      "texture": "textures/tiles/TILE_006_ROYAL_GARDENS.png",
+      "build_anchor": [
+        6.0664,
+        0.29,
+        -5.5038
+      ],
+      "pawn_anchor": [
+        5.6766,
+        0.48,
+        -5.1501
+      ],
+      "tangent": [
+        0.5,
+        0.866
+      ],
+      "normal": [
+        0.6972,
+        -0.7169
+      ],
+      "neighbors": [
+        5,
+        7
+      ]
+    },
+    {
+      "id": 7,
+      "key": "TILE_007_ROYAL_LANDMARK",
+      "name": "Royal Landmark",
+      "kind": "property",
+      "price_sc": 400000,
+      "palette": "gold",
+      "position": [
+        6.2172,
+        0.25,
+        -4.2138
+      ],
+      "tile_polygon_xz": [
+        [
+          5.037,
+          -3.9196
+        ],
+        [
+          5.4568,
+          -3.1926
+        ],
+        [
+          7.475,
+          -4.3734
+        ],
+        [
+          6.9,
+          -5.3694
+        ]
+      ],
+      "raycast_node": "TILE_007_ROYAL_LANDMARK",
+      "texture": "textures/tiles/TILE_007_ROYAL_LANDMARK.png",
+      "build_anchor": [
+        6.6441,
+        0.29,
+        -4.5031
+      ],
+      "pawn_anchor": [
+        6.2172,
+        0.48,
+        -4.2138
+      ],
+      "tangent": [
+        0.5,
+        0.866
+      ],
+      "normal": [
+        0.7892,
+        -0.6141
+      ],
+      "neighbors": [
+        6,
+        8
+      ]
+    },
+    {
+      "id": 8,
+      "key": "TILE_008_RIVERSIDE_PLAZA",
+      "name": "Riverside Plaza",
+      "kind": "gate",
+      "price_sc": 0,
+      "palette": "cream",
+      "position": [
+        6.7578,
+        0.25,
+        -3.2774
+      ],
+      "tile_polygon_xz": [
+        [
+          5.4933,
+          -3.1294
+        ],
+        [
+          5.913,
+          -2.4024
+        ],
+        [
+          8.1,
+          -3.2909
+        ],
+        [
+          7.525,
+          -4.2868
+        ]
+      ],
+      "raycast_node": "TILE_008_RIVERSIDE_PLAZA",
+      "texture": "textures/tiles/TILE_008_RIVERSIDE_PLAZA.png",
+      "build_anchor": [
+        7.2219,
+        0.29,
+        -3.5024
+      ],
+      "pawn_anchor": [
+        6.7578,
+        0.48,
+        -3.2774
+      ],
+      "tangent": [
+        0.5,
+        0.866
+      ],
+      "normal": [
+        0.8689,
+        -0.495
+      ],
+      "neighbors": [
+        7,
+        9
+      ]
+    },
+    {
+      "id": 9,
+      "key": "TILE_009_RIVERSIDE_FIRST_AVENUE",
+      "name": "Riverside First Avenue",
+      "kind": "property",
+      "price_sc": 255000,
+      "palette": "blue",
+      "position": [
+        7.2984,
+        0.25,
+        -2.341
+      ],
+      "tile_polygon_xz": [
+        [
+          5.9495,
+          -2.3391
+        ],
+        [
+          6.3693,
+          -1.6121
+        ],
+        [
+          8.725,
+          -2.2084
+        ],
+        [
+          8.15,
+          -3.2043
+        ]
+      ],
+      "raycast_node": "TILE_009_RIVERSIDE_FIRST_AVENUE",
+      "texture": "textures/tiles/TILE_009_RIVERSIDE_FIRST_AVENUE.png",
+      "build_anchor": [
+        7.7996,
+        0.29,
+        -2.5017
+      ],
+      "pawn_anchor": [
+        7.2984,
+        0.48,
+        -2.341
+      ],
+      "tangent": [
+        0.5,
+        0.866
+      ],
+      "normal": [
+        0.9307,
+        -0.3659
+      ],
+      "neighbors": [
+        8,
+        10
+      ]
+    },
+    {
+      "id": 10,
+      "key": "TILE_010_RIVERSIDE_MARKET_LANE",
+      "name": "Riverside Market Lane",
+      "kind": "property",
+      "price_sc": 295000,
+      "palette": "blue",
+      "position": [
+        7.8391,
+        0.25,
+        -1.4046
+      ],
+      "tile_polygon_xz": [
+        [
+          6.4058,
+          -1.5489
+        ],
+        [
+          6.8255,
+          -0.8219
+        ],
+        [
+          9.35,
+          -1.1258
+        ],
+        [
+          8.775,
+          -2.1218
+        ]
+      ],
+      "raycast_node": "TILE_010_RIVERSIDE_MARKET_LANE",
+      "texture": "textures/tiles/TILE_010_RIVERSIDE_MARKET_LANE.png",
+      "build_anchor": [
+        8.3774,
+        0.29,
+        -1.501
+      ],
+      "pawn_anchor": [
+        7.8391,
+        0.48,
+        -1.4046
+      ],
+      "tangent": [
+        0.5,
+        0.866
+      ],
+      "normal": [
+        0.972,
+        -0.235
+      ],
+      "neighbors": [
+        9,
+        11
+      ]
+    },
+    {
+      "id": 11,
+      "key": "TILE_011_RIVERSIDE_BOULEVARD",
+      "name": "Riverside Boulevard",
+      "kind": "property",
+      "price_sc": 335000,
+      "palette": "blue",
+      "position": [
+        8.3797,
+        0.25,
+        -0.4682
+      ],
+      "tile_polygon_xz": [
+        [
+          6.862,
+          -0.7586
+        ],
+        [
+          7.2818,
+          -0.0316
+        ],
+        [
+          9.975,
+          -0.0433
+        ],
+        [
+          9.4,
+          -1.0392
+        ]
+      ],
+      "raycast_node": "TILE_011_RIVERSIDE_BOULEVARD",
+      "texture": "textures/tiles/TILE_011_RIVERSIDE_BOULEVARD.png",
+      "build_anchor": [
+        8.9551,
+        0.29,
+        -0.5003
+      ],
+      "pawn_anchor": [
+        8.3797,
+        0.48,
+        -0.4682
+      ],
+      "tangent": [
+        0.5,
+        0.866
+      ],
+      "normal": [
+        0.9939,
+        -0.1099
+      ],
+      "neighbors": [
+        10,
+        12
+      ]
+    },
+    {
+      "id": 12,
+      "key": "TILE_012_RIVERSIDE_EXCHANGE",
+      "name": "Riverside Exchange",
+      "kind": "market",
+      "price_sc": 0,
+      "palette": "cream",
+      "position": [
+        8.3797,
+        0.25,
+        0.4682
+      ],
+      "tile_polygon_xz": [
+        [
+          7.2818,
+          0.0316
+        ],
+        [
+          6.862,
+          0.7586
+        ],
+        [
+          9.4,
+          1.0392
+        ],
+        [
+          9.975,
+          0.0433
+        ]
+      ],
+      "raycast_node": "TILE_012_RIVERSIDE_EXCHANGE",
+      "texture": "textures/tiles/TILE_012_RIVERSIDE_EXCHANGE.png",
+      "build_anchor": [
+        8.9551,
+        0.29,
+        0.5003
+      ],
+      "pawn_anchor": [
+        8.3797,
+        0.48,
+        0.4682
+      ],
+      "tangent": [
+        -0.5,
+        0.866
+      ],
+      "normal": [
+        1.0,
+        0.0043
+      ],
+      "neighbors": [
+        11,
+        13
+      ]
+    },
+    {
+      "id": 13,
+      "key": "TILE_013_RIVERSIDE_TERRACE",
+      "name": "Riverside Terrace",
+      "kind": "property",
+      "price_sc": 375000,
+      "palette": "blue",
+      "position": [
+        7.8391,
+        0.25,
+        1.4046
+      ],
+      "tile_polygon_xz": [
+        [
+          6.8255,
+          0.8219
+        ],
+        [
+          6.4058,
+          1.5489
+        ],
+        [
+          8.775,
+          2.1218
+        ],
+        [
+          9.35,
+          1.1258
+        ]
+      ],
+      "raycast_node": "TILE_013_RIVERSIDE_TERRACE",
+      "texture": "textures/tiles/TILE_013_RIVERSIDE_TERRACE.png",
+      "build_anchor": [
+        8.3774,
+        0.29,
+        1.501
+      ],
+      "pawn_anchor": [
+        7.8391,
+        0.48,
+        1.4046
+      ],
+      "tangent": [
+        -0.5,
+        0.866
+      ],
+      "normal": [
+        0.9928,
+        0.1195
+      ],
+      "neighbors": [
+        12,
+        14
+      ]
+    },
+    {
+      "id": 14,
+      "key": "TILE_014_RIVERSIDE_GARDENS",
+      "name": "Riverside Gardens",
+      "kind": "property",
+      "price_sc": 415000,
+      "palette": "blue",
+      "position": [
+        7.2984,
+        0.25,
+        2.341
+      ],
+      "tile_polygon_xz": [
+        [
+          6.3693,
+          1.6121
+        ],
+        [
+          5.9495,
+          2.3391
+        ],
+        [
+          8.15,
+          3.2043
+        ],
+        [
+          8.725,
+          2.2084
+        ]
+      ],
+      "raycast_node": "TILE_014_RIVERSIDE_GARDENS",
+      "texture": "textures/tiles/TILE_014_RIVERSIDE_GARDENS.png",
+      "build_anchor": [
+        7.7996,
+        0.29,
+        2.5017
+      ],
+      "pawn_anchor": [
+        7.2984,
+        0.48,
+        2.341
+      ],
+      "tangent": [
+        -0.5,
+        0.866
+      ],
+      "normal": [
+        0.9694,
+        0.2454
+      ],
+      "neighbors": [
+        13,
+        15
+      ]
+    },
+    {
+      "id": 15,
+      "key": "TILE_015_RIVERSIDE_LANDMARK",
+      "name": "Riverside Landmark",
+      "kind": "property",
+      "price_sc": 475000,
+      "palette": "blue",
+      "position": [
+        6.7578,
+        0.25,
+        3.2774
+      ],
+      "tile_polygon_xz": [
+        [
+          5.913,
+          2.4024
+        ],
+        [
+          5.4932,
+          3.1294
+        ],
+        [
+          7.525,
+          4.2868
+        ],
+        [
+          8.1,
+          3.2909
+        ]
+      ],
+      "raycast_node": "TILE_015_RIVERSIDE_LANDMARK",
+      "texture": "textures/tiles/TILE_015_RIVERSIDE_LANDMARK.png",
+      "build_anchor": [
+        7.2219,
+        0.29,
+        3.5024
+      ],
+      "pawn_anchor": [
+        6.7578,
+        0.48,
+        3.2774
+      ],
+      "tangent": [
+        -0.5,
+        0.866
+      ],
+      "normal": [
+        0.9265,
+        0.3764
+      ],
+      "neighbors": [
+        14,
+        16
+      ]
+    },
+    {
+      "id": 16,
+      "key": "TILE_016_SKYLINE_WEST",
+      "name": "Skyline West",
+      "kind": "gate",
+      "price_sc": 0,
+      "palette": "cream",
+      "position": [
+        6.2172,
+        0.25,
+        4.2138
+      ],
+      "tile_polygon_xz": [
+        [
+          5.4568,
+          3.1926
+        ],
+        [
+          5.037,
+          3.9196
+        ],
+        [
+          6.9,
+          5.3694
+        ],
+        [
+          7.475,
+          4.3734
+        ]
+      ],
+      "raycast_node": "TILE_016_SKYLINE_WEST",
+      "texture": "textures/tiles/TILE_016_SKYLINE_WEST.png",
+      "build_anchor": [
+        6.6441,
+        0.29,
+        4.5031
+      ],
+      "pawn_anchor": [
+        6.2172,
+        0.48,
+        4.2138
+      ],
+      "tangent": [
+        -0.5,
+        0.866
+      ],
+      "normal": [
+        0.8631,
+        0.505
+      ],
+      "neighbors": [
+        15,
+        17
+      ]
+    },
+    {
+      "id": 17,
+      "key": "TILE_017_SKYLINE_FIRST_AVENUE",
+      "name": "Skyline First Avenue",
+      "kind": "property",
+      "price_sc": 330000,
+      "palette": "purple",
+      "position": [
+        5.6766,
+        0.25,
+        5.1501
+      ],
+      "tile_polygon_xz": [
+        [
+          5.0005,
+          3.9829
+        ],
+        [
+          4.5807,
+          4.7099
+        ],
+        [
+          6.275,
+          6.4519
+        ],
+        [
+          6.85,
+          5.456
+        ]
+      ],
+      "raycast_node": "TILE_017_SKYLINE_FIRST_AVENUE",
+      "texture": "textures/tiles/TILE_017_SKYLINE_FIRST_AVENUE.png",
+      "build_anchor": [
+        6.0664,
+        0.29,
+        5.5038
+      ],
+      "pawn_anchor": [
+        5.6766,
+        0.48,
+        5.1501
+      ],
+      "tangent": [
+        -0.5,
+        0.866
+      ],
+      "normal": [
+        0.7822,
+        0.623
+      ],
+      "neighbors": [
+        16,
+        18
+      ]
+    },
+    {
+      "id": 18,
+      "key": "TILE_018_SKYLINE_MARKET_LANE",
+      "name": "Skyline Market Lane",
+      "kind": "property",
+      "price_sc": 370000,
+      "palette": "purple",
+      "position": [
+        5.1359,
+        0.25,
+        6.0865
+      ],
+      "tile_polygon_xz": [
+        [
+          4.5442,
+          4.7731
+        ],
+        [
+          4.1245,
+          5.5001
+        ],
+        [
+          5.65,
+          7.5344
+        ],
+        [
+          6.225,
+          6.5385
+        ]
+      ],
+      "raycast_node": "TILE_018_SKYLINE_MARKET_LANE",
+      "texture": "textures/tiles/TILE_018_SKYLINE_MARKET_LANE.png",
+      "build_anchor": [
+        5.4886,
+        0.29,
+        6.5045
+      ],
+      "pawn_anchor": [
+        5.1359,
+        0.48,
+        6.0865
+      ],
+      "tangent": [
+        -0.5,
+        0.866
+      ],
+      "normal": [
+        0.6895,
+        0.7243
+      ],
+      "neighbors": [
+        17,
+        19
+      ]
+    },
+    {
+      "id": 19,
+      "key": "TILE_019_SKYLINE_BOULEVARD",
+      "name": "Skyline Boulevard",
+      "kind": "property",
+      "price_sc": 410000,
+      "palette": "purple",
+      "position": [
+        4.5953,
+        0.25,
+        7.0229
+      ],
+      "tile_polygon_xz": [
+        [
+          4.088,
+          5.5633
+        ],
+        [
+          3.6682,
+          6.2904
+        ],
+        [
+          5.025,
+          8.617
+        ],
+        [
+          5.6,
+          7.621
+        ]
+      ],
+      "raycast_node": "TILE_019_SKYLINE_BOULEVARD",
+      "texture": "textures/tiles/TILE_019_SKYLINE_BOULEVARD.png",
+      "build_anchor": [
+        4.9109,
+        0.29,
+        7.5052
+      ],
+      "pawn_anchor": [
+        4.5953,
+        0.48,
+        7.0229
+      ],
+      "tangent": [
+        -0.5,
+        0.866
+      ],
+      "normal": [
+        0.5921,
+        0.8058
+      ],
+      "neighbors": [
+        18,
+        20
+      ]
+    },
+    {
+      "id": 20,
+      "key": "TILE_020_SKYLINE_EXCHANGE",
+      "name": "Skyline Exchange",
+      "kind": "market",
+      "price_sc": 0,
+      "palette": "cream",
+      "position": [
+        3.7844,
+        0.25,
+        7.4911
+      ],
+      "tile_polygon_xz": [
+        [
+          3.6135,
+          6.322
+        ],
+        [
+          2.774,
+          6.322
+        ],
+        [
+          3.8,
+          8.6603
+        ],
+        [
+          4.95,
+          8.6603
+        ]
+      ],
+      "raycast_node": "TILE_020_SKYLINE_EXCHANGE",
+      "texture": "textures/tiles/TILE_020_SKYLINE_EXCHANGE.png",
+      "build_anchor": [
+        4.0442,
+        0.29,
+        8.0055
+      ],
+      "pawn_anchor": [
+        3.7844,
+        0.48,
+        7.4911
+      ],
+      "tangent": [
+        -1.0,
+        0.0
+      ],
+      "normal": [
+        0.4962,
+        0.8682
+      ],
+      "neighbors": [
+        19,
+        21
+      ]
+    },
+    {
+      "id": 21,
+      "key": "TILE_021_SKYLINE_TERRACE",
+      "name": "Skyline Terrace",
+      "kind": "property",
+      "price_sc": 450000,
+      "palette": "purple",
+      "position": [
+        2.7031,
+        0.25,
+        7.4911
+      ],
+      "tile_polygon_xz": [
+        [
+          2.701,
+          6.322
+        ],
+        [
+          1.8615,
+          6.322
+        ],
+        [
+          2.55,
+          8.6603
+        ],
+        [
+          3.7,
+          8.6603
+        ]
+      ],
+      "raycast_node": "TILE_021_SKYLINE_TERRACE",
+      "texture": "textures/tiles/TILE_021_SKYLINE_TERRACE.png",
+      "build_anchor": [
+        2.8887,
+        0.29,
+        8.0055
+      ],
+      "pawn_anchor": [
+        2.7031,
+        0.48,
+        7.4911
+      ],
+      "tangent": [
+        -1.0,
+        0.0
+      ],
+      "normal": [
+        0.3929,
+        0.9196
+      ],
+      "neighbors": [
+        20,
+        22
+      ]
+    },
+    {
+      "id": 22,
+      "key": "TILE_022_SKYLINE_GARDENS",
+      "name": "Skyline Gardens",
+      "kind": "property",
+      "price_sc": 490000,
+      "palette": "purple",
+      "position": [
+        1.6219,
+        0.25,
+        7.4911
+      ],
+      "tile_polygon_xz": [
+        [
+          1.7885,
+          6.322
+        ],
+        [
+          0.949,
+          6.322
+        ],
+        [
+          1.3,
+          8.6603
+        ],
+        [
+          2.45,
+          8.6603
+        ]
+      ],
+      "raycast_node": "TILE_022_SKYLINE_GARDENS",
+      "texture": "textures/tiles/TILE_022_SKYLINE_GARDENS.png",
+      "build_anchor": [
+        1.7332,
+        0.29,
+        8.0055
+      ],
+      "pawn_anchor": [
+        1.6219,
+        0.48,
+        7.4911
+      ],
+      "tangent": [
+        -1.0,
+        0.0
+      ],
+      "normal": [
+        0.2722,
+        0.9622
+      ],
+      "neighbors": [
+        21,
+        23
+      ]
+    },
+    {
+      "id": 23,
+      "key": "TILE_023_SKYLINE_LANDMARK",
+      "name": "Skyline Landmark",
+      "kind": "property",
+      "price_sc": 550000,
+      "palette": "purple",
+      "position": [
+        0.5406,
+        0.25,
+        7.4911
+      ],
+      "tile_polygon_xz": [
+        [
+          0.876,
+          6.322
+        ],
+        [
+          0.0365,
+          6.322
+        ],
+        [
+          0.05,
+          8.6603
+        ],
+        [
+          1.2,
+          8.6603
+        ]
+      ],
+      "raycast_node": "TILE_023_SKYLINE_LANDMARK",
+      "texture": "textures/tiles/TILE_023_SKYLINE_LANDMARK.png",
+      "build_anchor": [
+        0.5777,
+        0.29,
+        8.0055
+      ],
+      "pawn_anchor": [
+        0.5406,
+        0.48,
+        7.4911
+      ],
+      "tangent": [
+        -1.0,
+        0.0
+      ],
+      "normal": [
+        0.1373,
+        0.9905
+      ],
+      "neighbors": [
+        22,
+        24
+      ]
+    },
+    {
+      "id": 24,
+      "key": "TILE_024_HERITAGE_WALK",
+      "name": "Heritage Walk",
+      "kind": "gate",
+      "price_sc": 0,
+      "palette": "cream",
+      "position": [
+        -0.5406,
+        0.25,
+        7.4911
+      ],
+      "tile_polygon_xz": [
+        [
+          -0.0365,
+          6.322
+        ],
+        [
+          -0.876,
+          6.322
+        ],
+        [
+          -1.2,
+          8.6603
+        ],
+        [
+          -0.05,
+          8.6603
+        ]
+      ],
+      "raycast_node": "TILE_024_HERITAGE_WALK",
+      "texture": "textures/tiles/TILE_024_HERITAGE_WALK.png",
+      "build_anchor": [
+        -0.5778,
+        0.29,
+        8.0055
+      ],
+      "pawn_anchor": [
+        -0.5406,
+        0.48,
+        7.4911
+      ],
+      "tangent": [
+        -1.0,
+        0.0
+      ],
+      "normal": [
+        -0.0058,
+        1.0
+      ],
+      "neighbors": [
+        23,
+        25
+      ]
+    },
+    {
+      "id": 25,
+      "key": "TILE_025_HERITAGE_FIRST_AVENUE",
+      "name": "Heritage First Avenue",
+      "kind": "property",
+      "price_sc": 405000,
+      "palette": "rose",
+      "position": [
+        -1.6219,
+        0.25,
+        7.4911
+      ],
+      "tile_polygon_xz": [
+        [
+          -0.949,
+          6.322
+        ],
+        [
+          -1.7885,
+          6.322
+        ],
+        [
+          -2.45,
+          8.6603
+        ],
+        [
+          -1.3,
+          8.6603
+        ]
+      ],
+      "raycast_node": "TILE_025_HERITAGE_FIRST_AVENUE",
+      "texture": "textures/tiles/TILE_025_HERITAGE_FIRST_AVENUE.png",
+      "build_anchor": [
+        -1.7333,
+        0.29,
+        8.0055
+      ],
+      "pawn_anchor": [
+        -1.6219,
+        0.48,
+        7.4911
+      ],
+      "tangent": [
+        -1.0,
+        0.0
+      ],
+      "normal": [
+        -0.1484,
+        0.9889
+      ],
+      "neighbors": [
+        24,
+        26
+      ]
+    },
+    {
+      "id": 26,
+      "key": "TILE_026_HERITAGE_MARKET_LANE",
+      "name": "Heritage Market Lane",
+      "kind": "property",
+      "price_sc": 445000,
+      "palette": "rose",
+      "position": [
+        -2.7031,
+        0.25,
+        7.4911
+      ],
+      "tile_polygon_xz": [
+        [
+          -1.8615,
+          6.322
+        ],
+        [
+          -2.701,
+          6.322
+        ],
+        [
+          -3.7,
+          8.6603
+        ],
+        [
+          -2.55,
+          8.6603
+        ]
+      ],
+      "raycast_node": "TILE_026_HERITAGE_MARKET_LANE",
+      "texture": "textures/tiles/TILE_026_HERITAGE_MARKET_LANE.png",
+      "build_anchor": [
+        -2.8888,
+        0.29,
+        8.0055
+      ],
+      "pawn_anchor": [
+        -2.7031,
+        0.48,
+        7.4911
+      ],
+      "tangent": [
+        -1.0,
+        0.0
+      ],
+      "normal": [
+        -0.2825,
+        0.9593
+      ],
+      "neighbors": [
+        25,
+        27
+      ]
+    },
+    {
+      "id": 27,
+      "key": "TILE_027_HERITAGE_BOULEVARD",
+      "name": "Heritage Boulevard",
+      "kind": "property",
+      "price_sc": 485000,
+      "palette": "rose",
+      "position": [
+        -3.7844,
+        0.25,
+        7.4911
+      ],
+      "tile_polygon_xz": [
+        [
+          -2.774,
+          6.322
+        ],
+        [
+          -3.6135,
+          6.322
+        ],
+        [
+          -4.95,
+          8.6603
+        ],
+        [
+          -3.8,
+          8.6603
+        ]
+      ],
+      "raycast_node": "TILE_027_HERITAGE_BOULEVARD",
+      "texture": "textures/tiles/TILE_027_HERITAGE_BOULEVARD.png",
+      "build_anchor": [
+        -4.0443,
+        0.29,
+        8.0055
+      ],
+      "pawn_anchor": [
+        -3.7844,
+        0.48,
+        7.4911
+      ],
+      "tangent": [
+        -1.0,
+        -0.0
+      ],
+      "normal": [
+        -0.4018,
+        0.9157
+      ],
+      "neighbors": [
+        26,
+        28
+      ]
+    },
+    {
+      "id": 28,
+      "key": "TILE_028_HERITAGE_EXCHANGE",
+      "name": "Heritage Exchange",
+      "kind": "market",
+      "price_sc": 0,
+      "palette": "cream",
+      "position": [
+        -4.5953,
+        0.25,
+        7.0229
+      ],
+      "tile_polygon_xz": [
+        [
+          -3.6682,
+          6.2904
+        ],
+        [
+          -4.088,
+          5.5633
+        ],
+        [
+          -5.6,
+          7.621
+        ],
+        [
+          -5.025,
+          8.617
+        ]
+      ],
+      "raycast_node": "TILE_028_HERITAGE_EXCHANGE",
+      "texture": "textures/tiles/TILE_028_HERITAGE_EXCHANGE.png",
+      "build_anchor": [
+        -4.9109,
+        0.29,
+        7.5052
+      ],
+      "pawn_anchor": [
+        -4.5953,
+        0.48,
+        7.0229
+      ],
+      "tangent": [
+        -0.5,
+        -0.866
+      ],
+      "normal": [
+        -0.5038,
+        0.8638
+      ],
+      "neighbors": [
+        27,
+        29
+      ]
+    },
+    {
+      "id": 29,
+      "key": "TILE_029_HERITAGE_TERRACE",
+      "name": "Heritage Terrace",
+      "kind": "property",
+      "price_sc": 525000,
+      "palette": "rose",
+      "position": [
+        -5.1359,
+        0.25,
+        6.0865
+      ],
+      "tile_polygon_xz": [
+        [
+          -4.1245,
+          5.5001
+        ],
+        [
+          -4.5443,
+          4.7731
+        ],
+        [
+          -6.225,
+          6.5385
+        ],
+        [
+          -5.65,
+          7.5344
+        ]
+      ],
+      "raycast_node": "TILE_029_HERITAGE_TERRACE",
+      "texture": "textures/tiles/TILE_029_HERITAGE_TERRACE.png",
+      "build_anchor": [
+        -5.4886,
+        0.29,
+        6.5045
+      ],
+      "pawn_anchor": [
+        -5.1359,
+        0.48,
+        6.0865
+      ],
+      "tangent": [
+        -0.5,
+        -0.866
+      ],
+      "normal": [
+        -0.5999,
+        0.8
+      ],
+      "neighbors": [
+        28,
+        30
+      ]
+    },
+    {
+      "id": 30,
+      "key": "TILE_030_HERITAGE_GARDENS",
+      "name": "Heritage Gardens",
+      "kind": "property",
+      "price_sc": 565000,
+      "palette": "rose",
+      "position": [
+        -5.6766,
+        0.25,
+        5.1501
+      ],
+      "tile_polygon_xz": [
+        [
+          -4.5808,
+          4.7099
+        ],
+        [
+          -5.0005,
+          3.9829
+        ],
+        [
+          -6.85,
+          5.456
+        ],
+        [
+          -6.275,
+          6.4519
+        ]
+      ],
+      "raycast_node": "TILE_030_HERITAGE_GARDENS",
+      "texture": "textures/tiles/TILE_030_HERITAGE_GARDENS.png",
+      "build_anchor": [
+        -6.0664,
+        0.29,
+        5.5038
+      ],
+      "pawn_anchor": [
+        -5.6766,
+        0.48,
+        5.1501
+      ],
+      "tangent": [
+        -0.5,
+        -0.866
+      ],
+      "normal": [
+        -0.6972,
+        0.7169
+      ],
+      "neighbors": [
+        29,
+        31
+      ]
+    },
+    {
+      "id": 31,
+      "key": "TILE_031_HERITAGE_LANDMARK",
+      "name": "Heritage Landmark",
+      "kind": "property",
+      "price_sc": 625000,
+      "palette": "rose",
+      "position": [
+        -6.2172,
+        0.25,
+        4.2138
+      ],
+      "tile_polygon_xz": [
+        [
+          -5.037,
+          3.9196
+        ],
+        [
+          -5.4568,
+          3.1926
+        ],
+        [
+          -7.475,
+          4.3734
+        ],
+        [
+          -6.9,
+          5.3694
+        ]
+      ],
+      "raycast_node": "TILE_031_HERITAGE_LANDMARK",
+      "texture": "textures/tiles/TILE_031_HERITAGE_LANDMARK.png",
+      "build_anchor": [
+        -6.6441,
+        0.29,
+        4.5031
+      ],
+      "pawn_anchor": [
+        -6.2172,
+        0.48,
+        4.2138
+      ],
+      "tangent": [
+        -0.5,
+        -0.866
+      ],
+      "normal": [
+        -0.7892,
+        0.6141
+      ],
+      "neighbors": [
+        30,
+        32
+      ]
+    },
+    {
+      "id": 32,
+      "key": "TILE_032_GARDEN_PROMENADE",
+      "name": "Garden Promenade",
+      "kind": "gate",
+      "price_sc": 0,
+      "palette": "cream",
+      "position": [
+        -6.7578,
+        0.25,
+        3.2774
+      ],
+      "tile_polygon_xz": [
+        [
+          -5.4933,
+          3.1294
+        ],
+        [
+          -5.913,
+          2.4024
+        ],
+        [
+          -8.1,
+          3.2909
+        ],
+        [
+          -7.525,
+          4.2868
+        ]
+      ],
+      "raycast_node": "TILE_032_GARDEN_PROMENADE",
+      "texture": "textures/tiles/TILE_032_GARDEN_PROMENADE.png",
+      "build_anchor": [
+        -7.2219,
+        0.29,
+        3.5024
+      ],
+      "pawn_anchor": [
+        -6.7578,
+        0.48,
+        3.2774
+      ],
+      "tangent": [
+        -0.5,
+        -0.866
+      ],
+      "normal": [
+        -0.8689,
+        0.495
+      ],
+      "neighbors": [
+        31,
+        33
+      ]
+    },
+    {
+      "id": 33,
+      "key": "TILE_033_GARDEN_FIRST_AVENUE",
+      "name": "Garden First Avenue",
+      "kind": "property",
+      "price_sc": 480000,
+      "palette": "green",
+      "position": [
+        -7.2984,
+        0.25,
+        2.341
+      ],
+      "tile_polygon_xz": [
+        [
+          -5.9495,
+          2.3391
+        ],
+        [
+          -6.3693,
+          1.6121
+        ],
+        [
+          -8.725,
+          2.2084
+        ],
+        [
+          -8.15,
+          3.2043
+        ]
+      ],
+      "raycast_node": "TILE_033_GARDEN_FIRST_AVENUE",
+      "texture": "textures/tiles/TILE_033_GARDEN_FIRST_AVENUE.png",
+      "build_anchor": [
+        -7.7996,
+        0.29,
+        2.5017
+      ],
+      "pawn_anchor": [
+        -7.2984,
+        0.48,
+        2.341
+      ],
+      "tangent": [
+        -0.5,
+        -0.866
+      ],
+      "normal": [
+        -0.9307,
+        0.3659
+      ],
+      "neighbors": [
+        32,
+        34
+      ]
+    },
+    {
+      "id": 34,
+      "key": "TILE_034_GARDEN_MARKET_LANE",
+      "name": "Garden Market Lane",
+      "kind": "property",
+      "price_sc": 520000,
+      "palette": "green",
+      "position": [
+        -7.8391,
+        0.25,
+        1.4046
+      ],
+      "tile_polygon_xz": [
+        [
+          -6.4058,
+          1.5489
+        ],
+        [
+          -6.8255,
+          0.8219
+        ],
+        [
+          -9.35,
+          1.1258
+        ],
+        [
+          -8.775,
+          2.1218
+        ]
+      ],
+      "raycast_node": "TILE_034_GARDEN_MARKET_LANE",
+      "texture": "textures/tiles/TILE_034_GARDEN_MARKET_LANE.png",
+      "build_anchor": [
+        -8.3774,
+        0.29,
+        1.501
+      ],
+      "pawn_anchor": [
+        -7.8391,
+        0.48,
+        1.4046
+      ],
+      "tangent": [
+        -0.5,
+        -0.866
+      ],
+      "normal": [
+        -0.972,
+        0.235
+      ],
+      "neighbors": [
+        33,
+        35
+      ]
+    },
+    {
+      "id": 35,
+      "key": "TILE_035_GARDEN_BOULEVARD",
+      "name": "Garden Boulevard",
+      "kind": "property",
+      "price_sc": 560000,
+      "palette": "green",
+      "position": [
+        -8.3797,
+        0.25,
+        0.4682
+      ],
+      "tile_polygon_xz": [
+        [
+          -6.862,
+          0.7586
+        ],
+        [
+          -7.2817,
+          0.0316
+        ],
+        [
+          -9.975,
+          0.0433
+        ],
+        [
+          -9.4,
+          1.0392
+        ]
+      ],
+      "raycast_node": "TILE_035_GARDEN_BOULEVARD",
+      "texture": "textures/tiles/TILE_035_GARDEN_BOULEVARD.png",
+      "build_anchor": [
+        -8.9551,
+        0.29,
+        0.5003
+      ],
+      "pawn_anchor": [
+        -8.3797,
+        0.48,
+        0.4682
+      ],
+      "tangent": [
+        -0.5,
+        -0.866
+      ],
+      "normal": [
+        -0.9939,
+        0.1099
+      ],
+      "neighbors": [
+        34,
+        36
+      ]
+    },
+    {
+      "id": 36,
+      "key": "TILE_036_GARDEN_EXCHANGE",
+      "name": "Garden Exchange",
+      "kind": "market",
+      "price_sc": 0,
+      "palette": "cream",
+      "position": [
+        -8.3797,
+        0.25,
+        -0.4682
+      ],
+      "tile_polygon_xz": [
+        [
+          -7.2817,
+          -0.0316
+        ],
+        [
+          -6.862,
+          -0.7586
+        ],
+        [
+          -9.4,
+          -1.0392
+        ],
+        [
+          -9.975,
+          -0.0433
+        ]
+      ],
+      "raycast_node": "TILE_036_GARDEN_EXCHANGE",
+      "texture": "textures/tiles/TILE_036_GARDEN_EXCHANGE.png",
+      "build_anchor": [
+        -8.9551,
+        0.29,
+        -0.5003
+      ],
+      "pawn_anchor": [
+        -8.3797,
+        0.48,
+        -0.4682
+      ],
+      "tangent": [
+        0.5,
+        -0.866
+      ],
+      "normal": [
+        -1.0,
+        -0.0043
+      ],
+      "neighbors": [
+        35,
+        37
+      ]
+    },
+    {
+      "id": 37,
+      "key": "TILE_037_GARDEN_TERRACE",
+      "name": "Garden Terrace",
+      "kind": "property",
+      "price_sc": 600000,
+      "palette": "green",
+      "position": [
+        -7.8391,
+        0.25,
+        -1.4046
+      ],
+      "tile_polygon_xz": [
+        [
+          -6.8255,
+          -0.8219
+        ],
+        [
+          -6.4057,
+          -1.5489
+        ],
+        [
+          -8.775,
+          -2.1218
+        ],
+        [
+          -9.35,
+          -1.1258
+        ]
+      ],
+      "raycast_node": "TILE_037_GARDEN_TERRACE",
+      "texture": "textures/tiles/TILE_037_GARDEN_TERRACE.png",
+      "build_anchor": [
+        -8.3774,
+        0.29,
+        -1.501
+      ],
+      "pawn_anchor": [
+        -7.8391,
+        0.48,
+        -1.4046
+      ],
+      "tangent": [
+        0.5,
+        -0.866
+      ],
+      "normal": [
+        -0.9928,
+        -0.1195
+      ],
+      "neighbors": [
+        36,
+        38
+      ]
+    },
+    {
+      "id": 38,
+      "key": "TILE_038_GARDEN_GARDENS",
+      "name": "Garden Gardens",
+      "kind": "property",
+      "price_sc": 640000,
+      "palette": "green",
+      "position": [
+        -7.2984,
+        0.25,
+        -2.341
+      ],
+      "tile_polygon_xz": [
+        [
+          -6.3692,
+          -1.6121
+        ],
+        [
+          -5.9495,
+          -2.3391
+        ],
+        [
+          -8.15,
+          -3.2043
+        ],
+        [
+          -8.725,
+          -2.2084
+        ]
+      ],
+      "raycast_node": "TILE_038_GARDEN_GARDENS",
+      "texture": "textures/tiles/TILE_038_GARDEN_GARDENS.png",
+      "build_anchor": [
+        -7.7996,
+        0.29,
+        -2.5017
+      ],
+      "pawn_anchor": [
+        -7.2984,
+        0.48,
+        -2.341
+      ],
+      "tangent": [
+        0.5,
+        -0.866
+      ],
+      "normal": [
+        -0.9694,
+        -0.2454
+      ],
+      "neighbors": [
+        37,
+        39
+      ]
+    },
+    {
+      "id": 39,
+      "key": "TILE_039_GARDEN_LANDMARK",
+      "name": "Garden Landmark",
+      "kind": "property",
+      "price_sc": 700000,
+      "palette": "green",
+      "position": [
+        -6.7578,
+        0.25,
+        -3.2774
+      ],
+      "tile_polygon_xz": [
+        [
+          -5.913,
+          -2.4024
+        ],
+        [
+          -5.4932,
+          -3.1294
+        ],
+        [
+          -7.525,
+          -4.2868
+        ],
+        [
+          -8.1,
+          -3.2909
+        ]
+      ],
+      "raycast_node": "TILE_039_GARDEN_LANDMARK",
+      "texture": "textures/tiles/TILE_039_GARDEN_LANDMARK.png",
+      "build_anchor": [
+        -7.2219,
+        0.29,
+        -3.5024
+      ],
+      "pawn_anchor": [
+        -6.7578,
+        0.48,
+        -3.2774
+      ],
+      "tangent": [
+        0.5,
+        -0.866
+      ],
+      "normal": [
+        -0.9265,
+        -0.3764
+      ],
+      "neighbors": [
+        38,
+        40
+      ]
+    },
+    {
+      "id": 40,
+      "key": "TILE_040_CAPITAL_HEIGHTS",
+      "name": "Capital Heights",
+      "kind": "gate",
+      "price_sc": 0,
+      "palette": "cream",
+      "position": [
+        -6.2172,
+        0.25,
+        -4.2138
+      ],
+      "tile_polygon_xz": [
+        [
+          -5.4567,
+          -3.1926
+        ],
+        [
+          -5.037,
+          -3.9196
+        ],
+        [
+          -6.9,
+          -5.3694
+        ],
+        [
+          -7.475,
+          -4.3734
+        ]
+      ],
+      "raycast_node": "TILE_040_CAPITAL_HEIGHTS",
+      "texture": "textures/tiles/TILE_040_CAPITAL_HEIGHTS.png",
+      "build_anchor": [
+        -6.6441,
+        0.29,
+        -4.5031
+      ],
+      "pawn_anchor": [
+        -6.2172,
+        0.48,
+        -4.2138
+      ],
+      "tangent": [
+        0.5,
+        -0.866
+      ],
+      "normal": [
+        -0.8631,
+        -0.505
+      ],
+      "neighbors": [
+        39,
+        41
+      ]
+    },
+    {
+      "id": 41,
+      "key": "TILE_041_CAPITAL_FIRST_AVENUE",
+      "name": "Capital First Avenue",
+      "kind": "property",
+      "price_sc": 555000,
+      "palette": "orange",
+      "position": [
+        -5.6766,
+        0.25,
+        -5.1501
+      ],
+      "tile_polygon_xz": [
+        [
+          -5.0005,
+          -3.9829
+        ],
+        [
+          -4.5807,
+          -4.7099
+        ],
+        [
+          -6.275,
+          -6.4519
+        ],
+        [
+          -6.85,
+          -5.456
+        ]
+      ],
+      "raycast_node": "TILE_041_CAPITAL_FIRST_AVENUE",
+      "texture": "textures/tiles/TILE_041_CAPITAL_FIRST_AVENUE.png",
+      "build_anchor": [
+        -6.0664,
+        0.29,
+        -5.5038
+      ],
+      "pawn_anchor": [
+        -5.6766,
+        0.48,
+        -5.1501
+      ],
+      "tangent": [
+        0.5,
+        -0.866
+      ],
+      "normal": [
+        -0.7822,
+        -0.623
+      ],
+      "neighbors": [
+        40,
+        42
+      ]
+    },
+    {
+      "id": 42,
+      "key": "TILE_042_CAPITAL_MARKET_LANE",
+      "name": "Capital Market Lane",
+      "kind": "property",
+      "price_sc": 595000,
+      "palette": "orange",
+      "position": [
+        -5.1359,
+        0.25,
+        -6.0865
+      ],
+      "tile_polygon_xz": [
+        [
+          -4.5442,
+          -4.7731
+        ],
+        [
+          -4.1245,
+          -5.5001
+        ],
+        [
+          -5.65,
+          -7.5344
+        ],
+        [
+          -6.225,
+          -6.5385
+        ]
+      ],
+      "raycast_node": "TILE_042_CAPITAL_MARKET_LANE",
+      "texture": "textures/tiles/TILE_042_CAPITAL_MARKET_LANE.png",
+      "build_anchor": [
+        -5.4886,
+        0.29,
+        -6.5045
+      ],
+      "pawn_anchor": [
+        -5.1359,
+        0.48,
+        -6.0865
+      ],
+      "tangent": [
+        0.5,
+        -0.866
+      ],
+      "normal": [
+        -0.6895,
+        -0.7243
+      ],
+      "neighbors": [
+        41,
+        43
+      ]
+    },
+    {
+      "id": 43,
+      "key": "TILE_043_CAPITAL_BOULEVARD",
+      "name": "Capital Boulevard",
+      "kind": "property",
+      "price_sc": 635000,
+      "palette": "orange",
+      "position": [
+        -4.5953,
+        0.25,
+        -7.0229
+      ],
+      "tile_polygon_xz": [
+        [
+          -4.088,
+          -5.5633
+        ],
+        [
+          -3.6682,
+          -6.2904
+        ],
+        [
+          -5.025,
+          -8.617
+        ],
+        [
+          -5.6,
+          -7.621
+        ]
+      ],
+      "raycast_node": "TILE_043_CAPITAL_BOULEVARD",
+      "texture": "textures/tiles/TILE_043_CAPITAL_BOULEVARD.png",
+      "build_anchor": [
+        -4.9109,
+        0.29,
+        -7.5052
+      ],
+      "pawn_anchor": [
+        -4.5953,
+        0.48,
+        -7.0229
+      ],
+      "tangent": [
+        0.5,
+        -0.866
+      ],
+      "normal": [
+        -0.5921,
+        -0.8058
+      ],
+      "neighbors": [
+        42,
+        44
+      ]
+    },
+    {
+      "id": 44,
+      "key": "TILE_044_CAPITAL_EXCHANGE",
+      "name": "Capital Exchange",
+      "kind": "market",
+      "price_sc": 0,
+      "palette": "cream",
+      "position": [
+        -3.7844,
+        0.25,
+        -7.4911
+      ],
+      "tile_polygon_xz": [
+        [
+          -3.6135,
+          -6.322
+        ],
+        [
+          -2.774,
+          -6.322
+        ],
+        [
+          -3.8,
+          -8.6603
+        ],
+        [
+          -4.95,
+          -8.6603
+        ]
+      ],
+      "raycast_node": "TILE_044_CAPITAL_EXCHANGE",
+      "texture": "textures/tiles/TILE_044_CAPITAL_EXCHANGE.png",
+      "build_anchor": [
+        -4.0442,
+        0.29,
+        -8.0055
+      ],
+      "pawn_anchor": [
+        -3.7844,
+        0.48,
+        -7.4911
+      ],
+      "tangent": [
+        1.0,
+        0.0
+      ],
+      "normal": [
+        -0.4962,
+        -0.8682
+      ],
+      "neighbors": [
+        43,
+        45
+      ]
+    },
+    {
+      "id": 45,
+      "key": "TILE_045_CAPITAL_TERRACE",
+      "name": "Capital Terrace",
+      "kind": "property",
+      "price_sc": 675000,
+      "palette": "orange",
+      "position": [
+        -2.7031,
+        0.25,
+        -7.4911
+      ],
+      "tile_polygon_xz": [
+        [
+          -2.701,
+          -6.322
+        ],
+        [
+          -1.8615,
+          -6.322
+        ],
+        [
+          -2.55,
+          -8.6603
+        ],
+        [
+          -3.7,
+          -8.6603
+        ]
+      ],
+      "raycast_node": "TILE_045_CAPITAL_TERRACE",
+      "texture": "textures/tiles/TILE_045_CAPITAL_TERRACE.png",
+      "build_anchor": [
+        -2.8887,
+        0.29,
+        -8.0055
+      ],
+      "pawn_anchor": [
+        -2.7031,
+        0.48,
+        -7.4911
+      ],
+      "tangent": [
+        1.0,
+        0.0
+      ],
+      "normal": [
+        -0.3929,
+        -0.9196
+      ],
+      "neighbors": [
+        44,
+        46
+      ]
+    },
+    {
+      "id": 46,
+      "key": "TILE_046_CAPITAL_GARDENS",
+      "name": "Capital Gardens",
+      "kind": "property",
+      "price_sc": 715000,
+      "palette": "orange",
+      "position": [
+        -1.6219,
+        0.25,
+        -7.4911
+      ],
+      "tile_polygon_xz": [
+        [
+          -1.7885,
+          -6.322
+        ],
+        [
+          -0.949,
+          -6.322
+        ],
+        [
+          -1.3,
+          -8.6603
+        ],
+        [
+          -2.45,
+          -8.6603
+        ]
+      ],
+      "raycast_node": "TILE_046_CAPITAL_GARDENS",
+      "texture": "textures/tiles/TILE_046_CAPITAL_GARDENS.png",
+      "build_anchor": [
+        -1.7332,
+        0.29,
+        -8.0055
+      ],
+      "pawn_anchor": [
+        -1.6219,
+        0.48,
+        -7.4911
+      ],
+      "tangent": [
+        1.0,
+        -0.0
+      ],
+      "normal": [
+        -0.2722,
+        -0.9622
+      ],
+      "neighbors": [
+        45,
+        47
+      ]
+    },
+    {
+      "id": 47,
+      "key": "TILE_047_CAPITAL_LANDMARK",
+      "name": "Capital Landmark",
+      "kind": "property",
+      "price_sc": 775000,
+      "palette": "orange",
+      "position": [
+        -0.5406,
+        0.25,
+        -7.4911
+      ],
+      "tile_polygon_xz": [
+        [
+          -0.876,
+          -6.322
+        ],
+        [
+          -0.0365,
+          -6.322
+        ],
+        [
+          -0.05,
+          -8.6603
+        ],
+        [
+          -1.2,
+          -8.6603
+        ]
+      ],
+      "raycast_node": "TILE_047_CAPITAL_LANDMARK",
+      "texture": "textures/tiles/TILE_047_CAPITAL_LANDMARK.png",
+      "build_anchor": [
+        -0.5777,
+        0.29,
+        -8.0055
+      ],
+      "pawn_anchor": [
+        -0.5406,
+        0.48,
+        -7.4911
+      ],
+      "tangent": [
+        1.0,
+        0.0
+      ],
+      "normal": [
+        -0.1373,
+        -0.9905
+      ],
+      "neighbors": [
+        46,
+        0
+      ]
+    }
+  ],
+  "player_tokens": [
+    "lion",
+    "eagle",
+    "horse",
+    "ship"
+  ],
+  "build_stages": [
+    "plot",
+    "lowrise",
+    "midrise",
+    "highrise",
+    "skyscraper"
+  ],
+  "logic_compatibility": "New layout: requires mapping/replacing prior Career board route & tile ids. Do not feed into old 61/44-space rules unmodified.",
+  "performance": {
+    "mobile_core": "board_core.glb",
+    "optional_visuals": "environment_detail.glb",
+    "full_scene": "board_full.glb",
+    "tile_colliders": "Use TILE_### surface meshes only; ignore *_BODY and DECOR_*",
+    "quality": "Store core on demand; stream environment only on high quality"
+  }
+}
