@@ -43,10 +43,10 @@ const humanTurn=p=>p.waitForFunction(()=>{const s=__dominionLab.state();return s
    const deadline=performance.now()+15000;
    while(r.stats().tracking>.05&&performance.now()<deadline)await new Promise(done=>setTimeout(done,200));
    clearInterval(timer);
-   const result={max:Math.max(0,...samples.map(x=>x.tracking||0)),upright:samples.every(x=>x.cameraUp?.[1]>.999),returned:r.stats().tracking};
+   const current=r.stats(),result={max:Math.max(current.trackingPeak||0,...samples.map(x=>x.tracking||0)),upright:samples.every(x=>x.cameraUp?.[1]>.999),returned:current.tracking,redMotion:current.prefersReducedMotion,focused:current.focused};
    r.sync(SkylineDominion.view(state));return result;
   });
-  check('smooth upright follow camera and overview recovery in regular motion',followProof.max>.07&&followProof.upright&&followProof.returned<.05,followProof);
+  check('smooth upright follow camera and overview recovery in regular motion',followProof.max>.07&&followProof.upright&&followProof.returned<.05&&!followProof.redMotion&&!followProof.focused,followProof);
   await p.emulateMedia({reducedMotion:'reduce'});
   // tap an adjacent unowned site on the 3D board
   const target=await p.evaluate(()=>{const s=__dominionLab.state(),D=SkylineDominion,me=s.players[0];return D.NEIGH[me.pos].find(id=>D.BY[id].type==='property'&&s.own[id].o<0)||Object.keys(__dominionLab.reach()).find(id=>D.BY[id].type==='property'&&s.own[id].o<0)});
