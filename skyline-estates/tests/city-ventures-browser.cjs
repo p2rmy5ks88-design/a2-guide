@@ -40,6 +40,10 @@ let n=0;const ok=m=>{n++;console.log('PASS',m)};
   // without spoofing the device's GPU pixel ratio.
   await p.setViewportSize({width:956,height:440});
   await p.evaluate(()=>{const st=document.documentElement.style;st.setProperty('--sl','62px');st.setProperty('--sr','62px');st.setProperty('--sb','21px')});
+  // The moving token deliberately slides the sidebar offscreen. Wait for the
+  // CSS transition back before assessing its resting safe-area geometry.
+  await p.waitForFunction(()=>!document.body.classList.contains('moving'),null,{timeout:90000});
+  await p.waitForTimeout(320);
   const phoneFit=await p.evaluate(()=>{
    const box=id=>document.getElementById(id).getBoundingClientRect();
    const players=box('players'),top=box('top'),side=box('side'),dock=box('dock'),help=box('help'),main=box('mainBtn');
@@ -49,7 +53,8 @@ let n=0;const ok=m=>{n++;console.log('PASS',m)};
     noRosterHelp:players.bottom<=help.top+1||players.right<help.left-1,
     controls:[...document.querySelectorAll('button')].filter(b=>b.offsetParent&&!b.disabled).every(b=>b.getBoundingClientRect().height>=43.5)};
   });
-  assert.ok(Object.values(phoneFit).every(Boolean),'iPhone landscape fit/safe-area UI: '+JSON.stringify(phoneFit));
+  const sideDebug=await p.evaluate(()=>{const n=document.getElementById('side'),r=n.getBoundingClientRect();return{x:r.x,y:r.y,width:r.width,height:r.height,right:r.right,bottom:r.bottom,moving:document.body.classList.contains('moving'),transform:getComputedStyle(n).transform,viewport:[innerWidth,innerHeight]}});
+  assert.ok(Object.values(phoneFit).every(Boolean),'iPhone landscape fit/safe-area UI: '+JSON.stringify({phoneFit,sideDebug}));
   ok('iPhone landscape 956×440 safe-area controls, roster and sidebars do not overlap');
   await p.screenshot({timeout:90000,path:path.join(out,engine+'-iphone-landscape-safe.png')});
   await p.evaluate(()=>{const st=document.documentElement.style;for(const v of ['--sl','--sr','--sb'])st.removeProperty(v)});
