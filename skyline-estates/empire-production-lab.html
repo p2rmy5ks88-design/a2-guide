@@ -63,8 +63,10 @@ buildPanels();
 // Board game is the primary review experience. Full statistics remain one tap away.
 const TABLETOP=Q.get('dashboard')!=='1';
 if(!TABLETOP)$('game').classList.remove('sk-boardgame');
+if(TABLETOP)$('p-sel').open=true; // Board-first must show the actual landing-space details
 function setBoardgameView(board){
  $('game').classList.toggle('sk-boardgame',board);
+ if(board)$('p-sel').open=true;
  $('layoutToggle').textContent=board?'☰ Game details':'▣ Board view';
  $('layoutToggle').setAttribute('aria-pressed',String(board));
  $('layoutToggle').setAttribute('aria-label',board?'Show full game details':'Show board-first game view');
