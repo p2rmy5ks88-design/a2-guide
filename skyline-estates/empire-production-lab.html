@@ -56,7 +56,7 @@ async function boot(){$('setup').hidden=true;$('game').hidden=false;save();
  catch(e){$('loading').textContent='Could not load the local Empire models: '+e.message+' — see EMPIRE-3D.md for the asset copy step.';$('loading').dataset.error=e.message;console.error(e);return}
  $('loading').hidden=true;fit();addEventListener('resize',fit);render();loop()}
 const short=()=>innerHeight<400;
-function buildPanels(){$('leftscroll').innerHTML=H.brand('Skyline Empire','Advanced board')+H.panel('p-map','The Empire map','map')+H.panel('p-victory','Victory','trophy',{open:!short()})+H.panel('p-land','Landmarks','temple',{open:!short()})+H.panel('p-log','Match log','book',{open:false});
+function buildPanels(){$('leftscroll').innerHTML=H.brand('Skyline Empire','Expert board')+H.panel('p-map','The Empire map','map')+H.panel('p-victory','Victory','trophy',{open:!short()})+H.panel('p-land','Landmarks','temple',{open:!short()})+H.panel('p-log','Match log','book',{open:false});
  $('rightscroll').innerHTML='<span class="sk-badge dark">Career · Board 5 · Expert</span>'+H.panel('p-market','Market strategy','chart')+H.panel('p-ms','Milestone progress','flag')+H.panel('p-neg','Negotiation','shake',{open:!short()})+H.panel('p-sel','Selected space','globe',{open:!short()})}
 buildPanels();
 function fit(){const c=$('board');r3?.resize({x:0,y:0,w:c.clientWidth,h:c.clientHeight,free:H.freeArea(c)})}
