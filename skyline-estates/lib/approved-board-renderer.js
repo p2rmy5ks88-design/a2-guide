@@ -6,33 +6,73 @@ import {GLTFLoader} from '../lib/GLTFLoader.js';
 const TOKEN_KEYS=['lion','eagle','horse','ship'];
 const STRUCTURES=['stage_0_plot.glb','stage_1_lowrise.glb','stage_2_midrise.glb','stage_3_highrise.glb','stage_4_skyscraper.glb','stage_5_hotel.glb'];
 const PAWN_OFF=[[-.24,-.17],[.24,-.17],[-.24,.17],[.24,.17]];
+// A real surface grounds the scenery and keeps the background consistent as the camera moves.
+function createTableSurface(isEmpire) {
+ const canvas=document.createElement('canvas');
+ canvas.width=canvas.height=512;
+ const context=canvas.getContext('2d');
+ context.fillStyle=isEmpire?'#51301f':'#143b4b';
+ context.fillRect(0,0,512,512);
+ for(let row=0;row<512;row++){
+  const grain=Math.sin(row*.32)*.055+Math.sin(row*.091)*.045;
+  context.strokeStyle=grain>0?`rgba(255,215,163,${grain})`:`rgba(4,10,19,${-grain})`;
+  context.beginPath();
+  for(let x=0;x<=512;x+=8){
+   const y=row+Math.sin(x*.019+row*.05)*(isEmpire?5:1.5);
+   if(x===0)context.moveTo(x,y);else context.lineTo(x,y);
+  }
+  context.stroke();
+ }
+ const texture=new THREE.CanvasTexture(canvas);
+ texture.colorSpace=THREE.SRGBColorSpace;
+ texture.wrapS=texture.wrapT=THREE.RepeatWrapping;
+ texture.repeat.set(3,3);
+ const material=new THREE.MeshStandardMaterial({map:texture,roughness:isEmpire?.66:.43});
+ const surface=new THREE.Mesh(new THREE.PlaneGeometry(90,90),material);
+ surface.rotation.x=-Math.PI/2;
+ surface.position.y=-.85;
+ surface.receiveShadow=true;
+ return surface;
+}
 export async function createBoard({canvas,source,board,base,onSelect=()=>{},quality='high'}){
  const scene=new THREE.Scene();scene.background=new THREE.Color(board==='empire'?0x081829:0x111522);
  scene.fog=new THREE.Fog(board==='empire'?0x112b41:0x343047,40,96);
  const camera=new THREE.PerspectiveCamera(34,1,.12,240);camera.up.set(0,1,0);
  const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false,powerPreference:'high-performance'});
- renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.22;
+ renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.07;
  renderer.shadowMap.enabled=quality!=='low';renderer.shadowMap.type=THREE.PCFSoftShadowMap;
  const hemi=new THREE.HemisphereLight(0xe5e9ff,0x5d442e,1.65),sun=new THREE.DirectionalLight(0xffd299,3.5);
  sun.position.set(-9,24,15);sun.castShadow=quality!=='low';sun.shadow.mapSize.set(quality==='high'?2048:1024,quality==='high'?2048:1024);
- Object.assign(sun.shadow.camera,{left:-22,right:22,top:22,bottom:-22,near:1,far:90});scene.add(hemi,sun,new THREE.AmbientLight(0xffffff,.28));
+ Object.assign(sun.shadow.camera,{left:-22,right:22,top:22,bottom:-22,near:1,far:90});scene.add(hemi,sun,createTableSurface(board==='empire'));
+ const rim=new THREE.DirectionalLight(0x9ccaff,1.15);
+ rim.position.set(13,10,-16);scene.add(rim);
  const loader=new GLTFLoader();const url=x=>base.replace(/\/$/,'')+'/'+x;
  const load=x=>new Promise((resolve,reject)=>loader.load(url(x),g=>resolve(g.scene),undefined,reject));
  const boardRoot=await load('board_core.glb');scene.add(boardRoot);
+ boardRoot.traverse(mesh=>{if(mesh.isMesh)mesh.receiveShadow=true});
  // Keep tile textures readable and bright while environment retains real lighting.
  boardRoot.traverse(o=>{if(o.isMesh&&/^TILE_\d{3}_/.test(o.name)){
   const src=Array.isArray(o.material)?o.material[0]:o.material;
-  if(src?.map){const mat=new THREE.MeshBasicMaterial({map:src.map,toneMapped:false,side:THREE.DoubleSide});o.material=mat;}
+  if(src?.map){src.map.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());const mat=new THREE.MeshBasicMaterial({map:src.map,toneMapped:false,side:THREE.DoubleSide});o.material=mat;}
  }});
- let scenery=null;try{if(quality!=='low'){scenery=await load('environment_detail.glb');scene.add(scenery)}}catch(e){console.warn('Optional scene details unavailable',e)}
+ let scenery=null;try{if(quality!=='low'){scenery=await load('environment_detail.glb');scene.add(scenery);scenery.traverse(mesh=>{if(mesh.isMesh)mesh.castShadow=true})}}catch(e){console.warn('Optional scene details unavailable',e)}
  const spaceMeshes=new Map(),clickable=[];
  for(const tile of source.spaces){const mesh=boardRoot.getObjectByName(tile.raycast_node);if(!mesh)throw Error('3D board missing named tile mesh: '+tile.raycast_node);
   mesh.userData.spaceId=tile.id;spaceMeshes.set(tile.id,mesh);clickable.push(mesh)}
  const tokenRoots=[];for(let i=0;i<4;i++){
   const mesh=await load('tokens/'+TOKEN_KEYS[i]+'.glb');
   const bb=new THREE.Box3().setFromObject(mesh),dim=bb.getSize(new THREE.Vector3());
-  const norm=.72/Math.max(dim.x,dim.y,dim.z,.01);mesh.scale.setScalar(norm);
-  mesh.userData.seat=i;tokenRoots.push(mesh);scene.add(mesh);
+  const norm=1.05/Math.max(dim.x,dim.y,dim.z,.01);mesh.scale.setScalar(norm);
+  const pawn=new THREE.Group();
+  pawn.add(mesh);
+  mesh.position.y=-bb.min.y*norm+.09;
+  const baseMaterial=new THREE.MeshStandardMaterial({
+   color:[0xe8a629,0x297ccc,0x228455,0x824db2][i],metalness:.22,roughness:.43
+  });
+  const baseMesh=new THREE.Mesh(new THREE.CylinderGeometry(.26,.31,.09,20),baseMaterial);
+  baseMesh.position.y=.045;
+  pawn.add(baseMesh);
+  pawn.userData.seat=i;tokenRoots.push(pawn);scene.add(pawn);
  }
  const structures=new Map(),prefabs=[];
  for(let i=0;i<STRUCTURES.length;i++)try{prefabs[i]=await load('buildings/'+STRUCTURES[i])}catch(e){if(i<5)throw e}

@@ -55,6 +55,7 @@ const ok=(name,value,extra)=>{assert.ok(value,name+' '+JSON.stringify(extra||'')
  ok('resume restores exact new-board position and built property',stateBefore.pos===stateAfter.pos&&stateBefore.property===stateAfter.property);
  const view=await p.evaluate(()=>({bodyOverflow:document.documentElement.scrollWidth>innerWidth+2,buttons:[...document.querySelectorAll('#right button')].filter(x=>!x.disabled).every(x=>x.getBoundingClientRect().height>=43.5)}));
  ok('landscape controls fit and preserve 44pt hit targets',!view.bodyOverflow&&view.buttons,view);
+ await p.locator('#notice').waitFor({state:'hidden',timeout:15000});
  await p.screenshot({path:path.join(output,board+'-956x440-gameplay.png'),timeout:90000,animations:'disabled'});
  // Repeat safe-area geometry at 844x390 without changing match state.
  await p.setViewportSize({width:844,height:390});
