@@ -138,7 +138,25 @@ export function createCityVenturesRenderer(canvas,{rules,onTile}={}){
   corners.forEach((P,k)=>{const inward=center.clone().sub(P).setY(0).normalize(),side=new THREE.Vector3(-inward.z,0,inward.x);
    for(const sgn of[-1,1]){const p=props.palm.clone();p.position.copy(P.clone().add(inward.clone().multiplyScalar(-2.0)).add(side.clone().multiplyScalar(sgn*1.3)));p.position.y=-.32;p.rotation.y=k+sgn;p.scale.multiplyScalar(1.6);p.traverse(o=>{if(o.isMesh)o.castShadow=true});scene.add(p)}
    const l=props.lamp.clone();l.position.copy(P.clone().add(inward.clone().multiplyScalar(-1.75)));l.position.y=-.32;l.scale.multiplyScalar(2.2);scene.add(l)});dirty=true}).catch(e=>console.warn('City Ventures props',e));
- function building(stage,color){if(proto[stage]){const g=new THREE.Group(),m=proto[stage].clone(true);g.add(m);const pad=new THREE.Mesh(new THREE.BoxGeometry(.5,.025,.5),new THREE.MeshStandardMaterial({color,roughness:.5}));pad.position.y=.012;pad.receiveShadow=true;g.add(pad);m.position.y=.025;return g}const g=new THREE.Group(),m=new THREE.MeshStandardMaterial({color,map:winTex,roughness:.55,metalness:.05}),roof=new THREE.MeshStandardMaterial({color:'#e9d7a6',roughness:.5,metalness:.4});
+ // Owned plots show who owns them (owner request 21 Nov 2026): a SOLD sign in the owner's colour with their name
+// replaces the approved model's FOR SALE stand, and every built stage carries a pennant in the owner's colour.
+const signTex={};function ownerTexture(name,color){const k=name+'|'+color;if(signTex[k])return signTex[k];const W=256,H=150,X=2,c=document.createElement('canvas');c.width=W*X;c.height=H*X;const g=c.getContext('2d');g.scale(X,X);
+  g.fillStyle='#fffaf0';g.beginPath();g.roundRect(0,0,W,H,16);g.fill();g.fillStyle=color;g.beginPath();g.roundRect(7,7,W-14,H-14,12);g.fill();
+  g.fillStyle='rgba(255,255,255,.92)';g.font='800 30px Outfit,Manrope,system-ui,sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText('SOLD',W/2,40);
+  let f=58;const nm=String(name).toUpperCase();do{g.font=`800 ${f}px Outfit,Manrope,system-ui,sans-serif`;f-=2}while(g.measureText(nm).width>W-34&&f>24);
+  g.lineWidth=5;g.strokeStyle='rgba(0,0,0,.28)';g.strokeText(nm,W/2,97);g.fillStyle='#ffffff';g.fillText(nm,W/2,97);
+  const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=8;return signTex[k]=t}
+function ownerSign(name,color){const g=new THREE.Group(),metal=new THREE.MeshStandardMaterial({color:'#e9d7a6',roughness:.35,metalness:.6});
+  const post=new THREE.Mesh(new THREE.CylinderGeometry(.018,.018,.42,12),metal);post.position.set(-.19,.21,0);post.castShadow=true;g.add(post);
+  const post2=post.clone();post2.position.x=.19;g.add(post2);
+  const board=new THREE.Mesh(new THREE.BoxGeometry(.44,.26,.02),new THREE.MeshStandardMaterial({color,roughness:.5}));board.position.y=.3;board.castShadow=true;g.add(board);
+  const mat=new THREE.MeshBasicMaterial({map:ownerTexture(name,color),toneMapped:false,fog:false});
+  const f1=new THREE.Mesh(new THREE.PlaneGeometry(.43,.25),mat);f1.position.set(0,.3,.0115);const f2=f1.clone();f2.position.z=-.0115;f2.rotation.y=Math.PI;g.add(f1,f2);
+  const pad=new THREE.Mesh(new THREE.BoxGeometry(.5,.025,.5),new THREE.MeshStandardMaterial({color,roughness:.5}));pad.position.y=.012;pad.receiveShadow=true;g.add(pad);return g}
+function pennant(color){const g=new THREE.Group(),pole=new THREE.Mesh(new THREE.CylinderGeometry(.012,.012,.5,10),new THREE.MeshStandardMaterial({color:'#e9d7a6',roughness:.35,metalness:.6}));pole.position.y=.25;g.add(pole);
+  const sh=new THREE.Shape();sh.moveTo(0,0);sh.lineTo(.2,-.06);sh.lineTo(0,-.12);sh.closePath();const fl=new THREE.Mesh(new THREE.ShapeGeometry(sh),new THREE.MeshStandardMaterial({color,emissive:color,emissiveIntensity:.25,side:THREE.DoubleSide,roughness:.5}));fl.position.set(.012,.5,0);fl.castShadow=true;g.add(fl);return g}
+function building(stage,color,owner){if(owner&&stage===0)return ownerSign(owner.name,owner.color);const out=buildingModel(stage,color);if(owner){const f=pennant(owner.color);f.position.set(.2,.02,.2);out.add(f)}return out}
+function buildingModel(stage,color){if(proto[stage]){const g=new THREE.Group(),m=proto[stage].clone(true);g.add(m);const pad=new THREE.Mesh(new THREE.BoxGeometry(.5,.025,.5),new THREE.MeshStandardMaterial({color,roughness:.5}));pad.position.y=.012;pad.receiveShadow=true;g.add(pad);m.position.y=.025;return g}const g=new THREE.Group(),m=new THREE.MeshStandardMaterial({color,map:winTex,roughness:.55,metalness:.05}),roof=new THREE.MeshStandardMaterial({color:'#e9d7a6',roughness:.5,metalness:.4});
   if(stage===0){const s=new THREE.Mesh(new THREE.CylinderGeometry(.02,.02,.32),roof);s.position.y=.16;const f=new THREE.Mesh(new THREE.BoxGeometry(.2,.12,.02),new THREE.MeshStandardMaterial({color}));f.position.set(.1,.27,0);g.add(s,f);return g}
   const h=[0,.3,.62,1.05][stage],w=stage===3?.3:.34;const b=new THREE.Mesh(new THREE.BoxGeometry(w,h,w),m);b.position.y=h/2;b.castShadow=true;g.add(b);
   if(stage===1){const r=new THREE.Mesh(new THREE.ConeGeometry(w*.78,.16,4),roof);r.rotation.y=Math.PI/4;r.position.y=h+.08;g.add(r)}
@@ -207,7 +225,7 @@ export function createCityVenturesRenderer(canvas,{rules,onTile}={}){
   v.own.forEach((o,i)=>{const T=tileMeshes[i];if(!T||!T.ring)return;const key=o?o.owner+':'+o.stage+':'+(o.mortgaged?1:0):'';if(T.key===key)return;T.key=key;
    if(T.building){T.grp.remove(T.building);T.building=null}
    if(o){T.ring.visible=true;T.ring.material.color.set(v.players[o.owner].color||PLAYER_COLORS[o.owner]);T.ring.material.emissive.set(v.players[o.owner].color||PLAYER_COLORS[o.owner]);T.ring.material.emissiveIntensity=.35;
-    if(TILES[i].type==='property'){const b=building(o.stage,CV.DISTRICT_COLORS[TILES[i].district]);b.position.set(0,.12,-DEPTH*.3);T.grp.add(b);T.building=b}
+    if(TILES[i].type==='property'){const op=v.players[o.owner],b=building(o.stage,CV.DISTRICT_COLORS[TILES[i].district],{name:o.owner===0?'You':op.name,color:op.color||PLAYER_COLORS[o.owner]});b.position.set(0,.12,-DEPTH*.3);T.grp.add(b);T.building=b}
     T.face.material.color.set(o.mortgaged?'#8a8a8a':'#ffffff');/* Unlit labels: mortgage shading remains material.color. */}else{T.ring.visible=false;T.face.material.color.set('#ffffff');/* Restore high-contrast unlit title ink. */}});
   effects.market=v.market;effects.civic=v.civic;dirty=true}
  function placeTokens(){const counts={};tokens.forEach((t,k)=>{if(t&&view.players[k]&&!view.players[k].out)counts[t.tile]=(counts[t.tile]||0)+1});

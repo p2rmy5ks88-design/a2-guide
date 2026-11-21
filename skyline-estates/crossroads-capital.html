@@ -25,7 +25,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 #brand{display:flex;flex-direction:column;line-height:1;padding:6px 12px;font-family:Georgia,"Times New Roman",serif;font-weight:900;letter-spacing:.04em;font-size:17px;color:var(--gold-300);text-shadow:0 2px 0 #0008}
 #brand small{font:700 9.5px -apple-system,Inter,Arial;letter-spacing:.14em;color:#fff;opacity:.85;margin-top:3px}
 #turnpill{padding:7px 12px;font-weight:800;font-size:13px}
-#effects{display:flex;gap:6px;flex-wrap:wrap}
+#effects{display:flex;gap:6px;flex-wrap:nowrap;min-width:0;flex:0 1 auto;overflow:hidden}#effects .chip{display:block;flex:0 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .chip{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:750;background:#09172ce6;border:1px solid #ffffff33}
 .chip.boom{border-color:#ff9a3c;color:#ffd2a6}.chip.correction{border-color:#5ab8ff;color:#bfe3ff}.chip.civic{border-color:#59e39a;color:#c4f5da}
 .grow{flex:1}
@@ -301,5 +301,6 @@ $('mNew').onclick=()=>{$('menu').hidden=true;try{localStorage.removeItem(CC.SAVE
 let overview=false;$('viewBtn').onclick=()=>{overview=!overview;r3.overview(overview);$('viewBtn').textContent=overview?'🎯':'🗺';$('viewBtn').setAttribute('aria-label',overview?'Return to your token':'Show the whole board')};
 const saved=load();if(saved){s=saved;r3.sync(CC.view(s));r3.follow(s.turn.pid);render();toast('Match resumed');pump()}else startScreen();
 </script>
+<script src="lib/board-radio.js"></script><script>try{SkylineBoardRadio.mount(document.getElementById('top'),document.getElementById('viewBtn'))}catch(e){}</script>
 </body>
 </html>

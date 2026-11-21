@@ -6,7 +6,8 @@
   else root.SkylineSCWallet = api;
 })(typeof window === 'object' ? window : globalThis, function () {
   'use strict';
-  const RULES = Object.freeze({season:40,weekly:25,daily:5,dailyLimit:3,completion:20,win:40,
+  // Season-tier and match SC were raised 15× on 21 Nov 2026 (owner decision): season 40→600, completion 20→300, win 40→600.
+  const RULES = Object.freeze({season:600,weekly:25,daily:5,dailyLimit:3,completion:300,win:600,
     firstTower:25,threeTowers:50,cityCollection:100,practiceCap:100,practiceFraction:.1,
     minRounds:5,minMinutes:2,minActivity:3,matchDailyLimit:3});
   const PREFIX='skyline-earned-sc:v1:', MIGRATION=PREFIX+'migration';

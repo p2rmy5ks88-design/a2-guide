@@ -192,7 +192,7 @@ const SAVE_KEY='skylineRingSave',TIMER_KEY='skylineRingTimer';let TURN_MS=25000;
 let scWallet=null;const walletApi=()=>{try{return scWallet||(scWallet=window.SkylineSCWallet&&SkylineSCWallet.create(localStorage))}catch(e){return null}};
 const T=f=>{try{return f()}catch(e){return undefined}};
 function payRewards(){if(!s||!s.over||s.rewarded)return null;s.rewarded=true;const P=s.players[me],won=s.winner===me&&!P.bankrupt,st=P.st||{};
-  const r={won,xp:50+(won?200:0)+Math.min(200,Math.round((st.rentIn||0)/10)),coins:T(()=>gameCoinReward(won,won?0:1))||(won?500:220),tr:won?30:-8,sc:0};
+  const r={won,xp:50+(won?200:0)+Math.min(200,Math.round((st.rentIn||0)/10)),coins:T(()=>gameCoinReward(won,won?0:1))||(won?7500:3300),tr:won?30:-8,sc:0};
   T(()=>addXP(r.xp,won?'Harbour Ring win':'Harbour Ring match'));
   T(()=>{PREF.coins=(PREF.coins||0)+r.coins;if(typeof COINLOG!=='undefined')COINLOG.push([won?'Harbour Ring win':'Harbour Ring',r.coins]);refreshCoins()});
   T(()=>addTrophies(r.tr));
