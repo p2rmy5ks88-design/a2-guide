@@ -258,4 +258,4 @@ export function createCityVenturesRenderer(canvas,{rules,onTile}={}){
   frames++;if(now-fpsT>3000){const fps=frames*1000/(now-fpsT);frames=0;fpsT=now;if(fps<28&&dpr>2){dpr=Math.max(2,dpr-.5);renderer.setPixelRatio(dpr);resize()}}}
  resize();overviewGoal();Object.assign(cam,{target:goal.target.clone(),yaw:goal.yaw,pitch:goal.pitch,dist:goal.dist});requestAnimationFrame(loop);
  return{setFrameBias(v){frameBias=v;refreshGoal()},sync,moveToken,follow,focusTile,overview,highlight,resize,tileScreen:i=>{const v=tileInfo[i].pos.clone().project(camera);const r=canvas.getBoundingClientRect();return{x:(v.x+1)/2*r.width+r.left,y:(1-v.y)/2*r.height+r.top}},
-  stats:()=>({dpr,mode,zoom:userZoom,camDist:cam.dist,camYaw:cam.yaw,camPitch:cam.pitch,cameraUp:camera.up.toArray(),tiles:tileMeshes.filter(Boolean).length,tokens:tokens.length}),mode:()=>mode,dispose(){running=false;renderer.dispose()}}}
+  stats:()=>({dpr,mode,zoom:userZoom,camDist:cam.dist,goalDist:goal.dist,camYaw:cam.yaw,camPitch:cam.pitch,cameraUp:camera.up.toArray(),tiles:tileMeshes.filter(Boolean).length,tokens:tokens.length}),mode:()=>mode,dispose(){running=false;renderer.dispose()}}}
