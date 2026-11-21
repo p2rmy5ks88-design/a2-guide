@@ -21,6 +21,20 @@ let n=0;const ok=m=>{n++;console.log('PASS',m)};
   const overlap=await p.evaluate(()=>{const r=id=>document.getElementById(id).getBoundingClientRect();const a=r('players'),b=r('dock'),c=r('top'),h=r('help');return a.bottom>b.top&&a.right>b.left||c.bottom>a.top+1||a.bottom>h.top+1});assert.equal(overlap,false);ok('HUD fits 844×390 with 44pt buttons and no overlaps');
   await p.screenshot({path:path.join(out,engine+'-start.png')});
 
+  // Independent camera acceptance: the full-board view must be recoverable,
+  // followed by an upright, close three-quarter token view. Renderer-only UI
+  // controls are used here: no match state, money, movement or save is changed.
+  await p.evaluate(()=>__cc.renderer.overview(true));
+  await p.waitForFunction(()=>__cc.renderer.stats().camDist>9,null,{timeout:45000});
+  const cameraOverview=await p.evaluate(()=>__cc.renderer.stats());
+  await p.evaluate(()=>__cc.renderer.overview(false));
+  await p.waitForFunction(()=>__cc.renderer.stats().camDist<8,null,{timeout:45000});
+  const cameraFollow=await p.evaluate(()=>__cc.renderer.stats());
+  assert.ok(cameraOverview.camDist>cameraFollow.camDist*1.55,'camera overview vs close-follow distance: '+JSON.stringify({overview:cameraOverview.camDist,follow:cameraFollow.camDist}));
+  assert.ok(cameraOverview.mode==='overview'&&cameraFollow.mode==='follow'&&cameraFollow.camPitch>0.5&&cameraFollow.camPitch<1.2&&cameraFollow.cameraUp[1]>.999&&Math.abs(cameraFollow.cameraUp[0])<.001&&Math.abs(cameraFollow.cameraUp[2])<.001,'camera upright / modes: '+JSON.stringify({overview:cameraOverview,follow:cameraFollow}));
+  ok('camera can return to overview and smoothly follow a token upright');
+
+
   // Phone landscape acceptance: the 956 x 440 CSS viewport corresponds to
   // the iPhone 18 Pro Max aspect ratio; manually inject conservative cutouts
   // without spoofing the device's GPU pixel ratio.
