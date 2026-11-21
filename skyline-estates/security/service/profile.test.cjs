@@ -46,13 +46,14 @@ async function test(name,fn){await fn();count++;console.log('ok - '+name)}
   const again=await f.svc.migrate('alice',{requestId:rid(),mode:'import',snapshot:{coins:999}});assert.equal(again.mode,'merge');assert.equal(again.profile.coins,0);
  });
  await test('earned coins and XP are capped per server UTC day and reset the next day',async()=>{const f=fixture();
-  let r=await f.svc.sync('alice',{requestId:rid(),changes:{coins:30000,xp:1000,reasons:['Season tier 5']}});assert.equal(r.coins,30000);
-  r=await f.svc.sync('alice',{requestId:rid(),changes:{coins:30000}});assert.equal(r.coins,20000);assert.ok(r.notes.includes('daily-coin-limit'));assert.equal(r.profile.coins,50000);
+  assert.equal(P.POLICY.dayCoins,2500000,'owner-approved 50x daily earned-coin limit');
+  let r=await f.svc.sync('alice',{requestId:rid(),changes:{coins:P.POLICY.dayCoins-20000,xp:1000,reasons:['Season tier 5']}});assert.equal(r.coins,P.POLICY.dayCoins-20000);
+  r=await f.svc.sync('alice',{requestId:rid(),changes:{coins:30000}});assert.equal(r.coins,20000);assert.ok(r.notes.includes('daily-coin-limit'));assert.equal(r.profile.coins,P.POLICY.dayCoins);
   r=await f.svc.sync('alice',{requestId:rid(),changes:{coins:5}});assert.equal(r.coins,0);
   f.clock.now=DAY+864e5;r=await f.svc.sync('alice',{requestId:rid(),changes:{coins:5}});assert.equal(r.coins,5);assert.equal(r.profile.today.coins,5);
  });
  await test('device clock cannot reopen the cap: only the server day counts',async()=>{const f=fixture();
-  await f.svc.sync('alice',{requestId:rid(),changes:{coins:50000}});const r=await f.svc.sync('alice',{requestId:rid(),changes:{coins:100,reasons:['2030-01-01']}});assert.equal(r.coins,0);
+  await f.svc.sync('alice',{requestId:rid(),changes:{coins:P.POLICY.dayCoins}});const r=await f.svc.sync('alice',{requestId:rid(),changes:{coins:100,reasons:['2030-01-01']}});assert.equal(r.coins,0);
  });
  await test('spending only lowers the balance, never below zero',async()=>{const f=fixture();
   await f.svc.sync('alice',{requestId:rid(),changes:{coins:300}});
@@ -71,9 +72,9 @@ async function test(name,fn){await fn();count++;console.log('ok - '+name)}
  await test('promo codes are checked on the server: once per account, expiry, and outside the daily cap',async()=>{const code='not-the-real-code',f=fixture(Date.UTC(2026,10,1),{[P.promoHash(code)]:{coins:100000,xp:5000,until:Date.UTC(2026,10,2)}});
   {
    let r=await f.svc.sync('alice',{requestId:rid(),changes:{coins:100000,xp:5000,promos:[code]}});assert.equal(r.coins,100000);assert.equal(r.xp,5000);assert.equal(r.profile.today.coins,0);
-   r=await f.svc.sync('alice',{requestId:rid(),changes:{coins:100000,promos:[code]}});assert.ok(r.notes.includes('promo-used'));assert.equal(r.coins,P.POLICY.dayCoins);
+   r=await f.svc.sync('alice',{requestId:rid(),changes:{coins:100000,promos:[code]}});assert.ok(r.notes.includes('promo-used'));assert.equal(r.coins,Math.min(100000,P.POLICY.dayCoins));
    r=await f.svc.sync('bob',{requestId:rid(),changes:{promos:['wrong']}});assert.ok(r.notes.includes('promo-invalid'));
-   f.clock.now=Date.UTC(2026,10,3);r=await f.svc.sync('carol',{requestId:rid(),changes:{coins:100000,promos:[code]}});assert.ok(r.notes.includes('promo-expired'));assert.equal(r.coins,P.POLICY.dayCoins);
+   f.clock.now=Date.UTC(2026,10,3);r=await f.svc.sync('carol',{requestId:rid(),changes:{coins:100000,promos:[code]}});assert.ok(r.notes.includes('promo-expired'));assert.equal(r.coins,Math.min(100000,P.POLICY.dayCoins));
   }
  });
  await test('equipped items use the newest revision',async()=>{const f=fixture();

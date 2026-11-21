@@ -6,7 +6,7 @@
 const {createHash}=require('node:crypto');
 const hash=x=>createHash('sha256').update(x).digest('hex');
 const fail=code=>{throw Object.assign(new Error(code),{code})};
-const POLICY=Object.freeze({dayCoins:50000,dayXp:150000,migrateCoins:1000000,migrateXp:5000000,maxItems:2000,maxFlags:5000,maxMaxKeys:2000,maxValue:1e9,reasons:20});
+const POLICY=Object.freeze({dayCoins:2500000,dayXp:150000,migrateCoins:1000000,migrateXp:5000000,maxItems:2000,maxFlags:5000,maxMaxKeys:2000,maxValue:1e9,reasons:20});
 // Owned collection kinds. Unknown kinds are rejected rather than stored.
 const KINDS=Object.freeze(['tok','fin','dice','surr','country','city','frame','char','roof']);
 // Monotonic values: field -> key. Merged by maximum, never summed.
