@@ -58,7 +58,7 @@ function badgeTexture(t,renderer){
  g.beginPath();for(let k=0;k<6;k++){const a=Math.PI/3*k;const x=S/2+Math.cos(a)*S*.5,y=S/2+Math.sin(a)*S*.5;k?g.lineTo(x,y):g.moveTo(x,y)}g.closePath();g.clip();
  g.fillStyle=CORNER_COLORS[t.i];g.fillRect(0,0,S,S);
  const grd=g.createRadialGradient(S/2,S/2-40,40,S/2,S/2,S/2);grd.addColorStop(0,'rgba(255,255,255,.1)');grd.addColorStop(1,'rgba(0,0,0,.22)');g.fillStyle=grd;g.fillRect(0,0,S,S);
- g.textAlign='center';g.fillStyle='#fff';g.font='96px "Apple Color Emoji","Segoe UI Emoji",sans-serif';g.fillText(CORNER_ICON[t.i],S/2,215);
+ g.textAlign='center';g.fillStyle='#fff';g.font='96px "Apple Color Emoji","Segoe UI Emoji",sans-serif';if(t.i===0){g.save();g.translate(S/2,0);g.scale(-1,1);g.fillText(CORNER_ICON[t.i],0,215);g.restore()}else g.fillText(CORNER_ICON[t.i],S/2,215);
  g.font='900 80px Georgia,"Times New Roman",serif';const words=t.name.toUpperCase().split(' ');
  g.strokeStyle='rgba(0,0,0,.35)';g.lineWidth=8;words.forEach((w,k)=>{const y=330+k*84;g.strokeText(w,S/2,y);g.fillStyle='#fff';g.fillText(w,S/2,y)});
  const tex=new THREE.CanvasTexture(c);tex.colorSpace=THREE.SRGBColorSpace;tex.anisotropy=renderer.capabilities.getMaxAnisotropy();return tex}
@@ -90,6 +90,8 @@ export function createCityVenturesRenderer(canvas,{rules,onTile}={}){
 
  // ---- board geometry from the approved art ----
  const corners=CORNER_PX.map(toWorld),center=new THREE.Vector3(0,0,0);
+ // Spaces run clockwise seen from above (owner request 21 Nov 2026): walk the hex corners in reverse order.
+ const ring=[0,5,4,3,2,1].map(k=>corners[k]);
  const outline=corners.map(v=>v.clone().add(v.clone().setY(0).normalize().multiplyScalar(.95)));
  const shape=new THREE.Shape();outline.forEach((v,k)=>k?shape.lineTo(v.x,-v.z):shape.moveTo(v.x,-v.z));shape.closePath();
  const gold=new THREE.MeshStandardMaterial({color:'#e2b25a',metalness:.85,roughness:.28,envMapIntensity:1.15});
@@ -107,7 +109,7 @@ export function createCityVenturesRenderer(canvas,{rules,onTile}={}){
  const tileMeshes=[],tileInfo=[],pick=[];
  const sides=[[0,6],[6,13],[13,19],[19,25],[25,31],[31,37]];
  const BADGE=1.0,DEPTH=1.28;
- sides.forEach(([a,b],k)=>{const A=corners[k],B=corners[(k+1)%6],L=A.distanceTo(B),dir=B.clone().sub(A).normalize(),n=b-a-1,r=BADGE/L;
+ sides.forEach(([a,b],k)=>{const A=ring[k],B=ring[(k+1)%6],L=A.distanceTo(B),dir=B.clone().sub(A).normalize(),n=b-a-1,r=BADGE/L;
   const mid=A.clone().add(B).multiplyScalar(.5),inward=center.clone().sub(mid).setY(0).normalize();
   // make inward perpendicular to the side
   const perp=new THREE.Vector3(-dir.z,0,dir.x);if(perp.dot(inward)<0)perp.negate();
@@ -121,7 +123,7 @@ export function createCityVenturesRenderer(canvas,{rules,onTile}={}){
    const inner=pos.clone().add(perp.clone().multiplyScalar(DEPTH*.28)),outer=pos.clone().add(perp.clone().multiplyScalar(-DEPTH*.2));
    tileMeshes[i]={grp,face,ring,glow,building:null};tileInfo[i]={pos,inner,outer,perp,dir,w}}
  });
- CORNER_TILES.forEach((i,k)=>{const t=TILES[i],P=corners[k],grp=new THREE.Group();grp.position.copy(P);const inward=center.clone().sub(P).setY(0).normalize();grp.rotation.y=Math.atan2(-inward.x,-inward.z);
+ CORNER_TILES.forEach((i,k)=>{const t=TILES[i],P=ring[k],grp=new THREE.Group();grp.position.copy(P);const inward=center.clone().sub(P).setY(0).normalize();grp.rotation.y=Math.atan2(-inward.x,-inward.z);
   const rim=new THREE.Mesh(new THREE.CylinderGeometry(1.12,1.18,.2,6),gold);rim.position.y=.1;rim.rotation.y=Math.PI/2;rim.castShadow=true;grp.add(rim);
   const cap=new THREE.Mesh(new THREE.CylinderGeometry(1.0,1.0,.26,6),new THREE.MeshStandardMaterial({color:CORNER_COLORS[i],roughness:.45}));cap.position.y=.2;cap.rotation.y=Math.PI/2;cap.castShadow=true;grp.add(cap);
   // label: flat plane whose canvas top points to the board centre, so it reads upright from outside
@@ -231,14 +233,15 @@ function buildingModel(stage,color){if(proto[stage]){const g=new THREE.Group(),m
  function placeTokens(){const counts={};tokens.forEach((t,k)=>{if(t&&view.players[k]&&!view.players[k].out)counts[t.tile]=(counts[t.tile]||0)+1});
   tokens.forEach((t,k)=>{if(!t)return;const p=slot(t.tile,k,counts[t.tile]);t.g.position.set(p.x,.13,p.z);t.g.rotation.y=Math.atan2(tileInfo[t.tile].dir.x,tileInfo[t.tile].dir.z)-Math.PI/2});dirty=true}
  const wait=ms=>new Promise(r=>setTimeout(r,ms));
+ let speedK=1;
  async function moveToken(pid,path,{express=false}={}){const t=tokens[pid];if(!t||!path.length)return;moving=true;followPid=pid;if(mode==='follow')pushIn=1;
   if(pinned)overviewGoal();
-  const step=reduceMotion.matches?0:express?110:230;
+  const step=reduceMotion.matches?0:(express?110:230)*speedK;
   for(const i of path){const from=t.g.position.clone(),to=slot(i,pid,1);const t0=performance.now();
    if(step){await new Promise(res=>{const tick=()=>{const k=Math.min(1,(performance.now()-t0)/step);const e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;t.g.position.lerpVectors(from,to,e);t.g.position.y=.13+Math.sin(Math.PI*k)*.35;
      const ahead=tileInfo[i].outer.clone();if(mode==='follow')followGoal(t.g.position.clone().lerp(ahead,.6));t.g.rotation.y=Math.atan2(to.x-from.x,to.z-from.z)-Math.PI/2;dirty=true;if(k<1)requestAnimationFrame(tick);else res()};tick()})}
    t.tile=i}
-  moving=false;placeTokens();if(mode==='follow'){pushIn=1.13;followGoal(tileInfo[t.tile].pos)}await wait(reduceMotion.matches?0:220)}
+  moving=false;placeTokens();if(mode==='follow'){pushIn=1.13;followGoal(tileInfo[t.tile].pos)}await wait(reduceMotion.matches?0:220*speedK)}
  function follow(pid){followPid=pid;if(pinned){dirty=true;return}mode='follow';userYaw=0;pushIn=1;const t=tokens[pid];if(t)followGoal(tileInfo[t.tile].pos);dirty=true}
  function focusTile(i){if(pinned){highlight(i);return}mode='follow';pushIn=1.13;followGoal(tileInfo[i].pos);highlight(i);dirty=true}
  function overview(on=true){pinned=on;mode=on?'overview':'follow';if(on)overviewGoal();else follow(followPid);dirty=true}
@@ -275,5 +278,5 @@ function buildingModel(stage,color){if(proto[stage]){const g=new THREE.Group(),m
   renderer.render(scene,camera);
   frames++;if(now-fpsT>3000){const fps=frames*1000/(now-fpsT);frames=0;fpsT=now;if(fps<28&&dpr>2){dpr=Math.max(2,dpr-.5);renderer.setPixelRatio(dpr);resize()}}}
  resize();overviewGoal();Object.assign(cam,{target:goal.target.clone(),yaw:goal.yaw,pitch:goal.pitch,dist:goal.dist});requestAnimationFrame(loop);
- return{setFrameBias(v){frameBias=v;refreshGoal()},sync,moveToken,follow,focusTile,overview,highlight,resize,tileScreen:i=>{const v=tileInfo[i].pos.clone().project(camera);const r=canvas.getBoundingClientRect();return{x:(v.x+1)/2*r.width+r.left,y:(1-v.y)/2*r.height+r.top}},
+ return{setFrameBias(v){frameBias=v;refreshGoal()},sync,moveToken,setSpeed:k=>{speedK=k},follow,focusTile,overview,highlight,resize,tileScreen:i=>{const v=tileInfo[i].pos.clone().project(camera);const r=canvas.getBoundingClientRect();return{x:(v.x+1)/2*r.width+r.left,y:(1-v.y)/2*r.height+r.top}},
   stats:()=>({dpr,mode,zoom:userZoom,camDist:cam.dist,goalDist:goal.dist,camYaw:cam.yaw,camPitch:cam.pitch,cameraUp:camera.up.toArray(),tiles:tileMeshes.filter(Boolean).length,tokens:tokens.length}),mode:()=>mode,dispose(){running=false;renderer.dispose()}}}

@@ -154,7 +154,7 @@ function legal(s,pid){const pd=pending(s);if(s.over)return[];const p=P(s,pid),ou
  if(pd.kind==='debt'){if(pd.pid!==pid)return[];for(const i of owned(s,pid)){const o=s.own[i];if(o.stage>0&&!DISTRICTS[TILES[i].district]?.some(j=>s.own[j]&&s.own[j].owner===pid&&s.own[j].stage>o.stage))out.push({type:'sell',tile:i,value:Math.round(TILES[i].upgrades[o.stage-1]*R.sellBack)});
   if(!o.mortgaged&&!(o.stage>0)&&!(TILES[i].district&&DISTRICTS[TILES[i].district].some(j=>s.own[j]&&s.own[j].stage>0)))out.push({type:'mortgage',tile:i,value:Math.round(TILES[i].price*R.mortgage)})}
   out.push({type:'bankrupt'});return out}
- if(pd.pid!==pid)return[];
+ if(pd.pid!==pid&&!(pd.kind==='trade'&&pd.to===pid))return[];
  if(pd.kind==='roll')return[{type:'roll'}];
  if(pd.kind==='buy'){const t=TILES[pd.tile],d=discountFor(p,'buy',t.price),cost=t.price-d.amount;if(p.cash>=cost)out.push({type:'buy',cost,discount:d.amount});out.push({type:'decline'});return out}
  if(pd.kind==='auction'){const steps=R.bidSteps.map(x=>Math.max(pd.high+x,10));for(const b of steps)if(p.cash>=b)out.push({type:'bid',amount:b});out.push({type:'pass'});return out}
