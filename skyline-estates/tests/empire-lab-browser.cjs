@@ -6,7 +6,7 @@ const base=origin+'skyline-estates/empire-production-lab.html';const report={eng
 const check=(n,ok,x)=>{assert.ok(ok,n+(x?' '+JSON.stringify(x):''));report.checks.push(n);console.log('PASS',engine,n)};
 const VPS=[{width:956,height:440,dpr:3,name:'956x440'},{width:844,height:390,dpr:3,safe:true,name:'844x390-safe'},{width:667,height:375,dpr:2,name:'667x375'}];
 const launch=()=>({chromium,webkit}[engine]).launch({headless:true,...(engine==='chromium'?{args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']}:{})});
-async function open(b,vp,url){const ctx=await b.newContext({viewport:{width:vp.width,height:vp.height},deviceScaleFactor:vp.dpr,hasTouch:true,serviceWorkers:'block',reducedMotion:'reduce'});const p=await ctx.newPage();
+async function open(b,vp,url,normalMotion=false){const ctx=await b.newContext({viewport:{width:vp.width,height:vp.height},deviceScaleFactor:vp.dpr,hasTouch:true,serviceWorkers:'block',reducedMotion:normalMotion?'no-preference':'reduce'});const p=await ctx.newPage();
  p.on('pageerror',e=>report.errors.push(String(e.stack||e)));p.on('console',m=>{if(m.type()==='error')report.errors.push(m.text().slice(0,300))});await p.goto(url);return{ctx,p}}
 async function started(p,vp){if(vp.safe)await p.evaluate(()=>{for(const[k,v]of Object.entries({sal:47,sar:47,sab:21}))document.documentElement.style.setProperty('--'+k,v+'px')});
  await p.waitForFunction(()=>document.getElementById('loading')?.hidden||document.getElementById('loading')?.dataset.error,null,{timeout:300000});assert.equal(await p.evaluate(()=>document.getElementById('loading').dataset.error||null),null)}
@@ -14,7 +14,7 @@ async function started(p,vp){if(vp.safe)await p.evaluate(()=>{for(const[k,v]of O
 async function humanTurn(p){for(let i=0;i<4000;i++){if(await p.evaluate(()=>document.getElementById('dlg').open)){await p.click('#dlg-btns button:first-child');continue}
  const st=await p.evaluate(()=>{const s=__empireLab.state(),pd=SkylineEmpire.pending(s);return s.phase==='over'?'over':(pd.player===0&&(pd.kind==='roll'||pd.kind==='invest')&&!__empireLab.busy())?'me':'wait'});if(st!=='wait')return st;await p.waitForTimeout(60)}throw Error('timeout waiting for human turn')}
 (async()=>{const browser=await launch();try{
- {const vp=VPS[0],{ctx,p}=await open(browser,vp,base+'?seed=515&speed=fast');await p.evaluate(()=>{localStorage.setItem('skylineSave','CLASSIC-SENTINEL');localStorage.setItem('skylineDominionSave','DOMINION-SENTINEL')});
+ {const vp=VPS[0],{ctx,p}=await open(browser,vp,base+'?seed=515&speed=fast',true);await p.evaluate(()=>{localStorage.setItem('skylineSave','CLASSIC-SENTINEL');localStorage.setItem('skylineDominionSave','DOMINION-SENTINEL')});
   await p.click('#start');await started(p,vp);const st=await p.evaluate(()=>__empireLab.r3().stats());report.stats=st;
   check('44 live spaces and four visible tokens from the real match',st.nodes===44&&st.tokensVisible===4);
   check("Claude's supplied art-matched Empire board, bay skyline, Empire Tower and crane GLBs submitted to the GPU",['board_empire_44.glb','empire_bay_skyline.glb','empire_tower.glb','tower_crane.glb'].every(f=>st.files.includes(f))&&st.triangles>500000);
@@ -26,7 +26,9 @@ async function humanTurn(p){for(let i=0;i<4000;i++){if(await p.evaluate(()=>docu
   await humanTurn(p);const idle=await p.evaluate(()=>__empireLab.r3().stats().renders);await p.waitForTimeout(1200);check('no continuous idle rendering',await p.evaluate(()=>__empireLab.r3().stats().renders)===idle);
   // Real movement test: ordinary camera motion, not reduced-motion overview.
   // Manipulates only the renderer's test token; authoritative match state stays untouched.
-  await p.emulateMedia({reducedMotion:'no-preference'});
+  // First match runs with normal motion from context creation (Safari-safe).
+  const normalMotion=await p.evaluate(()=>!matchMedia('(prefers-reduced-motion: reduce)').matches);
+  check('regular motion enabled before moving the camera',normalMotion);
   const followProof=await p.evaluate(async()=>{
    const r=__empireLab.r3(),state=__empireLab.state(),from=state.players[0].pos,to=SkylineEmpire.NODES.find(n=>n.id!==from).id;
    const samples=[],timer=setInterval(()=>samples.push(r.stats()),40);
@@ -41,7 +43,7 @@ async function humanTurn(p){for(let i=0;i<4000;i++){if(await p.evaluate(()=>docu
    r.sync(SkylineEmpire.view(state));return result;
   });
   check('smooth upright follow camera and overview recovery in regular motion',followProof.max>.07&&followProof.upright&&followProof.returned<.05&&!followProof.redMotion&&!followProof.focused,followProof);
-  await p.emulateMedia({reducedMotion:'reduce'});
+  // No media-mode switch here: verify restored overview in the original context.
   const tap=await p.evaluate(()=>__empireLab.r3().project('E21'));await p.mouse.click(tap.x,tap.y);check('tapping a rendered space selects it',await p.evaluate(()=>__empireLab.r3().stats().selected)==='E21');
   const expected=await p.evaluate(()=>{const E=SkylineEmpire,s=E.restore(E.serialize(__empireLab.state())).state;E.act(s,0,{type:'roll'});return{pos:s.players[0].pos,roll:s.players[0].lastRoll}});
   await p.click('#roll');await p.waitForFunction(()=>!__empireLab.busy()&&SkylineEmpire.pending(__empireLab.state()).kind!=='roll',null,{timeout:60000});
