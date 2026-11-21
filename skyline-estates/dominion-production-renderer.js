@@ -77,13 +77,15 @@ export async function createDominionRenderer(canvas,{quality='high',onPick=()=>{
  // ---- camera: fit the actual board bounds into the visible board rect (no automatic zoom) ----
  const boardBox=new THREE.Box3().setFromObject(board),boardSize=boardBox.getSize(new THREE.Vector3()),boardCenter=boardBox.getCenter(new THREE.Vector3());
  let view={pitch:50,yaw:0,zoom:1,focus:null},rect={x:0,y:0,w:canvas.clientWidth||1,h:canvas.clientHeight||1},dirty=true,anim=[],renders=0,selected=null;
+ const prefersLess=matchMedia('(prefers-reduced-motion: reduce)'),overviewEye=new THREE.Vector3(),overviewTarget=new THREE.Vector3(),followTarget=new THREE.Vector3(),followEye=new THREE.Vector3(),cameraAim=new THREE.Vector3();
+ let tracking=0,trackingUntil=0,trackingPid=-1,trackingYaw=0,trackingAt=0;
  // Fit by projecting the real board footprint corners (bounded search; same result every time, no animation).
  const fitPts=[];for(const y of [.4])for(const[x,z]of[[boardBox.min.x,boardBox.min.z],[boardBox.max.x,boardBox.min.z],[boardBox.min.x,boardBox.max.z],[boardBox.max.x,boardBox.max.z],[boardBox.min.x,boardCenter.z],[boardBox.max.x,boardCenter.z]])fitPts.push(new THREE.Vector3(x,y,z));
  function placeAt(dist,target){const pitch=THREE.MathUtils.degToRad(view.pitch),yaw=THREE.MathUtils.degToRad(view.yaw);
-  camera.position.set(target.x+dist*Math.cos(pitch)*Math.sin(yaw),target.y+dist*Math.sin(pitch),target.z+dist*Math.cos(pitch)*Math.cos(yaw));camera.lookAt(target);camera.updateMatrixWorld()}
+  camera.up.set(0,1,0);camera.position.set(target.x+dist*Math.cos(pitch)*Math.sin(yaw),target.y+dist*Math.sin(pitch),target.z+dist*Math.cos(pitch)*Math.cos(yaw));camera.lookAt(target);camera.updateMatrixWorld()}
  function placeCamera(){const target=view.focus?POS[view.focus].clone():boardCenter.clone().setY(.4);
   const around=c=>[[-2.5,-2.5],[2.5,-2.5],[-2.5,2.5],[2.5,2.5]].map(([x,z])=>c.clone().add(new THREE.Vector3(x,0,z)));
-  fitToFree(THREE,camera,view.focus?around(POS[view.focus]):fitPts,rect,d=>placeAt(d,target));dirty=true}
+  fitToFree(THREE,camera,view.focus?around(POS[view.focus]):fitPts,rect,d=>placeAt(d,target));overviewEye.copy(camera.position);overviewTarget.copy(target);dirty=true}
  function resize(r){rect=r||{x:0,y:0,w:canvas.clientWidth,h:canvas.clientHeight,free:rect.free};const dpr=Math.min(devicePixelRatio||1,tier.dpr);renderer.setPixelRatio(dpr);renderer.setSize(rect.w,rect.h,false);placeCamera()}
 
  // ---- state binding ----
@@ -99,7 +101,11 @@ export async function createDominionRenderer(canvas,{quality='high',onPick=()=>{
   if(tier.shadows)renderer.shadowMap.needsUpdate=true;dirty=true}
  function select(id,route=null){selected=id;sel.visible=!!id;if(id)sel.position.copy(POS[id]).add(new THREE.Vector3(0,.08,0));
   if(route&&route.length>1){routeLine.geometry.setFromPoints(route.map(x=>POS[x].clone().add(new THREE.Vector3(0,.12,0))));routeLine.visible=true}else routeLine.visible=false;dirty=true}
- function moveToken(pid,from,to,ms=380){return new Promise(res=>{anim.push({pid,a:tokenTarget(pid,from),b:tokenTarget(pid,to),t0:performance.now(),ms,res});dirty=true;kick()})}
+ function moveToken(pid,from,to,ms=380){return new Promise(res=>{
+  const now=performance.now(),duration=Math.max(1,ms);
+  if(!view.focus&&!prefersLess.matches){trackingPid=pid;trackingUntil=now+duration+750;}
+  anim.push({pid,a:tokenTarget(pid,from),b:tokenTarget(pid,to),t0:now,ms:duration,res});dirty=true;kick();
+ })}
 
  // ---- picking (deterministic: nearest hit hexagon under the pointer) ----
  const ray=new THREE.Raycaster(),ndc=new THREE.Vector2();
@@ -111,16 +117,28 @@ export async function createDominionRenderer(canvas,{quality='high',onPick=()=>{
  let raf=0;function kick(){if(!raf)raf=requestAnimationFrame(frame)}
  function frame(now){raf=0;if(lost)return;
   anim=anim.filter(a=>{const k=Math.min(1,(now-a.t0)/a.ms),e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;tokens[a.pid].position.lerpVectors(a.a,a.b,e);tokens[a.pid].position.y+=Math.sin(k*Math.PI)*.35;if(k>=1){a.res();return false}return true});
-  if(dirty||anim.length){if(!anim.length)water.refresh(now);renderer.render(scene,camera);renders++;dirty=false}
-  if(anim.length)kick()}
+  if(trackingPid>=0&&!view.focus&&!prefersLess.matches){
+    const dt=Math.min(70,trackingAt?now-trackingAt:16),k=1-Math.exp(-dt/220),active=anim.some(a=>a.pid===trackingPid)||now<trackingUntil;
+    tracking+=(Number(active)-tracking)*k;if(!active&&tracking<.003)tracking=0;
+    followTarget.copy(tokens[trackingPid].position);followTarget.y+=.24;
+    const yaw=Math.atan2(followTarget.x-boardCenter.x,followTarget.z-boardCenter.z);
+    trackingYaw+=Math.atan2(Math.sin(yaw-trackingYaw),Math.cos(yaw-trackingYaw))*k;
+    const dist=THREE.MathUtils.clamp(overviewEye.distanceTo(overviewTarget)*.45,7.8,14),pitch=.78;
+    followEye.set(followTarget.x+Math.sin(trackingYaw)*Math.cos(pitch)*dist,followTarget.y+Math.sin(pitch)*dist,followTarget.z+Math.cos(trackingYaw)*Math.cos(pitch)*dist);
+    camera.position.copy(overviewEye).lerp(followEye,tracking);cameraAim.copy(overviewTarget).lerp(followTarget,tracking);
+    camera.up.set(0,1,0);camera.lookAt(cameraAim);camera.updateMatrixWorld();dirty=true;
+   }else if(tracking>0){tracking=0;camera.position.copy(overviewEye);camera.up.set(0,1,0);camera.lookAt(overviewTarget);dirty=true}
+   trackingAt=now;
+   if(dirty||anim.length){if(!anim.length)water.refresh(now);renderer.render(scene,camera);renders++;dirty=false}
+   if(anim.length||tracking>0)kick()}
  const invalidate=()=>{dirty=true;kick()};
  addEventListener('resize',()=>invalidate());document.addEventListener('visibilitychange',()=>{if(!document.hidden){renderer.shadowMap.needsUpdate=true;invalidate()}});
  canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();lost=true;renderer.dispose()});
  canvas.addEventListener('webglcontextrestored',()=>{renderer=makeRenderer();buildEnv();water.restore();lost=false;resize(rect);if(lastView)sync(lastView);invalidate()});
 
- function setView(p){Object.assign(view,p);placeCamera();water.invalidate();invalidate()}
+ function setView(p){Object.assign(view,p);tracking=0;trackingUntil=0;placeCamera();water.invalidate();invalidate()}
  function stats(){const info=renderer.info.render;return{ruleset:D.RULESET,quality,nodes:D.NODES.length,buffer:[canvas.width,canvas.height],css:[rect.w,rect.h],pixelRatio:renderer.getPixelRatio(),devicePixelRatio:devicePixelRatio,
   triangles:info.triangles,calls:info.calls,renders,materials:materials.size,files:audit.files,assetTriangles:audit.triangles,reflections:water.stats(),stagesShown:Object.keys(stagesAt).length,
-  tokensVisible:tokens.filter(t=>t.visible).length,selected,physicalDevice:false,boardBounds:[+boardSize.x.toFixed(2),+boardSize.y.toFixed(2),+boardSize.z.toFixed(2)]}}
+  tokensVisible:tokens.filter(t=>t.visible).length,selected,tracking:+tracking.toFixed(3),cameraUp:camera.up.toArray(),physicalDevice:false,boardBounds:[+boardSize.x.toFixed(2),+boardSize.y.toFixed(2),+boardSize.z.toFixed(2)]}}
  resize();sync(D.view(window.__dominionLab?.state()||D.newMatch({seed:1})));invalidate();
  return{resize,sync,select,moveToken,project,setView,view:()=>({...view}),stats,invalidate,positions:POS,layout,renderNow(){renderer.render(scene,camera);renders++}}}
