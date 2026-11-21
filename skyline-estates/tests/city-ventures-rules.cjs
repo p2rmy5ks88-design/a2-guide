@@ -45,4 +45,7 @@ const fresh=()=>CV.newMatch({seed:42,players:[{name:'You'},{name:'Bot',ai:true}]
  assert.ok(CV.act(s,0,{type:'mortgage',tile:3}).ok);assert.equal(s.own[3].mortgaged,true);assert.equal(CV.pending(s).kind,'action');assert.equal(s.players[0].cash,10+110-80);assert.equal(s.players[1].cash,3080);
  s.pending={kind:'debt',pid:0,amount:5000,to:1,reason:'test',resume:null};assert.ok(CV.act(s,0,{type:'bankrupt'}).ok);assert.ok(s.over&&s.winner===1);ok('debts: mortgage to pay, bankruptcy hands assets to the creditor and ends a 2-player match')}
 {const s=fresh();s.over=false;const f=CV.careerFacts(s,{ownerSeat:0});assert.equal(f.board,'circuit');assert.equal(f.ruleset,'city-ventures-v1');ok('Career facts report City Ventures as Career Board 2')}
+{const s=fresh();for(let k=0;k<300;k++){const pd=CV.pending(s);if(pd.kind==='action'&&pd.pid===0)break;const w=pd.kind==='trade'?pd.to:pd.pid;CV.act(s,w,CV.ai(s,w))}
+ s.own[3]={owner:0,stage:0};s.own[6]={owner:1,stage:0};assert.ok(CV.act(s,0,{type:'offer',to:1,give:{tiles:[],cash:0},get:{tiles:[6],cash:0}}).ok);
+ assert.deepEqual(CV.legal(s,1).map(x=>x.type),['accept','reject']);const a=CV.ai(s,1);assert.ok(a);assert.ok(CV.act(s,1,a).ok);assert.equal(CV.pending(s).kind,'action');assert.equal(CV.pending(s).pid,0);ok('a computer player answers your deal and your turn continues')}
 console.log('CITY VENTURES RULES '+n+' checks')
