@@ -7197,7 +7197,12 @@ const WELCOME_GIFT=500,WB_GAP=4*36e5;
 if(PREF.welcomed===undefined){PREF.welcomed=(PREF.nickSet||(PREF.stats&&PREF.stats.games>0))?1:0}
 PREF.coach=PREF.coach||{};
 /* ---- 1. loading screen ---- */
-(function boot(){if(typeof FAST!=='undefined'&&FAST)return;const b=document.createElement('div');b.id='boot';b.setAttribute('aria-hidden','true');
+/* Coming back from a Career board page (index.html?return=1) goes straight to the home screen: no loading screen,
+   no welcome card. The flag is removed from the address so a later reload behaves normally. */
+const SK_RETURN=(()=>{try{const q=new URLSearchParams(location.search);if(!q.has('return'))return false;q.delete('return');
+  history.replaceState(history.state,'',location.pathname+(q.toString()?'?'+q:'')+location.hash);return true}catch(e){return false}})();
+(function boot(){if(typeof FAST!=='undefined'&&FAST)return;
+  if(SK_RETURN){const go=()=>setTimeout(()=>document.dispatchEvent(new Event('sk-booted')),0);if(document.readyState==='complete')go();else addEventListener('load',go,{once:true});return}const b=document.createElement('div');b.id='boot';b.setAttribute('aria-hidden','true');
   b.innerHTML=`<div class="bimg"></div><div class="bshade"></div><div class="bmid"><div class="blogo"><svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#f2c14a"/><g fill="#13284a"><rect x="12" y="30" width="9" height="22" rx="1"/><rect x="23" y="20" width="9" height="32" rx="1"/><rect x="34" y="12" width="9" height="40" rx="1"/><rect x="45" y="26" width="8" height="26" rx="1"/></g></svg></div><h1>Skyline Estates</h1><p>Buy streets. Build towers. Own the skyline.</p></div><div class="bbar"><i></i></div>`;
   document.body.append(b);const t0=performance.now(),bar=b.querySelector('.bbar i');let pr=0;
   const tick=()=>{const el=performance.now()-t0,ready=document.readyState==='complete'&&(typeof S3!=='undefined'&&S3||el>2500)&&el>2600;pr=ready?100:Math.min(92,pr+(92-pr)*.06);bar.style.width=pr+'%';
@@ -7246,7 +7251,7 @@ function coachTip(){if(FAST||!G||G.online||G.over||!PREF.welcomed)return;const p
   $('#ui').append(d);const close=()=>{d.classList.add('out');setTimeout(()=>d.remove(),300)};d.querySelector('.cok').onclick=close;setTimeout(close,9000)}
 {const _sp=setPrompt;setPrompt=function(h){_sp(h);if(!FAST)setTimeout(coachTip,700)}}
 /* ---- 4. welcome back ---- */
-function welcomeBack(){if(FAST||!PREF.welcomed||setup.welcoming)return;const now=Date.now(),last=PREF.lastOpen||0;PREF.lastOpen=now;savePref();
+function welcomeBack(){if(FAST||!PREF.welcomed||setup.welcoming)return;if(SK_RETURN&&!welcomeBack.seen){welcomeBack.seen=1;PREF.lastOpen=Date.now();savePref();return}const now=Date.now(),last=PREF.lastOpen||0;PREF.lastOpen=now;savePref();
   if(!last||now-last<WB_GAP||($('#title')&&$('#title').hidden))return;
   const chips=[];if(typeof wheelReady==='function'&&wheelReady())chips.push(['spin','🎡','Free spin ready']);
   const S=season();if(PREF.seenSeason!==S.n){chips.push(['season','✨',`New season: ${seasonName(S.n)}`]);PREF.seenSeason=S.n;savePref()}

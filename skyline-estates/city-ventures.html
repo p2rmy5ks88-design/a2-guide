@@ -271,7 +271,7 @@ function showResults(){const res=s.results||[];const me=res.find(r=>r.pid===0);$
  $('resTable').innerHTML=res.map((r,k)=>`<tr><td>${k+1}. ${esc(r.name)}${r.out?' (bankrupt)':''}</td><td>${r.sets} districts · ${r.landmarks} landmarks</td><td>${fmt(r.total)}</td></tr>`).join('')}
 function reportCareer(){if(!s||!s.over||s.closedFromMenu||!s.meta||!s.meta.career||reported===s.meta.matchId)return;reported=s.meta.matchId;
  try{const f=CV.careerFacts(s,{ownerSeat:0,endedAt:Date.now()});localStorage.setItem('skylineCareerInbox:'+f.matchId,JSON.stringify(f));localStorage.removeItem(CV.SAVE_KEY)}catch(e){console.warn('Career report',e)}}
-$('resAgain').onclick=()=>{$('results').hidden=true;startScreen()};$('resHome').onclick=()=>location.href='./index.html';
+$('resAgain').onclick=()=>{$('results').hidden=true;startScreen()};$('resHome').onclick=()=>location.href='./index.html?return=1';
 
 function closeFromMenu(bankruptcy){
  if(!s||s.over||busy||pumping)return;
@@ -283,7 +283,7 @@ function closeFromMenu(bankruptcy){
 $('mBankrupt').onclick=()=>closeFromMenu(true);
 $('mEnd').onclick=()=>closeFromMenu(false);
 $('menuBtn').onclick=()=>{const disabled=!s||s.over||busy||pumping;$('mBankrupt').disabled=disabled;$('mEnd').disabled=disabled;$('menu').hidden=false};$('mResume').onclick=()=>$('menu').hidden=true;$('mRules').onclick=()=>{$('menu').hidden=true;$('rules').hidden=false};
-$('mNew').onclick=()=>{$('menu').hidden=true;try{localStorage.removeItem(CV.SAVE_KEY)}catch(e){}s=null;startScreen()};$('mHome').onclick=()=>location.href='./index.html';
+$('mNew').onclick=()=>{$('menu').hidden=true;try{localStorage.removeItem(CV.SAVE_KEY)}catch(e){}s=null;startScreen()};$('mHome').onclick=()=>location.href='./index.html?return=1';
 let overview=false;$('viewBtn').onclick=()=>{overview=!overview;r3.overview(overview);$('viewBtn').textContent=overview?'🎯':'🗺';$('viewBtn').setAttribute('aria-label',overview?'Follow the active player':'Show the whole board')};
 
 // ---------- boot ----------
