@@ -65,7 +65,7 @@ export async function createEmpireRenderer(canvas,{quality='high',onPick=()=>{}}
  // camera: fit the playable island (track spaces + tower footprint) into the board area; no automatic zoom.
  const fitPts=[];for(const id of Object.keys(POS))fitPts.push(POS[id].clone().add(new THREE.Vector3(0,.2,0)));let view={pitch:46,yaw:0,zoom:1,focus:null},rect={x:0,y:0,w:canvas.clientWidth||1,h:canvas.clientHeight||1},dirty=true,anim=[],renders=0,selected=null;
  const prefersLess=matchMedia('(prefers-reduced-motion: reduce)'),overviewEye=new THREE.Vector3(),overviewTarget=new THREE.Vector3(),followTarget=new THREE.Vector3(),followEye=new THREE.Vector3(),cameraAim=new THREE.Vector3();
- let tracking=0,trackingUntil=0,trackingPid=-1,trackingYaw=0,trackingAt=0;
+ let tracking=0,trackingPeak=0,trackingUntil=0,trackingPid=-1,trackingYaw=0,trackingAt=0;
  const centre=fitPts.reduce((a,p)=>a.add(p),new THREE.Vector3()).multiplyScalar(1/fitPts.length);
  function placeAt(d,t){const p=THREE.MathUtils.degToRad(view.pitch),y=THREE.MathUtils.degToRad(view.yaw);camera.up.set(0,1,0);camera.position.set(t.x+d*Math.cos(p)*Math.sin(y),t.y+d*Math.sin(p),t.z+d*Math.cos(p)*Math.cos(y));camera.lookAt(t);camera.updateMatrixWorld()}
  function placeCamera(){const t=view.focus?POS[view.focus].clone():centre.clone().setY(.6);const around=c=>[[-2.2,-2.2],[2.2,-2.2],[-2.2,2.2],[2.2,2.2]].map(([x,z])=>c.clone().add(new THREE.Vector3(x,0,z)));fitToFree(THREE,camera,view.focus?around(POS[view.focus]):fitPts,rect,d=>placeAt(d,t));overviewEye.copy(camera.position);overviewTarget.copy(t);dirty=true}
@@ -89,12 +89,12 @@ export async function createEmpireRenderer(canvas,{quality='high',onPick=()=>{}}
  canvas.addEventListener('pointerup',e=>{const b=canvas.getBoundingClientRect();ndc.set((e.clientX-b.left)/b.width*2-1,-((e.clientY-b.top)/b.height)*2+1);ray.setFromCamera(ndc,camera);const h=ray.intersectObjects(hit.children,false)[0];onPick(h?h.object.userData.id:null)});
  function project(id){const v=POS[id].clone().project(camera),b=canvas.getBoundingClientRect();return{x:b.left+(v.x+1)/2*b.width,y:b.top+(1-v.y)/2*b.height}}
  let raf=0;function kick(){if(!raf)raf=requestAnimationFrame(frame)}
- function frame(now){raf=0;if(lost)return;anim=anim.filter(a=>{const k=Math.min(1,(now-a.t0)/a.ms);tokens[a.pid].position.lerpVectors(a.a,a.b,k);tokens[a.pid].position.y+=Math.sin(k*Math.PI)*.4;if(k>=1){a.res();return false}return true});
+ function frame(now){raf=0;if(lost)return;const hadMovement=anim.some(a=>a.pid===trackingPid);anim=anim.filter(a=>{const k=Math.min(1,(now-a.t0)/a.ms);tokens[a.pid].position.lerpVectors(a.a,a.b,k);tokens[a.pid].position.y+=Math.sin(k*Math.PI)*.4;if(k>=1){a.res();return false}return true});
   if(trackingPid>=0&&!view.focus&&!prefersLess.matches){
     // Use elapsed wall time rather than a fixed 70ms step; slow software-GPU
     // frames must not leave the camera stranded in close-up after a roll.
-    const dt=Math.min(600,trackingAt?Math.max(0,now-trackingAt):16),k=1-Math.exp(-dt/210),active=anim.some(a=>a.pid===trackingPid)||now<trackingUntil;
-    tracking+=(Number(active)-tracking)*k;if(!active&&tracking<.003)tracking=0;
+    const dt=Math.min(600,trackingAt?Math.max(0,now-trackingAt):16),k=1-Math.exp(-dt/210),active=hadMovement||anim.some(a=>a.pid===trackingPid)||now<trackingUntil;
+    tracking+=(Number(active)-tracking)*k;trackingPeak=Math.max(trackingPeak,tracking);if(!active&&tracking<.003)tracking=0;
     followTarget.copy(tokens[trackingPid].position);followTarget.y+=.28;
     const yaw=Math.atan2(followTarget.x-centre.x,followTarget.z-centre.z);
     trackingYaw+=Math.atan2(Math.sin(yaw-trackingYaw),Math.cos(yaw-trackingYaw))*k;
@@ -112,6 +112,6 @@ export async function createEmpireRenderer(canvas,{quality='high',onPick=()=>{}}
  function setView(p){Object.assign(view,p);tracking=0;trackingUntil=0;placeCamera();water.invalidate();invalidate()}
  function stats(){const i=renderer.info.render;return{ruleset:E.RULESET,quality,nodes:E.NODES.length,buffer:[canvas.width,canvas.height],css:[rect.w,rect.h],pixelRatio:renderer.getPixelRatio(),devicePixelRatio,
   triangles:i.triangles,calls:i.calls,renders,materials:materials.size,files:audit.files,assetTriangles:audit.triangles,towerTrianglesRemoved:audit.towerTrianglesRemoved,towerClip:clip.constant,craneVisible:crane.visible,
-  reflections:water.stats(),stagesShown:Object.keys(stagesAt).length,tokensVisible:tokens.filter(t=>t.visible).length,selected,tracking:+tracking.toFixed(3),cameraUp:camera.up.toArray(),physicalDevice:false}}
+  reflections:water.stats(),stagesShown:Object.keys(stagesAt).length,tokensVisible:tokens.filter(t=>t.visible).length,selected,tracking:+tracking.toFixed(3),trackingPeak:+trackingPeak.toFixed(3),prefersReducedMotion:prefersLess.matches,focused:!!view.focus,cameraUp:camera.up.toArray(),physicalDevice:false}}
  resize();invalidate();
  return{resize,sync,select,moveToken,project,setView,stats,invalidate,positions:POS,layout}}
