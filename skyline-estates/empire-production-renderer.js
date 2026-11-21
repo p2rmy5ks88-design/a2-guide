@@ -64,9 +64,11 @@ export async function createEmpireRenderer(canvas,{quality='high',onPick=()=>{}}
 
  // camera: fit the playable island (track spaces + tower footprint) into the board area; no automatic zoom.
  const fitPts=[];for(const id of Object.keys(POS))fitPts.push(POS[id].clone().add(new THREE.Vector3(0,.2,0)));let view={pitch:46,yaw:0,zoom:1,focus:null},rect={x:0,y:0,w:canvas.clientWidth||1,h:canvas.clientHeight||1},dirty=true,anim=[],renders=0,selected=null;
+ const prefersLess=matchMedia('(prefers-reduced-motion: reduce)'),overviewEye=new THREE.Vector3(),overviewTarget=new THREE.Vector3(),followTarget=new THREE.Vector3(),followEye=new THREE.Vector3(),cameraAim=new THREE.Vector3();
+ let tracking=0,trackingUntil=0,trackingPid=-1,trackingYaw=0,trackingAt=0;
  const centre=fitPts.reduce((a,p)=>a.add(p),new THREE.Vector3()).multiplyScalar(1/fitPts.length);
- function placeAt(d,t){const p=THREE.MathUtils.degToRad(view.pitch),y=THREE.MathUtils.degToRad(view.yaw);camera.position.set(t.x+d*Math.cos(p)*Math.sin(y),t.y+d*Math.sin(p),t.z+d*Math.cos(p)*Math.cos(y));camera.lookAt(t);camera.updateMatrixWorld()}
- function placeCamera(){const t=view.focus?POS[view.focus].clone():centre.clone().setY(.6);const around=c=>[[-2.2,-2.2],[2.2,-2.2],[-2.2,2.2],[2.2,2.2]].map(([x,z])=>c.clone().add(new THREE.Vector3(x,0,z)));fitToFree(THREE,camera,view.focus?around(POS[view.focus]):fitPts,rect,d=>placeAt(d,t));dirty=true}
+ function placeAt(d,t){const p=THREE.MathUtils.degToRad(view.pitch),y=THREE.MathUtils.degToRad(view.yaw);camera.up.set(0,1,0);camera.position.set(t.x+d*Math.cos(p)*Math.sin(y),t.y+d*Math.sin(p),t.z+d*Math.cos(p)*Math.cos(y));camera.lookAt(t);camera.updateMatrixWorld()}
+ function placeCamera(){const t=view.focus?POS[view.focus].clone():centre.clone().setY(.6);const around=c=>[[-2.2,-2.2],[2.2,-2.2],[-2.2,2.2],[2.2,2.2]].map(([x,z])=>c.clone().add(new THREE.Vector3(x,0,z)));fitToFree(THREE,camera,view.focus?around(POS[view.focus]):fitPts,rect,d=>placeAt(d,t));overviewEye.copy(camera.position);overviewTarget.copy(t);dirty=true}
  function resize(r){rect=r||{x:0,y:0,w:canvas.clientWidth,h:canvas.clientHeight,free:rect.free};renderer.setPixelRatio(Math.min(devicePixelRatio||1,tier.dpr));renderer.setSize(rect.w,rect.h,false);placeCamera()}
 
  let lastView=null;
@@ -78,20 +80,36 @@ export async function createEmpireRenderer(canvas,{quality='high',onPick=()=>{}}
   for(const p of v.players){tokens[p.id].visible=!p.out;if(!anim.some(a=>a.pid===p.id))tokens[p.id].position.copy(tokenTarget(p.id,p.pos))}
   if(tier.shadows)renderer.shadowMap.needsUpdate=true;water.invalidate();dirty=true;kick()}
  function select(id){selected=id;sel.visible=!!id;if(id){sel.position.copy(POS[id]).add(new THREE.Vector3(0,.09,0));sel.rotation.z=YAW[id]+Math.PI/4}dirty=true;kick()}
- function moveToken(pid,from,to,ms=220){return new Promise(res=>{anim.push({pid,a:tokenTarget(pid,from),b:tokenTarget(pid,to),t0:performance.now(),ms,res});kick()})}
+ function moveToken(pid,from,to,ms=220){return new Promise(res=>{
+  const now=performance.now(),duration=Math.max(1,ms);
+  if(!view.focus&&!prefersLess.matches){trackingPid=pid;trackingUntil=now+duration+700;}
+  anim.push({pid,a:tokenTarget(pid,from),b:tokenTarget(pid,to),t0:now,ms:duration,res});dirty=true;kick();
+ })}
  const ray=new THREE.Raycaster(),ndc=new THREE.Vector2();
  canvas.addEventListener('pointerup',e=>{const b=canvas.getBoundingClientRect();ndc.set((e.clientX-b.left)/b.width*2-1,-((e.clientY-b.top)/b.height)*2+1);ray.setFromCamera(ndc,camera);const h=ray.intersectObjects(hit.children,false)[0];onPick(h?h.object.userData.id:null)});
  function project(id){const v=POS[id].clone().project(camera),b=canvas.getBoundingClientRect();return{x:b.left+(v.x+1)/2*b.width,y:b.top+(1-v.y)/2*b.height}}
  let raf=0;function kick(){if(!raf)raf=requestAnimationFrame(frame)}
  function frame(now){raf=0;if(lost)return;anim=anim.filter(a=>{const k=Math.min(1,(now-a.t0)/a.ms);tokens[a.pid].position.lerpVectors(a.a,a.b,k);tokens[a.pid].position.y+=Math.sin(k*Math.PI)*.4;if(k>=1){a.res();return false}return true});
-  if(dirty||anim.length){if(!anim.length)water.refresh(now);renderer.render(scene,camera);renders++;dirty=false}if(anim.length)kick()}
+  if(trackingPid>=0&&!view.focus&&!prefersLess.matches){
+    const dt=Math.min(70,trackingAt?now-trackingAt:16),k=1-Math.exp(-dt/210),active=anim.some(a=>a.pid===trackingPid)||now<trackingUntil;
+    tracking+=(Number(active)-tracking)*k;if(!active&&tracking<.003)tracking=0;
+    followTarget.copy(tokens[trackingPid].position);followTarget.y+=.28;
+    const yaw=Math.atan2(followTarget.x-centre.x,followTarget.z-centre.z);
+    trackingYaw+=Math.atan2(Math.sin(yaw-trackingYaw),Math.cos(yaw-trackingYaw))*k;
+    const distance=THREE.MathUtils.clamp(overviewEye.distanceTo(overviewTarget)*.44,9,16),pitch=.79;
+    followEye.set(followTarget.x+Math.sin(trackingYaw)*Math.cos(pitch)*distance,followTarget.y+Math.sin(pitch)*distance,followTarget.z+Math.cos(trackingYaw)*Math.cos(pitch)*distance);
+    camera.position.copy(overviewEye).lerp(followEye,tracking);cameraAim.copy(overviewTarget).lerp(followTarget,tracking);
+    camera.up.set(0,1,0);camera.lookAt(cameraAim);camera.updateMatrixWorld();dirty=true;
+   }else if(tracking>0){tracking=0;camera.position.copy(overviewEye);camera.up.set(0,1,0);camera.lookAt(overviewTarget);dirty=true}
+   trackingAt=now;
+   if(dirty||anim.length){if(!anim.length)water.refresh(now);renderer.render(scene,camera);renders++;dirty=false}if(anim.length||tracking>0)kick()}
  const invalidate=()=>{dirty=true;kick()};
  document.addEventListener('visibilitychange',()=>{if(!document.hidden){renderer.shadowMap.needsUpdate=true;invalidate()}});
  canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();lost=true;renderer.dispose()});
  canvas.addEventListener('webglcontextrestored',()=>{renderer=makeRenderer();buildEnv();water.restore();lost=false;resize(rect);if(lastView)sync(lastView);invalidate()});
- function setView(p){Object.assign(view,p);placeCamera();water.invalidate();invalidate()}
+ function setView(p){Object.assign(view,p);tracking=0;trackingUntil=0;placeCamera();water.invalidate();invalidate()}
  function stats(){const i=renderer.info.render;return{ruleset:E.RULESET,quality,nodes:E.NODES.length,buffer:[canvas.width,canvas.height],css:[rect.w,rect.h],pixelRatio:renderer.getPixelRatio(),devicePixelRatio,
   triangles:i.triangles,calls:i.calls,renders,materials:materials.size,files:audit.files,assetTriangles:audit.triangles,towerTrianglesRemoved:audit.towerTrianglesRemoved,towerClip:clip.constant,craneVisible:crane.visible,
-  reflections:water.stats(),stagesShown:Object.keys(stagesAt).length,tokensVisible:tokens.filter(t=>t.visible).length,selected,physicalDevice:false}}
+  reflections:water.stats(),stagesShown:Object.keys(stagesAt).length,tokensVisible:tokens.filter(t=>t.visible).length,selected,tracking:+tracking.toFixed(3),cameraUp:camera.up.toArray(),physicalDevice:false}}
  resize();invalidate();
  return{resize,sync,select,moveToken,project,setView,stats,invalidate,positions:POS,layout}}
