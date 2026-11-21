@@ -25,10 +25,10 @@ let n=0;const ok=m=>{n++;console.log('PASS',m)};
   // followed by an upright, close three-quarter token view. Renderer-only UI
   // controls are used here: no match state, money, movement or save is changed.
   await p.evaluate(()=>__cc.renderer.overview(true));
-  await p.waitForFunction(()=>__cc.renderer.stats().camDist>9,null,{timeout:45000});
+  await p.waitForFunction(()=>{const s=__cc.renderer.stats();return s.mode==='overview'&&s.goalDist>10&&Math.abs(s.camDist-s.goalDist)<.18},null,{timeout:90000});
   const cameraOverview=await p.evaluate(()=>__cc.renderer.stats());
   await p.evaluate(()=>__cc.renderer.overview(false));
-  await p.waitForFunction(()=>__cc.renderer.stats().camDist<8,null,{timeout:45000});
+  await p.waitForFunction(()=>{const s=__cc.renderer.stats();return s.mode==='follow'&&s.goalDist<7&&Math.abs(s.camDist-s.goalDist)<.18},null,{timeout:90000});
   const cameraFollow=await p.evaluate(()=>__cc.renderer.stats());
   assert.ok(cameraOverview.camDist>cameraFollow.camDist*1.55,'camera overview vs close-follow distance: '+JSON.stringify({overview:cameraOverview.camDist,follow:cameraFollow.camDist}));
   assert.ok(cameraOverview.mode==='overview'&&cameraFollow.mode==='follow'&&cameraFollow.camPitch>0.5&&cameraFollow.camPitch<1.2&&cameraFollow.cameraUp[1]>.999&&Math.abs(cameraFollow.cameraUp[0])<.001&&Math.abs(cameraFollow.cameraUp[2])<.001,'camera upright / modes: '+JSON.stringify({overview:cameraOverview,follow:cameraFollow}));
