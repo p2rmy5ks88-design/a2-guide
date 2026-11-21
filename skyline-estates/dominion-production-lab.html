@@ -29,7 +29,7 @@ dialog button{font:inherit;min-height:44px;min-width:44px;border-radius:10px;bor
  <div class="sk-top"><span class="sk-pill" id="round"></span><span class="sk-pill" id="scoring"></span></div>
  <aside id="left" class="sk-col sk-left" aria-label="Career and mechanics"><div class="sk-scroll" id="leftscroll"></div></aside>
  <aside id="right" class="sk-col sk-right" aria-label="Property groups, upgrades, negotiation and actions"><div class="sk-scroll" id="rightscroll"></div>
-  <div class="sk-dock" id="dock"><div class="sk-views" id="viewbtns"><button id="v-over">Overview</button><button id="v-insp">Inspect</button></div><div class="act" id="actions"></div></div></aside>
+  <div class="sk-dock" id="dock"><div class="sk-views" id="viewbtns"><button id="v-over" aria-label="Show full playable board">Whole board</button><button id="v-insp" aria-label="Zoom to selected tile">Close view</button></div><div class="act" id="actions"></div></div></aside>
  <div class="sk-strip" id="players" aria-label="Territory control (live)"></div>
 </section>
 <dialog id="dlg"><h3 id="dlg-t"></h3><div id="dlg-b"></div><div class="btns" id="dlg-btns"></div></dialog>
@@ -112,8 +112,8 @@ function render(){const v=D.view(s),my=s.turn===human&&s.phase==='act',R=my?reac
  q('[data-go]',b=>b.onclick=()=>travel(b.dataset.go));q('[data-act]',b=>b.onclick=()=>doAct(b.dataset.act));q('[data-offer]',b=>b.onclick=()=>offerDialog(b.dataset.offer));
  if($('end'))$('end').onclick=()=>run({type:'end'});if($('again'))$('again').onclick=()=>{localStorage.removeItem(D.SAVE_KEY);location.reload()}}
 function toast(msg){const t=$('toast');t.textContent=msg;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>t.hidden=true,2600)}
-function run(a,pid=s.turn){const r=D.act(s,pid,a);if(!r.ok)toast(r.error);save();render();setTimeout(()=>loop.wake?.(),0);return r}
-async function travel(to){const R=reach()[to];if(!R)return;busy=true;try{for(let i=1;i<R.path.length;i++){const from=s.players[human].pos;const r=D.act(s,human,{type:'move',to:R.path[i]});if(!r.ok){toast(r.error);break}if(SPEED)await r3.moveToken(human,from,R.path[i],SPEED);render()}}finally{busy=false;sel=s.players[human].pos;save();render()}}
+function run(a,pid=s.turn){const r=D.act(s,pid,a);if(!r.ok)toast(r.error);if(TABLETOP&&a.type==='end')r3.setView({focus:null,zoom:1,pitch:50});save();render();setTimeout(()=>loop.wake?.(),0);return r}
+async function travel(to){const R=reach()[to];if(!R)return;busy=true;try{for(let i=1;i<R.path.length;i++){const from=s.players[human].pos;const r=D.act(s,human,{type:'move',to:R.path[i]});if(!r.ok){toast(r.error);break}if(SPEED)await r3.moveToken(human,from,R.path[i],SPEED);render()}}finally{busy=false;sel=s.players[human].pos;save();render();if(TABLETOP&&SPEED&&sel)r3.setView({focus:sel,zoom:1.65,pitch:47})}}
 function doAct(type){const p=s.players[human];if(type==='auction'){run({type:'auction',node:p.pos});return}run({type,node:p.pos})}
 function dialog(title,body,buttons){return new Promise(res=>{const d=$('dlg');$('dlg-t').textContent=title;$('dlg-b').innerHTML=body;$('dlg-btns').innerHTML='';
  for(const[label,val,cls]of buttons){const b=document.createElement('button');b.textContent=label;if(cls)b.className=cls;b.onclick=()=>{d.close();res(val)};$('dlg-btns').append(b)}d.showModal()})}
