@@ -62,7 +62,7 @@ const humanTurn=p=>p.waitForFunction(()=>{const s=__dominionLab.state();return s
   check('owned site shows its Plot model and owner ring',await p.evaluate(()=>__dominionLab.r3().stats().stagesShown)>=1);
   if(await p.locator('[data-act="develop"]:not([disabled])').count()){await p.click('[data-act="develop"]');check('Build creates a Low-rise in the rules and the 3D scene',await p.evaluate(id=>__dominionLab.state().own[id].h===1,target))}
   const why=await p.locator('[data-act="develop"] + .why').first().textContent().catch(()=>'');check('blocked actions explain why',/control|One upgrade|action points|cash/.test(why),{why});
-  await p.screenshot({timeout:90000,animations:'disabled',path:path.join(out,`${engine}-${vp.name}-human-turn.png`)});
+  await p.screenshot({timeout:90000,scale:engine==='chromium'?'css':'device',animations:'disabled',path:path.join(out,`${engine}-${vp.name}-human-turn.png`)});
   // view controls never change the match
   const snap=await p.evaluate(()=>SkylineDominion.serialize(__dominionLab.state()));await p.click('#v-insp');await p.click('#v-over');check('Inspect/Overview keep match state unchanged',await p.evaluate(()=>SkylineDominion.serialize(__dominionLab.state()))===snap);
   // context loss recovery
@@ -80,7 +80,7 @@ const humanTurn=p=>p.waitForFunction(()=>{const s=__dominionLab.state();return s
   while(await p.evaluate(()=>__dominionLab.state().phase!=='over')){await humanTurn(p);if(await p.evaluate(()=>__dominionLab.state().phase==='over'))break;await p.click('#end');assert.ok(n++<40,'match too long')}
   const end=await p.evaluate(()=>{const s=__dominionLab.state();return{reason:s.endReason,winner:s.winner,round:s.round,ranking:SkylineDominion.ranking(s)}});report.completedMatch=end;
   check('a full match ends with a published reason and ranking shown',['district-control','round-limit','last-standing'].includes(end.reason)&&await p.locator('#again').isVisible());
-  await p.screenshot({timeout:90000,animations:'disabled',path:path.join(out,`${engine}-${vp.name}-match-over.png`)});await ctx.close()}
+  await p.screenshot({timeout:90000,scale:engine==='chromium'?'css':'device',animations:'disabled',path:path.join(out,`${engine}-${vp.name}-match-over.png`)});await ctx.close()}
  // ---------- viewport matrix: board, HUD and touch targets ----------
  for(const vp of VPS){const {ctx,p}=await open(browser,vp,base+'?seed=838&speed=instant&quality='+(vp.width<700?'medium':'high'));await p.click('#start');await started(p,vp);await humanTurn(p);
   const lay=await p.evaluate(()=>{const W=innerWidth,H=innerHeight,r=e=>e.getBoundingClientRect(),c=r(document.getElementById('board'));
@@ -94,7 +94,7 @@ const humanTurn=p=>p.waitForFunction(()=>{const s=__dominionLab.state();return s
   check(`${vp.name}: no horizontal page overflow`,!lay.hScroll);
   check(`${vp.name}: HUD icons stay icon-sized (no oversized SVGs)`,await p.evaluate(()=>[...document.querySelectorAll('.sk-col svg,.sk-strip svg')].every(e=>{const q=e.getBoundingClientRect();return q.height<=48||e.closest('.sk-map,.sk-stages')})));
   check(`${vp.name}: art sidebars (career, mechanics, property groups, upgrades, negotiation) and four territory cards present; card figures not clipped`,lay.panels&&lay.cards===4&&lay.fits);
-  await p.screenshot({timeout:90000,animations:'disabled',path:path.join(out,`${engine}-${vp.name}.png`)});await ctx.close()}
+  await p.screenshot({timeout:90000,scale:engine==='chromium'?'css':'device',animations:'disabled',path:path.join(out,`${engine}-${vp.name}.png`)});await ctx.close()}
  check('no page errors',report.errors.length===0,{errors:report.errors.slice(0,3)});
 }finally{fs.writeFileSync(path.join(out,`${engine}-report.json`),JSON.stringify(report,null,1));await browser.close()}
 console.log(`${report.checks.length} checks passed on ${engine}`)})().catch(e=>{console.error(e);process.exit(1)});
