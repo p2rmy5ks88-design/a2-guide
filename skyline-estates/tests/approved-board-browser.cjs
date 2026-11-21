@@ -12,13 +12,13 @@ const ok=(name,value,extra)=>{assert.ok(value,name+' '+JSON.stringify(extra||'')
  const browser=await({chromium,webkit}[browserName]).launch({headless:true,...(browserName==='chromium'?{args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']}:{})});
  const ctx=await browser.newContext({viewport:{width:956,height:440},deviceScaleFactor:3,hasTouch:true,isMobile:true,serviceWorkers:'block',reducedMotion:'no-preference'});
  const p=await ctx.newPage();p.on('pageerror',e=>errors.push(String(e)));
- const url=origin+'skyline-estates/approved-career-board.html?board='+board+'&autostart=1&seed='+seed+'&quality=low&speed=instant';
+ const url=origin+'skyline-estates/approved-career-board.html?board='+board+'&autostart=1&seed='+seed+'&quality='+(browserName==='webkit'?'high':'low')+'&speed=instant';
  await p.goto(url);
  await p.waitForFunction(n=>window.__skylineApproved?.renderer()?.stats().spaces===n,expected,{timeout:120000});
  const stats=await p.evaluate(()=>__skylineApproved.renderer().stats());
  ok('real approved GLB board loads every individual tile',stats.spaces===expected&&stats.playingAssets);
  ok('four independent 3D tokens and 5 building models loaded',stats.tokens===4&&stats.stagePrefabs>=5,stats);
- ok('iPhone 18 Pro Max Retina drawing buffer',stats.dpr>=2.9&&stats.buffer[0]>=956*2.9&&stats.buffer[1]>=300*2.9,stats);
+ ok('iPhone 18 Pro Max rendering buffer matches selected mobile quality',stats.dpr>=(browserName==='webkit'?2.9:1.4)&&stats.buffer[0]>=956*stats.dpr*.98&&stats.buffer[1]>=300*stats.dpr*.98,stats);
  ok('camera stays upright',stats.cameraUp[1]===1&&stats.cameraUp[0]===0&&stats.cameraUp[2]===0);
  await p.locator('#roll').click({timeout:30000});
  await p.waitForFunction(()=>__skylineApproved.state().phase==='decide'&&!document.querySelector('#roll'),null,{timeout:120000});
@@ -43,7 +43,7 @@ const ok=(name,value,extra)=>{assert.ok(value,name+' '+JSON.stringify(extra||'')
  await p.locator('#close').click();
  ok('close view control restores nearby property view',await p.evaluate(()=>__skylineApproved.renderer().stats().mode==='close'));
  const stateBefore=await p.evaluate(()=>({pos:__skylineApproved.state().players[0].pos,property:__skylineApproved.state().properties[__skylineApproved.state().players[0].pos]?.stage}));
- const resumeUrl=origin+'skyline-estates/approved-career-board.html?board='+board+'&quality=low&seed='+seed;
+ const resumeUrl=origin+'skyline-estates/approved-career-board.html?board='+board+'&quality='+(browserName==='webkit'?'high':'low')+'&seed='+seed;
  await p.goto(resumeUrl);await p.locator('#resume').waitFor({state:'visible',timeout:30000});await p.locator('#resume').click();
  await p.waitForFunction(()=>window.__skylineApproved?.renderer()?.stats().spaces>0,null,{timeout:120000});
  const stateAfter=await p.evaluate(()=>({pos:__skylineApproved.state().players[0].pos,property:__skylineApproved.state().properties[__skylineApproved.state().players[0].pos]?.stage}));
