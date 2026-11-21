@@ -20,15 +20,14 @@ const css=`#boardRadio{pointer-events:auto;display:flex;align-items:center;gap:7
 #boardRadio .rl span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px}
 #boardRadio .eq{display:flex;gap:2px;align-items:flex-end;height:14px}#boardRadio .eq i{width:3px;height:4px;background:#ffc61a;border-radius:1px}
 #boardRadio.on .eq i{animation:brEq .9s ease-in-out infinite}#boardRadio.on .eq i:nth-child(2){animation-delay:.2s}#boardRadio.on .eq i:nth-child(3){animation-delay:.45s}
-@keyframes brEq{50%{height:14px}}#boardRadio.compact{width:44px;padding:0;justify-content:center;flex:none}#boardRadio.compact .rl{display:none}@media (prefers-reduced-motion:reduce){#boardRadio.on .eq i{animation:none;height:10px}}`;
+@keyframes brEq{50%{height:14px}}#boardRadio.compact{width:44px;padding:0;justify-content:center;flex:none}#boardRadio.compact .rl{display:none}@media (max-width:900px){#boardRadio{width:44px;padding:0;justify-content:center;flex:none}#boardRadio .rl{display:none}}@media (prefers-reduced-motion:reduce){#boardRadio.on .eq i{animation:none;height:10px}}`;
 let el=null,audio=null,on=false,order=[],idx=-1,track=null,bad=0,baseIdx=0,fade=null;
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 function render(){if(!el)return;el.classList.toggle('on',on);const label=on?(track?track[1]+' · Kenstylez':'Tuning in…'):'Radio off';
  el.setAttribute('aria-pressed',String(on));el.setAttribute('aria-label',on?'Skyline FM is playing '+label+'. Tap to turn the radio off':'Turn Skyline FM radio on');
  el.innerHTML=`<span class="eq" aria-hidden="true"><i></i><i></i><i></i></span><span class="rl"><b>${STATION}</b><span></span></span>`;el.querySelector('.rl span').textContent=label;fit()}
 // Show the station and track only when the bar has room; otherwise a 44pt equaliser button (same tap).
-function fit(){if(!el||!el.parentNode)return;el.classList.remove('compact');const p=el.parentNode,r=el.getBoundingClientRect();
- const wraps=[...p.children].some(c=>c!==el&&c.offsetParent&&Math.abs(c.getBoundingClientRect().top-r.top)>8&&c.getBoundingClientRect().height>0)||p.scrollWidth>p.clientWidth+1||r.right>innerWidth;if(wraps)el.classList.add('compact')}
+function fit(){if(el)el.classList.add('compact')}
 function ramp(to,ms,done){clearInterval(fade);const from=audio.volume,t0=performance.now();fade=setInterval(()=>{const k=Math.min(1,(performance.now()-t0)/ms);audio.volume=from+(to-from)*k;if(k>=1){clearInterval(fade);done&&done()}},40)}
 function next(){if(!order.length||idx>=order.length-1){const last=order[order.length-1];do{order=shuffle(LIST.map((_,i)=>i))}while(order.length>1&&order[0]===last);idx=-1}
  idx++;track=LIST[order[idx]];play()}
@@ -41,7 +40,7 @@ function start(){if(on)return;on=true;if(audio&&audio.src&&!audio.ended&&audio.c
 function stop(save=true){if(!on)return;on=false;if(audio)ramp(0,300,()=>audio.pause());if(save)saveRadio(false);render()}
 function toggle(){if(on)stop();else{saveRadio(true);start()}}
 function mount(parent,before){if(el||!parent)return null;const st=document.createElement('style');st.textContent=css;document.head.append(st);
- el=document.createElement('button');el.id='boardRadio';el.type='button';el.onclick=e=>{e.stopPropagation();toggle()};render();parent.insertBefore(el,before||null);fit();addEventListener('resize',fit);try{new ResizeObserver(()=>fit()).observe(parent)}catch(e){}try{new MutationObserver(()=>requestAnimationFrame(fit)).observe(parent,{childList:true,subtree:true,characterData:true})}catch(e){}
+ el=document.createElement('button');el.id='boardRadio';el.className='compact';el.type='button';el.onclick=e=>{e.stopPropagation();toggle()};render();parent.insertBefore(el,before||null);fit();addEventListener('resize',fit);try{document.fonts&&document.fonts.ready.then(fit)}catch(e){}setTimeout(fit,1500);try{new ResizeObserver(()=>fit()).observe(parent)}catch(e){}try{new MutationObserver(()=>requestAnimationFrame(fit)).observe(parent,{childList:true,subtree:true,characterData:true})}catch(e){}
  if(audioPref().radio){const go=e=>{removeEventListener('pointerdown',go,true);removeEventListener('keydown',go,true);if(e&&el.contains(e.target))return;if(!on&&audioPref().radio)start()};addEventListener('pointerdown',go,true);addEventListener('keydown',go,true)}
  document.addEventListener('visibilitychange',()=>{if(!audio||!on)return;if(document.hidden)audio.pause();else{const p=audio.play();if(p&&p.catch)p.catch(()=>{})}});
  return el}
