@@ -217,3 +217,36 @@
  .origins-production .orgOverviewBody::after{font-size:9px;line-height:1.15}
  .origins-production #orgFootnotes .orgStage svg{max-height:30px}
 }
+
+/* Physical-width QA: 844 CSS pixel landscape was squeezing four stage
+   captions into the footer and letting adjacent labels overlap. */
+@media (orientation:landscape) and (max-width:900px){
+ .origins-production #orgFootnotes{
+  grid-template-columns:21% 43% minmax(0,36%);
+ }
+ .origins-production #orgFootnotes .orgStageTrack{
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:1px;
+ }
+ .origins-production #orgFootnotes .orgStage{
+  min-width:0;overflow:hidden;
+  justify-content:flex-end;
+ }
+ .origins-production #orgFootnotes .orgStage strong{
+  max-width:100%;
+  font-size:9px;
+  line-height:1.05;
+  white-space:normal;
+  overflow-wrap:anywhere;
+ }
+ .origins-production #orgFootnotes .orgStage small{
+  max-width:100%;
+  font-size:8px;
+  line-height:1.05;
+  white-space:normal;
+  overflow-wrap:anywhere;
+ }
+ .origins-production #orgFootnotes .orgStage:not(:last-child)::after{
+  display:none;
+ }
+}
