@@ -86,14 +86,14 @@ const humanTurn=p=>p.waitForFunction(()=>{const s=__dominionLab.state();return s
   const lay=await p.evaluate(()=>{const W=innerWidth,H=innerHeight,r=e=>e.getBoundingClientRect(),c=r(document.getElementById('board'));
    const btn=[...document.querySelectorAll('#dock button')].filter(b=>b.offsetParent).map(b=>{const q=r(b);return{t:b.textContent.trim().slice(0,20),w:q.width,h:q.height,in:q.left>=0&&q.right<=W+.5&&q.top>=0&&q.bottom<=H+.5}});
    const L2=r(document.querySelector('.sk-left')),R2=r(document.querySelector('.sk-right')),S2=r(document.querySelector('.sk-strip'));const nodesIn=SkylineDominion.NODES.filter(n=>{const q=__dominionLab.r3().project(n.id);return q.x>=L2.right&&q.x<=R2.left&&q.y>=c.top&&q.y<=S2.top}).length;
-   const panels=['p-career','p-mech','p-groups','p-up','p-neg','p-sel'].every(id=>document.getElementById(id)),cards=document.querySelectorAll('#players .sk-card').length,fits=[...document.querySelectorAll('#players .sk-card .v')].every(e=>e.scrollWidth<=e.clientWidth+1);
-   return{panels,cards,fits,W,H,canvas:[c.width,c.height],nodesIn,btn,hScroll:document.documentElement.scrollWidth>W,st:__dominionLab.r3().stats()}});
+   const panels=['p-career','p-mech','p-groups','p-up','p-neg','p-sel'].every(id=>document.getElementById(id)),cards=document.querySelectorAll('#players .sk-card').length,fits=[...document.querySelectorAll('#players .sk-card .v')].every(e=>e.scrollWidth<=e.clientWidth+1),namesFit=[...document.querySelectorAll('#players .sk-card .nm')].every(e=>e.scrollWidth<=e.clientWidth+1);
+   return{panels,cards,fits,namesFit,W,H,canvas:[c.width,c.height],nodesIn,btn,hScroll:document.documentElement.scrollWidth>W,st:__dominionLab.r3().stats()}});
   report.viewports.push({vp,buffer:lay.st.buffer,css:lay.st.css,pixelRatio:lay.st.pixelRatio,screenshot:[vp.width*vp.dpr,vp.height*vp.dpr],triangles:lay.st.triangles,calls:lay.st.calls});
   check(`${vp.name}: all 61 nodes inside the free board area (not under panels or player strip)`,lay.nodesIn===61);
   check(`${vp.name}: every visible action button is on screen and ≥44 CSS px tall`,lay.btn.length>0&&lay.btn.every(b=>b.in&&b.h>=44),{bad:lay.btn.filter(b=>!(b.in&&b.h>=44))});
   check(`${vp.name}: no horizontal page overflow`,!lay.hScroll);
   check(`${vp.name}: HUD icons stay icon-sized (no oversized SVGs)`,await p.evaluate(()=>[...document.querySelectorAll('.sk-col svg,.sk-strip svg')].every(e=>{const q=e.getBoundingClientRect();return q.height<=48||e.closest('.sk-map,.sk-stages')})));
-  check(`${vp.name}: art sidebars (career, mechanics, property groups, upgrades, negotiation) and four territory cards present; card figures not clipped`,lay.panels&&lay.cards===4&&lay.fits);
+  check(`${vp.name}: art sidebars (career, mechanics, property groups, upgrades, negotiation) and four territory cards present; card figures not clipped`,lay.panels&&lay.cards===4&&lay.fits&&lay.namesFit);
   await p.screenshot({timeout:90000,scale:engine==='chromium'?'css':'device',animations:'disabled',path:path.join(out,`${engine}-${vp.name}.png`)});await ctx.close()}
  check('no page errors',report.errors.length===0,{errors:report.errors.slice(0,3)});
 }finally{fs.writeFileSync(path.join(out,`${engine}-report.json`),JSON.stringify(report,null,1));await browser.close()}
