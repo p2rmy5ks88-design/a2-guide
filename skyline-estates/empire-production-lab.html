@@ -22,7 +22,8 @@ dialog button{font:inherit;min-height:44px;min-width:44px;border-radius:10px;bor
  <fieldset><legend>Graphics</legend><label><input type="radio" name="q" value="low"> Low</label><label><input type="radio" name="q" value="medium"> Medium</label><label><input type="radio" name="q" value="high" checked> High</label></fieldset>
  <button id="start" class="gold">Start match</button> <button id="resume" hidden>Resume saved match</button> <span id="saveinfo" class="muted"></span>
 </section>
-<section id="game" class="sk-hud" hidden>
+<section id="game" class="sk-hud sk-boardgame" hidden>
+ <div class="sk-tabletop-head"><div class="sk-tabletop-title">SKYLINE EMPIRE<small>BOARD 5 · EXPERT</small></div><button type="button" id="layoutToggle" aria-label="Show full game details" aria-pressed="true">☰ Game details</button></div>
  <div id="stage"><canvas id="board" aria-label="Skyline Empire 3D board. Tap a space to inspect it."></canvas><div id="toast" hidden></div><div id="loading">Loading the Empire island…</div></div>
  <div class="sk-top"><span class="sk-pill" id="round"></span><span class="sk-pill" id="trend"></span></div>
  <aside id="left" class="sk-col sk-left" aria-label="Empire map, victory and landmarks"><div class="sk-scroll" id="leftscroll"></div></aside>
@@ -54,11 +55,23 @@ $('resume').onclick=()=>{s=savedState();if(s)boot()};
 async function boot(){$('setup').hidden=true;$('game').hidden=false;save();
  try{r3=await createEmpireRenderer($('board'),{quality:Q.get('quality')||document.querySelector('[name=q]:checked').value,onPick:id=>{if(!busy){sel=id;render()}}})}
  catch(e){$('loading').textContent='Could not load the local Empire models: '+e.message+' — see EMPIRE-3D.md for the asset copy step.';$('loading').dataset.error=e.message;console.error(e);return}
- $('loading').hidden=true;fit();addEventListener('resize',fit);render();loop()}
+ $('loading').hidden=true;if(TABLETOP&&!sel&&s.players?.[0])sel=s.players[0].pos;fit();addEventListener('resize',fit);render();loop()}
 const short=()=>innerHeight<400;
 function buildPanels(){$('leftscroll').innerHTML=H.brand('Skyline Empire','Expert board')+H.panel('p-map','The Empire map','map')+H.panel('p-victory','Victory','trophy',{open:!short()})+H.panel('p-land','Landmarks','temple',{open:!short()})+H.panel('p-log','Match log','book',{open:false});
  $('rightscroll').innerHTML='<span class="sk-badge dark">Career · Board 5 · Expert</span>'+H.panel('p-market','Market strategy','chart')+H.panel('p-ms','Milestone progress','flag')+H.panel('p-neg','Negotiation','shake',{open:!short()})+H.panel('p-sel','Selected space','globe',{open:!short()})}
 buildPanels();
+// Board game is the primary review experience. Full statistics remain one tap away.
+const TABLETOP=Q.get('dashboard')!=='1';
+if(!TABLETOP)$('game').classList.remove('sk-boardgame');
+function setBoardgameView(board){
+ $('game').classList.toggle('sk-boardgame',board);
+ $('layoutToggle').textContent=board?'☰ Game details':'▣ Board view';
+ $('layoutToggle').setAttribute('aria-pressed',String(board));
+ $('layoutToggle').setAttribute('aria-label',board?'Show full game details':'Show board-first game view');
+ fit();
+}
+$('layoutToggle').onclick=()=>setBoardgameView(!$('game').classList.contains('sk-boardgame'));
+if(!TABLETOP)$('layoutToggle').textContent='▣ Board view';
 function fit(){const c=$('board');r3?.resize({x:0,y:0,w:c.clientWidth,h:c.clientHeight,free:H.freeArea(c)})}
 const ZC={luxury:'#F2B533',trade:'#F08A28',innovation:'#28BEDC',finance:'#3C78E6',culture:'#AA5ADC',residential:'#50BE6E'};
 const ZXY={innovation:[-6,-5],finance:[5.8,-5.6],trade:[-8.2,1.6],culture:[7.6,.6],luxury:[-1.8,5.6],residential:[5,5.4]};
