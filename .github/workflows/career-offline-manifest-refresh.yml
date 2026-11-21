@@ -1,0 +1,42 @@
+name: Refresh Career review offline manifest
+# Only generated manifest/service-worker cache identity can be committed.
+# The live main branch and all release/phone builds remain untouched.
+on:
+  pull_request:
+    paths:
+      - 'skyline-estates/city-ventures-renderer.js'
+      - 'skyline-estates/city-ventures.html'
+      - 'skyline-estates/crossroads-renderer.js'
+      - 'skyline-estates/crossroads-capital.html'
+      - '.github/workflows/career-offline-manifest-refresh.yml'
+permissions:
+  contents: write
+concurrency:
+  group: career-manifest-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  refresh-review-branch:
+    name: Rebuild generated web cache on the PR branch (never main)
+    if: github.event.pull_request.head.repo.full_name == github.repository && startsWith(github.head_ref, 'review/career-boards-2to5-')
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          persist-credentials: true
+      - name: Regenerate offline-cache hash after board renderer changes
+        run: |
+          python3 skyline-estates/build.py
+          python3 skyline-estates/build.py --check
+      - name: Commit only generated offline metadata to review branch
+        run: |
+          git add -- skyline-estates/offline-assets.js skyline-estates/sw.js
+          if git diff --cached --quiet; then
+            echo 'Generated offline manifest was already current'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'Regenerate Career board offline manifest for draft QA'
+          git push origin HEAD:${{ github.head_ref }}
