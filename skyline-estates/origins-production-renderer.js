@@ -131,12 +131,13 @@ const key=JSON.stringify([v.ownership,v.players.map(p=>[p.id,p.out,p.color])]);i
  function angleDelta(a,b){return Math.atan2(Math.sin(b-a),Math.cos(b-a));}
  function applyCamera(){
   if(!base)return;
-  const t=followT,d=base.dist*(1-.55*t),cos=Math.cos(base.elev);
+  const t=followT,d=base.dist*(1-.62*t),elev=base.elev+(.78-base.elev)*t,cos=Math.cos(elev);
   target.set(followFocus.x*t,.15+(followFocus.y-.15)*t,followFocus.z*t);
   camera.up.set(0,1,0);
-  camera.position.set(target.x+Math.sin(followYaw)*cos*d,target.y+Math.sin(base.elev)*d,target.z+Math.cos(followYaw)*cos*d);
+  camera.position.set(target.x+Math.sin(followYaw)*cos*d,target.y+Math.sin(elev)*d,target.z+Math.cos(followYaw)*cos*d);
   camera.lookAt(target);
-  camera.setViewOffset(base.w,base.h,-base.dx*(1-t),-base.dy*(1-t),base.w,base.h);
+  // Preserve the live HUD-safe framing offset during close follow, too.
+  camera.setViewOffset(base.w,base.h,-base.dx,-base.dy,base.w,base.h);
  }
  function followCamera(v,now){
   if(!base)return;
