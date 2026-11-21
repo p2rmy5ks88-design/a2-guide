@@ -110,7 +110,7 @@ export async function createBoard({canvas,source,board,base,onSelect=()=>{},qual
   }}finally{mesh.userData.inMotion=false;moving=false}
  };
  const projectTile=id=>{const t=source.spaces[id],p=new THREE.Vector3(...t.position).project(camera),r=canvas.getBoundingClientRect();return{x:r.left+(p.x+1)*r.width/2,y:r.top+(1-p.y)*r.height/2,visible:p.z>-1&&p.z<1}};
- const stats=()=>({spaces:spaceMeshes.size,buffer:[canvas.width,canvas.height],css:[worldW,worldH],dpr:renderer.getPixelRatio(),selected,mode,playingAssets:!!boardRoot,detailAssets:!!scenery,tokens:tokenRoots.length,stagePrefabs:prefabs.filter(Boolean).length,cameraUp:camera.up.toArray(),physicalDevice:false});
+ const stats=()=>({spaces:spaceMeshes.size,buffer:[canvas.width,canvas.height],css:[worldW,worldH],dpr:renderer.getPixelRatio(),selected,mode,playingAssets:!!boardRoot,detailAssets:!!scenery,tokens:tokenRoots.length,stagePrefabs:prefabs.filter(Boolean).length,structuresShown:structures.size,cameraUp:camera.up.toArray(),physicalDevice:false});
  const destroy=()=>{cancelAnimationFrame(raf);canvas.removeEventListener('pointerup',onPointer);removeEventListener('resize',resize);renderer.dispose()};
  return {source,boardRoot,scene,camera,renderer,spaceMeshes,sync,choose,overview,close,move,resize,projectTile,stats,destroy};
 }

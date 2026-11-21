@@ -40,18 +40,18 @@ const BOARDS=Object.freeze([
   requires:[{kind:'qualifiedWins',board:'circuit',count:2},{kind:'challenges',board:'circuit',tag:'district',count:3}],lengths:[],
   preview:{headline:'Complete Landmark Chains and build a city legacy.',geometry:'33-space double loop with three shared hubs',movement:'Choose the Riverside or Highland loop at Start',
    building:'Plot to House 4, then a Landmark Residence with the full colour group.',victory:'Most Legacy Points after 15 turns.',status:'released',design:'crossroads-capital.html'}},
- {id:'dominion',tier:4,name:'Skyline Dominion',difficulty:'Advanced',strategy:'Territory and negotiation',playable:false,ruleset:null,
+ {id:'dominion',tier:4,name:'Skyline Dominion',difficulty:'Advanced',strategy:'Hex Ring property trading',playable:false,ruleset:null,
   requires:[{kind:'qualifiedWins',board:'crossroads',count:2},{kind:'challenges',board:'crossroads',tag:'landmark',count:3}],lengths:[],
-  // Released with prototype rules (owner decision 19 Nov 2026): DOMINION.md, ruleset dominion-p1. Quick is experimental.
+  // Approved 48-space Hex Ring replacement; Quick remains experimental.
   alpha:{ruleset:'skyline-approved-board-v1',lengths:['standard','extended','quick'],experimental:['quick'],defaultLength:'standard'},
-  preview:{headline:'Contest districts and negotiate for control.',geometry:'48-space premium hexagonal ring, six royal districts and a central Dominion Tower',movement:'Two dice around a clockwise perimeter with 3D token movement',
-   building:'Owning a site allows basic development; advanced buildings need district control.',victory:'Hold the required districts or lead on control points.',status:'released-prototype',design:'dominion-production-lab.html'}},
- {id:'empire',tier:5,name:'Skyline Empire',difficulty:'Expert',strategy:'Investment and economic control',playable:false,ruleset:null,
+  preview:{headline:'Buy and upgrade royal properties around the Hex Ring.',geometry:'48-space flat-top hexagonal ring, six royal districts and central Dominion Tower',movement:'Roll two dice and move clockwise with visible 3D tokens',
+   building:'Build Plot, Low-rise, Mid-rise, High-rise and Skyscraper on properties you own.',victory:'Highest cash plus property and upgrade value after 12 / 18 / 24 rounds.',status:'replacement-review',design:'approved-career-board.html?board=dominion'}},
+ {id:'empire',tier:5,name:'Crown Empire',difficulty:'Expert',strategy:'Crown Plaza property trading',playable:false,ruleset:null,
   requires:[{kind:'qualifiedWins',board:'dominion',count:2},{kind:'challenges',board:'dominion',tag:'negotiation',count:1}],lengths:[],
-  // Released with prototype rules (owner decision 19 Nov 2026): EMPIRE.md, ruleset empire-p1. Quick is experimental.
+  // Approved 32-space Crown Plaza replacement; Quick remains experimental.
   alpha:{ruleset:'skyline-approved-board-v1',lengths:['standard','extended','quick'],experimental:['quick'],defaultLength:'standard'},
-  preview:{headline:'Invest across zones and complete your empire.',geometry:'32-space royal crown-shaped board and central Crown Plaza gardens',movement:'Two dice around the 32-space clockwise Crown Plaza route',
-   building:'Higher buildings need supporting investment and infrastructure.',victory:'Complete three empire milestones and keep the lead.',status:'released-prototype',design:'empire-production-lab.html'}}
+  preview:{headline:'Build a royal property empire around Crown Plaza.',geometry:'32-space gold-framed crown board surrounding central royal gardens',movement:'Roll two dice and travel the clockwise royal-estate route',
+   building:'Upgrade owned properties through the Hotel stage for higher rent.',victory:'Highest cash plus property and upgrade value after 12 / 20 / 28 rounds.',status:'replacement-review',design:'approved-career-board.html?board=empire'}}
 ].map(b=>Object.freeze({...b,requires:Object.freeze(b.requires.map(r=>Object.freeze({...r}))),preview:Object.freeze({...b.preview})})));
 const BY_ID=Object.fromEntries(BOARDS.map(b=>[b.id,b]));
 const int=(v,lo=0)=>Number.isSafeInteger(v)&&v>=lo?v:0;
@@ -246,7 +246,9 @@ const LENGTH_CHOICES={
  crossroads:[['standard','Standard','15 turns · counts for unlocks'],['quick','Quick','9 turns · mastery XP only']],
  origins:[['quick','Quick','20 rounds · about 15 min'],['standard','Standard','30 rounds · about 25 min'],['extended','Extended','40 rounds · about 35 min'],['unlimited','Unlimited','Play until one player is left']],
  alpha:[['standard','Standard','Full match · counts for unlocks'],['extended','Extended','Longer match · counts for unlocks'],['quick','Quick','Short practice · mastery XP only']]};
-const BOARD_RULES={crossroads:`<b>Goal:</b> the most Legacy Points after 15 turns (Quick: 9).<br><br>
+const BOARD_RULES={dominion:`<b>Win:</b> the highest total of Skyline Cash, properties and upgrades at the round limit (Quick 12 / Standard 18 / Extended 24).<br><br><b>Play:</b> roll two dice, move clockwise around 48 royal spaces, earn SC 220,000 passing GO, buy or auction unowned estates and pay rent when you land on a rival property. Build from Plot through Skyscraper on your properties, or make a trade offer. Tap tiles to inspect and use Whole Board / Close View for the camera.`,
+empire:`<b>Win:</b> the highest cash plus property and building value after 12 / 20 / 28 rounds.<br><br><b>Play:</b> roll two dice around the 32-space crown perimeter and earn SC 350,000 passing START. Buy, auction and trade property; build up to a Hotel and collect increasing rent. Events, taxes and Civic Review spaces affect turns. Select real 3D tiles to inspect them, or toggle Whole Board / Close View.`,
+crossroads:`<b>Goal:</b> the most Legacy Points after 15 turns (Quick: 9).<br><br>
 <b>Landmark Chains:</b> pursue a three-stage brief; stamps come in order, one per action. A Ribbon Cutting pays +5 Legacy Points and 200 CC (+1 more on the Skybridge) and unveils a landmark in the city.<br><br>
 <b>The double loop:</b> at Start choose the Riverside or Highland loop. Both meet at the Skybridge Bonus, the Grand Exchange and Start / Payday (200 CC).<br><br>
 <b>Every landing matters:</b> acquire, reserve or auction; Open House or upgrade your own; Scout or deal after paying rent; Metro Express; City Moments; tax and fees can buy Legacy Points. Each chapter has a public City Headline worth bonus points.<br><br>

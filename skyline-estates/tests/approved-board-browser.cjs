@@ -28,11 +28,12 @@ const ok=(name,value,extra)=>{assert.ok(value,name+' '+JSON.stringify(extra||'')
  await p.locator('#buy').click({timeout:30000});
  await p.waitForFunction(()=>Object.values(__skylineApproved.state().properties).some(v=>v.owner===0),null,{timeout:25000});
  ok('purchase deducts actual Skyline Cash and assigns owner',await p.evaluate(()=>{const s=__skylineApproved.state();return s.properties[s.players[0].pos]?.owner===0&&s.players[0].cash<(s.board==='dominion'?1500000:2500000)}));
+ ok('purchased property physically displays a Stage 0 Plot',await p.evaluate(()=>__skylineApproved.renderer().stats().structuresShown>=1));
  await p.locator('#build').click({timeout:30000});
  ok('build applies a true property stage in the rules engine',await p.evaluate(()=>__skylineApproved.state().properties[__skylineApproved.state().players[0].pos]?.stage===1));
  const selected=await p.evaluate(()=>__skylineApproved.renderer().projectTile(6));
  ok('board selection point projects onto real visible 3D tile',selected.visible&&selected.x>0&&selected.y>0,selected);
- await p.mouse.click(selected.x,selected.y);
+ await p.touchscreen.tap(selected.x,selected.y);
  await p.waitForFunction(()=>__skylineApproved.state().selected===6,null,{timeout:12000});
  ok('real touch-pick raycasts tile 6 onto game selection',true);
  await p.locator('#more').click();
