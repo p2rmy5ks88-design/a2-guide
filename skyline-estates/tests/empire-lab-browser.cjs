@@ -14,7 +14,7 @@ async function started(p,vp){if(vp.safe)await p.evaluate(()=>{for(const[k,v]of O
 async function humanTurn(p){for(let i=0;i<4000;i++){if(await p.evaluate(()=>document.getElementById('dlg').open)){await p.click('#dlg-btns button:first-child');continue}
  const st=await p.evaluate(()=>{const s=__empireLab.state(),pd=SkylineEmpire.pending(s);return s.phase==='over'?'over':(pd.player===0&&(pd.kind==='roll'||pd.kind==='invest')&&!__empireLab.busy())?'me':'wait'});if(st!=='wait')return st;await p.waitForTimeout(60)}throw Error('timeout waiting for human turn')}
 (async()=>{const browser=await launch();try{
- {const vp=VPS[0],{ctx,p}=await open(browser,vp,base+'?seed=515&speed=fast',true);await p.evaluate(()=>{localStorage.setItem('skylineSave','CLASSIC-SENTINEL');localStorage.setItem('skylineDominionSave','DOMINION-SENTINEL')});
+ {const vp=VPS[0],{ctx,p}=await open(browser,vp,base+'?seed=515&speed=instant',true);await p.evaluate(()=>{localStorage.setItem('skylineSave','CLASSIC-SENTINEL');localStorage.setItem('skylineDominionSave','DOMINION-SENTINEL')});
   await p.click('#start');await started(p,vp);const st=await p.evaluate(()=>__empireLab.r3().stats());report.stats=st;
   check('44 live spaces and four visible tokens from the real match',st.nodes===44&&st.tokensVisible===4);
   check("Claude's supplied art-matched Empire board, bay skyline, Empire Tower and crane GLBs submitted to the GPU",['board_empire_44.glb','empire_bay_skyline.glb','empire_tower.glb','tower_crane.glb'].every(f=>st.files.includes(f))&&st.triangles>500000);
@@ -54,7 +54,7 @@ async function humanTurn(p){for(let i=0;i<4000;i++){if(await p.evaluate(()=>docu
   else if(await p.locator('[data-act="auction"]').count()){await p.click('[data-act="auction"]');await humanTurn(p)}
   const fb=await p.evaluate(()=>{const s=__empireLab.state();return{tower:s.tower.funded+s.tower.stage*1e6,inf:s.players[0].influence}});
   if(await p.locator('#fund:not([disabled])').count()){await p.click('#fund');await p.click('#dlg-btns button.gold');check('Empire Tower investment moves funds into the shared landmark and grants influence',await p.evaluate(b=>{const s=__empireLab.state();return s.tower.funded+s.tower.stage*1e6>b.tower&&s.players[0].influence>=b.inf},fb))}
-  await p.screenshot({path:path.join(out,`${engine}-${vp.name}-human-turn.png`)});
+  await p.screenshot({timeout:90000,animations:'disabled',path:path.join(out,`${engine}-${vp.name}-human-turn.png`)});
   const snap=await p.evaluate(()=>SkylineEmpire.serialize(__empireLab.state()));await p.click('#v-insp');await p.click('#v-over');check('Inspect/Overview keep match state unchanged',await p.evaluate(()=>SkylineEmpire.serialize(__empireLab.state()))===snap);
   const lc=await p.evaluate(async()=>{const c=document.getElementById('board'),gl=c.getContext('webgl2')||c.getContext('webgl'),x=gl.getExtension('WEBGL_lose_context');if(!x)return'no-ext';x.loseContext();await new Promise(r=>setTimeout(r,300));x.restoreContext();await new Promise(r=>setTimeout(r,2000));return 'ok'});
   check('graphics context loss is recovered without touching the match',lc==='no-ext'||await p.evaluate(()=>SkylineEmpire.serialize(__empireLab.state()))===snap);
@@ -70,8 +70,8 @@ async function humanTurn(p){for(let i=0;i<4000;i++){if(await p.evaluate(()=>docu
    await p.click('#end')}
   const end=await p.evaluate(()=>{const s=__empireLab.state();return{reason:s.endReason,winner:s.winner,round:s.round,tower:s.tower.stage,ranking:SkylineEmpire.ranking(s)}});report.completedMatch=end;
   check('a full match played through the visible buttons ends with a published reason and ranking',['milestones','round-limit','last-standing'].includes(end.reason)&&await p.locator('#again').isVisible());
-  await p.screenshot({path:path.join(out,`${engine}-${vp.name}-match-over.png`)});await ctx.close()}
- for(const vp of VPS){const {ctx,p}=await open(browser,vp,base+'?seed=515&speed=fast&quality='+(vp.width<700?'medium':'high'));await p.click('#start');await started(p,vp);await humanTurn(p);
+  await p.screenshot({timeout:90000,animations:'disabled',path:path.join(out,`${engine}-${vp.name}-match-over.png`)});await ctx.close()}
+ for(const vp of VPS){const {ctx,p}=await open(browser,vp,base+'?seed=515&speed=instant&quality='+(vp.width<700?'medium':'high'));await p.click('#start');await started(p,vp);await humanTurn(p);
   const lay=await p.evaluate(()=>{const W=innerWidth,H=innerHeight,r=e=>e.getBoundingClientRect(),c=r(document.getElementById('board'));
    const btn=[...document.querySelectorAll('#dock button')].filter(b=>b.offsetParent).map(b=>{const q=r(b);return{t:b.textContent.trim().slice(0,20),h:q.height,in:q.left>=0&&q.right<=W+.5&&q.top>=0&&q.bottom<=H+.5}});
    const L2=r(document.querySelector('.sk-left')),R2=r(document.querySelector('.sk-right')),S2=r(document.querySelector('.sk-strip'));const nodesIn=SkylineEmpire.NODES.filter(n=>{const q=__empireLab.r3().project(n.id);return q.x>=L2.right&&q.x<=R2.left&&q.y>=c.top&&q.y<=S2.top}).length;const panels=['p-map','p-victory','p-land','p-market','p-ms','p-neg','p-sel'].every(id=>document.getElementById(id)),cards=document.querySelectorAll('#players .sk-card').length;
@@ -81,6 +81,6 @@ async function humanTurn(p){for(let i=0;i<4000;i++){if(await p.evaluate(()=>docu
   check(`${vp.name}: all 44 spaces inside the free board area (not under panels or player strip)`,lay.nodesIn===44);check(`${vp.name}: Roll Dice and view controls on screen and ≥44 CSS px tall`,lay.btn.length>=3&&lay.btn.every(b=>b.in&&b.h>=44),{bad:lay.btn.filter(b=>!(b.in&&b.h>=44))});
   check(`${vp.name}: no horizontal page overflow`,!lay.hScroll);
   check(`${vp.name}: HUD icons stay icon-sized (no oversized SVGs)`,await p.evaluate(()=>[...document.querySelectorAll('.sk-col svg,.sk-strip svg')].every(e=>{const q=e.getBoundingClientRect();return q.height<=48||e.closest('.sk-map,.sk-stages')})));
-  check(`${vp.name}: art sidebars (Empire map, victory, landmarks, market, milestones, negotiation) and four player cards present; card figures not clipped`,lay.panels&&lay.cards===4&&lay.fits&&lay.stripIn);await p.screenshot({path:path.join(out,`${engine}-${vp.name}.png`)});await ctx.close()}
+  check(`${vp.name}: art sidebars (Empire map, victory, landmarks, market, milestones, negotiation) and four player cards present; card figures not clipped`,lay.panels&&lay.cards===4&&lay.fits&&lay.stripIn);await p.screenshot({timeout:90000,animations:'disabled',path:path.join(out,`${engine}-${vp.name}.png`)});await ctx.close()}
  check('no page errors',report.errors.length===0,{errors:report.errors.slice(0,3)});
 }finally{fs.writeFileSync(path.join(out,`${engine}-report.json`),JSON.stringify(report,null,1));await browser.close()}console.log(`${report.checks.length} checks passed on ${engine}`)})().catch(e=>{console.error(e);process.exit(1)});
