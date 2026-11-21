@@ -31,11 +31,12 @@ fs.mkdirSync(path.join(www,'web'),{recursive:true});
 for(const f of ['skyline-showcase.js','skyline-showcase.css','challenges.js','challenges.css','social.js','social.css','verified.js','verified-config.js'])fs.copyFileSync(path.join(src,'web',f),path.join(www,'web',f));
 fs.mkdirSync(path.join(www,'security','service'),{recursive:true});
 for(const f of fs.readdirSync(path.join(src,'security','service')).filter(f=>f.endsWith('.mjs')))fs.copyFileSync(path.join(src,'security','service',f),path.join(www,'security','service',f));
-// Cloud channel: the web game always ships with accounts and purchases off. Only a native build made
-// with SKYLINE_CLOUD_CHANNEL=private-testing (manual TestFlight workflow) switches them on, and then
-// only when running in the iOS app. ios-release is the reviewed public App Store channel.
+// Native channel: the published-web configuration resolves to off inside wrappers.
+// Manual private-progress builds enable iOS cloud save without purchases; private-testing
+// retains purchase QA. ios-release remains the reviewed public App Store channel.
 const channel=process.env.SKYLINE_CLOUD_CHANNEL||'off';
-if(!['off','private-testing','ios-release'].includes(channel))throw Error('Unknown SKYLINE_CLOUD_CHANNEL '+channel);
+if(!['off','private-testing','private-progress','ios-release'].includes(channel))throw Error('Unknown SKYLINE_CLOUD_CHANNEL '+channel);
 if(channel!=='off')fs.copyFileSync(path.join(app,'cloud',channel+'.js'),path.join(www,'lib','cloud-config.js'));
 console.log('cloud channel:',channel);
 console.log('www built:',fs.readdirSync(www).join(', '),'| fonts:',faces.length);
+

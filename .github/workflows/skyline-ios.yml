@@ -12,9 +12,9 @@ on:
         type: string
         default: '1.0'
       cloud_channel:
-        description: 'Accounts and purchases: off, private-testing (TestFlight only), or ios-release (public App Store build)'
+        description: 'Cloud: off, private-progress (save only), private-testing (purchase QA), ios-release (public)'
         type: choice
-        options: [off, private-testing, ios-release]
+        options: [off, private-testing, private-progress, ios-release]
         default: 'off'
       sign_only:
         description: 'With publish: sign and export the App Store IPA as an artifact only; do NOT upload to TestFlight'
@@ -93,6 +93,7 @@ jobs:
         working-directory: .
         run: |
           python3 skyline-estates/tests/build-pipelines.py
+          node skyline-estates/tests/cloud-config.test.cjs
           python3 skyline-estates-app/scripts/verify-ios-sdk.test.py
           python3 skyline-estates-app/scripts/verify-signed-apple.test.py
           python3 skyline-estates-app/scripts/ios-distribution.test.py
@@ -243,3 +244,4 @@ jobs:
             ${{ runner.temp }}/skyline-ios-build.log
             ${{ runner.temp }}/skyline-ios-device-build.log
           if-no-files-found: warn
+
