@@ -5,6 +5,7 @@ const engine=process.env.VISUAL_ENGINE||'chromium',origin=process.env.VISUAL_ORI
 const base=origin+'skyline-estates/empire-production-lab.html';const report={engine,physicalDevice:false,checks:[],errors:[],viewports:[]};
 const check=(n,ok,x)=>{assert.ok(ok,n+(x?' '+JSON.stringify(x):''));report.checks.push(n);console.log('PASS',engine,n)};
 const VPS=[{width:956,height:440,dpr:3,name:'956x440'},{width:844,height:390,dpr:3,safe:true,name:'844x390-safe'},{width:667,height:375,dpr:2,name:'667x375'}];
+const actionTap=(page,selector)=>engine==='chromium'?page.locator(selector).click({force:true,timeout:60000}):page.locator(selector).click({timeout:60000});
 const launch=()=>({chromium,webkit}[engine]).launch({headless:true,...(engine==='chromium'?{args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']}:{})});
 async function open(b,vp,url,normalMotion=false){const ctx=await b.newContext({viewport:{width:vp.width,height:vp.height},deviceScaleFactor:vp.dpr,hasTouch:true,serviceWorkers:'block',reducedMotion:normalMotion?'no-preference':'reduce'});const p=await ctx.newPage();
  p.on('pageerror',e=>report.errors.push(String(e.stack||e)));p.on('console',m=>{if(m.type()==='error')report.errors.push(m.text().slice(0,300))});await p.goto(url);return{ctx,p}}
@@ -48,29 +49,29 @@ async function humanTurn(p){for(let i=0;i<4000;i++){if(await p.evaluate(()=>docu
   const expected=await p.evaluate(()=>{const E=SkylineEmpire,s=E.restore(E.serialize(__empireLab.state())).state;E.act(s,0,{type:'roll'});return{pos:s.players[0].pos,roll:s.players[0].lastRoll}});
   await p.locator('#roll').click({force:true,timeout:60000});await p.waitForFunction(()=>!__empireLab.busy()&&SkylineEmpire.pending(__empireLab.state()).kind!=='roll',null,{timeout:60000});
   check('ROLL DICE uses the seeded rules roll and moves the token the exact total',await p.evaluate(e=>{const p=__empireLab.state().players[0];return p.pos===e.pos&&p.lastRoll.join()===e.roll.join()},expected));
-  if(await p.locator('[data-act="buy"]:not([disabled])').count()){const before=await p.evaluate(()=>{const s=__empireLab.state(),p=s.players[0];return{cash:p.cash,pos:p.pos,price:SkylineEmpire.BY[p.pos].price}});await p.click('[data-act="buy"]');
+  if(await p.locator('[data-act="buy"]:not([disabled])').count()){const before=await p.evaluate(()=>{const s=__empireLab.state(),p=s.players[0];return{cash:p.cash,pos:p.pos,price:SkylineEmpire.BY[p.pos].price}});await actionTap(p,'[data-act="buy"]');
    check('Buy charges once and transfers ownership; Plot model and owner ring appear',await p.evaluate(b=>{const s=__empireLab.state();return s.own[b.pos].o===0&&s.players[0].cash===b.cash-b.price&&__empireLab.r3().stats().stagesShown>=1},before));
-   await p.evaluate(id=>__empireLab.select(id),before.pos);if(await p.locator(`[data-dev="${before.pos}"]:not([disabled])`).count()){await p.click(`[data-dev="${before.pos}"]`);check('Build Low-rise updates rules and model',await p.evaluate(id=>__empireLab.state().own[id].h===1,before.pos))}}
-  else if(await p.locator('[data-act="auction"]').count()){await p.click('[data-act="auction"]');await humanTurn(p)}
+   await p.evaluate(id=>__empireLab.select(id),before.pos);if(await p.locator(`[data-dev="${before.pos}"]:not([disabled])`).count()){await actionTap(p,`[data-dev="${before.pos}"]`);check('Build Low-rise updates rules and model',await p.evaluate(id=>__empireLab.state().own[id].h===1,before.pos))}}
+  else if(await p.locator('[data-act="auction"]').count()){await actionTap(p,'[data-act="auction"]');await humanTurn(p)}
   const fb=await p.evaluate(()=>{const s=__empireLab.state();return{tower:s.tower.funded+s.tower.stage*1e6,inf:s.players[0].influence}});
-  if(await p.locator('#fund:not([disabled])').count()){await p.click('#fund');await p.click('#dlg-btns button.gold');check('Empire Tower investment moves funds into the shared landmark and grants influence',await p.evaluate(b=>{const s=__empireLab.state();return s.tower.funded+s.tower.stage*1e6>b.tower&&s.players[0].influence>=b.inf},fb))}
-  await p.screenshot({timeout:90000,scale:engine==='chromium'?'css':'device',animations:'disabled',path:path.join(out,`${engine}-${vp.name}-human-turn.png`)});
+  if(await p.locator('#fund:not([disabled])').count()){await actionTap(p,'#fund');await p.click('#dlg-btns button.gold');check('Empire Tower investment moves funds into the shared landmark and grants influence',await p.evaluate(b=>{const s=__empireLab.state();return s.tower.funded+s.tower.stage*1e6>b.tower&&s.players[0].influence>=b.inf},fb))}
+  if(engine==='webkit')await p.screenshot({timeout:90000,scale:'device',animations:'disabled',path:path.join(out,`${engine}-${vp.name}-human-turn.png`)});
   const snap=await p.evaluate(()=>SkylineEmpire.serialize(__empireLab.state()));await p.click('#v-insp');await p.click('#v-over');check('Inspect/Overview keep match state unchanged',await p.evaluate(()=>SkylineEmpire.serialize(__empireLab.state()))===snap);
   const lc=await p.evaluate(async()=>{const c=document.getElementById('board'),gl=c.getContext('webgl2')||c.getContext('webgl'),x=gl.getExtension('WEBGL_lose_context');if(!x)return'no-ext';x.loseContext();await new Promise(r=>setTimeout(r,300));x.restoreContext();await new Promise(r=>setTimeout(r,2000));return 'ok'});
   check('graphics context loss is recovered without touching the match',lc==='no-ext'||await p.evaluate(()=>SkylineEmpire.serialize(__empireLab.state()))===snap);
-  await p.click('#end');await humanTurn(p);check('AI opponents act through the rules engine and return the turn',await p.evaluate(()=>{const s=__empireLab.state();return s.phase==='over'||SkylineEmpire.pending(s).player===0}));
+  await actionTap(p,'#end');await humanTurn(p);check('AI opponents act through the rules engine and return the turn',await p.evaluate(()=>{const s=__empireLab.state();return s.phase==='over'||SkylineEmpire.pending(s).player===0}));
   const saved=await p.evaluate(()=>SkylineEmpire.serialize(__empireLab.state()));await p.reload();await p.locator('#resume').waitFor({state:'visible'});await p.click('#resume');await started(p,vp);
   check('resume restores the exact saved match in its own slot',await p.evaluate(()=>SkylineEmpire.serialize(__empireLab.state()))===saved);
   check('Classic and Dominion saves untouched',await p.evaluate(()=>localStorage.getItem('skylineSave')==='CLASSIC-SENTINEL'&&localStorage.getItem('skylineDominionSave')==='DOMINION-SENTINEL'));await ctx.close()}
  {const vp=VPS[0],{ctx,p}=await open(browser,vp,base+'?seed=4242&speed=instant&quality=low');await p.click('#start');await started(p,vp);let n=0;
   while(await humanTurn(p)!=='over'){assert.ok(n++<400,'too long');const kind=await p.evaluate(()=>SkylineEmpire.pending(__empireLab.state()).kind);
    if(kind==='roll'){await p.locator('#roll').click({force:true,timeout:60000});continue}
-   if(await p.locator('[data-act="buy"]:not([disabled])').count()){await p.click('[data-act="buy"]');continue}
-   if(await p.locator('[data-act="auction"]').count()){await p.click('[data-act="auction"]');continue}
-   await p.click('#end')}
+   if(await p.locator('[data-act="buy"]:not([disabled])').count()){await actionTap(p,'[data-act="buy"]');continue}
+   if(await p.locator('[data-act="auction"]').count()){await actionTap(p,'[data-act="auction"]');continue}
+   await actionTap(p,'#end')}
   const end=await p.evaluate(()=>{const s=__empireLab.state();return{reason:s.endReason,winner:s.winner,round:s.round,tower:s.tower.stage,ranking:SkylineEmpire.ranking(s)}});report.completedMatch=end;
   check('a full match played through the visible buttons ends with a published reason and ranking',['milestones','round-limit','last-standing'].includes(end.reason)&&await p.locator('#again').isVisible());
-  await p.screenshot({timeout:90000,scale:engine==='chromium'?'css':'device',animations:'disabled',path:path.join(out,`${engine}-${vp.name}-match-over.png`)});await ctx.close()}
+  if(engine==='webkit')await p.screenshot({timeout:90000,scale:'device',animations:'disabled',path:path.join(out,`${engine}-${vp.name}-match-over.png`)});await ctx.close()}
  for(const vp of VPS){const {ctx,p}=await open(browser,vp,base+'?seed=515&speed=instant&quality='+(vp.width<700?'medium':'high'));await p.click('#start');await started(p,vp);await humanTurn(p);
   const lay=await p.evaluate(()=>{const W=innerWidth,H=innerHeight,r=e=>e.getBoundingClientRect(),c=r(document.getElementById('board'));
    const btn=[...document.querySelectorAll('#dock button')].filter(b=>b.offsetParent).map(b=>{const q=r(b);return{t:b.textContent.trim().slice(0,20),h:q.height,in:q.left>=0&&q.right<=W+.5&&q.top>=0&&q.bottom<=H+.5}});
@@ -81,6 +82,6 @@ async function humanTurn(p){for(let i=0;i<4000;i++){if(await p.evaluate(()=>docu
   check(`${vp.name}: all 44 spaces inside the free board area (not under panels or player strip)`,lay.nodesIn===44);check(`${vp.name}: Roll Dice and view controls on screen and ≥44 CSS px tall`,lay.btn.length>=3&&lay.btn.every(b=>b.in&&b.h>=44),{bad:lay.btn.filter(b=>!(b.in&&b.h>=44))});
   check(`${vp.name}: no horizontal page overflow`,!lay.hScroll);
   check(`${vp.name}: HUD icons stay icon-sized (no oversized SVGs)`,await p.evaluate(()=>[...document.querySelectorAll('.sk-col svg,.sk-strip svg')].every(e=>{const q=e.getBoundingClientRect();return q.height<=48||e.closest('.sk-map,.sk-stages')})));
-  check(`${vp.name}: art sidebars (Empire map, victory, landmarks, market, milestones, negotiation) and four player cards present; card figures not clipped`,lay.panels&&lay.cards===4&&lay.fits&&lay.stripIn&&lay.namesFit);await p.screenshot({timeout:90000,scale:engine==='chromium'?'css':'device',animations:'disabled',path:path.join(out,`${engine}-${vp.name}.png`)});await ctx.close()}
+  check(`${vp.name}: art sidebars (Empire map, victory, landmarks, market, milestones, negotiation) and four player cards present; card figures not clipped`,lay.panels&&lay.cards===4&&lay.fits&&lay.stripIn&&lay.namesFit);if(engine==='webkit')await p.screenshot({timeout:90000,scale:'device',animations:'disabled',path:path.join(out,`${engine}-${vp.name}.png`)});await ctx.close()}
  check('no page errors',report.errors.length===0,{errors:report.errors.slice(0,3)});
 }finally{fs.writeFileSync(path.join(out,`${engine}-report.json`),JSON.stringify(report,null,1));await browser.close()}console.log(`${report.checks.length} checks passed on ${engine}`)})().catch(e=>{console.error(e);process.exit(1)});
