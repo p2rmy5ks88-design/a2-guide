@@ -27,3 +27,60 @@ for(const [board,spaces] of [['dominion',48],['empire',32]]){
  console.log(board,'PASS','completed real turns',rolls,'winner',s.winner,'built',Object.values(s.properties).filter(p=>p.stage>0).length);
 }
 console.log('All approved board rules tests passed.');
+
+
+// Approval gate: real property rent, salary, auctions, trades, Career receipts
+// and strict rejection of incompatible old 61-node/44-space saved games.
+for (const board of ['dominion','empire']) {
+ const raw=JSON.parse(fs.readFileSync(new URL('../assets/approved-replacements/'+board+'/board_data.json',import.meta.url),'utf8'));
+ const spaces=R.preserveRules(raw,board),N=spaces.length,seed=board==='dominion'?1:11,propertyId=board==='dominion'?2:3;
+ const rentState=R.createMatch(board,raw,{seed,length:'standard'}),property=spaces[propertyId];
+ assert.ok(R.isOwnable(property));
+ rentState.properties[propertyId]={owner:1,stage:2};
+ const ownerBefore=rentState.players[1].cash,playerBefore=rentState.players[0].cash;
+ const moved=R.roll(rentState,spaces);
+ assert.deepEqual(moved.dice,board==='dominion'?[1,1]:[1,2]);
+ assert.equal(rentState.players[0].pos,propertyId);
+ const toll=R.rent(property,rentState.properties[propertyId]);
+ assert.equal(rentState.players[0].cash,playerBefore-toll);
+ assert.equal(rentState.players[1].cash,ownerBefore+toll);
+ assert.throws(()=>R.buy(rentState,spaces),/not available/);
+ assert.equal(R.restore(JSON.stringify({...rentState,ruleset:board==='dominion'?'dominion-p1':'empire-p1'}),spaces,board),null);
+ assert.equal(R.restore(JSON.stringify({...rentState,players:rentState.players.map((p,i)=>i?p:{...p,pos:N})}),spaces,board),null);
+
+ const payday=R.createMatch(board,raw,{seed,length:'standard'});
+ payday.players[0].pos=board==='dominion'?N-1:N-2;
+ const before=payday.players[0].cash,salary=board==='dominion'?220000:350000;
+ const route=R.roll(payday,spaces);
+ assert.deepEqual(route.steps,board==='dominion'?[0,1]:[N-1,0,1]);
+ assert.equal(payday.players[0].cash,before+salary);
+
+ const auctionState=R.createMatch(board,raw,{seed,length:'standard'});
+ R.roll(auctionState,spaces);
+ const beforeBids=auctionState.players.map(p=>p.cash);
+ const winner=R.auction(auctionState,spaces,spaces[propertyId].price_sc);
+ assert.ok(winner.player>=0&&winner.player<4);
+ assert.equal(auctionState.properties[propertyId].owner,winner.player);
+ assert.equal(auctionState.players[winner.player].cash,beforeBids[winner.player]-winner.bid);
+
+ const tradeState=R.createMatch(board,raw,{seed,length:'standard'});
+ R.roll(tradeState,spaces);
+ const traded=spaces.find(t=>t.id!==propertyId&&R.isOwnable(t));
+ assert.ok(traded);
+ tradeState.properties[traded.id]={owner:1,stage:1};
+ const price=Math.ceil(traded.price_sc*(1.13+.28));
+ const buyerBefore=tradeState.players[0].cash,sellerBefore=tradeState.players[1].cash;
+ R.trade(tradeState,spaces,traded.id,price);
+ assert.equal(tradeState.properties[traded.id].owner,0);
+ assert.equal(tradeState.players[0].cash,buyerBefore-price);
+ assert.equal(tradeState.players[1].cash,sellerBefore+price);
+ assert.equal(tradeState.players[0].stats.trades,1);
+
+ tradeState.phase='over';tradeState.winner=0;
+ const fact=R.careerFacts(tradeState,spaces);
+ assert.equal(fact.board,board);
+ assert.equal(fact.ruleset,R.ID);
+ assert.equal(fact.challenges[0]?.tag,'negotiation');
+ assert.equal(fact.won,true);
+ console.log(board,'PASS','rent, GO, auction, trade, old save isolation and Career receipts');
+}
