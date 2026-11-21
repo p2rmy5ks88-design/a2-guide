@@ -43,14 +43,14 @@ const BOARDS=Object.freeze([
  {id:'dominion',tier:4,name:'Skyline Dominion',difficulty:'Advanced',strategy:'Territory and negotiation',playable:false,ruleset:null,
   requires:[{kind:'qualifiedWins',board:'crossroads',count:2},{kind:'challenges',board:'crossroads',tag:'landmark',count:3}],lengths:[],
   // Released with prototype rules (owner decision 19 Nov 2026): DOMINION.md, ruleset dominion-p1. Quick is experimental.
-  alpha:{ruleset:'dominion-p1',lengths:['standard','extended','quick'],experimental:['quick'],defaultLength:'standard'},
-  preview:{headline:'Contest districts and negotiate for control.',geometry:'48-space hexagonal track, eight district territories, Central District and contest exchanges',movement:'Action points across connected districts',
+  alpha:{ruleset:'skyline-approved-board-v1',lengths:['standard','extended','quick'],experimental:['quick'],defaultLength:'standard'},
+  preview:{headline:'Contest districts and negotiate for control.',geometry:'48-space premium hexagonal ring, six royal districts and a central Dominion Tower',movement:'Two dice around a clockwise perimeter with 3D token movement',
    building:'Owning a site allows basic development; advanced buildings need district control.',victory:'Hold the required districts or lead on control points.',status:'released-prototype',design:'dominion-production-lab.html'}},
  {id:'empire',tier:5,name:'Skyline Empire',difficulty:'Expert',strategy:'Investment and economic control',playable:false,ruleset:null,
   requires:[{kind:'qualifiedWins',board:'dominion',count:2},{kind:'challenges',board:'dominion',tag:'negotiation',count:1}],lengths:[],
   // Released with prototype rules (owner decision 19 Nov 2026): EMPIRE.md, ruleset empire-p1. Quick is experimental.
-  alpha:{ruleset:'empire-p1',lengths:['standard','extended','quick'],experimental:['quick'],defaultLength:'standard'},
-  preview:{headline:'Invest across zones and complete your empire.',geometry:'44-space island loop through six zones around the Empire Tower',movement:'Strategic movement between zones',
+  alpha:{ruleset:'skyline-approved-board-v1',lengths:['standard','extended','quick'],experimental:['quick'],defaultLength:'standard'},
+  preview:{headline:'Invest across zones and complete your empire.',geometry:'32-space royal crown-shaped board and central Crown Plaza gardens',movement:'Two dice around the 32-space clockwise Crown Plaza route',
    building:'Higher buildings need supporting investment and infrastructure.',victory:'Complete three empire milestones and keep the lead.',status:'released-prototype',design:'empire-production-lab.html'}}
 ].map(b=>Object.freeze({...b,requires:Object.freeze(b.requires.map(r=>Object.freeze({...r}))),preview:Object.freeze({...b.preview})})));
 const BY_ID=Object.fromEntries(BOARDS.map(b=>[b.id,b]));
@@ -276,8 +276,8 @@ async function open(){
  if(len==='back')return open();
  if(len==='rules'){await modal({cls:'wide career-rules',html:`<div class="mh">${BOARD_ICON[bid]||''} ${esc(b.name)} — How to play</div><div class="mtxt" style="text-align:left;font-size:14px;line-height:1.45">${BOARD_RULES[bid]}</div>`,btns:[{k:'x',label:'Got it',primary:true}]});return open()}
  if(!len)return;
- const page={circuit:'./city-ventures.html',crossroads:'./crossroads-capital.html',dominion:'./dominion-production-lab.html',empire:'./empire-production-lab.html'};
- if(page[bid])location.href=page[bid]+'?career=1&length='+encodeURIComponent(len);
+ const page={circuit:'./city-ventures.html',crossroads:'./crossroads-capital.html',dominion:'./approved-career-board.html?board=dominion',empire:'./approved-career-board.html?board=empire'};
+ if(page[bid]){const u=new URL(page[bid],location.href);u.searchParams.set('career','1');u.searchParams.set('length',len);location.href=u.href;}
  else startOrigins(len);
 }
 // Career Board 1 (owner decisions 19–20 Nov 2026): Career Origins matches are shown on the approved Origins 3D board.

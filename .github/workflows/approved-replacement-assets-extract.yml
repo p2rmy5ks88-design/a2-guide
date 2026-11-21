@@ -1,0 +1,61 @@
+name: Extract approved Dominion & Empire 3D assets (review only)
+on:
+  push:
+    paths:
+      - 'skyline-estates/assets/approved-replacements.zip'
+      - '.github/workflows/approved-replacement-assets-extract.yml'
+permissions:
+  contents: write
+jobs:
+  extract:
+    if: startsWith(github.ref, 'refs/heads/feat/approved-dominion-empire-')
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Validate package and unpack actual 3D assets
+        run: |
+          python3 - <<'PY'
+          import json,zipfile,pathlib
+          zip_path=pathlib.Path('skyline-estates/assets/approved-replacements.zip')
+          dest=pathlib.Path('skyline-estates').resolve()
+          with zipfile.ZipFile(zip_path) as z:
+            assert z.testzip() is None, 'Archive CRC failed'
+            for entry in z.infolist():
+              if entry.is_dir():continue
+              name=pathlib.PurePosixPath(entry.filename)
+              assert not name.is_absolute() and '..' not in name.parts
+              assert entry.filename.startswith('assets/approved-replacements/')
+              path=(dest/entry.filename).resolve()
+              assert path.is_relative_to(dest)
+              path.parent.mkdir(parents=True,exist_ok=True)
+              path.write_bytes(z.read(entry))
+          for board,count in [('dominion',48),('empire',32)]:
+            root=dest/'assets'/'approved-replacements'/board
+            m=json.loads((root/'board_data.json').read_text())
+            assert m['playable_spaces']==count and len(m['spaces'])==count
+            assert (root/'board_core.glb').read_bytes()[:4]==b'glTF'
+            assert (root/'environment_detail.glb').read_bytes()[:4]==b'glTF'
+            for x in m['spaces']:
+              assert (root/x['texture']).is_file()
+              assert x['neighbors']==[(x['id']-1)%count,(x['id']+1)%count]
+            for t in ('lion','eagle','horse','ship'):
+              assert (root/'tokens'/(t+'.glb')).read_bytes()[:4]==b'glTF'
+            print('Validated',board,count,'genuine pickable 3D tiles')
+          PY
+      - name: Validate deterministic gameplay and save/restore
+        run: node --test skyline-estates/tests/approved-board-rules.test.mjs
+      - name: Rebuild offline manifests on review branch only
+        run: |
+          python3 skyline-estates/build.py
+          python3 skyline-estates/build.py --check
+      - name: Save extracted assets in same review branch
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add skyline-estates/assets/approved-replacements skyline-estates/offline-assets.js skyline-estates/sw.js
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'Import approved real GLB board assets, tokens and tile textures'
+          git push origin HEAD:$GITHUB_REF_NAME
