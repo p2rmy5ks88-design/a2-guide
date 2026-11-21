@@ -6,6 +6,7 @@ const {createFakeFirestore}=require('./firestore-fake.cjs');
 const {createProfileService}=require('./profile-service.cjs');
 const {createFirestoreWallet}=require('./firestore-wallet.cjs');
 const {APP}=require('./wallet.cjs');
+const {POLICY}=require('./profile.cjs');
 let count=0,ids=0;
 const verifyIdToken=async t=>({uid:t,auth_time:0,firebase:{sign_in_provider:'apple.com'}});
 function server(){const db=createFakeFirestore(),clock={now:Date.UTC(2026,9,30,10)};return{db,clock,svc:createProfileService({db,verifyIdToken,environment:'sandbox',clock:()=>clock.now}),wallet:createFirestoreWallet({db,environment:'sandbox',verifyIdToken,verifyPurchase:async v=>v,verifyNotification:async v=>v,clock:()=>clock.now})}}
@@ -56,7 +57,12 @@ async function test(name,fn){await fn();count++;console.log('ok - '+name)}
   s.clock.now+=600000;await d.cloud.sync();assert.equal((await s.svc.get('alice')).coins,205,'retry with the same request ID is not credited twice');assert.equal(d.prefs.coins,205);
  });
  await test('a daily-limit clamp is reflected locally and reported',async()=>{const s=server(),d=device(s);await d.cloud.sync();
-  d.prefs.coins+=70000;await d.cloud.sync();assert.equal(d.prefs.coins,50000);assert.ok(d.notes.includes('note:daily-coin-limit'));
+  d.prefs.coins+=POLICY.dayCoins+20000;await d.cloud.sync();assert.equal(d.prefs.coins,POLICY.dayCoins);assert.ok(d.notes.includes('note:daily-coin-limit'));
+ });
+ await test('multiple 15x Career rewards survive sync above the old daily limit without duplicate credit',async()=>{const s=server(),d=device(s);await d.cloud.sync();
+  for(let n=0;n<3;n++){d.prefs.coins+=37500;d.cloud.reason('City Ventures win');await d.cloud.sync();}
+  await d.cloud.sync({refresh:true});const p=await s.svc.get('alice');assert.equal(p.coins,112500);assert.equal(d.prefs.coins,112500);assert.equal(p.today.coinLimit,2500000);
+  const peer=device(s,{coins:0});await peer.cloud.sync();assert.equal(peer.prefs.coins,112500);await d.cloud.sync();assert.equal((await s.svc.get('alice')).coins,112500);
  });
  await test('purchases credited by the server appear on the device without double counting local changes',async()=>{const s=server(),d=device(s,{coins:100});await d.cloud.sync();
   await s.wallet.purchase('alice',{store:'apple',environment:'sandbox',appId:APP,type:'purchase',transactionId:'t-9',ownerUid:'alice',productId:APP+'.coins_1500',quantity:1,state:'purchased'});
@@ -82,7 +88,7 @@ async function test(name,fn){await fn();count++;console.log('ok - '+name)}
   d.prefs.coins+=1;await d.cloud.sync();assert.equal(d.prefs.owner,null);assert.ok(d.notes.includes('account-removed:undefined'));assert.equal(d.prefs.coins,31);
  });
  await test('promo codes travel with the change and are checked by the server',async()=>{const s=server(),d=device(s);await d.cloud.sync();
-  d.prefs.coins+=500000;d.prefs.xp+=100000;d.cloud.promo('WRONGCODE');await d.cloud.sync();assert.ok(d.notes.includes('note:promo-invalid'));assert.equal(d.prefs.coins,50000);
+  d.prefs.coins+=500000;d.prefs.xp+=100000;d.cloud.promo('WRONGCODE');await d.cloud.sync();assert.ok(d.notes.includes('note:promo-invalid'));assert.equal(d.prefs.coins,Math.min(500000,POLICY.dayCoins));
  });
  await test('a change captured while a request is in flight is never lost',async()=>{const s=server(),d=device(s,{coins:100});await d.cloud.sync();
   // Slow the next server call and save a new change while it is pending.
