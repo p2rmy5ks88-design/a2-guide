@@ -14,7 +14,7 @@ function createTableSurface(isEmpire) {
  context.fillStyle=isEmpire?'#51301f':'#143b4b';
  context.fillRect(0,0,512,512);
  for(let row=0;row<512;row++){
-  const grain=Math.sin(row*.32)*.055+Math.sin(row*.091)*.045;
+  const grain=Math.sin(row*.32)*.025+Math.sin(row*.091)*.018;
   context.strokeStyle=grain>0?`rgba(255,215,163,${grain})`:`rgba(4,10,19,${-grain})`;
   context.beginPath();
   for(let x=0;x<=512;x+=8){
@@ -27,12 +27,37 @@ function createTableSurface(isEmpire) {
  texture.colorSpace=THREE.SRGBColorSpace;
  texture.wrapS=texture.wrapT=THREE.RepeatWrapping;
  texture.repeat.set(3,3);
- const material=new THREE.MeshStandardMaterial({map:texture,roughness:isEmpire?.66:.43});
+ const material=new THREE.MeshStandardMaterial({map:texture,roughness:isEmpire?.77:.68});
  const surface=new THREE.Mesh(new THREE.PlaneGeometry(90,90),material);
  surface.rotation.x=-Math.PI/2;
  surface.position.y=-.85;
  surface.receiveShadow=true;
  return surface;
+}
+function createWaterfrontDistrict() {
+ const district=new THREE.Group();
+ const blocks=new THREE.InstancedMesh(new THREE.BoxGeometry(),new THREE.MeshStandardMaterial({roughness:.72}),48);
+ const windows=new THREE.InstancedMesh(new THREE.BoxGeometry(),new THREE.MeshBasicMaterial({color:0xffcb76}),192);
+ const transform=new THREE.Object3D();
+ for(let index=0;index<48;index++){
+  const angle=index*Math.PI/24;
+  const radius=15+(index%3)*1.45;
+  const height=.65+(index*13%17)*.12;
+  const x=Math.cos(angle)*radius,z=Math.sin(angle)*radius;
+  transform.position.set(x,height/2-.65,z);
+  transform.scale.set(.62,height,.56);
+  transform.updateMatrix();
+  blocks.setMatrixAt(index,transform.matrix);
+  blocks.setColorAt(index,new THREE.Color([0x475568,0x354352,0x756650][index%3]));
+  for(let floor=0;floor<4;floor++){
+   transform.position.set(x,-.62+height*(floor+1)/5,z);
+   transform.scale.set(.22,.045,.58);
+   transform.updateMatrix();
+   windows.setMatrixAt(index*4+floor,transform.matrix);
+  }
+ }
+ district.add(blocks,windows);
+ return district;
 }
 export async function createBoard({canvas,source,board,base,onSelect=()=>{},quality='high'}){
  const scene=new THREE.Scene();scene.background=new THREE.Color(board==='empire'?0x081829:0x111522);
@@ -48,6 +73,7 @@ export async function createBoard({canvas,source,board,base,onSelect=()=>{},qual
  rim.position.set(13,10,-16);scene.add(rim);
  const loader=new GLTFLoader();const url=x=>base.replace(/\/$/,'')+'/'+x;
  const load=x=>new Promise((resolve,reject)=>loader.load(url(x),g=>resolve(g.scene),undefined,reject));
+ if(board==='dominion'&&quality!=='low')scene.add(createWaterfrontDistrict());
  const boardRoot=await load('board_core.glb');scene.add(boardRoot);
  boardRoot.traverse(mesh=>{if(mesh.isMesh)mesh.receiveShadow=true});
  // Keep tile textures readable and bright while environment retains real lighting.
@@ -121,6 +147,10 @@ export async function createBoard({canvas,source,board,base,onSelect=()=>{},qual
   const alpha=1-Math.exp(-dt*7);
   desiredPos.copy(calcEye());camera.position.lerp(desiredPos,alpha);
   const v=camera.userData.look||new THREE.Vector3(...source.board_camera.target);v.lerp(target,alpha);camera.userData.look=v;
+  const overviewZoom=board==='empire'?1.32:1.04;
+  const desiredZoom=mode==='whole'&&camera.aspect>1.55?overviewZoom:1;
+  camera.zoom=THREE.MathUtils.lerp(camera.zoom,desiredZoom,alpha);
+  camera.updateProjectionMatrix();
   camera.up.set(0,1,0);camera.lookAt(v);camera.updateMatrixWorld();
   selectedMark.material.opacity=.78+.18*Math.sin(now*.004);
   renderer.render(scene,camera)
