@@ -43,7 +43,12 @@ let n=0;const ok=m=>{n++;console.log('PASS',m)};
   // The moving token deliberately slides the sidebar offscreen. Wait for the
   // CSS transition back before assessing its resting safe-area geometry.
   await p.waitForFunction(()=>!document.body.classList.contains('moving'),null,{timeout:90000});
-  await p.waitForTimeout(320);
+  // SwiftShader can stall compositor frames past the 250ms CSS duration.
+  // Observe the actual sidebar geometry, not an arbitrary wall-clock delay.
+  await p.waitForFunction(()=>{
+   const r=document.getElementById('side').getBoundingClientRect();
+   return !document.body.classList.contains('moving') && r.left>=62 && r.right<=innerWidth-62+1 && r.bottom<=innerHeight+1;
+  },null,{polling:200,timeout:90000});
   const phoneFit=await p.evaluate(()=>{
    const box=id=>document.getElementById(id).getBoundingClientRect();
    const players=box('players'),top=box('top'),side=box('side'),dock=box('dock'),help=box('help'),main=box('mainBtn');
