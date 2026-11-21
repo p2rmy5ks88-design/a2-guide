@@ -21,6 +21,25 @@ const humanTurn=p=>p.waitForFunction(()=>{const s=__dominionLab.state();return s
  {const vp=VPS[0],{ctx,p}=await open(browser,vp,base+'?seed=838&speed=instant',true);
   await p.evaluate(()=>{localStorage.setItem('skylineSave','CLASSIC-SENTINEL');localStorage.setItem('skylineCircuitSave','CIRCUIT-SENTINEL')});
   await p.click('#start');await started(p,vp);
+   // Board-game presentation acceptance: game board, not dense stats, leads.
+   const tabletop=await p.evaluate(()=>{
+    const game=document.querySelector('#game'),left=document.getElementById('left'),right=document.getElementById('right'),strip=document.getElementById('players'),menu=document.getElementById('p-groups');
+    return {enabled:game.classList.contains('sk-boardgame'),
+     leftWidth:left.getBoundingClientRect().width,
+     rightWidth:right.getBoundingClientRect().width,
+     stripWidth:strip.getBoundingClientRect().width,
+     advancedPanelHidden:getComputedStyle(menu).display==='none',
+     selectedVisible:getComputedStyle(document.getElementById('p-sel')).display!=='none',
+     detailsButton:document.getElementById('layoutToggle').getBoundingClientRect().height};
+   });
+   check('board-first camera/HUD focuses on play, not analysis panels',
+    tabletop.enabled&&tabletop.leftWidth<2&&tabletop.selectedVisible&&tabletop.advancedPanelHidden&&tabletop.detailsButton>=44,tabletop);
+   await p.locator('#layoutToggle').click({force:true});
+   const full=await p.evaluate(()=>!document.getElementById('game').classList.contains('sk-boardgame')&&getComputedStyle(document.getElementById('p-groups')).display!=='none');
+   check('full management details remain available on demand',full);
+   await p.locator('#layoutToggle').click({force:true});
+   check('player can immediately return to board-first play',await p.evaluate(()=>document.getElementById('game').classList.contains('sk-boardgame')));
+
   const st=await p.evaluate(()=>__dominionLab.r3().stats());report.stats=st;
   check('61 live nodes (48 track spaces + 8 plazas + Central + 4 contest exchanges) and four visible tokens',st.nodes===61&&st.tokensVisible===4);
   check("Claude's supplied art-matched Dominion board (48-space hexagonal track) and city GLBs submitted to the GPU",st.files.includes('board_dominion_48.glb')&&st.files.includes('dominion_waterfront_city.glb')&&st.triangles>300000);
