@@ -23,7 +23,8 @@ dialog button{font:inherit;min-height:44px;min-width:44px;border-radius:10px;bor
  <fieldset><legend>Graphics</legend><label><input type="radio" name="q" value="low"> Low</label><label><input type="radio" name="q" value="medium"> Medium</label><label><input type="radio" name="q" value="high" checked> High</label></fieldset>
  <button id="start" class="gold">Start match</button> <button id="resume" hidden>Resume saved match</button> <span id="saveinfo" class="muted"></span>
 </section>
-<section id="game" class="sk-hud" hidden>
+<section id="game" class="sk-hud sk-boardgame" hidden>
+ <div class="sk-tabletop-head"><div class="sk-tabletop-title">SKYLINE DOMINION<small>BOARD 4 · ADVANCED</small></div><button type="button" id="layoutToggle" aria-label="Show full game details" aria-pressed="true">☰ Game details</button></div>
  <div id="stage"><canvas id="board" aria-label="Skyline Dominion 3D board. Tap a node to select it."></canvas><div id="toast" hidden></div><div id="loading">Loading the Dominion city…</div></div>
  <div class="sk-top"><span class="sk-pill" id="round"></span><span class="sk-pill" id="scoring"></span></div>
  <aside id="left" class="sk-col sk-left" aria-label="Career and mechanics"><div class="sk-scroll" id="leftscroll"></div></aside>
@@ -55,13 +56,25 @@ $('start').onclick=()=>{const np=+document.querySelector('[name=np]:checked').va
 $('resume').onclick=()=>{s=savedState();if(s)boot()};
 async function boot(){$('setup').hidden=true;$('game').hidden=false;save();
  try{r3=await createDominionRenderer($('board'),{quality:Q.get('quality')||document.querySelector('[name=q]:checked').value,onPick:pick})}catch(e){$('loading').textContent='Could not load the local Dominion models: '+e.message+' — see DOMINION-3D.md for the asset copy step.';$('loading').dataset.error=e.message;console.error(e);return}
- $('loading').hidden=true;fit();addEventListener('resize',fit);matchMedia('(orientation:landscape)').addEventListener?.('change',fit);render();loop()}
+ $('loading').hidden=true;if(TABLETOP&&!sel&&s.players?.[0])sel=s.players[0].pos;fit();addEventListener('resize',fit);matchMedia('(orientation:landscape)').addEventListener?.('change',fit);render();loop()}
 const short=()=>innerHeight<400;
 function buildPanels(){$('leftscroll').innerHTML=H.brand('Skyline Dominion','Advanced board')+H.panel('p-career','Career progression','crown')+H.panel('p-mech','Key mechanics (Dominion)','knight',{open:!short()})+H.panel('p-log','Match log','book',{open:false});
  $('rightscroll').innerHTML='<span class="sk-badge dark sk-small">Career · Board 4 · Advanced</span>'+H.panel('p-groups','Property groups','globe')+H.panel('p-up','Building upgrades','bars',{open:!short()})+H.panel('p-neg','Negotiation opportunity','shake',{open:!short()})+H.panel('p-sel','Selected node','map',{open:!short()});
  $('p-career-b').innerHTML=H.career('dominion');
  $('p-mech-b').innerHTML=H.checks([[1,'Hexagonal district network','tick'],[1,'Contested acquisitions','tick'],[1,'Negotiate &amp; trade to gain control','tick'],[1,'District control &amp; influence (CP)','tick'],[1,'Connected districts with strategic value','tick'],[1,'Action points: '+(s?.cfg.apPerTurn||7)+' per turn','tick']])}
 buildPanels();
+// Board game is the primary review experience. Full statistics remain one tap away.
+const TABLETOP=Q.get('dashboard')!=='1';
+if(!TABLETOP)$('game').classList.remove('sk-boardgame');
+function setBoardgameView(board){
+ $('game').classList.toggle('sk-boardgame',board);
+ $('layoutToggle').textContent=board?'☰ Game details':'▣ Board view';
+ $('layoutToggle').setAttribute('aria-pressed',String(board));
+ $('layoutToggle').setAttribute('aria-label',board?'Show full game details':'Show board-first game view');
+ fit();
+}
+$('layoutToggle').onclick=()=>setBoardgameView(!$('game').classList.contains('sk-boardgame'));
+if(!TABLETOP)$('layoutToggle').textContent='▣ Board view';
 function fit(){const c=$('board');r3?.resize({x:0,y:0,w:c.clientWidth,h:c.clientHeight,free:H.freeArea(c)})}
 
 // ---------- reachable nodes (shortest path cost within AP; rules still validate every step) ----------
