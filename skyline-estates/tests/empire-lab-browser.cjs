@@ -24,6 +24,20 @@ async function humanTurn(p){for(let i=0;i<4000;i++){if(await p.evaluate(()=>docu
   check('supplied layout matches the rule track space-for-space',await p.evaluate(()=>{const L=__empireLab.r3().layout,E=SkylineEmpire;return L.spaces.length===44&&L.spaces.every(sp=>{const[t,z]=E.TRACK[sp.index].split(':');return ({start:'start',property:'property',chance:'chance',negotiate:'trade',market:'market',dice:'dice'})[t]===sp.type&&(z||null)===(sp.group||null)})}));
   check('every space projects inside the free board area between the HUD panels',await p.evaluate(()=>{const b=document.getElementById('board').getBoundingClientRect(),L=document.querySelector('.sk-left').getBoundingClientRect(),R=document.querySelector('.sk-right').getBoundingClientRect(),c={left:L.right,right:R.left,top:b.top,bottom:document.querySelector('.sk-strip').getBoundingClientRect().top};return SkylineEmpire.NODES.every(n=>{const q=__empireLab.r3().project(n.id);return q.x>=c.left&&q.x<=c.right&&q.y>=c.top&&q.y<=c.bottom})}));
   await humanTurn(p);const idle=await p.evaluate(()=>__empireLab.r3().stats().renders);await p.waitForTimeout(1200);check('no continuous idle rendering',await p.evaluate(()=>__empireLab.r3().stats().renders)===idle);
+  // Real movement test: ordinary camera motion, not reduced-motion overview.
+  // Manipulates only the renderer's test token; authoritative match state stays untouched.
+  await p.emulateMedia({reducedMotion:'no-preference'});
+  const followProof=await p.evaluate(async()=>{
+   const r=__empireLab.r3(),state=__empireLab.state(),from=state.players[0].pos,to=SkylineEmpire.NODES.find(n=>n.id!==from).id;
+   const samples=[],timer=setInterval(()=>samples.push(r.stats()),40);
+   await r.moveToken(0,from,to,980);
+   await new Promise(done=>setTimeout(done,1650));
+   clearInterval(timer);
+   const result={max:Math.max(0,...samples.map(x=>x.tracking||0)),upright:samples.every(x=>x.cameraUp?.[1]>.999),returned:r.stats().tracking};
+   r.sync(SkylineEmpire.view(state));return result;
+  });
+  check('smooth upright follow camera and overview recovery in regular motion',followProof.max>.07&&followProof.upright&&followProof.returned<.05,followProof);
+  await p.emulateMedia({reducedMotion:'reduce'});
   const tap=await p.evaluate(()=>__empireLab.r3().project('E21'));await p.mouse.click(tap.x,tap.y);check('tapping a rendered space selects it',await p.evaluate(()=>__empireLab.r3().stats().selected)==='E21');
   const expected=await p.evaluate(()=>{const E=SkylineEmpire,s=E.restore(E.serialize(__empireLab.state())).state;E.act(s,0,{type:'roll'});return{pos:s.players[0].pos,roll:s.players[0].lastRoll}});
   await p.click('#roll');await p.waitForFunction(()=>!__empireLab.busy()&&SkylineEmpire.pending(__empireLab.state()).kind!=='roll',null,{timeout:60000});
