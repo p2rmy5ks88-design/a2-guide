@@ -37,10 +37,10 @@ async function humanTurn(p){for(let i=0;i<4000;i++){if(await p.evaluate(()=>docu
    const deadline=performance.now()+15000;
    while(r.stats().tracking>.05&&performance.now()<deadline)await new Promise(done=>setTimeout(done,200));
    clearInterval(timer);
-   const result={max:Math.max(0,...samples.map(x=>x.tracking||0)),upright:samples.every(x=>x.cameraUp?.[1]>.999),returned:r.stats().tracking};
+   const current=r.stats(),result={max:Math.max(current.trackingPeak||0,...samples.map(x=>x.tracking||0)),upright:samples.every(x=>x.cameraUp?.[1]>.999),returned:current.tracking,redMotion:current.prefersReducedMotion,focused:current.focused};
    r.sync(SkylineEmpire.view(state));return result;
   });
-  check('smooth upright follow camera and overview recovery in regular motion',followProof.max>.07&&followProof.upright&&followProof.returned<.05,followProof);
+  check('smooth upright follow camera and overview recovery in regular motion',followProof.max>.07&&followProof.upright&&followProof.returned<.05&&!followProof.redMotion&&!followProof.focused,followProof);
   await p.emulateMedia({reducedMotion:'reduce'});
   const tap=await p.evaluate(()=>__empireLab.r3().project('E21'));await p.mouse.click(tap.x,tap.y);check('tapping a rendered space selects it',await p.evaluate(()=>__empireLab.r3().stats().selected)==='E21');
   const expected=await p.evaluate(()=>{const E=SkylineEmpire,s=E.restore(E.serialize(__empireLab.state())).state;E.act(s,0,{type:'roll'});return{pos:s.players[0].pos,roll:s.players[0].lastRoll}});
