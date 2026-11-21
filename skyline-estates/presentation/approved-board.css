@@ -30,3 +30,34 @@
 @media(max-height:410px){#heading{top:calc(var(--safe-t) + 4px)}#heading h1{font-size:17px}#heading .blurb{display:none}#more{top:calc(var(--safe-t) + 45px)}#roster{top:calc(var(--safe-t) + 93px)}#right{top:calc(var(--safe-t) + 44px)}#property{min-height:90px}#property h2{font-size:13px}#property .mini{width:42px;height:34px}#bottom{height:47px}#bottom .player-chip{height:44px}}
 @media(max-width:900px){#heading{width:155px}#roster{width:155px}#roster .seat{height:30px;padding:2px 3px}#roster .emblem{font-size:18px;width:25px;height:25px;flex-basis:25px}#roster .money{font-size:10px}#boardBox{left:calc(159px + var(--safe-l));right:calc(190px + var(--safe-r))}#bottom{left:calc(159px + var(--safe-l));right:calc(var(--safe-r) + 6px)}#right{width:183px}#bottom .player-chip .icon{font-size:17px}#bottom .player-chip .details{font-size:10px}#bottom .player-chip small{font-size:9px}#cameraButtons button{font-size:10px;padding:5px 4px}}
 @media(max-width:730px){#heading h1{font-size:14px}#roster{width:111px}#roster .money{display:none}#roster .who{font-size:10px}#boardBox{left:calc(114px + var(--safe-l));right:calc(156px + var(--safe-r))}#right{width:150px}#bottom{left:calc(114px + var(--safe-l))}#bottom .player-chip .details{font-size:9px}#bottom .player-chip .icon{display:none}#cameraButtons{gap:1px}#cameraButtons button{font-size:9px}}
+
+/* iPhone 18 Pro Max landscape: a physical board game, not a simulation HUD.
+   Players remain in the bottom strip; reclaim the duplicate left roster's
+   space for real 3D tiles while respecting notch/home-bar safe areas. */
+@media (orientation:landscape) and (min-width:731px) and (max-height:520px){
+ #roster{display:none}
+ #heading{width:clamp(130px,17vw,175px)}
+ #heading .blurb{display:none}
+ #heading h1{font-size:clamp(15px,1.8vw,19px)}
+ #more{
+  left:auto;right:calc(var(--safe-r) + 7px);
+  top:calc(var(--safe-t) + 7px)
+ }
+ #boardBox{
+  left:calc(var(--safe-l) + 9px);
+  right:calc(var(--safe-r) + clamp(187px,23vw,236px));
+  top:calc(var(--safe-t) + 43px);
+  bottom:calc(var(--safe-b) + 65px)
+ }
+ #right{
+  top:calc(var(--safe-t) + 52px);
+  width:clamp(180px,22vw,221px)
+ }
+ #bottom{
+  left:calc(var(--safe-l) + 7px);
+  right:calc(var(--safe-r) + 7px)
+ }
+ #bottom .player-chip .icon{font-size:clamp(18px,2vw,24px)}
+ #bottom .player-chip .details{font-size:clamp(10px,1.1vw,12px)}
+ #bottom .player-chip small{font-size:10px}
+}

@@ -56,8 +56,14 @@ const ok=(name,value,extra)=>{assert.ok(value,name+' '+JSON.stringify(extra||'')
  await p.setViewportSize({width:844,height:390});
  await p.evaluate(()=>{for(const [k,v]of Object.entries({'--safe-l':'47px','--safe-r':'47px','--safe-b':'21px'}))document.documentElement.style.setProperty(k,v)});
  await p.waitForTimeout(400);
- const fit=await p.evaluate(()=>{const ids=['boardBox','roster','right','bottom','more'];return ids.map(id=>{const r=document.getElementById(id).getBoundingClientRect();return{id,x:r.left,right:r.right,top:r.top,bottom:r.bottom,ok:r.left>=46&&r.right<=innerWidth-46&&r.top>=0&&r.bottom<=innerHeight}})});
+ const fit=await p.evaluate(()=>{const ids=['boardBox','right','bottom','more'];return ids.map(id=>{const r=document.getElementById(id).getBoundingClientRect();return{id,x:r.left,right:r.right,top:r.top,bottom:r.bottom,ok:r.left>=46&&r.right<=innerWidth-46&&r.top>=0&&r.bottom<=innerHeight}})});
  ok('844x390 iPhone safe-area board/HUD elements remain visible',fit.every(x=>x.ok),fit);
+ const tabletop=await p.evaluate(()=>{
+  const board=document.getElementById('boardBox').getBoundingClientRect();
+  const roster=document.getElementById('roster');
+  return {boardWidth:board.width,viewport:innerWidth,rosterHidden:getComputedStyle(roster).display==='none',players:document.querySelectorAll('#seatSummary .player-chip').length};
+ });
+ ok('board-first: substantial playable 3D area, four players in bottom strip, no redundant sidebar',tabletop.boardWidth>=innerWidth*.58&&tabletop.rosterHidden&&tabletop.players===4,tabletop);
  if(browserName==='webkit')await p.screenshot({path:path.join(output,board+'-844x390-safe.png'),timeout:90000,animations:'disabled'});
  ok('no JS page errors in interactive 3D gameplay',errors.length===0,errors);
  fs.writeFileSync(path.join(output,'result.json'),JSON.stringify({board,browser:browserName,checks,errors,physicalDevice:false,stats},null,2));
