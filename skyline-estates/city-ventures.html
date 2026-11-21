@@ -84,6 +84,19 @@ table.res{width:100%;border-collapse:collapse;font-size:14px;margin:8px 0}table.
 #rules .card{max-height:calc(100dvh - 24px);overflow:auto;font-size:13.5px;line-height:1.45}#rules h3{margin:10px 0 2px;font-size:14px;color:var(--gold-300)}
 @media (max-height:430px){#players .pl{padding:3px 8px 3px 5px}.pl .av{width:26px;height:26px;font-size:14px}#side{width:min(210px,28vw)}#log{max-height:60px}#decision{max-height:calc(100dvh - 70px)}}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+/* Readable disabled controls: fully opaque against animated 3D scenery.
+   Disabled state stays visually muted, without allowing trees or tile labels
+   to bleed through the action dock on iPhone landscape. */
+#help .btn:disabled,#dock .btn:disabled{
+ opacity:1;
+ background:linear-gradient(175deg,#1b3048,#0a1a30);
+ color:#bac5d5;
+ border-color:#827459;
+ text-shadow:0 1px 2px #07111e;
+ box-shadow:0 4px 14px #000a;
+ cursor:default;
+}
 </style>
 </head>
 <body>
