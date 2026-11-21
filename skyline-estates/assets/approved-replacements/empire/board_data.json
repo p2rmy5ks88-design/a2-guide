@@ -1,0 +1,1819 @@
+{
+  "schema_version": 1,
+  "title": "Crown Empire \u2014 Crown Plaza Loop",
+  "board_id": "crown_empire_loop",
+  "reference_status": "approved visual concept; procedural editable 3D reconstruction, not photographic conversion",
+  "world_coordinate_system": "Y-up metres; +Y upward, ground plane XZ",
+  "up": [
+    0,
+    1,
+    0
+  ],
+  "playable_spaces": 32,
+  "space_kind": "perimeter_loop",
+  "closed_loop": true,
+  "board_camera": {
+    "fov_deg": 34,
+    "target": [
+      0,
+      0.35,
+      0
+    ],
+    "overview_position": [
+      0,
+      17,
+      28
+    ],
+    "close_follow_distance": 8.4,
+    "close_follow_pitch_deg": 48,
+    "landscape_css_target": [
+      956,
+      440
+    ],
+    "supports_safe_areas": true
+  },
+  "spaces": [
+    {
+      "id": 0,
+      "key": "TILE_000_START",
+      "name": "START",
+      "kind": "start",
+      "price_sc": 0,
+      "palette": "red",
+      "position": [
+        0.867,
+        0.25,
+        -6.315
+      ],
+      "tile_polygon_xz": [
+        [
+          0.0603,
+          -5.51
+        ],
+        [
+          1.4483,
+          -5.51
+        ],
+        [
+          1.8809,
+          -7.12
+        ],
+        [
+          0.0784,
+          -7.12
+        ]
+      ],
+      "raycast_node": "TILE_000_START",
+      "texture": "textures/tiles/TILE_000_START.png",
+      "build_anchor": [
+        0.9165,
+        0.29,
+        -6.6692
+      ],
+      "pawn_anchor": [
+        0.867,
+        0.48,
+        -6.315
+      ],
+      "tangent": [
+        1.0,
+        -0.0
+      ],
+      "normal": [
+        0.0112,
+        -0.9999
+      ],
+      "neighbors": [
+        31,
+        1
+      ]
+    },
+    {
+      "id": 1,
+      "key": "TILE_001_CROWN_GATE",
+      "name": "Crown Gate",
+      "kind": "property",
+      "price_sc": 620000,
+      "palette": "purple",
+      "position": [
+        2.6009,
+        0.25,
+        -6.315
+      ],
+      "tile_polygon_xz": [
+        [
+          1.569,
+          -5.51
+        ],
+        [
+          2.9569,
+          -5.51
+        ],
+        [
+          3.8401,
+          -7.12
+        ],
+        [
+          2.0376,
+          -7.12
+        ]
+      ],
+      "raycast_node": "TILE_001_CROWN_GATE",
+      "texture": "textures/tiles/TILE_001_CROWN_GATE.png",
+      "build_anchor": [
+        2.7496,
+        0.29,
+        -6.6692
+      ],
+      "pawn_anchor": [
+        2.6009,
+        0.48,
+        -6.315
+      ],
+      "tangent": [
+        1.0,
+        0.0
+      ],
+      "normal": [
+        0.2795,
+        -0.9601
+      ],
+      "neighbors": [
+        0,
+        2
+      ]
+    },
+    {
+      "id": 2,
+      "key": "TILE_002_INCOME_TAX",
+      "name": "Income Tax",
+      "kind": "tax",
+      "price_sc": 250000,
+      "palette": "cream",
+      "position": [
+        4.3348,
+        0.25,
+        -6.315
+      ],
+      "tile_polygon_xz": [
+        [
+          3.0776,
+          -5.51
+        ],
+        [
+          4.4655,
+          -5.51
+        ],
+        [
+          5.7993,
+          -7.12
+        ],
+        [
+          3.9968,
+          -7.12
+        ]
+      ],
+      "raycast_node": "TILE_002_INCOME_TAX",
+      "texture": "textures/tiles/TILE_002_INCOME_TAX.png",
+      "build_anchor": [
+        4.5826,
+        0.29,
+        -6.6692
+      ],
+      "pawn_anchor": [
+        4.3348,
+        0.48,
+        -6.315
+      ],
+      "tangent": [
+        1.0,
+        0.0
+      ],
+      "normal": [
+        0.4958,
+        -0.8684
+      ],
+      "neighbors": [
+        1,
+        3
+      ]
+    },
+    {
+      "id": 3,
+      "key": "TILE_003_ROYAL_HARBOR",
+      "name": "Royal Harbor",
+      "kind": "property",
+      "price_sc": 600000,
+      "palette": "purple",
+      "position": [
+        6.0687,
+        0.25,
+        -6.315
+      ],
+      "tile_polygon_xz": [
+        [
+          4.5862,
+          -5.51
+        ],
+        [
+          5.9741,
+          -5.51
+        ],
+        [
+          7.7586,
+          -7.12
+        ],
+        [
+          5.9561,
+          -7.12
+        ]
+      ],
+      "raycast_node": "TILE_003_ROYAL_HARBOR",
+      "texture": "textures/tiles/TILE_003_ROYAL_HARBOR.png",
+      "build_anchor": [
+        6.4157,
+        0.29,
+        -6.6692
+      ],
+      "pawn_anchor": [
+        6.0687,
+        0.48,
+        -6.315
+      ],
+      "tangent": [
+        1.0,
+        0.0
+      ],
+      "normal": [
+        0.648,
+        -0.7616
+      ],
+      "neighbors": [
+        2,
+        4
+      ]
+    },
+    {
+      "id": 4,
+      "key": "TILE_004_PALACE_WALK",
+      "name": "Palace Walk",
+      "kind": "property",
+      "price_sc": 580000,
+      "palette": "purple",
+      "position": [
+        7.7116,
+        0.25,
+        -6.126
+      ],
+      "tile_polygon_xz": [
+        [
+          6.0884,
+          -5.4968
+        ],
+        [
+          7.3305,
+          -5.1942
+        ],
+        [
+          9.5202,
+          -6.7099
+        ],
+        [
+          7.9071,
+          -7.1029
+        ]
+      ],
+      "raycast_node": "TILE_004_PALACE_WALK",
+      "texture": "textures/tiles/TILE_004_PALACE_WALK.png",
+      "build_anchor": [
+        8.1525,
+        0.29,
+        -6.4694
+      ],
+      "pawn_anchor": [
+        7.7116,
+        0.48,
+        -6.126
+      ],
+      "tangent": [
+        0.9716,
+        0.2367
+      ],
+      "normal": [
+        0.7496,
+        -0.6619
+      ],
+      "neighbors": [
+        3,
+        5
+      ]
+    },
+    {
+      "id": 5,
+      "key": "TILE_005_EMPIRE_PALACE",
+      "name": "Empire Palace",
+      "kind": "palace",
+      "price_sc": 1500000,
+      "palette": "gold",
+      "position": [
+        8.983,
+        0.25,
+        -5.2418
+      ],
+      "tile_polygon_xz": [
+        [
+          7.419,
+          -5.1327
+        ],
+        [
+          8.2123,
+          -4.0198
+        ],
+        [
+          10.6654,
+          -5.1847
+        ],
+        [
+          9.6351,
+          -6.63
+        ]
+      ],
+      "raycast_node": "TILE_005_EMPIRE_PALACE",
+      "texture": "textures/tiles/TILE_005_EMPIRE_PALACE.png",
+      "build_anchor": [
+        9.4966,
+        0.29,
+        -5.5347
+      ],
+      "pawn_anchor": [
+        8.983,
+        0.48,
+        -5.2418
+      ],
+      "tangent": [
+        0.5805,
+        0.8143
+      ],
+      "normal": [
+        0.8286,
+        -0.5598
+      ],
+      "neighbors": [
+        4,
+        6
+      ]
+    },
+    {
+      "id": 6,
+      "key": "TILE_006_CHANCE",
+      "name": "Chance",
+      "kind": "chance",
+      "price_sc": 0,
+      "palette": "cream",
+      "position": [
+        9.528,
+        0.25,
+        -3.6811
+      ],
+      "tile_polygon_xz": [
+        [
+          8.2503,
+          -3.9112
+        ],
+        [
+          8.3295,
+          -2.5256
+        ],
+        [
+          10.8175,
+          -3.2441
+        ],
+        [
+          10.7146,
+          -5.0437
+        ]
+      ],
+      "raycast_node": "TILE_006_CHANCE",
+      "texture": "textures/tiles/TILE_006_CHANCE.png",
+      "build_anchor": [
+        10.0727,
+        0.29,
+        -3.8847
+      ],
+      "pawn_anchor": [
+        9.528,
+        0.48,
+        -3.6811
+      ],
+      "tangent": [
+        0.057,
+        0.9984
+      ],
+      "normal": [
+        0.9087,
+        -0.4176
+      ],
+      "neighbors": [
+        5,
+        7
+      ]
+    },
+    {
+      "id": 7,
+      "key": "TILE_007_EMPIRE_EXCHANGE",
+      "name": "Empire Exchange",
+      "kind": "market",
+      "price_sc": 560000,
+      "palette": "purple",
+      "position": [
+        9.5776,
+        0.25,
+        -1.9519
+      ],
+      "tile_polygon_xz": [
+        [
+          8.3329,
+          -2.4052
+        ],
+        [
+          8.3333,
+          -1.0225
+        ],
+        [
+          10.8224,
+          -1.292
+        ],
+        [
+          10.822,
+          -3.0878
+        ]
+      ],
+      "raycast_node": "TILE_007_EMPIRE_EXCHANGE",
+      "texture": "textures/tiles/TILE_007_EMPIRE_EXCHANGE.png",
+      "build_anchor": [
+        10.1252,
+        0.29,
+        -2.0566
+      ],
+      "pawn_anchor": [
+        9.5776,
+        0.48,
+        -1.9519
+      ],
+      "tangent": [
+        0.0002,
+        1.0
+      ],
+      "normal": [
+        0.9644,
+        -0.2645
+      ],
+      "neighbors": [
+        6,
+        8
+      ]
+    },
+    {
+      "id": 8,
+      "key": "TILE_008_CAPITAL_SQUARE",
+      "name": "Capital Square",
+      "kind": "property",
+      "price_sc": 520000,
+      "palette": "purple",
+      "position": [
+        9.4641,
+        0.25,
+        -0.2287
+      ],
+      "tile_polygon_xz": [
+        [
+          8.3254,
+          -0.9025
+        ],
+        [
+          8.1433,
+          0.4734
+        ],
+        [
+          10.5757,
+          0.6506
+        ],
+        [
+          10.8122,
+          -1.1363
+        ]
+      ],
+      "raycast_node": "TILE_008_CAPITAL_SQUARE",
+      "texture": "textures/tiles/TILE_008_CAPITAL_SQUARE.png",
+      "build_anchor": [
+        10.0052,
+        0.29,
+        -0.2349
+      ],
+      "pawn_anchor": [
+        9.4641,
+        0.48,
+        -0.2287
+      ],
+      "tangent": [
+        -0.1312,
+        0.9914
+      ],
+      "normal": [
+        0.9956,
+        -0.0936
+      ],
+      "neighbors": [
+        7,
+        9
+      ]
+    },
+    {
+      "id": 9,
+      "key": "TILE_009_LUXURY_TAX",
+      "name": "Luxury Tax",
+      "kind": "tax",
+      "price_sc": 300000,
+      "palette": "cream",
+      "position": [
+        9.1333,
+        0.25,
+        1.4646
+      ],
+      "tile_polygon_xz": [
+        [
+          8.1202,
+          0.5912
+        ],
+        [
+          7.7728,
+          1.9262
+        ],
+        [
+          10.0945,
+          2.5373
+        ],
+        [
+          10.5458,
+          0.8037
+        ]
+      ],
+      "raycast_node": "TILE_009_LUXURY_TAX",
+      "texture": "textures/tiles/TILE_009_LUXURY_TAX.png",
+      "build_anchor": [
+        9.6555,
+        0.29,
+        1.5552
+      ],
+      "pawn_anchor": [
+        9.1333,
+        0.48,
+        1.4646
+      ],
+      "tangent": [
+        -0.2519,
+        0.9678
+      ],
+      "normal": [
+        0.9962,
+        0.0873
+      ],
+      "neighbors": [
+        8,
+        10
+      ]
+    },
+    {
+      "id": 10,
+      "key": "TILE_010_AIRPORT_TRANSIT",
+      "name": "Airport Transit",
+      "kind": "transit",
+      "price_sc": 200000,
+      "palette": "cream",
+      "position": [
+        8.5733,
+        0.25,
+        3.0693
+      ],
+      "tile_polygon_xz": [
+        [
+          7.7338,
+          2.0378
+        ],
+        [
+          7.1846,
+          3.2718
+        ],
+        [
+          9.3307,
+          4.285
+        ],
+        [
+          10.0439,
+          2.6824
+        ]
+      ],
+      "raycast_node": "TILE_010_AIRPORT_TRANSIT",
+      "texture": "textures/tiles/TILE_010_AIRPORT_TRANSIT.png",
+      "build_anchor": [
+        9.0634,
+        0.29,
+        3.2516
+      ],
+      "pawn_anchor": [
+        8.5733,
+        0.48,
+        3.0693
+      ],
+      "tangent": [
+        -0.4066,
+        0.9136
+      ],
+      "normal": [
+        0.9632,
+        0.2687
+      ],
+      "neighbors": [
+        9,
+        11
+      ]
+    },
+    {
+      "id": 11,
+      "key": "TILE_011_GRAND_THEATRE",
+      "name": "Grand Theatre",
+      "kind": "property",
+      "price_sc": 500000,
+      "palette": "rose",
+      "position": [
+        7.4155,
+        0.25,
+        4.1364
+      ],
+      "tile_polygon_xz": [
+        [
+          7.104,
+          3.3461
+        ],
+        [
+          5.7997,
+          3.8204
+        ],
+        [
+          7.5321,
+          4.9974
+        ],
+        [
+          9.226,
+          4.3814
+        ]
+      ],
+      "raycast_node": "TILE_011_GRAND_THEATRE",
+      "texture": "textures/tiles/TILE_011_GRAND_THEATRE.png",
+      "build_anchor": [
+        7.8394,
+        0.29,
+        4.3797
+      ],
+      "pawn_anchor": [
+        7.4155,
+        0.48,
+        4.1364
+      ],
+      "tangent": [
+        -0.9398,
+        0.3417
+      ],
+      "normal": [
+        0.8987,
+        0.4385
+      ],
+      "neighbors": [
+        10,
+        12
+      ]
+    },
+    {
+      "id": 12,
+      "key": "TILE_012_WATER_UTILITY",
+      "name": "Water Utility",
+      "kind": "utility",
+      "price_sc": 150000,
+      "palette": "cream",
+      "position": [
+        5.7561,
+        0.25,
+        4.5849
+      ],
+      "tile_polygon_xz": [
+        [
+          5.6842,
+          3.8516
+        ],
+        [
+          4.3321,
+          4.0955
+        ],
+        [
+          5.6261,
+          5.3546
+        ],
+        [
+          7.3821,
+          5.038
+        ]
+      ],
+      "raycast_node": "TILE_012_WATER_UTILITY",
+      "texture": "textures/tiles/TILE_012_WATER_UTILITY.png",
+      "build_anchor": [
+        6.0852,
+        0.29,
+        4.8539
+      ],
+      "pawn_anchor": [
+        5.7561,
+        0.48,
+        4.5849
+      ],
+      "tangent": [
+        -0.9841,
+        0.1775
+      ],
+      "normal": [
+        0.8197,
+        0.5728
+      ],
+      "neighbors": [
+        11,
+        13
+      ]
+    },
+    {
+      "id": 13,
+      "key": "TILE_013_ROYAL_GARDENS",
+      "name": "Royal Gardens",
+      "kind": "garden",
+      "price_sc": 480000,
+      "palette": "green",
+      "position": [
+        4.0461,
+        0.25,
+        4.7887
+      ],
+      "tile_polygon_xz": [
+        [
+          4.2131,
+          4.1096
+        ],
+        [
+          2.8276,
+          4.192
+        ],
+        [
+          3.6723,
+          5.48
+        ],
+        [
+          5.4716,
+          5.373
+        ]
+      ],
+      "raycast_node": "TILE_013_ROYAL_GARDENS",
+      "texture": "textures/tiles/TILE_013_ROYAL_GARDENS.png",
+      "build_anchor": [
+        4.2775,
+        0.29,
+        5.0693
+      ],
+      "pawn_anchor": [
+        4.0461,
+        0.48,
+        4.7887
+      ],
+      "tangent": [
+        -0.9982,
+        0.0594
+      ],
+      "normal": [
+        0.7057,
+        0.7085
+      ],
+      "neighbors": [
+        12,
+        14
+      ]
+    },
+    {
+      "id": 14,
+      "key": "TILE_014_EVENT",
+      "name": "Event",
+      "kind": "event",
+      "price_sc": 0,
+      "palette": "cream",
+      "position": [
+        2.373,
+        0.25,
+        5.1155
+      ],
+      "tile_polygon_xz": [
+        [
+          2.7112,
+          4.2148
+        ],
+        [
+          1.418,
+          4.6556
+        ],
+        [
+          1.8416,
+          6.0821
+        ],
+        [
+          3.521,
+          5.5096
+        ]
+      ],
+      "raycast_node": "TILE_014_EVENT",
+      "texture": "textures/tiles/TILE_014_EVENT.png",
+      "build_anchor": [
+        2.5086,
+        0.29,
+        5.4148
+      ],
+      "pawn_anchor": [
+        2.373,
+        0.48,
+        5.1155
+      ],
+      "tangent": [
+        -0.9465,
+        0.3227
+      ],
+      "normal": [
+        0.5303,
+        0.8478
+      ],
+      "neighbors": [
+        13,
+        15
+      ]
+    },
+    {
+      "id": 15,
+      "key": "TILE_015_EMPIRE_AVENUE",
+      "name": "Empire Avenue",
+      "kind": "property",
+      "price_sc": 460000,
+      "palette": "purple",
+      "position": [
+        0.7826,
+        0.25,
+        5.7639
+      ],
+      "tile_polygon_xz": [
+        [
+          1.3073,
+          4.7007
+        ],
+        [
+          0.0545,
+          5.2979
+        ],
+        [
+          0.0707,
+          6.9163
+        ],
+        [
+          1.6978,
+          6.1407
+        ]
+      ],
+      "raycast_node": "TILE_015_EMPIRE_AVENUE",
+      "texture": "textures/tiles/TILE_015_EMPIRE_AVENUE.png",
+      "build_anchor": [
+        0.8273,
+        0.29,
+        6.1003
+      ],
+      "pawn_anchor": [
+        0.7826,
+        0.48,
+        5.7639
+      ],
+      "tangent": [
+        -0.9027,
+        0.4303
+      ],
+      "normal": [
+        0.2617,
+        0.9651
+      ],
+      "neighbors": [
+        14,
+        16
+      ]
+    },
+    {
+      "id": 16,
+      "key": "TILE_016_IMPERIAL_TOWER",
+      "name": "Imperial Tower",
+      "kind": "tower",
+      "price_sc": 1200000,
+      "palette": "gold",
+      "position": [
+        -0.7826,
+        0.25,
+        5.7639
+      ],
+      "tile_polygon_xz": [
+        [
+          -0.0545,
+          5.2979
+        ],
+        [
+          -1.3073,
+          4.7007
+        ],
+        [
+          -1.6978,
+          6.1407
+        ],
+        [
+          -0.0707,
+          6.9163
+        ]
+      ],
+      "raycast_node": "TILE_016_IMPERIAL_TOWER",
+      "texture": "textures/tiles/TILE_016_IMPERIAL_TOWER.png",
+      "build_anchor": [
+        -0.8273,
+        0.29,
+        6.1003
+      ],
+      "pawn_anchor": [
+        -0.7826,
+        0.48,
+        5.7639
+      ],
+      "tangent": [
+        -0.9027,
+        -0.4303
+      ],
+      "normal": [
+        -0.0101,
+        0.9999
+      ],
+      "neighbors": [
+        15,
+        17
+      ]
+    },
+    {
+      "id": 17,
+      "key": "TILE_017_SKYLINE_CENTER",
+      "name": "Skyline Center",
+      "kind": "property",
+      "price_sc": 420000,
+      "palette": "purple",
+      "position": [
+        -2.373,
+        0.25,
+        5.1155
+      ],
+      "tile_polygon_xz": [
+        [
+          -1.418,
+          4.6556
+        ],
+        [
+          -2.7112,
+          4.2148
+        ],
+        [
+          -3.521,
+          5.5096
+        ],
+        [
+          -1.8416,
+          6.0821
+        ]
+      ],
+      "raycast_node": "TILE_017_SKYLINE_CENTER",
+      "texture": "textures/tiles/TILE_017_SKYLINE_CENTER.png",
+      "build_anchor": [
+        -2.5086,
+        0.29,
+        5.4148
+      ],
+      "pawn_anchor": [
+        -2.373,
+        0.48,
+        5.1155
+      ],
+      "tangent": [
+        -0.9465,
+        -0.3227
+      ],
+      "normal": [
+        -0.2846,
+        0.9586
+      ],
+      "neighbors": [
+        16,
+        18
+      ]
+    },
+    {
+      "id": 18,
+      "key": "TILE_018_RIVERMERE_PLAZA",
+      "name": "Rivermere Plaza",
+      "kind": "property",
+      "price_sc": 380000,
+      "palette": "blue",
+      "position": [
+        -4.0461,
+        0.25,
+        4.7887
+      ],
+      "tile_polygon_xz": [
+        [
+          -2.8276,
+          4.192
+        ],
+        [
+          -4.2131,
+          4.1096
+        ],
+        [
+          -5.4716,
+          5.373
+        ],
+        [
+          -3.6723,
+          5.48
+        ]
+      ],
+      "raycast_node": "TILE_018_RIVERMERE_PLAZA",
+      "texture": "textures/tiles/TILE_018_RIVERMERE_PLAZA.png",
+      "build_anchor": [
+        -4.2775,
+        0.29,
+        5.0693
+      ],
+      "pawn_anchor": [
+        -4.0461,
+        0.48,
+        4.7887
+      ],
+      "tangent": [
+        -0.9982,
+        -0.0594
+      ],
+      "normal": [
+        -0.5484,
+        0.8362
+      ],
+      "neighbors": [
+        17,
+        19
+      ]
+    },
+    {
+      "id": 19,
+      "key": "TILE_019_EVENT",
+      "name": "Event",
+      "kind": "event",
+      "price_sc": 0,
+      "palette": "cream",
+      "position": [
+        -5.7561,
+        0.25,
+        4.5849
+      ],
+      "tile_polygon_xz": [
+        [
+          -4.3321,
+          4.0955
+        ],
+        [
+          -5.6842,
+          3.8516
+        ],
+        [
+          -7.3821,
+          5.038
+        ],
+        [
+          -5.6261,
+          5.3546
+        ]
+      ],
+      "raycast_node": "TILE_019_EVENT",
+      "texture": "textures/tiles/TILE_019_EVENT.png",
+      "build_anchor": [
+        -6.0852,
+        0.29,
+        4.8539
+      ],
+      "pawn_anchor": [
+        -5.7561,
+        0.48,
+        4.5849
+      ],
+      "tangent": [
+        -0.9841,
+        -0.1775
+      ],
+      "normal": [
+        -0.7167,
+        0.6974
+      ],
+      "neighbors": [
+        18,
+        20
+      ]
+    },
+    {
+      "id": 20,
+      "key": "TILE_020_SUNRISE_TERRACE",
+      "name": "Sunrise Terrace",
+      "kind": "property",
+      "price_sc": 360000,
+      "palette": "rose",
+      "position": [
+        -7.4155,
+        0.25,
+        4.1364
+      ],
+      "tile_polygon_xz": [
+        [
+          -5.7997,
+          3.8204
+        ],
+        [
+          -7.104,
+          3.3461
+        ],
+        [
+          -9.226,
+          4.3814
+        ],
+        [
+          -7.5321,
+          4.9974
+        ]
+      ],
+      "raycast_node": "TILE_020_SUNRISE_TERRACE",
+      "texture": "textures/tiles/TILE_020_SUNRISE_TERRACE.png",
+      "build_anchor": [
+        -7.8394,
+        0.29,
+        4.3797
+      ],
+      "pawn_anchor": [
+        -7.4155,
+        0.48,
+        4.1364
+      ],
+      "tangent": [
+        -0.9398,
+        -0.3417
+      ],
+      "normal": [
+        -0.8271,
+        0.562
+      ],
+      "neighbors": [
+        19,
+        21
+      ]
+    },
+    {
+      "id": 21,
+      "key": "TILE_021_REST_LOUNGE",
+      "name": "Rest Lounge",
+      "kind": "rest",
+      "price_sc": 0,
+      "palette": "cream",
+      "position": [
+        -8.5733,
+        0.25,
+        3.0693
+      ],
+      "tile_polygon_xz": [
+        [
+          -7.1846,
+          3.2718
+        ],
+        [
+          -7.7338,
+          2.0378
+        ],
+        [
+          -10.0439,
+          2.6824
+        ],
+        [
+          -9.3307,
+          4.285
+        ]
+      ],
+      "raycast_node": "TILE_021_REST_LOUNGE",
+      "texture": "textures/tiles/TILE_021_REST_LOUNGE.png",
+      "build_anchor": [
+        -9.0634,
+        0.29,
+        3.2516
+      ],
+      "pawn_anchor": [
+        -8.5733,
+        0.48,
+        3.0693
+      ],
+      "tangent": [
+        -0.4066,
+        -0.9136
+      ],
+      "normal": [
+        -0.9043,
+        0.4269
+      ],
+      "neighbors": [
+        20,
+        22
+      ]
+    },
+    {
+      "id": 22,
+      "key": "TILE_022_LAKEVIEW_VILLAS",
+      "name": "Lakeview Villas",
+      "kind": "property",
+      "price_sc": 240000,
+      "palette": "emerald",
+      "position": [
+        -9.1333,
+        0.25,
+        1.4646
+      ],
+      "tile_polygon_xz": [
+        [
+          -7.7728,
+          1.9262
+        ],
+        [
+          -8.1202,
+          0.5912
+        ],
+        [
+          -10.5458,
+          0.8037
+        ],
+        [
+          -10.0945,
+          2.5373
+        ]
+      ],
+      "raycast_node": "TILE_022_LAKEVIEW_VILLAS",
+      "texture": "textures/tiles/TILE_022_LAKEVIEW_VILLAS.png",
+      "build_anchor": [
+        -9.6555,
+        0.29,
+        1.5552
+      ],
+      "pawn_anchor": [
+        -9.1333,
+        0.48,
+        1.4646
+      ],
+      "tangent": [
+        -0.2519,
+        -0.9678
+      ],
+      "normal": [
+        -0.9671,
+        0.2546
+      ],
+      "neighbors": [
+        21,
+        23
+      ]
+    },
+    {
+      "id": 23,
+      "key": "TILE_023_MAPLE_ESTATES",
+      "name": "Maple Estates",
+      "kind": "property",
+      "price_sc": 260000,
+      "palette": "green",
+      "position": [
+        -9.4641,
+        0.25,
+        -0.2287
+      ],
+      "tile_polygon_xz": [
+        [
+          -8.1433,
+          0.4734
+        ],
+        [
+          -8.3254,
+          -0.9025
+        ],
+        [
+          -10.8122,
+          -1.1363
+        ],
+        [
+          -10.5757,
+          0.6506
+        ]
+      ],
+      "raycast_node": "TILE_023_MAPLE_ESTATES",
+      "texture": "textures/tiles/TILE_023_MAPLE_ESTATES.png",
+      "build_anchor": [
+        -10.0052,
+        0.29,
+        -0.2349
+      ],
+      "pawn_anchor": [
+        -9.4641,
+        0.48,
+        -0.2287
+      ],
+      "tangent": [
+        -0.1312,
+        -0.9914
+      ],
+      "normal": [
+        -0.9974,
+        0.0727
+      ],
+      "neighbors": [
+        22,
+        24
+      ]
+    },
+    {
+      "id": 24,
+      "key": "TILE_024_CIVIC_REVIEW",
+      "name": "Civic Review",
+      "kind": "review",
+      "price_sc": 0,
+      "palette": "cream",
+      "position": [
+        -9.5776,
+        0.25,
+        -1.9519
+      ],
+      "tile_polygon_xz": [
+        [
+          -8.3333,
+          -1.0225
+        ],
+        [
+          -8.3329,
+          -2.4052
+        ],
+        [
+          -10.822,
+          -3.0878
+        ],
+        [
+          -10.8224,
+          -1.292
+        ]
+      ],
+      "raycast_node": "TILE_024_CIVIC_REVIEW",
+      "texture": "textures/tiles/TILE_024_CIVIC_REVIEW.png",
+      "build_anchor": [
+        -10.1252,
+        0.29,
+        -2.0566
+      ],
+      "pawn_anchor": [
+        -9.5776,
+        0.48,
+        -1.9519
+      ],
+      "tangent": [
+        0.0002,
+        -1.0
+      ],
+      "normal": [
+        -0.9942,
+        -0.1077
+      ],
+      "neighbors": [
+        23,
+        25
+      ]
+    },
+    {
+      "id": 25,
+      "key": "TILE_025_POWER_UTILITY",
+      "name": "Power Utility",
+      "kind": "utility",
+      "price_sc": 150000,
+      "palette": "cream",
+      "position": [
+        -9.528,
+        0.25,
+        -3.6811
+      ],
+      "tile_polygon_xz": [
+        [
+          -8.3295,
+          -2.5256
+        ],
+        [
+          -8.2503,
+          -3.9112
+        ],
+        [
+          -10.7146,
+          -5.0437
+        ],
+        [
+          -10.8175,
+          -3.2441
+        ]
+      ],
+      "raycast_node": "TILE_025_POWER_UTILITY",
+      "texture": "textures/tiles/TILE_025_POWER_UTILITY.png",
+      "build_anchor": [
+        -10.0727,
+        0.29,
+        -3.8847
+      ],
+      "pawn_anchor": [
+        -9.528,
+        0.48,
+        -3.6811
+      ],
+      "tangent": [
+        0.057,
+        -0.9984
+      ],
+      "normal": [
+        -0.9607,
+        -0.2775
+      ],
+      "neighbors": [
+        24,
+        26
+      ]
+    },
+    {
+      "id": 26,
+      "key": "TILE_026_MARKET_ROW",
+      "name": "Market Row",
+      "kind": "property",
+      "price_sc": 280000,
+      "palette": "blue",
+      "position": [
+        -8.983,
+        0.25,
+        -5.2418
+      ],
+      "tile_polygon_xz": [
+        [
+          -8.2123,
+          -4.0198
+        ],
+        [
+          -7.419,
+          -5.1327
+        ],
+        [
+          -9.6351,
+          -6.63
+        ],
+        [
+          -10.6654,
+          -5.1847
+        ]
+      ],
+      "raycast_node": "TILE_026_MARKET_ROW",
+      "texture": "textures/tiles/TILE_026_MARKET_ROW.png",
+      "build_anchor": [
+        -9.4966,
+        0.29,
+        -5.5347
+      ],
+      "pawn_anchor": [
+        -8.983,
+        0.48,
+        -5.2418
+      ],
+      "tangent": [
+        0.5805,
+        -0.8143
+      ],
+      "normal": [
+        -0.9033,
+        -0.429
+      ],
+      "neighbors": [
+        25,
+        27
+      ]
+    },
+    {
+      "id": 27,
+      "key": "TILE_027_PORT_TRANSIT",
+      "name": "Port Transit",
+      "kind": "transit",
+      "price_sc": 200000,
+      "palette": "cream",
+      "position": [
+        -7.7116,
+        0.25,
+        -6.126
+      ],
+      "tile_polygon_xz": [
+        [
+          -7.3305,
+          -5.1942
+        ],
+        [
+          -6.0884,
+          -5.4968
+        ],
+        [
+          -7.9071,
+          -7.1029
+        ],
+        [
+          -9.5202,
+          -6.7099
+        ]
+      ],
+      "raycast_node": "TILE_027_PORT_TRANSIT",
+      "texture": "textures/tiles/TILE_027_PORT_TRANSIT.png",
+      "build_anchor": [
+        -8.1525,
+        0.29,
+        -6.4694
+      ],
+      "pawn_anchor": [
+        -7.7116,
+        0.48,
+        -6.126
+      ],
+      "tangent": [
+        0.9716,
+        -0.2367
+      ],
+      "normal": [
+        -0.8222,
+        -0.5692
+      ],
+      "neighbors": [
+        26,
+        28
+      ]
+    },
+    {
+      "id": 28,
+      "key": "TILE_028_HARBOR_HEIGHTS",
+      "name": "Harbor Heights",
+      "kind": "property",
+      "price_sc": 300000,
+      "palette": "blue",
+      "position": [
+        -6.0687,
+        0.25,
+        -6.315
+      ],
+      "tile_polygon_xz": [
+        [
+          -5.9741,
+          -5.51
+        ],
+        [
+          -4.5862,
+          -5.51
+        ],
+        [
+          -5.9561,
+          -7.12
+        ],
+        [
+          -7.7586,
+          -7.12
+        ]
+      ],
+      "raycast_node": "TILE_028_HARBOR_HEIGHTS",
+      "texture": "textures/tiles/TILE_028_HARBOR_HEIGHTS.png",
+      "build_anchor": [
+        -6.4157,
+        0.29,
+        -6.6692
+      ],
+      "pawn_anchor": [
+        -6.0687,
+        0.48,
+        -6.315
+      ],
+      "tangent": [
+        1.0,
+        -0.0
+      ],
+      "normal": [
+        -0.7425,
+        -0.6699
+      ],
+      "neighbors": [
+        27,
+        29
+      ]
+    },
+    {
+      "id": 29,
+      "key": "TILE_029_CHANCE",
+      "name": "Chance",
+      "kind": "chance",
+      "price_sc": 0,
+      "palette": "cream",
+      "position": [
+        -4.3348,
+        0.25,
+        -6.315
+      ],
+      "tile_polygon_xz": [
+        [
+          -4.4655,
+          -5.51
+        ],
+        [
+          -3.0776,
+          -5.51
+        ],
+        [
+          -3.9968,
+          -7.12
+        ],
+        [
+          -5.7993,
+          -7.12
+        ]
+      ],
+      "raycast_node": "TILE_029_CHANCE",
+      "texture": "textures/tiles/TILE_029_CHANCE.png",
+      "build_anchor": [
+        -4.5826,
+        0.29,
+        -6.6692
+      ],
+      "pawn_anchor": [
+        -4.3348,
+        0.48,
+        -6.315
+      ],
+      "tangent": [
+        1.0,
+        0.0
+      ],
+      "normal": [
+        -0.638,
+        -0.7701
+      ],
+      "neighbors": [
+        28,
+        30
+      ]
+    },
+    {
+      "id": 30,
+      "key": "TILE_030_RIVERSIDE_QUAY",
+      "name": "Riverside Quay",
+      "kind": "property",
+      "price_sc": 320000,
+      "palette": "blue",
+      "position": [
+        -2.6009,
+        0.25,
+        -6.315
+      ],
+      "tile_polygon_xz": [
+        [
+          -2.9569,
+          -5.51
+        ],
+        [
+          -1.569,
+          -5.51
+        ],
+        [
+          -2.0376,
+          -7.12
+        ],
+        [
+          -3.8401,
+          -7.12
+        ]
+      ],
+      "raycast_node": "TILE_030_RIVERSIDE_QUAY",
+      "texture": "textures/tiles/TILE_030_RIVERSIDE_QUAY.png",
+      "build_anchor": [
+        -2.7496,
+        0.29,
+        -6.6692
+      ],
+      "pawn_anchor": [
+        -2.6009,
+        0.48,
+        -6.315
+      ],
+      "tangent": [
+        1.0,
+        -0.0
+      ],
+      "normal": [
+        -0.481,
+        -0.8767
+      ],
+      "neighbors": [
+        29,
+        31
+      ]
+    },
+    {
+      "id": 31,
+      "key": "TILE_031_CROWN_PROMENADE",
+      "name": "Crown Promenade",
+      "kind": "property",
+      "price_sc": 340000,
+      "palette": "purple",
+      "position": [
+        -0.867,
+        0.25,
+        -6.315
+      ],
+      "tile_polygon_xz": [
+        [
+          -1.4483,
+          -5.51
+        ],
+        [
+          -0.0603,
+          -5.51
+        ],
+        [
+          -0.0784,
+          -7.12
+        ],
+        [
+          -1.8809,
+          -7.12
+        ]
+      ],
+      "raycast_node": "TILE_031_CROWN_PROMENADE",
+      "texture": "textures/tiles/TILE_031_CROWN_PROMENADE.png",
+      "build_anchor": [
+        -0.9165,
+        0.29,
+        -6.6692
+      ],
+      "pawn_anchor": [
+        -0.867,
+        0.48,
+        -6.315
+      ],
+      "tangent": [
+        1.0,
+        0.0
+      ],
+      "normal": [
+        -0.2595,
+        -0.9657
+      ],
+      "neighbors": [
+        30,
+        0
+      ]
+    }
+  ],
+  "player_tokens": [
+    "lion",
+    "eagle",
+    "horse",
+    "ship"
+  ],
+  "build_stages": [
+    "plot",
+    "lowrise",
+    "midrise",
+    "highrise",
+    "skyscraper",
+    "hotel"
+  ],
+  "logic_compatibility": "New layout: requires mapping/replacing prior Career board route & tile ids. Do not feed into old 61/44-space rules unmodified.",
+  "performance": {
+    "mobile_core": "board_core.glb",
+    "optional_visuals": "environment_detail.glb",
+    "full_scene": "board_full.glb",
+    "tile_colliders": "Use TILE_### surface meshes only; ignore *_BODY and DECOR_*",
+    "quality": "Store core on demand; stream environment only on high quality"
+  }
+}
