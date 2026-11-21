@@ -1,6 +1,6 @@
 # Approved Dominion / Crown Empire board replacements — review only
 
-This branch implements the newly approved 48-space flat-top **Skyline Dominion Hex Ring** and 32-space **Crown Empire** as separate, true 3D, playable Career board replacements. The old prototype pages and their save keys remain unchanged as rollback options.
+This branch implements the newly approved 48-space flat-top **Skyline Dominion Hex Ring** and 32-space **Crown Empire** as separate, true 3D, playable Career board replacements. The old 61-node / 44-space runtime and superseded large 3D assets have been retired on this branch. Historical saved data is not deleted, migrated or reinterpreted as new-board data; older page URLs redirect to the approved replacements.
 
 **Files:** `approved-career-board.html`, `lib/approved-board-app.js`, `lib/approved-board-rules.js`, `lib/approved-board-renderer.js`, `presentation/approved-board.css`, and individual mesh/token/building assets under `assets/approved-replacements/{dominion,empire}`. Asset ZIP is committed for reproducibility and extracted in a branch-restricted GitHub Action. Each 3D tile retains its unique `TILE_###` picking name and the exact `board_data.json` perimeter order.
 

@@ -1,15 +1,11 @@
-name: Career Boards 2–5 visual and gameplay QA
+name: Career Boards 2–3 visual and gameplay QA
 on:
   pull_request:
     paths:
       - 'skyline-estates/city-ventures-renderer.js'
       - 'skyline-estates/crossroads-renderer.js'
-      - 'skyline-estates/dominion-production-renderer.js'
-      - 'skyline-estates/empire-production-renderer.js'
       - 'skyline-estates/tests/city-ventures-browser.cjs'
       - 'skyline-estates/tests/crossroads-browser.cjs'
-      - 'skyline-estates/tests/dominion-lab-browser.cjs'
-      - 'skyline-estates/tests/empire-lab-browser.cjs'
       - '.github/workflows/career-board-quality-qa.yml'
   workflow_dispatch:
 # A new commit supersedes old 3D screenshot matrices; avoid congesting CI.
@@ -25,7 +21,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        board: [city-ventures, crossroads, dominion, empire]
+        board: [city-ventures, crossroads]
         engine: [chromium, webkit]
     steps:
       - uses: actions/checkout@v4
@@ -47,8 +43,6 @@ jobs:
           case "${{ matrix.board }}" in
             city-ventures) script=city-ventures-browser.cjs ;;
             crossroads) script=crossroads-browser.cjs ;;
-            dominion) script=dominion-lab-browser.cjs ;;
-            empire) script=empire-lab-browser.cjs ;;
           esac
           python3 -m http.server 8790 --bind 127.0.0.1 --directory . >"$RUNNER_TEMP/career-http.log" 2>&1 &
           node "skyline-estates/tests/$script"

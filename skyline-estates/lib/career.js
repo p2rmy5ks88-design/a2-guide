@@ -8,8 +8,7 @@
       temporary functional entry point. The final Career interface is ChatGPT's design and replaces the temporary one.
 
    Origins is today's Classic game, unchanged. A career match is an ordinary match started with set.career='origins'
-   (saves already accept extra set fields). Circuit, Dominion and Empire have no gameplay yet: they can be previewed
-   and unlocked, but not played. City Boards progression (city achievements, frames, Spotlight, objectives, country
+   (saves already accept extra set fields). Dominion and Empire now launch approved 48/32-space 3D boards, not the retired prototype rules. City Boards progression (city achievements, frames, Spotlight, objectives, country
    unlocks) is not read or written here. See skyline-estates/CAREER.md. */
 (function(root,factory){const core=factory();if(typeof module==='object'&&module.exports)module.exports=core;else root.SkylineCareerCore=core})(typeof self!=='undefined'?self:this,function(){'use strict';
 const VERSION=1;
