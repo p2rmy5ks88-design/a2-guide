@@ -118,7 +118,9 @@ export async function createDominionRenderer(canvas,{quality='high',onPick=()=>{
  function frame(now){raf=0;if(lost)return;
   anim=anim.filter(a=>{const k=Math.min(1,(now-a.t0)/a.ms),e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;tokens[a.pid].position.lerpVectors(a.a,a.b,e);tokens[a.pid].position.y+=Math.sin(k*Math.PI)*.35;if(k>=1){a.res();return false}return true});
   if(trackingPid>=0&&!view.focus&&!prefersLess.matches){
-    const dt=Math.min(70,trackingAt?now-trackingAt:16),k=1-Math.exp(-dt/220),active=anim.some(a=>a.pid===trackingPid)||now<trackingUntil;
+    // Use elapsed wall time rather than a fixed 70ms step; slow software-GPU
+    // frames must not leave the camera stranded in close-up after a roll.
+    const dt=Math.min(600,trackingAt?Math.max(0,now-trackingAt):16),k=1-Math.exp(-dt/220),active=anim.some(a=>a.pid===trackingPid)||now<trackingUntil;
     tracking+=(Number(active)-tracking)*k;if(!active&&tracking<.003)tracking=0;
     followTarget.copy(tokens[trackingPid].position);followTarget.y+=.24;
     const yaw=Math.atan2(followTarget.x-boardCenter.x,followTarget.z-boardCenter.z);
