@@ -20,6 +20,27 @@ let n=0;const ok=m=>{n++;console.log('PASS',m)};
   const small=await p.evaluate(()=>[...document.querySelectorAll('button')].filter(b=>b.offsetParent&&b.getBoundingClientRect().height<43.5).map(b=>b.id||b.textContent.trim()));assert.deepEqual(small,[],'touch targets');
   const overlap=await p.evaluate(()=>{const r=id=>document.getElementById(id).getBoundingClientRect();const a=r('players'),b=r('dock'),c=r('top'),h=r('help');return a.bottom>b.top&&a.right>b.left||c.bottom>a.top+1||a.bottom>h.top+1});assert.equal(overlap,false);ok('HUD fits 844×390 with 44pt buttons and no overlaps');
   await p.screenshot({path:path.join(out,engine+'-start.png')});
+
+  // Phone landscape acceptance: the 956 x 440 CSS viewport corresponds to
+  // the iPhone 18 Pro Max aspect ratio; manually inject conservative cutouts
+  // without spoofing the device's GPU pixel ratio.
+  await p.setViewportSize({width:956,height:440});
+  await p.evaluate(()=>{const st=document.documentElement.style;st.setProperty('--sl','62px');st.setProperty('--sr','62px');st.setProperty('--sb','21px')});
+  const phoneFit=await p.evaluate(()=>{
+   const box=id=>document.getElementById(id).getBoundingClientRect();
+   const players=box('players'),top=box('top'),side=box('side'),dock=box('dock'),help=box('help'),main=box('mainBtn');
+   const inPhone=(r,l=62,rPad=62)=>r.left>=l-1&&r.right<=innerWidth-rPad+1&&r.top>=0&&r.bottom<=innerHeight+1;
+   return {players:inPhone(players),top:inPhone(top),side:inPhone(side),dock:inPhone(dock),help:inPhone(help),main:inPhone(main),
+    noRosterDock:players.bottom<=dock.top+1||players.right<dock.left-1,noTopRoster:top.bottom<=players.top+1,
+    noRosterHelp:players.bottom<=help.top+1||players.right<help.left-1,
+    controls:[...document.querySelectorAll('button')].filter(b=>b.offsetParent&&!b.disabled).every(b=>b.getBoundingClientRect().height>=43.5)};
+  });
+  assert.ok(Object.values(phoneFit).every(Boolean),'iPhone landscape fit/safe-area UI: '+JSON.stringify(phoneFit));
+  ok('iPhone landscape 956×440 safe-area controls, roster and sidebars do not overlap');
+  await p.screenshot({timeout:90000,path:path.join(out,engine+'-iphone-landscape-safe.png')});
+  await p.evaluate(()=>{const st=document.documentElement.style;for(const v of ['--sl','--sr','--sb'])st.removeProperty(v)});
+  await p.setViewportSize({width:844,height:390});
+
   let shots=0;const seen={};const t0=Date.now();
   while(Date.now()-t0<480000){const st=await p.evaluate(()=>{const s=__cc.state(),pd=__cc.rules.pending(s);return{over:s.over,kind:pd.kind,mine:(pd.kind==='trade'?pd.to:pd.pid)===0,busy:__cc.busy(),panel:!document.getElementById('decision').hidden}});
    if(st.over)break;
