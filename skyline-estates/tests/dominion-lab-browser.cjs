@@ -30,6 +30,20 @@ const humanTurn=p=>p.waitForFunction(()=>{const s=__dominionLab.state();return s
   check('every node projects inside the free board area between the HUD panels',await p.evaluate(()=>{const b=document.getElementById('board').getBoundingClientRect(),L=document.querySelector('.sk-left').getBoundingClientRect(),R=document.querySelector('.sk-right').getBoundingClientRect(),c={left:L.right,right:R.left,top:b.top,bottom:document.querySelector('.sk-strip').getBoundingClientRect().top};return SkylineDominion.NODES.every(n=>{const q=__dominionLab.r3().project(n.id);return q.x>=c.left&&q.x<=c.right&&q.y>=c.top&&q.y<=c.bottom})}));
   await humanTurn(p);
   const idle=await p.evaluate(()=>__dominionLab.r3().stats().renders);await p.waitForTimeout(1200);check('no continuous idle rendering',await p.evaluate(()=>__dominionLab.r3().stats().renders)===idle);
+  // Real movement test: ordinary camera motion, not reduced-motion overview.
+  // Manipulates only the renderer's test token; authoritative match state stays untouched.
+  await p.emulateMedia({reducedMotion:'no-preference'});
+  const followProof=await p.evaluate(async()=>{
+   const r=__dominionLab.r3(),state=__dominionLab.state(),from=state.players[0].pos,to=SkylineDominion.NODES.find(n=>n.id!==from).id;
+   const samples=[],timer=setInterval(()=>samples.push(r.stats()),40);
+   await r.moveToken(0,from,to,980);
+   await new Promise(done=>setTimeout(done,1650));
+   clearInterval(timer);
+   const result={max:Math.max(0,...samples.map(x=>x.tracking||0)),upright:samples.every(x=>x.cameraUp?.[1]>.999),returned:r.stats().tracking};
+   r.sync(SkylineDominion.view(state));return result;
+  });
+  check('smooth upright follow camera and overview recovery in regular motion',followProof.max>.07&&followProof.upright&&followProof.returned<.05,followProof);
+  await p.emulateMedia({reducedMotion:'reduce'});
   // tap an adjacent unowned site on the 3D board
   const target=await p.evaluate(()=>{const s=__dominionLab.state(),D=SkylineDominion,me=s.players[0];return D.NEIGH[me.pos].find(id=>D.BY[id].type==='property'&&s.own[id].o<0)||Object.keys(__dominionLab.reach()).find(id=>D.BY[id].type==='property'&&s.own[id].o<0)});
   const pt=await p.evaluate(id=>__dominionLab.r3().project(id),target);await p.mouse.click(pt.x,pt.y);
