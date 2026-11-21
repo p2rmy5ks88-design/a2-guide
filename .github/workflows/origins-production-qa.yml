@@ -8,6 +8,10 @@ on:
       - 'skyline-estates/tests/origins-production-browser.cjs'
       - '.github/workflows/origins-production-qa.yml'
   workflow_dispatch:
+# A new commit supersedes old 3D screenshot matrices; avoid congesting CI.
+concurrency:
+  group: origin-visual-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 permissions:
   contents: read
 jobs:
