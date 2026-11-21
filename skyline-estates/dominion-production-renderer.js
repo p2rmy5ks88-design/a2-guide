@@ -78,7 +78,7 @@ export async function createDominionRenderer(canvas,{quality='high',onPick=()=>{
  const boardBox=new THREE.Box3().setFromObject(board),boardSize=boardBox.getSize(new THREE.Vector3()),boardCenter=boardBox.getCenter(new THREE.Vector3());
  let view={pitch:50,yaw:0,zoom:1,focus:null},rect={x:0,y:0,w:canvas.clientWidth||1,h:canvas.clientHeight||1},dirty=true,anim=[],renders=0,selected=null;
  const prefersLess=matchMedia('(prefers-reduced-motion: reduce)'),overviewEye=new THREE.Vector3(),overviewTarget=new THREE.Vector3(),followTarget=new THREE.Vector3(),followEye=new THREE.Vector3(),cameraAim=new THREE.Vector3();
- let tracking=0,trackingUntil=0,trackingPid=-1,trackingYaw=0,trackingAt=0;
+ let tracking=0,trackingPeak=0,trackingUntil=0,trackingPid=-1,trackingYaw=0,trackingAt=0;
  // Fit by projecting the real board footprint corners (bounded search; same result every time, no animation).
  const fitPts=[];for(const y of [.4])for(const[x,z]of[[boardBox.min.x,boardBox.min.z],[boardBox.max.x,boardBox.min.z],[boardBox.min.x,boardBox.max.z],[boardBox.max.x,boardBox.max.z],[boardBox.min.x,boardCenter.z],[boardBox.max.x,boardCenter.z]])fitPts.push(new THREE.Vector3(x,y,z));
  function placeAt(dist,target){const pitch=THREE.MathUtils.degToRad(view.pitch),yaw=THREE.MathUtils.degToRad(view.yaw);
@@ -116,12 +116,12 @@ export async function createDominionRenderer(canvas,{quality='high',onPick=()=>{
  // ---- on-demand rendering (no idle loop) ----
  let raf=0;function kick(){if(!raf)raf=requestAnimationFrame(frame)}
  function frame(now){raf=0;if(lost)return;
-  anim=anim.filter(a=>{const k=Math.min(1,(now-a.t0)/a.ms),e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;tokens[a.pid].position.lerpVectors(a.a,a.b,e);tokens[a.pid].position.y+=Math.sin(k*Math.PI)*.35;if(k>=1){a.res();return false}return true});
+  const hadMovement=anim.some(a=>a.pid===trackingPid);anim=anim.filter(a=>{const k=Math.min(1,(now-a.t0)/a.ms),e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;tokens[a.pid].position.lerpVectors(a.a,a.b,e);tokens[a.pid].position.y+=Math.sin(k*Math.PI)*.35;if(k>=1){a.res();return false}return true});
   if(trackingPid>=0&&!view.focus&&!prefersLess.matches){
     // Use elapsed wall time rather than a fixed 70ms step; slow software-GPU
     // frames must not leave the camera stranded in close-up after a roll.
-    const dt=Math.min(600,trackingAt?Math.max(0,now-trackingAt):16),k=1-Math.exp(-dt/220),active=anim.some(a=>a.pid===trackingPid)||now<trackingUntil;
-    tracking+=(Number(active)-tracking)*k;if(!active&&tracking<.003)tracking=0;
+    const dt=Math.min(600,trackingAt?Math.max(0,now-trackingAt):16),k=1-Math.exp(-dt/220),active=hadMovement||anim.some(a=>a.pid===trackingPid)||now<trackingUntil;
+    tracking+=(Number(active)-tracking)*k;trackingPeak=Math.max(trackingPeak,tracking);if(!active&&tracking<.003)tracking=0;
     followTarget.copy(tokens[trackingPid].position);followTarget.y+=.24;
     const yaw=Math.atan2(followTarget.x-boardCenter.x,followTarget.z-boardCenter.z);
     trackingYaw+=Math.atan2(Math.sin(yaw-trackingYaw),Math.cos(yaw-trackingYaw))*k;
@@ -141,6 +141,6 @@ export async function createDominionRenderer(canvas,{quality='high',onPick=()=>{
  function setView(p){Object.assign(view,p);tracking=0;trackingUntil=0;placeCamera();water.invalidate();invalidate()}
  function stats(){const info=renderer.info.render;return{ruleset:D.RULESET,quality,nodes:D.NODES.length,buffer:[canvas.width,canvas.height],css:[rect.w,rect.h],pixelRatio:renderer.getPixelRatio(),devicePixelRatio:devicePixelRatio,
   triangles:info.triangles,calls:info.calls,renders,materials:materials.size,files:audit.files,assetTriangles:audit.triangles,reflections:water.stats(),stagesShown:Object.keys(stagesAt).length,
-  tokensVisible:tokens.filter(t=>t.visible).length,selected,tracking:+tracking.toFixed(3),cameraUp:camera.up.toArray(),physicalDevice:false,boardBounds:[+boardSize.x.toFixed(2),+boardSize.y.toFixed(2),+boardSize.z.toFixed(2)]}}
+  tokensVisible:tokens.filter(t=>t.visible).length,selected,tracking:+tracking.toFixed(3),trackingPeak:+trackingPeak.toFixed(3),prefersReducedMotion:prefersLess.matches,focused:!!view.focus,cameraUp:camera.up.toArray(),physicalDevice:false,boardBounds:[+boardSize.x.toFixed(2),+boardSize.y.toFixed(2),+boardSize.z.toFixed(2)]}}
  resize();sync(D.view(window.__dominionLab?.state()||D.newMatch({seed:1})));invalidate();
  return{resize,sync,select,moveToken,project,setView,view:()=>({...view}),stats,invalidate,positions:POS,layout,renderNow(){renderer.render(scene,camera);renders++}}}
