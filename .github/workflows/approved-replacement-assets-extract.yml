@@ -6,6 +6,11 @@ on:
       - 'skyline-estates/build.py'
       - 'skyline-estates/approved-career-board.html'
       - 'skyline-estates/lib/approved-board-*.js'
+      - 'skyline-estates/lib/career.js'
+      - 'skyline-estates/lib/career-dominion-rules.js'
+      - 'skyline-estates/lib/career-empire-rules.js'
+      - 'skyline-estates/dominion-production-lab.html'
+      - 'skyline-estates/empire-production-lab.html'
       - 'skyline-estates/presentation/approved-board.css'
       - '.github/workflows/approved-replacement-assets-extract.yml'
 permissions:
@@ -49,6 +54,16 @@ jobs:
               assert (root/'tokens'/(t+'.glb')).read_bytes()[:4]==b'glTF'
             print('Validated',board,count,'genuine pickable 3D tiles')
           PY
+      - name: Verify obsolete playable boards are absent
+        run: |
+          test ! -e skyline-estates/dominion-production-renderer.js
+          test ! -e skyline-estates/empire-production-renderer.js
+          test ! -e skyline-estates/lib/career-dominion-rules.js
+          test ! -e skyline-estates/lib/career-empire-rules.js
+          test ! -e skyline-estates/assets/dominion-local
+          test ! -e skyline-estates/assets/empire-local
+          grep -q 'approved-career-board.html?board=dominion' skyline-estates/lib/career.js
+          grep -q 'approved-career-board.html?board=empire' skyline-estates/lib/career.js
       - name: Validate deterministic gameplay and save/restore
         run: node --test skyline-estates/tests/approved-board-rules.test.mjs
       - name: Rebuild offline manifests on review branch only
