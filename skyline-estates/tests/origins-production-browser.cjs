@@ -64,11 +64,15 @@ try{for(const vp of (process.env.VISUAL_MATRIX==='1'?[{width:956,height:440,dpr:
   // Move the real test player's token via existing placement, then inspect the 3D camera.
   await p.emulateMedia({reducedMotion:'no-preference'});
   await f.evaluate(()=>{const me=P(0);me.pos=14;placeToken(me);SkylineOriginsProduction.refresh();});
-  await f.waitForFunction(()=>{const s=SkylineOriginsProduction.stats();return s.follow>.07&&Math.abs(s.followYaw)>.07;},null,{timeout:45000});
-  const motion=await f.evaluate(()=>SkylineOriginsProduction.stats());
+  await f.waitForFunction(()=>{const s=SkylineOriginsProduction.stats();if(s.follow>.07&&Math.abs(s.followYaw)>.07){window.__observedOriginsMotion=s;return true}return false},null,{timeout:45000});
+  // Capture at the exact moment tracking passes the threshold. A separate
+  // later stats read can see the intentional return-to-overview and false-fail.
+  const motion=await f.evaluate(()=>window.__observedOriginsMotion);
+  report.followMovement=motion;
   check('regular-motion camera zooms and rotates toward the real moving token',motion.follow>.07&&Math.abs(motion.followYaw)>.07);
   check('camera remains upright during tracking',motion.cameraUp[1]>.999&&Math.abs(motion.cameraUp[0])<.001&&Math.abs(motion.cameraUp[2])<.001);
-  await p.screenshot({path:path.join(out,engine+'-actual-camera-follow.png'),timeout:90000,animations:'disabled'});
+  // Camera proof is saved as exact-frame stats; 3× software-WebGL screenshots
+  // while the camera eases caused nondeterministic Chrome screenshot stalls.
   await p.emulateMedia({reducedMotion:'reduce'});
 }
  check('reference artwork is not loaded into renderer',!(await f.evaluate(()=>[...document.images].some(x=>/APPROVED-ORIGINAL/.test(x.src)))));
