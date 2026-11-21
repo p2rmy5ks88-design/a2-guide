@@ -111,3 +111,25 @@ details.sk-panel,.sk-panel{background:linear-gradient(180deg,var(--panel2),var(-
   overflow:hidden;text-overflow:ellipsis;
  }
 }
+
+/* Small landscape: four readable names and two numeric lines take priority
+   over portraits. The 24px avatar column was wasting ~25% of each 95px card,
+   and 'Investor AI' / cash figures appeared visibly truncated at 844px. */
+@media (orientation:landscape) and (max-width:900px){
+ .sk-hud #players .sk-card{
+   grid-template-columns:minmax(0,1fr);
+   padding:3px 5px;
+   min-width:0;
+ }
+ .sk-hud #players .sk-card img{display:none!important}
+ .sk-hud #players .sk-card .nm{
+   font-size:11px;line-height:1.15;letter-spacing:-.15px;
+   white-space:nowrap;
+ }
+ .sk-hud #players .sk-card .v{
+   font-size:10px;line-height:1.2;
+ }
+ .sk-hud #players .sk-card .v b{
+   font-size:10px;text-overflow:clip;
+ }
+}
