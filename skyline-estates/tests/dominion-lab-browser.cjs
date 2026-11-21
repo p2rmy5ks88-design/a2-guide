@@ -29,7 +29,7 @@ const humanTurn=p=>p.waitForFunction(()=>{const s=__dominionLab.state();return s
      rightWidth:right.getBoundingClientRect().width,
      stripWidth:strip.getBoundingClientRect().width,
      advancedPanelHidden:getComputedStyle(menu).display==='none',
-     selectedVisible:getComputedStyle(document.getElementById('p-sel')).display!=='none',
+     selectedVisible:getComputedStyle(document.getElementById('p-sel')).display!=='none'&&document.getElementById('p-sel').open,
      detailsButton:document.getElementById('layoutToggle').getBoundingClientRect().height};
    });
    check('board-first camera/HUD focuses on play, not analysis panels',
