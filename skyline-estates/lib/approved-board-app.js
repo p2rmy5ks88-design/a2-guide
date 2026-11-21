@@ -82,9 +82,11 @@ async function takeEnd(){if(busy||s.phase!=='decide')return;busy=true;
  if(s.phase==='over'){sendCareerResult();finish()}else{s.selected=s.players[0].pos;three.overview();redraw()}
  }finally{busy=false;if(s.phase!=='over')redraw()}}
 function finish(){if(!s)return;const results=R.score(s,spaces),champ=s.players[s.winner];
- const box=$('finish');box.innerHTML=`<div class="box"><h2>🏆 ${champ.name} Wins!</h2><p>Final property and cash ranking</p>${results.map((p,i)=>`<p>${i+1}. ${p.name}: ${money(p.worth)}</p>`).join('')}<button id="newMatch">Start another match</button> <button id="exitResults">Close</button></div>`;
+ const box=$('finish');box.innerHTML=`<div class="box"><h2>🏆 ${champ.name} Wins!</h2><p>Final property and cash ranking</p>${results.map((p,i)=>`<p>${i+1}. ${p.name}: ${money(p.worth)}</p>`).join('')}<button id="newMatch">Start another match</button> ${career?'<button id="returnCareer">Return to Skyline Estates</button>':''} <button id="exitResults">Close</button></div>`;
  box.hidden=false;box.querySelector('#newMatch').onclick=()=>{localStorage.removeItem(saveKey);location.reload()};box.querySelector('#exitResults').onclick=()=>box.hidden=true;
  sendCareerResult();
+ const returnButton=box.querySelector('#returnCareer');
+ if(returnButton)returnButton.onclick=()=>location.assign('./index.html');
 }
 function tileSelected(id){if(!s||busy)return;s.selected=id;three.choose(id);redraw()}
 async function start(state){
