@@ -8,7 +8,7 @@ const report={engine,physicalDevice:false,checks:[],errors:[],viewports:[]};cons
 const VPS=[{width:956,height:440,dpr:3,name:'956x440'},{width:844,height:390,dpr:3,safe:true,name:'844x390-safe'},{width:667,height:375,dpr:2,name:'667x375'}];
 const launch=()=>({chromium,webkit}[engine]).launch({headless:true,...(engine==='chromium'?{args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']}:{})});
 
-async function open(browser,vp,url){const ctx=await browser.newContext({viewport:{width:vp.width,height:vp.height},deviceScaleFactor:vp.dpr,hasTouch:true,serviceWorkers:'block',reducedMotion:'reduce'});
+async function open(browser,vp,url,normalMotion=false){const ctx=await browser.newContext({viewport:{width:vp.width,height:vp.height},deviceScaleFactor:vp.dpr,hasTouch:true,serviceWorkers:'block',reducedMotion:normalMotion?'no-preference':'reduce'});
  const p=await ctx.newPage();p.on('pageerror',e=>report.errors.push(String(e.stack||e)));p.on('console',m=>{if(m.type()==='error')report.errors.push(m.text().slice(0,300))});
  await p.goto(url);return{ctx,p}}
 async function started(p,vp){if(vp.safe)await p.evaluate(()=>{for(const[k,v]of Object.entries({sal:47,sar:47,sab:21}))document.documentElement.style.setProperty('--'+k,v+'px')});
@@ -18,7 +18,7 @@ const humanTurn=p=>p.waitForFunction(()=>{const s=__dominionLab.state();return s
 
 (async()=>{const browser=await launch();try{
  // ---------- full interaction pass at the large-phone landscape target ----------
- {const vp=VPS[0],{ctx,p}=await open(browser,vp,base+'?seed=838&speed=fast');
+ {const vp=VPS[0],{ctx,p}=await open(browser,vp,base+'?seed=838&speed=fast',true);
   await p.evaluate(()=>{localStorage.setItem('skylineSave','CLASSIC-SENTINEL');localStorage.setItem('skylineCircuitSave','CIRCUIT-SENTINEL')});
   await p.click('#start');await started(p,vp);
   const st=await p.evaluate(()=>__dominionLab.r3().stats());report.stats=st;
@@ -32,7 +32,9 @@ const humanTurn=p=>p.waitForFunction(()=>{const s=__dominionLab.state();return s
   const idle=await p.evaluate(()=>__dominionLab.r3().stats().renders);await p.waitForTimeout(1200);check('no continuous idle rendering',await p.evaluate(()=>__dominionLab.r3().stats().renders)===idle);
   // Real movement test: ordinary camera motion, not reduced-motion overview.
   // Manipulates only the renderer's test token; authoritative match state stays untouched.
-  await p.emulateMedia({reducedMotion:'no-preference'});
+  // First match runs with normal motion from context creation (Safari-safe).
+  const normalMotion=await p.evaluate(()=>!matchMedia('(prefers-reduced-motion: reduce)').matches);
+  check('regular motion enabled before moving the camera',normalMotion);
   const followProof=await p.evaluate(async()=>{
    const r=__dominionLab.r3(),state=__dominionLab.state(),from=state.players[0].pos,to=SkylineDominion.NODES.find(n=>n.id!==from).id;
    const samples=[],timer=setInterval(()=>samples.push(r.stats()),40);
@@ -47,7 +49,7 @@ const humanTurn=p=>p.waitForFunction(()=>{const s=__dominionLab.state();return s
    r.sync(SkylineDominion.view(state));return result;
   });
   check('smooth upright follow camera and overview recovery in regular motion',followProof.max>.07&&followProof.upright&&followProof.returned<.05&&!followProof.redMotion&&!followProof.focused,followProof);
-  await p.emulateMedia({reducedMotion:'reduce'});
+  // No media-mode switch here: verify restored overview in the original context.
   // tap an adjacent unowned site on the 3D board
   const target=await p.evaluate(()=>{const s=__dominionLab.state(),D=SkylineDominion,me=s.players[0];return D.NEIGH[me.pos].find(id=>D.BY[id].type==='property'&&s.own[id].o<0)||Object.keys(__dominionLab.reach()).find(id=>D.BY[id].type==='property'&&s.own[id].o<0)});
   const pt=await p.evaluate(id=>__dominionLab.r3().project(id),target);await p.mouse.click(pt.x,pt.y);
