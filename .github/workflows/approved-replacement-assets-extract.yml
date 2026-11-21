@@ -3,6 +3,10 @@ on:
   push:
     paths:
       - 'skyline-estates/assets/approved-replacements.zip'
+      - 'skyline-estates/build.py'
+      - 'skyline-estates/approved-career-board.html'
+      - 'skyline-estates/lib/approved-board-*.js'
+      - 'skyline-estates/presentation/approved-board.css'
       - '.github/workflows/approved-replacement-assets-extract.yml'
 permissions:
   contents: write

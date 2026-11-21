@@ -44,7 +44,7 @@ export async function createBoard({canvas,source,board,base,onSelect=()=>{},qual
  const renderTokens=players=>players.forEach(p=>{const mesh=tokenRoots[p.id];if(!mesh)return;mesh.visible=!p.bankrupt;if(!mesh.userData.inMotion)mesh.position.copy(pawnAt(p.pos,p.id))});
  const resetBuildings=properties=>{
   for(const [i,p] of Object.entries(properties)){
-   const idx=+i;const old=structures.get(idx);if(p.owner<0||p.stage<1){if(old){scene.remove(old);structures.delete(idx)}continue}
+   const idx=+i;const old=structures.get(idx);if(p.owner<0){if(old){scene.remove(old);structures.delete(idx)}continue}
    if(old?.userData.stage===p.stage&&old?.userData.owner===p.owner)continue;
    if(old)scene.remove(old);
    const prefab=prefabs[Math.min(p.stage,prefabs.length-1)];if(!prefab)continue;
@@ -53,11 +53,11 @@ export async function createBoard({canvas,source,board,base,onSelect=()=>{},qual
    obj.position.set(anchor[0],anchor[1],anchor[2]);
    obj.userData={stage:p.stage,owner:p.owner};scene.add(obj);structures.set(idx,obj)
   }
-  for(const [i,obj] of [...structures.entries()])if(!properties[i]||properties[i].stage<1||properties[i].owner<0){scene.remove(obj);structures.delete(i)}
+  for(const [i,obj] of [...structures.entries()])if(!properties[i]||properties[i].owner<0){scene.remove(obj);structures.delete(i)}
  };
  let selected=0,mode='whole',cameraTime=0,moving=false;
  const target=new THREE.Vector3(0,.18,0),desiredPos=new THREE.Vector3();
- let worldW=0,worldH=0,last=performance.now(),raf=0;
+ let worldW=0,worldH=0,last=performance.now(),lastRender=0,raf=0;
  const choose=idx=>{selected=idx;const tile=source.spaces[idx];selectedMark.visible=true;selectedDisc.visible=true;
   selectedMark.position.set(tile.position[0],tile.position[1]+.092,tile.position[2]);selectedDisc.position.copy(selectedMark.position)};
  const overview=()=>{mode='whole';target.set(...source.board_camera.target);cameraTime=0};
@@ -69,13 +69,21 @@ export async function createBoard({canvas,source,board,base,onSelect=()=>{},qual
   const a=(source.board_camera.close_follow_pitch_deg||48)*Math.PI/180;
   return new THREE.Vector3(target.x+nx/len*d*Math.cos(a),target.y+d*Math.sin(a),target.z+nz/len*d*Math.cos(a));
  };
- function tick(now){const dt=Math.min(.055,(now-last)/1000||.016);last=now;
+ function tick(now){
+  raf=requestAnimationFrame(tick);
+  if(document.hidden)return;
+  // High-density mobile canvases retain full DPR; idle scene is only refreshed
+  // at 20 fps rather than redrawing 3–4 million pixels at 60 fps.
+  const frameTime=moving?16:50;
+  if(now-lastRender<frameTime)return;
+  lastRender=now;
+  const dt=Math.min(.1,(now-last)/1000||.016);last=now;
   const alpha=1-Math.exp(-dt*7);
   desiredPos.copy(calcEye());camera.position.lerp(desiredPos,alpha);
   const v=camera.userData.look||new THREE.Vector3(...source.board_camera.target);v.lerp(target,alpha);camera.userData.look=v;
   camera.up.set(0,1,0);camera.lookAt(v);camera.updateMatrixWorld();
   selectedMark.material.opacity=.78+.18*Math.sin(now*.004);
-  renderer.render(scene,camera);raf=requestAnimationFrame(tick)
+  renderer.render(scene,camera)
  }
  camera.position.set(...source.board_camera.overview_position);camera.lookAt(...source.board_camera.target);
  const ray=new THREE.Raycaster(),ndc=new THREE.Vector2();

@@ -9,3 +9,9 @@ This branch implements the newly approved 48-space flat-top **Skyline Dominion H
 **Preview:** serve the repo root over HTTP and open `/skyline-estates/approved-career-board.html?board=dominion&autostart=1` or `?board=empire&autostart=1`.
 
 **Safety:** This is a draft review branch. No changes are merged into main; native/TestFlight and the current live game are untouched. Physical iPhone 18 Pro Max landscape, visual fidelity versus approved images, interactive tile taps, and full CI acceptance are still release gates.
+
+## Review improvements (21 Nov 2026)
+- The approved new-board HTML/CSS and the genuine GLB/PNG source assets now enter the deterministic offline service-worker manifest; the committed ZIP is excluded from the offline cache to avoid duplication.
+- Purchased plots render the supplied Stage 0 plot model immediately. Subsequent upgrades still use the same 3D prefabs and owner state.
+- Preserve full 3× iPhone landscape rendering resolution while reducing idle frame submissions to improve battery and WebGL performance.
+- Do not merge until exact rendered screenshots and real browser gameplay QA have been checked. Obsolete production prototypes will be retired only after replacement acceptance.
