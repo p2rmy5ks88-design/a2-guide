@@ -9,7 +9,7 @@ let n=0;const ok=m=>{n++;console.log('PASS',m)};
  await new Promise(r=>server.listen(0,'127.0.0.1',r));const base=`http://127.0.0.1:${server.address().port}/skyline-estates/`;
  const browser=await({chromium,webkit}[engine]).launch(engine==='chromium'?{executablePath:process.env.CHROME_PATH||undefined,args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist']}:{});
  try{const context=await browser.newContext({viewport:{width:844,height:390},deviceScaleFactor:1,hasTouch:true});/* 1x: gameplay checks; software WebGL on CI is slow at retina resolution */const p=await context.newPage();const errors=[];p.on('pageerror',e=>errors.push(String(e)));
-  await p.goto(base+'index.html');await p.evaluate(()=>{localStorage.clear();const s=SkylineCareer.raw();s.unlocked.circuit=1;PREF.career=s;savePref()});await p.reload();await p.waitForSelector('#hdCareer');
+  await p.goto(base+'index.html');await p.evaluate(()=>{localStorage.clear();const s=SkylineCareer.raw();s.unlocked.circuit=1;PREF.career=s;savePref()});await p.reload();await p.waitForSelector('#hdCareer');await p.waitForSelector('#boot',{state:'hidden',timeout:60000});
   await p.evaluate(()=>{document.querySelector('#modals').innerHTML='';document.querySelector('#hdCareer').click()});await p.waitForSelector('.crc-btn[data-board="circuit"]:not([disabled])');
   assert.match(await p.locator('.crc').nth(1).innerText(),/City Ventures/);await p.locator('.crc-btn[data-board="circuit"]').click();
   await p.locator('.crl[data-len="quick"]').waitFor();assert.deepEqual(await p.evaluate(()=>[...document.querySelectorAll('.crl')].map(b=>b.dataset.len)),['standard','quick']);
