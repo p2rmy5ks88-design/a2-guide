@@ -301,5 +301,6 @@ $('mNew').onclick=()=>{$('menu').hidden=true;try{localStorage.removeItem(CC.SAVE
 let overview=false;$('viewBtn').onclick=()=>{overview=!overview;r3.overview(overview);$('viewBtn').textContent=overview?'🎯':'🗺';$('viewBtn').setAttribute('aria-label',overview?'Return to your token':'Show the whole board')};
 const saved=load();if(saved){s=saved;r3.sync(CC.view(s));r3.follow(s.turn.pid);render();toast('Match resumed');pump()}else startScreen();
 </script>
+<script src="lib/board-radio.js"></script><script>try{SkylineBoardRadio.mount(document.getElementById('top'),document.getElementById('viewBtn'))}catch(e){}</script>
 </body>
 </html>
