@@ -32,6 +32,9 @@ const ok=(name,value,extra)=>{assert.ok(value,name+' '+JSON.stringify(extra||'')
  ok('purchased property physically displays a Stage 0 Plot',await p.evaluate(()=>__skylineApproved.renderer().stats().structuresShown>=1));
  await p.locator('#build').click({timeout:30000});
  ok('build applies a true property stage in the rules engine',await p.evaluate(()=>__skylineApproved.state().properties[__skylineApproved.state().players[0].pos]?.stage===1));
+ // Pick against a settled overview rather than stale coordinates from an easing close camera.
+ await p.locator('#whole').click();
+ await p.waitForFunction(()=>{const r=__skylineApproved.renderer(),eye=r.source.board_camera.overview_position;return r.camera.position.toArray().every((v,i)=>Math.abs(v-eye[i])<.01)},null,{timeout:15000});
  const selected=await p.evaluate(()=>__skylineApproved.renderer().projectTile(6));
  ok('board selection point projects onto real visible 3D tile',selected.visible&&selected.x>0&&selected.y>0,selected);
  await p.touchscreen.tap(selected.x,selected.y);
@@ -52,7 +55,7 @@ const ok=(name,value,extra)=>{assert.ok(value,name+' '+JSON.stringify(extra||'')
  ok('resume restores exact new-board position and built property',stateBefore.pos===stateAfter.pos&&stateBefore.property===stateAfter.property);
  const view=await p.evaluate(()=>({bodyOverflow:document.documentElement.scrollWidth>innerWidth+2,buttons:[...document.querySelectorAll('#right button')].filter(x=>!x.disabled).every(x=>x.getBoundingClientRect().height>=43.5)}));
  ok('landscape controls fit and preserve 44pt hit targets',!view.bodyOverflow&&view.buttons,view);
- if(browserName==='webkit')await p.screenshot({path:path.join(output,board+'-956x440-gameplay.png'),timeout:90000,animations:'disabled'});
+ await p.screenshot({path:path.join(output,board+'-956x440-gameplay.png'),timeout:90000,animations:'disabled'});
  // Repeat safe-area geometry at 844x390 without changing match state.
  await p.setViewportSize({width:844,height:390});
  await p.evaluate(()=>{for(const [k,v]of Object.entries({'--safe-l':'47px','--safe-r':'47px','--safe-b':'21px'}))document.documentElement.style.setProperty(k,v)});
@@ -64,8 +67,8 @@ const ok=(name,value,extra)=>{assert.ok(value,name+' '+JSON.stringify(extra||'')
   const roster=document.getElementById('roster');
   return {boardWidth:board.width,viewport:innerWidth,rosterHidden:getComputedStyle(roster).display==='none',players:document.querySelectorAll('#seatSummary .player-chip').length};
  });
- ok('board-first: substantial playable 3D area, four players in bottom strip, no redundant sidebar',tabletop.boardWidth>=innerWidth*.58&&tabletop.rosterHidden&&tabletop.players===4,tabletop);
- if(browserName==='webkit')await p.screenshot({path:path.join(output,board+'-844x390-safe.png'),timeout:90000,animations:'disabled'});
+ ok('board-first: substantial playable 3D area, four players in bottom strip, no redundant sidebar',tabletop.boardWidth>=tabletop.viewport*.58&&tabletop.rosterHidden&&tabletop.players===4,tabletop);
+ await p.screenshot({path:path.join(output,board+'-844x390-safe.png'),timeout:90000,animations:'disabled'});
  ok('no JS page errors in interactive 3D gameplay',errors.length===0,errors);
  fs.writeFileSync(path.join(output,'result.json'),JSON.stringify({board,browser:browserName,checks,errors,physicalDevice:false,stats},null,2));
  console.log('PASSED',board,browserName,checks.length,'actual in-browser checks');
