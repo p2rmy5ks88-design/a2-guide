@@ -97,6 +97,19 @@ table.res{width:100%;border-collapse:collapse;font-size:14px;margin:8px 0}table.
  box-shadow:0 4px 14px #000a;
  cursor:default;
 }
+
+/* Phone landscape safe-area: never let the current-property/log sidebar
+   extend over the bottom dice/action dock. It scrolls instead of clipping. */
+@media (orientation:landscape) and (max-height:500px){
+ #side{
+  bottom:calc(var(--sb) + 76px);
+  min-height:0;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  scrollbar-width:thin;
+ }
+ #side .panel{flex-shrink:0}
+}
 </style>
 </head>
 <body>
