@@ -114,7 +114,7 @@ export function createCityVenturesRenderer(canvas,{rules,onTile}={}){
   for(let j=0;j<n;j++){const i=a+1+j,t=TILES[i],f=r+(j+.5)*(1-2*r)/n,pos=A.clone().lerp(B,f),w=(1-2*r)*L/n*.95;
    const grp=new THREE.Group();grp.position.copy(pos);grp.rotation.y=Math.atan2(-perp.x,-perp.z);
    const body=new THREE.Mesh(new THREE.BoxGeometry(w,.12,DEPTH),new THREE.MeshStandardMaterial({color:'#efe4c8',roughness:.7}));body.position.y=.06;body.castShadow=true;body.receiveShadow=true;grp.add(body);
-   const ftex=tileTexture(t,CV.DISTRICT_COLORS,renderer);const face=new THREE.Mesh(new THREE.PlaneGeometry(w*.96,DEPTH*.97),new THREE.MeshBasicMaterial({map:ftex,toneMapped:false,side:THREE.DoubleSide}));face.rotation.x=-Math.PI/2;face.position.y=.122;face.receiveShadow=true;grp.add(face);
+   const ftex=tileTexture(t,CV.DISTRICT_COLORS,renderer);const face=new THREE.Mesh(new THREE.PlaneGeometry(w*.96,DEPTH*.97),new THREE.MeshBasicMaterial({map:ftex,toneMapped:false,fog:false,side:THREE.DoubleSide}));face.rotation.x=-Math.PI/2;face.position.y=.122;face.receiveShadow=true;grp.add(face);
    const ring=new THREE.Mesh(new THREE.BoxGeometry(w*1.06,.1,DEPTH*1.04),new THREE.MeshStandardMaterial({color:'#ffffff',emissive:'#000',roughness:.4}));ring.position.y=.03;ring.visible=false;grp.add(ring);
    const glow=new THREE.Mesh(new THREE.PlaneGeometry(w*1.02,DEPTH*1.02),new THREE.MeshBasicMaterial({color:'#ffd36b',transparent:true,opacity:0,depthWrite:false}));glow.rotation.x=-Math.PI/2;glow.position.y=.125;grp.add(glow);
    scene.add(grp);body.userData.tile=i;face.userData.tile=i;pick.push(body,face);
@@ -125,7 +125,7 @@ export function createCityVenturesRenderer(canvas,{rules,onTile}={}){
   const rim=new THREE.Mesh(new THREE.CylinderGeometry(1.12,1.18,.2,6),gold);rim.position.y=.1;rim.rotation.y=Math.PI/2;rim.castShadow=true;grp.add(rim);
   const cap=new THREE.Mesh(new THREE.CylinderGeometry(1.0,1.0,.26,6),new THREE.MeshStandardMaterial({color:CORNER_COLORS[i],roughness:.45}));cap.position.y=.2;cap.rotation.y=Math.PI/2;cap.castShadow=true;grp.add(cap);
   // label: flat plane whose canvas top points to the board centre, so it reads upright from outside
-  const label=new THREE.Mesh(new THREE.PlaneGeometry(2.0,2.0),(()=>{const bt=badgeTexture(t,renderer);return new THREE.MeshBasicMaterial({map:bt,toneMapped:false,transparent:true,alphaTest:.05,side:THREE.DoubleSide})})());label.rotation.x=-Math.PI/2;label.position.y=.335;grp.add(label);label.userData.tile=i;pick.push(label);
+  const label=new THREE.Mesh(new THREE.PlaneGeometry(2.0,2.0),(()=>{const bt=badgeTexture(t,renderer);return new THREE.MeshBasicMaterial({map:bt,toneMapped:false,fog:false,transparent:true,alphaTest:.05,side:THREE.DoubleSide})})());label.rotation.x=-Math.PI/2;label.position.y=.335;grp.add(label);label.userData.tile=i;pick.push(label);
   const glow=new THREE.Mesh(new THREE.CircleGeometry(1.25,6),new THREE.MeshBasicMaterial({color:'#ffd36b',transparent:true,opacity:0,depthWrite:false}));glow.rotation.x=-Math.PI/2;glow.position.y=.36;grp.add(glow);
   scene.add(grp);cap.userData.tile=i;pick.push(cap);
   tileMeshes[i]={grp,glow,cap};tileInfo[i]={pos:P.clone(),inner:P.clone().add(inward.clone().multiplyScalar(.2)),outer:P.clone(),perp:inward,dir:new THREE.Vector3(-inward.z,0,inward.x),w:1.6}});

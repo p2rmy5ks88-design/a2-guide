@@ -95,7 +95,7 @@ export function createOriginsRenderer(canvas,{read,onSquare,onError=console.erro
    // Neutral, camera-facing deed text occupies the outside of the tile. The
    // district-coloured inner surface stays separate for its actual development.
    const labelW=corner?p.w-.055:vertical?p.w*.59:p.w-.055,labelD=corner?p.d-.055:vertical?p.d-.055:p.d*.59;
-   const map=labelTexture(s,i,s.color||'#b79145'),face=new THREE.Mesh(new THREE.PlaneGeometry(labelW,labelD),new THREE.MeshBasicMaterial({map,toneMapped:false,depthWrite:true,polygonOffset:true,polygonOffsetFactor:-1}));face.rotation.x=-Math.PI/2;face.position.set(corner?0:side===0?-p.w*.2:side===2?p.w*.2:0,.072,corner?0:side===1?-p.d*.2:side===3?p.d*.2:0);
+   const map=labelTexture(s,i,s.color||'#b79145'),face=new THREE.Mesh(new THREE.PlaneGeometry(labelW,labelD),new THREE.MeshBasicMaterial({map,toneMapped:false,fog:false,depthWrite:true,polygonOffset:true,polygonOffsetFactor:-1}));face.rotation.x=-Math.PI/2;face.position.set(corner?0:side===0?-p.w*.2:side===2?p.w*.2:0,.072,corner?0:side===1?-p.d*.2:side===3?p.d*.2:0);
    tile.add(face);
    if(s.type==='prop'){
     const plotW=vertical?p.w*.35:p.w-.05,plotD=vertical?p.d-.05:p.d*.35;

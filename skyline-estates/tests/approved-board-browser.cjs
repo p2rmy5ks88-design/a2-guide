@@ -70,6 +70,17 @@ const ok=(name,value,extra)=>{assert.ok(value,name+' '+JSON.stringify(extra||'')
  });
  ok('board-first: substantial playable 3D area, four players in bottom strip, no redundant sidebar',tabletop.boardWidth>=tabletop.viewport*.58&&tabletop.rosterHidden&&tabletop.players===4,tabletop);
  await p.screenshot({path:path.join(output,board+'-844x390-safe.png'),timeout:90000,animations:'disabled'});
+ await p.locator('#more').click();
+ p.once('dialog',dialog=>dialog.dismiss());
+ await p.locator('#endMatch').click();
+ ok('cancelling early finish keeps the match active',await p.evaluate(()=>__skylineApproved.state().phase!=='over'));
+ p.once('dialog',dialog=>dialog.accept());
+ await p.locator('#declareBankruptcy').click();
+ await p.locator('#finish').waitFor({state:'visible'});
+ ok('menu bankruptcy clears player property and produces final standings',await p.evaluate(()=>{
+  const s=__skylineApproved.state();
+  return s.endReason==='declared-bankruptcy'&&s.players[0].bankrupt&&s.winner!==0&&Object.values(s.properties).every(p=>p.owner!==0);
+ }));
  ok('no JS page errors in interactive 3D gameplay',errors.length===0,errors);
  fs.writeFileSync(path.join(output,'result.json'),JSON.stringify({board,browser:browserName,checks,errors,physicalDevice:false,stats},null,2));
  console.log('PASSED',board,browserName,checks.length,'actual in-browser checks');

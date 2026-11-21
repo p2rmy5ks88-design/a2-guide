@@ -312,6 +312,15 @@ function after(s,ev){if(s.over)return;if(s.pending&&s.pending.kind==='debt'){con
 function finish(s,ev){s.over=true;s.turn.phase='over';s.pending=null;s.queue=[];const res=s.players.map(p=>({pid:p.id,name:p.name,out:p.out,...score(s,p.id)}));
  res.sort((a,b)=>(a.out-b.out)||(b.total-a.total)||(b.chains-a.chains)||(b.netWorth-a.netWorth)||(b.cash-a.cash));s.results=res;s.winner=res[0].pid;log(s,P(s,s.winner).name+' wins with '+res[0].total+' Legacy Points!',ev);ev.push({type:'over',winner:s.winner})}
 
+function closeMatch(s, declareBankruptcy=false){
+ if(!s||s.over)return false;
+ const events=[];
+ s.closedFromMenu=true;
+ if(declareBankruptcy)bankrupt(s,0,null,events);
+ if(!s.over)finish(s,events);
+ return true;
+}
+
 // ---------- computer players ----------
 function aiPickChain(s,pid,offer){const easy=['grand_opening','new_landmarks','fresh_start','neighborhood_revival','bright_future','green_corridor'];return offer.slice().sort((a,b)=>(easy.includes(CHAINS[b].id)?1:0)-(easy.includes(CHAINS[a].id)?1:0))[0]}
 function ai(s,pid){const L=legal(s,pid),pd=pending(s),p=P(s,pid);if(!L.length)return null;const has=t=>L.find(x=>x.type===t);const reserve=300+30*Math.max(0,s.cfg.turns-p.turns)/2;
@@ -353,6 +362,6 @@ function careerFacts(s,{ownerSeat=0,endedAt=Date.now()}={}){const o=P(s,ownerSea
   rounds:Math.min(...s.players.filter(p=>!p.out||p.id===ownerSeat).map(p=>p.turns)),activity:st.buys+st.builds+st.trades+st.hubs+st.claims,
   won:s.winner===ownerSeat,score:score(s,ownerSeat).total,aiOpponents:s.players.filter(p=>p.ai).length,aiLevel:'normal',experimental:LENGTHS[s.cfg.length].experimental,
   challenges:o.completed.map((id,k)=>({id:'cc-landmark-'+id,tag:'landmark'}))}}
-return Object.freeze({RULESET,VERSION,SAVE_KEY,TILES,BY,GROUPS,GROUP_NAMES,GROUP_COLORS,LOOP_NAMES,STAGES,CHAINS,HEADLINES,MOMENTS,RULES:R,LENGTHS,
+return Object.freeze({closeMatch,RULESET,VERSION,SAVE_KEY,TILES,BY,GROUPS,GROUP_NAMES,GROUP_COLORS,LOOP_NAMES,STAGES,CHAINS,HEADLINES,MOMENTS,RULES:R,LENGTHS,
  newMatch,pending,legal,act,ai,rent,canUpgrade,buildCost,score,netWorth,view,serialize,restore,careerFacts,owned,fullGroup,momentText,loopOf});
 });

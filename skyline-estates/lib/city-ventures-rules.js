@@ -256,6 +256,15 @@ function afterAction(s,ev){if(s.over)return;if(s.pending&&s.pending.kind==='debt
 function finish(s,ev){s.over=true;s.turn.phase='over';s.pending=null;const res=s.players.map(p=>({pid:p.id,name:p.name,out:p.out,...cityValue(s,p.id)}));
  res.sort((a,b)=>(a.out-b.out)||(b.total-a.total)||(b.sets-a.sets)||(b.cash-a.cash));s.results=res;s.winner=res[0].pid;log(s,P(s,s.winner).name+' wins with a City Value of '+fmt(res[0].total)+'!',ev);ev.push({type:'over',winner:s.winner})}
 
+function closeMatch(s, declareBankruptcy=false){
+ if(!s||s.over)return false;
+ const events=[];
+ s.closedFromMenu=true;
+ if(declareBankruptcy)bankrupt(s,0,null,events);
+ if(!s.over)finish(s,events);
+ return true;
+}
+
 // ---------- computer players ----------
 function ai(s,pid){const L=legal(s,pid),pd=pending(s),p=P(s,pid);if(!L.length)return null;const has=t=>L.find(x=>x.type===t);
  const reserve=250+40*Math.max(0,s.cfg.turns-p.turns)/3;
@@ -302,6 +311,6 @@ function careerFacts(s,{ownerSeat=0,endedAt=Date.now()}={}){const owner=P(s,owne
  return{board:'circuit',ruleset:RULESET,rank,length:s.cfg.length,matchId:m.matchId,startedAt:m.startedAt,endedAt,over:!!s.over,ownerHuman:!!owner&&!owner.ai,
   rounds:Math.min(...s.players.filter(p=>!p.out||p.id===ownerSeat).map(p=>p.turns)),activity:st.buys+st.builds+st.trades+st.auctions+st.corners,
   won:s.winner===ownerSeat,score:cityValue(s,ownerSeat).total,aiOpponents:s.players.filter(p=>p.ai).length,aiLevel:'normal',experimental:LENGTHS[s.cfg.length].experimental,challenges}}
-return Object.freeze({RULESET,VERSION,SAVE_KEY,TILES,N,CORNERS,STATIONS,UTILITIES,DISTRICTS,DISTRICT_NAMES,DISTRICT_COLORS,STAGES,CARDS,CORNER_INFO,RULES:R,LENGTHS,
+return Object.freeze({closeMatch,RULESET,VERSION,SAVE_KEY,TILES,N,CORNERS,STATIONS,UTILITIES,DISTRICTS,DISTRICT_NAMES,DISTRICT_COLORS,STAGES,CARDS,CORNER_INFO,RULES:R,LENGTHS,
  newMatch,pending,legal,act,ai,rent,upgradeCost,canUpgrade,cityValue,view,serialize,restore,careerFacts,owned,fullDistrict,countIn});
 });

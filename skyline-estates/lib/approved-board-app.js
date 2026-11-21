@@ -20,7 +20,7 @@ const notice=(message,delay=2600)=>{const n=$('notice');n.textContent=message;n.
 async function fetchAssets(){const res=await fetch(base+'/board_data.json');if(!res.ok)throw Error(`Approved board map missing (${res.status}). Install the supplied 3D asset kit at ${base}`);source=await res.json();spaces=R.preserveRules(source,board)}
 const getSaved=()=>{try{return R.restore(localStorage.getItem(saveKey),spaces,board)}catch{return null}};
 const store=()=>{try{if(s&&s.phase!=='over')localStorage.setItem(saveKey,JSON.stringify(s))}catch(e){console.warn('Game save unavailable',e)}};
-function sendCareerResult(){if(!career||!s||s.phase!=='over')return;const facts=R.careerFacts(s,spaces);
+function sendCareerResult(){if(!career||!s||s.phase!=='over'||s.endReason!=='highest-value')return;const facts=R.careerFacts(s,spaces);
  try{localStorage.setItem('skylineCareerInbox:'+facts.matchId,JSON.stringify(facts));localStorage.removeItem(saveKey)}catch(e){console.warn('Career inbox save failed',e)}}
 function seatHtml(p,compact=false){return compact?
  `<div class="player-chip ${p.id===s.turn&&s.phase!=='over'?'active':''}" style="--seat:${seatColors[p.id]}"><span class="icon">${emblems[p.id]}</span><div class="details">${p.id===0?'You':p.name.replace(' (CPU)','')}<small>${money(p.cash)}</small></div></div>`:
@@ -61,6 +61,7 @@ function redraw(){if(!s||!three)return;three.sync(s);updateCards();detailsTile()
  }
  const info=document.createElement('div');info.className='message';
  info.textContent=isTurn?(phase==='roll'?'Roll to move your 3D token around the board.':`You landed on ${landing.name}. Tap a space to inspect or upgrade owned properties.`):'Opponents are taking their turns';box.appendChild(info);
+ $('declareBankruptcy').disabled=$('endMatch').disabled=!isTurn||busy;
  const advanced=R.score(s,spaces);$('advancedInfo').innerHTML=`<div class="info">Board: ${source.title}</div><div class="info">Turn: ${s.round} of ${s.maxRounds}</div><div class="info">Rules: ${R.ID}</div>`+
  advanced.map((p,i)=>`<div class="info">${i+1}. ${p.name}: ${money(p.worth)} total value</div>`).join('')+
  '<h3>Latest decisions</h3>'+s.log.slice(-6).reverse().map(v=>`<div class="info">${v.message}</div>`).join('');
@@ -82,12 +83,24 @@ async function takeEnd(){if(busy||s.phase!=='decide')return;busy=true;
  if(s.phase==='over'){sendCareerResult();finish()}else{s.selected=s.players[0].pos;three.overview();redraw()}
  }finally{busy=false;if(s.phase!=='over')redraw()}}
 function finish(){if(!s)return;const results=R.score(s,spaces),champ=s.players[s.winner];
- const box=$('finish');box.innerHTML=`<div class="box"><h2>🏆 ${champ.name} Wins!</h2><p>Final property and cash ranking</p>${results.map((p,i)=>`<p>${i+1}. ${p.name}: ${money(p.worth)}</p>`).join('')}<button id="newMatch">Start another match</button> ${career?'<button id="returnCareer">Return to Skyline Estates</button>':''} <button id="exitResults">Close</button></div>`;
+ const box=$('finish');box.innerHTML=`<div class="box"><h2>🏆 ${champ.name} Wins!</h2><p>${s.endReason==='highest-value'?'Final property and cash ranking':'Match ended early. Final standings are shown below.'}</p>${results.map((p,i)=>`<p>${i+1}. ${p.name}: ${money(p.worth)}</p>`).join('')}<button id="newMatch">Start another match</button> ${career?'<button id="returnCareer">Return to Skyline Estates</button>':''} <button id="exitResults">Close</button></div>`;
  box.hidden=false;box.querySelector('#newMatch').onclick=()=>{localStorage.removeItem(saveKey);location.reload()};box.querySelector('#exitResults').onclick=()=>box.hidden=true;
  sendCareerResult();
  const returnButton=box.querySelector('#returnCareer');
  if(returnButton)returnButton.onclick=()=>location.assign('./index.html');
 }
+function closeFromMenu(bankruptcy){
+ if(!s||s.phase==='over'||busy||s.turn!==0)return;
+ const question=bankruptcy?'Declare bankruptcy and return your properties to the bank?':'End this match now and score the current standings?';
+ if(!window.confirm(question+' Early finishes on this board do not award Career progress.'))return;
+ if(!R.closeMatch(s,spaces,bankruptcy))return;
+ localStorage.removeItem(saveKey);
+ $('detailsDrawer').hidden=true;
+ $('more').setAttribute('aria-expanded','false');
+ three.overview();redraw();finish();
+}
+$('declareBankruptcy').onclick=()=>closeFromMenu(true);
+$('endMatch').onclick=()=>closeFromMenu(false);
 function tileSelected(id){if(!s||busy)return;s.selected=id;three.choose(id);redraw()}
 async function start(state){
  s=state;$('setup').hidden=true;notice('Loading approved 3D board, 3D tokens and buildings…',10000);

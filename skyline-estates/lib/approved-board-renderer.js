@@ -149,7 +149,7 @@ export async function createBoard({canvas,source,board,base,onSelect=()=>{},qual
  // Keep tile textures readable and bright while environment retains real lighting.
  boardRoot.traverse(o=>{if(o.isMesh&&/^TILE_\d{3}_/.test(o.name)){
   const src=Array.isArray(o.material)?o.material[0]:o.material;
-  if(src?.map){src.map.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());const mat=new THREE.MeshBasicMaterial({map:src.map,toneMapped:false,side:THREE.DoubleSide});o.material=mat;}
+  if(src?.map){src.map.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());const mat=new THREE.MeshBasicMaterial({map:src.map,toneMapped:false,fog:false,side:THREE.DoubleSide});o.material=mat;}
  }});
  let scenery=null;try{if(quality!=='low'){scenery=await load('environment_detail.glb');scene.add(scenery);scenery.traverse(mesh=>{if(mesh.isMesh)mesh.castShadow=true})}}catch(e){console.warn('Optional scene details unavailable',e)}
  if(scenery)scene.add(createLandmarkDetail(board==='empire'));
@@ -192,13 +192,15 @@ export async function createBoard({canvas,source,board,base,onSelect=()=>{},qual
   }
   for(const [i,obj] of [...structures.entries()])if(!properties[i]||properties[i].owner<0){scene.remove(obj);structures.delete(i)}
  };
- let selected=0,mode='whole',cameraTime=0,moving=false;
+ let selected=0,mode='whole',moving=false,overviewZoom=1;
+ const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)');
+ const overviewCamera=camera.clone();
  const target=new THREE.Vector3(0,.18,0),desiredPos=new THREE.Vector3();
  let worldW=0,worldH=0,last=performance.now(),lastRender=0,raf=0;
  const choose=idx=>{selected=idx;const tile=source.spaces[idx];selectedMark.visible=true;selectedDisc.visible=true;
   selectedMark.position.set(tile.position[0],tile.position[1]+.092,tile.position[2]);selectedDisc.position.copy(selectedMark.position)};
- const overview=()=>{mode='whole';target.set(...source.board_camera.target);cameraTime=0};
- const close=idx=>{choose(idx);mode='close';target.set(...source.spaces[idx].position);target.y=.38;cameraTime=0};
+ const overview=()=>{mode='whole';target.set(...source.board_camera.target)};
+ const close=idx=>{choose(idx);mode='close';target.set(...source.spaces[idx].position);target.y=.38};
  const calcEye=()=>{
   if(mode==='whole')return new THREE.Vector3(...source.board_camera.overview_position);
   const t=source.spaces[selected],nx=t.normal?.[0]??0,nz=t.normal?.[1]??-1;
@@ -218,8 +220,7 @@ export async function createBoard({canvas,source,board,base,onSelect=()=>{},qual
   const alpha=1-Math.exp(-dt*7);
   desiredPos.copy(calcEye());camera.position.lerp(desiredPos,alpha);
   const v=camera.userData.look||new THREE.Vector3(...source.board_camera.target);v.lerp(target,alpha);camera.userData.look=v;
-  const overviewZoom=board==='empire'?1.32:1.04;
-  const desiredZoom=mode==='whole'&&camera.aspect>1.55?overviewZoom:1;
+  const desiredZoom=mode==='whole'?overviewZoom:1;
   camera.zoom=THREE.MathUtils.lerp(camera.zoom,desiredZoom,alpha);
   camera.updateProjectionMatrix();
   camera.up.set(0,1,0);camera.lookAt(v);camera.updateMatrixWorld();
@@ -237,17 +238,33 @@ export async function createBoard({canvas,source,board,base,onSelect=()=>{},qual
  canvas.addEventListener('pointerup',onPointer,{passive:true});
  const resize=()=>{const r=canvas.getBoundingClientRect(),dpr=Math.min(devicePixelRatio||1,quality==='high'?3:quality==='medium'?2:1.5);
   worldW=Math.max(1,r.width);worldH=Math.max(1,r.height);
-  renderer.setPixelRatio(dpr);renderer.setSize(worldW,worldH,false);camera.aspect=worldW/worldH;camera.updateProjectionMatrix()};
+  renderer.setPixelRatio(dpr);renderer.setSize(worldW,worldH,false);camera.aspect=worldW/worldH;camera.updateProjectionMatrix();
+  overviewCamera.aspect=camera.aspect;
+  overviewCamera.position.set(...source.board_camera.overview_position);
+  overviewCamera.lookAt(...source.board_camera.target);
+  overviewCamera.updateMatrixWorld();
+  overviewCamera.updateProjectionMatrix();
+  const extent=new THREE.Vector2();
+  for(const tile of source.spaces){
+   const point=new THREE.Vector3(...tile.position).project(overviewCamera);
+   extent.x=Math.max(extent.x,Math.abs(point.x));
+   extent.y=Math.max(extent.y,Math.abs(point.y));
+  }
+  overviewZoom=Math.min(board==='empire'?1.32:1.04,.88/Math.max(extent.x,extent.y,.01));
+ };
  addEventListener('resize',resize);resize();choose(0);raf=requestAnimationFrame(tick);
  const sync=state=>{renderTokens(state.players);resetBuildings(state.properties);choose(state.selected)};
  const move=async (seat,route,duration=135)=>{
   const mesh=tokenRoots[seat];if(!mesh||!route?.length)return;
   moving=true;mesh.userData.inMotion=true;
+  const track=seat===0&&!reduceMotion.matches;
   try{let prev=mesh.position.clone();for(const tileId of route){const next=pawnAt(tileId,seat),start=performance.now();
+    if(track){choose(tileId);mode='close';}
     await new Promise(done=>{const step=now=>{const t=Math.min(1,(now-start)/Math.max(20,duration)),k=t*t*(3-2*t);
-      mesh.position.lerpVectors(prev,next,k);mesh.position.y+=.26*Math.sin(Math.PI*k);
+      mesh.position.lerpVectors(prev,next,k);mesh.position.y+=reduceMotion.matches?0:.26*Math.sin(Math.PI*k);
+      if(track)target.set(mesh.position.x,.4,mesh.position.z);
       if(t<1)requestAnimationFrame(step);else done()};requestAnimationFrame(step)});
-    prev=next.clone();if(seat===0){selected=tileId;target.set(...source.spaces[tileId].position);target.y=.4;mode='close';choose(tileId)}
+    prev=next.clone();if(track)close(tileId);
   }}finally{mesh.userData.inMotion=false;moving=false}
  };
  const projectTile=id=>{const t=source.spaces[id],p=new THREE.Vector3(...t.position).project(camera),r=canvas.getBoundingClientRect();return{x:r.left+(p.x+1)*r.width/2,y:r.top+(1-p.y)*r.height/2,visible:p.z>-1&&p.z<1}};

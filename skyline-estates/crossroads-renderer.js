@@ -119,7 +119,7 @@ export function createCrossroadsRenderer(canvas,{rules,onTile}={}){
   const solid=new THREE.Mesh(sectorSolid(loop,t0,t1,RI,RO,.11),new THREE.MeshStandardMaterial({color:'#efe4c8',roughness:.7}));solid.castShadow=solid.receiveShadow=true;grp.add(solid);
   const ftex=tileTexture(tileData(t),CC.GROUP_COLORS,renderer);
   // canvas top (v=1) toward the loop centre; u runs left→right as seen from outside the loop
-  const face=new THREE.Mesh(sectorGeometry(loop,t0,t1,RI+.03,RO-.03,16,2,loop==='west'),new THREE.MeshBasicMaterial({map:ftex,toneMapped:false,side:THREE.DoubleSide}));face.position.y=.125;face.receiveShadow=true;grp.add(face);
+  const face=new THREE.Mesh(sectorGeometry(loop,t0,t1,RI+.03,RO-.03,16,2,loop==='west'),new THREE.MeshBasicMaterial({map:ftex,toneMapped:false,fog:false,side:THREE.DoubleSide}));face.position.y=.125;face.receiveShadow=true;grp.add(face);
   const ring=new THREE.Mesh(sectorSolid(loop,t0-.006,t1+.006,RI-.03,RO+.03,.09),new THREE.MeshStandardMaterial({color:'#ffffff',roughness:.4}));ring.position.y=-.01;ring.visible=false;grp.add(ring);
   const glow=new THREE.Mesh(sectorGeometry(loop,t0,t1,RI,RO,8,1,false),new THREE.MeshBasicMaterial({color:'#ffd36b',transparent:true,opacity:0,depthWrite:false}));glow.position.y=.13;grp.add(glow);
   solid.userData.tile=face.userData.tile=t.id;pick.push(solid,face);

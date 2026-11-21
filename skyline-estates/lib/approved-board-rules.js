@@ -33,7 +33,20 @@ export const propertyValue=(s,spaces,pid)=>Object.entries(s.properties).reduce((
 export const worth=(s,spaces,pid)=>(s.players[pid]?.cash||0)+propertyValue(s,spaces,pid);
 export const addLog=(s,message)=>{s.log.push({turn:s.round,message});if(s.log.length>70)s.log.shift()};
 function transfer(s,from,to,amount){const pay=Math.max(0,Math.min(s.players[from].cash,amount));s.players[from].cash-=pay;if(to!==null)s.players[to].cash+=pay;return pay}
-function finish(s,spaces){s.phase='over';const ranking=s.players.map(p=>({id:p.id,worth:worth(s,spaces,p.id)})).sort((a,b)=>b.worth-a.worth);s.winner=ranking[0].id;s.endReason='highest-value';addLog(s,`${s.players[s.winner].name} wins with ${cashFormat(ranking[0].worth)} total value`)}
+function finish(s,spaces){s.phase='over';const ranking=s.players.map(p=>({id:p.id,worth:worth(s,spaces,p.id)})).sort((a,b)=>Number(s.players[a.id].bankrupt)-Number(s.players[b.id].bankrupt)||b.worth-a.worth);s.winner=ranking[0].id;s.endReason='highest-value';addLog(s,`${s.players[s.winner].name} wins with ${cashFormat(ranking[0].worth)} total value`)}
+export function closeMatch(s,spaces,declareBankruptcy=false){
+ if(!s||s.phase==='over'||s.turn!==0)return false;
+ if(declareBankruptcy){
+  s.players[0].cash=0;
+  s.players[0].bankrupt=true;
+  for(const [id,property] of Object.entries(s.properties)){
+   if(property.owner===0)delete s.properties[id];
+  }
+ }
+ finish(s,spaces);
+ s.endReason=declareBankruptcy?'declared-bankruptcy':'ended-from-menu';
+ return true;
+}
 export function roll(s,spaces){
  if(s.phase!=='roll'||s.turn!==0)throw Error('It is not your dice turn');return rollSeat(s,spaces);
 }
@@ -107,7 +120,7 @@ function advance(s,spaces){
  }
  if(s.phase!=='over')s.phase='roll';s.selected=s.players[0].pos;return movement;
 }
-export function score(s,spaces){return s.players.map(p=>({id:p.id,name:p.name,cash:p.cash,worth:worth(s,spaces,p.id)})).sort((a,b)=>b.worth-a.worth)}
+export function score(s,spaces){return s.players.map(p=>({id:p.id,name:p.name,cash:p.cash,worth:worth(s,spaces,p.id)})).sort((a,b)=>Number(s.players[a.id].bankrupt)-Number(s.players[b.id].bankrupt)||b.worth-a.worth)}
 export function careerFacts(s,spaces){
  const me=s.players[0],ai=s.players.filter(p=>p.ai).length;return{
   board:s.board,length:s.length,ruleset:ID,matchId:s.matchId,startedAt:s.startedAt,endedAt:Date.now(),
