@@ -38,6 +38,10 @@ const humanTurn=p=>p.waitForFunction(()=>{const s=__dominionLab.state();return s
    const samples=[],timer=setInterval(()=>samples.push(r.stats()),40);
    await r.moveToken(0,from,to,980);
    await new Promise(done=>setTimeout(done,1650));
+   // SwiftShader can take several wall-clock seconds to submit a 3× frame.
+   // Wait for the actual return instead of assuming a fixed frame count.
+   const deadline=performance.now()+15000;
+   while(r.stats().tracking>.05&&performance.now()<deadline)await new Promise(done=>setTimeout(done,200));
    clearInterval(timer);
    const result={max:Math.max(0,...samples.map(x=>x.tracking||0)),upright:samples.every(x=>x.cameraUp?.[1]>.999),returned:r.stats().tracking};
    r.sync(SkylineDominion.view(state));return result;
