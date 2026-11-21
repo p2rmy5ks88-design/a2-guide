@@ -114,7 +114,7 @@ export function createCityVenturesRenderer(canvas,{rules,onTile}={}){
   for(let j=0;j<n;j++){const i=a+1+j,t=TILES[i],f=r+(j+.5)*(1-2*r)/n,pos=A.clone().lerp(B,f),w=(1-2*r)*L/n*.95;
    const grp=new THREE.Group();grp.position.copy(pos);grp.rotation.y=Math.atan2(-perp.x,-perp.z);
    const body=new THREE.Mesh(new THREE.BoxGeometry(w,.12,DEPTH),new THREE.MeshStandardMaterial({color:'#efe4c8',roughness:.7}));body.position.y=.06;body.castShadow=true;body.receiveShadow=true;grp.add(body);
-   const ftex=tileTexture(t,CV.DISTRICT_COLORS,renderer);const face=new THREE.Mesh(new THREE.PlaneGeometry(w*.96,DEPTH*.97),new THREE.MeshStandardMaterial({map:ftex,emissiveMap:ftex,emissive:'#ffffff',emissiveIntensity:.38,roughness:.85,envMapIntensity:.2}));face.rotation.x=-Math.PI/2;face.position.y=.122;face.receiveShadow=true;grp.add(face);
+   const ftex=tileTexture(t,CV.DISTRICT_COLORS,renderer);const face=new THREE.Mesh(new THREE.PlaneGeometry(w*.96,DEPTH*.97),new THREE.MeshBasicMaterial({map:ftex,toneMapped:false,side:THREE.DoubleSide}));face.rotation.x=-Math.PI/2;face.position.y=.122;face.receiveShadow=true;grp.add(face);
    const ring=new THREE.Mesh(new THREE.BoxGeometry(w*1.06,.1,DEPTH*1.04),new THREE.MeshStandardMaterial({color:'#ffffff',emissive:'#000',roughness:.4}));ring.position.y=.03;ring.visible=false;grp.add(ring);
    const glow=new THREE.Mesh(new THREE.PlaneGeometry(w*1.02,DEPTH*1.02),new THREE.MeshBasicMaterial({color:'#ffd36b',transparent:true,opacity:0,depthWrite:false}));glow.rotation.x=-Math.PI/2;glow.position.y=.125;grp.add(glow);
    scene.add(grp);body.userData.tile=i;face.userData.tile=i;pick.push(body,face);
@@ -125,7 +125,7 @@ export function createCityVenturesRenderer(canvas,{rules,onTile}={}){
   const rim=new THREE.Mesh(new THREE.CylinderGeometry(1.12,1.18,.2,6),gold);rim.position.y=.1;rim.rotation.y=Math.PI/2;rim.castShadow=true;grp.add(rim);
   const cap=new THREE.Mesh(new THREE.CylinderGeometry(1.0,1.0,.26,6),new THREE.MeshStandardMaterial({color:CORNER_COLORS[i],roughness:.45}));cap.position.y=.2;cap.rotation.y=Math.PI/2;cap.castShadow=true;grp.add(cap);
   // label: flat plane whose canvas top points to the board centre, so it reads upright from outside
-  const label=new THREE.Mesh(new THREE.PlaneGeometry(2.0,2.0),(()=>{const bt=badgeTexture(t,renderer);return new THREE.MeshStandardMaterial({map:bt,emissiveMap:bt,emissive:'#ffffff',emissiveIntensity:.3,transparent:true,alphaTest:.05,roughness:.6,envMapIntensity:.3})})());label.rotation.x=-Math.PI/2;label.position.y=.335;grp.add(label);label.userData.tile=i;pick.push(label);
+  const label=new THREE.Mesh(new THREE.PlaneGeometry(2.0,2.0),(()=>{const bt=badgeTexture(t,renderer);return new THREE.MeshBasicMaterial({map:bt,toneMapped:false,transparent:true,alphaTest:.05,side:THREE.DoubleSide})})());label.rotation.x=-Math.PI/2;label.position.y=.335;grp.add(label);label.userData.tile=i;pick.push(label);
   const glow=new THREE.Mesh(new THREE.CircleGeometry(1.25,6),new THREE.MeshBasicMaterial({color:'#ffd36b',transparent:true,opacity:0,depthWrite:false}));glow.rotation.x=-Math.PI/2;glow.position.y=.36;grp.add(glow);
   scene.add(grp);cap.userData.tile=i;pick.push(cap);
   tileMeshes[i]={grp,glow,cap};tileInfo[i]={pos:P.clone(),inner:P.clone().add(inward.clone().multiplyScalar(.2)),outer:P.clone(),perp:inward,dir:new THREE.Vector3(-inward.z,0,inward.x),w:1.6}});
@@ -196,7 +196,7 @@ export function createCityVenturesRenderer(canvas,{rules,onTile}={}){
  function followGoal(p){const pos=p.clone();const out=pos.clone().setY(0).normalize();goal.target.copy(pos.clone().add(out.multiplyScalar(frameBias)));goal.yaw=yawFor(pos)+userYaw;goal.pitch=THREE.MathUtils.degToRad(44);goal.dist=4.7*userZoom/pushIn}
  function angleLerp(a,b,t){let d=((b-a+Math.PI)%(2*Math.PI)+2*Math.PI)%(2*Math.PI)-Math.PI;return a+d*t}
  function applyCam(dt){const k=reduceMotion.matches?1:1-Math.exp(-dt/.18);cam.target.lerp(goal.target,k);cam.yaw=angleLerp(cam.yaw,goal.yaw,k);cam.pitch+=(goal.pitch-cam.pitch)*k;cam.dist+=(goal.dist-cam.dist)*k;
-  const c=Math.cos(cam.pitch)*cam.dist;camera.position.set(cam.target.x+Math.sin(cam.yaw)*c,cam.target.y+Math.sin(cam.pitch)*cam.dist,cam.target.z+Math.cos(cam.yaw)*c);camera.lookAt(cam.target)}
+  const c=Math.cos(cam.pitch)*cam.dist;camera.up.set(0,1,0);camera.position.set(cam.target.x+Math.sin(cam.yaw)*c,cam.target.y+Math.sin(cam.pitch)*cam.dist,cam.target.z+Math.cos(cam.yaw)*c);camera.lookAt(cam.target)}
 
  // ---- state sync ----
  let view=null,moving=false;const effects={market:null,civic:null,highlight:null};
@@ -208,7 +208,7 @@ export function createCityVenturesRenderer(canvas,{rules,onTile}={}){
    if(T.building){T.grp.remove(T.building);T.building=null}
    if(o){T.ring.visible=true;T.ring.material.color.set(v.players[o.owner].color||PLAYER_COLORS[o.owner]);T.ring.material.emissive.set(v.players[o.owner].color||PLAYER_COLORS[o.owner]);T.ring.material.emissiveIntensity=.35;
     if(TILES[i].type==='property'){const b=building(o.stage,CV.DISTRICT_COLORS[TILES[i].district]);b.position.set(0,.12,-DEPTH*.3);T.grp.add(b);T.building=b}
-    T.face.material.color.set(o.mortgaged?'#8a8a8a':'#ffffff');T.face.material.emissiveIntensity=o.mortgaged?.08:.38}else{T.ring.visible=false;T.face.material.color.set('#ffffff');T.face.material.emissiveIntensity=.38}});
+    T.face.material.color.set(o.mortgaged?'#8a8a8a':'#ffffff');/* Unlit labels: mortgage shading remains material.color. */}else{T.ring.visible=false;T.face.material.color.set('#ffffff');/* Restore high-contrast unlit title ink. */}});
   effects.market=v.market;effects.civic=v.civic;dirty=true}
  function placeTokens(){const counts={};tokens.forEach((t,k)=>{if(t&&view.players[k]&&!view.players[k].out)counts[t.tile]=(counts[t.tile]||0)+1});
   tokens.forEach((t,k)=>{if(!t)return;const p=slot(t.tile,k,counts[t.tile]);t.g.position.set(p.x,.13,p.z);t.g.rotation.y=Math.atan2(tileInfo[t.tile].dir.x,tileInfo[t.tile].dir.z)-Math.PI/2});dirty=true}
