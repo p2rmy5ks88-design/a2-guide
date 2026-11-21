@@ -34,30 +34,100 @@ function createTableSurface(isEmpire) {
  surface.receiveShadow=true;
  return surface;
 }
+function addBox(group, material, size, position, yaw=0) {
+ const mesh=new THREE.Mesh(new THREE.BoxGeometry(...size),material);
+ mesh.position.set(...position);
+ mesh.rotation.y=yaw;
+ group.add(mesh);
+ return mesh;
+}
+
 function createWaterfrontDistrict() {
  const district=new THREE.Group();
- const blocks=new THREE.InstancedMesh(new THREE.BoxGeometry(),new THREE.MeshStandardMaterial({roughness:.72}),48);
- const windows=new THREE.InstancedMesh(new THREE.BoxGeometry(),new THREE.MeshBasicMaterial({color:0xffcb76}),192);
+ const stone=new THREE.MeshStandardMaterial({color:0x847460,roughness:.88});
+ const park=new THREE.MeshStandardMaterial({color:0x284536,roughness:1});
+ const light=new THREE.MeshBasicMaterial({color:0xffc971});
+ const blocks=new THREE.InstancedMesh(new THREE.BoxGeometry(),new THREE.MeshStandardMaterial({roughness:.65}),48);
+ const windows=new THREE.InstancedMesh(new THREE.BoxGeometry(),light,240);
  const transform=new THREE.Object3D();
- for(let index=0;index<48;index++){
-  const angle=index*Math.PI/24;
-  const radius=15+(index%3)*1.45;
-  const height=.65+(index*13%17)*.12;
-  const x=Math.cos(angle)*radius,z=Math.sin(angle)*radius;
-  transform.position.set(x,height/2-.65,z);
-  transform.scale.set(.62,height,.56);
-  transform.updateMatrix();
-  blocks.setMatrixAt(index,transform.matrix);
-  blocks.setColorAt(index,new THREE.Color([0x475568,0x354352,0x756650][index%3]));
-  for(let floor=0;floor<4;floor++){
-   transform.position.set(x,-.62+height*(floor+1)/5,z);
-   transform.scale.set(.22,.045,.58);
+ for(let side=0;side<6;side++){
+  const angle=(side+.5)*Math.PI/3;
+  const quay=new THREE.Group();
+  quay.rotation.y=-angle;
+  district.add(quay);
+  addBox(quay,stone,[4.9,.46,9.3],[15.4,-.64,0]);
+  addBox(quay,park,[4.1,.07,8.4],[15.55,-.37,0]);
+  addBox(quay,stone,[4.9,.19,1.05],[11.3,-.48,0]);
+  for(const z of [-.6,.6])addBox(quay,light,[4.9,.045,.045],[11.3,-.325,z]);
+  for(let lamp=0;lamp<8;lamp++){
+   const z=-4+lamp*1.14;
+   addBox(quay,stone,[.085,.46,.085],[13.17,-.16,z]);
+   addBox(quay,light,[.13,.14,.13],[13.17,.09,z]);
+  }
+  for(let lot=0;lot<8;lot++){
+   const index=side*8+lot;
+   const radial=14.1+(lot%2)*2.65;
+   const offset=(Math.floor(lot/2)-1.5)*1.95;
+   const height=.8+(index*13%17)*.13;
+   const x=Math.cos(angle)*radial-Math.sin(angle)*offset;
+   const z=Math.sin(angle)*radial+Math.cos(angle)*offset;
+   transform.position.set(x,height/2-.33,z);
+   transform.rotation.y=-angle;
+   transform.scale.set(.86,height,.96);
    transform.updateMatrix();
-   windows.setMatrixAt(index*4+floor,transform.matrix);
+   blocks.setMatrixAt(index,transform.matrix);
+   blocks.setColorAt(index,new THREE.Color([0x475568,0x354352,0x756650][index%3]));
+   for(let floor=0;floor<5;floor++){
+    transform.position.set(x,-.33+height*(floor+1)/6,z);
+    transform.scale.set(.88,.045,.98);
+    transform.updateMatrix();
+    windows.setMatrixAt(index*5+floor,transform.matrix);
+   }
   }
  }
  district.add(blocks,windows);
  return district;
+}
+
+function createLandmarkDetail(isEmpire) {
+ const detail=new THREE.Group();
+ const gold=new THREE.MeshStandardMaterial({color:0xd9a548,metalness:.48,roughness:.32});
+ const stone=new THREE.MeshStandardMaterial({color:0xb39a72,roughness:.67});
+ const warmLight=new THREE.MeshBasicMaterial({color:0xffca72});
+ if(isEmpire){
+  for(const [radius,height] of [[.76,.43],[.72,1.12],[.82,1.65]]){
+   const ring=new THREE.Mesh(new THREE.TorusGeometry(radius,.065,8,36),gold);
+   ring.rotation.x=Math.PI/2;
+   ring.position.y=height;
+   detail.add(ring);
+  }
+  for(let index=0;index<10;index++){
+   const angle=index*Math.PI/5;
+   const jewel=new THREE.Mesh(new THREE.OctahedronGeometry(.12),new THREE.MeshStandardMaterial({
+    color:index%2?0xa02665:0x136bba,metalness:.35,roughness:.24
+   }));
+   jewel.position.set(Math.cos(angle)*.83,1.43,Math.sin(angle)*.83);
+   detail.add(jewel);
+   const jet=new THREE.Mesh(new THREE.SphereGeometry(.055,8,6),warmLight);
+   jet.position.set(Math.cos(angle)*1.25,.25,Math.sin(angle)*1.25);
+   detail.add(jet);
+  }
+  detail.rotation.y=Math.PI/10;
+ }else{
+  for(const sign of [-1,1]){
+   addBox(detail,stone,[.43,3.8,1.1],[sign*.96,2.4,.02]);
+   addBox(detail,gold,[.5,.18,1.17],[sign*.96,4.35,.02]);
+   for(let level=0;level<9;level++){
+    const y=1+level*.38;
+    for(const face of [-1,1])addBox(detail,warmLight,[.18,.075,.025],[sign*.96,y,face*.58]);
+   }
+   for(const z of [-.54,.54])addBox(detail,gold,[.064,4.5,.073],[sign*.58,3.1,z]);
+  }
+  const spire=new THREE.Mesh(new THREE.ConeGeometry(.19,1.05,4),gold);
+  spire.position.y=8.24;
+  detail.add(spire);
+ }
+ return detail;
 }
 export async function createBoard({canvas,source,board,base,onSelect=()=>{},quality='high'}){
  const scene=new THREE.Scene();scene.background=new THREE.Color(board==='empire'?0x081829:0x111522);
@@ -82,6 +152,7 @@ export async function createBoard({canvas,source,board,base,onSelect=()=>{},qual
   if(src?.map){src.map.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());const mat=new THREE.MeshBasicMaterial({map:src.map,toneMapped:false,side:THREE.DoubleSide});o.material=mat;}
  }});
  let scenery=null;try{if(quality!=='low'){scenery=await load('environment_detail.glb');scene.add(scenery);scenery.traverse(mesh=>{if(mesh.isMesh)mesh.castShadow=true})}}catch(e){console.warn('Optional scene details unavailable',e)}
+ if(scenery)scene.add(createLandmarkDetail(board==='empire'));
  const spaceMeshes=new Map(),clickable=[];
  for(const tile of source.spaces){const mesh=boardRoot.getObjectByName(tile.raycast_node);if(!mesh)throw Error('3D board missing named tile mesh: '+tile.raycast_node);
   mesh.userData.spaceId=tile.id;spaceMeshes.set(tile.id,mesh);clickable.push(mesh)}
