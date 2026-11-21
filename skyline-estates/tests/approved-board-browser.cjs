@@ -10,6 +10,7 @@ fs.mkdirSync(output,{recursive:true});const checks=[],errors=[];
 const ok=(name,value,extra)=>{assert.ok(value,name+' '+JSON.stringify(extra||''));checks.push(name);console.log('PASS',board,browserName,name)};
 (async()=>{
  const browser=await({chromium,webkit}[browserName]).launch({headless:true,...(browserName==='chromium'?{args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']}:{})});
+ try {
  const ctx=await browser.newContext({viewport:{width:956,height:440},deviceScaleFactor:3,hasTouch:true,isMobile:true,serviceWorkers:'block',reducedMotion:'no-preference'});
  const p=await ctx.newPage();p.on('pageerror',e=>errors.push(String(e)));
  const url=origin+'skyline-estates/approved-career-board.html?board='+board+'&autostart=1&seed='+seed+'&quality='+(browserName==='webkit'?'high':'low')+'&speed=instant';
@@ -18,7 +19,7 @@ const ok=(name,value,extra)=>{assert.ok(value,name+' '+JSON.stringify(extra||'')
  const stats=await p.evaluate(()=>__skylineApproved.renderer().stats());
  ok('real approved GLB board loads every individual tile',stats.spaces===expected&&stats.playingAssets);
  ok('four independent 3D tokens and 5 building models loaded',stats.tokens===4&&stats.stagePrefabs>=5,stats);
- ok('iPhone 18 Pro Max rendering buffer matches selected mobile quality',stats.dpr>=(browserName==='webkit'?2.9:1.4)&&stats.buffer[0]>=956*stats.dpr*.98&&stats.buffer[1]>=300*stats.dpr*.98,stats);
+ ok('iPhone landscape rendering buffer matches actual canvas size and selected quality',stats.dpr>=(browserName==='webkit'?2.9:1.4)&&stats.css.every(n=>n>0)&&stats.buffer.every((n,i)=>Math.abs(n-Math.floor(stats.css[i]*stats.dpr))<=1),stats);
  ok('camera stays upright',stats.cameraUp[1]===1&&stats.cameraUp[0]===0&&stats.cameraUp[2]===0);
  await p.locator('#roll').click({timeout:30000});
  await p.waitForFunction(()=>__skylineApproved.state().phase==='decide'&&!document.querySelector('#roll'),null,{timeout:120000});
@@ -67,5 +68,6 @@ const ok=(name,value,extra)=>{assert.ok(value,name+' '+JSON.stringify(extra||'')
  if(browserName==='webkit')await p.screenshot({path:path.join(output,board+'-844x390-safe.png'),timeout:90000,animations:'disabled'});
  ok('no JS page errors in interactive 3D gameplay',errors.length===0,errors);
  fs.writeFileSync(path.join(output,'result.json'),JSON.stringify({board,browser:browserName,checks,errors,physicalDevice:false,stats},null,2));
- console.log('PASSED',board,browserName,checks.length,'actual in-browser checks');await browser.close();
+ console.log('PASSED',board,browserName,checks.length,'actual in-browser checks');
+ } finally { await browser.close(); }
 })().catch(e=>{console.error(e.stack||e);process.exitCode=1});
