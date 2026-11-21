@@ -16,7 +16,26 @@ async function humanTurn(p){for(let i=0;i<4000;i++){if(await p.evaluate(()=>docu
  const st=await p.evaluate(()=>{const s=__empireLab.state(),pd=SkylineEmpire.pending(s);return s.phase==='over'?'over':(pd.player===0&&(pd.kind==='roll'||pd.kind==='invest')&&!__empireLab.busy())?'me':'wait'});if(st!=='wait')return st;await p.waitForTimeout(60)}throw Error('timeout waiting for human turn')}
 (async()=>{const browser=await launch();try{
  {const vp=VPS[0],{ctx,p}=await open(browser,vp,base+'?seed=515&speed=instant',true);await p.evaluate(()=>{localStorage.setItem('skylineSave','CLASSIC-SENTINEL');localStorage.setItem('skylineDominionSave','DOMINION-SENTINEL')});
-  await p.click('#start');await started(p,vp);const st=await p.evaluate(()=>__empireLab.r3().stats());report.stats=st;
+  await p.click('#start');await started(p,vp);
+   // Board-game presentation acceptance: game board, not dense stats, leads.
+   const tabletop=await p.evaluate(()=>{
+    const game=document.querySelector('#game'),left=document.getElementById('left'),right=document.getElementById('right'),strip=document.getElementById('players'),menu=document.getElementById('p-market');
+    return {enabled:game.classList.contains('sk-boardgame'),
+     leftWidth:left.getBoundingClientRect().width,
+     rightWidth:right.getBoundingClientRect().width,
+     stripWidth:strip.getBoundingClientRect().width,
+     advancedPanelHidden:getComputedStyle(menu).display==='none',
+     selectedVisible:getComputedStyle(document.getElementById('p-sel')).display!=='none',
+     detailsButton:document.getElementById('layoutToggle').getBoundingClientRect().height};
+   });
+   check('board-first camera/HUD focuses on play, not analysis panels',
+    tabletop.enabled&&tabletop.leftWidth<2&&tabletop.selectedVisible&&tabletop.advancedPanelHidden&&tabletop.detailsButton>=44,tabletop);
+   await p.locator('#layoutToggle').click({force:true});
+   const full=await p.evaluate(()=>!document.getElementById('game').classList.contains('sk-boardgame')&&getComputedStyle(document.getElementById('p-market')).display!=='none');
+   check('full management details remain available on demand',full);
+   await p.locator('#layoutToggle').click({force:true});
+   check('player can immediately return to board-first play',await p.evaluate(()=>document.getElementById('game').classList.contains('sk-boardgame')));
+const st=await p.evaluate(()=>__empireLab.r3().stats());report.stats=st;
   check('44 live spaces and four visible tokens from the real match',st.nodes===44&&st.tokensVisible===4);
   check("Claude's supplied art-matched Empire board, bay skyline, Empire Tower and crane GLBs submitted to the GPU",['board_empire_44.glb','empire_bay_skyline.glb','empire_tower.glb','tower_crane.glb'].every(f=>st.files.includes(f))&&st.triangles>500000);
   check('five stage models loaded',['dev_0_lot.glb','dev_1_midrise_L1.glb','dev_2_midrise_L2.glb','dev_4_highrise_L4.glb','dev_5_skyscraper_L5.glb'].every(f=>st.files.includes(f)));
