@@ -492,8 +492,8 @@ export function createCrossroadsRenderer(canvas,{rules,onTile}={}){
    const house=classic.building(kind,stage,Math.round(Math.abs(x*17+z*11))%3);
    house.position.set(x,.086,z);house.scale.setScalar(scale);house.rotation.y=Math.atan2(x,z);
    core.add(house);
-   // Three high-rises plus the landmark Riverside residential mid-rise; four approved 3D facades total.
-   if(stage===4||(x===-2.79&&z===1.69))facadeUpgradeSlots.push({house,x,z,stage,scale});
+   // Four waterfront high-rise locations receive the approved stage-4 3D GLB facades.
+   if(stage===4)facadeUpgradeSlots.push({house,x,z,stage,scale});
  }
  // Classic Solo's green courtyards and civic fountains make the centre a living city,
  // without covering the perimeter property names or the playable Grand Exchange.
