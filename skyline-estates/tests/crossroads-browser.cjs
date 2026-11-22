@@ -16,7 +16,7 @@ let n=0;const ok=m=>{n++;console.log('PASS',m)};
   await Promise.all([p.waitForURL(/crossroads-capital\.html\?career=1&length=quick/),p.locator('.crl[data-len="quick"]').click()]);ok('Career card → Quick opens Crossroads Capital as a Career match');
   await p.goto(base+'crossroads-capital.html?career=1&length=quick&speed=fast&seed=11');await p.locator('#startBtn').waitFor();
   assert.equal(await p.locator('#careerNote').isVisible(),true);await p.click('#startBtn');
-  await p.waitForFunction(()=>window.__cc&&__cc.state()&&__cc.renderer.stats().tiles===33);const ringStats=await p.evaluate(()=>__cc.renderer.stats());assert.equal(ringStats.layout,'classic-circular');assert.equal(ringStats.perimeterTiles,32);assert.ok(ringStats.diameter>=11.5&&ringStats.diameter<=12,'classic-scale circular tabletop');ok('32 spaces on one circular perimeter + selectable central Exchange, same classic-scale diameter');
+  await p.waitForFunction(()=>window.__cc&&__cc.state()&&__cc.renderer.stats().tiles===33);const ringStats=await p.evaluate(()=>__cc.renderer.stats());assert.equal(ringStats.layout,'classic-circular');assert.equal(ringStats.environment,'skyline-terrace','premium city terrace replaces the plain floor');assert.equal(ringStats.perimeterTiles,32);assert.ok(ringStats.diameter>=11.5&&ringStats.diameter<=12,'classic-scale circular tabletop');ok('32 spaces on one circular perimeter + selectable central Exchange, same classic-scale diameter');
   const small=await p.evaluate(()=>[...document.querySelectorAll('button')].filter(b=>b.offsetParent&&b.getBoundingClientRect().height<43.5).map(b=>b.id||b.textContent.trim()));assert.deepEqual(small,[],'touch targets');
   const overlap=await p.evaluate(()=>{const r=id=>document.getElementById(id).getBoundingClientRect();const a=r('players'),b=r('dock'),c=r('top'),h=r('help');return a.bottom>b.top&&a.right>b.left||c.bottom>a.top+1||a.bottom>h.top+1});assert.equal(overlap,false);ok('HUD fits 844×390 with 44pt buttons and no overlaps');
   await p.screenshot({path:path.join(out,engine+'-start.png')});
@@ -31,6 +31,7 @@ let n=0;const ok=m=>{n++;console.log('PASS',m)};
   await p.waitForFunction(()=>{const s=__cc.renderer.stats();return s.mode==='follow'&&s.goalDist<7&&Math.abs(s.camDist-s.goalDist)<.18},null,{timeout:90000});
   const cameraFollow=await p.evaluate(()=>__cc.renderer.stats());
   assert.ok(cameraOverview.camDist>cameraFollow.camDist*1.55,'camera overview vs close-follow distance: '+JSON.stringify({overview:cameraOverview.camDist,follow:cameraFollow.camDist}));
+  assert.ok(cameraFollow.goalDist<5.1,'approved close-up game camera should make tiles larger');
   assert.ok(cameraOverview.mode==='overview'&&cameraFollow.mode==='follow'&&cameraFollow.camPitch>0.5&&cameraFollow.camPitch<1.2&&cameraFollow.cameraUp[1]>.999&&Math.abs(cameraFollow.cameraUp[0])<.001&&Math.abs(cameraFollow.cameraUp[2])<.001,'camera upright / modes: '+JSON.stringify({overview:cameraOverview,follow:cameraFollow}));
   ok('camera can return to overview and smoothly follow a token upright');
 
