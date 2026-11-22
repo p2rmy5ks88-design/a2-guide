@@ -65,8 +65,13 @@ export function validate(s, roster) {
   return errs;
 }
 
+export function safeStorage() { // sandboxed frames / private mode can throw on access
+  try { const ls = globalThis.localStorage; const k = '__af_probe'; ls.setItem(k, '1'); ls.removeItem(k); return ls; }
+  catch { const m = new Map(); return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, String(v)), removeItem: (k) => m.delete(k) }; }
+}
+
 export class Store {
-  constructor(roster, storage = globalThis.localStorage) {
+  constructor(roster, storage = safeStorage()) {
     this.roster = roster; this.storage = storage; this.listeners = new Set();
     let raw = null, legacy = 0;
     try { raw = JSON.parse(storage?.getItem(SAVE_KEY) || 'null'); legacy = Number(storage?.getItem('aetherfront-best') || 0); } catch { raw = null; }

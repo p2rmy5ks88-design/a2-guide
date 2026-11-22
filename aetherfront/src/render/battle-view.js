@@ -160,7 +160,7 @@ export class BattleView {
     const gate = await this.lib.instance('entry_gate');
     gate.root.position.copy(toWorld(ENTRY.x - 0.75, ENTRY.y + 0.5)); gate.root.rotation.y = Math.PI / 2; gate.root.scale.setScalar(1.15); gate.loop('idle'); s.add(gate.root);
     const core = await this.lib.instance('core_reactor');
-    core.root.position.copy(toWorld(EXIT.x + 1.75, EXIT.y + 0.5)); core.root.scale.setScalar(1.35); core.loop('idle'); s.add(core.root);
+    core.root.position.copy(toWorld(EXIT.x + 1.75, EXIT.y + 0.5)); core.root.scale.setScalar(0.95); core.loop('idle'); s.add(core.root);
     this.props = [gate, core]; this.core = core;
     const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: GLOW_TEX, color: '#3ce5ff', blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, opacity: 0.8 }));
     halo.scale.setScalar(3.5); halo.position.copy(core.root.position).setY(1.4); s.add(halo);

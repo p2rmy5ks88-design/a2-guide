@@ -62,7 +62,7 @@ export class HomeView {
   async populate(heroIds) {
     const place = async (id, x, z, ry = 0, s = 1) => { const a = await this.lib.instance(id); a.root.position.set(x, 0.14, z); a.root.rotation.y = ry; a.root.scale.setScalar(s); a.loop('idle'); this.island.add(a.root); this.actors.push(a); return a; };
     await Promise.all([
-      place('core_reactor', 0, -0.2, 0, 1.6),
+      place('core_reactor', 0, -0.2, 0, 1.15),
       place('nova_mortar', -1.9, 0.6, 0.6, 1.3),
       place('arc_pylon', 1.9, 0.3, 0, 1.3),
       place('quantum_spire', 1.2, -1.7, 0, 1.1),

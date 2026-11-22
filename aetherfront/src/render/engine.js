@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { clone as skeletonClone } from 'three/addons/utils/SkeletonUtils.js';
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 
 export const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent));
 
@@ -81,11 +82,11 @@ export class Engine {
 
 // ------------------------------------------------------------------ model library
 export class ModelLibrary {
-  constructor(byId) { this.byId = byId; this.loader = new GLTFLoader(); this.cache = new Map(); }
+  constructor(byId) { this.byId = byId; this.loader = new GLTFLoader(); MeshoptDecoder.ready.then(() => this.loader.setMeshoptDecoder(MeshoptDecoder)).catch((e) => console.warn('[aetherfront] meshopt decoder unavailable', e)); this.decoderReady = MeshoptDecoder.ready.catch(() => null); this.cache = new Map(); }
   load(id) {
     if (!this.cache.has(id)) {
       const rec = this.byId[id];
-      this.cache.set(id, this.loader.loadAsync(rec.model).catch(() => this.loader.loadAsync(rec.starter_model)).then((g) => {
+      this.cache.set(id, this.decoderReady.then(() => this.loader.loadAsync(rec.model)).catch(() => this.loader.loadAsync(rec.forge_model || rec.starter_model)).catch(() => this.loader.loadAsync(rec.starter_model)).then((g) => {
         g.scene.traverse((o) => { if (o.isMesh) { o.castShadow = !o.material.name?.includes('Glow'); o.receiveShadow = false; if (o.isSkinnedMesh) o.frustumCulled = false; if (o.material.isMeshStandardMaterial) o.material.envMapIntensity = 0.85; } });
         return g;
       }));

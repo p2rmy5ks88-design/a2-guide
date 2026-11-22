@@ -197,14 +197,14 @@
       "model": "assets/models/aether_drone_swarm.glb",
       "bounds": [
         [
-          -0.422,
-          0.735,
-          -0.302
+          -0.419,
+          0,
+          -0.425
         ],
         [
-          0.422,
-          1.01,
-          0.302
+          0.419,
+          0.96,
+          0.425
         ]
       ],
       "audio": {
@@ -216,7 +216,7 @@
         "source": "original procedural audio (not ElevenLabs)"
       },
       "starter_model": "assets/models/starter/aether_drone_swarm.glb",
-      "model_version": 2,
+      "model_version": 3,
       "triangles": 2234,
       "animation_clips": [
         "idle",
@@ -225,7 +225,9 @@
         "hit",
         "die"
       ],
-      "portrait": "assets/portraits/aether_drone_swarm.png"
+      "portrait": "assets/portraits/aether_drone_swarm.png",
+      "forge_model": "assets/models/forge/aether_drone_swarm.glb",
+      "model_source": "Meshy AI text-to-3D (static PBR mesh) + procedural clips, packed by tools/meshy/run-static.mjs"
     },
     {
       "id": "nova_mortar",
@@ -250,14 +252,14 @@
       "model": "assets/models/nova_mortar.glb",
       "bounds": [
         [
-          -0.416,
+          -0.503,
           0,
-          -0.48
+          -0.644
         ],
         [
-          0.416,
-          1.078,
-          0.518
+          0.502,
+          1.05,
+          0.646
         ]
       ],
       "audio": {
@@ -269,7 +271,7 @@
         "source": "original procedural audio (not ElevenLabs)"
       },
       "starter_model": "assets/models/starter/nova_mortar.glb",
-      "model_version": 2,
+      "model_version": 3,
       "triangles": 1784,
       "animation_clips": [
         "idle",
@@ -278,7 +280,9 @@
         "hit",
         "die"
       ],
-      "portrait": "assets/portraits/nova_mortar.png"
+      "portrait": "assets/portraits/nova_mortar.png",
+      "forge_model": "assets/models/forge/nova_mortar.glb",
+      "model_source": "Meshy AI text-to-3D (static PBR mesh) + procedural clips, packed by tools/meshy/run-static.mjs"
     },
     {
       "id": "sovereign_lyra",
@@ -359,14 +363,14 @@
       "model": "assets/models/halo_medic.glb",
       "bounds": [
         [
-          -0.285,
-          0.14,
-          -0.214
+          -0.22,
+          0,
+          -0.126
         ],
         [
-          0.285,
-          0.632,
-          0.22
+          0.22,
+          0.675,
+          0.126
         ]
       ],
       "audio": {
@@ -378,7 +382,7 @@
         "source": "original procedural audio (not ElevenLabs)"
       },
       "starter_model": "assets/models/starter/halo_medic.glb",
-      "model_version": 2,
+      "model_version": 3,
       "triangles": 1960,
       "animation_clips": [
         "idle",
@@ -387,7 +391,9 @@
         "hit",
         "die"
       ],
-      "portrait": "assets/portraits/halo_medic.png"
+      "portrait": "assets/portraits/halo_medic.png",
+      "forge_model": "assets/models/forge/halo_medic.glb",
+      "model_source": "Meshy AI text-to-3D (static PBR mesh) + procedural clips, packed by tools/meshy/run-static.mjs"
     },
     {
       "id": "pulse_cannon",
@@ -412,14 +418,14 @@
       "model": "assets/models/pulse_cannon.glb",
       "bounds": [
         [
-          -0.416,
+          -0.393,
           0,
-          -0.48
+          -0.366
         ],
         [
-          0.416,
-          0.61,
-          0.57
+          0.393,
+          1.05,
+          0.366
         ]
       ],
       "audio": {
@@ -431,7 +437,7 @@
         "source": "original procedural audio (not ElevenLabs)"
       },
       "starter_model": "assets/models/starter/pulse_cannon.glb",
-      "model_version": 2,
+      "model_version": 3,
       "triangles": 2092,
       "animation_clips": [
         "idle",
@@ -440,7 +446,9 @@
         "hit",
         "die"
       ],
-      "portrait": "assets/portraits/pulse_cannon.png"
+      "portrait": "assets/portraits/pulse_cannon.png",
+      "forge_model": "assets/models/forge/pulse_cannon.glb",
+      "model_source": "Meshy AI text-to-3D (static PBR mesh) + procedural clips, packed by tools/meshy/run-static.mjs"
     },
     {
       "id": "arc_pylon",
@@ -465,14 +473,14 @@
       "model": "assets/models/arc_pylon.glb",
       "bounds": [
         [
-          -0.416,
+          -0.353,
           0,
-          -0.48
+          -0.353
         ],
         [
-          0.416,
-          1.288,
-          0.48
+          0.353,
+          1.3,
+          0.353
         ]
       ],
       "audio": {
@@ -484,7 +492,7 @@
         "source": "original procedural audio (not ElevenLabs)"
       },
       "starter_model": "assets/models/starter/arc_pylon.glb",
-      "model_version": 2,
+      "model_version": 3,
       "triangles": 2028,
       "animation_clips": [
         "idle",
@@ -493,7 +501,9 @@
         "hit",
         "die"
       ],
-      "portrait": "assets/portraits/arc_pylon.png"
+      "portrait": "assets/portraits/arc_pylon.png",
+      "forge_model": "assets/models/forge/arc_pylon.glb",
+      "model_source": "Meshy AI text-to-3D (static PBR mesh) + procedural clips, packed by tools/meshy/run-static.mjs"
     },
     {
       "id": "glacial_emitter",
@@ -518,14 +528,14 @@
       "model": "assets/models/glacial_emitter.glb",
       "bounds": [
         [
-          -0.416,
+          -0.647,
           0,
-          -0.48
+          -0.417
         ],
         [
-          0.416,
-          0.826,
-          0.48
+          0.647,
+          1.05,
+          0.417
         ]
       ],
       "audio": {
@@ -537,7 +547,7 @@
         "source": "original procedural audio (not ElevenLabs)"
       },
       "starter_model": "assets/models/starter/glacial_emitter.glb",
-      "model_version": 2,
+      "model_version": 3,
       "triangles": 1428,
       "animation_clips": [
         "idle",
@@ -546,7 +556,9 @@
         "hit",
         "die"
       ],
-      "portrait": "assets/portraits/glacial_emitter.png"
+      "portrait": "assets/portraits/glacial_emitter.png",
+      "forge_model": "assets/models/forge/glacial_emitter.glb",
+      "model_source": "Meshy AI text-to-3D (static PBR mesh) + procedural clips, packed by tools/meshy/run-static.mjs"
     },
     {
       "id": "atlas_walker",
@@ -571,14 +583,14 @@
       "model": "assets/models/atlas_walker.glb",
       "bounds": [
         [
-          -0.444,
-          -0.005,
-          -0.444
+          -0.523,
+          0,
+          -0.751
         ],
         [
-          0.444,
-          0.91,
-          0.66
+          0.523,
+          1,
+          0.751
         ]
       ],
       "audio": {
@@ -590,7 +602,7 @@
         "source": "original procedural audio (not ElevenLabs)"
       },
       "starter_model": "assets/models/starter/atlas_walker.glb",
-      "model_version": 2,
+      "model_version": 3,
       "triangles": 6616,
       "animation_clips": [
         "idle",
@@ -599,7 +611,9 @@
         "hit",
         "die"
       ],
-      "portrait": "assets/portraits/atlas_walker.png"
+      "portrait": "assets/portraits/atlas_walker.png",
+      "forge_model": "assets/models/forge/atlas_walker.glb",
+      "model_source": "Meshy AI text-to-3D (static PBR mesh) + procedural clips, packed by tools/meshy/run-static.mjs"
     },
     {
       "id": "cobalt_scout",
@@ -792,14 +806,14 @@
       "model": "assets/models/aegis_barrier.glb",
       "bounds": [
         [
-          -0.416,
+          -0.514,
           0,
-          -0.48
+          -0.506
         ],
         [
-          0.416,
-          1.071,
-          0.48
+          0.514,
+          1.15,
+          0.506
         ]
       ],
       "audio": {
@@ -811,7 +825,7 @@
         "source": "original procedural audio (not ElevenLabs)"
       },
       "starter_model": "assets/models/starter/aegis_barrier.glb",
-      "model_version": 2,
+      "model_version": 3,
       "triangles": 2044,
       "animation_clips": [
         "idle",
@@ -820,7 +834,9 @@
         "hit",
         "die"
       ],
-      "portrait": "assets/portraits/aegis_barrier.png"
+      "portrait": "assets/portraits/aegis_barrier.png",
+      "forge_model": "assets/models/forge/aegis_barrier.glb",
+      "model_source": "Meshy AI text-to-3D (static PBR mesh) + procedural clips, packed by tools/meshy/run-static.mjs"
     },
     {
       "id": "volt_sentinel",
@@ -845,14 +861,14 @@
       "model": "assets/models/volt_sentinel.glb",
       "bounds": [
         [
-          -0.416,
+          -0.258,
           0,
-          -0.48
+          -0.273
         ],
         [
-          0.416,
-          1.02,
-          0.48
+          0.258,
+          1.3,
+          0.273
         ]
       ],
       "audio": {
@@ -864,7 +880,7 @@
         "source": "original procedural audio (not ElevenLabs)"
       },
       "starter_model": "assets/models/starter/volt_sentinel.glb",
-      "model_version": 2,
+      "model_version": 3,
       "triangles": 2540,
       "animation_clips": [
         "idle",
@@ -873,7 +889,9 @@
         "hit",
         "die"
       ],
-      "portrait": "assets/portraits/volt_sentinel.png"
+      "portrait": "assets/portraits/volt_sentinel.png",
+      "forge_model": "assets/models/forge/volt_sentinel.glb",
+      "model_source": "Meshy AI text-to-3D (static PBR mesh) + procedural clips, packed by tools/meshy/run-static.mjs"
     },
     {
       "id": "quantum_spire",
@@ -898,14 +916,14 @@
       "model": "assets/models/quantum_spire.glb",
       "bounds": [
         [
-          -0.416,
+          -0.247,
           0,
-          -0.48
+          -0.247
         ],
         [
-          0.416,
-          1.37,
-          0.48
+          0.247,
+          1.3,
+          0.247
         ]
       ],
       "audio": {
@@ -917,7 +935,7 @@
         "source": "original procedural audio (not ElevenLabs)"
       },
       "starter_model": "assets/models/starter/quantum_spire.glb",
-      "model_version": 2,
+      "model_version": 3,
       "triangles": 3220,
       "animation_clips": [
         "idle",
@@ -926,7 +944,9 @@
         "hit",
         "die"
       ],
-      "portrait": "assets/portraits/quantum_spire.png"
+      "portrait": "assets/portraits/quantum_spire.png",
+      "forge_model": "assets/models/forge/quantum_spire.glb",
+      "model_source": "Meshy AI text-to-3D (static PBR mesh) + procedural clips, packed by tools/meshy/run-static.mjs"
     },
     {
       "id": "ember_striker",
@@ -1175,14 +1195,14 @@
       "model": "assets/models/scavenger_drone.glb",
       "bounds": [
         [
-          -0.21,
-          0.81,
-          -0.19
+          -0.222,
+          -0.02,
+          -0.275
         ],
         [
-          0.21,
-          0.985,
-          0.26
+          0.222,
+          1.001,
+          0.275
         ]
       ],
       "audio": {
@@ -1194,7 +1214,7 @@
         "source": "original procedural audio (not ElevenLabs)"
       },
       "starter_model": "assets/models/starter/scavenger_drone.glb",
-      "model_version": 2,
+      "model_version": 3,
       "triangles": 748,
       "animation_clips": [
         "idle",
@@ -1203,7 +1223,9 @@
         "hit",
         "die"
       ],
-      "portrait": "assets/portraits/scavenger_drone.png"
+      "portrait": "assets/portraits/scavenger_drone.png",
+      "forge_model": "assets/models/forge/scavenger_drone.glb",
+      "model_source": "Meshy AI text-to-3D (static PBR mesh) + procedural clips, packed by tools/meshy/run-static.mjs"
     },
     {
       "id": "crawler_swarm",
@@ -1228,14 +1250,14 @@
       "model": "assets/models/crawler_swarm.glb",
       "bounds": [
         [
-          -0.334,
-          0.05,
-          -0.228
+          -0.3,
+          0,
+          -0.247
         ],
         [
-          0.334,
-          0.2,
-          0.276
+          0.3,
+          0.254,
+          0.247
         ]
       ],
       "audio": {
@@ -1247,7 +1269,7 @@
         "source": "original procedural audio (not ElevenLabs)"
       },
       "starter_model": "assets/models/starter/crawler_swarm.glb",
-      "model_version": 2,
+      "model_version": 3,
       "triangles": 3092,
       "animation_clips": [
         "idle",
@@ -1256,7 +1278,9 @@
         "hit",
         "die"
       ],
-      "portrait": "assets/portraits/crawler_swarm.png"
+      "portrait": "assets/portraits/crawler_swarm.png",
+      "forge_model": "assets/models/forge/crawler_swarm.glb",
+      "model_source": "Meshy AI text-to-3D (static PBR mesh) + procedural clips, packed by tools/meshy/run-static.mjs"
     },
     {
       "id": "siege_walker",
@@ -1281,14 +1305,14 @@
       "model": "assets/models/siege_walker.glb",
       "bounds": [
         [
-          -0.571,
-          0.011,
-          -0.571
+          -0.626,
+          0,
+          -0.321
         ],
         [
-          0.571,
-          1.195,
-          0.78
+          0.624,
+          0.866,
+          0.321
         ]
       ],
       "audio": {
@@ -1300,7 +1324,7 @@
         "source": "original procedural audio (not ElevenLabs)"
       },
       "starter_model": "assets/models/starter/siege_walker.glb",
-      "model_version": 2,
+      "model_version": 3,
       "triangles": 5972,
       "animation_clips": [
         "idle",
@@ -1309,7 +1333,9 @@
         "hit",
         "die"
       ],
-      "portrait": "assets/portraits/siege_walker.png"
+      "portrait": "assets/portraits/siege_walker.png",
+      "forge_model": "assets/models/forge/siege_walker.glb",
+      "model_source": "Meshy AI text-to-3D (static PBR mesh) + procedural clips, packed by tools/meshy/run-static.mjs"
     },
     {
       "id": "titan_breaker",
@@ -1390,14 +1416,14 @@
       "model": "assets/models/spectral_interceptor.glb",
       "bounds": [
         [
-          -0.355,
-          0.99,
-          -0.325
+          -0.378,
+          0,
+          -0.343
         ],
         [
-          0.355,
-          1.135,
-          0.32
+          0.372,
+          1.144,
+          0.336
         ]
       ],
       "audio": {
@@ -1409,7 +1435,7 @@
         "source": "original procedural audio (not ElevenLabs)"
       },
       "starter_model": "assets/models/starter/spectral_interceptor.glb",
-      "model_version": 2,
+      "model_version": 3,
       "triangles": 844,
       "animation_clips": [
         "idle",
@@ -1418,7 +1444,9 @@
         "hit",
         "die"
       ],
-      "portrait": "assets/portraits/spectral_interceptor.png"
+      "portrait": "assets/portraits/spectral_interceptor.png",
+      "forge_model": "assets/models/forge/spectral_interceptor.glb",
+      "model_source": "Meshy AI text-to-3D (static PBR mesh) + procedural clips, packed by tools/meshy/run-static.mjs"
     },
     {
       "id": "assault_crab",
@@ -1443,14 +1471,14 @@
       "model": "assets/models/assault_crab.glb",
       "bounds": [
         [
-          -0.468,
-          -0.035,
-          -0.428
+          -0.425,
+          0,
+          -0.418
         ],
         [
-          0.468,
-          0.55,
-          0.428
+          0.425,
+          0.576,
+          0.418
         ]
       ],
       "audio": {
@@ -1462,7 +1490,7 @@
         "source": "original procedural audio (not ElevenLabs)"
       },
       "starter_model": "assets/models/starter/assault_crab.glb",
-      "model_version": 2,
+      "model_version": 3,
       "triangles": 6900,
       "animation_clips": [
         "idle",
@@ -1471,7 +1499,9 @@
         "hit",
         "die"
       ],
-      "portrait": "assets/portraits/assault_crab.png"
+      "portrait": "assets/portraits/assault_crab.png",
+      "forge_model": "assets/models/forge/assault_crab.glb",
+      "model_source": "Meshy AI text-to-3D (static PBR mesh) + procedural clips, packed by tools/meshy/run-static.mjs"
     }
   ],
   "environment": [
@@ -1502,23 +1532,25 @@
       "model": "assets/models/core_reactor.glb",
       "bounds": [
         [
-          -0.624,
+          -1.236,
           0,
-          -0.72
+          -1.131
         ],
         [
-          0.624,
-          1.27,
-          0.72
+          1.236,
+          1.7,
+          1.131
         ]
       ],
       "starter_model": "assets/models/starter/core_reactor.glb",
-      "model_version": 2,
+      "model_version": 3,
       "triangles": 3940,
       "animation_clips": [
         "idle",
         "hit"
-      ]
+      ],
+      "forge_model": "assets/models/forge/core_reactor.glb",
+      "model_source": "Meshy AI text-to-3D (static PBR mesh) + procedural clips, packed by tools/meshy/run-static.mjs"
     },
     {
       "id": "turret_pad",

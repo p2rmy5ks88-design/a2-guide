@@ -275,3 +275,6 @@ select.filter { appearance: none; -webkit-appearance: none; height: 38px; paddin
   .reward { padding: 5px; font-size: 10px; } .reward b { font-size: 15px; } .reward img { width: 30px !important; height: 30px !important; }
   .statline { margin: 2px 0 4px; } .statline b { font-size: 16px; }
 }
+.dialog-veil { position: fixed; inset: 0; z-index: 90; display: grid; place-items: center; background: #040820d0; padding: 16px; }
+.dialog-veil .panel { width: min(420px, 100%); padding: 16px; text-align: center; }
+.dlg-input { width: 100%; height: 44px; border-radius: 10px; border: 2px solid #3a6fd8; background: #0a1236; color: #fff; font: inherit; font-weight: 800; font-size: 18px; padding: 0 12px; margin-top: 4px; -webkit-user-select: text; user-select: text; }

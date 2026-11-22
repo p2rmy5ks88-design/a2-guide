@@ -17,6 +17,14 @@ window.__AF = app; // test/debug hook (no secrets)
 
 function toast(msg, bad = false) { const d = document.createElement('div'); d.textContent = msg; if (bad) d.className = 'bad'; $('#toast').append(d); setTimeout(() => d.remove(), 2300); }
 function modal(html, onClick) { const m = $('#modal'); m.innerHTML = `<div class="panel">${html}</div>`; m.classList.remove('hidden'); m.onclick = (e) => { if (e.target === m) closeModal(); const b = e.target.closest('[data-act]'); if (b) onClick?.(b.dataset.act, b); }; }
+function ask(text, { input = null, ok = 'OK', cancel = 'Cancel', danger = false } = {}) { // in-game confirm/prompt (native dialogs are blocked in sandboxed frames)
+  return new Promise((res) => {
+    const d = document.createElement('div'); d.className = 'dialog-veil';
+    d.innerHTML = `<div class="panel"><p>${esc(text)}</p>${input !== null ? `<input class="dlg-input" maxlength="18" value="${esc(input)}">` : ''}<div class="row-btns"><button class="btn ghost" data-r="0">${cancel}</button><button class="btn ${danger ? 'red' : 'gold'}" data-r="1">${ok}</button></div></div>`;
+    document.body.append(d); d.querySelector('input')?.focus();
+    d.onclick = (e) => { const b = e.target.closest('[data-r]'); if (!b) return; const v = b.dataset.r === '1' ? (input !== null ? d.querySelector('input').value : true) : (input !== null ? null : false); d.remove(); res(v); };
+  });
+}
 function closeModal() { $('#modal').classList.add('hidden'); $('#modal').innerHTML = ''; }
 const S = () => app.store.get();
 
@@ -195,7 +203,7 @@ function showSettings() {
     if (act === 'close') { closeModal(); renderHome(); return; }
     if (act === 'mute') { app.store.transact((s) => { s.settings.muted = !s.settings.muted; }); app.audio.apply(); showSettings(); }
     if (act.startsWith('q-')) { const q = act.slice(2); app.store.transact((s) => { s.settings.quality = q; }); app.engine?.setQuality(q); showSettings(); }
-    if (act === 'reset') { if (confirm('Reset ALL Aetherfront progress on this device?')) { localStorage.removeItem('aetherfront.save'); location.reload(); } }
+    if (act === 'reset') { ask('Reset ALL Aetherfront progress on this device? This cannot be undone.', { ok: 'Reset', danger: true }).then((y) => { if (y) { try { app.store.storage.removeItem('aetherfront.save'); } catch {} location.reload(); } }); }
   });
   $('#vol').oninput = (e) => { app.store.transact((s) => { s.settings.volume = Number(e.target.value); }); app.audio.apply(); };
 }
@@ -276,7 +284,7 @@ function squadsAct(act, b) {
     case 'tab-squads': u.tab = 'squads'; renderSquads(); break;
     case 'tab-collection': u.tab = 'collection'; renderSquads(); break;
     case 'sq': leaveCheck(); u.idx = Number(b.dataset.i); u.replacing = false; renderSquads(); break;
-    case 'rename': { const d = currentDraft(); const n = prompt('Squad name', d.name || ''); if (n !== null) { d.name = n.trim().slice(0, 18) || 'Squad ' + (u.idx + 1); commitDraft(d); renderSquads(); } break; }
+    case 'rename': { const d = currentDraft(); ask('Squad name', { input: d.name || '', ok: 'Save' }).then((n) => { if (n !== null) { d.name = n.trim().slice(0, 18) || 'Squad ' + (u.idx + 1); commitDraft(d); renderSquads(); } }); break; }
     case 'auto': { // strongest affordable mix: 2 towers, 1 tank, 2 best others + best hero
       const lv = (id) => S().units[id].level, pw = (x) => power(x, lv(x.id));
       const R = app.M.roster.filter((x) => x.category !== 'hero');
@@ -399,7 +407,7 @@ function battleUIClick(e) {
     case 'speed': B.speed = B.speed === 1 ? 2 : 1; $('#h-speed').textContent = B.speed + '× ' + (B.speed === 2 ? '▸▸' : '▸'); app.audio.ui_('ui_select'); break;
     case 'pause': setPaused(!B.paused); break;
     case 'resume': setPaused(false); break;
-    case 'quit': if (confirm('Leave the battle? It counts as a defeat (rewards for waves cleared still apply).')) { sim.finish(false); } break;
+    case 'quit': ask('Leave the battle? It counts as a defeat (rewards for waves cleared still apply).', { ok: 'Leave', danger: true }).then((y) => { if (y && B.sim === sim) { setPaused(false); sim.finish(false); } }); break;
     case 'ult': {
       if (!sim.ultReady()) { app.audio.ui_('ui_error'); toast(sim.allies.some((x) => x.kind === 'hero') ? `Ultimate charging ${Math.floor(sim.ult)}%` : 'Deploy your hero first', true); break; }
       const hero = sim.allies.find((x) => x.kind === 'hero');
