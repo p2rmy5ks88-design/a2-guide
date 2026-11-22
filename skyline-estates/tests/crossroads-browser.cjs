@@ -27,6 +27,7 @@ let n=0;const ok=m=>{n++;console.log('PASS',m)};
   await p.evaluate(()=>__cc.renderer.overview(true));
   await p.waitForFunction(()=>{const s=__cc.renderer.stats();return s.mode==='overview'&&s.goalDist>10&&Math.abs(s.camDist-s.goalDist)<.18},null,{timeout:90000});
   const cameraOverview=await p.evaluate(()=>__cc.renderer.stats());
+  assert.ok(cameraOverview.titleNdcY<.90&&cameraOverview.titleNdcY>-.15,'Crossroads marquee must be onscreen during board overview: '+cameraOverview.titleNdcY);
   assert.ok(cameraOverview.camPitch<.85&&cameraOverview.camDist<15,'immersive low-angle board overview');
   await p.evaluate(()=>__cc.renderer.overview(false));
   await p.waitForFunction(()=>{const s=__cc.renderer.stats();return s.mode==='follow'&&s.goalDist<7&&Math.abs(s.camDist-s.goalDist)<.18},null,{timeout:90000});
