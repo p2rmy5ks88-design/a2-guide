@@ -14,6 +14,8 @@ function wrap(g,text,x,y,maxW,lh){const words=String(text).split(' ');let line='
 function icon(g,kind,x,y,sz,col){g.save();g.translate(x,y);g.scale(sz/100,sz/100);g.fillStyle=col;g.strokeStyle=col;g.lineWidth=8;g.lineJoin='round';g.lineCap='round';
  const P=d=>g.fill(new Path2D(d));
  switch(kind){
+  case'start':g.font='900 41px Arial,sans-serif';g.textAlign='center';g.fillText('GO',50,62);g.beginPath();g.moveTo(18,83);g.lineTo(82,83);g.lineTo(66,73);g.moveTo(82,83);g.lineTo(66,93);g.lineWidth=6;g.stroke();break;
+  case'skybridge':g.beginPath();g.moveTo(9,82);g.lineTo(91,82);g.moveTo(16,82);g.quadraticCurveTo(50,12,84,82);g.moveTo(16,62);g.lineTo(16,91);g.moveTo(84,62);g.lineTo(84,91);for(const x of[32,50,68]){g.moveTo(x,57);g.lineTo(x,82)}g.lineWidth=7;g.stroke();break;
   case'property':P('M18 92V40h26v52zM52 92V14h32v78z');g.fillStyle='rgba(255,255,255,.0)';g.globalCompositeOperation='destination-out';for(const [a,b]of[[24,48],[34,48],[24,62],[34,62],[24,76],[34,76],[58,24],[72,24],[58,40],[72,40],[58,56],[72,56],[58,72],[72,72]])g.fillRect(a,b,6,8);g.globalCompositeOperation='source-over';break;
   case'transit':P('M22 12h56q10 0 10 10v48q0 10-10 10H22q-10 0-10-10V22q0-10 10-10zM22 26v22h56V26z');g.beginPath();g.moveTo(26,96);g.lineTo(36,80);g.moveTo(74,96);g.lineTo(64,80);g.stroke();g.globalCompositeOperation='destination-out';g.beginPath();g.arc(30,64,6,0,7);g.arc(70,64,6,0,7);g.fill();g.globalCompositeOperation='source-over';break;
   case'power-grid':P('M58 4L18 56h28l-8 40 44-56H52z');break;
@@ -29,7 +31,7 @@ function tileTexture(t,colors,renderer){
  const bg=g.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#fffaf0');bg.addColorStop(1,'#f3e7cc');g.fillStyle=bg;g.fillRect(0,0,W,H);
  const band=t.district?colors[t.district]:t.type==='start'?'#13814c':t.type==='skybridge'?'#2465a5':null;
  if(band){const b=g.createLinearGradient(0,0,0,170);b.addColorStop(0,band);b.addColorStop(1,shade(band,-.18));g.fillStyle=b;g.fillRect(0,0,W,170);g.fillStyle='rgba(255,255,255,.22)';g.fillRect(0,0,W,6);g.fillStyle=shade(band,-.35);g.fillRect(0,166,W,4);
-  icon(g,t.type==='start'?'tax':t.type==='skybridge'?'event':'property',W/2-46,30,92,'#ffffff')}
+  icon(g,t.type==='start'?'start':t.type==='skybridge'?'skybridge':'property',W/2-46,30,92,'#ffffff')}
  else{const kind=t.type==='utility'?t.id:t.type;icon(g,kind,W/2-48,26,96,t.type==='event'?'#7a3cc4':t.type==='transit'?'#1d4f8a':t.type==='utility'?(t.id==='water-works'?'#1f8fd6':t.id==='power-grid'?'#e0a10c':'#5b6676'):t.type==='tax'?'#c79a3e':'#8a5a2b')}
  // gold double border
  g.strokeStyle=gold;g.lineWidth=7;g.strokeRect(4,4,W-8,H-8);g.strokeStyle='rgba(199,154,62,.55)';g.lineWidth=2;g.strokeRect(14,14,W-28,H-28);
@@ -122,6 +124,28 @@ export function createCrossroadsRenderer(canvas,{rules,onTile}={}){
    const house=classic.building(kind,stage,Math.round(Math.abs(x*17+z*11))%3);
    house.position.set(x,.086,z);house.scale.setScalar(scale);house.rotation.y=Math.atan2(x,z);
    core.add(house);
+ }
+ // Classic Solo's green courtyards and civic fountains make the centre a living city,
+ // without covering the perimeter property names or the playable Grand Exchange.
+ for(const [x,z,garden] of [[-1.20,-1.17,true],[1.25,1.18,true],
+                             [-1.24,1.16,false],[1.22,-1.20,false]]){
+  classic.box(core,'limestone',x,.090,z,1.18,.065,1.10);
+  classic.box(core,garden?'foliageLight':'paving',x,.131,z,1.07,.025,.99);
+  for(const dz of[-.38,.38])classic.box(core,'gold',x,.156,z+dz,.95,.014,.022);
+  if(garden){
+   for(const [dx,dz,n]of[[-.29,-.27,1],[.29,.24,2]]){
+    const tree=classic.tree(Math.round((x+5)*19+(z+5)*7+n));
+    tree.scale.setScalar(.45);tree.position.set(x+dx,.165,z+dz);core.add(tree);
+   }
+   classic.box(core,'paving',x,.159,z,.74,.012,.12);
+  }else{
+   const pool=classic.disk(core,'glass',x,.167,z,.30,.020);
+   pool.castShadow=false;
+   const centre=classic.disk(core,'ivory',x,.190,z,.065,.045);
+   centre.castShadow=false;
+   for(const dx of[-.35,.35]){const lamp=classic.lamp();lamp.scale.setScalar(.44);
+    lamp.position.set(x+dx,.170,z+.35);core.add(lamp)}
+  }
  }
  for(let i=0;i<20;i++){const a=i*Math.PI/10,r=3.35,x=Math.cos(a)*r,z=Math.sin(a)*r;
   if(Math.abs(x)<.55||Math.abs(z)<.55)continue;
@@ -286,7 +310,7 @@ export function createCrossroadsRenderer(canvas,{rules,onTile}={}){
  const cam={target:new THREE.Vector3(),yaw:0,pitch:THREE.MathUtils.degToRad(48),dist:14},goal={target:new THREE.Vector3(),yaw:0,pitch:THREE.MathUtils.degToRad(48),dist:14};
  let pinned=false,frameBias=.2,mode='follow',followPid=0,userZoom=1,userYaw=0,pushIn=1,lastT=performance.now(),lastYaw=0;
  function yawAt(id,p){const T=tileInfo[id];if(!T||T.hub){return Math.abs(p.x)<.9?(p.z<-1.2?Math.PI:0):lastYaw}const d=p.clone().sub(T.center);return Math.atan2(d.x,d.z)}
- function overviewGoal(){goal.target.set(0,0,0);goal.yaw=0;goal.pitch=THREE.MathUtils.degToRad(50);const a=camera.aspect||2.17;goal.dist=Math.max(15.5,15.5*2.05/a)}
+ function overviewGoal(){goal.target.set(0,0,.9);goal.yaw=0;goal.pitch=THREE.MathUtils.degToRad(50);const a=camera.aspect||2.17;goal.dist=Math.max(15.5,15.5*2.05/a)}
  function followGoal(p,id){const T=tileInfo[id]||{};const out=T.perp?T.perp.clone().negate():new THREE.Vector3(0,0,1);goal.target.copy(p.clone().add(out.multiplyScalar(frameBias)));const y=yawAt(id,p);lastYaw=y;goal.yaw=y+userYaw;goal.pitch=THREE.MathUtils.degToRad(43);goal.dist=5.3*userZoom/pushIn}
  function angleLerp(a,b,t){let d=((b-a+Math.PI)%(2*Math.PI)+2*Math.PI)%(2*Math.PI)-Math.PI;return a+d*t}
  function applyCam(dt){const k=reduceMotion.matches?1:1-Math.exp(-dt/.2);cam.target.lerp(goal.target,k);cam.yaw=angleLerp(cam.yaw,goal.yaw,k);cam.pitch+=(goal.pitch-cam.pitch)*k;cam.dist+=(goal.dist-cam.dist)*k;
