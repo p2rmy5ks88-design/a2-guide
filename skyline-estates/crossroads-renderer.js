@@ -678,7 +678,7 @@ export function createCrossroadsRenderer(canvas,{rules,onTile}={}){
  const cam={target:new THREE.Vector3(),yaw:0,pitch:THREE.MathUtils.degToRad(48),dist:14},goal={target:new THREE.Vector3(),yaw:0,pitch:THREE.MathUtils.degToRad(48),dist:14};
  let pinned=false,frameBias=1.65,mode='follow',followPid=0,userZoom=1,userYaw=0,pushIn=1,lastT=performance.now(),lastYaw=0;
  function yawAt(id,p){const T=tileInfo[id];if(!T||T.hub){return Math.abs(p.x)<.9?(p.z<-1.2?Math.PI:0):lastYaw}const d=p.clone().sub(T.center);return Math.atan2(d.x,d.z)}
- function overviewGoal(){goal.target.set(0,0,.65);goal.yaw=0;goal.pitch=THREE.MathUtils.degToRad(41);const a=camera.aspect||2.17;goal.dist=Math.max(13.6,13.6*2.05/a)}
+ function overviewGoal(){goal.target.set(0,0,1.08);goal.yaw=0;goal.pitch=THREE.MathUtils.degToRad(43);const a=camera.aspect||2.17;goal.dist=Math.max(11.95,11.95*2.05/a)}
  function followGoal(p,id){const T=tileInfo[id]||{};const inward=T.perp?T.perp.clone():new THREE.Vector3(0,0,1);goal.target.copy(p.clone().add(inward.multiplyScalar(frameBias)));const y=yawAt(id,p);lastYaw=y;goal.yaw=y+userYaw;goal.pitch=THREE.MathUtils.degToRad(43);goal.dist=6.6*userZoom/pushIn}
  function angleLerp(a,b,t){let d=((b-a+Math.PI)%(2*Math.PI)+2*Math.PI)%(2*Math.PI)-Math.PI;return a+d*t}
  function applyCam(dt){const k=reduceMotion.matches?1:1-Math.exp(-dt/.2);cam.target.lerp(goal.target,k);cam.yaw=angleLerp(cam.yaw,goal.yaw,k);cam.pitch+=(goal.pitch-cam.pitch)*k;cam.dist+=(goal.dist-cam.dist)*k;
@@ -726,11 +726,11 @@ export function createCrossroadsRenderer(canvas,{rules,onTile}={}){
  // ---- loop ----
  function resize(){const w=canvas.clientWidth,h=canvas.clientHeight;if(!w||!h)return;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();if(mode==='overview')overviewGoal();dirty=true}
  addEventListener('resize',resize);visualViewport&&visualViewport.addEventListener('resize',resize);
- let frames=0,fpsT=performance.now(),running=true;
+ let frames=0,fpsT=performance.now(),running=true,measuredFps=null;
  function loop(now){if(!running)return;requestAnimationFrame(loop);terrace.marquee.visible=mode==='overview';const dt=Math.min(.1,(now-lastT)/1000);lastT=now;applyCam(dt);const pulse=.5+.5*Math.sin(now/300);if(!reduceMotion.matches)livingCity.tick(now);
   for(const id in tileMeshes){const T=tileMeshes[id];T.glow.material.opacity=effects.highlight===id?.35+.25*pulse:0}
   tokens.forEach((t,k)=>{if(!t)return;const on=view&&view.turn&&view.turn.pid===k;const r=t.g.userData.ring;if(r&&r.material)r.material.emissiveIntensity=on?.6+.6*pulse:.25});
-  renderer.render(scene,camera);frames++;if(now-fpsT>3000){const fps=frames*1000/(now-fpsT);frames=0;fpsT=now;if(fps<28&&dpr>2){dpr=Math.max(2,dpr-.5);renderer.setPixelRatio(dpr);resize()}}}
+  renderer.render(scene,camera);frames++;if(now-fpsT>3000){const fps=frames*1000/(now-fpsT);measuredFps=Math.round(fps*10)/10;frames=0;fpsT=now;if(fps<28&&dpr>2){dpr=Math.max(2,dpr-.5);renderer.setPixelRatio(dpr);resize()}}}
  resize();overviewGoal();Object.assign(cam,{target:goal.target.clone(),yaw:goal.yaw,pitch:goal.pitch,dist:goal.dist});requestAnimationFrame(loop);
  return{setFrameBias(v){frameBias=v;refreshGoal()},sync,moveToken,follow,focusTile,overview,highlight,resize,
-  stats:()=>({dpr,mode,zoom:userZoom,camDist:cam.dist,goalDist:goal.dist,camYaw:cam.yaw,camPitch:cam.pitch,cameraUp:camera.up.toArray(),layout:'classic-circular',environment:'harbour-terrace',followBias:'inward',vistaTowers:terrace.vistaTowers,titleNdcY:terrace.marquee.position.clone().project(camera).y,landmarksDetailed:livingCity.landmarks,ambientTraffic:livingCity.trafficCount,premiumPalms:premiumCity.palms,promenadeLights:premiumCity.lights,diameter:RIM*2,perimeterTiles:ringOrder.length,tiles:Object.keys(tileMeshes).length,tokens:tokens.length,landmarks:lmGroup.children.length}),mode:()=>mode,dispose(){running=false;renderer.dispose()}}}
+  stats:()=>({dpr,maxDpr,cssWidth:canvas.clientWidth,cssHeight:canvas.clientHeight,drawWidth:canvas.width,drawHeight:canvas.height,measuredFps,triangles:renderer.info.render.triangles,mode,zoom:userZoom,camDist:cam.dist,goalDist:goal.dist,camYaw:cam.yaw,camPitch:cam.pitch,cameraUp:camera.up.toArray(),layout:'classic-circular',environment:'harbour-terrace',followBias:'inward',vistaTowers:terrace.vistaTowers,titleNdcY:terrace.marquee.position.clone().project(camera).y,landmarksDetailed:livingCity.landmarks,ambientTraffic:livingCity.trafficCount,premiumPalms:premiumCity.palms,promenadeLights:premiumCity.lights,diameter:RIM*2,perimeterTiles:ringOrder.length,tiles:Object.keys(tileMeshes).length,tokens:tokens.length,landmarks:lmGroup.children.length}),mode:()=>mode,dispose(){running=false;renderer.dispose()}}}
