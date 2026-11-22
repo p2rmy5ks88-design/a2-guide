@@ -630,26 +630,51 @@ export function createCrossroadsRenderer(canvas,{rules,onTile}={}){
  const winTex=windowTexture(),proto=[],props={},lmProto=[];const loader=new GLTFLoader(),base='./assets/approved-v5/';
  let modelLoadStatus='loading',modelLoadError='';
  const fit=(obj,w)=>{const b=new THREE.Box3().setFromObject(obj),size=b.getSize(new THREE.Vector3()),k=w/Math.max(size.x,size.z);obj.scale.setScalar(k);const b2=new THREE.Box3().setFromObject(obj);obj.position.y-=b2.min.y;const c=b2.getCenter(new THREE.Vector3());obj.position.x-=c.x;obj.position.z-=c.z;const g=new THREE.Group();g.add(obj);return g};
- Promise.all(['dev_0_lot','dev_1_midrise_L1','dev_2_midrise_L2','dev_3_highrise_L3','dev_4_highrise_L4','dev_5_skyscraper_L5'].map(f=>loader.loadAsync(base+'buildings/'+f+'.glb').then(x=>x.scene))).then(list=>{list.forEach((sc,k)=>{sc.traverse(o=>{if(o.isMesh)o.castShadow=o.receiveShadow=true});proto[k]=fit(sc,[.36,.32,.3,.28,.27,.26][k])});
-  // Reuse the already-loaded approved 3D architecture for four central towers.
-  // Keep procedural placeholders until GLB loading succeeds (offline-safe).
-  for(const slot of facadeUpgradeSlots){
-   const approved=proto[slot.stage]?.clone(true);
-   if(!approved)continue;
-   approved.scale.setScalar(2.8*slot.scale);
-   approved.position.set(slot.x,.10,slot.z);
-   approved.rotation.y=Math.atan2(slot.x,slot.z);
-   core.add(approved);slot.house.visible=false;approvedFacades++;
-  }
-  modelLoadStatus='ready';dirty=true;for(const id in tileMeshes)tileMeshes[id].key=null;if(view)sync(view)}).catch(e=>{modelLoadStatus='failed';modelLoadError=String(e&&e.message||e);console.warn('Crossroads building models',e)});
- Promise.all(['financial_tower_crown','grand_boulevard_palace','financial_tower_spire'].map(f=>loader.loadAsync(base+'buildings/'+f+'.glb').then(x=>x.scene))).then(list=>{list.forEach((sc,k)=>{sc.traverse(o=>{if(o.isMesh)o.castShadow=true});lmProto[k]=fit(sc,[.5,.75,.5][k])});lmKey='';if(view)sync(view)}).catch(e=>console.warn('Crossroads landmark models',e));
+ // Mobile-friendly progressive loading: decode only one approved tower GLB at
+ // startup and share its GPU resources across four facades. All other property
+ // stages and Landmark models load on first actual use, never on the menu.
+ const stageFiles=['dev_0_lot','dev_1_midrise_L1','dev_2_midrise_L2','dev_3_highrise_L3','dev_4_highrise_L4','dev_5_skyscraper_L5'];
+ const stageWidths=[.36,.32,.30,.28,.27,.26],pendingStages=new Set(),failedStages=new Set();
+ function loadStage(stage){
+  if(proto[stage]||pendingStages.has(stage)||failedStages.has(stage)||!stageFiles[stage])return;
+  pendingStages.add(stage);
+  loader.loadAsync(base+'buildings/'+stageFiles[stage]+'.glb').then(x=>{
+   const sc=x.scene;sc.traverse(o=>{if(o.isMesh)o.castShadow=o.receiveShadow=true});
+   proto[stage]=fit(sc,stageWidths[stage]);pendingStages.delete(stage);
+   if(stage===4){
+    for(const slot of facadeUpgradeSlots){
+     const approved=proto[stage].clone(true);
+     approved.scale.setScalar(2.8*slot.scale);
+     approved.position.set(slot.x,.10,slot.z);
+     approved.rotation.y=Math.atan2(slot.x,slot.z);
+     core.add(approved);slot.house.visible=false;approvedFacades++;
+    }
+    modelLoadStatus='ready';
+   }
+   dirty=true;for(const id in tileMeshes)tileMeshes[id].key=null;if(view)sync(view);
+  }).catch(e=>{
+   pendingStages.delete(stage);failedStages.add(stage);
+   if(stage===4){modelLoadStatus='failed';modelLoadError=String(e&&e.message||e)}
+   console.warn('Crossroads stage '+stage+' model; using procedural fallback',e)
+  });
+ }
+ loadStage(4);
+ let landmarksRequested=false;
+ function loadLandmarkModels(){
+  if(landmarksRequested)return;landmarksRequested=true;
+  Promise.all(['financial_tower_crown','grand_boulevard_palace','financial_tower_spire']
+   .map(name=>loader.loadAsync(base+'buildings/'+name+'.glb').then(x=>x.scene)))
+   .then(list=>{list.forEach((sc,k)=>{sc.traverse(o=>{if(o.isMesh)o.castShadow=true});
+    lmProto[k]=fit(sc,[.5,.75,.5][k])});lmKey='';dirty=true;if(view)sync(view)})
+   .catch(e=>console.warn('Crossroads landmark models; using procedural fallback',e))
+ }
  Promise.all(['palm','street_lamp','yacht'].map(f=>loader.loadAsync(base+'props/'+f+'.glb').then(x=>x.scene))).then(([palm,lamp,yacht])=>{props.palm=fit(palm,.5);props.lamp=fit(lamp,.12);props.yacht=fit(yacht,.44);rebuildTokens();
   for(const [x,z,s] of[[-2.5,5.9,.9],[2.5,5.9,.9],[-2.5,-5.9,.9],[2.5,-5.9,.9],[-5.8,1.6,1.1],[-5.8,-1.6,1.1],[5.8,1.6,1.1],[5.8,-1.6,1.1]]){const p=props.palm.clone();p.position.set(x,Math.abs(x)<2?.02:-.30,z);p.scale.multiplyScalar(s);p.rotation.y=x*z;p.traverse(o=>{if(o.isMesh)o.castShadow=true});scene.add(p)}
   for(const [x,z] of[[-.62,1.7],[.62,1.7],[-.62,-1.7],[.62,-1.7]]){const l=props.lamp.clone();l.position.set(x,.04,z);l.scale.multiplyScalar(1.6);scene.add(l)}dirty=true}).catch(e=>console.warn('Crossroads props',e));
- function building(stage,color){if(proto[stage]){const g=new THREE.Group(),m=proto[stage].clone(true);g.add(m);const pad=new THREE.Mesh(new THREE.CylinderGeometry(.21,.21,.02,32),new THREE.MeshStandardMaterial({color,roughness:.5}));pad.position.y=.01;g.add(pad);m.position.y=.02;return g}
+ function building(stage,color){if(!proto[stage])loadStage(stage);if(proto[stage]){const g=new THREE.Group(),m=proto[stage].clone(true);g.add(m);const pad=new THREE.Mesh(new THREE.CylinderGeometry(.21,.21,.02,32),new THREE.MeshStandardMaterial({color,roughness:.5}));pad.position.y=.01;g.add(pad);m.position.y=.02;return g}
   const g=new THREE.Group(),h=.12+stage*.11,b=new THREE.Mesh(new THREE.BoxGeometry(.24,h,.24),new THREE.MeshStandardMaterial({color,map:winTex}));b.position.y=h/2;b.castShadow=true;g.add(b);return g}
  const LM_SLOTS=[[CW,-.75,-.35],[CE,.75,-.35],[CW,.65,.6],[CE,-.65,.6],[CW,-.6,.85],[CE,.6,.85],[CW,.25,-1.0],[CE,-.25,-1.0]];let lmKey='',lmGroup=new THREE.Group();scene.add(lmGroup);
- function syncLandmarks(list,players){const key=JSON.stringify(list)+lmProto.length;if(key===lmKey)return;lmKey=key;lmGroup.clear();
+ function syncLandmarks(list,players){if(list.length&&!lmProto.length)loadLandmarkModels();const key=JSON.stringify(list)+lmProto.length;if(key===lmKey)return;lmKey=key;lmGroup.clear();
   list.slice(-LM_SLOTS.length).forEach((l,k)=>{const [c,dx,dz]=LM_SLOTS[k],g=new THREE.Group(),col=players[l.pid].color;g.position.set(c.x+dx,.01,c.z+dz);
    const plinth=new THREE.Mesh(new THREE.CylinderGeometry(.34,.38,.08,48),gold);plinth.position.y=.04;plinth.castShadow=true;g.add(plinth);
    const band=new THREE.Mesh(new THREE.TorusGeometry(.36,.025,8,48),new THREE.MeshStandardMaterial({color:col,emissive:col,emissiveIntensity:.5}));band.rotation.x=Math.PI/2;band.position.y=.06;g.add(band);
