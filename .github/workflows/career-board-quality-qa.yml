@@ -54,3 +54,33 @@ jobs:
           path: skyline-estates/test-results/
           if-no-files-found: ignore
           retention-days: 7
+
+  # A device-scale WebKit test, separate from full-match 1× software-render QA.
+  # This is a simulator-style viewport/DPR check, NOT a physical iPhone test.
+  crossroads-retina-webkit:
+    name: Crossroads Retina 3× (simulated iPhone landscape)
+    runs-on: ubuntu-latest
+    timeout-minutes: 22
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Playwright test dependencies
+        run: npm install --prefix skyline-estates/tests --no-audit --no-fund
+      - name: Install WebKit and software rendering dependencies
+        run: npx --prefix skyline-estates/tests playwright install --with-deps webkit
+      - name: Verify 3× screenshots and adaptive WebGL sharpness on 956×440 landscape
+        env:
+          VISUAL_ENGINE: webkit
+          WEBKIT_DISABLE_DMABUF_RENDERER: '1'
+          CROSSROADS_RETINA_ONLY: '1'
+        run: node skyline-estates/tests/crossroads-browser.cjs
+      - name: Preserve real DPR3 screenshot and rendering metrics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: crossroads-retina-webkit-dpr3
+          path: skyline-estates/test-results/crossroads/
+          if-no-files-found: ignore
+          retention-days: 7
