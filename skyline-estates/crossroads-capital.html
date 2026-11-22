@@ -109,6 +109,27 @@ table.res{width:100%;border-collapse:collapse;font-size:14px;margin:8px 0}table.
  box-shadow:0 4px 14px #000a;
  cursor:default;
 }
+
+/* 22 Nov 2026 owner polish: smaller text boxes, holdings panel, classic-style menu and portfolio */
+#decision{padding:8px 10px 10px}#decision h2{font-size:15px}#decision .tag{font-size:11.5px;margin:1px 0 6px}
+.opts{gap:6px;grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}.opt{min-height:46px;padding:6px 9px;border-radius:10px}.opt b{font-size:13px}.opt small{font-size:10.5px}
+#tile .tb{padding:6px 9px 8px}#tile h3{font-size:13.5px}#tile .k{font-size:10.5px}#tile dl{font-size:11.5px;margin-top:4px}
+#chainCard{padding:6px 9px}#chainCard b{font-size:12.5px}#chainCard small{font-size:10.5px}
+#brand{font-size:15px;padding:5px 10px}#brand small{font-size:8.5px}#turnpill{font-size:12px;padding:6px 10px}
+#holdings{padding:6px 8px 7px;font-size:11px}#holdings .hh{display:flex;align-items:center;justify-content:space-between;margin-bottom:3px}
+#holdings .hh b{font-size:10.5px;letter-spacing:.08em;color:var(--gold-300);text-transform:uppercase}#holdings .hh button{min-height:44px;padding:2px 10px;font-size:11.5px;border-radius:9px}
+#holdings .g{display:flex;align-items:center;gap:5px;min-height:20px}#holdings .g .nm{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#e9f0f8;font-weight:700}
+#holdings .pips{display:flex;gap:3px}#holdings .pip{width:11px;height:11px;border-radius:3px;border:1.5px solid #ffffff55;background:transparent}
+#holdings .pip.me{border-color:transparent}#holdings .cnt{font-weight:800;color:#f6d47c;min-width:24px;text-align:right}
+.mlist{display:flex;flex-direction:column;gap:7px;min-width:min(320px,80vw)}.mlist .btn{width:100%;justify-content:flex-start;min-height:44px}
+#menu .card h1{margin-bottom:2px}
+.pf{width:min(820px,92vw);max-height:calc(100dvh - 30px);overflow:auto}.pfh{display:flex;align-items:center;justify-content:space-between;gap:10px}.pfh h1{margin:0}
+.pfg{margin-top:8px;border-radius:12px;background:#ffffff0d;padding:6px 8px}.pfg h4{margin:0 0 4px;display:flex;align-items:center;gap:6px;font-size:13px}
+.pfg h4 i{width:12px;height:12px;border-radius:3px;display:inline-block}.pfg h4 span{margin-left:auto;font-size:11.5px;color:var(--muted);font-weight:700}
+.pft{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr .8fr;gap:2px 8px;font-size:12px;align-items:center}.pft .hd{color:var(--muted);font-size:10.5px;text-transform:uppercase;letter-spacing:.06em}
+.pft .own{display:flex;align-items:center;gap:5px}.pft .own i{width:9px;height:9px;border-radius:50%;display:inline-block}
+.die.roll{animation:dtoss .6s cubic-bezier(.2,.8,.3,1)}@keyframes dtoss{0%{transform:translate(-90px,-60px) rotate(-260deg) scale(.7);opacity:.3}60%{transform:translate(6px,4px) rotate(20deg) scale(1.08);opacity:1}100%{transform:none}}
+#d2.roll{animation-delay:.05s}
 </style>
 </head>
 <body>
@@ -122,7 +143,7 @@ table.res{width:100%;border-collapse:collapse;font-size:14px;margin:8px 0}table.
  <button class="iconbtn" id="menuBtn" aria-label="Menu">☰</button>
 </header>
 <nav id="players" aria-label="Players"></nav>
-<aside id="side"><section id="tile" class="panel" hidden></section><section id="chainCard" class="panel"></section><section id="headline" class="panel" hidden></section></aside>
+<aside id="side"><section id="tile" class="panel" hidden></section><section id="chainCard" class="panel"></section><section id="holdings" class="panel" aria-label="Your streets and missing streets"></section><section id="headline" class="panel" hidden></section></aside>
 <div id="dice" aria-hidden="true"><div class="die" id="d1"></div><div class="die" id="d2"></div></div>
 <div id="foot"><span class="pill panel" id="footChain"></span></div>
 <div id="help"><button class="btn small" id="buildBtn">🏗 Build</button><button class="btn small" id="dealBtn">🤝 Trade</button><button class="btn small" id="claimBtn">🎀 Chain</button></div>
@@ -130,7 +151,8 @@ table.res{width:100%;border-collapse:collapse;font-size:14px;margin:8px 0}table.
 <section id="decision" class="panel" hidden role="dialog" aria-live="polite"></section>
 <div id="toast" class="panel" role="status"></div>
 <div id="menu" class="screen" hidden><div class="card panel"><h1>Menu</h1><p>Crossroads Capital — Landmark Chase</p>
- <div class="row"><button class="btn" id="mRules">📖 Rules</button><button class="btn" id="mResume">▶ Resume</button><button class="btn" id="mNew">↻ New match</button><button class="btn" id="mBankrupt">Declare bankruptcy</button><button class="btn" id="mEnd">End game &amp; score</button><button class="btn" id="mHome">🏠 Skyline Estates</button></div></div></div>
+ <div class="mlist"><button class="btn primary" id="mResume">▶ Resume</button><button class="btn" id="mPortfolio">🏘 Portfolio</button><button class="btn" id="mRules">📖 Rules</button><button class="btn" id="mNew">↻ New match</button><button class="btn" id="mEnd">🏁 End game &amp; score</button><button class="btn" id="mBankrupt">Declare bankruptcy</button><button class="btn" id="mHome">🏠 Skyline Estates</button></div></div></div>
+<div id="portfolio" class="screen" hidden><div class="card panel pf"><div class="pfh"><h1>🏘 Portfolio</h1><button class="btn small" id="pfClose">Close</button></div><div id="pfBody"></div></div></div>
 <div id="rules" hidden><div class="card panel"><h1>How to play</h1><p>Build the most celebrated city: most Legacy Points after 15 turns each (Quick: 9).</p>
  <h3>Landmark Chains</h3>You always pursue one three-stage brief. Complete the stages in order (one stamp per action), then hold a <b>Ribbon Cutting</b> in your turn for +5 Legacy Points and 200 CC — +1 more if you claim it on the Skybridge. A landmark appears in the city and you pick a new brief.
  <h3>The circular city</h3>Play on one full-size circular board with the familiar Skyline property tiles, colour districts, miniature buildings and landmarks. From <b>Start</b>, choose the Riverside (west) or Highland (east) half of the circle. Both arcs meet at <b>Skybridge Bonus</b>, then the token travels through <b>Grand Exchange</b> in the centre and returns to <b>Start / Payday</b> (+200 CC once per roll). Route choices and Landmark Chase rules are unchanged.
@@ -192,10 +214,23 @@ function render(){if(!s)return;const v=CC.view(s),me=s.players[0],pd=CC.pending(
  const act=pd.kind==='action'&&myTurn&&!busy,L=act?CC.legal(s,0):[];
  const nb=L.filter(x=>x.type==='build'||x.type==='redeem'||x.type==='completeReservation').length;$('buildBtn').disabled=!nb;$('buildBtn').textContent='🏗 Build'+(nb?' ('+nb+')':'');
  $('dealBtn').disabled=!act;const cl=L.some(x=>x.type==='claim');$('claimBtn').disabled=!(act||myTurn);$('claimBtn').textContent=cl?'🎀 Ribbon!':'🎀 Chain';$('claimBtn').classList.toggle('primary',cl);
- if(selected!=null)showTile(selected,true);decision()}
+ if(selected!=null&&!$('tile').hidden)showTile(selected,true,true);holdings();decision()}
 function headlineText(h){return{first_upgrade_loop:'upgrades in '+(h.loop==='west'?'Riverside':'Highland'),first_purchase_loop:'buys in '+(h.loop==='west'?'Riverside':'Highland'),visit_both_metros:'visits both Metro stations',first_contract_claim:'claims a Landmark',two_distinct_open_houses:'holds two Open Houses',own_both_loops:'owns property on both loops',first_two_upgrades_chapter:'builds twice',first_trade_accepted:'closes a trade'}[h.condition]||'meets it'}
 function isMine(pd){return pd&&((pd.kind==='trade'&&pd.to===0)||(pd.kind!=='trade'&&pd.pid===0))}
-function showTile(id,quiet){const t=CC.BY[id],o=s&&s.own[id],el=$('tile');if(!t)return;el.hidden=false;
+// Right panel (owner request 22 Nov 2026): which streets you have and which you are missing, per colour group.
+function holdings(){const el=$('holdings');if(!el||!s)return;const me=s.players[0];
+ const rows=Object.keys(CC.GROUPS).map(g=>{const ids=CC.GROUPS[g],mine=ids.filter(id=>s.own[id]&&s.own[id].owner===0).length;
+  return `<div class="g" title="${esc(CC.GROUP_NAMES[g])}"><span class="pips">${ids.map(id=>{const o=s.own[id];const c=o?(s.players[o.owner].color):'';return `<i class="pip${o&&o.owner===0?' me':''}" style="${o?(o.owner===0?'background:'+CC.GROUP_COLORS[g]:'border-color:'+c):'border-color:'+CC.GROUP_COLORS[g]+'88'}"></i>`}).join('')}</span><span class="nm">${esc(CC.GROUP_NAMES[g])}</span><span class="cnt">${mine}/${ids.length}</span></div>`}).join('');
+ const html=`<div class="hh"><b>Your streets</b><button class="btn small" id="pfOpen">Portfolio</button></div>${rows}`;
+ if(el.dataset.h===html)return;el.dataset.h=html;el.innerHTML=html;$('pfOpen').onclick=openPortfolio}
+function openPortfolio(){if(!s)return;const P=s.players;
+ $('pfBody').innerHTML=Object.keys(CC.GROUPS).map(g=>{const ids=CC.GROUPS[g],mine=ids.filter(id=>s.own[id]&&s.own[id].owner===0).length;
+  return `<div class="pfg"><h4><i style="background:${CC.GROUP_COLORS[g]}"></i>${esc(CC.GROUP_NAMES[g])} · ${esc(CC.LOOP_NAMES[CC.BY[ids[0]].loop]||'')}<span>You own ${mine} of ${ids.length}</span></h4><div class="pft"><span class="hd">Street</span><span class="hd">Owner</span><span class="hd">Stage</span><span class="hd">Rent now</span><span class="hd">Price</span>${ids.map(id=>{const t=CC.BY[id],o=s.own[id];
+   return `<span>${esc(t.name)}</span><span class="own">${o?`<i style="background:${P[o.owner].color}"></i>${esc(o.owner===0?'You':P[o.owner].name)}${o.mortgaged?' (mortgaged)':''}`:'<span style="color:var(--muted)">For sale</span>'}</span><span>${o?esc(CC.STAGES[o.stage||0]):'—'}</span><span>${o?fmt(CC.rent(s,id,s.turn.dice)):'—'}</span><span>${fmt(t.price)}</span>`}).join('')}</div></div>`}).join('');
+ $('menu').hidden=true;$('portfolio').hidden=false}
+$('pfClose').onclick=()=>{$('portfolio').hidden=true};
+let tileTimer=null;
+function showTile(id,quiet,keep){if(!keep){clearTimeout(tileTimer);if(quiet)tileTimer=setTimeout(()=>{$('tile').hidden=true},6000)}const t=CC.BY[id],o=s&&s.own[id],el=$('tile');if(!t)return;el.hidden=false;
  const color=t.group?CC.GROUP_COLORS[t.group]:t.type==='start'||t.type==='exchange'||t.type==='skybridge'?'#efc15c':'#cbbf9f';const rows=[];
  if(t.price)rows.push(['Price',fmt(t.price)]);if(t.type==='property'){rows.push(['Base rent',fmt(t.rent)]);rows.push(['Build',fmt(t.build)+' / stage'])}
  if(t.type==='utility')rows.push(['Rent','dice × 10 (× 18 with both)']);
@@ -296,7 +331,7 @@ function closeFromMenu(bankruptcy){
 }
 $('mBankrupt').onclick=()=>closeFromMenu(true);
 $('mEnd').onclick=()=>closeFromMenu(false);
-$('menuBtn').onclick=()=>{const disabled=!s||s.over||busy||pumping;$('mBankrupt').disabled=disabled;$('mEnd').disabled=disabled;$('menu').hidden=false};$('mResume').onclick=()=>$('menu').hidden=true;$('mRules').onclick=()=>{$('menu').hidden=true;$('rules').hidden=false};
+$('menuBtn').onclick=()=>{const disabled=!s||s.over||busy||pumping;$('mBankrupt').disabled=disabled;$('mEnd').disabled=disabled;$('menu').hidden=false};$('mResume').onclick=()=>$('menu').hidden=true;$('mPortfolio').onclick=openPortfolio;$('mRules').onclick=()=>{$('menu').hidden=true;$('rules').hidden=false};
 $('mNew').onclick=()=>{$('menu').hidden=true;try{localStorage.removeItem(CC.SAVE_KEY)}catch(e){}s=null;startScreen()};$('mHome').onclick=()=>location.href='./index.html?return=1';
 let overview=false;$('viewBtn').onclick=()=>{overview=!overview;r3.overview(overview);$('viewBtn').textContent=overview?'🎯':'🗺';$('viewBtn').setAttribute('aria-label',overview?'Return to your token':'Show the whole board')};
 const saved=load();if(saved){s=saved;r3.sync(CC.view(s));r3.follow(s.turn.pid);render();toast('Match resumed');pump()}else startScreen();

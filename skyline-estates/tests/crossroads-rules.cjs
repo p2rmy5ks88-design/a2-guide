@@ -3,7 +3,7 @@
 const assert=require('node:assert/strict'),CC=require('../lib/crossroads-rules.js');
 let n=0;const ok=m=>{n++;console.log('PASS',m)};
 assert.equal(CC.TILES.length,33);for(const t of CC.TILES)for(const x of t.next)assert.ok(CC.BY[x],t.id+'→'+x);
-assert.deepEqual(CC.BY.START.next,['W00','E00']);assert.equal(CC.TILES.filter(t=>t.type==='property').length,20);
+assert.deepEqual(CC.BY.START.next,['W00','EXCHANGE']);assert.equal(CC.TILES.filter(t=>t.type==='property').length,20);
 ok('33-node double loop: Start forks West/East, both loops rejoin at Skybridge → Grand Exchange → Start; 20 properties');
 let longest=0,stats={claims:0,headlines:0,bankrupt:0,stamps:0,express:0,routes:0,events:0};const hubs={};
 for(let i=0;i<200;i++){const np=2+i%3,s=CC.newMatch({seed:i*7907+11,length:i%4?'standard':'quick',players:Array.from({length:np},(_,k)=>({name:'P'+k,ai:true}))});
@@ -18,7 +18,10 @@ for(const k of['bonus','voucher','grant','ribbon','commission','design','auction
 assert.ok(stats.claims>100&&stats.headlines>100);ok('every hub option, Landmark claims and City Headlines happen in real play: '+JSON.stringify(hubs));
 const fresh=()=>{const s=CC.newMatch({seed:42,players:[{name:'You'},{name:'Bot',ai:true}]});while(CC.pending(s).kind==='chain')CC.act(s,0,{type:'pickChain',card:CC.pending(s).offer[0]});return s};
 {const s=fresh();s.turn.pid=0;s.pending=null;s.turn.phase='roll';s.players[0].pos='START';
- assert.ok(CC.act(s,0,{type:'route',route:'east'}).ok);let r;do{r=CC.act(s,0,{type:'roll'})}while(false);assert.ok(r.ok);const mv=r.events.find(e=>e.type==='move');assert.ok(mv.path[0]==='E00','route east taken '+mv.path);ok('choosing a loop at Start sends the pawn onto that loop')}
+ assert.ok(CC.act(s,0,{type:'route',route:'east'}).ok);let r;do{r=CC.act(s,0,{type:'roll'})}while(false);assert.ok(r.ok);const mv=r.events.find(e=>e.type==='move');assert.ok(mv.path[0]==='EXCHANGE','route east taken '+mv.path);ok('choosing a loop at Start sends the pawn onto that loop')}
+{const s=CC.newMatch({seed:5});const p=s.players[0];p.pos='START';p.lap=null;p.route='east';const ev=[];const path=[];
+ const order=[];let id='START';p.route='east';for(let k=0;k<20;k++){if(p.pos==='START'){p.lap=p.route||p.lap;p.pos=p.lap==='west'?'W00':'EXCHANGE'}else p.pos=CC.nextTile(p);order.push(p.pos)}
+ assert.deepEqual(order.slice(0,4),['EXCHANGE','SKY','E14','E13']);assert.equal(order[16],'E00');assert.equal(order[17],'START');ok('Highland lap runs clockwise: Exchange, Skybridge, then E14 down to E00 and Start')}
 {const s=fresh();const p=s.players[0];s.turn.pid=0;s.pending=null;s.turn.phase='roll';p.pos='W13';s.rng=7;const r=CC.act(s,0,{type:'roll'});const d=s.turn.dice[0]+s.turn.dice[1];
  if(d>=4){assert.equal(CC.pending(s).kind,'route');const pay=r.events.filter(e=>e.type==='log'&&/Payday/.test(e.text)).length;assert.equal(pay,1);const r2=CC.act(s,0,{type:'route',route:'west'});assert.ok(r2.ok);assert.equal(r2.events.filter(e=>e.type==='log'&&/Payday/.test(e.text)).length,0)}
  ok('passing Start mid-move pays 200 once, pauses for the West/East choice, then finishes the remaining pips')}
