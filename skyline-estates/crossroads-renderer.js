@@ -91,8 +91,33 @@ function installCrossroadsTerrace(scene,classic,renderer){
  const marble=new THREE.CanvasTexture(mc);marble.colorSpace=THREE.SRGBColorSpace;
  marble.wrapS=marble.wrapT=THREE.RepeatWrapping;marble.repeat.set(12,12);
  marble.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());
- const floor=new THREE.Mesh(new THREE.PlaneGeometry(95,95),new THREE.MeshStandardMaterial({map:marble,roughness:.67,metalness:.14}));
- floor.rotation.x=-Math.PI/2;floor.position.y=-.80;floor.receiveShadow=true;scene.add(floor);
+ // Open water around the stage: there is no longer an endless tiled floor.
+ // A patterned luxury terrace floats over a blue harbour, with gold quay edging.
+ const seaCanvas=document.createElement('canvas');seaCanvas.width=seaCanvas.height=512;
+ const seaCtx=seaCanvas.getContext('2d'),sea=seaCtx.createLinearGradient(0,0,0,512);
+ sea.addColorStop(0,'#103a57');sea.addColorStop(.4,'#1c6275');sea.addColorStop(.7,'#16475e');sea.addColorStop(1,'#102e52');
+ seaCtx.fillStyle=sea;seaCtx.fillRect(0,0,512,512);
+ for(let i=0;i<140;i++){
+  const x=(i*97)%512,y=(i*131)%512,w=12+i%5*8;
+  seaCtx.strokeStyle=i%3?'rgba(123,226,236,.11)':'rgba(244,206,135,.12)';
+  seaCtx.lineWidth=i%4===0?2:1;seaCtx.beginPath();
+  seaCtx.moveTo(x,y);seaCtx.quadraticCurveTo(x+w/2,y-3,x+w,y);seaCtx.stroke()
+ }
+ const seaTex=new THREE.CanvasTexture(seaCanvas);seaTex.colorSpace=THREE.SRGBColorSpace;
+ seaTex.wrapS=seaTex.wrapT=THREE.RepeatWrapping;seaTex.repeat.set(9,9);
+ seaTex.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());
+ const harbour=new THREE.Mesh(new THREE.PlaneGeometry(95,95),
+  new THREE.MeshStandardMaterial({map:seaTex,metalness:.18,roughness:.29,envMapIntensity:.65}));
+ harbour.rotation.x=-Math.PI/2;harbour.position.y=-.87;harbour.receiveShadow=false;scene.add(harbour);
+ // This stone promenade is only 3.5 units wide, framing the board without
+ // becoming another board or competing with readable property tiles.
+ const floor=new THREE.Mesh(new THREE.RingGeometry(7.88,11.12,160),
+  new THREE.MeshStandardMaterial({map:marble,roughness:.42,metalness:.25,side:THREE.DoubleSide}));
+ floor.rotation.x=-Math.PI/2;floor.position.y=-.78;floor.receiveShadow=true;scene.add(floor);
+ for(const [r,y,w,mt] of[[10.85,-.735,.031,bronze],[11.09,-.743,.018,aquaGlow]]){
+  const rim=new THREE.Mesh(new THREE.TorusGeometry(r,w,9,160),mt);
+  rim.rotation.x=Math.PI/2;rim.position.y=y;scene.add(rim)
+ }
  const base=new THREE.Mesh(new THREE.CylinderGeometry(7.8,7.94,.30,128),deep);
  base.position.y=-.69;base.receiveShadow=true;scene.add(base);
  const step=new THREE.Mesh(new THREE.CylinderGeometry(7.17,7.23,.10,128),slate);
@@ -135,7 +160,7 @@ function installCrossroadsTerrace(scene,classic,renderer){
  }
  body.instanceMatrix.needsUpdate=true;tops.instanceMatrix.needsUpdate=true;scene.add(body,tops);
  // The rear title is only for overview; it must not obscure moving tokens.
- const marquee=new THREE.Group();marquee.position.set(0,1.22,-8.35);scene.add(marquee);
+ const marquee=new THREE.Group();marquee.position.set(0,2.38,-8.35);scene.add(marquee);
  const sign=new THREE.Mesh(new THREE.BoxGeometry(4.6,.96,.16),deep);marquee.add(sign);
  const outer=new THREE.Mesh(new THREE.BoxGeometry(4.7,1.07,.08),bronze);outer.position.z=-.11;marquee.add(outer);
  const label=document.createElement('canvas');label.width=1024;label.height=256;
@@ -525,7 +550,7 @@ export function createCrossroadsRenderer(canvas,{rules,onTile}={}){
  const cam={target:new THREE.Vector3(),yaw:0,pitch:THREE.MathUtils.degToRad(48),dist:14},goal={target:new THREE.Vector3(),yaw:0,pitch:THREE.MathUtils.degToRad(48),dist:14};
  let pinned=false,frameBias=1.65,mode='follow',followPid=0,userZoom=1,userYaw=0,pushIn=1,lastT=performance.now(),lastYaw=0;
  function yawAt(id,p){const T=tileInfo[id];if(!T||T.hub){return Math.abs(p.x)<.9?(p.z<-1.2?Math.PI:0):lastYaw}const d=p.clone().sub(T.center);return Math.atan2(d.x,d.z)}
- function overviewGoal(){goal.target.set(0,0,.95);goal.yaw=0;goal.pitch=THREE.MathUtils.degToRad(54);const a=camera.aspect||2.17;goal.dist=Math.max(14.6,14.6*2.05/a)}
+ function overviewGoal(){goal.target.set(0,0,.65);goal.yaw=0;goal.pitch=THREE.MathUtils.degToRad(41);const a=camera.aspect||2.17;goal.dist=Math.max(13.6,13.6*2.05/a)}
  function followGoal(p,id){const T=tileInfo[id]||{};const inward=T.perp?T.perp.clone():new THREE.Vector3(0,0,1);goal.target.copy(p.clone().add(inward.multiplyScalar(frameBias)));const y=yawAt(id,p);lastYaw=y;goal.yaw=y+userYaw;goal.pitch=THREE.MathUtils.degToRad(43);goal.dist=6.6*userZoom/pushIn}
  function angleLerp(a,b,t){let d=((b-a+Math.PI)%(2*Math.PI)+2*Math.PI)%(2*Math.PI)-Math.PI;return a+d*t}
  function applyCam(dt){const k=reduceMotion.matches?1:1-Math.exp(-dt/.2);cam.target.lerp(goal.target,k);cam.yaw=angleLerp(cam.yaw,goal.yaw,k);cam.pitch+=(goal.pitch-cam.pitch)*k;cam.dist+=(goal.dist-cam.dist)*k;
@@ -580,4 +605,4 @@ export function createCrossroadsRenderer(canvas,{rules,onTile}={}){
   renderer.render(scene,camera);frames++;if(now-fpsT>3000){const fps=frames*1000/(now-fpsT);frames=0;fpsT=now;if(fps<28&&dpr>2){dpr=Math.max(2,dpr-.5);renderer.setPixelRatio(dpr);resize()}}}
  resize();overviewGoal();Object.assign(cam,{target:goal.target.clone(),yaw:goal.yaw,pitch:goal.pitch,dist:goal.dist});requestAnimationFrame(loop);
  return{setFrameBias(v){frameBias=v;refreshGoal()},sync,moveToken,follow,focusTile,overview,highlight,resize,
-  stats:()=>({dpr,mode,zoom:userZoom,camDist:cam.dist,goalDist:goal.dist,camYaw:cam.yaw,camPitch:cam.pitch,cameraUp:camera.up.toArray(),layout:'classic-circular',environment:'skyline-terrace',followBias:'inward',landmarksDetailed:livingCity.landmarks,ambientTraffic:livingCity.trafficCount,diameter:RIM*2,perimeterTiles:ringOrder.length,tiles:Object.keys(tileMeshes).length,tokens:tokens.length,landmarks:lmGroup.children.length}),mode:()=>mode,dispose(){running=false;renderer.dispose()}}}
+  stats:()=>({dpr,mode,zoom:userZoom,camDist:cam.dist,goalDist:goal.dist,camYaw:cam.yaw,camPitch:cam.pitch,cameraUp:camera.up.toArray(),layout:'classic-circular',environment:'harbour-terrace',followBias:'inward',landmarksDetailed:livingCity.landmarks,ambientTraffic:livingCity.trafficCount,diameter:RIM*2,perimeterTiles:ringOrder.length,tiles:Object.keys(tileMeshes).length,tokens:tokens.length,landmarks:lmGroup.children.length}),mode:()=>mode,dispose(){running=false;renderer.dispose()}}}
