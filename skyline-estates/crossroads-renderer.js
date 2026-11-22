@@ -194,7 +194,7 @@ function installCrossroadsTerrace(scene,classic,renderer){
  // Warm twilight light on the skyline's rear facades, with no expensive shadows.
  const glow=new THREE.PointLight('#ffad73',1.6,25,2);glow.position.set(0,3,-12);scene.add(glow);
  // The rear title is only for overview; it must not obscure moving tokens.
- const marquee=new THREE.Group();marquee.position.set(0,.42,-7.38);scene.add(marquee);
+ const marquee=new THREE.Group();marquee.position.set(0,-.18,-7.02);scene.add(marquee);
  const sign=new THREE.Mesh(new THREE.BoxGeometry(4.6,.96,.16),deep);marquee.add(sign);
  const outer=new THREE.Mesh(new THREE.BoxGeometry(4.7,1.07,.08),bronze);outer.position.z=-.11;marquee.add(outer);
  const label=document.createElement('canvas');label.width=1024;label.height=256;
@@ -315,15 +315,26 @@ function installCrossroadsPremiumCity(core,classic){
        gold=classic.mats.gold,ivory=classic.mats.ivory;
  const palmRoots=[[-2.60,-.96,.88],[2.64,-.98,.95],[-2.26,-2.35,.81],[2.20,-2.34,.82],
   [-2.53,2.05,.70],[2.45,2.16,.72]];
- const palmGeo=new THREE.CylinderGeometry(.052,.10,1.15,10),leafGeo=new THREE.ConeGeometry(.21,1.24,5);
+ const palmGeo=new THREE.CylinderGeometry(.052,.10,1.15,10);
+ // Broad, downward-curving real fronds, not upright pine-tree cones.
+ const verts=[],idx=[];
+ for(let k=0;k<=12;k++){
+  const t=k/12,w=.24*Math.pow(Math.sin(t*Math.PI),.8);
+  const z=.10+1.07*t,y=-.08-.48*t*t;
+  verts.push(-w,y,z,w,y,z);
+  if(k<12){const a=k*2;idx.push(a,a+1,a+2,a+1,a+3,a+2)}
+ }
+ const leafGeo=new THREE.BufferGeometry();
+ leafGeo.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));
+ leafGeo.setIndex(idx);leafGeo.computeVertexNormals();
  for(const [i,[x,z,size]] of palmRoots.entries()){
   const group=new THREE.Group();group.position.set(x,.15,z);group.scale.setScalar(size);
   const trunk=new THREE.Mesh(palmGeo,bark);trunk.position.y=.58;trunk.rotation.z=.05*Math.sin(i*3);trunk.castShadow=true;group.add(trunk);
   const top=new THREE.Mesh(new THREE.SphereGeometry(.12,10,8),foliage);top.position.y=1.14;group.add(top);
   for(let k=0;k<8;k++){
    const a=k*Math.PI/4,frond=new THREE.Mesh(leafGeo,k%2?foliageLight:foliage);
-   frond.position.set(Math.sin(a)*.34,1.07,Math.cos(a)*.34);
-   frond.rotation.set(.97*Math.cos(a),-.18+a,-.97*Math.sin(a));
+   frond.position.set(0,1.15,0);
+   frond.rotation.y=a;
    frond.castShadow=true;group.add(frond)
   }
   core.add(group)
