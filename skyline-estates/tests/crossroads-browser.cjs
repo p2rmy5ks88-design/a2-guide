@@ -2,13 +2,44 @@
 // a complete Quick match with every human decision made through the page, Career inbox report, layout checks.
 'use strict';
 const {chromium,webkit}=require(process.env.PLAYWRIGHT_MODULE||'playwright'),assert=require('node:assert/strict'),http=require('node:http'),fs=require('node:fs'),path=require('node:path');
-const engine=process.env.VISUAL_ENGINE||'chromium',root=path.resolve(__dirname,'../..'),out=path.resolve(__dirname,'../test-results/crossroads');fs.mkdirSync(out,{recursive:true});
+const engine=process.env.VISUAL_ENGINE||'chromium',root=path.resolve(__dirname,'../..'),out=path.resolve(__dirname,'../test-results/crossroads');
+const retinaOnly=process.env.CROSSROADS_RETINA_ONLY==='1';fs.mkdirSync(out,{recursive:true});
 const mime={'.html':'text/html','.js':'text/javascript','.css':'text/css','.json':'application/json','.png':'image/png','.jpg':'image/jpeg','.webp':'image/webp','.svg':'image/svg+xml','.glb':'model/gltf-binary','.mp3':'audio/mpeg','.woff2':'font/woff2'};
 let n=0;const ok=m=>{n++;console.log('PASS',m)};
 (async()=>{const server=http.createServer((q,r)=>{const f=path.join(root,decodeURIComponent(q.url.split('?')[0]));fs.readFile(f,(e,d)=>{if(e){r.writeHead(404);r.end();return}r.writeHead(200,{'content-type':mime[path.extname(f)]||'application/octet-stream'});r.end(d)})});
  await new Promise(r=>server.listen(0,'127.0.0.1',r));const base=`http://127.0.0.1:${server.address().port}/skyline-estates/`;
  const browser=await({chromium,webkit}[engine]).launch(engine==='chromium'?{executablePath:process.env.CHROME_PATH||undefined,args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist']}:{});
- try{const context=await browser.newContext({viewport:{width:844,height:390},deviceScaleFactor:1,hasTouch:true});/* 1x: gameplay checks; software WebGL on CI is slow at retina resolution */const p=await context.newPage();const errors=[];p.on('pageerror',e=>errors.push(String(e)));
+ try{const context=await browser.newContext({viewport:retinaOnly?{width:956,height:440}:{width:844,height:390},deviceScaleFactor:retinaOnly?3:1,hasTouch:true});/* 1x full-match gameplay; separate 3x Retina smoke is visual and GPU only */const p=await context.newPage();const errors=[];p.on('pageerror',e=>errors.push(String(e)));
+  if(retinaOnly){
+   await p.goto(base+'crossroads-capital.html?length=quick&speed=fast&seed=11');
+   await p.locator('#startBtn').waitFor({timeout:60000});await p.click('#startBtn');
+   await p.waitForFunction(()=>window.__cc&&__cc.renderer.stats().tiles===33,null,{timeout:120000});
+   const initial=await p.evaluate(()=>__cc.renderer.stats());
+   assert.equal(initial.maxDpr,3,'simulated high-density iPhone DPR3');
+   assert.equal(initial.layout,'classic-circular');
+   assert.equal(initial.environment,'harbour-terrace');
+   await p.evaluate(()=>__cc.renderer.overview(true));
+   await p.waitForFunction(()=>{const x=__cc.renderer.stats();return x.mode==='overview'&&Math.abs(x.camDist-x.goalDist)<.25},null,{timeout:120000});
+   const img=await p.screenshot({path:path.join(out,engine+'-retina3-overview-2868x1320.png'),scale:'device',timeout:120000});
+   assert.equal(img.readUInt32BE(16),2868,'retina screenshot width must be 956 × 3');
+   assert.equal(img.readUInt32BE(20),1320,'retina screenshot height must be 440 × 3');
+   const overview=await p.evaluate(()=>__cc.renderer.stats());
+   assert.ok(overview.titleNdcY<.90&&overview.titleNdcY>-.15,'title is visible at Retina landscape');
+   assert.ok(overview.dpr>=2,'adaptive Retina rendering must not fall below 2×');
+   assert.ok(overview.drawWidth>=overview.cssWidth*2,'actual WebGL drawing buffer is at least 2× CSS');
+   assert.equal(overview.vistaTowers,8);
+   await p.evaluate(()=>__cc.renderer.overview(false));
+   await p.waitForFunction(()=>{const x=__cc.renderer.stats();return x.mode==='follow'&&Math.abs(x.camDist-x.goalDist)<.25},null,{timeout:120000});
+   await p.screenshot({path:path.join(out,engine+'-retina3-follow-2868x1320.png'),scale:'device',timeout:120000});
+   await p.waitForTimeout(3600);
+   const perf=await p.evaluate(()=>__cc.renderer.stats());
+   assert.ok(perf.measuredFps!==null&&perf.measuredFps>0,'Retina canvas must keep rendering');
+   assert.ok(perf.drawWidth>=perf.cssWidth*2,'adaptive render scale must remain sharp at 2× or 3×');
+   assert.deepEqual(errors,[],'no errors in high-density mobile WebKit');
+   fs.writeFileSync(path.join(out,engine+'-retina3-metrics.json'),JSON.stringify({overview,perf,viewport:{width:956,height:440,deviceScaleFactor:3},simulatedDevice:true,physicalDevice:false},null,2));
+   ok('simulated iPhone landscape Retina 3×: real WebGL screenshots, 2868×1320, >=2× internal adaptive resolution, no errors');
+   await context.close();return;
+  }
   await p.goto(base+'index.html');await p.evaluate(()=>{localStorage.clear();const s=SkylineCareer.raw();s.unlocked.circuit=1;s.unlocked.crossroads=1;PREF.career=s;savePref()});await p.reload();await p.waitForSelector('#hdCareer');await p.waitForSelector('#boot',{state:'hidden',timeout:60000});
   await p.evaluate(()=>{document.querySelector('#modals').innerHTML='';document.querySelector('#hdCareer').click()});await p.waitForSelector('.crc-btn[data-board="crossroads"]:not([disabled])');
   assert.match(await p.locator('.crc').nth(2).innerText(),/Crossroads Capital/);await p.locator('.crc-btn[data-board="crossroads"]').click();
