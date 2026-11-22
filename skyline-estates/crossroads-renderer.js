@@ -304,19 +304,100 @@ function installCrossroadsLivingCity(core,classic){
  return{tick,landmarks:2,trafficCount:traffic.length};
 }
 
+
+// Premium Crossroads city furniture. Instanced small props keep draw calls bounded
+// at Retina scale, while real 3D palms, waterfront details and plaza lights
+// deliver the approved Classic Solo ambience without touching interactive tiles.
+function installCrossroadsPremiumCity(core,classic){
+ const foliage=new THREE.MeshStandardMaterial({color:'#22854b',roughness:.83,side:THREE.DoubleSide}),
+       foliageLight=new THREE.MeshStandardMaterial({color:'#50bb67',roughness:.87,side:THREE.DoubleSide}),
+       bark=new THREE.MeshStandardMaterial({color:'#956f45',roughness:.91}),
+       gold=classic.mats.gold,ivory=classic.mats.ivory;
+ const palmRoots=[[-2.60,-.96,.88],[2.64,-.98,.95],[-2.26,-2.35,.81],[2.20,-2.34,.82],
+  [-2.53,2.05,.70],[2.45,2.16,.72]];
+ const palmGeo=new THREE.CylinderGeometry(.052,.10,1.15,10),leafGeo=new THREE.ConeGeometry(.21,1.24,5);
+ for(const [i,[x,z,size]] of palmRoots.entries()){
+  const group=new THREE.Group();group.position.set(x,.15,z);group.scale.setScalar(size);
+  const trunk=new THREE.Mesh(palmGeo,bark);trunk.position.y=.58;trunk.rotation.z=.05*Math.sin(i*3);trunk.castShadow=true;group.add(trunk);
+  const top=new THREE.Mesh(new THREE.SphereGeometry(.12,10,8),foliage);top.position.y=1.14;group.add(top);
+  for(let k=0;k<8;k++){
+   const a=k*Math.PI/4,frond=new THREE.Mesh(leafGeo,k%2?foliageLight:foliage);
+   frond.position.set(Math.sin(a)*.34,1.07,Math.cos(a)*.34);
+   frond.rotation.set(.97*Math.cos(a),-.18+a,-.97*Math.sin(a));
+   frond.castShadow=true;group.add(frond)
+  }
+  core.add(group)
+ }
+ const lamps=new THREE.Group();core.add(lamps);
+ const posts=new THREE.InstancedMesh(new THREE.CylinderGeometry(.021,.025,.34,8),
+  new THREE.MeshStandardMaterial({color:'#7d5d2b',metalness:.6,roughness:.34}),22);
+ const bulbs=new THREE.InstancedMesh(new THREE.SphereGeometry(.052,10,8),
+  new THREE.MeshBasicMaterial({color:'#ffe8a7',toneMapped:false}),22);
+ const dummy=new THREE.Object3D();
+ for(let i=0;i<22;i++){
+  const a=(i+.5)*2*Math.PI/22,r=3.10,px=Math.cos(a)*r,pz=Math.sin(a)*r;
+  dummy.position.set(px,.24,pz);dummy.rotation.set(0,0,0);dummy.scale.set(1,1,1);dummy.updateMatrix();posts.setMatrixAt(i,dummy.matrix);
+  dummy.position.y=.43;dummy.updateMatrix();bulbs.setMatrixAt(i,dummy.matrix)
+ }
+ posts.instanceMatrix.needsUpdate=true;bulbs.instanceMatrix.needsUpdate=true;lamps.add(posts,bulbs);
+ // Promenade flower beds with separate colored floral heads, not flat color decals.
+ const bed=new THREE.InstancedMesh(new THREE.IcosahedronGeometry(.11,1),
+  new THREE.MeshStandardMaterial({color:'#ffffff',roughness:.93}),72);
+ const petal=new THREE.Color();
+ for(let i=0;i<72;i++){
+  const a=i*Math.PI*2/72,r=2.81+.08*Math.sin(i*7.7);
+  dummy.position.set(r*Math.cos(a),.15,r*Math.sin(a));
+  dummy.rotation.set(0,i*.57,0);dummy.scale.set(1,.62,1);dummy.updateMatrix();bed.setMatrixAt(i,dummy.matrix);
+  bed.setColorAt(i,petal.set(['#ec5879','#fac952','#db69cf','#ffe7a5'][i%4]))
+ }
+ bed.instanceMatrix.needsUpdate=true;core.add(bed);
+ // A winding ivory garden path and bench seating add grounded human-scale cues.
+ const pathMat=new THREE.MeshBasicMaterial({color:'#f2dfb8',side:THREE.DoubleSide});
+ const circularPath=new THREE.Mesh(new THREE.RingGeometry(2.64,2.75,96),pathMat);
+ circularPath.rotation.x=-Math.PI/2;circularPath.position.y=.106;core.add(circularPath);
+ const seat=new THREE.MeshStandardMaterial({color:'#8b5c30',roughness:.61});
+ for(const a of [.26,1.3,2.25,3.42,4.55,5.78]){
+  const r=2.59,x=r*Math.cos(a),z=r*Math.sin(a),g=new THREE.Group();
+  g.position.set(x,.13,z);g.rotation.y=-a;core.add(g);
+  const board=new THREE.Mesh(new THREE.BoxGeometry(.34,.045,.11),seat);board.position.y=.09;g.add(board);
+  const back=new THREE.Mesh(new THREE.BoxGeometry(.34,.20,.028),seat);back.position.set(0,.17,-.052);g.add(back);
+  for(const dx of[-.14,.14]){
+   const leg=new THREE.Mesh(new THREE.BoxGeometry(.028,.14,.03),gold);
+   leg.position.set(dx,.035,0);g.add(leg)
+  }
+ }
+ // Pool ripples and fountain jets catch light even from the camera-follow view.
+ const rippleMat=new THREE.MeshBasicMaterial({color:'#d8ffff',transparent:true,opacity:.77,
+  side:THREE.DoubleSide,depthWrite:false});
+ const waterFeatures=new THREE.Group();core.add(waterFeatures);
+ for(const [x,z]of[[-.3,-1.85],[.38,-1.49],[.88,-1.82]]){
+  for(const r of [.12,.25,.38]){
+   const ring=new THREE.Mesh(new THREE.RingGeometry(r,r+.018,48),rippleMat);
+   ring.rotation.x=-Math.PI/2;ring.position.set(x,.169,z);waterFeatures.add(ring)
+  }
+  for(let n=0;n<5;n++){
+   const a=n*Math.PI*2/5;
+   const plume=new THREE.Mesh(new THREE.CylinderGeometry(.007,.028,.26+.08*(n%2),8),
+    new THREE.MeshBasicMaterial({color:'#edffff',transparent:true,opacity:.85,depthWrite:false}));
+   plume.position.set(x+.055*Math.sin(a),.35,z+.055*Math.cos(a));waterFeatures.add(plume)
+  }
+ }
+ return{palms:palmRoots.length,lights:22,benches:6};
+}
+
 export function createCrossroadsRenderer(canvas,{rules,onTile}={}){
  const CC=rules,TILES=CC.TILES,BY=CC.BY;
  const renderer=new THREE.WebGLRenderer({canvas,antialias:true,powerPreference:'high-performance'});
  renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.NoToneMapping;renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
  const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)');const maxDpr=Math.min(devicePixelRatio||1,3);let dpr=maxDpr;renderer.setPixelRatio(dpr);
- const scene=new THREE.Scene();scene.background=new THREE.Color('#130d09');scene.fog=new THREE.Fog('#130d09',30,70);
+ const scene=new THREE.Scene();scene.background=new THREE.Color('#262245');scene.fog=new THREE.Fog('#28304b',65,160);
  const camera=new THREE.PerspectiveCamera(40,1,.1,220);
  {const env=new THREE.Scene(),cv=document.createElement('canvas');cv.width=16;cv.height=256;const g=cv.getContext('2d'),gr=g.createLinearGradient(0,0,0,256);gr.addColorStop(0,'#24365e');gr.addColorStop(.42,'#ffcf8a');gr.addColorStop(.55,'#ffe7c0');gr.addColorStop(1,'#3a2414');g.fillStyle=gr;g.fillRect(0,0,16,256);
   env.add(new THREE.Mesh(new THREE.SphereGeometry(50,32,16),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(cv),side:THREE.BackSide})));
   for(const [x,y,z,c]of[[18,22,10,'#fff1d6'],[-20,14,-8,'#ffd79a'],[0,30,-18,'#ffffff']]){const m=new THREE.Mesh(new THREE.PlaneGeometry(14,8),new THREE.MeshBasicMaterial({color:c,side:THREE.DoubleSide}));m.position.set(x,y,z);m.lookAt(0,0,0);env.add(m)}
-  const pm=new THREE.PMREMGenerator(renderer);scene.environment=pm.fromScene(env,.04).texture;scene.environmentIntensity=.55;pm.dispose()}
- scene.add(new THREE.HemisphereLight('#fff6ea','#4a3524',.55));
- const sun=new THREE.DirectionalLight('#fff0d8',1.55);sun.position.set(-7,15,10);sun.castShadow=true;sun.shadow.mapSize.set(maxDpr>=2?4096:2048,maxDpr>=2?4096:2048);Object.assign(sun.shadow.camera,{left:-11,right:11,top:8,bottom:-8,near:1,far:45});sun.shadow.bias=-.0006;scene.add(sun);
+  const pm=new THREE.PMREMGenerator(renderer);scene.environment=pm.fromScene(env,.04).texture;scene.environmentIntensity=.70;pm.dispose()}
+ scene.add(new THREE.HemisphereLight('#fff6ea','#4a3524',.77));
+ const sun=new THREE.DirectionalLight('#fff0d8',1.55);sun.position.set(-7,15,10);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-11,right:11,top:8,bottom:-8,near:1,far:45});sun.shadow.bias=-.0006;scene.add(sun);
  const lamp=new THREE.PointLight('#ffc27a',8,24,1.6);lamp.position.set(0,6,-7);scene.add(lamp);
  let dirty=true;
 
@@ -529,6 +610,7 @@ export function createCrossroadsRenderer(canvas,{rules,onTile}={}){
   arch.position.set(0,.20,-5.25);arch.castShadow=true;scene.add(arch)}
  
  const livingCity=installCrossroadsLivingCity(core,classic);
+ const premiumCity=installCrossroadsPremiumCity(core,classic);
 
  // ---- buildings (6 stages) and landmark miniatures ----
  const winTex=windowTexture(),proto=[],props={},lmProto=[];const loader=new GLTFLoader(),base='./assets/approved-v5/';
@@ -651,4 +733,4 @@ export function createCrossroadsRenderer(canvas,{rules,onTile}={}){
   renderer.render(scene,camera);frames++;if(now-fpsT>3000){const fps=frames*1000/(now-fpsT);frames=0;fpsT=now;if(fps<28&&dpr>2){dpr=Math.max(2,dpr-.5);renderer.setPixelRatio(dpr);resize()}}}
  resize();overviewGoal();Object.assign(cam,{target:goal.target.clone(),yaw:goal.yaw,pitch:goal.pitch,dist:goal.dist});requestAnimationFrame(loop);
  return{setFrameBias(v){frameBias=v;refreshGoal()},sync,moveToken,follow,focusTile,overview,highlight,resize,
-  stats:()=>({dpr,mode,zoom:userZoom,camDist:cam.dist,goalDist:goal.dist,camYaw:cam.yaw,camPitch:cam.pitch,cameraUp:camera.up.toArray(),layout:'classic-circular',environment:'harbour-terrace',followBias:'inward',vistaTowers:terrace.vistaTowers,titleNdcY:terrace.marquee.position.clone().project(camera).y,landmarksDetailed:livingCity.landmarks,ambientTraffic:livingCity.trafficCount,diameter:RIM*2,perimeterTiles:ringOrder.length,tiles:Object.keys(tileMeshes).length,tokens:tokens.length,landmarks:lmGroup.children.length}),mode:()=>mode,dispose(){running=false;renderer.dispose()}}}
+  stats:()=>({dpr,mode,zoom:userZoom,camDist:cam.dist,goalDist:goal.dist,camYaw:cam.yaw,camPitch:cam.pitch,cameraUp:camera.up.toArray(),layout:'classic-circular',environment:'harbour-terrace',followBias:'inward',vistaTowers:terrace.vistaTowers,titleNdcY:terrace.marquee.position.clone().project(camera).y,landmarksDetailed:livingCity.landmarks,ambientTraffic:livingCity.trafficCount,premiumPalms:premiumCity.palms,promenadeLights:premiumCity.lights,diameter:RIM*2,perimeterTiles:ringOrder.length,tiles:Object.keys(tileMeshes).length,tokens:tokens.length,landmarks:lmGroup.children.length}),mode:()=>mode,dispose(){running=false;renderer.dispose()}}}
