@@ -485,7 +485,7 @@ export function createCrossroadsRenderer(canvas,{rules,onTile}={}){
  for(const [x,z,stage,kind,scale]of[
   [-2.83,-1.70,3,'residential',.78],[-1.83,-2.23,4,'financial',.78],[-.9,-2.75,2,'residential',.70],
   [1.15,-2.72,4,'financial',.75],[2.70,-1.62,3,'residential',.76],
-  [-2.79,1.69,3,'residential',.72],[-1.73,2.43,3,'financial',.74],
+  [-2.79,1.69,3,'residential',.72],[-1.73,2.43,4,'financial',.74],
   [.92,2.74,2,'residential',.72],[2.66,1.79,4,'financial',.77],
   [-2.42,.93,2,'residential',.65],[2.38,-.94,3,'financial',.68]
  ]){
