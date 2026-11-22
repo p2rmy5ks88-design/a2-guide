@@ -85,8 +85,10 @@ let n=0;const ok=m=>{n++;console.log('PASS',m)};
   const phoneFit=await p.evaluate(()=>{
    const box=id=>document.getElementById(id).getBoundingClientRect();
    const players=box('players'),top=box('top'),side=box('side'),dock=box('dock'),help=box('help'),main=box('mainBtn');
-   const inPhone=(r,l=62,rPad=62)=>r.left>=l-1&&r.right<=innerWidth-rPad+1&&r.top>=0&&r.bottom<=innerHeight+1;
-   return {players:inPhone(players),top:inPhone(top),side:inPhone(side),dock:inPhone(dock),help:inPhone(help),main:inPhone(main),
+   // Left HUD sits at 62% of the left inset (owner request 22 Nov 2026), still clear of the Dynamic Island.
+   const inPhone=(r,l=62*.62+6,rPad=62)=>r.left>=l-1&&r.right<=innerWidth-rPad+1&&r.top>=0&&r.bottom<=innerHeight+1;
+   const sideOk=getComputedStyle(document.getElementById('side')).opacity==='0'||inPhone(side,62);
+   return {players:inPhone(players),top:inPhone(top),side:sideOk,dock:inPhone(dock),help:inPhone(help),main:inPhone(main),
     noRosterDock:players.bottom<=dock.top+1||players.right<dock.left-1,noTopRoster:top.bottom<=players.top+1,
     noRosterHelp:players.bottom<=help.top+1||players.right<help.left-1,
     controls:[...document.querySelectorAll('button')].filter(b=>b.offsetParent&&!b.disabled).every(b=>b.getBoundingClientRect().height>=43.5)};

@@ -20,7 +20,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .btn.go{background:linear-gradient(#39b86b,#08603b)}
 .btn.small{min-height:44px;padding:6px 10px;font-size:13px}
 /* top bar */
-#top{position:fixed;top:calc(var(--st) + 6px);left:calc(var(--sl) + 8px);right:calc(var(--sr) + 8px);display:flex;align-items:center;gap:8px;pointer-events:none;z-index:5}
+#top{position:fixed;top:calc(var(--st) + 6px);left:var(--ll);right:calc(var(--sr) + 8px);display:flex;align-items:center;gap:8px;pointer-events:none;z-index:5}
 #top>*{pointer-events:auto}
 #brand{display:flex;flex-direction:column;line-height:1;padding:6px 12px;font-family:Georgia,"Times New Roman",serif;font-weight:900;letter-spacing:.04em;font-size:17px;color:var(--gold-300);text-shadow:0 2px 0 #0008}
 #brand small{font:700 9.5px -apple-system,Inter,Arial;letter-spacing:.14em;color:#fff;opacity:.85;margin-top:3px}
@@ -31,7 +31,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .grow{flex:1}
 .iconbtn{width:44px;height:44px;border-radius:12px;border:1.5px solid var(--gold);background:linear-gradient(#17517f,#0b2342);display:grid;place-items:center;font-size:19px}
 /* players */
-#players{position:fixed;left:calc(var(--sl) + 8px);top:calc(var(--st) + 62px);display:flex;flex-direction:column;gap:6px;z-index:4;transition:transform .25s,opacity .25s}
+#players{position:fixed;left:var(--ll);top:calc(var(--st) + 62px);display:flex;flex-direction:column;gap:6px;z-index:4;transition:transform .25s,opacity .25s}
 .pl{display:grid;grid-template-columns:30px auto;column-gap:7px;align-items:center;padding:5px 10px 5px 6px;min-width:132px;border-radius:12px;background:#09172cdd;border:1.5px solid #ffffff26}
 .pl .av{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:16px;grid-row:span 2;border:2px solid var(--c)}
 .pl b{font-size:13px;white-space:nowrap}.pl span{font-size:12px;color:var(--gold-300);font-weight:750}
@@ -54,7 +54,7 @@ body.moving #side{transform:translateX(calc(100% + 20px));opacity:0}
 .die i{width:8px;height:8px;border-radius:50%;background:#1d2433;place-self:center;visibility:hidden}
 .die.roll{animation:roll .45s ease}
 @keyframes roll{0%{transform:rotate(0) scale(.8)}50%{transform:rotate(200deg) scale(1.1)}100%{transform:rotate(360deg) scale(1)}}
-#help{position:fixed;left:calc(var(--sl) + 8px);bottom:calc(var(--sb) + 8px);z-index:4;display:flex;gap:6px}
+#help{position:fixed;left:var(--ll);bottom:calc(var(--sb) + 8px);z-index:4;display:flex;gap:6px}
 /* decision */
 #decision{position:fixed;left:50%;bottom:calc(var(--sb) + 8px);transform:translateX(-50%);width:min(560px,calc(100vw - 320px - var(--sl) - var(--sr)));min-width:300px;max-height:calc(100dvh - 120px);overflow:auto;padding:10px 12px 12px;z-index:8}
 #decision h2{margin:0;font-size:17px;display:flex;align-items:center;gap:8px}#decision .tag{margin:2px 0 8px;font-size:12.5px;color:var(--muted)}
@@ -94,7 +94,7 @@ table.res{width:100%;border-collapse:collapse;font-size:14px;margin:8px 0}table.
 .cards2{display:grid;grid-template-columns:1fr 1fr;gap:8px}.mcard{border:1.5px solid #ffffff3a;border-radius:12px;padding:8px;background:#0b2342}.mcard h5{margin:0 0 6px;font-size:13.5px;color:var(--gold-300)}
 .mcard .opt{min-height:48px;width:100%;margin-top:6px}
 #dice{bottom:calc(var(--sb) + 52px)}
-#help{flex-direction:column;align-items:stretch;width:118px}#decision{left:calc(var(--sl) + 136px);right:calc(var(--sr) + min(232px,30vw) + 16px);transform:none;width:auto;min-width:0}#headline{display:none}#help .btn{justify-content:flex-start}
+#help{flex-direction:column;align-items:stretch;width:118px}#decision{left:calc(var(--ll) + 128px);right:calc(var(--sr) + min(232px,30vw) + 16px);transform:none;width:auto;min-width:0}#headline{display:none}#help .btn{justify-content:flex-start}
 @media (max-height:400px){#help .btn{min-height:44px;padding:4px 10px}}
 
 /* Readable disabled controls: fully opaque against animated 3D scenery.
@@ -130,6 +130,15 @@ table.res{width:100%;border-collapse:collapse;font-size:14px;margin:8px 0}table.
 .pft .own{display:flex;align-items:center;gap:5px}.pft .own i{width:9px;height:9px;border-radius:50%;display:inline-block}
 .die.roll{animation:dtoss .6s cubic-bezier(.2,.8,.3,1)}@keyframes dtoss{0%{transform:translate(-90px,-60px) rotate(-260deg) scale(.7);opacity:.3}60%{transform:translate(6px,4px) rotate(20deg) scale(1.08);opacity:1}100%{transform:none}}
 #d2.roll{animation-delay:.05s}
+/* Cleaner screen (owner request 22 Nov 2026) */
+:root{--ll:calc(var(--sl) * .62 + 6px)}
+#decision{padding:6px 9px 8px}#decision h2{font-size:13.5px}#decision .tag{font-size:10.5px;margin:0 0 5px}
+.opts{gap:5px;grid-template-columns:repeat(auto-fit,minmax(130px,1fr))}.opt{min-height:44px;padding:5px 8px}.opt b{font-size:12px}.opt small{font-size:10px;line-height:1.25}
+#sideToggle{position:fixed;top:calc(var(--st) + 62px);right:calc(var(--sr) + min(210px,28vw) + 12px);z-index:5;width:44px;height:44px;border-radius:12px;border:1.5px solid var(--gold);background:linear-gradient(#17517f,#0b2342);color:#fff;font-size:16px;font-weight:900;transition:right .25s,opacity .25s}
+body.sideoff #sideToggle{right:calc(var(--sr) + 8px)}body.sideoff #side{opacity:0;pointer-events:none;transform:translateX(calc(100% + 20px))}
+body.deciding #sideToggle,body.moving #sideToggle{opacity:0;pointer-events:none}
+body.sideoff #decision{right:calc(var(--sr) + 16px)}
+#chainCard{display:none!important}body.deciding #side{opacity:0;pointer-events:none;transform:translateX(calc(100% + 20px))}
 </style>
 </head>
 <body>
@@ -143,7 +152,7 @@ table.res{width:100%;border-collapse:collapse;font-size:14px;margin:8px 0}table.
  <button class="iconbtn" id="menuBtn" aria-label="Menu">☰</button>
 </header>
 <nav id="players" aria-label="Players"></nav>
-<aside id="side"><section id="tile" class="panel" hidden></section><section id="chainCard" class="panel"></section><section id="holdings" class="panel" aria-label="Your streets and missing streets"></section><section id="headline" class="panel" hidden></section></aside>
+<button id="sideToggle" type="button" aria-label="Hide the side panel" aria-expanded="true">›</button><aside id="side"><section id="tile" class="panel" hidden></section><section id="chainCard" class="panel"></section><section id="holdings" class="panel" aria-label="Your streets and missing streets"></section><section id="headline" class="panel" hidden></section></aside>
 <div id="dice" aria-hidden="true"><div class="die" id="d1"></div><div class="die" id="d2"></div></div>
 <div id="foot"><span class="pill panel" id="footChain"></span></div>
 <div id="help"><button class="btn small" id="buildBtn">🏗 Build</button><button class="btn small" id="dealBtn">🤝 Trade</button><button class="btn small" id="claimBtn">🎀 Chain</button></div>
@@ -231,6 +240,10 @@ function openPortfolio(){if(!s)return;const P=s.players;
  $('menu').hidden=true;$('portfolio').hidden=false}
 $('pfClose').onclick=()=>{$('portfolio').hidden=true};
 let tileTimer=null;
+// The right side panel can be hidden (owner request 22 Nov 2026); the choice is remembered.
+function setSide(off){document.body.classList.toggle('sideoff',off);const b=$('sideToggle');b.textContent=off?'‹':'›';b.setAttribute('aria-expanded',String(!off));b.setAttribute('aria-label',off?'Show the side panel':'Hide the side panel');try{localStorage.setItem('skylineCCSideOff',off?'1':'0')}catch(e){}}
+$('sideToggle').onclick=()=>setSide(!document.body.classList.contains('sideoff'));
+try{setSide(localStorage.getItem('skylineCCSideOff')==='1')}catch(e){}
 function showTile(id,quiet,keep){if(!keep){clearTimeout(tileTimer);if(quiet)tileTimer=setTimeout(()=>{$('tile').hidden=true},6000)}const t=CC.BY[id],o=s&&s.own[id],el=$('tile');if(!t)return;el.hidden=false;
  const color=t.group?CC.GROUP_COLORS[t.group]:t.type==='start'||t.type==='exchange'||t.type==='skybridge'?'#efc15c':'#cbbf9f';const rows=[];
  if(t.price)rows.push(['Price',fmt(t.price)]);if(t.type==='property'){rows.push(['Base rent',fmt(t.rent)]);rows.push(['Build',fmt(t.build)+' / stage'])}
@@ -242,8 +255,8 @@ function showTile(id,quiet,keep){if(!keep){clearTimeout(tileTimer);if(quiet)tile
 
 // ---------- decisions ----------
 let dealDraft=null;
-function panel(html){const d=$('decision');d.innerHTML=html;d.hidden=false;r3.setFrameBias(1.30);return d}
-function hidePanel(){if(!$('decision').hidden)r3.setFrameBias(1.65);$('decision').hidden=true}
+function panel(html){const d=$('decision');d.innerHTML=html;d.hidden=false;document.body.classList.add('deciding');r3.setFrameBias(1.30);return d}
+function hidePanel(){if(!$('decision').hidden)r3.setFrameBias(1.65);$('decision').hidden=true;document.body.classList.remove('deciding')}
 const opts=list=>`<div class="opts">${list.map(o=>`<button class="opt${o.pri?' pri':''}" data-a='${JSON.stringify(o.a).replace(/'/g,'&#39;')}'${o.dis?' disabled':''}><b>${o.label}</b>${o.sub?`<small>${o.sub}</small>`:''}</button>`).join('')}</div>`;
 const chainHtml=c=>`<ol>${CC.CHAINS[c].stages.map(st=>`<li>${esc(st.label)}</li>`).join('')}</ol>`;
 function decision(){if(!s||s.over||busy){if(!busy)hidePanel();return}const pd=CC.pending(s);
@@ -301,7 +314,7 @@ async function doAct(pid,a){if(busy)return;busy=true;render();const r=CC.act(s,p
 async function play(events){for(const e of events){
  if(e.type==='dice'){showDice(e.dice);await wait(380*speed)}
  else if(e.type==='move'){document.body.classList.add('moving');r3.sync(CC.view(s));await r3.moveToken(e.pid,e.path,{express:!!e.express});document.body.classList.remove('moving')}
- else if(e.type==='land'){selected=e.tile;showTile(e.tile,true);r3.focusTile(e.tile)}
+ else if(e.type==='land'){selected=e.tile;$('tile').hidden=true;r3.focusTile(e.tile)}
  else if(e.type==='rent'){toast(`${s.players[e.pid].name} paid ${fmt(e.amount)} rent to ${s.players[e.to].name}`);await wait(500*speed)}
  else if(e.type==='stamp'){if(e.pid===0)toast(`✅ Stamp ${e.stage}/3 · ${CC.CHAINS.find(c=>c.id===e.chain).name}`);await wait(300*speed)}
  else if(e.type==='landmark'){r3.sync(CC.view(s));toast(`🎀 ${s.players[e.pid].name} unveiled the ${e.landmark}!`);await wait(900*speed)}
