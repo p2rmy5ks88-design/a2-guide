@@ -1,0 +1,57 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Aetherfront model forge</title>
+<script type="importmap">{"imports":{"three":"../../vendor/three/three.module.min.js","three/addons/":"../../vendor/three/addons/"}}</script>
+<style>body{margin:0;background:#0b1224;color:#cfe;font:12px system-ui}#sheet{display:grid;grid-template-columns:repeat(6,200px);gap:6px;padding:6px}figure{margin:0;background:#14203a;border:1px solid #2a4a7a;border-radius:8px}figure img{width:200px;height:250px;display:block}figcaption{padding:4px 6px}</style>
+</head><body><div id="sheet"></div>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { CATALOG } from './catalog.js';
+
+const toB64 = (buf) => { let s = ''; const b = new Uint8Array(buf); for (let i = 0; i < b.length; i += 0x8000) s += String.fromCharCode.apply(null, b.subarray(i, i + 0x8000)); return btoa(s); };
+const exporter = new GLTFExporter();
+
+window.forgeGLB = async (id) => {
+  const scene = CATALOG[id]();
+  const buf = await exporter.parseAsync(scene, { binary: true, animations: scene.animations, onlyVisible: false });
+  const box = new THREE.Box3().setFromObject(scene);
+  let tris = 0; scene.traverse((o) => { if (o.isMesh) tris += (o.geometry.index ? o.geometry.index.count : o.geometry.attributes.position.count) / 3; });
+  return { b64: toB64(buf), bytes: buf.byteLength, bounds: [box.min.toArray().map((v) => +v.toFixed(3)), box.max.toArray().map((v) => +v.toFixed(3))], tris: Math.round(tris), clips: scene.animations.map((c) => c.name) };
+};
+window.forgeIds = () => Object.keys(CATALOG);
+
+// --- portrait renderer (renders the SAME model data, so card art matches the battle actor)
+const PW = 360, PH = 440;
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
+renderer.setSize(PW, PH); renderer.setPixelRatio(1);
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.15;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+const pmrem = new THREE.PMREMGenerator(renderer);
+const env = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+window.portrait = (id, kind) => {
+  const scene = new THREE.Scene(); scene.environment = env;
+  const key = new THREE.DirectionalLight(0xfff1dc, 2.6); key.position.set(2, 3, 3); scene.add(key);
+  const rim = new THREE.DirectionalLight(0x6fd8ff, 2.2); rim.position.set(-3, 2, -2); scene.add(rim);
+  const rim2 = new THREE.DirectionalLight(0xff5fe0, 1.2); rim2.position.set(3, 1, -3); scene.add(rim2);
+  scene.add(new THREE.AmbientLight(0x6070a0, 0.8));
+  const model = CATALOG[id]();
+  model.rotation.y = -0.45;
+  scene.add(model);
+  model.updateMatrixWorld(true);
+  const box = new THREE.Box3().setFromObject(model);
+  const size = box.getSize(new THREE.Vector3()), c = box.getCenter(new THREE.Vector3());
+  const cam = new THREE.PerspectiveCamera(30, PW / PH, 0.01, 100);
+  let target, dist;
+  if (kind === 'humanoid') { // bust framing
+    target = new THREE.Vector3(c.x, box.max.y - size.y * 0.3, c.z + size.z * 0.1); dist = size.y * 1.35;
+  } else { target = c.clone(); dist = Math.max(size.x, size.y, size.z) * 2.3; }
+  cam.position.set(target.x + dist * 0.12, target.y + dist * 0.18, target.z + dist);
+  cam.lookAt(target);
+  renderer.setClearColor(0x000000, 0);
+  renderer.render(scene, cam);
+  return renderer.domElement.toDataURL('image/png');
+};
+window.sheet = (items) => { const s = document.getElementById('sheet'); s.innerHTML = items.map(([id, url]) => `<figure><img src="${url}"><figcaption>${id}</figcaption></figure>`).join(''); };
+window.forgeReady = true;
+</script></body></html>

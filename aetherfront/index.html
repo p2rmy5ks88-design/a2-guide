@@ -1,54 +1,33 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no">
-<meta name="theme-color" content="#091723">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>AETHERFRONT · LAST LINE — 3D Defense</title>
-<link rel="stylesheet" href="style.css">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="theme-color" content="#0b1230" />
+<title>AETHERFRONT: LAST LINE</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml" />
+<link rel="stylesheet" href="style.css" />
+<script type="importmap">{"imports":{"three":"./vendor/three/three.module.min.js","three/addons/":"./vendor/three/addons/"}}</script>
 </head>
 <body>
-<div id="app" class="app">
- <header class="topbar">
-  <div class="brand"><div class="brand-logo">✦</div><div class="brand-text"><strong>AETHERFRONT<span>: LAST LINE</span></strong><small>SECTOR 01&nbsp; // &nbsp;TIDAL FOUNDRY</small></div></div>
-  <div class="resourcebar">
-   <div class="resource"><span class="resource-symbol amber">◆</span><div><small>ALLOY</small><strong id="credits">320</strong></div></div>
-   <div class="resource"><span class="resource-symbol coral">♥</span><div><small>INTEGRITY</small><strong id="lives">20</strong></div></div>
-   <div class="resource"><span class="resource-symbol cyan">◉</span><div><small>WAVE</small><strong id="wave">0 / 15</strong></div></div>
-  </div>
-  <div class="header-actions"><button id="soundBtn" class="iconbtn" title="Toggle sound">♫</button><button id="speedBtn" class="iconbtn" title="1× or 2×">1×</button><button id="pauseBtn" class="iconbtn" title="Pause or resume">Ⅱ</button></div>
- </header>
- <main class="game-layout">
-  <section class="battle-area" aria-label="Interactive 3D battlefield">
-   <div class="canvas-wrap" id="canvasWrap"><canvas id="gameCanvas" width="1080" height="600" aria-label="Tower-defense grid; use tower buttons then tap the terrain to place a turret"></canvas>
-    <div class="battle-glass-label north"><span class="live-dot"></span> AEGIS PERIMETER <i>GRID 18×10</i></div>
-    <div class="battle-glass-label south"><span id="enemyCount">0 HOSTILES IN THE FIELD</span><b id="score">SCORE 000000</b></div>
-    <div class="board-label spawn-label">ENTRY ◂</div><div class="board-label exit-label">CORE ◈</div>
-    <div class="map-hidden" id="mapHint">TAP A FREE TILE TO BUILD</div>
-    <div class="map-hidden" id="missionText">Shape the route. Hold the line.</div>
-   </div>
-   <div class="notice" id="notice" aria-live="polite"></div>
+<div id="app">
+  <section id="screen-home" class="screen portrait" aria-label="Home"></section>
+  <section id="screen-squads" class="screen portrait" aria-label="Squads and collection"></section>
+  <section id="screen-battle" class="screen landscape" aria-label="Battle">
+    <div id="battle-host"></div>
+    <div id="battle-ui"></div>
   </section>
- </main>
- <footer class="command-console">
-  <div class="console-title"><span class="console-icon">⬡</span><div><strong>BUILD TOWERS</strong><small>DEFENSE SYSTEMS</small></div></div>
-  <div class="tower-grid" id="towerGrid">
-   <button class="tower-button selected" data-tower="pulse"><span class="tower-icon pulse">◉</span><span class="tower-label"><strong>PULSE</strong><small>CANNON</small></span><b>◆ 65</b></button>
-   <button class="tower-button" data-tower="tesla"><span class="tower-icon tesla">ϟ</span><span class="tower-label"><strong>ARC</strong><small>PYLON</small></span><b>◆ 95</b></button>
-   <button class="tower-button" data-tower="mortar"><span class="tower-icon mortar">✹</span><span class="tower-label"><strong>NOVA</strong><small>MORTAR</small></span><b>◆ 125</b></button>
-   <button class="tower-button" data-tower="cryo"><span class="tower-icon cryo">❄</span><span class="tower-label"><strong>CRYO</strong><small>EMITTER</small></span><b>◆ 80</b></button>
+  <div id="modal" class="hidden" role="dialog" aria-modal="true"></div>
+  <div id="toast" aria-live="polite"></div>
+  <div id="rotate" class="hidden">
+    <div class="rotate-card"><div class="phone-icon"></div><h2>Rotate to landscape</h2><p>Battles are designed for landscape. Turn your phone sideways.</p><button class="btn ghost" data-act="rotate-ignore">Continue anyway</button></div>
   </div>
-  <div class="context-box" id="contextBox"><div class="context-icon">⌖</div><div class="context-body"><strong id="contextTitle">PULSE CANNON</strong><span id="contextDesc">Fast and precise single-target damage.</span></div></div>
-  <div id="upgradeControls" class="upgrade-controls hidden"><button id="upgradeBtn" class="small-action">↥ UPGRADE <span id="upgradePrice"></span></button><button id="sellBtn" class="small-action danger">↘ SELL <span id="sellPrice"></span></button></div>
-  <div class="energy-area"><div class="energy-top"><span>ORBITAL STRIKE</span><b id="energyText">0%</b></div><div class="energy-track"><div id="energyFill"></div></div><button id="abilityBtn" class="ability-button" disabled>◈ <span>STRIKE</span><small>CHARGE</small></button></div>
-  <div class="bottom-actions"><button id="nextWaveBtn" class="wave-button"><span>▶</span><strong>DEPLOY WAVE 1</strong><small>START DEFENSE</small></button><div class="aside-footer"><span id="status">READY</span><button id="helpBtn" class="help-btn">?</button></div></div>
- </footer>
- <div class="overlay" id="overlay"><div class="overlay-card"><div class="overline">✦ &nbsp; AETHERFRONT COMMAND &nbsp; ✦</div><h1 id="overlayTitle">THE LAST LINE<br><em>HOLDS HERE.</em></h1><p id="overlayDesc">Defend the Aegis perimeter in a real-time 3D battlefield. Construct kinetic cannons, arc pylons, nova mortars and cryo emitters; redirect ground units; survive 15 escalating waves.</p><div class="overlay-info"><span>◈ 3D BATTLEFIELD</span><span>◈ DYNAMIC PATHS</span><span>◈ 15 WAVES</span></div><button id="overlayBtn" class="play-btn">BEGIN DEFENSE <span>▶</span></button><div class="overlay-sub">iPhone landscape · Touch to build · Original playable prototype</div></div></div>
- <div class="rotate-message"><div>↻</div><strong>ROTATE TO LANDSCAPE</strong><p>Turn your iPhone sideways to command the battlefield.</p></div>
+  <div id="boot"><div class="boot-logo"><span class="a-mark"></span><b>AETHERFRONT:</b> <i>LAST LINE</i></div><div class="boot-bar"><i id="boot-fill"></i></div><small id="boot-msg">Loading assets…</small></div>
 </div>
-<script src="game.js"></script>
-<script src="render3d.js"></script>
+<script type="module" src="src/main.js"></script>
+<noscript>AETHERFRONT requires JavaScript.</noscript>
 </body>
 </html>

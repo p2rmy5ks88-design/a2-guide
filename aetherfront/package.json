@@ -1,0 +1,16 @@
+{
+  "name": "aetherfront-last-line",
+  "private": true,
+  "version": "0.2.0",
+  "type": "module",
+  "description": "AETHERFRONT: LAST LINE — static WebGL game (no build step). Dev tooling only.",
+  "scripts": {
+    "serve": "node tools/serve.mjs 8787",
+    "forge": "node tools/forge/run-forge.mjs",
+    "test": "node --test tests/unit/*.test.mjs",
+    "test:browser": "node tests/browser/e2e.mjs"
+  },
+  "devDependencies": {
+    "playwright-core": "1.56.0"
+  }
+}

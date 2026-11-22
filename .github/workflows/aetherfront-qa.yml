@@ -1,0 +1,37 @@
+name: Aetherfront QA
+on:
+  pull_request:
+    paths: ['aetherfront/**', '.github/workflows/aetherfront-qa.yml']
+  push:
+    branches: ['feat/aetherfront-webgl-3d']
+    paths: ['aetherfront/**', '.github/workflows/aetherfront-qa.yml']
+permissions:
+  contents: read
+concurrency:
+  group: aetherfront-qa-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: aetherfront
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-audit --no-fund
+      - name: Unit tests (sim, BFS, progression, save, rewards)
+        run: npm test
+      - name: Browser e2e with real WebGL (SwiftShader) on iPhone viewports
+        env:
+          CHROME_PATH: /usr/bin/google-chrome
+        run: npm run test:browser
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: aetherfront-screenshots
+          path: aetherfront/test-results
+          retention-days: 7

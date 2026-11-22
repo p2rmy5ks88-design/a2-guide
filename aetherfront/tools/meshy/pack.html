@@ -1,0 +1,115 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Meshy pack</title>
+<script type="importmap">{"imports":{"three":"../../vendor/three/three.module.min.js","three/addons/":"../../vendor/three/addons/"}}</script></head><body>
+<script type="module">
+// Packs Meshy-generated rigged character + per-action animation GLBs into ONE game GLB that follows the
+// Aetherfront contract: clips idle/move/fire/hit/die, 'muzzle' + 'flash' nodes on a weapon in the right hand.
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
+import { Rig, W } from '../forge/kit.js';
+const loader = new GLTFLoader();
+const toB64 = (buf) => { let s = ''; const b = new Uint8Array(buf); for (let i = 0; i < b.length; i += 0x8000) s += String.fromCharCode.apply(null, b.subarray(i, i + 0x8000)); return btoa(s); };
+function shrink(tex, size) {
+  if (!tex?.image) return;
+  const img = tex.image, s = Math.min(size, img.width);
+  const c = document.createElement('canvas'); c.width = c.height = s; c.getContext('2d').drawImage(img, 0, 0, s, s);
+  tex.image = c; tex.userData.mimeType = 'image/jpeg'; tex.needsUpdate = true;
+}
+function inPlace(clip, keepY = true) {
+  for (const t of clip.tracks) if (/Hips\.position$/.test(t.name)) {
+    const v = t.values, x0 = v[0], z0 = v[2];
+    for (let i = 0; i < v.length; i += 3) { v[i] = x0; v[i + 2] = z0; if (!keepY) v[i + 1] = v[1]; }
+  }
+  // drop scale tracks (Meshy exports constant scales) to keep files small
+  clip.tracks = clip.tracks.filter((t) => !/\.scale$/.test(t.name));
+  return clip;
+}
+const UPPER = /^(Spine|Spine01|Spine02|neck|Head|headfront|head_end|LeftShoulder|LeftArm|LeftForeArm|LeftHand|RightShoulder|RightArm|RightForeArm|RightHand)\./;
+const upperOnly = (clip) => { clip.tracks = clip.tracks.filter((t) => UPPER.test(t.name)); return clip; };
+function hold(clip, name, t, dur = 2) { // static pose sampled from clip at time t (+ tiny breathing on Spine)
+  const out = [];
+  for (const tr of clip.tracks) {
+    const v = tr.createInterpolant(); const val = Array.from(v.evaluate(t));
+    out.push(new tr.constructor(tr.name, [0, dur], [...val, ...val]));
+  }
+  return new THREE.AnimationClip(name, dur, out);
+}
+// cfg: {clips:{idle:[file,mode,t], move:[file], fire:[file,mode], hit:[file], die:[file]}, weapon, glow, height, aim:'hands'|'up'}
+window.pack = async (id, base, cfg) => {
+  const rigged = await loader.loadAsync(`${base}/rigged.glb`);
+  const clips = {};
+  for (const [name, [file, mode, t]] of Object.entries(cfg.clips)) {
+    const g = await loader.loadAsync(`${base}/${file}.glb`);
+    let c = inPlace(g.animations[0].clone(), true);
+    if (mode === 'upper') c = upperOnly(c);
+    if (mode === 'hold') c = hold(upperOnly(c), name, t ?? 0.3);
+    if (mode === 'holdfull') c = hold(c, name, t ?? 0.3);
+    c.name = name; clips[name] = c;
+  }
+  const scene = rigged.scene;
+  scene.traverse((o) => { if (o.isMesh) { const m = o.material; for (const k of ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'emissiveMap']) shrink(m[k], k === 'map' ? 1024 : 512); m.name = 'AF_Meshy_' + id; } });
+  const wrapper = new THREE.Group(); wrapper.name = 'rig';
+  const root = new THREE.Group(); root.name = id; root.add(wrapper); wrapper.add(scene);
+  root.updateMatrixWorld(true);
+  const box = new THREE.Box3().setFromObject(scene);
+  const k = cfg.height / (box.max.y - box.min.y);
+  wrapper.scale.setScalar(k); wrapper.position.y = -box.min.y * k;
+  // calibrate weapon in the FIRE pose
+  const mixer = new THREE.AnimationMixer(scene);
+  if (clips.idle.tracks.length) mixer.clipAction(clips.idle).play();
+  const fa = mixer.clipAction(clips.fire); fa.play(); mixer.update(clips.fire.duration * 0.3); root.updateMatrixWorld(true);
+  const hand = scene.getObjectByName('RightHand'), lhand = scene.getObjectByName('LeftHand');
+  const rp = new THREE.Vector3(), lp = new THREE.Vector3(); hand.getWorldPosition(rp); lhand.getWorldPosition(lp);
+  let dir = cfg.aim === 'up' ? new THREE.Vector3(0, 1, 0.15) : cfg.aim === 'forward' ? new THREE.Vector3(0, -0.04, 1) : lp.clone().sub(rp);
+  if (cfg.aim !== 'up' && dir.length() < 0.05) dir.set(0, 0, 1);
+  dir.normalize();
+  const want = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, 1), dir);
+  const wr = new Rig('w'); wr.node('weapon'); W[cfg.weapon](cfg.glow)(wr); wr.build();
+  const wpn = wr.nodes.weapon; wpn.removeFromParent();
+  const hq = new THREE.Quaternion(), hs = new THREE.Vector3(), hp = new THREE.Vector3(); hand.matrixWorld.decompose(hp, hq, hs);
+  const holder = new THREE.Group(); holder.name = 'weapon_socket';
+  holder.quaternion.copy(hq).invert().multiply(want); holder.scale.set(1 / hs.x, 1 / hs.y, 1 / hs.z);
+  holder.add(wpn); wpn.scale.setScalar(cfg.weaponScale || 1.25); wpn.position.set(0, 0, cfg.aim === 'up' ? -0.35 : -0.16);
+  hand.add(holder);
+  mixer.stopAllAction();
+  root.animations = Object.values(clips);
+  const exporter = new GLTFExporter();
+  const buf = await exporter.parseAsync(root, { binary: true, animations: root.animations, onlyVisible: false, maxTextureSize: 1024 });
+  const b2 = new THREE.Box3().setFromObject(root);
+  return { b64: toB64(buf), bytes: buf.byteLength, bounds: [b2.min.toArray().map((v) => +v.toFixed(3)), b2.max.toArray().map((v) => +v.toFixed(3))] };
+};
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+const PW = 360, PH = 440;
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
+renderer.setSize(PW, PH); renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.1; renderer.outputColorSpace = THREE.SRGBColorSpace;
+const env = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
+window.portrait = async (url) => {
+  const g = await loader.loadAsync(url);
+  const scene = new THREE.Scene(); scene.environment = env;
+  const key = new THREE.DirectionalLight(0xfff1dc, 2.2); key.position.set(2, 3, 3); scene.add(key);
+  const rim = new THREE.DirectionalLight(0x6fd8ff, 2.0); rim.position.set(-3, 2, -2); scene.add(rim);
+  const rim2 = new THREE.DirectionalLight(0xff5fe0, 1.0); rim2.position.set(3, 1, -3); scene.add(rim2);
+  scene.add(new THREE.AmbientLight(0x6070a0, 0.6));
+  const m = g.scene; m.rotation.y = -0.35; scene.add(m);
+  const mixer = new THREE.AnimationMixer(m); const idle = g.animations.find((a) => a.name === 'idle'); if (idle) { mixer.clipAction(idle).play(); mixer.update(0.4); }
+  m.updateMatrixWorld(true);
+  const head = m.getObjectByName('Head'); const hp = new THREE.Vector3(); head.getWorldPosition(hp);
+  const cam = new THREE.PerspectiveCamera(30, PW / PH, 0.01, 100);
+  const t = new THREE.Vector3(hp.x, hp.y - 0.17, hp.z); cam.position.set(t.x + 0.15, t.y + 0.12, t.z + 1.45); cam.lookAt(t);
+  renderer.setClearColor(0, 0); renderer.render(scene, cam);
+  return renderer.domElement.toDataURL('image/png');
+};
+window.poses = async (url) => {
+  const g = await loader.loadAsync(url); const out = [];
+  for (const name of ['idle', 'move', 'fire', 'hit', 'die']) {
+    const scene = new THREE.Scene(); scene.environment = env; scene.add(new THREE.AmbientLight(0xffffff, 1)); const kl = new THREE.DirectionalLight(0xffffff, 2); kl.position.set(1, 3, 3); scene.add(kl);
+    const { clone } = await import('three/addons/utils/SkeletonUtils.js');
+    const m = clone(g.scene); scene.add(m);
+    const mixer = new THREE.AnimationMixer(m); const c = g.animations.find((a) => a.name === name); mixer.clipAction(c).play(); mixer.update(c.duration * 0.45);
+    const cam = new THREE.PerspectiveCamera(30, PW / PH, 0.01, 100); cam.position.set(0, 2.3, 3.6); cam.lookAt(0, 0.7, 0);
+    renderer.setClearColor(0x223366, 1); renderer.render(scene, cam); out.push(renderer.domElement.toDataURL('image/png'));
+  }
+  return out;
+};
+window.packReady = true;
+</script></body></html>
