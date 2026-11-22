@@ -399,7 +399,7 @@ function installCrossroadsPremiumCity(core,classic){
 export function createCrossroadsRenderer(canvas,{rules,onTile}={}){
  const CC=rules,TILES=CC.TILES,BY=CC.BY;
  const renderer=new THREE.WebGLRenderer({canvas,antialias:true,powerPreference:'high-performance'});
- renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.NoToneMapping;renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+ renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.NoToneMapping;renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.shadowMap.autoUpdate=false;renderer.shadowMap.needsUpdate=true;
  const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)');const maxDpr=Math.min(devicePixelRatio||1,3);let dpr=maxDpr;renderer.setPixelRatio(dpr);
  const scene=new THREE.Scene();scene.background=new THREE.Color('#262245');scene.fog=new THREE.Fog('#28304b',65,160);
  const camera=new THREE.PerspectiveCamera(40,1,.1,220);
@@ -408,7 +408,7 @@ export function createCrossroadsRenderer(canvas,{rules,onTile}={}){
   for(const [x,y,z,c]of[[18,22,10,'#fff1d6'],[-20,14,-8,'#ffd79a'],[0,30,-18,'#ffffff']]){const m=new THREE.Mesh(new THREE.PlaneGeometry(14,8),new THREE.MeshBasicMaterial({color:c,side:THREE.DoubleSide}));m.position.set(x,y,z);m.lookAt(0,0,0);env.add(m)}
   const pm=new THREE.PMREMGenerator(renderer);scene.environment=pm.fromScene(env,.04).texture;scene.environmentIntensity=.70;pm.dispose()}
  scene.add(new THREE.HemisphereLight('#fff6ea','#4a3524',.77));
- const sun=new THREE.DirectionalLight('#fff0d8',1.55);sun.position.set(-7,15,10);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-11,right:11,top:8,bottom:-8,near:1,far:45});sun.shadow.bias=-.0006;scene.add(sun);
+ const sun=new THREE.DirectionalLight('#fff0d8',1.55);sun.position.set(-7,15,10);sun.castShadow=true;sun.shadow.mapSize.set(1536,1536);Object.assign(sun.shadow.camera,{left:-11,right:11,top:8,bottom:-8,near:1,far:45});sun.shadow.bias=-.0006;scene.add(sun);
  const lamp=new THREE.PointLight('#ffc27a',8,24,1.6);lamp.position.set(0,6,-7);scene.add(lamp);
  let dirty=true;
 
@@ -741,7 +741,7 @@ export function createCrossroadsRenderer(canvas,{rules,onTile}={}){
  function loop(now){if(!running)return;requestAnimationFrame(loop);terrace.marquee.visible=mode==='overview';const dt=Math.min(.1,(now-lastT)/1000);lastT=now;applyCam(dt);const pulse=.5+.5*Math.sin(now/300);if(!reduceMotion.matches)livingCity.tick(now);
   for(const id in tileMeshes){const T=tileMeshes[id];T.glow.material.opacity=effects.highlight===id?.35+.25*pulse:0}
   tokens.forEach((t,k)=>{if(!t)return;const on=view&&view.turn&&view.turn.pid===k;const r=t.g.userData.ring;if(r&&r.material)r.material.emissiveIntensity=on?.6+.6*pulse:.25});
-  renderer.render(scene,camera);frames++;if(now-fpsT>3000){const fps=frames*1000/(now-fpsT);measuredFps=Math.round(fps*10)/10;frames=0;fpsT=now;if(fps<28&&dpr>2){dpr=Math.max(2,dpr-.5);renderer.setPixelRatio(dpr);resize()}}}
+  if(dirty){renderer.shadowMap.needsUpdate=true;dirty=false}renderer.render(scene,camera);frames++;if(now-fpsT>3000){const fps=frames*1000/(now-fpsT);measuredFps=Math.round(fps*10)/10;frames=0;fpsT=now;if(fps<28&&dpr>2){dpr=Math.max(2,dpr-.5);renderer.setPixelRatio(dpr);resize()}}}
  resize();overviewGoal();Object.assign(cam,{target:goal.target.clone(),yaw:goal.yaw,pitch:goal.pitch,dist:goal.dist});requestAnimationFrame(loop);
  return{setFrameBias(v){frameBias=v;refreshGoal()},sync,moveToken,follow,focusTile,overview,highlight,resize,
   stats:()=>({dpr,maxDpr,cssWidth:canvas.clientWidth,cssHeight:canvas.clientHeight,drawWidth:canvas.width,drawHeight:canvas.height,measuredFps,triangles:renderer.info.render.triangles,mode,zoom:userZoom,camDist:cam.dist,goalDist:goal.dist,camYaw:cam.yaw,camPitch:cam.pitch,cameraUp:camera.up.toArray(),layout:'classic-circular',environment:'harbour-terrace',followBias:'inward',vistaTowers:terrace.vistaTowers,titleNdcY:terrace.marquee.position.clone().project(camera).y,landmarksDetailed:livingCity.landmarks,ambientTraffic:livingCity.trafficCount,premiumPalms:premiumCity.palms,promenadeLights:premiumCity.lights,diameter:RIM*2,perimeterTiles:ringOrder.length,tiles:Object.keys(tileMeshes).length,tokens:tokens.length,landmarks:lmGroup.children.length}),mode:()=>mode,dispose(){running=false;renderer.dispose()}}}
