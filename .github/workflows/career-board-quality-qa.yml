@@ -89,7 +89,7 @@ jobs:
   # Linux WebKit it remains simulated, not a physical iPhone 18 Pro Max.
   crossroads-retina-macos:
     name: Crossroads Retina 3× (macOS WebKit GPU)
-    runs-on: macos-15
+    runs-on: macos-26
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
