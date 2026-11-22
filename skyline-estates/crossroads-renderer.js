@@ -147,6 +147,104 @@ function installCrossroadsTerrace(scene,classic,renderer){
  return{marquee};
 }
 
+// Cinematic *decorative* living-city assets, entirely within the Crossroads scene.
+// None of these meshes participate in tile picking, token routing or saved gameplay.
+function installCrossroadsLivingCity(core,classic){
+ const ivory=classic.mats.ivory,gold=classic.mats.gold,glass=classic.mats.glass;
+ const navy=classic.mats.navy,foliage=classic.mats.foliageLight;
+ const add=(geo,mat,x,y,z,parent=core)=>{const o=new THREE.Mesh(geo,mat);
+  o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;parent.add(o);return o};
+ const box=(mat,x,y,z,w,h,d)=>add(new THREE.BoxGeometry(w,h,d),mat,x,y,z);
+ function sign(text,w=.8,h=.18){
+  const c=document.createElement('canvas');c.width=768;c.height=160;
+  const ctx=c.getContext('2d');ctx.fillStyle='#142641';ctx.fillRect(0,0,768,160);
+  ctx.strokeStyle='#e1b65d';ctx.lineWidth=11;ctx.strokeRect(6,6,756,148);
+  ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#fff2c9';
+  let size=90;do{ctx.font='900 '+size+'px Arial,sans-serif';size-=3}
+  while(ctx.measureText(text).width>705&&size>30);
+  ctx.fillText(text,384,83);
+  const tex=new THREE.CanvasTexture(c);tex.colorSpace=THREE.SRGBColorSpace;
+  return new THREE.Mesh(new THREE.PlaneGeometry(w,h),
+   new THREE.MeshBasicMaterial({map:tex,toneMapped:false,side:THREE.DoubleSide}));
+ }
+ // A proper column-fronted City Hall along the near-side boulevard.
+ const town=new THREE.Group();town.position.set(0,.15,2.45);core.add(town);
+ const b=(mat,x,y,z,w,h,d)=>add(new THREE.BoxGeometry(w,h,d),mat,x,y,z,town);
+ b(gold,0,.075,0,1.50,.14,1.08);
+ b(ivory,0,.19,-.02,1.34,.31,.76);
+ b(glass,0,.46,-.06,1.16,.34,.61);
+ b(ivory,0,.64,-.05,1.35,.085,.80);
+ for(let i=0;i<6;i++){
+  const x=(i-2.5)*.185;
+  add(new THREE.CylinderGeometry(.033,.043,.44,12),ivory,x,.40,.35,town);
+  b(gold,x,.61,.35,.10,.026,.10)
+ }
+ const pediment=new THREE.Shape();pediment.moveTo(-.72,0);pediment.lineTo(.72,0);pediment.lineTo(0,.24);pediment.closePath();
+ const roof=new THREE.Mesh(new THREE.ExtrudeGeometry(pediment,
+  {depth:.12,bevelEnabled:true,bevelSize:.022,bevelThickness:.02,bevelSegments:1}),ivory);
+ roof.position.set(0,.69,.34);roof.castShadow=true;town.add(roof);
+ for(const x of[-.55,-.35,.35,.55])b(gold,x,.32,.265,.038,.24,.028);
+ for(let i=0;i<3;i++)b(ivory,0,.015,.64+i*.14,1.25-i*.12,.027,.13);
+ const hallSign=sign('CITY HALL',.81,.16);hallSign.position.set(0,.585,.41);town.add(hallSign);
+ // A second recognizable landmark: gold-and-blue domed Civic Center.
+ const civicSign=sign('CIVIC CENTER',.89,.15);
+ civicSign.position.set(2.35,.71,1.19);core.add(civicSign);
+ for(const dx of[-.45,.45]){
+  const hedge=add(new THREE.SphereGeometry(.14,10,7),foliage,2.35+dx,.21,1.16);
+  hedge.castShadow=false
+ }
+ // A warm-stone quay, rounded cyan lagoon edge and gold-lit pedestrian amenities.
+ const ring=new THREE.Mesh(new THREE.RingGeometry(.99,1.025,96),
+  new THREE.MeshBasicMaterial({color:'#ffe5ad',side:THREE.DoubleSide,toneMapped:false}));
+ ring.rotation.x=-Math.PI/2;ring.scale.set(1.64,.78,1);
+ ring.position.set(0,.151,-1.67);core.add(ring);
+ for(let i=0;i<10;i++){
+  const a=Math.PI*i/9,r=1.72,x=Math.cos(a)*r,z=-1.67+.83*Math.sin(a);
+  const lamp=classic.lamp();lamp.scale.setScalar(.55);lamp.position.set(x,.15,z);
+  core.add(lamp)
+ }
+ // Flowering shrubs (instanced to avoid one draw call per flower).
+ const bloomColors=['#f85f85','#eec95a','#ff8f92','#d35ab4'];
+ const petals=new THREE.InstancedMesh(new THREE.IcosahedronGeometry(.045,0),
+  new THREE.MeshStandardMaterial({color:'#ffffff',roughness:.75}),72);
+ const dummy=new THREE.Object3D(),color=new THREE.Color();
+ for(let i=0;i<72;i++){
+  const j=i%18,k=Math.floor(i/18),a=j*Math.PI*2/18+k*.075;
+  const r=2.9+.10*Math.sin(i*3.1),x=r*Math.cos(a),z=r*Math.sin(a);
+  dummy.position.set(x,.17+.045*(.5+.5*Math.sin(i*7.2)),z);
+  dummy.scale.setScalar(.7+.35*Math.abs(Math.sin(i*1.37)));dummy.updateMatrix();
+  petals.setMatrixAt(i,dummy.matrix);
+  petals.setColorAt(i,color.set(bloomColors[k%4]))
+ }
+ petals.instanceMatrix.needsUpdate=true;core.add(petals);
+ // Actual moving miniature street traffic, completely independent of turns.
+ const traffic=[];
+ const paint=['#ffca39','#286bbd','#dc526a','#35aab0'];
+ const chassis=new THREE.BoxGeometry(.20,.12,.38),glassCab=new THREE.BoxGeometry(.16,.08,.17);
+ const wheelGeo=new THREE.CylinderGeometry(.047,.047,.035,10);
+ const wheelMat=new THREE.MeshStandardMaterial({color:'#1b212a',roughness:.8});
+ for(let i=0;i<4;i++){
+  const car=new THREE.Group(),body=new THREE.Mesh(chassis,
+   new THREE.MeshStandardMaterial({color:paint[i],roughness:.28,metalness:.28}));
+  body.position.y=.17;car.add(body);
+  const cab=new THREE.Mesh(glassCab,glass);cab.position.set(0,.27,-.04);car.add(cab);
+  for(const x of[-.12,.12])for(const z of[-.10,.10]){
+   const wheel=new THREE.Mesh(wheelGeo,wheelMat);
+   wheel.rotation.z=Math.PI/2;wheel.position.set(x,.12,z);car.add(wheel)
+  }
+  car.userData.speed=[.000040,.000035,.000048,.000038][i];
+  car.userData.angle=i*Math.PI/2+.28;
+  car.position.y=.02;core.add(car);traffic.push(car)
+ }
+ function tick(ms){for(const car of traffic){
+  const a=car.userData.angle+ms*car.userData.speed,r=3.65;
+  car.position.set(r*Math.cos(a),.02,r*Math.sin(a));
+  car.rotation.y=-a
+ }}
+ tick(0);
+ return{tick,landmarks:2,trafficCount:traffic.length};
+}
+
 export function createCrossroadsRenderer(canvas,{rules,onTile}={}){
  const CC=rules,TILES=CC.TILES,BY=CC.BY;
  const renderer=new THREE.WebGLRenderer({canvas,antialias:true,powerPreference:'high-performance'});
@@ -354,11 +452,13 @@ export function createCrossroadsRenderer(canvas,{rules,onTile}={}){
    center:new THREE.Vector3(0,0,-1),hub:true,y:.34};
  }
  // Familiar 3D bridge, civic dome and celebratory details from Solo Play.
- {const civic=classic.civic();civic.position.set(0,.16,2.47);civic.scale.setScalar(.74);core.add(civic);
+ {const civic=classic.civic();civic.position.set(2.35,.14,.72);civic.scale.setScalar(.73);core.add(civic);
   const bridge=classic.bridge(1.52,.50);bridge.position.set(0,.16,-1.70);core.add(bridge);
   const arch=new THREE.Mesh(new THREE.TorusGeometry(.78,.046,12,56,Math.PI),gold);
   arch.position.set(0,.20,-5.25);arch.castShadow=true;scene.add(arch)}
  
+ const livingCity=installCrossroadsLivingCity(core,classic);
+
  // ---- buildings (6 stages) and landmark miniatures ----
  const winTex=windowTexture(),proto=[],props={},lmProto=[];const loader=new GLTFLoader(),base='./assets/approved-v5/';
  const fit=(obj,w)=>{const b=new THREE.Box3().setFromObject(obj),size=b.getSize(new THREE.Vector3()),k=w/Math.max(size.x,size.z);obj.scale.setScalar(k);const b2=new THREE.Box3().setFromObject(obj);obj.position.y-=b2.min.y;const c=b2.getCenter(new THREE.Vector3());obj.position.x-=c.x;obj.position.z-=c.z;const g=new THREE.Group();g.add(obj);return g};
@@ -474,10 +574,10 @@ export function createCrossroadsRenderer(canvas,{rules,onTile}={}){
  function resize(){const w=canvas.clientWidth,h=canvas.clientHeight;if(!w||!h)return;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();if(mode==='overview')overviewGoal();dirty=true}
  addEventListener('resize',resize);visualViewport&&visualViewport.addEventListener('resize',resize);
  let frames=0,fpsT=performance.now(),running=true;
- function loop(now){if(!running)return;requestAnimationFrame(loop);terrace.marquee.visible=mode==='overview';const dt=Math.min(.1,(now-lastT)/1000);lastT=now;applyCam(dt);const pulse=.5+.5*Math.sin(now/300);
+ function loop(now){if(!running)return;requestAnimationFrame(loop);terrace.marquee.visible=mode==='overview';const dt=Math.min(.1,(now-lastT)/1000);lastT=now;applyCam(dt);const pulse=.5+.5*Math.sin(now/300);if(!reduceMotion.matches)livingCity.tick(now);
   for(const id in tileMeshes){const T=tileMeshes[id];T.glow.material.opacity=effects.highlight===id?.35+.25*pulse:0}
   tokens.forEach((t,k)=>{if(!t)return;const on=view&&view.turn&&view.turn.pid===k;const r=t.g.userData.ring;if(r&&r.material)r.material.emissiveIntensity=on?.6+.6*pulse:.25});
   renderer.render(scene,camera);frames++;if(now-fpsT>3000){const fps=frames*1000/(now-fpsT);frames=0;fpsT=now;if(fps<28&&dpr>2){dpr=Math.max(2,dpr-.5);renderer.setPixelRatio(dpr);resize()}}}
  resize();overviewGoal();Object.assign(cam,{target:goal.target.clone(),yaw:goal.yaw,pitch:goal.pitch,dist:goal.dist});requestAnimationFrame(loop);
  return{setFrameBias(v){frameBias=v;refreshGoal()},sync,moveToken,follow,focusTile,overview,highlight,resize,
-  stats:()=>({dpr,mode,zoom:userZoom,camDist:cam.dist,goalDist:goal.dist,camYaw:cam.yaw,camPitch:cam.pitch,cameraUp:camera.up.toArray(),layout:'classic-circular',environment:'skyline-terrace',followBias:'inward',diameter:RIM*2,perimeterTiles:ringOrder.length,tiles:Object.keys(tileMeshes).length,tokens:tokens.length,landmarks:lmGroup.children.length}),mode:()=>mode,dispose(){running=false;renderer.dispose()}}}
+  stats:()=>({dpr,mode,zoom:userZoom,camDist:cam.dist,goalDist:goal.dist,camYaw:cam.yaw,camPitch:cam.pitch,cameraUp:camera.up.toArray(),layout:'classic-circular',environment:'skyline-terrace',followBias:'inward',landmarksDetailed:livingCity.landmarks,ambientTraffic:livingCity.trafficCount,diameter:RIM*2,perimeterTiles:ringOrder.length,tiles:Object.keys(tileMeshes).length,tokens:tokens.length,landmarks:lmGroup.children.length}),mode:()=>mode,dispose(){running=false;renderer.dispose()}}}
