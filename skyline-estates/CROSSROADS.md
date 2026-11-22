@@ -1,7 +1,7 @@
 # CROSSROADS CAPITAL — LANDMARK CHASE
 ## Complete original game-design proposal · Version 1.0
 
-**Authority:** This file defines the NEW gameplay rules. The original approved Crossroads Capital double-loop art is the board-shape / palette authority. The new widescreen artwork is a visual framing concept, not permission to redesign that approved board.
+**Authority:** This file defines Crossroads Capital's Landmark Chase gameplay. **22 November 2026 owner-directed visual revision:** Crossroads alone now uses a single, full-size circular tabletop inspired by Classic Solo Play: walnut/gold frame, strongly colored district tiles, the same miniature city architecture and visible buildings. Riverside and Highland occupy opposite semicircular arcs of one shared ring. The scene presents a civic waterfront with a cable bridge, distinct City Hall and Civic Center miniatures, flowering landscaping and ambient traffic inside a premium gold-trimmed promenade above a surrounding blue harbour, with an immersive lower-angle overview. These additions are visual only; they create no properties, tolls, extra nodes or rule effects. No other Career board or Classic Solo Play is changed.
 
 ### Identity and difference from earlier concepts
 Landmark Chase is **not City Ventures: The Living Market** (no temporary city ordinances and no six-corner powers), and is **not Crossroads Capital: Route Wars** (no Influence, Momentum, paid loop-entry tolls, or route-control victory points).
@@ -13,7 +13,7 @@ Its signature mechanic is the **Landmark Chain**: make three different achieveme
 ## 1. Goal, setup, timing
 - Players: 2–4; local pass-and-play first; CPU and network turns later.
 - Starting budget: **3,000 City Cash** each, **one active Landmark Chain** selected from two randomly offered cards.
-- Board: two connected loops (Riverside/West and Highland/East), sharing **Start/Payday**, **Grand Exchange**, **Skybridge Bonus**. See `gameplay/board_graph.json` for a **proposed implementation path**. Source artwork is decorative and must not be used as movement data.
+- Board: **one circular ring**, approximately the diameter of the Classic Solo Play tabletop. **32 perimeter spaces** (Start, 15 Riverside properties/specials, Skybridge, 15 Highland properties/specials), plus the playable **Grand Exchange** in the inner civic plaza. Riverside and Highland are opposing semicircular **route arcs**, not separate circular boards. The actual deterministic movement graph still comes from `lib/crossroads-rules.js`, never from decorative artwork.
 - One active project per player by default. Maximum one completed-but-unclaimed project. Player may replace their unfinished project at Grand Exchange.
 - Normal match: **15 turns per player** (3 chapters of 5 turns/player). Quick match: **9 turns/player** (3 chapters of 3 turns/player). Counts are per player, not total turns.
 - Bank starts with unlimited currency for local play. Players never need internet connectivity to move, buy, or win.
@@ -112,7 +112,7 @@ Pay **150** to the bank and receive a one-use 100 upgrade voucher, or pay **200*
 Mortgaged tile charges no rent and cannot be upgraded until redeemed. A player landing on another player's mortgaged property can still Scout or offer a voluntary deal.
 
 ## 6. Buildings, districts, and cash
-Properties retain color sets and named tiles from the approved board image. Standard stages: **Plot → House 1 → House 2 → House 3 → House 4 → Landmark Residence / Hotel**. Buildings are visible 3D meshes on the properties, not text-only counters. Upgrades require ownership and affordability; completion of full color groups is recommended for the final Hotel stage. Printed per-tile costs and rents live in `gameplay/board_graph.json` and may be balance-tested independently of appearance.
+Properties retain their named tiles, printed prices and saturated color sets; their physical placement is on the classic-scale circular ring. Standard stages: **Plot → House 1 → House 2 → House 3 → House 4 → Landmark Residence / Hotel**. Buildings are visible 3D meshes on the properties, not text-only counters. Upgrades require ownership and affordability; completion of full color groups is recommended for the final Hotel stage. Printed per-tile costs and rents live in `gameplay/board_graph.json` and may be balance-tested independently of appearance.
 
 Building-stage rent guideline: plot = printed base rent, house 1 = 2×, house 2 = 3.5×, house 3 = 5×, house 4 = 7×, hotel = 10×, rounding to whole Cash. Owning all properties of a color group earns a **+20% rent multiplier**, applied once. No temporary global rent policy.
 
