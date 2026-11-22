@@ -142,7 +142,8 @@ export function createCrossroadsRenderer(canvas,{rules,onTile}={}){
   const pos=[],uv=[],indices=[];
   for(let j=0;j<=nv;j++)for(let i=0;i<=nu;i++){
    const u=i/nu,v=j/nv,p=radial(t0+(t1-t0)*u,r1+(r0-r1)*v);
-   pos.push(p.x,0,p.z);uv.push(1-u,1-v);
+   // The property colour bar faces the inner city, just like Classic Solo tiles.
+   pos.push(p.x,0,p.z);uv.push(1-u,v);
   }
   for(let j=0;j<nv;j++)for(let i=0;i<nu;i++){
    const a=j*(nu+1)+i,b=a+1,c=a+nu+1,d=c+1;
