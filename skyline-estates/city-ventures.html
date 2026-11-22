@@ -117,6 +117,7 @@ table.res{width:100%;border-collapse:collapse;font-size:14px;margin:8px 0}table.
  }
  #side .panel{flex-shrink:0}
 }
+#menu .card{width:min(620px,88vw);box-sizing:border-box}.mlist{display:grid;grid-template-columns:1fr 1fr;gap:7px;width:100%}.mlist #mResume{grid-column:1/-1}.mlist .btn{width:100%;justify-content:flex-start;min-height:44px}
 </style>
 </head>
 <body>
@@ -138,7 +139,7 @@ table.res{width:100%;border-collapse:collapse;font-size:14px;margin:8px 0}table.
 <section id="decision" class="panel" hidden role="dialog" aria-live="polite"></section>
 <div id="toast" class="panel" role="status"></div>
 <div id="menu" class="screen" hidden><div class="card panel"><h1>Menu</h1><p>City Ventures — The Living Market</p>
- <div class="row"><button class="btn" id="mRules">📖 Rules</button><button class="btn" id="mResume">▶ Resume</button><button class="btn" id="mNew">↻ New match</button><button class="btn" id="mBankrupt">Declare bankruptcy</button><button class="btn" id="mEnd">End game &amp; score</button><button class="btn" id="mHome">🏠 Skyline Estates</button></div></div></div>
+ <div class="mlist"><button class="btn primary" id="mResume">▶ Resume</button><button class="btn" id="mRules">📖 Rules</button><button class="btn" id="mSpeed">⏩ Speed: normal</button><button class="btn" id="mCam">🗺 Camera: whole board</button><button class="btn" id="mRadio">📻 Radio: off</button><button class="btn" id="mNew">↻ New match</button><button class="btn" id="mEnd">🏁 End game &amp; score</button><button class="btn" id="mBankrupt">Declare bankruptcy</button><button class="btn" id="mHome">🏠 Skyline Estates</button></div></div></div>
 <div id="rules" hidden><div class="card panel"><h1>How to play</h1><p>Build the most valuable City Value in 18 turns (Quick: 10).</p>
  <h3>Your turn</h3>Roll, move, then buy the space you land on or send it to auction. Own 2 of a district’s 3 properties to build Low-rise and Mid-rise; own all 3 for a Landmark (+25% district rent).
  <h3>The six power corners</h3><b>Start</b> — pass for 200 CC; land exactly to pick a Charter. <b>Free Lounge</b> — Rent Shield or keep a card. <b>Civic Review</b> — Development Drive (−20% upgrades) or Tenant Protection (−30% rent) for a round. <b>Market Boom</b> — one district’s rent +50% or −40% for a round. <b>Skyline Exchange</b> — open an auction or a Deal Desk trade. <b>Transit Hub</b> — Express Route to any station or a Transit Dividend.
@@ -161,11 +162,12 @@ const TOKEN_EMOJI={car:'🚗',boat:'⛵',plane:'✈️',train:'🚆'};
 const fmt=n=>Math.round(n).toLocaleString('en-US')+' CC';
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const wait=ms=>new Promise(r=>setTimeout(r,matchMedia('(prefers-reduced-motion: reduce)').matches?Math.min(ms,60):ms));
-let s=null,R=null,busy=false,selected=null,reported=null,speed=Q.get('speed')==='fast'?.25:(()=>{try{return localStorage.getItem('skylineCVFast')==='1'?.45:1}catch(e){return 1}})();
+let s=null,R=null,busy=false,selected=null,reported=null,speed=Q.get('speed')==='fast'?.25:(()=>{try{return (localStorage.getItem('skylineBoardFast')||localStorage.getItem('skylineCVFast'))==='1'?.45:1}catch(e){return 1}})();
 const r3=createCityVenturesRenderer($('board'),{rules:CV,onTile:i=>{selected=i;showTile(i)}});
 // Fast mode (owner request 21 Nov 2026): one tap toggles 1× / 2× for dice, moves and computer turns; remembered.
 function syncSpeed(){const f=speed<1;const b=$('speedBtn');if(b){b.textContent=f?'2×':'1×';b.setAttribute('aria-pressed',String(f));b.setAttribute('aria-label',f?'Fast speed on. Tap for normal speed':'Normal speed. Tap for fast speed');b.style.fontWeight='900';b.style.fontSize='15px';b.style.color=f?'#ffd36b':''}try{r3&&r3.setSpeed&&r3.setSpeed(f?.45:1)}catch(e){}}
-$('speedBtn').onclick=()=>{speed=speed<1?1:.45;try{localStorage.setItem('skylineCVFast',speed<1?'1':'0')}catch(e){}syncSpeed()};
+$('speedBtn').onclick=()=>{speed=speed<1?1:.45;try{localStorage.setItem('skylineBoardFast',speed<1?'1':'0');localStorage.setItem('skylineCVFast',speed<1?'1':'0')}catch(e){}syncSpeed()};
+window.__boardSetSpeed=f=>{speed=f?.45:1;syncSpeed()};
 setTimeout(syncSpeed,0);
 window.__cv={state:()=>s,rules:CV,renderer:r3,act:(pid,a)=>doAct(pid,a),busy:()=>busy};
 
@@ -316,5 +318,19 @@ let overview=false;$('viewBtn').onclick=()=>{overview=!overview;r3.overview(over
 const saved=load();if(saved){s=saved;r3.sync(CV.view(s));r3.follow(s.turn.pid);render();toast('Match resumed');pump()}else startScreen();
 </script>
 <script src="lib/board-radio.js"></script><script>try{SkylineBoardRadio.mount(document.getElementById('top'),document.getElementById('viewBtn'))}catch(e){}</script>
+<script>
+/* Classic-style menu options on the Career board pages (owner request 22 Nov 2026): Speed, Camera and Radio,
+   as in the classic game menu. Speed is shared by all board pages. */
+(function(){const $=id=>document.getElementById(id);
+ const fast=()=>{try{return localStorage.getItem('skylineBoardFast')==='1'}catch(e){return false}};
+ function label(){if($('mSpeed'))$('mSpeed').textContent='⏩ Speed: '+(fast()?'fast':'normal');
+  if($('mCam')){const ov=($('viewBtn')&&$('viewBtn').getAttribute('aria-label')||'').startsWith('Return');$('mCam').textContent=ov?'🎯 Camera: follow token':'🗺 Camera: whole board'}
+  if($('mRadio')){const on=window.SkylineBoardRadio&&SkylineBoardRadio.state().on;$('mRadio').textContent='📻 Radio: '+(on?'on':'off')}}
+ window.SkylineBoardMenu={label,fast};
+ if($('mSpeed'))$('mSpeed').onclick=()=>{const f=!fast();try{localStorage.setItem('skylineBoardFast',f?'1':'0')}catch(e){}if(window.__boardSetSpeed)window.__boardSetSpeed(f);label()};
+ if($('mCam'))$('mCam').onclick=()=>{$('viewBtn')&&$('viewBtn').click();$('menu').hidden=true;label()};
+ if($('mRadio'))$('mRadio').onclick=()=>{window.SkylineBoardRadio&&SkylineBoardRadio.toggle();setTimeout(label,50)};
+ if($('menuBtn'))$('menuBtn').addEventListener('click',()=>setTimeout(label,0));label()})();
+</script>
 </body>
 </html>

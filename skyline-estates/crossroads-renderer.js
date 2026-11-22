@@ -749,13 +749,14 @@ export function createCrossroadsRenderer(canvas,{rules,onTile}={}){
  function placeTokens(){const counts={};tokens.forEach((t,k)=>{if(t&&view.players[k]&&!view.players[k].out)counts[t.tile]=(counts[t.tile]||0)+1});
   tokens.forEach((t,k)=>{if(!t)return;const p=slot(t.tile,k,counts[t.tile]);t.g.position.set(p.x,baseY(t.tile),p.z);const d=tileInfo[t.tile].dir;t.g.rotation.y=Math.atan2(d.x,d.z)-Math.PI/2});dirty=true}
  const wait=ms=>new Promise(r=>setTimeout(r,ms));
+ let speedK=1;
  async function moveToken(pid,path,{express=false}={}){const t=tokens[pid];if(!t||!path.length)return;moving=true;followPid=pid;if(mode==='follow')pushIn=1;if(pinned)overviewGoal();
-  const step=reduceMotion.matches?0:express?420:220;
+  const step=reduceMotion.matches?0:(express?420:220)*speedK;
   for(const id of path){const from=t.g.position.clone(),to=slot(id,pid,1);to.y=baseY(id);const t0=performance.now(),y0=from.y;
    if(step){await new Promise(res=>{const tick=()=>{const k=Math.min(1,(performance.now()-t0)/step);const e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;t.g.position.lerpVectors(from,to,e);t.g.position.y=y0+(to.y-y0)*e+Math.sin(Math.PI*k)*(express?.9:.32);
      if(mode==='follow')followGoal(t.g.position.clone(),id);if(to.distanceTo(from)>.01)t.g.rotation.y=Math.atan2(to.x-from.x,to.z-from.z)-Math.PI/2;dirty=true;if(k<1)requestAnimationFrame(tick);else res()};tick()})}
    t.tile=id}
-  moving=false;placeTokens();if(mode==='follow'){pushIn=1.12;followGoal(tileInfo[t.tile].pos,t.tile)}await wait(reduceMotion.matches?0:200)}
+  moving=false;placeTokens();if(mode==='follow'){pushIn=1.12;followGoal(tileInfo[t.tile].pos,t.tile)}await wait(reduceMotion.matches?0:200*speedK)}
  function follow(pid){followPid=pid;if(pinned){dirty=true;return}mode='follow';userYaw=0;pushIn=1;const t=tokens[pid];if(t)followGoal(tileInfo[t.tile].pos,t.tile);dirty=true}
  function focusTile(id){if(!tileInfo[id])return;if(pinned){highlight(id);return}mode='follow';pushIn=1.12;followGoal(tileInfo[id].pos,id);highlight(id);dirty=true}
  function overview(on=true){pinned=on;mode=on?'overview':'follow';if(on)overviewGoal();else follow(followPid);dirty=true}
@@ -783,5 +784,5 @@ export function createCrossroadsRenderer(canvas,{rules,onTile}={}){
   tokens.forEach((t,k)=>{if(!t)return;const on=view&&view.turn&&view.turn.pid===k;const r=t.g.userData.ring;if(r&&r.material)r.material.emissiveIntensity=on?.6+.6*pulse:.25});
   if(dirty){renderer.shadowMap.needsUpdate=true;dirty=false}renderer.render(scene,camera);frames++;if(now-fpsT>3000){const fps=frames*1000/(now-fpsT);measuredFps=Math.round(fps*10)/10;frames=0;fpsT=now;if(fps<28&&dpr>2){dpr=Math.max(2,dpr-.5);renderer.setPixelRatio(dpr);resize()}}}
  resize();overviewGoal();Object.assign(cam,{target:goal.target.clone(),yaw:goal.yaw,pitch:goal.pitch,dist:goal.dist});requestAnimationFrame(loop);
- return{setFrameBias(v){frameBias=v;refreshGoal()},sync,moveToken,follow,focusTile,overview,highlight,resize,
+ return{setFrameBias(v){frameBias=v;refreshGoal()},setSpeed(k){speedK=k},sync,moveToken,follow,focusTile,overview,highlight,resize,
   stats:()=>({dpr,maxDpr,cssWidth:canvas.clientWidth,cssHeight:canvas.clientHeight,drawWidth:canvas.width,drawHeight:canvas.height,measuredFps,triangles:renderer.info.render.triangles,mode,zoom:userZoom,camDist:cam.dist,goalDist:goal.dist,camYaw:cam.yaw,camPitch:cam.pitch,cameraUp:camera.up.toArray(),layout:'classic-circular',environment:'harbour-terrace',followBias:'inward',vistaTowers:terrace.vistaTowers,titleNdcY:terrace.marquee.position.clone().project(camera).y,landmarksDetailed:livingCity.landmarks,ambientTraffic:livingCity.trafficCount,premiumPalms:premiumCity.palms,promenadeLights:premiumCity.lights,approvedFacades,modelLoadStatus,modelLoadError,diameter:RIM*2,perimeterTiles:ringOrder.length,tiles:Object.keys(tileMeshes).length,tokens:tokens.length,landmarks:lmGroup.children.length}),mode:()=>mode,dispose(){running=false;renderer.dispose()}}}
