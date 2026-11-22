@@ -84,3 +84,32 @@ jobs:
           path: skyline-estates/test-results/crossroads/
           if-no-files-found: ignore
           retention-days: 7
+
+  # macOS WebKit offers an additional GPU-capable Safari-family signal; like
+  # Linux WebKit it remains simulated, not a physical iPhone 18 Pro Max.
+  crossroads-retina-macos:
+    name: Crossroads Retina 3× (macOS WebKit GPU)
+    runs-on: macos-15
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Playwright dependencies and native macOS WebKit
+        run: |
+          npm install --prefix skyline-estates/tests --no-audit --no-fund
+          npx --prefix skyline-estates/tests playwright install webkit
+      - name: Capture 3× WebGL drawing buffer, camera and performance metrics
+        env:
+          VISUAL_ENGINE: webkit
+          CROSSROADS_RETINA_ONLY: '1'
+        run: node skyline-estates/tests/crossroads-browser.cjs
+      - name: Preserve macOS WebKit Retina evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: crossroads-retina-macos-webkit
+          path: skyline-estates/test-results/crossroads/
+          if-no-files-found: ignore
+          retention-days: 7
