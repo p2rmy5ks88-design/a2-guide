@@ -51,6 +51,17 @@ let n=0;const ok=m=>{n++;console.log('PASS',m)};
   });
   assert.ok(Object.values(phoneFit).every(Boolean),'iPhone landscape fit/safe-area UI: '+JSON.stringify(phoneFit));
   ok('iPhone landscape 956×440 safe-area controls, roster and sidebars do not overlap');
+  // Camera-only visual evidence for owner approval: never alter state, money or match flow.
+  // Hide transient HUD/decisions for two unobstructed, genuine 3D framebuffer captures.
+  const clean=['top','players','side','dock','help','decision','dice','foot','toast'];
+  await p.evaluate(ids=>{for(const id of ids)document.getElementById(id).style.visibility='hidden';__cc.renderer.overview(true)},clean);
+  await p.waitForFunction(()=>{const z=__cc.renderer.stats();return z.mode==='overview'&&Math.abs(z.camDist-z.goalDist)<.12},null,{timeout:90000});
+  await p.screenshot({timeout:90000,path:path.join(out,engine+'-circular-board-overview-956x440.png')});
+  await p.evaluate(()=>__cc.renderer.overview(false));
+  await p.waitForFunction(()=>{const z=__cc.renderer.stats();return z.mode==='follow'&&Math.abs(z.camDist-z.goalDist)<.12},null,{timeout:90000});
+  await p.screenshot({timeout:90000,path:path.join(out,engine+'-circular-board-close-956x440.png')});
+  await p.evaluate(ids=>{for(const id of ids)document.getElementById(id).style.visibility=''},clean);
+  ok('unobstructed circular board overview and close-token camera frames at 956×440');
   await p.screenshot({timeout:90000,path:path.join(out,engine+'-iphone-landscape-safe.png')});
   await p.evaluate(()=>{const st=document.documentElement.style;for(const v of ['--sl','--sr','--sb'])st.removeProperty(v)});
   await p.setViewportSize({width:844,height:390});
