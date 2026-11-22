@@ -30,6 +30,7 @@ let n=0;const ok=m=>{n++;console.log('PASS',m)};
   await p.evaluate(()=>__cc.renderer.overview(false));
   await p.waitForFunction(()=>{const s=__cc.renderer.stats();return s.mode==='follow'&&s.goalDist<7&&Math.abs(s.camDist-s.goalDist)<.18},null,{timeout:90000});
   const cameraFollow=await p.evaluate(()=>__cc.renderer.stats());
+  assert.equal(cameraFollow.followBias,'inward','close camera frames the city instead of the outside floor');
   assert.ok(cameraOverview.camDist>cameraFollow.camDist*1.55,'camera overview vs close-follow distance: '+JSON.stringify({overview:cameraOverview.camDist,follow:cameraFollow.camDist}));
   assert.ok(cameraFollow.goalDist<5.1,'approved close-up game camera should make tiles larger');
   assert.ok(cameraOverview.mode==='overview'&&cameraFollow.mode==='follow'&&cameraFollow.camPitch>0.5&&cameraFollow.camPitch<1.2&&cameraFollow.cameraUp[1]>.999&&Math.abs(cameraFollow.cameraUp[0])<.001&&Math.abs(cameraFollow.cameraUp[2])<.001,'camera upright / modes: '+JSON.stringify({overview:cameraOverview,follow:cameraFollow}));
