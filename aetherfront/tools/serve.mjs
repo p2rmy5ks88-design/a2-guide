@@ -14,7 +14,9 @@ export function serve(port = 8787) {
     if (fs.existsSync(file) && fs.statSync(file).isDirectory()) file = path.join(file, 'index.html');
     fs.readFile(file, (err, data) => {
       if (err) { res.writeHead(404); return res.end('not found'); }
-      res.writeHead(200, { 'Content-Type': TYPES[path.extname(file)] || 'application/octet-stream', 'Cache-Control': 'no-store' });
+      const h = { 'Content-Type': TYPES[path.extname(file)] || 'application/octet-stream', 'Cache-Control': 'no-store' };
+      if (process.env.AF_CSP) h['Content-Security-Policy'] = process.env.AF_CSP;
+      res.writeHead(200, h);
       res.end(data);
     });
   });

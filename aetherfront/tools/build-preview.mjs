@@ -1,12 +1,13 @@
 // Builds test-results/preview/: a copy of the shippable game for hosts that cannot serve .glb
 // (e.g. the claude.ai artifact host). Each GLB becomes an equivalent embedded glTF JSON (.json).
-import fs from 'node:fs'; import path from 'node:path'; import { fileURLToPath } from 'node:url';
+import fs from 'node:fs'; import { execFileSync } from 'node:child_process'; import os from 'node:os'; import path from 'node:path'; import { fileURLToPath } from 'node:url';
 const AF = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = path.join(AF, 'test-results/preview');
 fs.rmSync(OUT, { recursive: true, force: true });
 const copy = (rel) => { fs.mkdirSync(path.dirname(path.join(OUT, rel)), { recursive: true }); fs.copyFileSync(path.join(AF, rel), path.join(OUT, rel)); };
 function glbToJson(src, dst) {
-  const b = fs.readFileSync(src); const jl = b.readUInt32LE(12); const json = JSON.parse(b.subarray(20, 20 + jl).toString('utf8'));
+  let b = fs.readFileSync(src);
+  if (b.subarray(20, 20 + b.readUInt32LE(12)).toString('latin1').includes('EXT_meshopt_compression')) { const tmp = path.join(os.tmpdir(), 'af-' + path.basename(src)); execFileSync('node', [process.env.AF_DECODER || path.join(AF, 'tools/decode-meshopt.mjs'), src, tmp], { env: { ...process.env, NODE_PATH: process.env.GLTF_NODE_PATH || '' } }); b = fs.readFileSync(tmp); } const jl = b.readUInt32LE(12); const json = JSON.parse(b.subarray(20, 20 + jl).toString('utf8'));
   let off = 20 + jl; const bin = off < b.length ? b.subarray(off + 8, off + 8 + b.readUInt32LE(off)) : null;
   if (bin && json.buffers?.[0]) json.buffers[0].uri = 'data:application/octet-stream;base64,' + bin.toString('base64');
   fs.mkdirSync(path.dirname(dst), { recursive: true }); fs.writeFileSync(dst, JSON.stringify(json));

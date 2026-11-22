@@ -5,6 +5,8 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { clone as skeletonClone } from 'three/addons/utils/SkeletonUtils.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 
+// Aetherfront: decode textures via <img> (blob: img-src) instead of fetch(blob:) — works under strict CSP hosts.
+globalThis.__AF_IMG_TEXTURES = true;
 export const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent));
 
 export function webglAvailable() {
@@ -86,12 +88,31 @@ export class ModelLibrary {
   load(id) {
     if (!this.cache.has(id)) {
       const rec = this.byId[id];
-      this.cache.set(id, this.decoderReady.then(() => this.loader.loadAsync(rec.model)).catch(() => this.loader.loadAsync(rec.forge_model || rec.starter_model)).catch(() => this.loader.loadAsync(rec.starter_model)).then((g) => {
+      this.cache.set(id, this.decoderReady.then(() => this.fetchModel(rec.model)).catch((e) => { console.warn('[aetherfront] model failed', rec.model, e?.message); return this.fetchModel(rec.forge_model || rec.starter_model); }).catch(() => this.fetchModel(rec.starter_model)).then((g) => {
         g.scene.traverse((o) => { if (o.isMesh) { o.castShadow = !o.material.name?.includes('Glow'); o.receiveShadow = false; if (o.isSkinnedMesh) o.frustumCulled = false; if (o.material.isMeshStandardMaterial) o.material.envMapIntensity = 0.85; } });
         return g;
       }));
     }
     return this.cache.get(id);
+  }
+  // Loads .glb normally; embedded-glTF .json (preview hosts) is repacked into GLB in memory so no data: URI fetch is needed.
+  async fetchModel(url) {
+    if (!url.endsWith('.json')) return this.loader.loadAsync(url);
+    const json = await (await fetch(url)).json();
+    let bin = null;
+    const uri = json.buffers?.[0]?.uri;
+    if (uri?.startsWith('data:')) {
+      const b64 = uri.slice(uri.indexOf(',') + 1), raw = atob(b64);
+      bin = new Uint8Array(raw.length); for (let i = 0; i < raw.length; i++) bin[i] = raw.charCodeAt(i);
+      delete json.buffers[0].uri;
+    }
+    const enc = new TextEncoder().encode(JSON.stringify(json));
+    const jlen = (enc.length + 3) & ~3, blen = bin ? (bin.length + 3) & ~3 : 0;
+    const out = new Uint8Array(12 + 8 + jlen + (bin ? 8 + blen : 0)); const dv = new DataView(out.buffer);
+    dv.setUint32(0, 0x46546c67, true); dv.setUint32(4, 2, true); dv.setUint32(8, out.length, true);
+    dv.setUint32(12, jlen, true); dv.setUint32(16, 0x4e4f534a, true); out.fill(0x20, 20, 20 + jlen); out.set(enc, 20);
+    if (bin) { const o = 20 + jlen; dv.setUint32(o, blen, true); dv.setUint32(o + 4, 0x004e4942, true); out.set(bin, o + 8); }
+    return this.loader.parseAsync(out.buffer, url.slice(0, url.lastIndexOf('/') + 1));
   }
   preload(ids, onProgress) { let n = 0; return Promise.all(ids.map((id) => this.load(id).then((g) => { onProgress?.(++n / ids.length); return g; }))); }
   /** Returns an actor wrapper: {root, mixer, play(name), node(name)} */
