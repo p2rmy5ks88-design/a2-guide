@@ -206,8 +206,8 @@ function showTile(id,quiet){const t=CC.BY[id],o=s&&s.own[id],el=$('tile');if(!t)
 
 // ---------- decisions ----------
 let dealDraft=null;
-function panel(html){const d=$('decision');d.innerHTML=html;d.hidden=false;r3.setFrameBias(.75);return d}
-function hidePanel(){if(!$('decision').hidden)r3.setFrameBias(.2);$('decision').hidden=true}
+function panel(html){const d=$('decision');d.innerHTML=html;d.hidden=false;r3.setFrameBias(1.30);return d}
+function hidePanel(){if(!$('decision').hidden)r3.setFrameBias(1.65);$('decision').hidden=true}
 const opts=list=>`<div class="opts">${list.map(o=>`<button class="opt${o.pri?' pri':''}" data-a='${JSON.stringify(o.a).replace(/'/g,'&#39;')}'${o.dis?' disabled':''}><b>${o.label}</b>${o.sub?`<small>${o.sub}</small>`:''}</button>`).join('')}</div>`;
 const chainHtml=c=>`<ol>${CC.CHAINS[c].stages.map(st=>`<li>${esc(st.label)}</li>`).join('')}</ol>`;
 function decision(){if(!s||s.over||busy){if(!busy)hidePanel();return}const pd=CC.pending(s);
