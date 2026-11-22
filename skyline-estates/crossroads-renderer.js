@@ -159,8 +159,42 @@ function installCrossroadsTerrace(scene,classic,renderer){
   unit.updateMatrix();tops.setMatrixAt(i,unit.matrix)
  }
  body.instanceMatrix.needsUpdate=true;tops.instanceMatrix.needsUpdate=true;scene.add(body,tops);
+ // The broad distant silhouettes above are atmospheric; these closer, detailed
+ // skyline buildings make the sunset city visible in the actual iPhone overview.
+ // All sit behind the terrace (z < -9.7) and are NEVER raycast for game actions.
+ const vista=new THREE.Group();scene.add(vista);
+ const facadeCanvas=document.createElement('canvas');facadeCanvas.width=256;facadeCanvas.height=512;
+ const fc=facadeCanvas.getContext('2d');fc.fillStyle='#254663';fc.fillRect(0,0,256,512);
+ for(let yy=24;yy<500;yy+=52)for(let xx=18;xx<250;xx+=43){
+  fc.fillStyle=(Math.sin(xx*3.7+yy*.83)>.05)?'#f2cb85':'#6babc2';
+  fc.fillRect(xx,yy,24,34);fc.fillStyle='#182f49';fc.fillRect(xx+11,yy,2,34);
+  fc.fillStyle='#1c314e';fc.fillRect(xx,yy+17,24,2)
+ }
+ const facadeTex=new THREE.CanvasTexture(facadeCanvas);facadeTex.colorSpace=THREE.SRGBColorSpace;
+ facadeTex.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());
+ const duskGlass=new THREE.MeshStandardMaterial({map:facadeTex,color:'#b5d7ee',metalness:.48,roughness:.24,
+  emissive:'#f2b96b',emissiveIntensity:.10});
+ const roofMetal=new THREE.MeshStandardMaterial({color:'#28365a',metalness:.6,roughness:.3});
+ const ridge=new THREE.MeshBasicMaterial({color:'#f5c86e',toneMapped:false});
+ const tall=[
+  [-7.65,3.9,1.30],[-6.30,5.35,1.08],[-4.95,3.5,1.38],[-3.56,4.5,1.04],
+  [3.57,4.18,1.1],[4.87,3.45,1.31],[6.20,5.10,1.08],[7.55,4.0,1.32]
+ ];
+ for(let i=0;i<tall.length;i++){
+  const [x,h,w]=tall[i],z=-11.55-.35*Math.abs(Math.sin(i*1.9));
+  const building=new THREE.Mesh(new THREE.BoxGeometry(w,h,.84),duskGlass);
+  building.position.set(x,-.75+h/2,z);building.receiveShadow=false;vista.add(building);
+  const roof=new THREE.Mesh(new THREE.BoxGeometry(w+.09,.09,.93),roofMetal);
+  roof.position.set(x,h-.70,z);vista.add(roof);
+  const rim=new THREE.Mesh(new THREE.BoxGeometry(w+.11,.026,.96),ridge);
+  rim.position.set(x,h-.64,z);vista.add(rim);
+  if(i===1||i===6){const spire=new THREE.Mesh(new THREE.CylinderGeometry(.025,.035,.65,8),ridge);
+   spire.position.set(x,h-.29,z);vista.add(spire)}
+ }
+ // Warm twilight light on the skyline's rear facades, with no expensive shadows.
+ const glow=new THREE.PointLight('#ffad73',1.6,25,2);glow.position.set(0,3,-12);scene.add(glow);
  // The rear title is only for overview; it must not obscure moving tokens.
- const marquee=new THREE.Group();marquee.position.set(0,2.38,-8.35);scene.add(marquee);
+ const marquee=new THREE.Group();marquee.position.set(0,.95,-8.15);scene.add(marquee);
  const sign=new THREE.Mesh(new THREE.BoxGeometry(4.6,.96,.16),deep);marquee.add(sign);
  const outer=new THREE.Mesh(new THREE.BoxGeometry(4.7,1.07,.08),bronze);outer.position.z=-.11;marquee.add(outer);
  const label=document.createElement('canvas');label.width=1024;label.height=256;
@@ -479,6 +513,18 @@ export function createCrossroadsRenderer(canvas,{rules,onTile}={}){
  // Familiar 3D bridge, civic dome and celebratory details from Solo Play.
  {const civic=classic.civic();civic.position.set(2.35,.14,.72);civic.scale.setScalar(.73);core.add(civic);
   const bridge=classic.bridge(1.52,.50);bridge.position.set(0,.16,-1.70);core.add(bridge);
+  // Landmark cable-stayed mast and tension cables: visual-only 3D geometry.
+  const mast=new THREE.Mesh(new THREE.CylinderGeometry(.045,.060,1.55,12),classic.mats.ivory);
+  mast.position.set(0,.88,-1.70);mast.castShadow=true;core.add(mast);
+  const stays=new THREE.Group();core.add(stays);
+  for(const dz of[-.67,-.45,-.22,.22,.45,.67]){
+   const start=new THREE.Vector3(0,1.60,-1.70),end=new THREE.Vector3(0,.23,-1.70+dz);
+   const cable=new THREE.Mesh(new THREE.CylinderGeometry(.008,.008,start.distanceTo(end),8),
+    classic.mats.gold);
+   cable.position.copy(start).add(end).multiplyScalar(.5);
+   cable.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),end.clone().sub(start).normalize());
+   stays.add(cable)
+  }
   const arch=new THREE.Mesh(new THREE.TorusGeometry(.78,.046,12,56,Math.PI),gold);
   arch.position.set(0,.20,-5.25);arch.castShadow=true;scene.add(arch)}
  
