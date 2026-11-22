@@ -178,7 +178,7 @@ const chainOf=p=>p.chain?CC.CHAINS[p.chain.card]:null;
 function render(){if(!s)return;const v=CC.view(s),me=s.players[0],pd=CC.pending(s);
  $('turnpill').textContent=`Chapter ${s.chapter} · Turn ${Math.min(s.cfg.turns,me.turns+1)} / ${s.cfg.turns}`;
  $('players').innerHTML=v.players.map(p=>`<div class="pl${p.id===s.turn.pid?' on':''}${p.out?' out':''}" style="--c:${p.color}"><span class="av" style="background:${p.color}33">${TOKEN_EMOJI[p.token]||'●'}</span><b>${esc(p.name)}</b><span>${fmt(p.cash)}<span class="val"> · <span class="lp">${p.lp} LP</span></span></span></div>`).join('');
- const fx=[];if(me.voucher)fx.push(`<span class="chip">🧾 ${me.voucher.amount} CC voucher</span>`);if(me.reservation)fx.push(`<span class="chip">📌 ${esc(CC.BY[me.reservation.tile].name)} reserved</span>`);if(me.route)fx.push(`<span class="chip">➜ ${CC.LOOP_NAMES[me.route]} loop next</span>`);
+ const fx=[];if(me.voucher)fx.push(`<span class="chip">🧾 ${me.voucher.amount} CC voucher</span>`);if(me.reservation)fx.push(`<span class="chip">📌 ${esc(CC.BY[me.reservation.tile].name)} reserved</span>`);if(me.route)fx.push(`<span class="chip">➜ ${CC.LOOP_NAMES[me.route]} route next</span>`);
 
  const c=chainOf(me);
  $('chainCard').innerHTML=c?`<h4>Landmark Chain</h4><b>${esc(c.name)}</b><small>${me.chain.stage>=3?'✅ Complete — Ribbon Cutting ready':'Next: '+esc(c.stages[me.chain.stage].label)}</small><div class="stamps">${[0,1,2].map(k=>`<i class="${k<me.chain.stage?'on':''}"></i>`).join('')}</div><small>Unveils: ${esc(c.landmark)} · ${me.completed.length} claimed</small>`:`<h4>Landmark Chain</h4><small>Choose a new brief</small>`;
