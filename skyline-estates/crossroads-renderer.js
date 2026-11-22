@@ -481,6 +481,7 @@ export function createCrossroadsRenderer(canvas,{rules,onTile}={}){
    new THREE.MeshBasicMaterial({color:'#e6ffff',transparent:true,opacity:.82,side:THREE.DoubleSide}));
   foam.rotation.x=-Math.PI/2;foam.position.set(dx,.157,dz);core.add(foam)}
 
+ const facadeUpgradeSlots=[];
  for(const [x,z,stage,kind,scale]of[
   [-2.83,-1.70,3,'residential',.78],[-1.83,-2.23,4,'financial',.78],[-.9,-2.75,2,'residential',.70],
   [1.15,-2.72,4,'financial',.75],[2.70,-1.62,3,'residential',.76],
@@ -491,6 +492,7 @@ export function createCrossroadsRenderer(canvas,{rules,onTile}={}){
    const house=classic.building(kind,stage,Math.round(Math.abs(x*17+z*11))%3);
    house.position.set(x,.086,z);house.scale.setScalar(scale);house.rotation.y=Math.atan2(x,z);
    core.add(house);
+   if(stage===4)facadeUpgradeSlots.push({house,x,z,stage,scale});
  }
  // Classic Solo's green courtyards and civic fountains make the centre a living city,
  // without covering the perimeter property names or the playable Grand Exchange.
@@ -626,7 +628,18 @@ export function createCrossroadsRenderer(canvas,{rules,onTile}={}){
  // ---- buildings (6 stages) and landmark miniatures ----
  const winTex=windowTexture(),proto=[],props={},lmProto=[];const loader=new GLTFLoader(),base='./assets/approved-v5/';
  const fit=(obj,w)=>{const b=new THREE.Box3().setFromObject(obj),size=b.getSize(new THREE.Vector3()),k=w/Math.max(size.x,size.z);obj.scale.setScalar(k);const b2=new THREE.Box3().setFromObject(obj);obj.position.y-=b2.min.y;const c=b2.getCenter(new THREE.Vector3());obj.position.x-=c.x;obj.position.z-=c.z;const g=new THREE.Group();g.add(obj);return g};
- Promise.all(['dev_0_lot','dev_1_midrise_L1','dev_2_midrise_L2','dev_3_highrise_L3','dev_4_highrise_L4','dev_5_skyscraper_L5'].map(f=>loader.loadAsync(base+'buildings/'+f+'.glb').then(x=>x.scene))).then(list=>{list.forEach((sc,k)=>{sc.traverse(o=>{if(o.isMesh)o.castShadow=o.receiveShadow=true});proto[k]=fit(sc,[.36,.32,.3,.28,.27,.26][k])});for(const id in tileMeshes)tileMeshes[id].key=null;if(view)sync(view)}).catch(e=>console.warn('Crossroads building models',e));
+ Promise.all(['dev_0_lot','dev_1_midrise_L1','dev_2_midrise_L2','dev_3_highrise_L3','dev_4_highrise_L4','dev_5_skyscraper_L5'].map(f=>loader.loadAsync(base+'buildings/'+f+'.glb').then(x=>x.scene))).then(list=>{list.forEach((sc,k)=>{sc.traverse(o=>{if(o.isMesh)o.castShadow=o.receiveShadow=true});proto[k]=fit(sc,[.36,.32,.3,.28,.27,.26][k])});
+  // Reuse the already-loaded approved 3D architecture for four central towers.
+  // Keep procedural placeholders until GLB loading succeeds (offline-safe).
+  for(const slot of facadeUpgradeSlots){
+   const approved=proto[slot.stage]?.clone(true);
+   if(!approved)continue;
+   approved.scale.setScalar(2.8*slot.scale);
+   approved.position.set(slot.x,.10,slot.z);
+   approved.rotation.y=Math.atan2(slot.x,slot.z);
+   core.add(approved);slot.house.visible=false;
+  }
+  dirty=true;for(const id in tileMeshes)tileMeshes[id].key=null;if(view)sync(view)}).catch(e=>console.warn('Crossroads building models',e));
  Promise.all(['financial_tower_crown','grand_boulevard_palace','financial_tower_spire'].map(f=>loader.loadAsync(base+'buildings/'+f+'.glb').then(x=>x.scene))).then(list=>{list.forEach((sc,k)=>{sc.traverse(o=>{if(o.isMesh)o.castShadow=true});lmProto[k]=fit(sc,[.5,.75,.5][k])});lmKey='';if(view)sync(view)}).catch(e=>console.warn('Crossroads landmark models',e));
  Promise.all(['palm','street_lamp','yacht'].map(f=>loader.loadAsync(base+'props/'+f+'.glb').then(x=>x.scene))).then(([palm,lamp,yacht])=>{props.palm=fit(palm,.5);props.lamp=fit(lamp,.12);props.yacht=fit(yacht,.44);rebuildTokens();
   for(const [x,z,s] of[[-2.5,5.9,.9],[2.5,5.9,.9],[-2.5,-5.9,.9],[2.5,-5.9,.9],[-5.8,1.6,1.1],[-5.8,-1.6,1.1],[5.8,1.6,1.1],[5.8,-1.6,1.1]]){const p=props.palm.clone();p.position.set(x,Math.abs(x)<2?.02:-.30,z);p.scale.multiplyScalar(s);p.rotation.y=x*z;p.traverse(o=>{if(o.isMesh)o.castShadow=true});scene.add(p)}
