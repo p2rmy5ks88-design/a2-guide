@@ -186,13 +186,52 @@ export function createCrossroadsRenderer(canvas,{rules,onTile}={}){
  const innerRail=new THREE.Mesh(new THREE.TorusGeometry(R_IN-.04,.043,12,160),gold);
  innerRail.rotation.x=Math.PI/2;innerRail.position.y=.042;scene.add(innerRail);
  const core=new THREE.Group();scene.add(core);
- classic.disk(core,'paving',0,.003,0,3.89,.065);
- // A lived-in miniature city, made from the SAME local architectural materials,
- // trees, street lamps, civic detailing and building forms as classic Solo.
- classic.box(core,'asphalt',0,.053,0,.74,.022,7.2);
- classic.box(core,'asphalt',0,.053,0,7.12,.022,.70);
- for(const x of[-.42,.42])classic.box(core,'ivory',x,.073,0,.025,.012,6.9);
- for(const z of[-.39,.39])classic.box(core,'ivory',0,.073,z,6.85,.012,.022);
+ classic.disk(core,'foliageLight',0,.003,0,3.89,.065);
+ // Premium waterfront city: a landscaped inner circular park with a playable
+ // Grand Exchange hub, waterfront, bridge, ring road and clearly separated
+ // building plots. These are decorative meshes: all click targets stay intact.
+ const green=new THREE.MeshStandardMaterial({color:'#58a35c',roughness:.91});
+ const hedge=new THREE.MeshStandardMaterial({color:'#35763e',roughness:.94});
+ const stone=new THREE.MeshStandardMaterial({color:'#f7e4c0',roughness:.52});
+ const water=new THREE.MeshPhysicalMaterial({color:'#17c0e8',metalness:.15,roughness:.14,
+  clearcoat:.9,clearcoatRoughness:.09,transparent:false});
+ const brightGold=new THREE.MeshBasicMaterial({color:'#ffd67c',toneMapped:false});
+ const lake=new THREE.Mesh(new THREE.CircleGeometry(1,96),water);
+ lake.rotation.x=-Math.PI/2;lake.scale.set(1.64,.78,1);
+ lake.position.set(0,.13,-1.67);lake.receiveShadow=false;core.add(lake);
+ const lakeEdge=new THREE.Mesh(new THREE.RingGeometry(.997,1.075,96),
+  new THREE.MeshStandardMaterial({color:'#fff5d7',metalness:.16,roughness:.4,side:THREE.DoubleSide}));
+ lakeEdge.rotation.x=-Math.PI/2;lakeEdge.scale.set(1.64,.78,1);
+ lakeEdge.position.set(0,.141,-1.67);core.add(lakeEdge);
+ // An actual driving ring, instead of the old flat intersection across the city.
+ const road=new THREE.Mesh(new THREE.RingGeometry(3.47,3.82,112),
+  new THREE.MeshStandardMaterial({color:'#2e3439',roughness:.9,side:THREE.DoubleSide}));
+ road.rotation.x=-Math.PI/2;road.position.y=.081;road.receiveShadow=true;core.add(road);
+ for(let k=0;k<48;k++){const a=k*2*Math.PI/48,r=3.65;
+  const dash=new THREE.Mesh(new THREE.BoxGeometry(.095,.012,.023),classic.mats.ivory);
+  dash.position.set(Math.cos(a)*r,.098,Math.sin(a)*r);dash.rotation.y=-a;core.add(dash)}
+ for(const r of[3.47,3.81]){const curb=new THREE.Mesh(new THREE.TorusGeometry(r,.025,8,112),stone);
+  curb.rotation.x=Math.PI/2;curb.position.y=.093;core.add(curb)}
+ // The road to the Grand Exchange remains physically depicted, but the giant
+ // four-way parking-lot cross is replaced with civic landscaping.
+ classic.box(core,'asphalt',0,.069,1.17,.57,.035,2.15);
+ for(const x of[-.31,.31])classic.box(core,'ivory',x,.098,1.17,.021,.012,2.08);
+ for(const [x,z] of [[-2.6,.05],[2.6,.05],[-1.82,1.72],[1.82,1.72]]){
+  const lawn=new THREE.Mesh(new THREE.CylinderGeometry(.48,.50,.052,24),green);
+  lawn.position.set(x,.073,z);core.add(lawn);
+  const border=new THREE.Mesh(new THREE.TorusGeometry(.48,.033,8,32),stone);
+  border.rotation.x=Math.PI/2;border.position.set(x,.112,z);core.add(border)}
+ // Boat, arch and fountain are deliberately behind the hub, keeping it selectable.
+ {const yacht=classic.yacht();yacht.position.set(-.95,.16,-1.62);yacht.scale.setScalar(.55);
+  yacht.rotation.y=.45;core.add(yacht)}
+ for(const [dx,dz,h]of[[.75,-1.84,.37],[1.07,-1.65,.48],[.90,-1.40,.33]]){
+  const plume=new THREE.Mesh(new THREE.CylinderGeometry(.018,.045,h,8),
+   new THREE.MeshBasicMaterial({color:'#e9fbff',transparent:true,opacity:.78,depthWrite:false}));
+  plume.position.set(dx,.16+h/2,dz);core.add(plume);
+  const foam=new THREE.Mesh(new THREE.RingGeometry(.075,.10,16),
+   new THREE.MeshBasicMaterial({color:'#e6ffff',transparent:true,opacity:.82,side:THREE.DoubleSide}));
+  foam.rotation.x=-Math.PI/2;foam.position.set(dx,.157,dz);core.add(foam)}
+
  for(const [x,z,stage,kind,scale]of[
   [-2.83,-1.70,3,'residential',.78],[-1.83,-2.23,4,'financial',.78],[-.9,-2.75,2,'residential',.70],
   [1.15,-2.72,4,'financial',.75],[2.70,-1.62,3,'residential',.76],
@@ -206,8 +245,8 @@ export function createCrossroadsRenderer(canvas,{rules,onTile}={}){
  }
  // Classic Solo's green courtyards and civic fountains make the centre a living city,
  // without covering the perimeter property names or the playable Grand Exchange.
- for(const [x,z,garden] of [[-1.20,-1.17,true],[1.25,1.18,true],
-                             [-1.24,1.16,false],[1.22,-1.20,false]]){
+ for(const [x,z,garden] of [[-1.4,1.18,true],[1.38,1.18,true],
+                             [-2.18,-.38,false],[2.18,-.38,false]]){
   classic.box(core,'limestone',x,.090,z,1.18,.065,1.10);
   classic.box(core,garden?'foliageLight':'paving',x,.131,z,1.07,.025,.99);
   for(const dz of[-.38,.38])classic.box(core,'gold',x,.156,z+dz,.95,.014,.022);
@@ -226,16 +265,13 @@ export function createCrossroadsRenderer(canvas,{rules,onTile}={}){
     lamp.position.set(x+dx,.170,z+.35);core.add(lamp)}
   }
  }
- for(let i=0;i<20;i++){const a=i*Math.PI/10,r=3.35,x=Math.cos(a)*r,z=Math.sin(a)*r;
+ for(let i=0;i<20;i++){const a=i*Math.PI/10,r=3.14,x=Math.cos(a)*r,z=Math.sin(a)*r;
   if(Math.abs(x)<.55||Math.abs(z)<.55)continue;
   const tree=classic.tree(i+27);tree.scale.setScalar(.54);tree.position.set(x,.06,z);core.add(tree)}
- for(let i=0;i<12;i++){const a=(i+.5)*Math.PI/6,r=3.72;
+ for(let i=0;i<12;i++){const a=(i+.5)*Math.PI/6,r=3.29;
   const light=classic.lamp();light.scale.setScalar(.72);light.position.set(Math.cos(a)*r,.057,Math.sin(a)*r);core.add(light)}
  // Dark chocolate/burnished-gold table furniture and true 3D paths between hubs.
- const spine=new THREE.Mesh(new THREE.BoxGeometry(.61,.045,4.25),classic.mats.asphalt);
- spine.position.set(0,.09,2.1);spine.receiveShadow=true;core.add(spine);
- for(const x of[-.33,.33]){const stripe=new THREE.Mesh(new THREE.BoxGeometry(.022,.015,4.2),gold);
-  stripe.position.set(x,.12,2.1);core.add(stripe)}
+ // The central boulevard stops at City Hall, leaving the turquoise water in full view.
  const tileMeshes={},tileInfo={},pick=[];
  // Counter-clockwise west arc, clockwise east arc: precisely one shared circular perimeter.
  const ringOrder=['START',...Array.from({length:15},(_,k)=>'W'+String(k).padStart(2,'0')),
@@ -318,8 +354,8 @@ export function createCrossroadsRenderer(canvas,{rules,onTile}={}){
    center:new THREE.Vector3(0,0,-1),hub:true,y:.34};
  }
  // Familiar 3D bridge, civic dome and celebratory details from Solo Play.
- {const civic=classic.civic();civic.position.set(0,.35,-1.43);civic.scale.setScalar(.55);core.add(civic);
-  const bridge=classic.bridge(1.5,.48);bridge.position.set(0,.12,-3.50);core.add(bridge);
+ {const civic=classic.civic();civic.position.set(0,.16,2.47);civic.scale.setScalar(.74);core.add(civic);
+  const bridge=classic.bridge(1.52,.50);bridge.position.set(0,.16,-1.70);core.add(bridge);
   const arch=new THREE.Mesh(new THREE.TorusGeometry(.78,.046,12,56,Math.PI),gold);
   arch.position.set(0,.20,-5.25);arch.castShadow=true;scene.add(arch)}
  
@@ -387,10 +423,10 @@ export function createCrossroadsRenderer(canvas,{rules,onTile}={}){
 
  // ---- camera (RESPONSIVE_CAMERA_SPEC: ROLL_FOLLOW / LANDING_FOCUS / BOARD_OVERVIEW / RETURN_TO_TOKEN) ----
  const cam={target:new THREE.Vector3(),yaw:0,pitch:THREE.MathUtils.degToRad(48),dist:14},goal={target:new THREE.Vector3(),yaw:0,pitch:THREE.MathUtils.degToRad(48),dist:14};
- let pinned=false,frameBias=.2,mode='follow',followPid=0,userZoom=1,userYaw=0,pushIn=1,lastT=performance.now(),lastYaw=0;
+ let pinned=false,frameBias=.52,mode='follow',followPid=0,userZoom=1,userYaw=0,pushIn=1,lastT=performance.now(),lastYaw=0;
  function yawAt(id,p){const T=tileInfo[id];if(!T||T.hub){return Math.abs(p.x)<.9?(p.z<-1.2?Math.PI:0):lastYaw}const d=p.clone().sub(T.center);return Math.atan2(d.x,d.z)}
  function overviewGoal(){goal.target.set(0,0,.95);goal.yaw=0;goal.pitch=THREE.MathUtils.degToRad(54);const a=camera.aspect||2.17;goal.dist=Math.max(14.6,14.6*2.05/a)}
- function followGoal(p,id){const T=tileInfo[id]||{};const out=T.perp?T.perp.clone().negate():new THREE.Vector3(0,0,1);goal.target.copy(p.clone().add(out.multiplyScalar(frameBias)));const y=yawAt(id,p);lastYaw=y;goal.yaw=y+userYaw;goal.pitch=THREE.MathUtils.degToRad(46);goal.dist=4.7*userZoom/pushIn}
+ function followGoal(p,id){const T=tileInfo[id]||{};const inward=T.perp?T.perp.clone():new THREE.Vector3(0,0,1);goal.target.copy(p.clone().add(inward.multiplyScalar(frameBias)));const y=yawAt(id,p);lastYaw=y;goal.yaw=y+userYaw;goal.pitch=THREE.MathUtils.degToRad(46);goal.dist=4.7*userZoom/pushIn}
  function angleLerp(a,b,t){let d=((b-a+Math.PI)%(2*Math.PI)+2*Math.PI)%(2*Math.PI)-Math.PI;return a+d*t}
  function applyCam(dt){const k=reduceMotion.matches?1:1-Math.exp(-dt/.2);cam.target.lerp(goal.target,k);cam.yaw=angleLerp(cam.yaw,goal.yaw,k);cam.pitch+=(goal.pitch-cam.pitch)*k;cam.dist+=(goal.dist-cam.dist)*k;
   const c=Math.cos(cam.pitch)*cam.dist;camera.up.set(0,1,0);camera.position.set(cam.target.x+Math.sin(cam.yaw)*c,cam.target.y+Math.sin(cam.pitch)*cam.dist,cam.target.z+Math.cos(cam.yaw)*c);camera.lookAt(cam.target)}
