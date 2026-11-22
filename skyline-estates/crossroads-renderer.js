@@ -423,10 +423,10 @@ export function createCrossroadsRenderer(canvas,{rules,onTile}={}){
 
  // ---- camera (RESPONSIVE_CAMERA_SPEC: ROLL_FOLLOW / LANDING_FOCUS / BOARD_OVERVIEW / RETURN_TO_TOKEN) ----
  const cam={target:new THREE.Vector3(),yaw:0,pitch:THREE.MathUtils.degToRad(48),dist:14},goal={target:new THREE.Vector3(),yaw:0,pitch:THREE.MathUtils.degToRad(48),dist:14};
- let pinned=false,frameBias=.52,mode='follow',followPid=0,userZoom=1,userYaw=0,pushIn=1,lastT=performance.now(),lastYaw=0;
+ let pinned=false,frameBias=1.65,mode='follow',followPid=0,userZoom=1,userYaw=0,pushIn=1,lastT=performance.now(),lastYaw=0;
  function yawAt(id,p){const T=tileInfo[id];if(!T||T.hub){return Math.abs(p.x)<.9?(p.z<-1.2?Math.PI:0):lastYaw}const d=p.clone().sub(T.center);return Math.atan2(d.x,d.z)}
  function overviewGoal(){goal.target.set(0,0,.95);goal.yaw=0;goal.pitch=THREE.MathUtils.degToRad(54);const a=camera.aspect||2.17;goal.dist=Math.max(14.6,14.6*2.05/a)}
- function followGoal(p,id){const T=tileInfo[id]||{};const inward=T.perp?T.perp.clone():new THREE.Vector3(0,0,1);goal.target.copy(p.clone().add(inward.multiplyScalar(frameBias)));const y=yawAt(id,p);lastYaw=y;goal.yaw=y+userYaw;goal.pitch=THREE.MathUtils.degToRad(46);goal.dist=4.7*userZoom/pushIn}
+ function followGoal(p,id){const T=tileInfo[id]||{};const inward=T.perp?T.perp.clone():new THREE.Vector3(0,0,1);goal.target.copy(p.clone().add(inward.multiplyScalar(frameBias)));const y=yawAt(id,p);lastYaw=y;goal.yaw=y+userYaw;goal.pitch=THREE.MathUtils.degToRad(43);goal.dist=6.6*userZoom/pushIn}
  function angleLerp(a,b,t){let d=((b-a+Math.PI)%(2*Math.PI)+2*Math.PI)%(2*Math.PI)-Math.PI;return a+d*t}
  function applyCam(dt){const k=reduceMotion.matches?1:1-Math.exp(-dt/.2);cam.target.lerp(goal.target,k);cam.yaw=angleLerp(cam.yaw,goal.yaw,k);cam.pitch+=(goal.pitch-cam.pitch)*k;cam.dist+=(goal.dist-cam.dist)*k;
   const c=Math.cos(cam.pitch)*cam.dist;camera.up.set(0,1,0);camera.position.set(cam.target.x+Math.sin(cam.yaw)*c,cam.target.y+Math.sin(cam.pitch)*cam.dist,cam.target.z+Math.cos(cam.yaw)*c);camera.lookAt(cam.target)}
