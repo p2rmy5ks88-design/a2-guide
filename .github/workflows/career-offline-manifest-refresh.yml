@@ -17,7 +17,7 @@ concurrency:
 jobs:
   refresh-review-branch:
     name: Rebuild generated web cache on the PR branch (never main)
-    if: github.event.pull_request.head.repo.full_name == github.repository && (startsWith(github.head_ref, 'review/career-boards-2to5-') || github.head_ref == 'feat/crossroads-classic-circular-board')
+    if: github.event.pull_request.head.repo.full_name == github.repository && startsWith(github.head_ref, 'review/career-boards-2to5-')
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
