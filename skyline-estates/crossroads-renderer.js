@@ -181,7 +181,7 @@ function installCrossroadsTerrace(scene,classic,renderer){
   [3.57,4.18,1.1],[4.87,3.45,1.31],[6.20,5.10,1.08],[7.55,4.0,1.32]
  ];
  for(let i=0;i<tall.length;i++){
-  const [x,h,w]=tall[i],z=-11.55-.35*Math.abs(Math.sin(i*1.9));
+  const [x,fullH,w]=tall[i],h=fullH*.61,z=-10.38-.15*Math.abs(Math.sin(i*1.9));
   const building=new THREE.Mesh(new THREE.BoxGeometry(w,h,.84),duskGlass);
   building.position.set(x,-.75+h/2,z);building.receiveShadow=false;vista.add(building);
   const roof=new THREE.Mesh(new THREE.BoxGeometry(w+.09,.09,.93),roofMetal);
@@ -194,7 +194,7 @@ function installCrossroadsTerrace(scene,classic,renderer){
  // Warm twilight light on the skyline's rear facades, with no expensive shadows.
  const glow=new THREE.PointLight('#ffad73',1.6,25,2);glow.position.set(0,3,-12);scene.add(glow);
  // The rear title is only for overview; it must not obscure moving tokens.
- const marquee=new THREE.Group();marquee.position.set(0,.95,-8.15);scene.add(marquee);
+ const marquee=new THREE.Group();marquee.position.set(0,.42,-7.38);scene.add(marquee);
  const sign=new THREE.Mesh(new THREE.BoxGeometry(4.6,.96,.16),deep);marquee.add(sign);
  const outer=new THREE.Mesh(new THREE.BoxGeometry(4.7,1.07,.08),bronze);outer.position.z=-.11;marquee.add(outer);
  const label=document.createElement('canvas');label.width=1024;label.height=256;
@@ -651,4 +651,4 @@ export function createCrossroadsRenderer(canvas,{rules,onTile}={}){
   renderer.render(scene,camera);frames++;if(now-fpsT>3000){const fps=frames*1000/(now-fpsT);frames=0;fpsT=now;if(fps<28&&dpr>2){dpr=Math.max(2,dpr-.5);renderer.setPixelRatio(dpr);resize()}}}
  resize();overviewGoal();Object.assign(cam,{target:goal.target.clone(),yaw:goal.yaw,pitch:goal.pitch,dist:goal.dist});requestAnimationFrame(loop);
  return{setFrameBias(v){frameBias=v;refreshGoal()},sync,moveToken,follow,focusTile,overview,highlight,resize,
-  stats:()=>({dpr,mode,zoom:userZoom,camDist:cam.dist,goalDist:goal.dist,camYaw:cam.yaw,camPitch:cam.pitch,cameraUp:camera.up.toArray(),layout:'classic-circular',environment:'harbour-terrace',followBias:'inward',vistaTowers:terrace.vistaTowers,landmarksDetailed:livingCity.landmarks,ambientTraffic:livingCity.trafficCount,diameter:RIM*2,perimeterTiles:ringOrder.length,tiles:Object.keys(tileMeshes).length,tokens:tokens.length,landmarks:lmGroup.children.length}),mode:()=>mode,dispose(){running=false;renderer.dispose()}}}
+  stats:()=>({dpr,mode,zoom:userZoom,camDist:cam.dist,goalDist:goal.dist,camYaw:cam.yaw,camPitch:cam.pitch,cameraUp:camera.up.toArray(),layout:'classic-circular',environment:'harbour-terrace',followBias:'inward',vistaTowers:terrace.vistaTowers,titleNdcY:terrace.marquee.position.clone().project(camera).y,landmarksDetailed:livingCity.landmarks,ambientTraffic:livingCity.trafficCount,diameter:RIM*2,perimeterTiles:ringOrder.length,tiles:Object.keys(tileMeshes).length,tokens:tokens.length,landmarks:lmGroup.children.length}),mode:()=>mode,dispose(){running=false;renderer.dispose()}}}
