@@ -68,6 +68,85 @@ function labelSprite(text,color){const c=document.createElement('canvas');c.widt
  g.fillStyle='#fff4d7';g.font='800 46px -apple-system,"Helvetica Neue",Arial,sans-serif';g.textAlign='center';g.fillText(text,256,80);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;
  const s=new THREE.Sprite(new THREE.SpriteMaterial({map:t,depthTest:false,transparent:true}));s.scale.set(1.2,.3,1);s.renderOrder=5;return s}
 
+// Crossroads-only cinematic terrace: background meshes never enter the tile picking graph.
+function installCrossroadsTerrace(scene,classic,renderer){
+ const mat=(hex,metalness=0,roughness=.55)=>new THREE.MeshStandardMaterial({color:hex,metalness,roughness});
+ const bronze=mat('#c9a15b',.72,.22),deep=mat('#161b35',.38,.38),slate=mat('#49445b',.18,.69);
+ const goldGlow=new THREE.MeshBasicMaterial({color:'#ffce7e',toneMapped:false});
+ const aquaGlow=new THREE.MeshBasicMaterial({color:'#4fe0e4',toneMapped:false});
+ // 360-degree sunset horizon responds naturally to camera rotation.
+ const cv=document.createElement('canvas');cv.width=16;cv.height=512;const ctx=cv.getContext('2d'),grad=ctx.createLinearGradient(0,0,0,512);
+ for(const [p,c]of[[0,'#171a35'],[.27,'#3b376c'],[.46,'#b27398'],[.57,'#fac18b'],[.7,'#374e6b'],[1,'#17243b']])grad.addColorStop(p,c);
+ ctx.fillStyle=grad;ctx.fillRect(0,0,16,512);
+ const tex=new THREE.CanvasTexture(cv);tex.colorSpace=THREE.SRGBColorSpace;
+ const sky=new THREE.Mesh(new THREE.SphereGeometry(85,40,20),new THREE.MeshBasicMaterial({map:tex,side:THREE.BackSide,fog:false,depthWrite:false}));
+ sky.position.y=-5;scene.add(sky);
+ // Patterned dark-stone plaza instead of the plain brown table.
+ const mc=document.createElement('canvas');mc.width=mc.height=256;const m=mc.getContext('2d');
+ m.fillStyle='#343049';m.fillRect(0,0,256,256);
+ for(let a=0;a<4;a++)for(let b=0;b<4;b++){
+  m.fillStyle=(a+b)%2?'#413e57':'#393950';m.fillRect(a*64+2,b*64+2,60,60);
+  m.strokeStyle='rgba(238,196,128,.26)';m.lineWidth=2;m.strokeRect(a*64+2,b*64+2,60,60)
+ }
+ const marble=new THREE.CanvasTexture(mc);marble.colorSpace=THREE.SRGBColorSpace;
+ marble.wrapS=marble.wrapT=THREE.RepeatWrapping;marble.repeat.set(12,12);
+ marble.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());
+ const floor=new THREE.Mesh(new THREE.PlaneGeometry(95,95),new THREE.MeshStandardMaterial({map:marble,roughness:.67,metalness:.14}));
+ floor.rotation.x=-Math.PI/2;floor.position.y=-.80;floor.receiveShadow=true;scene.add(floor);
+ const base=new THREE.Mesh(new THREE.CylinderGeometry(7.8,7.94,.30,128),deep);
+ base.position.y=-.69;base.receiveShadow=true;scene.add(base);
+ const step=new THREE.Mesh(new THREE.CylinderGeometry(7.17,7.23,.10,128),slate);
+ step.position.y=-.49;step.receiveShadow=true;scene.add(step);
+ const ring=(r,y,thick,material)=>{const o=new THREE.Mesh(new THREE.TorusGeometry(r,thick,9,160),material);
+  o.rotation.x=Math.PI/2;o.position.y=y;scene.add(o)};
+ ring(7.74,-.53,.064,bronze);ring(7.53,-.52,.024,aquaGlow);
+ ring(7.15,-.43,.036,bronze);ring(6.89,-.44,.022,goldGlow);
+ // Illuminated rear balustrade plus landscaped planters.
+ for(let i=0;i<=20;i++){
+  const a=Math.PI+Math.PI*i/20,x=9.3*Math.cos(a),z=9.3*Math.sin(a);
+  const post=new THREE.Mesh(new THREE.CylinderGeometry(.047,.060,.91,10),bronze);
+  post.position.set(x,-.29,z);scene.add(post);
+  const light=new THREE.Mesh(new THREE.SphereGeometry(.075,9,7),goldGlow);
+  light.position.set(x,.21,z);scene.add(light)
+ }
+ for(const y of[-.07,.32]){
+  const curve=new THREE.CatmullRomCurve3(Array.from({length:49},(_,i)=>{
+   const a=Math.PI+Math.PI*i/48;return new THREE.Vector3(9.3*Math.cos(a),y,9.3*Math.sin(a))}));
+  scene.add(new THREE.Mesh(new THREE.TubeGeometry(curve,96,.025,6,false),bronze))
+ }
+ for(let i=0;i<12;i++){
+  const a=(i+.5)*Math.PI/6,x=8.36*Math.cos(a),z=8.36*Math.sin(a);
+  const urn=new THREE.Mesh(new THREE.CylinderGeometry(.39,.47,.27,16),bronze);
+  urn.position.set(x,-.54,z);scene.add(urn);
+  const tree=classic.tree(210+i);tree.scale.setScalar(.59);tree.position.set(x,-.34,z);scene.add(tree)
+ }
+ // Low-draw-call skyline landmark silhouettes visible in every camera direction.
+ const N=54,body=new THREE.InstancedMesh(new THREE.BoxGeometry(1,1,1),mat('#203450',.1,.83),N);
+ const tops=new THREE.InstancedMesh(new THREE.BoxGeometry(1,1,1),goldGlow,N);
+ const unit=new THREE.Object3D(),col=new THREE.Color();
+ for(let i=0;i<N;i++){
+  const a=i*2*Math.PI/N,r=27+1.5*Math.sin(i*2.3),h=3.3+5.2*Math.abs(Math.sin(i*2.73));
+  unit.position.set(Math.cos(a)*r,h/2-.8,Math.sin(a)*r);unit.rotation.y=-a;
+  unit.scale.set(1.8+.5*Math.abs(Math.cos(i)),h,1.1);
+  unit.updateMatrix();body.setMatrixAt(i,unit.matrix);
+  col.setHSL(.59+.05*Math.sin(i),.46,.13+.055*Math.abs(Math.cos(i*1.7)));body.setColorAt(i,col);
+  unit.position.y=h-.75;unit.scale.set(1.65,.018,.9);
+  unit.updateMatrix();tops.setMatrixAt(i,unit.matrix)
+ }
+ body.instanceMatrix.needsUpdate=true;tops.instanceMatrix.needsUpdate=true;scene.add(body,tops);
+ // The rear title is only for overview; it must not obscure moving tokens.
+ const marquee=new THREE.Group();marquee.position.set(0,1.22,-8.35);scene.add(marquee);
+ const sign=new THREE.Mesh(new THREE.BoxGeometry(4.6,.96,.16),deep);marquee.add(sign);
+ const outer=new THREE.Mesh(new THREE.BoxGeometry(4.7,1.07,.08),bronze);outer.position.z=-.11;marquee.add(outer);
+ const label=document.createElement('canvas');label.width=1024;label.height=256;
+ const gg=label.getContext('2d');gg.textAlign='center';gg.fillStyle='#fff4d0';gg.font='900 78px Georgia,serif';gg.fillText('SKYLINE ESTATES',512,84);
+ gg.fillStyle='#f9cb70';gg.font='900 114px Arial,sans-serif';gg.fillText('CROSSROADS',512,175);gg.font='900 64px Arial,sans-serif';gg.fillText('CAPITAL',512,239);
+ const texture=new THREE.CanvasTexture(label);texture.colorSpace=THREE.SRGBColorSpace;
+ const lettering=new THREE.Mesh(new THREE.PlaneGeometry(4.5,.9),new THREE.MeshBasicMaterial({map:texture,transparent:true,toneMapped:false}));
+ lettering.position.z=.091;marquee.add(lettering);
+ return{marquee};
+}
+
 export function createCrossroadsRenderer(canvas,{rules,onTile}={}){
  const CC=rules,TILES=CC.TILES,BY=CC.BY;
  const renderer=new THREE.WebGLRenderer({canvas,antialias:true,powerPreference:'high-performance'});
@@ -82,7 +161,6 @@ export function createCrossroadsRenderer(canvas,{rules,onTile}={}){
  scene.add(new THREE.HemisphereLight('#fff6ea','#4a3524',.55));
  const sun=new THREE.DirectionalLight('#fff0d8',1.55);sun.position.set(-7,15,10);sun.castShadow=true;sun.shadow.mapSize.set(maxDpr>=2?4096:2048,maxDpr>=2?4096:2048);Object.assign(sun.shadow.camera,{left:-11,right:11,top:8,bottom:-8,near:1,far:45});sun.shadow.bias=-.0006;scene.add(sun);
  const lamp=new THREE.PointLight('#ffc27a',8,24,1.6);lamp.position.set(0,6,-7);scene.add(lamp);
- const table=new THREE.Mesh(new THREE.PlaneGeometry(90,90),new THREE.MeshStandardMaterial({map:woodTexture(),roughness:.75}));table.rotation.x=-Math.PI/2;table.position.y=-.32;table.receiveShadow=true;scene.add(table);
  let dirty=true;
 
  // ---- circular, classic-sized Skyline tabletop: one perimeter, two route arcs ----
@@ -92,6 +170,7 @@ export function createCrossroadsRenderer(canvas,{rules,onTile}={}){
  // The two original discs are deliberately gone: visually this is ONE circular board,
  // at the 11.7-unit diameter of the classic Solo Play tabletop.
  const classic=createMiniatures({tier:maxDpr>=2?'medium':'low'});
+ const terrace=installCrossroadsTerrace(scene,classic,renderer);
  const R_OUT=5.49,R_IN=4.03,R_MID=(R_OUT+R_IN)/2,RIM=5.84;
  const CW=new THREE.Vector3(-1.76,0,0),CE=new THREE.Vector3(1.76,0,0);
  const gold=classic.mats.gold,navy=classic.mats.navy;
@@ -310,8 +389,8 @@ export function createCrossroadsRenderer(canvas,{rules,onTile}={}){
  const cam={target:new THREE.Vector3(),yaw:0,pitch:THREE.MathUtils.degToRad(48),dist:14},goal={target:new THREE.Vector3(),yaw:0,pitch:THREE.MathUtils.degToRad(48),dist:14};
  let pinned=false,frameBias=.2,mode='follow',followPid=0,userZoom=1,userYaw=0,pushIn=1,lastT=performance.now(),lastYaw=0;
  function yawAt(id,p){const T=tileInfo[id];if(!T||T.hub){return Math.abs(p.x)<.9?(p.z<-1.2?Math.PI:0):lastYaw}const d=p.clone().sub(T.center);return Math.atan2(d.x,d.z)}
- function overviewGoal(){goal.target.set(0,0,.9);goal.yaw=0;goal.pitch=THREE.MathUtils.degToRad(50);const a=camera.aspect||2.17;goal.dist=Math.max(15.5,15.5*2.05/a)}
- function followGoal(p,id){const T=tileInfo[id]||{};const out=T.perp?T.perp.clone().negate():new THREE.Vector3(0,0,1);goal.target.copy(p.clone().add(out.multiplyScalar(frameBias)));const y=yawAt(id,p);lastYaw=y;goal.yaw=y+userYaw;goal.pitch=THREE.MathUtils.degToRad(43);goal.dist=5.3*userZoom/pushIn}
+ function overviewGoal(){goal.target.set(0,0,.95);goal.yaw=0;goal.pitch=THREE.MathUtils.degToRad(54);const a=camera.aspect||2.17;goal.dist=Math.max(14.6,14.6*2.05/a)}
+ function followGoal(p,id){const T=tileInfo[id]||{};const out=T.perp?T.perp.clone().negate():new THREE.Vector3(0,0,1);goal.target.copy(p.clone().add(out.multiplyScalar(frameBias)));const y=yawAt(id,p);lastYaw=y;goal.yaw=y+userYaw;goal.pitch=THREE.MathUtils.degToRad(46);goal.dist=4.7*userZoom/pushIn}
  function angleLerp(a,b,t){let d=((b-a+Math.PI)%(2*Math.PI)+2*Math.PI)%(2*Math.PI)-Math.PI;return a+d*t}
  function applyCam(dt){const k=reduceMotion.matches?1:1-Math.exp(-dt/.2);cam.target.lerp(goal.target,k);cam.yaw=angleLerp(cam.yaw,goal.yaw,k);cam.pitch+=(goal.pitch-cam.pitch)*k;cam.dist+=(goal.dist-cam.dist)*k;
   const c=Math.cos(cam.pitch)*cam.dist;camera.up.set(0,1,0);camera.position.set(cam.target.x+Math.sin(cam.yaw)*c,cam.target.y+Math.sin(cam.pitch)*cam.dist,cam.target.z+Math.cos(cam.yaw)*c);camera.lookAt(cam.target)}
@@ -359,10 +438,10 @@ export function createCrossroadsRenderer(canvas,{rules,onTile}={}){
  function resize(){const w=canvas.clientWidth,h=canvas.clientHeight;if(!w||!h)return;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();if(mode==='overview')overviewGoal();dirty=true}
  addEventListener('resize',resize);visualViewport&&visualViewport.addEventListener('resize',resize);
  let frames=0,fpsT=performance.now(),running=true;
- function loop(now){if(!running)return;requestAnimationFrame(loop);const dt=Math.min(.1,(now-lastT)/1000);lastT=now;applyCam(dt);const pulse=.5+.5*Math.sin(now/300);
+ function loop(now){if(!running)return;requestAnimationFrame(loop);terrace.marquee.visible=mode==='overview';const dt=Math.min(.1,(now-lastT)/1000);lastT=now;applyCam(dt);const pulse=.5+.5*Math.sin(now/300);
   for(const id in tileMeshes){const T=tileMeshes[id];T.glow.material.opacity=effects.highlight===id?.35+.25*pulse:0}
   tokens.forEach((t,k)=>{if(!t)return;const on=view&&view.turn&&view.turn.pid===k;const r=t.g.userData.ring;if(r&&r.material)r.material.emissiveIntensity=on?.6+.6*pulse:.25});
   renderer.render(scene,camera);frames++;if(now-fpsT>3000){const fps=frames*1000/(now-fpsT);frames=0;fpsT=now;if(fps<28&&dpr>2){dpr=Math.max(2,dpr-.5);renderer.setPixelRatio(dpr);resize()}}}
  resize();overviewGoal();Object.assign(cam,{target:goal.target.clone(),yaw:goal.yaw,pitch:goal.pitch,dist:goal.dist});requestAnimationFrame(loop);
  return{setFrameBias(v){frameBias=v;refreshGoal()},sync,moveToken,follow,focusTile,overview,highlight,resize,
-  stats:()=>({dpr,mode,zoom:userZoom,camDist:cam.dist,goalDist:goal.dist,camYaw:cam.yaw,camPitch:cam.pitch,cameraUp:camera.up.toArray(),layout:'classic-circular',diameter:RIM*2,perimeterTiles:ringOrder.length,tiles:Object.keys(tileMeshes).length,tokens:tokens.length,landmarks:lmGroup.children.length}),mode:()=>mode,dispose(){running=false;renderer.dispose()}}}
+  stats:()=>({dpr,mode,zoom:userZoom,camDist:cam.dist,goalDist:goal.dist,camYaw:cam.yaw,camPitch:cam.pitch,cameraUp:camera.up.toArray(),layout:'classic-circular',environment:'skyline-terrace',diameter:RIM*2,perimeterTiles:ringOrder.length,tiles:Object.keys(tileMeshes).length,tokens:tokens.length,landmarks:lmGroup.children.length}),mode:()=>mode,dispose(){running=false;renderer.dispose()}}}
