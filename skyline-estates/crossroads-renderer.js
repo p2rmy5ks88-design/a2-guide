@@ -1,10 +1,10 @@
-/* Crossroads Capital — Landmark Chase: 3D double-loop board (Career Board 3, owner design package 21 Nov 2026).
-   Geometry follows the approved double-loop board: Riverside (west) and Highland (east) loops sharing Start / Payday,
-   Grand Exchange and Skybridge Bonus on the central spine. Spaces, hubs, buildings (6 stages), landmarks and tokens
-   are real 3D objects; the approved artwork fills the district interiors. Close follow camera per
-   RESPONSIVE_CAMERA_SPEC.md (≈44°, damped, around-loop yaw, push-in on landing, pinch zoom, drag, overview button). */
+/* Crossroads Capital — classic-sized circular 3D board (Career Board 3).
+   Reuses classic Solo Play miniature architecture, wood/gold materials, landscaping, color bands,
+   space labels, buildings and interactive tokens, retaining Landmark Chase movement and decisions.
+   Only Crossroads rendering changes; all other boards and the Classic mode remain untouched. */
 import * as THREE from './lib/three.module.min.js';
 import {GLTFLoader} from './lib/GLTFLoader.js';
+import {createMiniatures} from './presentation/production-miniatures.js';
 export const PLAYER_COLORS=['#d63f51','#2c7fd4','#2bb875','#8e5cdc'];
 const ART='./assets/crossroads/';
 function roundRect(g,x,y,w,h,r){g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath()}
@@ -24,23 +24,23 @@ function icon(g,kind,x,y,sz,col){g.save();g.translate(x,y);g.scale(sz/100,sz/100
   case'fee':P('M24 8h52v84l-10-8-8 8-8-8-8 8-8-8-10 8z');g.fillStyle='#fff';for(const y of[28,44,60])g.fillRect(34,y,32,6);break}
  g.restore()}
 function tileTexture(t,colors,renderer){
- const W=300,H=620,X=2,c=document.createElement('canvas');c.width=W*X;c.height=H*X;const g=c.getContext('2d');g.scale(X,X);
+ const W=320,H=600,X=2,c=document.createElement('canvas');c.width=W*X;c.height=H*X;const g=c.getContext('2d');g.scale(X,X);
  const navy='#0f1d33',gold='#c79a3e';
  const bg=g.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#fffaf0');bg.addColorStop(1,'#f3e7cc');g.fillStyle=bg;g.fillRect(0,0,W,H);
- const band=t.district?colors[t.district]:null;
+ const band=t.district?colors[t.district]:t.type==='start'?'#13814c':t.type==='skybridge'?'#2465a5':null;
  if(band){const b=g.createLinearGradient(0,0,0,170);b.addColorStop(0,band);b.addColorStop(1,shade(band,-.18));g.fillStyle=b;g.fillRect(0,0,W,170);g.fillStyle='rgba(255,255,255,.22)';g.fillRect(0,0,W,6);g.fillStyle=shade(band,-.35);g.fillRect(0,166,W,4);
-  icon(g,'property',W/2-46,30,92,'#ffffff')}
+  icon(g,t.type==='start'?'tax':t.type==='skybridge'?'event':'property',W/2-46,30,92,'#ffffff')}
  else{const kind=t.type==='utility'?t.id:t.type;icon(g,kind,W/2-48,26,96,t.type==='event'?'#7a3cc4':t.type==='transit'?'#1d4f8a':t.type==='utility'?(t.id==='water-works'?'#1f8fd6':t.id==='power-grid'?'#e0a10c':'#5b6676'):t.type==='tax'?'#c79a3e':'#8a5a2b')}
  // gold double border
  g.strokeStyle=gold;g.lineWidth=7;g.strokeRect(4,4,W-8,H-8);g.strokeStyle='rgba(199,154,62,.55)';g.lineWidth=2;g.strokeRect(14,14,W-28,H-28);
  // name
- const label=(t.type==='event'?'Opportunity':t.name).toUpperCase();g.fillStyle=navy;g.textAlign='center';g.textBaseline='alphabetic';
+ const label=(t.type==='event'?'Opportunity':t.type==='start'?'Start / Payday':t.type==='skybridge'?'Skybridge Bonus':t.name).toUpperCase();g.fillStyle=navy;g.textAlign='center';g.textBaseline='alphabetic';
  let fs=52;g.font=`900 ${fs}px -apple-system,"SF Pro Display","Helvetica Neue",Arial,sans-serif`;const words=label.split(' ');while(fs>34&&words.some(w=>g.measureText(w).width>W-40)){fs-=2;g.font=`900 ${fs}px -apple-system,"SF Pro Display","Helvetica Neue",Arial,sans-serif`}
  const top=band?232:200;const lines=wrap(g,label,W/2,top,W-36,fs*1.05);
- const sub=t.type==='transit'?'TRANSIT':t.type==='utility'?'UTILITY':t.type==='tax'?'TAX':t.type==='fee'?'FEE':t.type==='event'?'DRAW A CARD':t.district?(t.district.toUpperCase()+' DISTRICT'):'';
+ const sub=t.type==='start'?'SALARY':t.type==='skybridge'?'LANDMARK HUB':t.type==='transit'?'TRANSIT':t.type==='utility'?'UTILITY':t.type==='tax'?'TAX':t.type==='fee'?'FEE':t.type==='event'?'DRAW A CARD':t.district?(t.district.toUpperCase()+' DISTRICT'):'';
  if(sub){g.font='800 24px -apple-system,"Helvetica Neue",Arial,sans-serif';g.fillStyle='#8a6a2a';g.letterSpacing='2px';g.fillText(sub,W/2,top+lines*fs*1.05+14);g.letterSpacing='0px'}
  // price plate
- const price=t.price?t.price+' CC':t.charge?'PAY '+t.charge+' CC':'';
+ const price=t.type==='start'?'PASS +200 CC':t.type==='skybridge'?'RIBBON CUTTING':t.price?t.price+' CC':t.charge?'PAY '+t.charge+' CC':'';
  if(price){g.fillStyle=navy;roundRect(g,26,H-118,W-52,76,16);g.fill();g.strokeStyle=gold;g.lineWidth=4;roundRect(g,26,H-118,W-52,76,16);g.stroke();g.fillStyle='#f6d987';g.font='900 46px -apple-system,"SF Pro Display","Helvetica Neue",Arial,sans-serif';g.fillText(price,W/2,H-64)}
  const tex=new THREE.CanvasTexture(c);tex.colorSpace=THREE.SRGBColorSpace;tex.anisotropy=renderer.capabilities.getMaxAnisotropy();return tex}
 function shade(hex,k){const n=parseInt(hex.slice(1),16);let r=n>>16,g=n>>8&255,b=n&255;const f=x=>Math.max(0,Math.min(255,Math.round(k<0?x*(1+k):x+(255-x)*k)));return'#'+[f(r),f(g),f(b)].map(v=>v.toString(16).padStart(2,'0')).join('')}
@@ -83,73 +83,153 @@ export function createCrossroadsRenderer(canvas,{rules,onTile}={}){
  const table=new THREE.Mesh(new THREE.PlaneGeometry(90,90),new THREE.MeshStandardMaterial({map:woodTexture(),roughness:.75}));table.rotation.x=-Math.PI/2;table.position.y=-.32;table.receiveShadow=true;scene.add(table);
  let dirty=true;
 
- // ---- board geometry: two loops on a central spine ----
- const CW=new THREE.Vector3(-3.45,0,0),CE=new THREE.Vector3(3.45,0,0),R=2.95,D=1.12,RO=R+D/2,RI=R-D/2;
- const HUB={START:new THREE.Vector3(0,0,3.05),EXCHANGE:new THREE.Vector3(0,0,0),SKY:new THREE.Vector3(0,0,-3.05)};
- const gold=new THREE.MeshStandardMaterial({color:'#e2b25a',metalness:.85,roughness:.28,envMapIntensity:1.15});
- const navy=new THREE.MeshStandardMaterial({color:'#0f2340',roughness:.6,metalness:.1});
- // base outline = union of both loop discs and the central spine
- const BR=RO+.38,SX=1.7,SZ=4.45,dz=Math.sqrt(BR*BR-(3.45-SX)*(3.45-SX));
- function outline(sh,inset=0){const br=BR-inset,sx=SX-inset,sz=SZ-inset,d=Math.sqrt(br*br-(3.45-sx)*(3.45-sx));const a=Math.atan2(d,3.45-sx);
-  sh.moveTo(-sx,sz);sh.lineTo(sx,sz);sh.lineTo(sx,d);sh.absarc(3.45,0,br,Math.PI-a,-(Math.PI-a),true);sh.lineTo(sx,-sz);sh.lineTo(-sx,-sz);sh.lineTo(-sx,-d);sh.absarc(-3.45,0,br,-a,a,true);sh.lineTo(-sx,sz);return sh}
- const frameShape=outline(new THREE.Shape());
- const frame=new THREE.Mesh(new THREE.ExtrudeGeometry(frameShape,{depth:.32,bevelEnabled:true,bevelThickness:.08,bevelSize:.14,bevelSegments:3,curveSegments:64}),gold);frame.rotation.x=-Math.PI/2;frame.position.y=-.49;frame.castShadow=true;frame.receiveShadow=true;scene.add(frame);
- const top=new THREE.Mesh(new THREE.ShapeGeometry(outline(new THREE.Shape(),.06),64),navy);top.rotation.x=-Math.PI/2;top.position.y=-.01;top.receiveShadow=true;scene.add(top);
- // district interiors and the Exchange plaza use the approved artwork
- const disc=(url,pos,r,ring)=>{const m=new THREE.Mesh(new THREE.CircleGeometry(r,96),new THREE.MeshStandardMaterial({map:discTexture(url,ring,renderer,()=>{dirty=true}),roughness:.9,envMapIntensity:.2}));m.rotation.x=-Math.PI/2;m.position.copy(pos);m.position.y=.004;m.receiveShadow=true;scene.add(m);return m};
- disc(ART+'riverside.jpg',CW,RI-.12,'#efc15c');disc(ART+'highland.jpg',CE,RI-.12,'#efc15c');
- // spine walkway (Start → Exchange → Skybridge) with gold rails
- {const w=new THREE.Mesh(new THREE.BoxGeometry(1.15,.05,6.1),new THREE.MeshStandardMaterial({color:'#e8dcc0',roughness:.7}));w.position.set(0,.02,0);w.receiveShadow=true;scene.add(w);
-  for(const x of[-.6,.6]){const r=new THREE.Mesh(new THREE.BoxGeometry(.05,.07,6.1),gold);r.position.set(x,.04,0);scene.add(r)}}
-
- // ---- spaces: curved tiles around each loop ----
+ // ---- circular, classic-sized Skyline tabletop: one perimeter, two route arcs ----
+ // Crossroads retains its established Landmark Chase rules and route choices:
+ // west travels counter-clockwise from Start to Skybridge, east clockwise.
+ // Both meet at the south hub and visit Grand Exchange in the playable centre.
+ // The two original discs are deliberately gone: visually this is ONE circular board,
+ // at the 11.7-unit diameter of the classic Solo Play tabletop.
+ const classic=createMiniatures({tier:maxDpr>=2?'medium':'low'});
+ const R_OUT=5.49,R_IN=4.03,R_MID=(R_OUT+R_IN)/2,RIM=5.84;
+ const CW=new THREE.Vector3(-1.76,0,0),CE=new THREE.Vector3(1.76,0,0);
+ const gold=classic.mats.gold,navy=classic.mats.navy;
+ const radial=(angle,r)=>new THREE.Vector3(r*Math.cos(angle),0,r*Math.sin(angle));
+ const tabletop=new THREE.Mesh(new THREE.CylinderGeometry(RIM,RIM+.06,.43,128),classic.mats.walnut);
+ tabletop.position.y=-.34;tabletop.receiveShadow=true;tabletop.castShadow=true;scene.add(tabletop);
+ const bottomRim=new THREE.Mesh(new THREE.TorusGeometry(RIM-.11,.10,10,144),gold);
+ bottomRim.rotation.x=Math.PI/2;bottomRim.position.y=-.12;scene.add(bottomRim);
+ const topDeck=new THREE.Mesh(new THREE.CylinderGeometry(R_OUT+.13,R_OUT+.13,.09,128),navy);
+ topDeck.position.y=-.045;topDeck.receiveShadow=true;scene.add(topDeck);
+ const outerRail=new THREE.Mesh(new THREE.TorusGeometry(R_OUT+.17,.065,12,160),gold);
+ outerRail.rotation.x=Math.PI/2;outerRail.position.y=.015;scene.add(outerRail);
+ const innerRail=new THREE.Mesh(new THREE.TorusGeometry(R_IN-.04,.043,12,160),gold);
+ innerRail.rotation.x=Math.PI/2;innerRail.position.y=.042;scene.add(innerRail);
+ const core=new THREE.Group();scene.add(core);
+ classic.disk(core,'paving',0,.003,0,3.89,.065);
+ // A lived-in miniature city, made from the SAME local architectural materials,
+ // trees, street lamps, civic detailing and building forms as classic Solo.
+ classic.box(core,'asphalt',0,.053,0,.74,.022,7.2);
+ classic.box(core,'asphalt',0,.053,0,7.12,.022,.70);
+ for(const x of[-.42,.42])classic.box(core,'ivory',x,.073,0,.025,.012,6.9);
+ for(const z of[-.39,.39])classic.box(core,'ivory',0,.073,z,6.85,.012,.022);
+ for(const [x,z,stage,kind,scale]of[
+  [-2.83,-1.70,3,'residential',.78],[-1.83,-2.23,4,'financial',.78],[-.9,-2.75,2,'residential',.70],
+  [1.15,-2.72,4,'financial',.75],[2.70,-1.62,3,'residential',.76],
+  [-2.79,1.69,3,'residential',.72],[-1.73,2.43,3,'financial',.74],
+  [.92,2.74,2,'residential',.72],[2.66,1.79,4,'financial',.77],
+  [-2.42,.93,2,'residential',.65],[2.38,-.94,3,'financial',.68]
+ ]){
+   const house=classic.building(kind,stage,Math.round(Math.abs(x*17+z*11))%3);
+   house.position.set(x,.086,z);house.scale.setScalar(scale);house.rotation.y=Math.atan2(x,z);
+   core.add(house);
+ }
+ for(let i=0;i<20;i++){const a=i*Math.PI/10,r=3.35,x=Math.cos(a)*r,z=Math.sin(a)*r;
+  if(Math.abs(x)<.55||Math.abs(z)<.55)continue;
+  const tree=classic.tree(i+27);tree.scale.setScalar(.54);tree.position.set(x,.06,z);core.add(tree)}
+ for(let i=0;i<12;i++){const a=(i+.5)*Math.PI/6,r=3.72;
+  const light=classic.lamp();light.scale.setScalar(.72);light.position.set(Math.cos(a)*r,.057,Math.sin(a)*r);core.add(light)}
+ // Dark chocolate/burnished-gold table furniture and true 3D paths between hubs.
+ const spine=new THREE.Mesh(new THREE.BoxGeometry(.61,.045,4.25),classic.mats.asphalt);
+ spine.position.set(0,.09,2.1);spine.receiveShadow=true;core.add(spine);
+ for(const x of[-.33,.33]){const stripe=new THREE.Mesh(new THREE.BoxGeometry(.022,.015,4.2),gold);
+  stripe.position.set(x,.12,2.1);core.add(stripe)}
  const tileMeshes={},tileInfo={},pick=[];
- const loopAngles=(k)=>{const a0=THREE.MathUtils.degToRad(50),span=THREE.MathUtils.degToRad(260)/15;return[a0+k*span,a0+(k+1)*span]};
- function worldPoint(loop,theta,r){return loop==='west'?new THREE.Vector3(CW.x+r*Math.cos(theta),0,r*Math.sin(theta)):new THREE.Vector3(CE.x-r*Math.cos(theta),0,r*Math.sin(theta))}
- function sectorGeometry(loop,t0,t1,r0,r1,nu=16,nv=2,flipU){const pos=[],uv=[],idx=[];for(let j=0;j<=nv;j++)for(let i=0;i<=nu;i++){const u=i/nu,v=j/nv,th=t0+(t1-t0)*u,r=r1+(r0-r1)*v,p=worldPoint(loop,th,r);pos.push(p.x,0,p.z);uv.push(flipU?1-u:u,v)}
-  for(let j=0;j<nv;j++)for(let i=0;i<nu;i++){const a=j*(nu+1)+i,b=a+1,c=a+nu+1,d=c+1;idx.push(a,c,b,b,c,d)}const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));g.setIndex(idx);g.computeVertexNormals();
-  // make the face point up
-  const n=g.attributes.normal;if(n.getY(0)<0){g.setIndex(idx.map((x,k)=>idx[k-(k%3)+[0,2,1][k%3]]));g.computeVertexNormals()}return g}
- function sectorSolid(loop,t0,t1,r0,r1,h){const sh=new THREE.Shape();const N=16;for(let i=0;i<=N;i++){const p=worldPoint(loop,t0+(t1-t0)*i/N,r1);i?sh.lineTo(p.x,-p.z):sh.moveTo(p.x,-p.z)}for(let i=N;i>=0;i--){const p=worldPoint(loop,t0+(t1-t0)*i/N,r0);sh.lineTo(p.x,-p.z)}sh.closePath();
-  const g=new THREE.ExtrudeGeometry(sh,{depth:h,bevelEnabled:true,bevelThickness:.012,bevelSize:.012,bevelSegments:1});g.rotateX(-Math.PI/2);return g}
- const tileData=t=>({...t,district:t.group,charge:t.type==='tax'?200:t.type==='fee'?150:undefined,id:t.type==='utility'?(t.id==='W07'?'water-works':'power-grid'):t.id,type:t.type==='metro'?'transit':t.type,name:t.type==='metro'?t.name.replace(' Line',''):t.name});
- const GAP=.012;
- for(const t of TILES){if(!t.loop)continue;const k=+t.id.slice(1),[a,b]=loopAngles(k),loop=t.loop,t0=a+GAP,t1=b-GAP;
-  const grp=new THREE.Group();scene.add(grp);
-  const solid=new THREE.Mesh(sectorSolid(loop,t0,t1,RI,RO,.11),new THREE.MeshStandardMaterial({color:'#efe4c8',roughness:.7}));solid.castShadow=solid.receiveShadow=true;grp.add(solid);
+ // Counter-clockwise west arc, clockwise east arc: precisely one shared circular perimeter.
+ const ringOrder=['START',...Array.from({length:15},(_,k)=>'W'+String(k).padStart(2,'0')),
+  'SKY',...Array.from({length:15},(_,k)=>'E'+String(14-k).padStart(2,'0'))];
+ const SEG=2*Math.PI/ringOrder.length,GAP=.010;
+ function sectorGeometry(t0,t1,r0,r1,nu=12,nv=2){
+  const pos=[],uv=[],indices=[];
+  for(let j=0;j<=nv;j++)for(let i=0;i<=nu;i++){
+   const u=i/nu,v=j/nv,p=radial(t0+(t1-t0)*u,r1+(r0-r1)*v);
+   pos.push(p.x,0,p.z);uv.push(1-u,1-v);
+  }
+  for(let j=0;j<nv;j++)for(let i=0;i<nu;i++){
+   const a=j*(nu+1)+i,b=a+1,c=a+nu+1,d=c+1;
+   indices.push(a,c,b,b,c,d);
+  }
+  const geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));
+  geo.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));
+  geo.setIndex(indices);geo.computeVertexNormals();
+  if(geo.attributes.normal.getY(0)<0){
+   geo.setIndex(indices.map((v,k)=>indices[k-k%3+[0,2,1][k%3]]));
+   geo.computeVertexNormals()
+  }
+  return geo;
+ }
+ function sectorSolid(t0,t1,r0,r1,h){
+  const shape=new THREE.Shape(),n=16;
+  for(let i=0;i<=n;i++){const p=radial(t0+(t1-t0)*i/n,r1);i?shape.lineTo(p.x,-p.z):shape.moveTo(p.x,-p.z)}
+  for(let i=n;i>=0;i--){const p=radial(t0+(t1-t0)*i/n,r0);shape.lineTo(p.x,-p.z)}
+  shape.closePath();
+  const geo=new THREE.ExtrudeGeometry(shape,{depth:h,bevelEnabled:true,bevelThickness:.012,bevelSize:.012,bevelSegments:1,curveSegments:12});
+  geo.rotateX(-Math.PI/2);return geo;
+ }
+ const tileData=t=>({...t,district:t.group,
+  charge:t.type==='tax'?200:t.type==='fee'?150:undefined,
+  id:t.type==='utility'?(t.id==='W07'?'water-works':'power-grid'):t.id,
+  type:t.type==='metro'?'transit':t.type,
+  name:t.type==='metro'?t.name.replace(' Line',''):t.name});
+ for(let i=0;i<ringOrder.length;i++){
+  const id=ringOrder[i],t=BY[id],mid=Math.PI/2+i*SEG;
+  const a=mid-SEG/2+GAP,b=mid+SEG/2-GAP,grp=new THREE.Group();scene.add(grp);
+  const solid=new THREE.Mesh(sectorSolid(a,b,R_IN,R_OUT,.11),
+   new THREE.MeshStandardMaterial({color:'#f3ead4',roughness:.7}));
+  solid.castShadow=solid.receiveShadow=true;grp.add(solid);
   const ftex=tileTexture(tileData(t),CC.GROUP_COLORS,renderer);
-  // canvas top (v=1) toward the loop centre; u runs left→right as seen from outside the loop
-  const face=new THREE.Mesh(sectorGeometry(loop,t0,t1,RI+.03,RO-.03,16,2,loop==='west'),new THREE.MeshBasicMaterial({map:ftex,toneMapped:false,fog:false,side:THREE.DoubleSide}));face.position.y=.125;face.receiveShadow=true;grp.add(face);
-  const ring=new THREE.Mesh(sectorSolid(loop,t0-.006,t1+.006,RI-.03,RO+.03,.09),new THREE.MeshStandardMaterial({color:'#ffffff',roughness:.4}));ring.position.y=-.01;ring.visible=false;grp.add(ring);
-  const glow=new THREE.Mesh(sectorGeometry(loop,t0,t1,RI,RO,8,1,false),new THREE.MeshBasicMaterial({color:'#ffd36b',transparent:true,opacity:0,depthWrite:false}));glow.position.y=.13;grp.add(glow);
-  solid.userData.tile=face.userData.tile=t.id;pick.push(solid,face);
-  const mid=(a+b)/2,pos=worldPoint(loop,mid,R),outward=pos.clone().sub(loop==='west'?CW:CE).setY(0).normalize();
-  const tangent=new THREE.Vector3(-outward.z,0,outward.x);
-  tileMeshes[t.id]={grp,face,ring,glow,building:null,loop};tileInfo[t.id]={pos,outer:worldPoint(loop,mid,R+.18),inner:worldPoint(loop,mid,R-.32),perp:outward.clone().negate(),dir:tangent,center:loop==='west'?CW:CE,build:worldPoint(loop,mid,R-.26)}}
- for(const id of['START','EXCHANGE','SKY']){const t=BY[id],P=HUB[id],grp=new THREE.Group();grp.position.copy(P);scene.add(grp);const r=id==='EXCHANGE'?1.18:1.02;
-  const rim=new THREE.Mesh(new THREE.CylinderGeometry(r+.1,r+.16,.22,96),gold);rim.position.y=.1;rim.castShadow=rim.receiveShadow=true;grp.add(rim);
-  const cap=new THREE.Mesh(new THREE.CylinderGeometry(r,r,.26,96),navy);cap.position.y=.13;grp.add(cap);
-  const face=new THREE.Mesh(new THREE.CircleGeometry(r,96),id==='EXCHANGE'?new THREE.MeshStandardMaterial({map:discTexture(ART+'exchange.jpg','#efc15c',renderer,()=>{dirty=true}),roughness:.8,envMapIntensity:.2}):(()=>{const ht=hubTexture(t,renderer);return new THREE.MeshBasicMaterial({map:ht,toneMapped:false,side:THREE.DoubleSide})})());
-  face.rotation.x=-Math.PI/2;face.position.y=.265;grp.add(face);
-  const glow=new THREE.Mesh(new THREE.CircleGeometry(r+.14,96),new THREE.MeshBasicMaterial({color:'#ffd36b',transparent:true,opacity:0,depthWrite:false}));glow.rotation.x=-Math.PI/2;glow.position.y=.27;grp.add(glow);
-  cap.userData.tile=face.userData.tile=rim.userData.tile=id;pick.push(cap,face,rim);
-  tileMeshes[id]={grp,glow,hub:true};tileInfo[id]={pos:P.clone(),outer:P.clone().add(new THREE.Vector3(0,0,id==='SKY'?-.45:.45)),perp:new THREE.Vector3(0,0,id==='SKY'?1:-1),dir:new THREE.Vector3(1,0,0),center:new THREE.Vector3(0,0,id==='SKY'?-9:id==='EXCHANGE'?-9:-9),hub:true,y:.27}}
- // skybridge arch over the spine and a dome over the Exchange
- {const arch=new THREE.Mesh(new THREE.TorusGeometry(.95,.05,12,64,Math.PI),gold);arch.position.set(0,.27,-3.05);arch.castShadow=true;scene.add(arch);
-  const dome=new THREE.Mesh(new THREE.SphereGeometry(.42,48,24,0,Math.PI*2,0,Math.PI/2),new THREE.MeshPhysicalMaterial({color:'#7fd3d0',metalness:.3,roughness:.08,transmission:0,clearcoat:1,transparent:true,opacity:.72}));dome.position.set(0,.27,-.62);dome.castShadow=true;scene.add(dome);
-  const ringD=new THREE.Mesh(new THREE.TorusGeometry(.43,.03,10,48),gold);ringD.rotation.x=Math.PI/2;ringD.position.set(0,.28,-.62);scene.add(ringD)}
-
+  const face=new THREE.Mesh(sectorGeometry(a,b,R_IN+.035,R_OUT-.035,16,2),
+   new THREE.MeshBasicMaterial({map:ftex,toneMapped:false,fog:false,side:THREE.DoubleSide}));
+  face.position.y=.127;face.receiveShadow=true;grp.add(face);
+  const ring=new THREE.Mesh(sectorSolid(a-.006,b+.006,R_IN-.035,R_OUT+.035,.09),
+   new THREE.MeshStandardMaterial({color:'#ffffff',roughness:.4}));
+  ring.position.y=-.012;ring.visible=false;grp.add(ring);
+  const glow=new THREE.Mesh(sectorGeometry(a,b,R_IN,R_OUT,8,1),
+   new THREE.MeshBasicMaterial({color:'#ffd36b',transparent:true,opacity:0,depthWrite:false,side:THREE.DoubleSide}));
+  glow.position.y=.134;grp.add(glow);
+  solid.userData.tile=face.userData.tile=id;pick.push(solid,face);
+  const outward=radial(mid,1),tangent=new THREE.Vector3(-outward.z,0,outward.x);
+  tileMeshes[id]={grp,face,ring,glow,building:null,loop:t.loop||null};
+  tileInfo[id]={pos:radial(mid,R_MID),outer:radial(mid,R_OUT-.25),
+   inner:radial(mid,R_MID-.38),build:radial(mid,R_IN-.17),
+   perp:outward.clone().negate(),dir:tangent,center:new THREE.Vector3(0,0,0)};
+ }
+ // Grand Exchange is a real selectable tile in the central civic plaza and the
+ // connecting node of the actual movement graph, not an ornamental illustration.
+ {const id='EXCHANGE',t=BY[id],grp=new THREE.Group();scene.add(grp);
+  const rim=new THREE.Mesh(new THREE.CylinderGeometry(.90,.97,.22,80),gold);
+  rim.position.y=.135;rim.castShadow=true;grp.add(rim);
+  const cap=new THREE.Mesh(new THREE.CylinderGeometry(.82,.84,.26,80),navy);cap.position.y=.20;grp.add(cap);
+  const tex=hubTexture(t,renderer);
+  const face=new THREE.Mesh(new THREE.CircleGeometry(.82,80),
+   new THREE.MeshBasicMaterial({map:tex,toneMapped:false,side:THREE.DoubleSide}));
+  face.rotation.x=-Math.PI/2;face.position.y=.335;grp.add(face);
+  const glow=new THREE.Mesh(new THREE.CircleGeometry(.95,80),
+   new THREE.MeshBasicMaterial({color:'#ffd36b',transparent:true,opacity:0,depthWrite:false}));
+  glow.rotation.x=-Math.PI/2;glow.position.y=.342;grp.add(glow);
+  rim.userData.tile=cap.userData.tile=face.userData.tile=id;pick.push(rim,cap,face);
+  tileMeshes[id]={grp,glow,hub:true};
+  tileInfo[id]={pos:new THREE.Vector3(0,0,0),outer:new THREE.Vector3(0,0,.30),
+   perp:new THREE.Vector3(0,0,-1),dir:new THREE.Vector3(1,0,0),
+   center:new THREE.Vector3(0,0,-1),hub:true,y:.34};
+ }
+ // Familiar 3D bridge, civic dome and celebratory details from Solo Play.
+ {const civic=classic.civic();civic.position.set(0,.35,-1.43);civic.scale.setScalar(.55);core.add(civic);
+  const bridge=classic.bridge(1.5,.48);bridge.position.set(0,.12,-3.50);core.add(bridge);
+  const arch=new THREE.Mesh(new THREE.TorusGeometry(.78,.046,12,56,Math.PI),gold);
+  arch.position.set(0,.20,-5.25);arch.castShadow=true;scene.add(arch)}
+ 
  // ---- buildings (6 stages) and landmark miniatures ----
  const winTex=windowTexture(),proto=[],props={},lmProto=[];const loader=new GLTFLoader(),base='./assets/approved-v5/';
  const fit=(obj,w)=>{const b=new THREE.Box3().setFromObject(obj),size=b.getSize(new THREE.Vector3()),k=w/Math.max(size.x,size.z);obj.scale.setScalar(k);const b2=new THREE.Box3().setFromObject(obj);obj.position.y-=b2.min.y;const c=b2.getCenter(new THREE.Vector3());obj.position.x-=c.x;obj.position.z-=c.z;const g=new THREE.Group();g.add(obj);return g};
  Promise.all(['dev_0_lot','dev_1_midrise_L1','dev_2_midrise_L2','dev_3_highrise_L3','dev_4_highrise_L4','dev_5_skyscraper_L5'].map(f=>loader.loadAsync(base+'buildings/'+f+'.glb').then(x=>x.scene))).then(list=>{list.forEach((sc,k)=>{sc.traverse(o=>{if(o.isMesh)o.castShadow=o.receiveShadow=true});proto[k]=fit(sc,[.36,.32,.3,.28,.27,.26][k])});for(const id in tileMeshes)tileMeshes[id].key=null;if(view)sync(view)}).catch(e=>console.warn('Crossroads building models',e));
  Promise.all(['financial_tower_crown','grand_boulevard_palace','financial_tower_spire'].map(f=>loader.loadAsync(base+'buildings/'+f+'.glb').then(x=>x.scene))).then(list=>{list.forEach((sc,k)=>{sc.traverse(o=>{if(o.isMesh)o.castShadow=true});lmProto[k]=fit(sc,[.5,.75,.5][k])});lmKey='';if(view)sync(view)}).catch(e=>console.warn('Crossroads landmark models',e));
  Promise.all(['palm','street_lamp','yacht'].map(f=>loader.loadAsync(base+'props/'+f+'.glb').then(x=>x.scene))).then(([palm,lamp,yacht])=>{props.palm=fit(palm,.5);props.lamp=fit(lamp,.12);props.yacht=fit(yacht,.44);rebuildTokens();
-  for(const [x,z,s] of[[-1.4,5.1,1.2],[1.4,5.1,1.2],[-1.4,-5.1,1.2],[1.4,-5.1,1.2],[-9,2.5,1.8],[-9,-2.5,1.8],[9,2.5,1.8],[9,-2.5,1.8],[-6,5.2,1.6],[6,5.2,1.6],[-6,-5.2,1.6],[6,-5.2,1.6]]){const p=props.palm.clone();p.position.set(x,Math.abs(x)<2?.02:-.32,z);p.scale.multiplyScalar(s);p.rotation.y=x*z;p.traverse(o=>{if(o.isMesh)o.castShadow=true});scene.add(p)}
+  for(const [x,z,s] of[[-2.5,5.9,.9],[2.5,5.9,.9],[-2.5,-5.9,.9],[2.5,-5.9,.9],[-5.8,1.6,1.1],[-5.8,-1.6,1.1],[5.8,1.6,1.1],[5.8,-1.6,1.1]]){const p=props.palm.clone();p.position.set(x,Math.abs(x)<2?.02:-.30,z);p.scale.multiplyScalar(s);p.rotation.y=x*z;p.traverse(o=>{if(o.isMesh)o.castShadow=true});scene.add(p)}
   for(const [x,z] of[[-.62,1.7],[.62,1.7],[-.62,-1.7],[.62,-1.7]]){const l=props.lamp.clone();l.position.set(x,.04,z);l.scale.multiplyScalar(1.6);scene.add(l)}dirty=true}).catch(e=>console.warn('Crossroads props',e));
  function building(stage,color){if(proto[stage]){const g=new THREE.Group(),m=proto[stage].clone(true);g.add(m);const pad=new THREE.Mesh(new THREE.CylinderGeometry(.21,.21,.02,32),new THREE.MeshStandardMaterial({color,roughness:.5}));pad.position.y=.01;g.add(pad);m.position.y=.02;return g}
   const g=new THREE.Group(),h=.12+stage*.11,b=new THREE.Mesh(new THREE.BoxGeometry(.24,h,.24),new THREE.MeshStandardMaterial({color,map:winTex}));b.position.y=h/2;b.castShadow=true;g.add(b);return g}
- const LM_SLOTS=[[CW,-.95,-.95],[CE,.95,-.95],[CW,.95,1.0],[CE,-.95,1.0],[CW,-1.3,.55],[CE,1.3,.55],[CW,.3,-1.45],[CE,-.3,-1.45]];let lmKey='',lmGroup=new THREE.Group();scene.add(lmGroup);
+ const LM_SLOTS=[[CW,-.75,-.35],[CE,.75,-.35],[CW,.65,.6],[CE,-.65,.6],[CW,-.6,.85],[CE,.6,.85],[CW,.25,-1.0],[CE,-.25,-1.0]];let lmKey='',lmGroup=new THREE.Group();scene.add(lmGroup);
  function syncLandmarks(list,players){const key=JSON.stringify(list)+lmProto.length;if(key===lmKey)return;lmKey=key;lmGroup.clear();
   list.slice(-LM_SLOTS.length).forEach((l,k)=>{const [c,dx,dz]=LM_SLOTS[k],g=new THREE.Group(),col=players[l.pid].color;g.position.set(c.x+dx,.01,c.z+dz);
    const plinth=new THREE.Mesh(new THREE.CylinderGeometry(.34,.38,.08,48),gold);plinth.position.y=.04;plinth.castShadow=true;g.add(plinth);
@@ -197,17 +277,16 @@ export function createCrossroadsRenderer(canvas,{rules,onTile}={}){
    for(const x of[.12,.02,-.08])for(const z of[.08,-.08]){add(new THREE.CylinderGeometry(.045,.045,.02,24),new THREE.MeshStandardMaterial({color:'#b3261e',metalness:.4,roughness:.4}),x,.05,z,Math.PI/2);add(new THREE.CylinderGeometry(.018,.018,.024,12),chrome,x,.05,z,Math.PI/2)}
    const cc=new THREE.Shape();cc.moveTo(0,0);cc.lineTo(.06,0);cc.lineTo(0,.06);cc.closePath();const ccg=new THREE.ExtrudeGeometry(cc,{depth:.14,bevelEnabled:false});ccg.translate(0,0,-.07);add(ccg,chrome,.17,.01,0)}
   g.traverse(o=>{if(o.isMesh){o.castShadow=true}});g.scale.setScalar(1.3);g.userData.ring=ring;return g}
- function slot(i,pid,count){const T=tileInfo[i];const off=count>1?[[-.17,-.17],[.17,-.17],[-.17,.17],[.17,.17]][pid]:[0,0];return T.outer.clone().add(T.dir.clone().multiplyScalar(off[0])).add(T.perp.clone().multiplyScalar(off[1]))}
-
- function slot(id,pid,count){const T=tileInfo[id],off=count>1?[[-.15,-.13],[.15,-.13],[-.15,.13],[.15,.13]][pid]:[0,0];return T.outer.clone().add(T.dir.clone().multiplyScalar(off[0])).add(T.perp.clone().multiplyScalar(off[1]))}
+ function slot(id,pid,count){const T=tileInfo[id],off=count>1?[[-.21,-.20],[.21,-.20],[-.21,.20],[.21,.20]][pid]:[0,0];
+  return T.outer.clone().add(T.dir.clone().multiplyScalar(off[0])).add(T.perp.clone().multiplyScalar(off[1]))}
  const baseY=id=>tileInfo[id].hub?.27:.13;
 
  // ---- camera (RESPONSIVE_CAMERA_SPEC: ROLL_FOLLOW / LANDING_FOCUS / BOARD_OVERVIEW / RETURN_TO_TOKEN) ----
  const cam={target:new THREE.Vector3(),yaw:0,pitch:THREE.MathUtils.degToRad(48),dist:14},goal={target:new THREE.Vector3(),yaw:0,pitch:THREE.MathUtils.degToRad(48),dist:14};
  let pinned=false,frameBias=.2,mode='follow',followPid=0,userZoom=1,userYaw=0,pushIn=1,lastT=performance.now(),lastYaw=0;
  function yawAt(id,p){const T=tileInfo[id];if(!T||T.hub){return Math.abs(p.x)<.9?(p.z<-1.2?Math.PI:0):lastYaw}const d=p.clone().sub(T.center);return Math.atan2(d.x,d.z)}
- function overviewGoal(){goal.target.set(0,0,1.15);goal.yaw=0;goal.pitch=THREE.MathUtils.degToRad(52);const a=camera.aspect||2.17;goal.dist=Math.max(16.4,16.4*2.05/a)}
- function followGoal(p,id){const T=tileInfo[id]||{};const out=T.perp?T.perp.clone().negate():new THREE.Vector3(0,0,1);goal.target.copy(p.clone().add(out.multiplyScalar(frameBias)));const y=yawAt(id,p);lastYaw=y;goal.yaw=y+userYaw;goal.pitch=THREE.MathUtils.degToRad(43);goal.dist=4.9*userZoom/pushIn}
+ function overviewGoal(){goal.target.set(0,0,0);goal.yaw=0;goal.pitch=THREE.MathUtils.degToRad(50);const a=camera.aspect||2.17;goal.dist=Math.max(15.5,15.5*2.05/a)}
+ function followGoal(p,id){const T=tileInfo[id]||{};const out=T.perp?T.perp.clone().negate():new THREE.Vector3(0,0,1);goal.target.copy(p.clone().add(out.multiplyScalar(frameBias)));const y=yawAt(id,p);lastYaw=y;goal.yaw=y+userYaw;goal.pitch=THREE.MathUtils.degToRad(43);goal.dist=5.3*userZoom/pushIn}
  function angleLerp(a,b,t){let d=((b-a+Math.PI)%(2*Math.PI)+2*Math.PI)%(2*Math.PI)-Math.PI;return a+d*t}
  function applyCam(dt){const k=reduceMotion.matches?1:1-Math.exp(-dt/.2);cam.target.lerp(goal.target,k);cam.yaw=angleLerp(cam.yaw,goal.yaw,k);cam.pitch+=(goal.pitch-cam.pitch)*k;cam.dist+=(goal.dist-cam.dist)*k;
   const c=Math.cos(cam.pitch)*cam.dist;camera.up.set(0,1,0);camera.position.set(cam.target.x+Math.sin(cam.yaw)*c,cam.target.y+Math.sin(cam.pitch)*cam.dist,cam.target.z+Math.cos(cam.yaw)*c);camera.lookAt(cam.target)}
