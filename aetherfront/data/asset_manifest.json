@@ -85,14 +85,14 @@
       "model": "assets/models/bastion_guardian.glb",
       "bounds": [
         [
-          -0.58,
-          -0.032,
-          -0.341
+          -0.674,
+          0,
+          -0.418
         ],
         [
-          0.501,
-          1.216,
-          0.484
+          0.762,
+          1.55,
+          0.475
         ]
       ],
       "audio": {
@@ -104,7 +104,7 @@
         "source": "original procedural audio (not ElevenLabs)"
       },
       "starter_model": "assets/models/starter/bastion_guardian.glb",
-      "model_version": 2,
+      "model_version": 3,
       "triangles": 18012,
       "animation_clips": [
         "idle",
@@ -113,7 +113,10 @@
         "hit",
         "die"
       ],
-      "portrait": "assets/portraits/bastion_guardian.png"
+      "portrait": "assets/portraits/bastion_guardian.png",
+      "forge_model": "assets/models/forge/bastion_guardian.glb",
+      "model_source": "Meshy AI (text-to-3D → refine → auto-rig → animation library), packed by tools/meshy",
+      "skinned": true
     },
     {
       "id": "vesper_ranger",
@@ -621,14 +624,14 @@
       "model": "assets/models/cobalt_scout.glb",
       "bounds": [
         [
-          -0.306,
-          -0.011,
-          -0.152
+          -0.588,
+          0,
+          -0.188
         ],
         [
-          0.306,
-          1.216,
-          0.502
+          0.445,
+          1.35,
+          0.286
         ]
       ],
       "audio": {
@@ -640,7 +643,7 @@
         "source": "original procedural audio (not ElevenLabs)"
       },
       "starter_model": "assets/models/starter/cobalt_scout.glb",
-      "model_version": 2,
+      "model_version": 3,
       "triangles": 15828,
       "animation_clips": [
         "idle",
@@ -649,7 +652,10 @@
         "hit",
         "die"
       ],
-      "portrait": "assets/portraits/cobalt_scout.png"
+      "portrait": "assets/portraits/cobalt_scout.png",
+      "forge_model": "assets/models/forge/cobalt_scout.glb",
+      "model_source": "Meshy AI (text-to-3D → refine → auto-rig → animation library), packed by tools/meshy",
+      "skinned": true
     },
     {
       "id": "siege_gunner",
@@ -674,14 +680,14 @@
       "model": "assets/models/siege_gunner.glb",
       "bounds": [
         [
-          -0.466,
-          -0.027,
-          -0.318
+          -0.917,
+          0,
+          -0.269
         ],
         [
-          0.466,
-          1.216,
-          0.72
+          0.587,
+          1.5,
+          0.433
         ]
       ],
       "audio": {
@@ -693,7 +699,7 @@
         "source": "original procedural audio (not ElevenLabs)"
       },
       "starter_model": "assets/models/starter/siege_gunner.glb",
-      "model_version": 2,
+      "model_version": 3,
       "triangles": 17368,
       "animation_clips": [
         "idle",
@@ -702,7 +708,10 @@
         "hit",
         "die"
       ],
-      "portrait": "assets/portraits/siege_gunner.png"
+      "portrait": "assets/portraits/siege_gunner.png",
+      "forge_model": "assets/models/forge/siege_gunner.glb",
+      "model_source": "Meshy AI (text-to-3D → refine → auto-rig → animation library), packed by tools/meshy",
+      "skinned": true
     },
     {
       "id": "nova_engineer",
@@ -727,14 +736,14 @@
       "model": "assets/models/nova_engineer.glb",
       "bounds": [
         [
-          -0.312,
-          -0.012,
-          -0.24
+          -0.52,
+          0,
+          -0.157
         ],
         [
-          0.312,
-          1.223,
-          0.487
+          0.379,
+          1.32,
+          0.217
         ]
       ],
       "audio": {
@@ -746,7 +755,7 @@
         "source": "original procedural audio (not ElevenLabs)"
       },
       "starter_model": "assets/models/starter/nova_engineer.glb",
-      "model_version": 2,
+      "model_version": 3,
       "triangles": 20672,
       "animation_clips": [
         "idle",
@@ -755,7 +764,10 @@
         "hit",
         "die"
       ],
-      "portrait": "assets/portraits/nova_engineer.png"
+      "portrait": "assets/portraits/nova_engineer.png",
+      "forge_model": "assets/models/forge/nova_engineer.glb",
+      "model_source": "Meshy AI (text-to-3D → refine → auto-rig → animation library), packed by tools/meshy",
+      "skinned": true
     },
     {
       "id": "aegis_barrier",
@@ -939,14 +951,14 @@
       "model": "assets/models/ember_striker.glb",
       "bounds": [
         [
-          -0.395,
-          -0.018,
-          -0.271
+          -0.72,
+          0,
+          -0.28
         ],
         [
-          0.395,
-          1.216,
-          0.64
+          0.47,
+          1.42,
+          0.251
         ]
       ],
       "audio": {
@@ -958,7 +970,7 @@
         "source": "original procedural audio (not ElevenLabs)"
       },
       "starter_model": "assets/models/starter/ember_striker.glb",
-      "model_version": 2,
+      "model_version": 3,
       "triangles": 16332,
       "animation_clips": [
         "idle",
@@ -967,7 +979,10 @@
         "hit",
         "die"
       ],
-      "portrait": "assets/portraits/ember_striker.png"
+      "portrait": "assets/portraits/ember_striker.png",
+      "forge_model": "assets/models/forge/ember_striker.glb",
+      "model_source": "Meshy AI (text-to-3D → refine → auto-rig → animation library), packed by tools/meshy",
+      "skinned": true
     },
     {
       "id": "rift_guardian",
@@ -992,14 +1007,14 @@
       "model": "assets/models/rift_guardian.glb",
       "bounds": [
         [
-          -0.558,
-          -0.03,
-          -0.329
+          -0.607,
+          0,
+          -0.446
         ],
         [
-          0.483,
-          1.216,
-          0.484
+          0.684,
+          1.55,
+          0.444
         ]
       ],
       "audio": {
@@ -1011,7 +1026,7 @@
         "source": "original procedural audio (not ElevenLabs)"
       },
       "starter_model": "assets/models/starter/rift_guardian.glb",
-      "model_version": 2,
+      "model_version": 3,
       "triangles": 18012,
       "animation_clips": [
         "idle",
@@ -1020,7 +1035,10 @@
         "hit",
         "die"
       ],
-      "portrait": "assets/portraits/rift_guardian.png"
+      "portrait": "assets/portraits/rift_guardian.png",
+      "forge_model": "assets/models/forge/rift_guardian.glb",
+      "model_source": "Meshy AI (text-to-3D → refine → auto-rig → animation library), packed by tools/meshy",
+      "skinned": true
     },
     {
       "id": "helios_sniper",
@@ -1045,14 +1063,14 @@
       "model": "assets/models/helios_sniper.glb",
       "bounds": [
         [
-          -0.321,
-          -0.013,
-          -0.247
+          -0.982,
+          0,
+          -0.223
         ],
         [
-          0.321,
-          1.223,
-          1.12
+          0.442,
+          1.42,
+          0.561
         ]
       ],
       "audio": {
@@ -1064,7 +1082,7 @@
         "source": "original procedural audio (not ElevenLabs)"
       },
       "starter_model": "assets/models/starter/helios_sniper.glb",
-      "model_version": 2,
+      "model_version": 3,
       "triangles": 18672,
       "animation_clips": [
         "idle",
@@ -1073,7 +1091,10 @@
         "hit",
         "die"
       ],
-      "portrait": "assets/portraits/helios_sniper.png"
+      "portrait": "assets/portraits/helios_sniper.png",
+      "forge_model": "assets/models/forge/helios_sniper.glb",
+      "model_source": "Meshy AI (text-to-3D → refine → auto-rig → animation library), packed by tools/meshy",
+      "skinned": true
     },
     {
       "id": "orbital_commander",
@@ -1098,14 +1119,14 @@
       "model": "assets/models/orbital_commander.glb",
       "bounds": [
         [
-          -0.431,
-          -0.023,
-          -0.294
+          -0.626,
+          0,
+          -0.232
         ],
         [
-          0.431,
-          1.36,
-          0.59
+          0.443,
+          1.5,
+          0.35
         ]
       ],
       "audio": {
@@ -1117,7 +1138,7 @@
         "source": "original procedural audio (not ElevenLabs)"
       },
       "starter_model": "assets/models/starter/orbital_commander.glb",
-      "model_version": 2,
+      "model_version": 3,
       "triangles": 18480,
       "animation_clips": [
         "idle",
@@ -1126,7 +1147,10 @@
         "hit",
         "die"
       ],
-      "portrait": "assets/portraits/orbital_commander.png"
+      "portrait": "assets/portraits/orbital_commander.png",
+      "forge_model": "assets/models/forge/orbital_commander.glb",
+      "model_source": "Meshy AI (text-to-3D → refine → auto-rig → animation library), packed by tools/meshy",
+      "skinned": true
     },
     {
       "id": "scavenger_drone",
@@ -1310,14 +1334,14 @@
       "model": "assets/models/titan_breaker.glb",
       "bounds": [
         [
-          -1.057,
-          -0.076,
-          -0.718
+          -1.742,
+          0,
+          -0.46
         ],
         [
-          1.057,
-          2.25,
-          1.332
+          1.102,
+          2.6,
+          0.542
         ]
       ],
       "audio": {
@@ -1329,7 +1353,7 @@
         "source": "original procedural audio (not ElevenLabs)"
       },
       "starter_model": "assets/models/starter/titan_breaker.glb",
-      "model_version": 2,
+      "model_version": 3,
       "triangles": 18190,
       "animation_clips": [
         "idle",
@@ -1338,7 +1362,10 @@
         "hit",
         "die"
       ],
-      "portrait": "assets/portraits/titan_breaker.png"
+      "portrait": "assets/portraits/titan_breaker.png",
+      "forge_model": "assets/models/forge/titan_breaker.glb",
+      "model_source": "Meshy AI (text-to-3D → refine → auto-rig → animation library), packed by tools/meshy",
+      "skinned": true
     },
     {
       "id": "spectral_interceptor",

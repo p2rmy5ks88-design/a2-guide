@@ -6,6 +6,15 @@ const gun = { idle: ['shoot', 'hold', 0.35], move: ['move'], fire: ['shoot', 'up
 const JOBS = {
   aegis_trooper: { clips: gun, weapon: 'rifle', glow: '#3ce5ff', height: 1.45, aim: 'forward' },
   vesper_ranger: { clips: gun, weapon: 'rifle', glow: '#ff4fd8', height: 1.4, aim: 'forward', weaponScale: 1.15 },
+  cobalt_scout: { clips: gun, weapon: 'rifle', glow: '#7ff3ff', height: 1.35, aim: 'forward', weaponScale: 1.0 },
+  ember_striker: { clips: gun, weapon: 'flamer', glow: '#ff8a2a', height: 1.42, aim: 'forward', weaponScale: 1.3 },
+  helios_sniper: { clips: gun, weapon: 'sniper', glow: '#ffc14a', height: 1.42, aim: 'forward', weaponScale: 1.1 },
+  siege_gunner: { clips: gun, weapon: 'gatling', glow: '#ff9a3a', height: 1.5, aim: 'forward', weaponScale: 1.35 },
+  nova_engineer: { clips: gun, weapon: 'tool', glow: '#ffb347', height: 1.32, aim: 'forward', weaponScale: 1.4 },
+  bastion_guardian: { clips: gun, weapon: 'rifle', glow: '#ffd36e', height: 1.55, aim: 'forward', weaponScale: 1.0, shield: '#4aa8ff' },
+  rift_guardian: { clips: gun, weapon: 'rifle', glow: '#a46bff', height: 1.55, aim: 'forward', weaponScale: 1.0, shield: '#9b5cff' },
+  orbital_commander: { clips: gun, weapon: 'rifle', glow: '#3ce5ff', height: 1.5, aim: 'forward', weaponScale: 1.15 },
+  titan_breaker: { clips: gun, weapon: 'gatling', glow: '#ff4a3a', height: 2.6, aim: 'forward', weaponScale: 2.4 },
   sovereign_lyra: { clips: { idle: ['calm'], move: ['move'], fire: ['cast'], hit: ['hit'], die: ['die'] }, weapon: 'lance', glow: '#d78bff', height: 1.5, aim: 'up', weaponScale: 1.5 },
 };
 const ids = process.argv.slice(2).length ? process.argv.slice(2) : Object.keys(JOBS);

@@ -6,7 +6,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
-import { Rig, W } from '../forge/kit.js';
+import { Rig, W, G } from '../forge/kit.js';
 const loader = new GLTFLoader();
 const toB64 = (buf) => { let s = ''; const b = new Uint8Array(buf); for (let i = 0; i < b.length; i += 0x8000) s += String.fromCharCode.apply(null, b.subarray(i, i + 0x8000)); return btoa(s); };
 function shrink(tex, size) {
@@ -71,6 +71,22 @@ window.pack = async (id, base, cfg) => {
   holder.quaternion.copy(hq).invert().multiply(want); holder.scale.set(1 / hs.x, 1 / hs.y, 1 / hs.z);
   holder.add(wpn); wpn.scale.setScalar(cfg.weaponScale || 1.25); wpn.position.set(0, 0, cfg.aim === 'up' ? -0.35 : -0.16);
   hand.add(holder);
+  if (cfg.shield) { // hex energy shield on the left forearm, facing forward in the fire pose
+    const fa = scene.getObjectByName('LeftForeArm');
+    const sr = new Rig('s'); sr.node('shield');
+    sr.add('shield', G.hexShield(0.24, 0.035), '#2c3240', 'body', { rot: [0, Math.PI, 0] });
+    sr.add('shield', G.hexShield(0.2, 0.03), cfg.shield, 'glow', { pos: [0, 0, 0.012], rot: [0, Math.PI, 0] });
+    sr.add('shield', G.box(0.5, 0.03, 0.03, 0.01), '#d6a548', 'metal', { pos: [0, 0, 0.035] }); sr.build();
+    const sh = sr.nodes.shield; sh.removeFromParent();
+    const fq = new THREE.Quaternion(), fs = new THREE.Vector3(), fp = new THREE.Vector3(); fa.matrixWorld.decompose(fp, fq, fs);
+    const sock = new THREE.Group(); sock.name = 'shield_socket';
+    sock.quaternion.copy(fq).invert(); sock.scale.set(1 / fs.x, 1 / fs.y, 1 / fs.z);
+    const wq = new THREE.Quaternion(); sock.add(sh); sh.quaternion.copy(wq); sh.scale.setScalar(cfg.shieldScale || 1.2);
+    // push the shield in front of the forearm (world +Z) converted into forearm space
+    const off = new THREE.Vector3(0, 0, 0.12).applyQuaternion(fq.clone().invert()).divide(fs);
+    sock.position.copy(off);
+    fa.add(sock);
+  }
   mixer.stopAllAction();
   root.animations = Object.values(clips);
   const exporter = new GLTFExporter();
@@ -93,6 +109,7 @@ window.portrait = async (url) => {
   const m = g.scene; m.rotation.y = -0.35; scene.add(m);
   const mixer = new THREE.AnimationMixer(m); const idle = g.animations.find((a) => a.name === 'idle'); if (idle) { mixer.clipAction(idle).play(); mixer.update(0.4); }
   m.updateMatrixWorld(true);
+  const ss = m.getObjectByName('shield_socket'); if (ss) ss.visible = false;
   const head = m.getObjectByName('Head'); const hp = new THREE.Vector3(); head.getWorldPosition(hp);
   const cam = new THREE.PerspectiveCamera(30, PW / PH, 0.01, 100);
   const t = new THREE.Vector3(hp.x, hp.y - 0.17, hp.z); cam.position.set(t.x + 0.15, t.y + 0.12, t.z + 1.45); cam.lookAt(t);
