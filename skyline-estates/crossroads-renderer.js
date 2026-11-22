@@ -481,7 +481,7 @@ export function createCrossroadsRenderer(canvas,{rules,onTile}={}){
    new THREE.MeshBasicMaterial({color:'#e6ffff',transparent:true,opacity:.82,side:THREE.DoubleSide}));
   foam.rotation.x=-Math.PI/2;foam.position.set(dx,.157,dz);core.add(foam)}
 
- const facadeUpgradeSlots=[];
+ const facadeUpgradeSlots=[];let approvedFacades=0;
  for(const [x,z,stage,kind,scale]of[
   [-2.83,-1.70,3,'residential',.78],[-1.83,-2.23,4,'financial',.78],[-.9,-2.75,2,'residential',.70],
   [1.15,-2.72,4,'financial',.75],[2.70,-1.62,3,'residential',.76],
@@ -637,7 +637,7 @@ export function createCrossroadsRenderer(canvas,{rules,onTile}={}){
    approved.scale.setScalar(2.8*slot.scale);
    approved.position.set(slot.x,.10,slot.z);
    approved.rotation.y=Math.atan2(slot.x,slot.z);
-   core.add(approved);slot.house.visible=false;
+   core.add(approved);slot.house.visible=false;approvedFacades++;
   }
   dirty=true;for(const id in tileMeshes)tileMeshes[id].key=null;if(view)sync(view)}).catch(e=>console.warn('Crossroads building models',e));
  Promise.all(['financial_tower_crown','grand_boulevard_palace','financial_tower_spire'].map(f=>loader.loadAsync(base+'buildings/'+f+'.glb').then(x=>x.scene))).then(list=>{list.forEach((sc,k)=>{sc.traverse(o=>{if(o.isMesh)o.castShadow=true});lmProto[k]=fit(sc,[.5,.75,.5][k])});lmKey='';if(view)sync(view)}).catch(e=>console.warn('Crossroads landmark models',e));
@@ -757,4 +757,4 @@ export function createCrossroadsRenderer(canvas,{rules,onTile}={}){
   if(dirty){renderer.shadowMap.needsUpdate=true;dirty=false}renderer.render(scene,camera);frames++;if(now-fpsT>3000){const fps=frames*1000/(now-fpsT);measuredFps=Math.round(fps*10)/10;frames=0;fpsT=now;if(fps<28&&dpr>2){dpr=Math.max(2,dpr-.5);renderer.setPixelRatio(dpr);resize()}}}
  resize();overviewGoal();Object.assign(cam,{target:goal.target.clone(),yaw:goal.yaw,pitch:goal.pitch,dist:goal.dist});requestAnimationFrame(loop);
  return{setFrameBias(v){frameBias=v;refreshGoal()},sync,moveToken,follow,focusTile,overview,highlight,resize,
-  stats:()=>({dpr,maxDpr,cssWidth:canvas.clientWidth,cssHeight:canvas.clientHeight,drawWidth:canvas.width,drawHeight:canvas.height,measuredFps,triangles:renderer.info.render.triangles,mode,zoom:userZoom,camDist:cam.dist,goalDist:goal.dist,camYaw:cam.yaw,camPitch:cam.pitch,cameraUp:camera.up.toArray(),layout:'classic-circular',environment:'harbour-terrace',followBias:'inward',vistaTowers:terrace.vistaTowers,titleNdcY:terrace.marquee.position.clone().project(camera).y,landmarksDetailed:livingCity.landmarks,ambientTraffic:livingCity.trafficCount,premiumPalms:premiumCity.palms,promenadeLights:premiumCity.lights,diameter:RIM*2,perimeterTiles:ringOrder.length,tiles:Object.keys(tileMeshes).length,tokens:tokens.length,landmarks:lmGroup.children.length}),mode:()=>mode,dispose(){running=false;renderer.dispose()}}}
+  stats:()=>({dpr,maxDpr,cssWidth:canvas.clientWidth,cssHeight:canvas.clientHeight,drawWidth:canvas.width,drawHeight:canvas.height,measuredFps,triangles:renderer.info.render.triangles,mode,zoom:userZoom,camDist:cam.dist,goalDist:goal.dist,camYaw:cam.yaw,camPitch:cam.pitch,cameraUp:camera.up.toArray(),layout:'classic-circular',environment:'harbour-terrace',followBias:'inward',vistaTowers:terrace.vistaTowers,titleNdcY:terrace.marquee.position.clone().project(camera).y,landmarksDetailed:livingCity.landmarks,ambientTraffic:livingCity.trafficCount,premiumPalms:premiumCity.palms,promenadeLights:premiumCity.lights,approvedFacades,diameter:RIM*2,perimeterTiles:ringOrder.length,tiles:Object.keys(tileMeshes).length,tokens:tokens.length,landmarks:lmGroup.children.length}),mode:()=>mode,dispose(){running=false;renderer.dispose()}}}
