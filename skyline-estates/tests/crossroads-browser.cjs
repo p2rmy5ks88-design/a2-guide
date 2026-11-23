@@ -110,12 +110,15 @@ let n=0;const ok=m=>{n++;console.log('PASS',m)};
   await p.evaluate(()=>{const st=document.documentElement.style;for(const v of ['--sl','--sr','--sb'])st.removeProperty(v)});
   await p.setViewportSize({width:844,height:390});
 
+  // Software WebGL renders slowly: run token animations quickly so the whole match fits the time budget.
+  await p.evaluate(()=>{try{__cc.renderer.setSpeed(.15)}catch(e){}});
   let shots=0;const seen={};const t0=Date.now();
-  while(Date.now()-t0<480000){const st=await p.evaluate(()=>{const s=__cc.state(),pd=__cc.rules.pending(s);return{over:s.over,kind:pd.kind,mine:(pd.kind==='trade'?pd.to:pd.pid)===0,busy:__cc.busy(),panel:!document.getElementById('decision').hidden}});
+  while(Date.now()-t0<660000){const st=await p.evaluate(()=>{const s=__cc.state(),pd=__cc.rules.pending(s);return{over:s.over,kind:pd.kind,mine:(pd.kind==='trade'?pd.to:pd.pid)===0,busy:__cc.busy(),panel:!document.getElementById('decision').hidden}});
    if(st.over)break;
    if(st.mine&&!st.busy){seen[st.kind]=(seen[st.kind]||0)+1;if(!['roll','action','dealDesk'].includes(st.kind)){assert.equal(st.panel,true,'decision panel shown for '+st.kind);if(shots<3){await p.screenshot({path:path.join(out,`${engine}-decision-${st.kind}-${shots++}.png`)})}}
     if(st.kind==='roll'){await p.click('#mainBtn')}else await p.evaluate(()=>{const s=__cc.state();__cc.act(0,__cc.rules.ai(s,0))})}
    await p.waitForTimeout(100)}
+  if(!await p.evaluate(()=>__cc.state().over))console.log('DBG',await p.evaluate(()=>{const s=__cc.state();return JSON.stringify({turns:s.players.map(p=>p.turns),pd:__cc.rules.pending(s),busy:__cc.busy()})}),JSON.stringify(seen));
   assert.ok(await p.evaluate(()=>__cc.state().over),'match finished');ok('a complete Quick match plays through the page ('+Object.entries(seen).map(([k,v])=>k+' '+v).join(', ')+')');
   await p.waitForSelector('#results:not([hidden])');await p.screenshot({path:path.join(out,engine+'-results.png')});
   const fact=await p.evaluate(()=>{const k=Object.keys(localStorage).find(k=>k.startsWith('skylineCareerInbox:'));return k&&JSON.parse(localStorage.getItem(k))});

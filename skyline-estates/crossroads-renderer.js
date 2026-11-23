@@ -585,7 +585,7 @@ export function createCrossroadsRenderer(canvas,{rules,onTile}={}){
   const outward=radial(mid,1),tangent=new THREE.Vector3(-outward.z,0,outward.x);
   tileMeshes[id]={grp,face,ring,glow,building:null,loop:t.loop||null};
   tileInfo[id]={pos:radial(mid,R_MID),outer:radial(mid,R_OUT-.25),
-   inner:radial(mid,R_MID-.38),build:radial(mid,R_IN-.17),
+   inner:radial(mid,R_MID-.38),build:radial(mid,R_IN+.22),
    perp:outward.clone().negate(),dir:tangent,center:new THREE.Vector3(0,0,0)};
  }
  // Grand Exchange is a real selectable tile in the central civic plaza and the
@@ -625,7 +625,7 @@ export function createCrossroadsRenderer(canvas,{rules,onTile}={}){
   }
   const arch=new THREE.Mesh(new THREE.TorusGeometry(.78,.046,12,56,Math.PI),gold);
   arch.position.set(0,.20,-5.25);arch.castShadow=true;scene.add(arch);
-   meshyModel('hub_skybridge').then(sc=>{if(!sc)return;arch.visible=false;const sb=fitted(sc,1.7);sb.position.set(0,.06,-5.25);scene.add(sb);window.dispatchEvent(new Event('skyline-meshy'))})}
+   meshyModel('hub_skybridge').then(sc=>{if(!sc)return;arch.visible=false;const sb=fitted(sc,.95);sb.position.set(0,.06,-6.35);scene.add(sb);window.dispatchEvent(new Event('skyline-meshy'))})}
  
  const livingCity=installCrossroadsLivingCity(core,classic);
  const premiumCity=installCrossroadsPremiumCity(core,classic);
@@ -749,7 +749,7 @@ function makeTokenBuilt(color,kind){const g=new THREE.Group(),m=new THREE.Group(
   for(const t of TILES){const T=tileMeshes[t.id];if(!T||T.hub)continue;const o=v.own[t.id];const key=o?o.owner+':'+(o.stage||0)+':'+(o.mortgaged?1:0)+':'+proto.length:'';if(T.key===key)continue;T.key=key;
    if(T.building){scene.remove(T.building);T.building=null}
    if(o){const col=v.players[o.owner].color||PLAYER_COLORS[o.owner];T.ring.visible=true;T.ring.material.color.set(col);T.ring.material.emissive=new THREE.Color(col);T.ring.material.emissiveIntensity=.35;
-    if(t.type==='property'){const b=building(o.stage||0,CC.GROUP_COLORS[t.group]);const at=tileInfo[t.id].build;b.position.set(at.x,.125,at.z);b.rotation.y=yawAt(t.id,tileInfo[t.id].pos);scene.add(b);T.building=b}
+    if(t.type==='property'){const b=building(o.stage||0,CC.GROUP_COLORS[t.group]);const at=tileInfo[t.id].build;b.position.set(at.x,.135,at.z);b.rotation.y=yawAt(t.id,tileInfo[t.id].pos);scene.add(b);T.building=b}
     T.face.material.color.set(o.mortgaged?'#8a8a8a':'#ffffff');/* Unlit text remains readable; mortgage tint uses material.color. */}else{T.ring.visible=false;T.face.material.color.set('#ffffff');/* Unlit face returns to full readable contrast. */}}
   syncLandmarks(v.landmarks||[],v.players);dirty=true}
  function placeTokens(){const counts={};tokens.forEach((t,k)=>{if(t&&view.players[k]&&!view.players[k].out)counts[t.tile]=(counts[t.tile]||0)+1});
