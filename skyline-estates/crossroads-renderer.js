@@ -4,6 +4,7 @@
    Only Crossroads rendering changes; all other boards and the Classic mode remain untouched. */
 import * as THREE from './lib/three.module.min.js';
 import {GLTFLoader} from './lib/GLTFLoader.js';
+import {dressToken,meshyModel,fitted,landmarkFile} from './lib/meshy-assets.js';
 import {createMiniatures} from './presentation/production-miniatures.js';
 export const PLAYER_COLORS=['#d63f51','#2c7fd4','#2bb875','#8e5cdc'];
 const ART='./assets/crossroads/';
@@ -245,6 +246,7 @@ function installCrossroadsLivingCity(core,classic){
  for(const x of[-.55,-.35,.35,.55])b(gold,x,.32,.265,.038,.24,.028);
  for(let i=0;i<3;i++)b(ivory,0,.015,.64+i*.14,1.25-i*.12,.027,.13);
  const hallSign=sign('CITY HALL',.81,.16);hallSign.position.set(0,.585,.41);town.add(hallSign);
+  meshyModel('hub_city_hall').then(sc=>{if(!sc)return;const keep=new Set([hallSign]);town.children.slice().forEach(c=>{if(!keep.has(c))c.visible=false});const hall=fitted(sc,1.55,{yaw:0});town.add(hall);hallSign.position.set(0,.98,.62);window.dispatchEvent(new Event('skyline-meshy'))});
  // A second recognizable landmark: gold-and-blue domed Civic Center.
  const civicSign=sign('CIVIC CENTER',.89,.15);
  civicSign.position.set(2.35,.71,1.19);core.add(civicSign);
@@ -410,7 +412,7 @@ export function createCrossroadsRenderer(canvas,{rules,onTile}={}){
  scene.add(new THREE.HemisphereLight('#fff6ea','#4a3524',.77));
  const sun=new THREE.DirectionalLight('#fff0d8',1.55);sun.position.set(-7,15,10);sun.castShadow=true;sun.shadow.mapSize.set(1536,1536);Object.assign(sun.shadow.camera,{left:-11,right:11,top:8,bottom:-8,near:1,far:45});sun.shadow.bias=-.0006;scene.add(sun);
  const lamp=new THREE.PointLight('#ffc27a',8,24,1.6);lamp.position.set(0,6,-7);scene.add(lamp);
- let dirty=true;
+ let dirty=true;addEventListener('skyline-meshy',()=>{dirty=true});
 
  // ---- circular, classic-sized Skyline tabletop: one perimeter, two route arcs ----
  // Crossroads retains its established Landmark Chase rules and route choices:
@@ -607,6 +609,7 @@ export function createCrossroadsRenderer(canvas,{rules,onTile}={}){
  }
  // Familiar 3D bridge, civic dome and celebratory details from Solo Play.
  {const civic=classic.civic();civic.position.set(2.35,.14,.72);civic.scale.setScalar(.73);core.add(civic);
+   meshyModel('hub_grand_exchange').then(sc=>{if(!sc)return;civic.visible=false;const dome=fitted(sc,1.0);dome.position.set(2.35,.14,.72);core.add(dome);window.dispatchEvent(new Event('skyline-meshy'))});
   const bridge=classic.bridge(1.52,.50);bridge.position.set(0,.16,-1.70);core.add(bridge);
   // Landmark cable-stayed mast and tension cables: visual-only 3D geometry.
   const mast=new THREE.Mesh(new THREE.CylinderGeometry(.045,.060,1.55,12),classic.mats.ivory);
@@ -621,7 +624,8 @@ export function createCrossroadsRenderer(canvas,{rules,onTile}={}){
    stays.add(cable)
   }
   const arch=new THREE.Mesh(new THREE.TorusGeometry(.78,.046,12,56,Math.PI),gold);
-  arch.position.set(0,.20,-5.25);arch.castShadow=true;scene.add(arch)}
+  arch.position.set(0,.20,-5.25);arch.castShadow=true;scene.add(arch);
+   meshyModel('hub_skybridge').then(sc=>{if(!sc)return;arch.visible=false;const sb=fitted(sc,1.7);sb.position.set(0,.06,-5.25);scene.add(sb);window.dispatchEvent(new Event('skyline-meshy'))})}
  
  const livingCity=installCrossroadsLivingCity(core,classic);
  const premiumCity=installCrossroadsPremiumCity(core,classic);
@@ -674,18 +678,20 @@ export function createCrossroadsRenderer(canvas,{rules,onTile}={}){
  function building(stage,color){if(!proto[stage])loadStage(stage);if(proto[stage]){const g=new THREE.Group(),m=proto[stage].clone(true);g.add(m);const pad=new THREE.Mesh(new THREE.CylinderGeometry(.21,.21,.02,32),new THREE.MeshStandardMaterial({color,roughness:.5}));pad.position.y=.01;g.add(pad);m.position.y=.02;return g}
   const g=new THREE.Group(),h=.12+stage*.11,b=new THREE.Mesh(new THREE.BoxGeometry(.24,h,.24),new THREE.MeshStandardMaterial({color,map:winTex}));b.position.y=h/2;b.castShadow=true;g.add(b);return g}
  const LM_SLOTS=[[CW,-.75,-.35],[CE,.75,-.35],[CW,.65,.6],[CE,-.65,.6],[CW,-.6,.85],[CE,.6,.85],[CW,.25,-1.0],[CE,-.25,-1.0]];let lmKey='',lmGroup=new THREE.Group();scene.add(lmGroup);
- function syncLandmarks(list,players){if(list.length&&!lmProto.length)loadLandmarkModels();const key=JSON.stringify(list)+lmProto.length;if(key===lmKey)return;lmKey=key;lmGroup.clear();
+ const lmMeshy={};function lmModel(name){const f=landmarkFile(name);if(!(f in lmMeshy)){lmMeshy[f]=null;meshyModel(f).then(sc=>{lmMeshy[f]=sc?fitted(sc,.62):false;lmKey='';dirty=true;if(view)sync(view)})}return lmMeshy[f]}
+ function syncLandmarks(list,players){if(list.length&&!lmProto.length)loadLandmarkModels();list.forEach(l=>lmModel(l.landmark));const key=JSON.stringify(list)+lmProto.length+Object.values(lmMeshy).filter(Boolean).length;if(key===lmKey)return;lmKey=key;lmGroup.clear();
   list.slice(-LM_SLOTS.length).forEach((l,k)=>{const [c,dx,dz]=LM_SLOTS[k],g=new THREE.Group(),col=players[l.pid].color;g.position.set(c.x+dx,.01,c.z+dz);
    const plinth=new THREE.Mesh(new THREE.CylinderGeometry(.34,.38,.08,48),gold);plinth.position.y=.04;plinth.castShadow=true;g.add(plinth);
    const band=new THREE.Mesh(new THREE.TorusGeometry(.36,.025,8,48),new THREE.MeshStandardMaterial({color:col,emissive:col,emissiveIntensity:.5}));band.rotation.x=Math.PI/2;band.position.y=.06;g.add(band);
-   const m=lmProto.length?lmProto[k%lmProto.length].clone(true):new THREE.Mesh(new THREE.ConeGeometry(.2,.6,6),gold);m.position.y=lmProto.length?.08:.38;g.add(m);
+   const mm=lmMeshy[landmarkFile(l.landmark)];const m=mm?mm.clone(true):lmProto.length?lmProto[k%lmProto.length].clone(true):new THREE.Mesh(new THREE.ConeGeometry(.2,.6,6),gold);m.position.y=mm?.08:lmProto.length?.08:.38;g.add(m);
    const lab=labelSprite(l.landmark,col);lab.position.y=1.15;g.add(lab);lmGroup.add(g)});dirty=true}
 
  // ---- tokens ----
  const tokens=[];function rebuildTokens(){tokens.forEach((t,k)=>{if(!t||!view)return;const p=view.players[k];if((p.token||'')!=='boat')return;const pos=t.g.position.clone(),rot=t.g.rotation.y;scene.remove(t.g);t.g=makeToken(p.color||PLAYER_COLORS[k],'boat');t.g.position.copy(pos);t.g.rotation.y=rot;scene.add(t.g)});dirty=true}
  // Detailed collectible game pieces (owner request 20 Nov 2026): clear-coated enamel in the player colour on a
  // polished chrome plinth with a colour ring. Sailboat uses the approved yacht model.
- function makeToken(color,kind){const g=new THREE.Group(),m=new THREE.Group();g.add(m);
+ function makeToken(color,kind){const g=makeTokenBuilt(color,kind);dressToken(g,kind,()=>{window.dispatchEvent(new Event('skyline-meshy'))});return g}
+function makeTokenBuilt(color,kind){const g=new THREE.Group(),m=new THREE.Group();g.add(m);
   const enamel=new THREE.MeshPhysicalMaterial({color,metalness:.25,roughness:.22,clearcoat:1,clearcoatRoughness:.08}),
    chrome=new THREE.MeshStandardMaterial({color:'#e9e6df',metalness:1,roughness:.14}),gold=new THREE.MeshStandardMaterial({color:'#e2b25a',metalness:1,roughness:.22}),
    glass=new THREE.MeshPhysicalMaterial({color:'#1b2a3d',metalness:.2,roughness:.05,clearcoat:1}),dark=new THREE.MeshStandardMaterial({color:'#17191d',roughness:.55}),

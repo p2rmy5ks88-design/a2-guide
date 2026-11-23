@@ -4,6 +4,7 @@
    camera_spec.json: ~46° pitch, critically damped, eases round the hex corners, pinch zoom, drag to look around. */
 import * as THREE from './lib/three.module.min.js';
 import {GLTFLoader} from './lib/GLTFLoader.js';
+import {dressToken,meshyModel,fitted,landmarkFile} from './lib/meshy-assets.js';
 
 const ART='./assets/city-ventures/board-art.jpg';
 // Corner badge centres in the approved 1254 px artwork (START bottom, then clockwise as indexed).
@@ -170,7 +171,8 @@ function buildingModel(stage,color){if(proto[stage]){const g=new THREE.Group(),m
  const tokens=[];function rebuildTokens(){tokens.forEach((t,k)=>{if(!t||!view)return;const p=view.players[k];if((p.token||'')!=='boat')return;const pos=t.g.position.clone(),rot=t.g.rotation.y;scene.remove(t.g);t.g=makeToken(p.color||PLAYER_COLORS[k],'boat');t.g.position.copy(pos);t.g.rotation.y=rot;scene.add(t.g)});dirty=true}
  // Detailed collectible game pieces (owner request 20 Nov 2026): clear-coated enamel in the player colour on a
  // polished chrome plinth with a colour ring. Sailboat uses the approved yacht model.
- function makeToken(color,kind){const g=new THREE.Group(),m=new THREE.Group();g.add(m);
+ function makeToken(color,kind){const g=makeTokenBuilt(color,kind);dressToken(g,kind,()=>{window.dispatchEvent(new Event('skyline-meshy'))});return g}
+function makeTokenBuilt(color,kind){const g=new THREE.Group(),m=new THREE.Group();g.add(m);
   const enamel=new THREE.MeshPhysicalMaterial({color,metalness:.25,roughness:.22,clearcoat:1,clearcoatRoughness:.08}),
    chrome=new THREE.MeshStandardMaterial({color:'#e9e6df',metalness:1,roughness:.14}),gold=new THREE.MeshStandardMaterial({color:'#e2b25a',metalness:1,roughness:.22}),
    glass=new THREE.MeshPhysicalMaterial({color:'#1b2a3d',metalness:.2,roughness:.05,clearcoat:1}),dark=new THREE.MeshStandardMaterial({color:'#17191d',roughness:.55}),
@@ -210,7 +212,7 @@ function buildingModel(stage,color){if(proto[stage]){const g=new THREE.Group(),m
 
  // ---- camera ----
  const cam={target:new THREE.Vector3(0,0,1),yaw:0,pitch:THREE.MathUtils.degToRad(46),dist:6.2},goal={target:new THREE.Vector3(0,0,1),yaw:0,pitch:cam.pitch,dist:6.2};
- let pinned=false,frameBias=.2,mode='follow',followPid=0,userZoom=1,userYaw=0,pushIn=1,dirty=true,lastT=performance.now();
+ let pinned=false,frameBias=.2,mode='follow',followPid=0,userZoom=1,userYaw=0,pushIn=1,dirty=true,lastT=performance.now();addEventListener('skyline-meshy',()=>{dirty=true});
  function yawFor(p){return Math.atan2(p.x,p.z)}
  function overviewGoal(){goal.target.set(0,0,.85);goal.yaw=0;goal.pitch=THREE.MathUtils.degToRad(57);const a=camera.aspect||1.9;goal.dist=Math.max(13.5,13.5*1.55/a)*1.02}
  function followGoal(p){const pos=p.clone();const out=pos.clone().setY(0).normalize();goal.target.copy(pos.clone().add(out.multiplyScalar(frameBias)));goal.yaw=yawFor(pos)+userYaw;goal.pitch=THREE.MathUtils.degToRad(44);goal.dist=4.7*userZoom/pushIn}
