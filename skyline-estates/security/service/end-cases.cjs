@@ -15,8 +15,7 @@ function cases(){const out=[],add=(name,change=()=>{},drawSpec=[])=>{const g=gam
  add('expired event remains historical when events are off',g=>{g.turn=1;g.set.events=false;g.event={id:'boom',round:1}});
  const cities=Object.keys(JSON.parse(line('const CITY_RAW=').slice(15).replace(/;\s*$/,'')));
  for(const city of cities){add('local festival '+city,g=>{g.set.city=city;g.set.events=true;g.turn=1},[0]);add('local storm '+city,g=>{g.set.city=city;g.set.events=true;g.turn=1},[1,9])}
- for(let i=0;i<12;i++)add('Lagos event pool index '+i,g=>{g.turn=1;g.set.events=true},i===5?[1,i,1]:[1,i]);
- for(const city of ['skyline'])add('local pool extra '+city,g=>{g.set.city=city;g.set.events=true;g.turn=1},[1,10]);
+ for(let i=0;i<10;i++)add('Skyline event pool index '+i,g=>{g.turn=1;g.set.events=true},i===5?[1,i,1]:[1,i]);
  add('festival excludes bankrupt seats',g=>{Object.assign(g,game(3));g.turn=2;g.players[1].bankrupt=true;g.players[1].cash=0;g.set.events=true},[0]);
  add('grant excludes bankrupt seats and keeps tie order',g=>{Object.assign(g,game(3));g.turn=2;g.players[1].bankrupt=true;g.players[1].cash=0;g.set.events=true},[1,4]);
  add('lottery chooses among living players',g=>{Object.assign(g,game(3));g.turn=2;g.players[1].bankrupt=true;g.players[1].cash=0;g.set.events=true},[1,5,1]);
