@@ -1156,8 +1156,6 @@ html.light .swc b{color:#7A5200}
 .avf::after{content:'';position:absolute;inset:-3px;border-radius:50%;z-index:-2;background:conic-gradient(transparent 0 72%,rgba(255,255,255,.85) 80%,transparent 88%);animation:avspin 2.4s linear infinite;filter:blur(1.5px)}
 .avf>.rav,.avf>.pav{box-shadow:none!important;margin:0}
 .avf.fr-city{filter:drop-shadow(0 0 5px color-mix(in srgb,var(--a) 60%,transparent))}
-.avf.fr-prism::before{background:conic-gradient(#FF3F6C,#FFB02E,#6BE38B,#3FD0FF,#8F3FD8,#FF3F6C);animation-duration:2.6s}
-.avf.fr-prism{filter:drop-shadow(0 0 7px rgba(143,63,216,.65))}
 .avf.fr-crown::before{background:conic-gradient(#FFF6D6,#E2B13C,#9A6F10,#F3CF76,#FFF6D6)}
 .avf.fr-crown{filter:drop-shadow(0 0 9px rgba(226,181,74,.8))}
 .avcrown{position:absolute;top:-9px;left:50%;transform:translateX(-50%);width:22px;height:13px;background:linear-gradient(180deg,#FFF2C2,#E2B13C);clip-path:polygon(0 100%,0 25%,25% 60%,50% 0,75% 60%,100% 25%,100% 100%);z-index:2}
@@ -3846,7 +3844,7 @@ function syncAudio(){if(!AC)return;const b=buses();b.m.gain.setTargetAtTime(PREF
   PREF.audio.amb?startAmb():stopAmb();PREF.audio.radio?startRadio():stopRadio();renderRadioPill()}
 document.addEventListener('visibilitychange',()=>{if(!AC)return;try{document.hidden?AC.suspend():AC.resume()}catch(e){}});
 async function openSound(){
-  const rows=[['sfx','Game sounds','Dice, coins, footsteps on the board.'],['amb','Street ambience','Crowd chatter, traffic, birds or rain to match the city.'],['radio','Skyline FM','One station for every city: a shuffled, DJ-blended mix of 13 Kenstylez tracks.']];
+  const rows=[['sfx','Game sounds','Dice, coins, footsteps on the board.'],['amb','Street ambience','Crowd chatter, traffic, birds or rain to match the city.'],['radio','Skyline FM','One station on every board: a shuffled, DJ-blended mix of 13 Kenstylez tracks.']];
   initAudio();
   await modal({cls:'wide',html:`<div class="mh">Sound</div><div class="rchips" id="sndChips"></div><label class="vol"><span>Volume</span><input type="range" id="sndVol" min="0" max="1" step="0.05"></label><div class="olrow"><button class="btn" id="sndSkip">Next track</button><span class="mtxt muted">On iPhone, flip the silent switch off and turn the volume up.</span></div>`,btns:[{k:'x',label:'Done',primary:true}],onMount:(pn)=>{
     const draw=()=>{const E=pn.querySelector('#sndChips');E.innerHTML='';rows.forEach(([k,l,d])=>{const b=el('button','rchip'+(PREF.audio[k]?' on':''),`<b>${l}</b><small>${d}</small>`);b.setAttribute('aria-pressed',PREF.audio[k]?'true':'false');b.onclick=()=>{PREF.audio[k]=!PREF.audio[k];savePref();syncAudio();draw()};E.append(b)})};draw();
@@ -4103,11 +4101,7 @@ const ACH=[
   {id:'quick',name:'Speed Dealer',desc:'Win a Quick deal game.',goal:1,reward:{coins:100}},
   {id:'timed',name:'Beat the Clock',desc:'Win a Round limit game.',goal:1,reward:{coins:100}},
   {id:'countries3',name:'Passport Stamps',desc:'Finish 10 games.',goal:10,s:'games',reward:{coins:150,token:'⛵'}},
-  {id:'countries8',name:'Frequent Flyer',desc:'Finish 25 games.',goal:25,s:'games',reward:{coins:400,token:'✈️'}},
-  {id:'globetrotter',name:'Globetrotter',desc:'Finish games in all 18 countries.',goal:18,s:'countries',reward:{coins:1000,surr:'ice'}},
-  {id:'cities10',name:'City Hopper',desc:'Finish games in 10 cities.',goal:10,s:'cities',reward:{coins:250}},
-  {id:'worldtour',name:'World Tour',desc:'Finish a game in every city.',goal:31,s:'cities',reward:{coins:1500}},
-  {id:'wincountries5',name:'World Champion',desc:'Win in 5 different countries.',goal:5,s:'winCountries',reward:{coins:500}},
+  {id:'countries8',name:'Frequent Flyer',desc:'Finish 25 games.',goal:25,s:'games',reward:{coins:400,token:'✈️',surr:'ice'}},
   {id:'medal',name:'Medallist',desc:'Earn a Bronze city medal.',goal:1,reward:{coins:100}},
   {id:'gold',name:'Gold Standard',desc:'Earn a Gold city medal.',goal:1,reward:{coins:400}},
   {id:'level10',name:'Rising Star',desc:'Reach level 10.',goal:10,s:'level',reward:{coins:300}},
@@ -4143,8 +4137,8 @@ const TIER_INFO={b:['Bronze','🥉',15],s:['Silver','🥈',30],g:['Gold','🥇',
 ACH.forEach(a=>a.tier=TROPHY_TIER[a.id]||'b');
 function trophyCount(){const n={b:0,s:0,g:0,p:0};ACH.forEach(a=>{if(achDone(a))n[a.tier]++});return n}
 function trophyPoints(){return ACH.filter(achDone).reduce((s,a)=>s+TIER_INFO[a.tier][2],0)}
-PREF.ach=PREF.ach||{};PREF.stats=Object.assign({wins:0,games:0,deals:0,quiz:0,winCities:[],playedCities:[],playedCountries:[],winCountries:[],onlineGames:0,onlineWins:0,streakBest:0},PREF.stats||{});
-function statVal(s){const st=PREF.stats;switch(s){case'wins':return st.wins;case'games':return st.games;case'deals':return st.deals;case'quiz':return st.quiz||0;case'countries':return st.playedCountries.length;case'cities':return st.playedCities.length;case'winCountries':return st.winCountries.length;
+PREF.ach=PREF.ach||{};PREF.stats=Object.assign({wins:0,games:0,deals:0,quiz:0,onlineGames:0,onlineWins:0,streakBest:0},PREF.stats||{});
+function statVal(s){const st=PREF.stats;switch(s){case'wins':return st.wins;case'games':return st.games;case'deals':return st.deals;case'quiz':return st.quiz||0;
   case'level':return lvlOf(PREF.xp);case'onlineGames':return st.onlineGames;case'onlineWins':return st.onlineWins;case'streak':return Math.max(st.streakBest||0,typeof streakNow==='function'?streakNow():0);case'tokLv':return Math.max(1,...Object.values(PREF.tokLv));case'seasonTier':return typeof seasonTierNow==='function'?seasonTierNow():0;case'cards':return st.cards||0;case'auctions':return st.auctions||0;case'chars':return typeof CHARS==='undefined'?0:CHARS.filter(c=>c.unlock&&c.id!=='nova'&&charUnlocked(c.id)).length;case'allTrophies':return ACH.every(a=>a.id==='platinum'||achDone(a))?1:0}return 0}
 function achProg(a){return a.s?statVal(a.s):(PREF.ach[a.id]?a.goal:0)}
 const achDone=a=>!!PREF.ach[a.id];
@@ -4164,10 +4158,10 @@ function achScan(){if(!trackable())return;for(const p of localHumans()){
   if(RAILS.every(i=>G.own[i].o===p.id))achAward('transport');if(UTILS.every(i=>G.own[i].o===p.id))achAward('utils');
   if(netWorth(p)>=3000)achAward('billion');if((p.jailCount||0)>=3)achAward('jail3');
   const s=p.st||{};if((s.maxRent||0)>=500)achAward('rent500');if(s.bankrupted)achAward('takeover');if((s.bankrupted||0)>=3)achAward('takeover3');if(s.aucCheap)achAward('auction');if(Object.keys(GROUPS).filter(g=>ownsAll(p.id,g)).length>=3)achAward('sets3');if(propsOf(p.id).length>=10)achAward('land10');if(propsOf(p.id).filter(i=>G.own[i].m).length>=5)achAward('paper');if(s.dbl3)achAward('speeding')}}
-function achGameEnd(winner){if(!trackable()||G.achDone)return;G.achDone=true;const hum=ownerHumans();if(!hum.length)return;const st=PREF.stats,c=G.set.city||'skyline',cc=countryOf(c).key;const won=winner&&hum.includes(winner);
-  st.games++;if(!st.playedCities.includes(c))st.playedCities.push(c);if(!st.playedCountries.includes(cc))st.playedCountries.push(cc);if(G.online){st.onlineGames++;if(won)st.onlineWins++}
+function achGameEnd(winner){if(!trackable()||G.achDone)return;G.achDone=true;const hum=ownerHumans();if(!hum.length)return;const st=PREF.stats;const won=winner&&hum.includes(winner);
+  st.games++;if(G.online){st.onlineGames++;if(won)st.onlineWins++}
   {const rk=['ffa','events','speedDie','pot','goDouble','jailRent'].filter(k=>G.set[k]).length+(G.set.minigames?1:0);if(rk>=4)achAward('rules4')}
-  if(won){const me=winner,ms=me.st||{};if(!ms.houses&&!ms.hotels)achAward('nohouse');if(ms.minCash!=null&&ms.minCash<100)achAward('comeback');if(G.set.mode==='classic'&&G.round<25)achAward('blitz');st.wins++;if(!st.winCities.includes(c))st.winCities.push(c);if(!st.winCountries.includes(cc))st.winCountries.push(cc);if(FFA())achAward('ffa_win');if(G.set.mode==='quick')achAward('quick');if(G.set.mode==='timed')achAward('timed')}
+  if(won){const me=winner,ms=me.st||{};if(!ms.houses&&!ms.hotels)achAward('nohouse');if(ms.minCash!=null&&ms.minCash<100)achAward('comeback');if(G.set.mode==='classic'&&G.round<25)achAward('blitz');st.wins++;if(FFA())achAward('ffa_win');if(G.set.mode==='quick')achAward('quick');if(G.set.mode==='timed')achAward('timed')}
   savePref();achBump()}
 
 /* ================= NEW TOKEN MODELS ================= */
@@ -4385,7 +4379,7 @@ const SURROUND_PREMIUM=[
   {id:'neon',name:'Neon Night',icon:'🌃',desc:'A glowing grid city at midnight. Lines of light all the way to the horizon.',price:1500,unlock:{league:'gold'},s:{base:'#120f2a',plinth:'#1c1840',plinthEm:.25,rim:'#ff3fa4',water:'#2a1050',waterEm:.35,em:.35,ops:[['neon','#36e6ff','#ff3fa4',4]]}},
   {id:'skydeck',name:'Sky Deck',icon:'☁️',desc:'Your board floats on a glass deck above the clouds.',price:1800,unlock:{season:30},s:{base:'#dfeefa',plinth:'#bfe2f6',plinthSpec:.9,rim:'#8fc6e8',water:'#bcdcf2',wave:0,ops:[['clouds']]}},
   {id:'lava',name:'Lava Isle',icon:'🌋',desc:'Black basalt cracked with glowing rivers of lava.',price:2000,unlock:{level:25},s:{base:'#2a2422',plinth:'#3a3230',rim:'#ff7a2a',water:'#ff6a1a',waterEm:.9,ops:[['speck',['#3a3230','#1f1a18','#4a403c'],60,.06,.3],['cracks','#ff8a2a',26],['lakesAll',[[-24,-20,6,4],[26,18,5,4],[-14,30,4,3],[30,-28,4,3]],'#5a2a14']]}},
-  {id:'ice',name:'Ice Palace',icon:'❄️',desc:'Frozen crystal plains with a sparkling ice plinth.',price:1400,unlock:{ach:'globetrotter'},s:{base:'#d6ecf8',plinth:'#bfe6fa',plinthSpec:1,rim:'#9fd2f0',water:'#7fc4e8',ops:[['speck',['#c6e4f6','#eaf6fc','#b4dcf2'],50,.08,.4],['cracks','#ffffff',30],['ice',0,0,40,40]]}},
+  {id:'ice',name:'Ice Palace',icon:'❄️',desc:'Frozen crystal plains with a sparkling ice plinth.',price:1400,unlock:{ach:'countries8'},s:{base:'#d6ecf8',plinth:'#bfe6fa',plinthSpec:1,rim:'#9fd2f0',water:'#7fc4e8',ops:[['speck',['#c6e4f6','#eaf6fc','#b4dcf2'],50,.08,.4],['cracks','#ffffff',30],['ice',0,0,40,40]]}},
   {id:'garden',name:'Royal Garden',icon:'🌹',desc:'Clipped hedge rings, rose beds and fountains.',price:1100,unlock:{level:15},s:{base:'#d8cfb8',plinth:'#e8e0cc',rim:'#bdb29a',water:'#4f8fb0',ops:[['hedges'],['fountain',-20,-20,2.6],['fountain',20,-20,2.6],['fountain',-20,20,2.6],['fountain',20,20,2.6]]}},
   {id:'lagoon',name:'Coral Lagoon',icon:'🐠',desc:'Turquoise shallows, white sandbars and coral gardens.',price:1300,unlock:{season:20},s:{base:'#f4ead0',plinth:'#f6efd8',rim:'#e6d8b0',water:'#2fd0c8',ops:[['speck',['#efe2c2','#faf4e2'],40,.04,.12],['lagoon']]}},
   {id:'confetti',name:'Carnival',icon:'🎉',desc:'Bright party tiles covered in confetti.',price:900,unlock:{level:6},s:{base:'#f4e6f0',plinth:'#ffd166',rim:'#ef476f',water:'#118ab2',ops:[['tiles',3,'#ffd6e8','#d6f0ff',12.6,90],['speck',['#ef476f','#ffd166','#06d6a0','#118ab2','#9b5de5'],35,.12,.3]]}}
@@ -5172,11 +5166,11 @@ function paneLearn(T){
     <div class="lcard"><i>📅</i><div><b>Seasons</b><p>Every 45 days a new season starts with 40 tiers of rewards and weekly challenges. All XP counts toward the season.</p></div></div>
     <div class="lcard"><i>🏆</i><div><b>Leagues</b><p>Win trophies to climb from Bronze to Legend and earn promotion rewards. The global leaderboard shows the top players each season.</p></div></div>
     <div class="lcard"><i>🎯</i><div><b>Daily missions</b><p>Three new missions every day pay XP and coins, with a bonus for finishing all three. Missions on back-to-back days build a streak.</p></div></div>
-    <div class="lcard"><i>👑</i><div><b>City Champion and frames</b><p>Earn all 15 awards in a city to become its Champion: coins, XP and an animated avatar frame. Five Champion cities add the Prism frame, all of them the Skyline Crown. Season frames come from the premium track.</p></div></div>
+    <div class="lcard"><i>👑</i><div><b>Board Champion and frames</b><p>Earn all 15 awards on the board to become its Champion: coins, XP, an animated avatar frame and the Skyline Crown. Season frames come from the premium track.</p></div></div>
     <div class="lcard"><i>🎨</i><div><b>Collection and cosmetics</b><p>Characters, tokens, frames, board styles, dice and finishes change how you look, never the rules. Finishes recolour your token, board styles change the scenery round the board, and dice sets change the dice you roll.</p></div></div>
     <div class="lcard"><i>🎁</i><div><b>New players</b><p>Your first launch includes a 500-coin welcome gift, this tutorial and a few tips during your first game. Replay the tutorial any time from the button at the top of this page.</p></div></div></div>`;
   const lt=T.querySelector('#lTut');if(lt)lt.onclick=()=>openTutorial(false)}
-function paneSettings(T){const rows=[['riders','Riders on tokens','Show each player’s character riding their token. Switch off on slower phones.'],['rig','Realistic riders','Lifelike characters with motion-captured gestures. Each one downloads once (about 2 MB). Switch off to save data.'],['sfx','Game sounds','Dice, coins and token movement.'],['amb','Street ambience','Crowd chatter, traffic, birds or rain to match the city.'],['radio','Skyline FM','One station for every city, playing a shuffled mix of 13 Kenstylez tracks.']];
+function paneSettings(T){const rows=[['riders','Riders on tokens','Show each player’s character riding their token. Switch off on slower phones.'],['rig','Realistic riders','Lifelike characters with motion-captured gestures. Each one downloads once (about 2 MB). Switch off to save data.'],['sfx','Game sounds','Dice, coins and token movement.'],['amb','Street ambience','Crowd chatter, traffic, birds or rain to match the city.'],['radio','Skyline FM','One station on every board, playing a shuffled mix of 13 Kenstylez tracks.']];
   const blocked=PREF.blocked||[];
   T.innerHTML=`<div class="phead"><h2>Settings</h2></div>
     <div class="card"><div class="ch">Sound</div><div class="rchips" id="sChips"></div><label class="vol"><span>Volume</span><input type="range" id="sVol" min="0" max="1" step="0.05"></label></div>
@@ -5275,7 +5269,7 @@ function bindCards(E,redraw){E.querySelectorAll('.icard[data-k]').forEach(c=>{co
   const u=c.querySelector('[data-a="eq"]');if(u)u.onclick=e=>{e.stopPropagation();equipItem(k,id);redraw()};
   const v=c.querySelector('[data-a="pv"]');if(v)v.onclick=e=>{e.stopPropagation();previewSurround(id)}})}
 /* the item page: a big look at the item, what it changes, and the coins before and after buying */
-const KIND_WHAT={fin:'Changes the colour and shine of your token on the board.',dice:'Changes how your dice look every time you roll.',surr:'Changes the land, water and plinth around the board in every city.'};
+const KIND_WHAT={fin:'Changes the colour and shine of your token on the board.',dice:'Changes how your dice look every time you roll.',surr:'Changes the land, water and plinth around the board.'};
 async function itemDetail(k,id,price,was,redraw){const it=itemOf(k,id);if(!it)return;const r=RAR[ITEM_RAR[k][id]||'R'],own=itemOwned(k,id),on=isEquipped(k,id),p=price||it.price||0,bal=PREF.coins,after=bal-p,short=after<0;
   const sum=own?`<div class="idown">${on?'You own this and it’s in use.':'You own this. Tap Use to switch to it.'}</div>`
     :p?`<div class="idsum"><span>Your coins<b>${COIN_I}${nfmt(bal)}</b></span><span>Price<b>${COIN_I}${was?`<s>${nfmt(was)}</s>`:''}${nfmt(p)}</b></span><span class="${short?'neg':'pos'}">${short?'You need':'After buying'}<b>${COIN_I}${nfmt(short?-after:after)}${short?' more':''}</b></span></div>`
@@ -5445,16 +5439,14 @@ function padStickScroll(ry,rx,dt){const inGame=G&&!G.over&&$('#title').hidden&&!
   if(Math.abs(ry)>.2)sc.scrollTop+=ry*dt*1100;if(Math.abs(rx)>.2)sc.scrollLeft+=rx*dt*1100;return true}
 
 /* ================= CITY CHAMPION REWARDS AND AVATAR FRAMES ================= */
-/* Earning all 15 awards in a city makes you its Champion: 2,000 coins, 1,000 XP and an animated avatar frame in
-   that country's colours. Five Champion cities add the Prism frame; all of them the Skyline Crown.
-   Each city's award page previews the frame you're playing for. */
-const CHAMP_COINS=2000,CHAMP_XP=1000,PRISM_AT=5,PRISM_COINS=3000,CROWN_COINS=10000;
+/* Earning all 15 awards on the board makes you its Champion: 2,000 coins, 1,000 XP, an animated avatar frame
+   and the Skyline Crown. The award page previews the frame you're playing for. */
+const CHAMP_COINS=2000,CHAMP_XP=1000,CROWN_COINS=10000;
 PREF.champ=PREF.champ||{};PREF.champM=PREF.champM||{};PREF.frameNew=PREF.frameNew||[];if(PREF.eq.frame===undefined)PREF.eq.frame='';
 const champCount=()=>Object.keys(PREF.champ).length;
 function frameDef(id){if(!id)return null;
   if(id==='gala'){const own=!!(PREF.inv.frame&&PREF.inv.frame.gala),t=typeof seasonTierNow==='function'&&season().prem?seasonTierNow():0;return{id,name:'Skyline Gala',cls:'fr-gala',how:'Premium Season pass, tier 40',own,coins:0,prog:[own?40:Math.min(40,t),40]}}
-  if(id==='prism')return{id,name:'Prism',cls:'fr-prism',how:`Become Champion of ${PRISM_AT} cities`,own:champCount()>=PRISM_AT,coins:PRISM_COINS,prog:[Math.min(PRISM_AT,champCount()),PRISM_AT]};
-  if(id==='crown')return{id,name:'Skyline Crown',cls:'fr-crown',how:`Become Champion of ${PLAY_CITIES.length===1?'Skyline International':'all '+PLAY_CITIES.length+' boards'}`,own:champCount()>=PLAY_CITIES.length,coins:CROWN_COINS,prog:[champCount(),CITY_ORDER.length]};
+  if(id==='crown')return{id,name:'Skyline Crown',cls:'fr-crown',how:`Become Champion of Skyline International`,own:champCount()>=PLAY_CITIES.length,coins:CROWN_COINS,prog:[champCount(),CITY_ORDER.length]};
   const c=id.slice(2);if(!CITY_DATA[c])return null;const cols=countryOf(c).cols||['#E2B54A','#FFFFFF'];
   return{id,city:c,name:`${CITY_DATA[c].name} Champion`,cls:'fr-city',st:`--a:${cols[0]};--b:${cols[1]||'#FFFFFF'};--c:${cols[2]||'#E2B54A'}`,how:`Earn all ${CT.length} awards in ${CITY_DATA[c].name}`,own:cityDone(c)>=CT.length,coins:CHAMP_COINS,xp:CHAMP_XP,prog:[cityDone(c),CT.length]}}
 const myFrame=()=>{const f=frameDef(PREF.eq.frame);return f&&f.own?f:null};
@@ -5463,7 +5455,7 @@ function framed(inner,f){if(f===undefined)f=myFrame();if(!f)return inner;return 
 function champCheck(live){let any=false;
   CITY_ORDER.forEach(c=>{if(cityDone(c)>=CT.length&&!PREF.champ[c]){PREF.champ[c]=Date.now();const nm=CITY_DATA[c].name;addCoins(CHAMP_COINS,`${nm} Champion`);addXP(CHAMP_XP,`${nm} Champion`);PREF.frameNew.push('c:'+c);any=true;
     if(live)achQ.push({name:`${nm} Champion`,medal:'👑',xp:CHAMP_XP,coins:CHAMP_COINS})}});
-  [['prism',PRISM_AT,PRISM_COINS],['crown',CITY_ORDER.length,CROWN_COINS]].forEach(([id,at,coins])=>{if(champCount()>=at&&!PREF.champM[id]){PREF.champM[id]=Date.now();addCoins(coins,`${frameDef(id).name} frame`);PREF.frameNew.push(id);any=true;
+  [['crown',CITY_ORDER.length,CROWN_COINS]].forEach(([id,at,coins])=>{if(champCount()>=at&&!PREF.champM[id]){PREF.champM[id]=Date.now();addCoins(coins,`${frameDef(id).name} frame`);PREF.frameNew.push(id);any=true;
     if(live)achQ.push({name:`${frameDef(id).name} frame`,medal:'👑',coins})}});
   if(any){savePref();if(live)achShow()}}
 function frameReveal(){if(!PREF.frameNew.length||$('#modals').children.length||$('#title').hidden)return;const id=PREF.frameNew.shift();savePref();const f=frameDef(id);if(!f){frameReveal();return}
@@ -5478,7 +5470,7 @@ function framePicker(){const ids=frameIds(),defs=ids.map(frameDef).filter(Boolea
   const next=defs.filter(f=>!f.own).sort((a,b)=>(b.prog[0]/b.prog[1])-(a.prog[0]/a.prog[1])).slice(0,Math.max(2,5-own.length));
   const chip=(f,lock)=>`<button class="frchip${lock?' lock':''}${(PREF.eq.frame||'')===(f?f.id:'')?' on':''}" data-f="${f?f.id:''}"${lock?' aria-disabled="true"':''} title="${esc(f?(lock?f.how:f.name):'No frame')}">${framed(`<span class="pav sm">${charSVG(myChar(),44)}</span>`,f||null)}<b>${esc(f?f.name.replace(' Champion',''):'None')}</b><small>${f?(lock?`${f.prog[0]}/${f.prog[1]}`:(PREF.eq.frame===f.id?'Wearing':'Owned')):(PREF.eq.frame?'':'Wearing')}</small></button>`;
   return `<div class="card frcard"><div class="ch">Avatar frame <small>Become a City Champion (all ${CT.length} awards in a city) to earn its frame</small></div><div class="frrow">${chip(null)}${own.map(f=>chip(f)).join('')}${next.map(f=>chip(f,true)).join('')}</div></div>`}
-const frameIds=()=>['gala','prism','crown'].concat(CITY_ORDER.map(c=>'c:'+c));
+const frameIds=()=>['gala','crown'].concat(CITY_ORDER.map(c=>'c:'+c));
 {const _pc=paneCast;paneCast=function(T){_pc(T);const pv=T.querySelector('.profcard .pav');if(pv&&myFrame())pv.outerHTML=framed(pv.outerHTML);const pc=T.querySelector('.profcard');if(!pc)return;
   pc.insertAdjacentHTML('afterend',framePicker());T.querySelectorAll('.frchip').forEach(b=>b.onclick=()=>{if(b.classList.contains('lock')){toast(b.title);return}PREF.eq.frame=b.dataset.f;savePref();railProfile();homeTab('cast')})}}
 /* the peek: every city's award page shows the Champion frame it pays out */
@@ -5486,7 +5478,7 @@ function champCard(c){const f=frameDef('c:'+c),[n,g]=f.prog,done=f.own,wear=PREF
   return `<div class="champcard${done?' got':''}">${framed(`<span class="pav">${charSVG(myChar(),56)}</span>`,f)}<div class="cci"><small>${done?'CITY CHAMPION':'CITY CHAMPION REWARD'}</small><b>${esc(f.name)} frame</b><span>+${nfmt(CHAMP_COINS)} coins · +${nfmt(CHAMP_XP)} XP · on top of the medals</span><span class="ccbar" aria-hidden="true"><i style="width:${n/g*100}%"></i></span><em>${done?'Unlocked':`${g-n} award${g-n===1?'':'s'} to go`}</em></div>${done?(wear?'<span class="iown">Wearing</span>':`<button class="ibtn gold" data-wear="${f.id}">Wear</button>`):''}</div>`}
 {const _pa=paneAch;paneAch=function(T){_pa(T);const ch=T.querySelector('.cityhead'),c=setup.achTab;
   if(ch&&c&&CITY_DATA[c])ch.insertAdjacentHTML('afterend',champCard(c));
-  else{const cab=T.querySelector('.cabinet');if(cab){const n=champCount(),nx=n<PRISM_AT?frameDef('prism'):frameDef('crown');
+  else{const cab=T.querySelector('.cabinet');if(cab){const n=champCount(),nx=frameDef('crown');
     cab.insertAdjacentHTML('afterend',`<div class="champsum">${framed(`<span class="pav sm">${charSVG(myChar(),40)}</span>`,nx)}<div><b>Board Champion: ${Math.min(n,PLAY_CITIES.length)} of ${PLAY_CITIES.length}</b><small>${nx.own?'All frames earned. Legend.':`Next: the ${esc(nx.name)} frame and ${nfmt(nx.coins)} coins at ${nx.prog[1]} Champion cities.`}</small></div></div>`)}}
   T.querySelectorAll('[data-wear]').forEach(b=>b.onclick=()=>{PREF.eq.frame=b.dataset.wear;savePref();railProfile();paneAch(T)})}}
 {const _cs=cityScan;cityScan=function(f){_cs(f);try{champCheck(true)}catch(e){}}}
@@ -6076,7 +6068,7 @@ function paneFrames(T){const defs=frameIds().map(frameDef).filter(Boolean),own=d
     return `<button class="frbig${on?' on':''}${lock?' lock':''}" data-f="${f?f.id:''}">${framed(`<span class="pav">${charSVG(myChar(),64)}</span>`,f||null)}<b>${esc(f?f.name:'No frame')}</b>
       <small>${f?(lock?esc(f.how):on?'✓ Wearing':'Owned · tap to wear'):on?'✓ Wearing':'Plain avatar'}</small>${lock?`<span class="ccbar" aria-hidden="true"><i style="width:${n/g*100}%"></i></span><em>${n} / ${g}</em>`:''}</button>`};
   T.innerHTML=`<div class="phead"><h2>Frames</h2><span class="small">${own} of ${defs.length} earned</span></div>
-    <div class="small">Become a City Champion (all ${CT.length} awards in a city) to earn that city’s frame. Five Champion cities add the Prism frame, and all of them the Skyline Crown.</div>
+    <div class="small">Become a City Champion (all ${CT.length} awards in a city) to earn its frame and the Skyline Crown.</div>
     <div class="frgrid">${card(null)}${defs.filter(f=>f.own).map(card).join('')}${defs.filter(f=>!f.own).sort((a,b)=>(b.prog[0]/b.prog[1])-(a.prog[0]/a.prog[1])).map(card).join('')}</div>`;
   T.querySelectorAll('.frbig').forEach(b=>b.onclick=()=>{if(b.classList.contains('lock')){toast(frameDef(b.dataset.f).how);return}PREF.eq.frame=b.dataset.f;savePref();railProfile();paneFrames(T)})}
 
@@ -6104,7 +6096,7 @@ function pvLoop(ts){const on=document.querySelector('.tab-shop .sipage .sistage.
 function previewFinish(tok,fin){const inv=PREF.inv.fin=PREF.inv.fin||{},had=fin&&inv[fin],old=PREF.eq.fin;if(fin)inv[fin]=1;PREF.eq.fin=fin;
   try{previewChar(myChar(),tok)}finally{if(fin&&!had)delete inv[fin];PREF.eq.fin=old}}
 const KIND_TAB={fin:'Finishes',dice:'Dice',surr:'Surrounds'};
-const KIND_SUB={fin:['🪙','Cosmetic token finish','Changes the colour and shine of your token.'],dice:['🎲','Cosmetic dice','Changes how your dice look every time you roll.'],surr:['🏝️','Cosmetic surround','Changes the land, water and plinth around the board in every city.']};
+const KIND_SUB={fin:['🪙','Cosmetic token finish','Changes the colour and shine of your token.'],dice:['🎲','Cosmetic dice','Changes how your dice look every time you roll.'],surr:['🏝️','Cosmetic surround','Changes the land, water and plinth around the board.']};
 function openItem(k,id,price,was,back){setup.shopItem={k,id,price:price||0,was:was||0,back:back||null};setup.shopTab=k;setup.shopTabSet=1;PV.opening=true;try{homeTab('shop')}finally{PV.opening=false}}
 function shopItemPage(T){const S=setup.shopItem,k=S.k,it=itemOf(k,S.id);if(!it){setup.shopItem=null;return paneShop(T)}
   const r=RAR[ITEM_RAR[k][it.id]||'R'],own=itemOwned(k,it.id),on=isEquipped(k,it.id),p=S.price||it.price||0,bal=PREF.coins,after=bal-p,sub=KIND_SUB[k];

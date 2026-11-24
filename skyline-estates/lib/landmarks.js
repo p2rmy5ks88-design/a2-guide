@@ -2,7 +2,7 @@
    Every city has three landmarks earned by playing there — Bronze: 1 win · Silver: 3 wins ·
    Gold: City Champion (all City Awards) — read from the existing per-city stats, so players keep
    what they already earned. Country sets (every Bronze in a country) pay a one-time reward.
-   Converted, never deleted: Champion frames = Gold landmarks; Gala/Prism/Crown frames = Wonders;
+   Converted, never deleted: Champion frames = Gold landmarks; Gala/Crown frames = Wonders;
    Rooftops bought or won = display plinths for the showcase (buildings use the standard roof).
    Compact layout sized for iPhone landscape and upright. No prices: landmarks are never sold. */
 (()=>{'use strict';
@@ -19,7 +19,7 @@
   return[{city:c,tier:'bronze',name:C.free,kind:kindOf(C.free),have:wins(c)>=1,prog:`${Math.min(1,wins(c))}/1 win`},
    {city:c,tier:'silver',name:C.traffic,kind:kindOf(C.traffic)==='plaza'?'gate':kindOf(C.traffic),have:wins(c)>=3,prog:`${Math.min(3,wins(c))}/3 wins`},
    {city:c,tier:'gold',name:top,kind:'tower',have:!!(PREF.champ&&PREF.champ[c]),prog:`${awards(c)}/${CT.length} City Awards`}]}
- const WONDERS=[['gala','Gala Tower','Premium Season pass, tier 40'],['prism','Prism Spire','Champion of 5 cities'],['crown','Crown Pavilion','Champion of every city']]
+ const WONDERS=[['gala','Gala Tower','Premium Season pass, tier 40'],['crown','Crown Pavilion','Champion of Skyline International']]
   .map(([id,name,how])=>({city:'',tier:'gold',name,kind:'wonder',wonder:id,how}));
  const wonderHave=w=>{try{return !!frameDef(w.wonder).own}catch{return false}};
  const SETS_KEY='lmSets';
