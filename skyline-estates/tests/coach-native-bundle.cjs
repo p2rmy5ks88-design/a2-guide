@@ -39,7 +39,7 @@ const TYPES={'.html':'text/html','.js':'text/javascript','.mjs':'text/javascript
     for(const [id,f] of Object.entries(m.files)){try{const ab=await (await fetch('coach/natural-en-f/'+f)).arrayBuffer();const buf=await ac.decodeAudioData(ab);if(buf.duration<0.2)throw 0;secs+=buf.duration;okc++}catch(e){bad.push(id)}}return{okc,bad,secs:Math.round(secs)}});
   assert.deepEqual(dec.bad,[]);ok(`all ${dec.okc} bundled recordings decode (${Math.round(dec.secs/60)} min of speech)`);
   // offline playback through the game's audio engine, with FM ducked during speech and restored after
-  const play=async()=>p.evaluate(async()=>{if(!window.G||G.over){applyCity('lagos');newGame({lc:true,cash:1600,set:{ai:'normal',speed:'fast',pot:false,maxRounds:300,city:'lagos',perks:false},players:[{name:'Kelvin',tok:TOKENS[0],col:PCOL[0],ai:false,tl:1},{name:'Kofi',tok:TOKENS[1],col:PCOL[1],ai:true,tl:1}]});startWith(G);await new Promise(r=>setTimeout(r,2500))}
+  const play=async()=>p.evaluate(async()=>{if(!window.G||G.over){applyCity('skyline');newGame({lc:true,cash:1600,set:{ai:'normal',speed:'fast',pot:false,maxRounds:300,city:'skyline',perks:false},players:[{name:'Kelvin',tok:TOKENS[0],col:PCOL[0],ai:false,tl:1},{name:'Kofi',tok:TOKENS[1],col:PCOL[1],ai:true,tl:1}]});startWith(G);await new Promise(r=>setTimeout(r,2500))}
     PREF.coach.on=true;PREF.coach.voice='natural';SkylineCoach.stop();const S=SkylineCoach._state;S.Q.recent.clear();__speech.length=0;
     const plays=S.NAT.plays||0;SkylineCoach.say('Do you want to acquire Eko Atlantic City?',1);let ducked=false;
     const heard=[];let undone=false;

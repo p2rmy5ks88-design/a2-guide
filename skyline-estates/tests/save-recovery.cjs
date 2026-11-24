@@ -5,8 +5,8 @@ const start=source.indexOf("const SKEY='skylineSave'"),code=source.slice(start,s
 const clone=x=>JSON.parse(JSON.stringify(x));let count=0;
 function fixture(){
   const storage=new Map(),messages=[];const cards=Array.from({length:16},(_,i)=>({goojf:i===9}));
-  const ctx={G:{v:1,players:[0,1].map(id=>({id,name:'P'+id,tok:'T',col:'#fff',ai:false,cash:1600,pos:0,inJail:false,jailTurns:0,goojf:[],declined:{},lastOffer:-9,bankrupt:false})),own:Array.from({length:40},()=>({o:-1,h:0,m:false})),turn:0,round:1,houses:36,hotels:12,pot:0,set:{mode:'classic',city:'lagos'},log:[],over:false,phase:'pre',chance:Array.from({length:16},(_,i)=>i),esusu:Array.from({length:16},(_,i)=>i)},
-    FAST:false,toast:m=>messages.push(m),console:{warn(){}},SQ:Array.from({length:40},(_,i)=>({t:i===4?'tax':'prop'})),CITY_DATA:{lagos:{}},CHANCE:cards,ESUSU:cards,
+  const ctx={G:{v:1,players:[0,1].map(id=>({id,name:'P'+id,tok:'T',col:'#fff',ai:false,cash:1600,pos:0,inJail:false,jailTurns:0,goojf:[],declined:{},lastOffer:-9,bankrupt:false})),own:Array.from({length:40},()=>({o:-1,h:0,m:false})),turn:0,round:1,houses:36,hotels:12,pot:0,set:{mode:'classic',city:'skyline'},log:[],over:false,phase:'pre',chance:Array.from({length:16},(_,i)=>i),esusu:Array.from({length:16},(_,i)=>i)},
+    FAST:false,toast:m=>messages.push(m),console:{warn(){}},SQ:Array.from({length:40},(_,i)=>({t:i===4?'tax':'prop'})),CITY_DATA:{skyline:{}},CHANCE:cards,ESUSU:cards,
     localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v),removeItem:k=>storage.delete(k)}};
   vm.createContext(ctx);vm.runInContext(code,ctx);return{ctx,storage,messages};
 }

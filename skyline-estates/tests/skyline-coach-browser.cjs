@@ -71,7 +71,7 @@ const STUB=()=>{const log=window.__speech=[];let cur=null;
   await p.locator('.coachbox select').selectOption('us-m');ok('voice choice survives reload; switching back to Automatic works');
   // 2. play a short Living City game: 1 human + 2 AI, auto-answering every prompt
   await p.evaluate(()=>{sleep=ms=>new Promise(r=>setTimeout(r,Math.min(ms||0,40)));initAudio();PREF.audio.radio=true;syncAudio()});
-  await p.evaluate(()=>{applyCity('lagos');newGame({lc:true,cash:1600,set:{ai:'normal',speed:'fast',pot:false,maxRounds:300,city:'lagos',perks:false,mode:'timed',rounds:8},players:[{name:'Kelvin',tok:TOKENS[0],col:PCOL[0],ai:false,tl:1},{name:'Kofi',tok:TOKENS[1],col:PCOL[1],ai:true,tl:1},{name:'Mei',tok:TOKENS[2],col:PCOL[2],ai:true,tl:1}]});
+  await p.evaluate(()=>{applyCity('skyline');newGame({lc:true,cash:1600,set:{ai:'normal',speed:'fast',pot:false,maxRounds:300,city:'skyline',perks:false,mode:'timed',rounds:8},players:[{name:'Kelvin',tok:TOKENS[0],col:PCOL[0],ai:false,tl:1},{name:'Kofi',tok:TOKENS[1],col:PCOL[1],ai:true,tl:1},{name:'Mei',tok:TOKENS[2],col:PCOL[2],ai:true,tl:1}]});
     const g=G;GROUPS.sky.forEach(i=>{g.own[i].o=0});g.players[0].cash=4000;startWith(g)});
   const drive=()=>p.evaluate(()=>{if(!G)return'none';if(G.over)return'over';const ovs=[...document.querySelectorAll('#modals .ov:not(.bye)')],ov=ovs[ovs.length-1];
     if(ov){if(/landlord of/.test(ov.textContent))return'over';const bs=[...ov.querySelectorAll('button')].filter(b=>!b.disabled&&b.offsetParent!==null);const bb=ov.querySelector('.lc-lmm')?bs[0]:bs.find(b=>/\bpri\b/.test(b.className))||bs[bs.length-1];if(bb){bb.click();return'modal'}return'wait'}
@@ -113,7 +113,7 @@ const STUB=()=>{const log=window.__speech=[];let cur=null;
   await p.evaluate(()=>{homeTab&&0});const off=await p.evaluate(async()=>{__speech.length=0;SkylineCoach.say('Long announcement that gets switched off.',2);PREF.coach.on=false;SkylineCoach.stop();SkylineCoach.say('Should not speak.',1);return{cancel:__speech.some(x=>x.cancel),spoke:__speech.some(x=>x.text==='Should not speak.'),ducked:SkylineCoach._state.D.ducked}});
   assert.deepEqual(off,{cancel:true,spoke:false,ducked:false});ok('turning Coach off stops speech immediately and restores audio');
   // 8b. Declare bankruptcy from the in-game menu (local game)
-  const bk=await p.evaluate(async()=>{applyCity('lagos');newGame({lc:true,cash:1600,set:{ai:'normal',speed:'fast',pot:false,maxRounds:300,city:'lagos',perks:false},players:[{name:'Kelvin',tok:TOKENS[0],col:PCOL[0],ai:false,tl:1},{name:'Kofi',tok:TOKENS[1],col:PCOL[1],ai:true,tl:1},{name:'Mei',tok:TOKENS[2],col:PCOL[2],ai:true,tl:1}]});G.own[1].o=0;startWith(G);
+  const bk=await p.evaluate(async()=>{applyCity('skyline');newGame({lc:true,cash:1600,set:{ai:'normal',speed:'fast',pot:false,maxRounds:300,city:'skyline',perks:false},players:[{name:'Kelvin',tok:TOKENS[0],col:PCOL[0],ai:false,tl:1},{name:'Kofi',tok:TOKENS[1],col:PCOL[1],ai:true,tl:1},{name:'Mei',tok:TOKENS[2],col:PCOL[2],ai:true,tl:1}]});G.own[1].o=0;startWith(G);
     await new Promise(r=>setTimeout(r,1500));document.querySelectorAll('#modals .ov').forEach(x=>x.remove());G.turn=0;const w=openMenu();await new Promise(r=>setTimeout(r,300));
     const b=[...document.querySelectorAll('#modals button')].find(x=>x.textContent==='Declare bankruptcy');if(!b)return'no button';b.click();await new Promise(r=>setTimeout(r,400));
     const y=[...document.querySelectorAll('#modals button')].find(x=>x.textContent==='Declare bankruptcy');y.click();await new Promise(r=>setTimeout(r,800));

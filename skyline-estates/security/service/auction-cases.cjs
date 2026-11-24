@@ -9,7 +9,7 @@ function cases(){const out=[],add=(name,n=2,turn=0,bids=[10,0],change=()=>{},rol
  add('cheap win counter',2,0,[10,0]);
  add('exact cash bid',2,0,[100,0],g=>g.players[0].cash=100);
  add('AI bidder remains explicit worker boundary',3,0,[10],g=>{g.players[1].ai=true;g.players[1].uid=null});
- for(const city of ['stockholm','nyc','tokyo','london','paris'])add('localized auction '+city,2,0,[50,0],g=>g.set.city=city);
+ for(const city of ['skyline'])add('localized auction '+city,2,0,[50,0],g=>g.set.city=city);
  for(const target of [5,14,39])add('property type square '+target,2,0,[10,0],g=>g.players[0].pos=(target-7+40)%40);
  add('doubles retain additional roll',2,0,[10,0],g=>g.players[0].pos=1,dice(3,3));
  add('star continuation waits after auction',2,0,[10,0],g=>{g.players[0].pos=38;g.players[0].lapped=true;g.set.speedDie=true},dice(1,2,5));

@@ -17,7 +17,7 @@ const root=path.resolve(__dirname,'../..'),mime={'.html':'text/html','.js':'text
   await page.locator('#boot').waitFor({state:'detached',timeout:25000});
   const before=await page.evaluate(()=>{
    FAST=true;GEN++;
-   newGame({cash:4500,set:{city:'lagos',mode:'classic',even:true,events2:false,ai:'normal',speed:'fast'},players:[
+   newGame({cash:4500,set:{city:'skyline',mode:'classic',even:true,events2:false,ai:'normal',speed:'fast'},players:[
     {name:'Tester',tok:TOKENS[0],col:PCOL[0],ai:false},{name:'Lucas',tok:TOKENS[1],col:PCOL[1],ai:true}
    ]});
    G.phase='post';G.turn=0;P(0).cash=4500;

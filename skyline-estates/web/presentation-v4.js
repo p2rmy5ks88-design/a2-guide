@@ -222,7 +222,7 @@ function occlusion(){
 let tone=null;
 function restoreTone(){if(!tone)return;for(const [material,color] of tone.colors)material.c=color;tone=null}
 function boardTone(){
- const on=!!(G&&S3&&CUR_THEME==='lagos'&&document.querySelector('#title').hidden&&!html.classList.contains('light')&&!equippedSurround());
+ const on=!!(G&&S3&&CUR_THEME==='skyline'&&document.querySelector('#title').hidden&&!html.classList.contains('light')&&!equippedSurround());
  if(tone&&(!on||tone.scene!==S3))restoreTone();
  html.classList.toggle('web-lagos-art',on);
  if(!on||tone)return;

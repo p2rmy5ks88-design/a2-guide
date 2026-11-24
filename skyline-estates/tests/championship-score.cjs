@@ -4,7 +4,7 @@ const assert=require('node:assert/strict'),path=require('node:path');
 const {readSources,createRuntime}=require('../online/headless-runtime.cjs');
 const rt=createRuntime(readSources(path.resolve(__dirname,'..')));
 function check(code){return JSON.parse(rt.run('JSON.stringify((()=>{'+code+'})())'))}
-function start(){rt.run(`FAST=true;GEN++;applyCity('lagos');newGame({lc:true,cash:5000,set:{ai:'normal',mode:'timed',rounds:30,championship:1,perks:false,city:'lagos'},players:[0,1,2].map(i=>({name:NAMES[i],tok:TOKENS[i],col:PCOL[i],ai:true,tl:1}))});`)}
+function start(){rt.run(`FAST=true;GEN++;applyCity('skyline');newGame({lc:true,cash:5000,set:{ai:'normal',mode:'timed',rounds:30,championship:1,perks:false,city:'skyline'},players:[0,1,2].map(i=>({name:NAMES[i],tok:TOKENS[i],col:PCOL[i],ai:true,tl:1}))});`)}
 start();
 const score=check(`
  const ids=Object.values(GROUPS).find(ids=>ids.length===3&&ids.every(i=>SQ[i].t==='prop'));

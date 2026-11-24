@@ -30,7 +30,7 @@ async function open(browser,vp,ui){
      assert.match(await page.evaluate(()=>onlineCfgSummary({mode:'timed',rounds:30,cash:1600})),/^Round limit/,'online timed mode retains legacy name');
      await page.screenshot({path:path.join(out,engine+'-custom-'+vp.width+'-'+ui+'.png'),fullPage:false});
      await page.evaluate(ui=>{
-       FAST=true;GEN++;newGame({cash:1600,set:{ai:'normal',speed:'fast',city:'lagos',mode:'timed',rounds:30,championship:1,lc:true},
+       FAST=true;GEN++;newGame({cash:1600,set:{ai:'normal',speed:'fast',city:'skyline',mode:'timed',rounds:30,championship:1,lc:true},
          players:[{name:'QA',tok:TOKENS[0],col:PCOL[0],ai:false},{name:'Mei',tok:TOKENS[1],col:PCOL[1],ai:true}]});
        FAST=false;G.round=28;G.phase='post';
        document.querySelector('#title').hidden=true;document.querySelector('#ui').hidden=false;
@@ -77,7 +77,7 @@ async function open(browser,vp,ui){
    const page=await open(browser,{width,height:width===844?390:768},'dark');
    await page.evaluate(({seats,speed})=>{
      FAST=true;GEN++;
-     newGame({cash:1600,set:{ai:'normal',speed,city:'lagos',mode:'timed',rounds:4,championship:1,lc:true,pot:false},
+     newGame({cash:1600,set:{ai:'normal',speed,city:'skyline',mode:'timed',rounds:4,championship:1,lc:true,pot:false},
        players:Array.from({length:seats},(_,i)=>({name:NAMES[i],tok:TOKENS[i],col:PCOL[i],ai:true,tl:1}))});
      FAST=false;document.querySelector('#title').hidden=true;document.querySelector('#ui').hidden=false;
      window.__champTurns=0;const original=playTurn;playTurn=async function(p){window.__champTurns++;return original(p)};

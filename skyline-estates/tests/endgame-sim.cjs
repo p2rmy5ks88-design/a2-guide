@@ -18,8 +18,8 @@ const name=process.argv[2]||'lc_classic',N=+(process.argv[3]||60),SEED=+(process
 const cfg=CONFIGS[name];if(!cfg)throw Error('unknown config '+name+'; one of '+Object.keys(CONFIGS).join(', '));
 const extra=process.env.SIM_SET?JSON.parse(process.env.SIM_SET):{};
 const HUMAN=['1','true','yes'].includes((process.env.SIM_HUMAN||'').toLowerCase());
-const MATCH=`(async(seed,lc,set,players,human)=>{let s=seed;Math.random=()=>{s=(Math.imul(s,1664525)+1013904223)>>>0;return s/4294967296};FAST=true;GEN++;applyCity('lagos');
- newGame({lc,cash:1600,set:Object.assign({ai:'normal',speed:'fast',pot:false,maxRounds:300,city:'lagos',perks:false},set),players:[...Array(players)].map((_,i)=>({name:NAMES[i],tok:TOKENS[i],col:PCOL[i],ai:true,tl:1}))});G.sim=true;
+const MATCH=`(async(seed,lc,set,players,human)=>{let s=seed;Math.random=()=>{s=(Math.imul(s,1664525)+1013904223)>>>0;return s/4294967296};FAST=true;GEN++;applyCity('skyline');
+ newGame({lc,cash:1600,set:Object.assign({ai:'normal',speed:'fast',pot:false,maxRounds:300,city:'skyline',perks:false},set),players:[...Array(players)].map((_,i)=>({name:NAMES[i],tok:TOKENS[i],col:PCOL[i],ai:true,tl:1}))});G.sim=true;
  // Skyline Duel prototype start (simulation only): deal N streets each, value-balanced, plus optional compensation for the second seat.
  if(set.duelDeal){const pool=shuffle(SQ.map((_,i)=>i).filter(i=>SQ[i].t==='prop'&&G.own[i].o<0));const v=G.players.map(()=>0);
    for(let k=0;k<set.duelDeal*G.players.length;k++){const pid=v.indexOf(Math.min(...v));const i=pool.pop();G.own[i].o=pid;v[pid]+=SQ[i].p}

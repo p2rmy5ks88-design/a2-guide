@@ -17,7 +17,7 @@ const BASE='https://europe-west1-eko-estates.cloudfunctions.net/skylineCompetiti
   const f=path.resolve(www,'.'+(u.pathname==='/'?'/index.html':decodeURIComponent(u.pathname)));if(!f.startsWith(www+path.sep))return r.abort();try{return r.fulfill({contentType:types[path.extname(f)]||'application/octet-stream',body:fs.readFileSync(f)})}catch{return r.fulfill({status:404,body:'missing'})}
  }
  if(r.request().url().startsWith(BASE+'/')){auth.push(r.request().headers().authorization||'');const name=u.pathname.split('/').at(-1);let data;
-  if(name==='capabilities')data={protocol:1,version:1,verified:true,categories:['season','city','worth','developers','weekly'],cities:['lagos','stockholm','tokyo','dubai']};
+  if(name==='capabilities')data={protocol:1,version:1,verified:true,categories:['season','city','worth','developers','weekly'],cities:['skyline']};
   else if(name==='me')data={protocol:1,publicId:'native-fixture',publish:false,shareName:false,community:false,name:'SkylineGuest',badges:{}};
   else if(name==='rankings')data={protocol:1,verified:true,mode:'timed-10-two-human-v1',rows:[],myPosition:null,ends:Date.UTC(2026,11,9)};
   else if(name==='community')data={protocol:1,verified:true,title:'Skyline Bridge',total:0,goal:1000,contributed:0,claimed:false,ends:Date.UTC(2026,11,9)};
@@ -39,7 +39,7 @@ const BASE='https://europe-west1-eko-estates.cloudfunctions.net/skylineCompetiti
  await p.evaluate(()=>window.__nativePlayer={uid:'native-test-account',token:'native-test-token'});await p.locator('[data-connect]').click();await p.locator('[data-community] progress').waitFor();
  check('native competition uses the existing native account token',auth.includes('Bearer native-test-token'));
  check('native ranking controls and genuine empty state render',await p.locator('[data-category] option').count()===5&&(await p.locator('.verified-rows').innerText()).includes('No published'));
- const record=await p.evaluate(()=>{GEN++;FAST=true;applyCity('lagos');newGame({cash:1600,set:{city:'lagos',mode:'classic',ai:'normal',perks:false,minigames:false},players:[{name:'Native QA',tok:TOKENS[0],col:PCOL[0],ai:false},{name:'Opponent',tok:TOKENS[1],col:PCOL[1],ai:true}]});FAST=false;G.owner=0;G.round=11;G.over=true;G.players[0].cash=2450;GROUPS.brown.forEach(i=>G.own[i]={o:0,h:1,m:false});G.houses=36-GROUPS.brown.length;return SkylineShowcase.capture(0)});
+ const record=await p.evaluate(()=>{GEN++;FAST=true;applyCity('skyline');newGame({cash:1600,set:{city:'skyline',mode:'classic',ai:'normal',perks:false,minigames:false},players:[{name:'Native QA',tok:TOKENS[0],col:PCOL[0],ai:false},{name:'Opponent',tok:TOKENS[1],col:PCOL[1],ai:true}]});FAST=false;G.owner=0;G.round=11;G.over=true;G.players[0].cash=2450;GROUPS.brown.forEach(i=>G.own[i]={o:0,h:1,m:false});G.houses=36-GROUPS.brown.length;return SkylineShowcase.capture(0)});
  check('native completed result contains actual owned properties',record?.properties===await p.evaluate(()=>GROUPS.brown.length)&&record.houses===record.properties);
  await p.evaluate(r=>SkylineShowcase.open(r),record);await p.locator('[data-share]:not([disabled])').waitFor();
  check('native export offers the OS share route without a broken blob window',await p.locator('[data-open-image]').isHidden());

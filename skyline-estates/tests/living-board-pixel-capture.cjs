@@ -18,7 +18,7 @@ const server=http.createServer((req,res)=>{const p=path.resolve(root,'.'+decodeU
   const url='http://127.0.0.1:'+server.address().port+'/skyline-estates/index.html?skylineRenderScale='+scale+'&skylineBoardTexture='+textureSize+'&skylineLabelContrast='+labelContrast+'&skylineLabelHierarchy='+labelHierarchy;
   await page.goto(url,{waitUntil:'domcontentloaded',timeout:60000});
   await page.locator('#boot').waitFor({state:'detached',timeout:60000});
-  await page.evaluate(()=>{FAST=true;GEN++;achScan=()=>{};achBump=()=>{};achShow=()=>{};coachTip=()=>{};trackable=()=>false;applyCity('lagos');newGame({cash:5000,set:{city:'lagos',mode:'classic',even:true,perks:false,events2:false,ai:'normal',speed:'fast'},players:[{name:'PixelQA',tok:TOKENS[0],col:PCOL[0],ai:false},{name:'Kofi',tok:TOKENS[1],col:PCOL[1],ai:true},{name:'Mei',tok:TOKENS[2],col:PCOL[2],ai:true},{name:'Lucas',tok:TOKENS[3],col:PCOL[3],ai:true}]});G.turn=0;G.phase='post';G.keysShown=true;Object.values(GROUPS).forEach((ids,k)=>ids.forEach(i=>G.own[i]={o:k%2,h:[0,1,2,3,4,5,0,1][k],m:false}));FAST=false;document.querySelector('#title').hidden=true;document.querySelector('#ui').hidden=false;document.querySelector('#modals').innerHTML='';buildBoard();renderRoster();camOverview(0,0)});
+  await page.evaluate(()=>{FAST=true;GEN++;achScan=()=>{};achBump=()=>{};achShow=()=>{};coachTip=()=>{};trackable=()=>false;applyCity('skyline');newGame({cash:5000,set:{city:'skyline',mode:'classic',even:true,perks:false,events2:false,ai:'normal',speed:'fast'},players:[{name:'PixelQA',tok:TOKENS[0],col:PCOL[0],ai:false},{name:'Kofi',tok:TOKENS[1],col:PCOL[1],ai:true},{name:'Mei',tok:TOKENS[2],col:PCOL[2],ai:true},{name:'Lucas',tok:TOKENS[3],col:PCOL[3],ai:true}]});G.turn=0;G.phase='post';G.keysShown=true;Object.values(GROUPS).forEach((ids,k)=>ids.forEach(i=>G.own[i]={o:k%2,h:[0,1,2,3,4,5,0,1][k],m:false}));FAST=false;document.querySelector('#title').hidden=true;document.querySelector('#ui').hidden=false;document.querySelector('#modals').innerHTML='';buildBoard();renderRoster();camOverview(0,0)});
   if(roster==='compact')await page.evaluate(()=>document.querySelector('#roster')?.classList.add('qa-compact'));
   // Production CSS must compact the roster automatically on a landscape touch device.
   // This check intentionally runs BEFORE the QA-only .qa-compact class is applied.
@@ -64,7 +64,7 @@ const server=http.createServer((req,res)=>{const p=path.resolve(root,'.'+decodeU
     if(!modal.visible)errors.push('Compact HUD player card tap did not open player detail overlay');
     await page.evaluate(()=>document.querySelector('#modals').innerHTML='');
   }
-  const filename='living-board-lagos-'+String(scale).replace('.','_')+'x-tex'+textureSize+'-'+labelContrast+'-'+labelHierarchy+'-'+roster+'.png';
+  const filename='living-board-skyline-'+String(scale).replace('.','_')+'x-tex'+textureSize+'-'+labelContrast+'-'+labelHierarchy+'-'+roster+'.png';
   await page.screenshot({path:path.join(out,filename)});
   // Keep source-pixel crops unscaled, so reviewers can inspect fine geometry and label antialiasing.
   // These fixed viewport regions are diagnostic only; no game UI is modified.

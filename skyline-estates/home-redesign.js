@@ -231,7 +231,7 @@ const css=`
 const st=document.createElement('style');st.id='hd-style';st.textContent=css;document.head.append(st);
 
 /* ---------- background ---------- */
-function hdPaintBg(B){const key=hdCityKey(),art=key==='lagos'&&hdLagosArt?hdLagosArt:null,photo=art||cityPhoto(setup.city)||cityPhoto(key);B.classList.toggle('art',!!art);
+function hdPaintBg(B){const key=hdCityKey(),art=key==='skyline'&&hdLagosArt?hdLagosArt:null,photo=art||cityPhoto(setup.city)||cityPhoto(key);B.classList.toggle('art',!!art);
  B.innerHTML=`<i class="hd-photo" style="${photo?`background-image:url(${photo})`:`background:${CITY_DATA[setup.city]?.sky||'#0a1230'}`}"></i><i class="hd-grade"></i><i class="hd-glow"></i><i class="hd-lights"></i><span class="hd-deco d1"></span><span class="hd-deco d2"></span>`}
 function hdBackground(on){const home=document.querySelector('#title .home');if(!home)return;let B=home.querySelector(':scope>.hd-bg');
  if(!on){if(B)B.remove();return}if(!B){B=document.createElement('div');B.className='hd-bg';B.setAttribute('aria-hidden','true');home.prepend(B)}hdPaintBg(B)}
@@ -270,7 +270,7 @@ const I_ARROW=ICO('<path d="M5 12h14M13 6l6 6-6 6"/>',2.2),I_LAYERS=ICO('<path d
  I_DUEL=ICO('<circle cx="7.5" cy="7" r="2.3"/><path d="M5.2 20h4.6l-.8-6.5c1-.6 1.5-1.6 1.5-2.6h-6c0 1 .5 2 1.5 2.6z"/><circle cx="16.5" cy="7" r="2.3"/><path d="M14.2 20h4.6l-.8-6.5c1-.6 1.5-1.6 1.5-2.6h-6c0 1 .5 2 1.5 2.6z"/><path d="M3 21h18"/>');
 window.SkylineHomeIcons=Object.freeze({duel:I_DUEL});
 const gmItem=(id,ico,name,desc,cls='')=>`<button class="hd-gm-item${cls}" id="${id}" type="button"><span class="ic">${ico}</span><span class="tx"><b>${name}</b><small>${desc}</small></span></button>`;
-function savedLine(g){try{const s=g.set||{},city=(CITY_DATA[s.city]||CITY_DATA.lagos).name,mode=s.duel?'Skyline Duel':s.championship?'Championship':s.mode==='timed'?'Timed':'Classic',of=s.rounds||s.maxRounds;
+function savedLine(g){try{const s=g.set||{},city=(CITY_DATA[s.city]||CITY_DATA.skyline).name,mode=s.duel?'Skyline Duel':s.championship?'Championship':s.mode==='timed'?'Timed':'Classic',of=s.rounds||s.maxRounds;
  return `${mode} · Round ${g.round}${s.mode==='timed'&&of?'/'+of:''}${s.championship||s.duel?'':' · '+city}`}catch(e){return ''}}
 function hdCityPane(T){const saved=loadSave(),c=CITY_DATA[setup.city],C=countryOf(setup.city),sp=spotNow(),S=season(),t=seasonTierNow(),cl=seasonClaimable();
  const showOnline=!(IS_APP&&!FIRE),name=c.name,len=Math.max(5,[...name].length);
@@ -284,7 +284,7 @@ function hdCityPane(T){const saved=loadSave(),c=CITY_DATA[setup.city],C=countryO
  const main=saved?`<button class="hd-main saved" id="tCont" type="button"><span class="dice" aria-hidden="true"></span><span class="lbl"><b>Continue Match</b><small>${esc(savedLine(saved))}</small></span>${I_ARROW}</button>`
   :`<button class="hd-main" id="qAI" type="button"><span class="dice" aria-hidden="true"></span><span class="lbl"><b>Play Solo</b></span>${I_ARROW}</button>`;
  let card='';
- if(sp){const k=Math.min(SPOT_GOAL,spotCount(sp.id)),R=roofDef(sp.reward),lag=sp.city==='lagos'&&hdLagosArt,ph=lag?hdLagosArt:cityPhoto(sp.city),ready=spotClaimable();
+ if(sp){const k=Math.min(SPOT_GOAL,spotCount(sp.id)),R=roofDef(sp.reward),lag=sp.city==='skyline'&&hdLagosArt,ph=lag?hdLagosArt:cityPhoto(sp.city),ready=spotClaimable();
   card=`<button class="hd-card" id="hdSpot" type="button" aria-label="City Spotlight: ${esc(sp.cityName)}, ${ready?'reward ready to claim':`${k} of ${SPOT_GOAL} matches`}${R?', reward '+esc(R.name):''}"><span class="th" style="${ph?`background-image:url(${ph})${lag?';background-size:430% auto;background-position:3% 86%':''}`:'background:#22325e'}"></span><span class="tx"><small>City Spotlight</small><b>${esc(sp.cityName)}</b><span>${ready?'Reward ready':`${k} / ${SPOT_GOAL} matches`}</span>${weekLine?`<span class="hd-weekly-inline">${esc(weekLine)}</span>`:''}</span><span class="go" aria-hidden="true">${I_ARROW}</span></button>`}
  else{const sn=typeof seasonDisplay==='function'?seasonDisplay(S.n):S.n;
   card=`<button class="hd-card" id="qSeason" type="button" aria-label="Season ${sn}, ${esc(seasonName(S.n))}, tier ${t} of ${TIERS}${cl?', '+cl+' rewards ready':''}"><span class="th" style="background-image:url(${S.n===2?'art/skyline-gala.svg':'art/shop.jpg'})"></span><span class="tx"><small>Season ${sn}</small><b>${esc(seasonName(S.n))}</b><span>${cl?`${cl} reward${cl>1?'s':''} ready`:`Tier ${t} of ${TIERS}`}</span></span><span class="go" aria-hidden="true">${I_ARROW}</span></button>`}

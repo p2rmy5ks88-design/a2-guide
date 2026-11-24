@@ -39,7 +39,7 @@ const types={'.html':'text/html','.css':'text/css','.js':'text/javascript','.jso
    subframe.on('pageerror',e=>errors.push('game: '+String(e)));
    const initial=await subframe.evaluate(()=>{
     FAST=true;GEN++;
-    newGame({lc:true,cash:1600,set:{city:'lagos',mode:'timed',rounds:30,ai:'normal',career:'origins'},
+    newGame({lc:true,cash:1600,set:{city:'skyline',mode:'timed',rounds:30,ai:'normal',career:'origins'},
      players:['Origins QA','Kofi','Mei','Lucas'].map((name,i)=>({name,tok:TOKENS[i],col:PCOL[i],ai:i>0}))});
     const groups=Object.keys(GROUPS);
     groups.forEach((g,k)=>GROUPS[g].forEach((i,j)=>{G.own[i]={o:k%4,h:j===0?Math.min(5,k%5+1):1,m:false}}));

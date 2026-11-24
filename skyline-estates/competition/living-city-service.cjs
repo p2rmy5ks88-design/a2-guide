@@ -62,7 +62,7 @@ function createLivingCityService({db,verifyIdToken,root=path.resolve(__dirname,'
       return{code:r.code,test:true,status:r.status,revision:r.revision,audit:r.audit||{},match:G?{round:G.round,over:!!m.over,rv:G.rv,seats:G.players.map(p=>({human:!p.ai,bankrupt:!!p.bankrupt,cash:p.cash,underReview:!!p.cr})),
         landmarks:Object.keys(G.lm||{}).length,built:G.own.filter(o=>o.o>=0&&o.h>0).length,event:G.ev2?{id:G.ev2.id,from:G.ev2.from}:null,lcStats:G.lcStats||{},waitingFor:m.boundary?m.boundary.type:null}:null}},
     async create(token,b){requireClient(b&&b.client);const {uid,test}=await admit(token,!!(b&&b.test));
-      const name=cleanName(b.name),city=typeof b.city==='string'&&/^[a-z][a-z0-9_]{1,23}$/.test(b.city)?b.city:'lagos';
+      const name=cleanName(b.name),city=typeof b.city==='string'&&/^[a-z][a-z0-9_]{1,23}$/.test(b.city)?b.city:'skyline';
       for(let i=0;i<6;i++){const code=code5();try{const r=await commit(code,null,{v:1,rules:2,code,host:uid,city,status:'lobby',seats:[{uid,name}],created:clock(),revision:1,...(test?{test:true}:{})});return lobbyView(r,uid)}catch(e){if(e.code!=='code-collision')throw e}}
       fail(503,'temporarily-unavailable')},
     async join(token,b){requireClient(b&&b.client);const name=cleanName(b.name);if(typeof b.code!=='string'||!CODE.test(b.code))fail(400,'invalid-code');
@@ -94,8 +94,8 @@ function createLivingCityService({db,verifyIdToken,root=path.resolve(__dirname,'
       if(decision.matched)return{matched:true,code:decision.matched};
       if(decision.waiting)return{waiting:true,seconds:60};
       const seats=[{uid:decision.pair.uid,name:decision.pair.name},{uid,name}];let st;
-      try{st=await eng().create({seats,set:{city:'lagos',mode:'timed',rounds:15,duel:1},seed:crypto.randomBytes(12).toString('hex')})}catch(e){if(e instanceof EngineError)fail(e.status,e.code);throw e}
-      await commit(code,null,{v:1,rules:2,code,host:decision.pair.uid,city:'lagos',status:'playing',seats,created:clock(),revision:2,duel:true,queued:true,deadline:clock()+DUEL_TURN_MS,match:JSON.stringify(st),...(test?{test:true}:{})});
+      try{st=await eng().create({seats,set:{city:'skyline',mode:'timed',rounds:15,duel:1},seed:crypto.randomBytes(12).toString('hex')})}catch(e){if(e instanceof EngineError)fail(e.status,e.code);throw e}
+      await commit(code,null,{v:1,rules:2,code,host:decision.pair.uid,city:'skyline',status:'playing',seats,created:clock(),revision:2,duel:true,queued:true,deadline:clock()+DUEL_TURN_MS,match:JSON.stringify(st),...(test?{test:true}:{})});
       return{matched:true,code}},
     async queueCancel(token){const uid=await identity(token);for(const pool of ['test','live'])await db.ref('skylineV2/lcq/'+pool).transaction(cur=>{if(!cur)return cur;const q={...cur,m:{...(cur.m||{})}};if(q.w&&q.w.uid===uid)q.w=null;delete q.m[uid];return q});return{ok:true}},
     // Ranked ladder: your record, the season leaderboard (top 50 plus your own row) and one-time reward claims.

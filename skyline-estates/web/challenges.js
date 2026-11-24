@@ -5,26 +5,23 @@
  const ledger=SkylineSCWallet.create(localStorage),clone=x=>JSON.parse(JSON.stringify(x));
  const SPEC=Object.freeze([
   {id:'season-games-v1',title:'Season Investor',kind:'games',target:20,sc:50,coins:150,xp:500},
-  {id:'season-cities-v1',title:'Three City Champion',kind:'cities',target:3,sc:40,coins:100,xp:350,item:['dice','midnight']},
   {id:'season-build-v1',title:'Season Developer',kind:'houses',target:30,sc:40,coins:100,xp:350,item:['fin','chrome']},
-  {id:'lagos-arts-v1',city:'lagos',title:'Lagos Arts Developer',kind:'district',group:'pink',target:3,sc:25,coins:60,xp:200,item:['dice','mint']},
-  {id:'stockholm-old-v1',city:'stockholm',title:'Stockholm Old Town',kind:'district',group:'sky',target:3,sc:25,coins:60,xp:200},
-  {id:'tokyo-tower-v1',city:'tokyo',title:'Tokyo Tower Builder',kind:'towers',target:1,sc:25,coins:60,xp:200,item:['fin','ruby']},
-  {id:'dubai-water-v1',city:'dubai',title:'Dubai Waterfront',kind:'district',group:'navy',target:2,sc:25,coins:60,xp:200}
+  {id:'skyline-arts-v1',city:'skyline',title:'International Developer',kind:'district',group:'pink',target:3,sc:25,coins:60,xp:200,item:['dice','mint']},
+  {id:'skyline-tower-v1',city:'skyline',title:'International Tower Builder',kind:'towers',target:1,sc:25,coins:60,xp:200,item:['fin','ruby']}
  ].map(x=>Object.freeze({...x,version:1})));
  let error='';
  const rows=()=>{try{return ledger.view().transactions.filter(t=>t.source==='objective-match'&&t.version===1&&t.season===season().n)}catch(e){error=e.message;return []}};
  const claims=()=>PREF.challengeClaims||{};
  const key=s=>'s'+season().n+':'+s.id;
- function value(s){const a=rows().filter(r=>!s.city||r.city===s.city);return Math.min(s.target,s.kind==='games'?a.length:s.kind==='cities'?new Set(a.filter(r=>r.won).map(r=>r.city)).size:s.kind==='houses'?a.reduce((n,r)=>n+r.houses,0):s.kind==='towers'?Math.max(0,...a.map(r=>r.towers)):Math.max(0,...a.map(r=>r.districts?.[s.group]||0)))}
+ function value(s){const a=rows().filter(r=>!s.city||r.city===s.city);return Math.min(s.target,s.kind==='games'?a.length:s.kind==='houses'?a.reduce((n,r)=>n+r.houses,0):s.kind==='towers'?Math.max(0,...a.map(r=>r.towers)):Math.max(0,...a.map(r=>r.districts?.[s.group]||0)))}
  function record(w){
   if(!G?.over||G.online||G.sim||G.scAssisted||FAST||!trackable()||!G.masteryId)return false;
   const p=G.players[G.owner??G.players.find(q=>!q.ai)?.id];if(!p||p.ai)return false;
   const all=ledger.view().transactions,start=all.find(t=>t.id==='start:'+G.masteryId),now=Date.now(),st=p.st||{};
   const activity=['buys','houses','hotels','trades','go','aucWins'].reduce((n,k)=>n+(st[k]||0),0);
-  if(!start||start.city!==(G.set.city||'lagos')||now-start.at<120000||G.round<5||activity<3||all.some(t=>t.at>now))return false;
+  if(!start||start.city!==(G.set.city||ONE_CITY)||now-start.at<120000||G.round<5||activity<3||all.some(t=>t.at>now))return false;
   const districts={};for(const [g,ids]of Object.entries(GROUPS))districts[g]=ids.filter(i=>G.own[i].o===p.id&&G.own[i].h>0&&!G.own[i].m).length;
-  const receipt=ledger.record('objective-match:'+G.masteryId,0,'objective-match','Qualified challenge match',{version:1,season:season().n,city:G.set.city||'lagos',won:p===w,houses:Math.max(0,Math.min(1000,st.houses||0)),towers:G.own.filter(o=>o.o===p.id&&o.h===5).length,districts});
+  const receipt=ledger.record('objective-match:'+G.masteryId,0,'objective-match','Qualified challenge match',{version:1,season:season().n,city:G.set.city||ONE_CITY,won:p===w,houses:Math.max(0,Math.min(1000,st.houses||0)),towers:G.own.filter(o=>o.o===p.id&&o.h===5).length,districts});
   if(receipt){if(G.set.events2)weeklyAdd('qualifiedStrategic',1);if(G.set.marketPulse)weeklyAdd('qualifiedPulse',1)}return receipt;
  }
  const oldProgress=progressGameEnd;progressGameEnd=function(w){if(G?.masteryId&&(PREF.tokenMastery?.receipts?.[G.masteryId]||rows().some(t=>t.id==='objective-match:'+G.masteryId)))return null;const r=oldProgress.apply(this,arguments);try{if(r)record(w)}catch(e){error=e.message}return r};
@@ -62,7 +59,7 @@
  }
  const until=t=>{const h=Math.max(0,Math.ceil((t-Date.now())/36e5));return h>=24?Math.floor(h/24)+'d '+h%24+'h':h+'h'};
  const ready=()=>SPEC.filter(s=>value(s)>=s.target&&!claims()[key(s)]).length;
- const detailOf=s=>s.kind==='games'?'Finish '+s.target+' eligible games':s.kind==='cities'?'Win in '+s.target+' different cities':s.kind==='houses'?'Build '+s.target+' houses across eligible games':s.kind==='towers'?'Own a tower at the finish':'Develop '+s.target+' properties in '+GNAME[s.group];
+ const detailOf=s=>s.kind==='games'?'Finish '+s.target+' eligible games':s.kind==='houses'?'Build '+s.target+' houses across eligible games':s.kind==='towers'?'Own a tower at the finish':'Develop '+s.target+' properties in '+GNAME[s.group];
  const placeOf=s=>s.city?(CITY_DATA[s.city]?.name||s.city):'Any city';
  function cardHTML(s){const v=value(s),done=!!claims()[key(s)],isReady=v>=s.target&&!done,state=done?'Claimed':isReady?'Ready to claim':'In progress';
   return '<article class="obj-card'+(isReady?' is-ready':done?' is-done':'')+'"><header><b>'+esc(s.title)+'</b><span class="obj-place">'+esc(placeOf(s))+'</span></header><small class="obj-desc">'+esc(detailOf(s))+'</small>'

@@ -11,7 +11,7 @@ const root=path.resolve(__dirname,'../../..'),report={sourceHash,checks:[],brows
    class Stop extends Error{constructor(kind,details={}){super(kind);this.boundary={kind,...details}}}class Finished extends Error{}
    renderRoster=()=>{};updateTools=()=>{};setPrompt=()=>{};hopTo=async()=>{};settleToken=async()=>{};highlight=()=>{};camFollow=()=>{};placeToken=()=>{};float=()=>{};flyCash=()=>{};updateCell=()=>{};sfx=()=>{};toast=()=>{};figG=()=>{};pushState=()=>{};throwDice=async()=>{};trackable=()=>false;aiChat=()=>{};
    const out=[];
-   for(const c of inputs){FAST=true;GEN++;G=JSON.parse(JSON.stringify(c.game));NET.on=false;NET.me=G.players[G.turn].uid;applyCity(G.set.city||'lagos');let answer=0,rolls=0,paymentKind=null,paymentTo=null,cardDepth=0;
+   for(const c of inputs){FAST=true;GEN++;G=JSON.parse(JSON.stringify(c.game));NET.on=false;NET.me=G.players[G.turn].uid;applyCity(G.set.city||'skyline');let answer=0,rolls=0,paymentKind=null,paymentTo=null,cardDepth=0;
     modal=async()=>{const p=P(G.turn),kind=c.choices[answer];if(['buy','decline'].includes(kind)){answer++;return kind==='buy'?'buy':'auction'}throw new Stop('purchase',{square:p.pos,price:SQ[p.pos].p,canBuy:p.cash>=SQ[p.pos].p})};
     actions=async(html,buttons)=>{if(buttons.some(b=>b.k==='keep')){if(c.choices[answer]==='keep'){answer++;return 'keep'}throw new Stop('reroll',{remaining:perkOf(P(G.turn)).rr-(P(G.turn).rrUsed||0),dice:c.dice})}if(buttons.some(b=>b.k==='end'))throw new Finished();if(rolls)throw new Finished();return 'roll'};
     offerReroll=async(p,d)=>{const prior=FAST;FAST=false;try{return await original.reroll(p,d)}finally{FAST=prior}};

@@ -7,7 +7,7 @@ const {createEngine}=require('../online/lc-engine.cjs');
 const seed=process.argv[2]||'lc-e2e-1';let n=0;const ok=m=>{n++;console.log('PASS',m)};
 (async()=>{
   const eng=createEngine(path.resolve(__dirname,'..'));
-  let st=await eng.create({seed,set:{city:'lagos',mode:'timed',rounds:20},seats:[{uid:'alice',name:'Alice'},{uid:'bob',name:'Bob'},{ai:true,name:'Kofi'}]});
+  let st=await eng.create({seed,set:{city:'skyline',mode:'timed',rounds:20},seats:[{uid:'alice',name:'Alice'},{uid:'bob',name:'Bob'},{ai:true,name:'Kofi'}]});
   assert.equal(st.G.rv,2);assert.ok(st.boundary,'first human decision');ok('server creates a rule-version-2 match and stops at the first human decision');
   const uid=pid=>st.G.players[pid].uid;
   // negative checks on the first decision

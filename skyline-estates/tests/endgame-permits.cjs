@@ -5,8 +5,8 @@ const path=require('node:path'),assert=require('node:assert/strict');
 const {readSources,createRuntime}=require('../online/headless-runtime.cjs');
 const root=path.resolve(__dirname,'..');
 const code=`(()=>{
-FAST=true;GEN++;applyCity('lagos');
-newGame({lc:true,cash:100000,set:{ai:'normal',speed:'fast',pot:false,city:'lagos',perks:false},
+FAST=true;GEN++;applyCity('skyline');
+newGame({lc:true,cash:100000,set:{ai:'normal',speed:'fast',pot:false,city:'skyline',perks:false},
   players:[0,1].map(i=>({name:NAMES[i],tok:TOKENS[i],col:PCOL[i],ai:true,tl:1}))});
 if(G.rv!==2)throw Error('Living City V2 not enabled');
 const groups=Object.entries(GROUPS).filter(([g,ids])=>ids.length===3&&ids.every(i=>SQ[i].t==='prop'));

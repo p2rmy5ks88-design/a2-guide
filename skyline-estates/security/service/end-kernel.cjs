@@ -7,7 +7,7 @@ for(const [before,after]of [["Math.random()<.25","draw(4)===0"],["Math.floor(Mat
 const driver=section('async function onlineTick(){','let awayT=').replace('async function onlineTick(){','function onlineTick(){').replaceAll('await ','');
 const rules=[section('const W=1100','/* ================= SOUND ================= */'),section('function validateSave(g){','function decodeRemoteGame(code,d){'),section('const COUNTRIES=','/* ---- city looks ---- */'),line('function log(t)'),line('function advanceTurn(){'),line('function endCheck(){'),line('function standings(){'),line('{const _sd=standings;'),events].join('\n');
 const script=new vm.Script(rules+`
-G=JSON.parse(input);FAST=true;applyCity(G.set.city||'lagos');Math.random=()=>{throw Error('Unaudited end-turn randomness')};
+G=JSON.parse(input);FAST=true;applyCity(G.set.city||'skyline');Math.random=()=>{throw Error('Unaudited end-turn randomness')};
 function valid(){return validateSave({...G,online:false,over:false})&&validIdentities(G.players)&&G.players.every(p=>Number.isSafeInteger(p.cash))&&Number.isSafeInteger(G.logN||0)&&Number.isSafeInteger(G.round)}
 if(!G.online||G.sim||G.over!==false||!valid())throw Error('Invalid game state');
 if(G.players[G.turn].uid!==actor)throw Error('Wrong actor');

@@ -9,7 +9,7 @@ const assert=require('node:assert/strict'),path=require('node:path');
  const r=await p.evaluate(()=>{
   const fake=()=>({paused:false,plays:0,pause(){this.paused=true},play(){this.paused=false;this.plays++;return Promise.resolve()}});
   const a=fake(),b=fake();b.paused=true;FMS.slots.splice(0,FMS.slots.length,{a:b},{a});AUD.radioOn=true;PREF.audio=PREF.audio||{};PREF.audio.radio=true;PREF.audio=PREF.audio||{};PREF.audio.radio=true;
-  GEN++;newGame({cash:1500,set:{ai:'normal',speed:'fast',city:'lagos'},players:[{name:'Ada',tok:TOKENS[0],col:PCOL[0],ai:false},{name:'Kofi',tok:TOKENS[1],col:PCOL[1],ai:true}]});
+  GEN++;newGame({cash:1500,set:{ai:'normal',speed:'fast',city:'skyline'},players:[{name:'Ada',tok:TOKENS[0],col:PCOL[0],ai:false},{name:'Kofi',tok:TOKENS[1],col:PCOL[1],ai:true}]});
   G.players[0].cash=1234;localStorage.removeItem(SKEY);
   SkylineLifecycle.hide();const hidden={a:a.paused,b:b.paused,saved:(loadSave()?.players?.[0]?.cash)===1234};
   SkylineLifecycle.show();const shown={a:a.paused,b:b.paused,plays:a.plays};

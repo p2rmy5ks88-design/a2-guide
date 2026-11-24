@@ -10,7 +10,7 @@ const root=path.resolve(__dirname,'../../..'),report={sourceHash,checks:[],brows
    const original=resolveTrade;class Pause extends Error{}
    renderRoster=()=>{};updateCell=()=>{};float=()=>{};sfx=()=>{};toast=()=>{};pushState=()=>{};figG=()=>{};trackable=()=>false;isRemote=()=>false;sleep=async()=>{};tradeSummary=()=>'';
    const out=[];
-   for(const c of inputs){FAST=true;GEN++;G=JSON.parse(JSON.stringify(c.game));NET.on=false;NET.me=G.players[G.turn].uid;applyCity(G.set.city||'lagos');let answer=0,current=null,pending=null,accepted=false;
+   for(const c of inputs){FAST=true;GEN++;G=JSON.parse(JSON.stringify(c.game));NET.on=false;NET.me=G.players[G.turn].uid;applyCity(G.set.city||'skyline');let answer=0,current=null,pending=null,accepted=false;
     resolveTrade=async(t,depth=0)=>{current={offer:t,depth};return original(t,depth)};
     modal=async()=>{const x=c.responses[answer];if(!x){pending=JSON.parse(JSON.stringify(current));throw new Pause()}answer++;return x.decision==='accept'?'yes':x.decision==='counter'?'counter':'no'};
     tradeEditor=async()=>{const x=c.responses[answer-1];if(x?.decision!=='counter')throw Error('Unexpected trade editor');return{from:current.offer.to,...x.offer}};

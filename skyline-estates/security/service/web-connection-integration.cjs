@@ -11,7 +11,7 @@ module.exports=async function({main,peer,api,apiPeer,account,id,test,denied,serv
   return{baseUrl:'http://127.0.0.1:'+server.address().port+'/',gameServices};
  }
  const a=await serve(main),b=await serve(peer),host=await account(),guest=await account(),outsider=await account();
- const room=await api.client(host).createRoom({requestId:id(),name:'Web host',settings:{mode:'classic',city:'lagos',cash:1600,auction:false}});
+ const room=await api.client(host).createRoom({requestId:id(),name:'Web host',settings:{mode:'classic',city:'skyline',cash:1600,auction:false}});
  await apiPeer.client(guest).joinRoom({requestId:id(),code:room.code,invite:room.invite,name:'Web guest'});
  const c=config(2,{auction:false,minigames:false});c.code=room.code;c.players[0].uid=host.uid;c.players[1].uid=guest.uid;
  const game=initializeGame(c,{draw:seededDraw(53).draw});game.turn=0;game.phase='pre';const ref=main.db.ref('skylineV2/rooms/'+room.code);

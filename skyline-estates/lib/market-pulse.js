@@ -20,7 +20,7 @@ function mpPermit(pid,e=ev2Active()){return mpOn()&&mpEvent(e)&&e.choices&&e.cho
 {const previous=ev2Active;ev2Active=function(g=G){if(g&&g.online&&g.set&&g.set.marketPulse)return null;return previous(g)}}
 {const previous=ev2Start;ev2Start=function(){if(!mpOn())return previous();
  const n=G.ev2n||0,group=EV2_GROUPS[n%EV2_GROUPS.length],id=MP_IDS[n%MP_IDS.length],D=EV2_DEFS[id];
- G.ev2={v:1,id,city:G.set.city||'lagos',kind:D.kind,pct:D.pct,from:G.round,rounds:2,targets:GROUPS[group].slice(),group,name:D.name,area:GNAME[group],choices:{}};
+ G.ev2={v:1,id,city:G.set.city||'skyline',kind:D.kind,pct:D.pct,from:G.round,rounds:2,targets:GROUPS[group].slice(),group,name:D.name,area:GNAME[group],choices:{}};
  G.ev2n=n+1;const t=ev2Text(G.ev2);log(`${t.title}: ${t.eff}, ${t.dur}.`);if(!FAST)ev2Banner(G.ev2);
 }}
 {const previous=ev2Disc;ev2Disc=function(pid,i){const base=previous(pid,i),e=ev2Active();

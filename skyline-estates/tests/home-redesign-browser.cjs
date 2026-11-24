@@ -54,9 +54,9 @@ const types={'.html':'text/html','.js':'text/javascript','.jpg':'image/jpeg','.p
  await home(page);await page.evaluate(()=>{window.__solo=null;const real=startFromSetup;startFromSetup=(T,slots)=>{window.__solo=slots.map(s=>s.type)}});await page.click('#qAI');
  const solo=await page.evaluate(()=>window.__solo);check('Play Solo starts the existing solo flow (you plus AI opponents)',Array.isArray(solo)&&solo[0]==='human'&&solo.slice(1).includes('ai'),solo);
  // City switch updates text and artwork.
- const other=await page.evaluate(()=>{const k=CITY_ORDER.find(c=>c!=='lagos'&&cityUnlocked(c));if(!k)return null;setup.city=k;homeTab('play');return{k,name:CITY_DATA[k].name}});
+ const other=await page.evaluate(()=>{const k=CITY_ORDER.find(c=>c!=='skyline'&&cityUnlocked(c));if(!k)return null;setup.city=k;homeTab('play');return{k,name:CITY_DATA[k].name}});
  if(other){const now=await page.evaluate(()=>({h:document.querySelector('.hd-city h1').textContent,bg:document.querySelector('.hd-bg .hd-photo').getAttribute('style')}));check('changing city updates the name and background artwork',now.h===other.name&&now.bg.includes(other.k),{other,now})}
- await page.evaluate(()=>{setup.city='lagos';homeTab('play')});
+ await page.evaluate(()=>{setup.city='skyline';homeTab('play')});
  // Other sections keep their screens and gain the dock.
  for(const k of ['portfolio','shop','season','settings']){await page.evaluate(k=>homeTab(k),k);await page.waitForTimeout(200);const s=await page.evaluate(()=>({dock:document.querySelectorAll('.hd-di').length,stage:!!document.querySelector('.hd-stage'),pane:document.querySelector('#pane').children.length,dockBox:document.querySelector('#title .rail').getBoundingClientRect().top,paneBottom:document.querySelector('#pane').getBoundingClientRect().bottom,handle:(()=>{const h=document.querySelector('.collection-nav-handle');if(!h)return null;const r=h.getBoundingClientRect();return r.width>=44&&r.height>=40&&getComputedStyle(h).display!=='none'})()}));
   // Collection categories auto-hide the dock behind a visible Menu handle (owner request).
@@ -66,14 +66,14 @@ const types={'.html':'text/html','.js':'text/javascript','.jpg':'image/jpeg','.p
 
  // A saved game turns the gold action into Continue Match with mode and round; New Solo Game moves into the panel.
  ({ctx,page}=await open({width:1280,height:720}));const cont=await page.evaluate(()=>{const g=loadSave();return !!g===!!document.querySelector('#tCont')});check('Continue appears exactly when a saved game exists',cont);
- const sv=await page.evaluate(()=>{const g={round:14,set:{city:'lagos',mode:'timed',rounds:30,championship:1}};window.loadSave=()=>g;homeTab('play');return{b:document.querySelector('#tCont b')?.textContent,s:document.querySelector('#tCont small')?.textContent,solo:!!document.querySelector('#hdGM #qAI'),modes:!!document.querySelector('#hdModes')}});
+ const sv=await page.evaluate(()=>{const g={round:14,set:{city:'skyline',mode:'timed',rounds:30,championship:1}};window.loadSave=()=>g;homeTab('play');return{b:document.querySelector('#tCont b')?.textContent,s:document.querySelector('#tCont small')?.textContent,solo:!!document.querySelector('#hdGM #qAI'),modes:!!document.querySelector('#hdModes')}});
  check('saved match: Continue Match shows mode and round, Game Modes stays, New Solo Game is in the panel',sv.b==='Continue Match'&&sv.s==='Championship · Round 14/30'&&sv.solo&&sv.modes,sv);
  await page.evaluate(()=>{window.__resume=0;startWith=()=>{window.__resume++}});await page.click('#tCont');check('Continue Match resumes the saved match',await page.evaluate(()=>window.__resume)===1);await ctx.close();
 
  // Layout: both Home states, long names and big balances; no overlap, inside the viewport, touch targets ≥ 44 px.
  const longCity=await (async()=>{({ctx,page}=await open({width:844,height:390}));const k=await page.evaluate(()=>CITY_ORDER.slice().sort((a,b)=>CITY_DATA[b].name.length-CITY_DATA[a].name.length)[0]);await ctx.close();return k})();
  for(const vp of [{width:1920,height:1080},{width:1280,height:720},{width:1024,height:768},{width:844,height:390},{width:667,height:375}])for(const variant of ['plain','saved','long']){({ctx,page}=await open(vp,variant==='long'?{nick:'Oluwaseunfemi',coins:98765432}:{}));
-  await page.evaluate(([v,lc])=>{const g={round:14,set:{city:'lagos',mode:'timed',rounds:30,championship:1}};window.loadSave=()=>v==='plain'?null:g;if(v==='long'){setup.city=lc;try{PREF.trophies=99999}catch(e){}}homeTab('play')},[variant,longCity]);
+  await page.evaluate(([v,lc])=>{const g={round:14,set:{city:'skyline',mode:'timed',rounds:30,championship:1}};window.loadSave=()=>v==='plain'?null:g;if(v==='long'){setup.city=lc;try{PREF.trophies=99999}catch(e){}}homeTab('play')},[variant,longCity]);
   const L=await page.evaluate(()=>{const R=s=>{const e=document.querySelector(s);if(!e)return null;const r=e.getBoundingClientRect();return{s,x:r.left,y:r.top,r:r.right,b:r.bottom}};
    const boxes=['#tbWho','#tbSkylineCash','#tbCoins','#hdGear','.hd-city','.hd-main','#hdModes','.hd-card','#title .rail'].map(R).filter(Boolean);
    const hit=(a,b)=>a.x<b.r-1&&b.x<a.r-1&&a.y<b.b-1&&b.y<a.b-1,over=[];for(let i=0;i<boxes.length;i++)for(let j=i+1;j<boxes.length;j++)if(hit(boxes[i],boxes[j]))over.push(boxes[i].s+' × '+boxes[j].s);

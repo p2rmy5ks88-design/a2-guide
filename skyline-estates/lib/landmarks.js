@@ -37,7 +37,7 @@
  const plinthId=()=>{const r=PREF.eq&&PREF.eq.roof;return r&&roofOwned(r)?r:''};
  const plinth=()=>PLINTH[plinthId()]||PLINTH[''];
  const S={country:null,sel:null};
- function countryNow(){if(S.country)return S.country;const k=(setup&&setup.city)||'lagos';return (COUNTRIES.find(C=>C.cities.includes(k))||COUNTRIES[0]).key}
+ function countryNow(){if(S.country)return S.country;const k=(setup&&setup.city)||'skyline';return (COUNTRIES.find(C=>C.cities.includes(k))||COUNTRIES[0]).key}
  // ---- 3D showcase (shared renderer; SVG fallback) ----
  const V={T:null,r:null,scene:null,cam:null,obj:null,raf:0,key:''};
  async function three(){if(V.T)return V.T;try{V.T=await import('./three.module.min.js')}catch{try{V.T=await import('./lib/three.module.min.js')}catch{V.T=null}}return V.T}

@@ -52,7 +52,7 @@ function createEngine(root){
   const src=readSources(root),hash=sourceHash(src),rt=createRuntime(src,{beforeLibs:ADAPTER,afterLibs:ADAPTER_RULES});
   const E=rt.ctx.__E;
   async function load(state){E.seed=state.seed;E.turnNo=state.turnNo;E.turnStart=state.turnStart;E.tape=state.tape.map(x=>({...x}));E.cursor=0;
-    rt.ctx.__in=state.turnStart;rt.run(`G=JSON.parse(__in);FAST=true;GEN++;applyCity(G.set.city||'lagos')`)}
+    rt.ctx.__in=state.turnStart;rt.run(`G=JSON.parse(__in);FAST=true;GEN++;applyCity(G.set.city||'skyline')`)}
   async function settle(state){let r;try{r=await rt.run('__step()')}catch(e){throw new EngineError(e&&e.message||'invalid',400)}
     return{...state,v:1,rules:'living-city-2',source:hash,turnNo:E.turnNo,turnStart:E.turnStart,tape:E.tape.map(x=>({...x})),G:JSON.parse(rt.run('JSON.stringify(G)')),boundary:r.boundary||null,over:!!r.over,revision:(state.revision||0)+1}}
   return{
@@ -60,7 +60,7 @@ function createEngine(root){
     async create({seats,set,seed,scenario}){
       if(!Array.isArray(seats)||seats.length<2||seats.length>6)throw new EngineError('invalid-seats',400);
       const ids=seats.filter(s=>!s.ai).map(s=>s.uid);if(!ids.length||ids.some(u=>typeof u!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(u))||new Set(ids).size!==ids.length)throw new EngineError('invalid-seats',400);
-      rt.run('FAST=true;GEN++');rt.ctx.__cfg={seats,set:{ai:'normal',speed:'fast',pot:false,maxRounds:300,city:'lagos',perks:false,...set,online:false},seed};
+      rt.run('FAST=true;GEN++');rt.ctx.__cfg={seats,set:{ai:'normal',speed:'fast',pot:false,maxRounds:300,city:'skyline',perks:false,...set,online:false},seed};
       rt.run(`applyCity(__cfg.set.city);newGame({lc:true,cash:1600,set:__cfg.set,players:__cfg.seats.map((s,i)=>({name:s.name,tok:s.tok||TOKENS[i],col:PCOL[i],ai:!!s.ai,tl:1,uid:s.ai?null:s.uid}))});G.first=0;G.turn=0;G.players.forEach((p,i)=>{p.uid=__cfg.seats[i].ai?null:__cfg.seats[i].uid});if(G.set.duel===1)lcDuelSetup()`);
       if(rt.run('G.rv')!==2)throw new EngineError('living-city-unavailable',500);
       // Test rooms only: the first human holds one whole district (Landmark + development) and the second human opens

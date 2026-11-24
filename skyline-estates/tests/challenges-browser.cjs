@@ -21,29 +21,29 @@ const check=(n,v)=>{assert.ok(v,n);report.checks.push(n);console.log('PASS',n)};
   const checks=[];const ok=(n,v)=>{if(!v)throw Error(n);checks.push(n)};
   const ledger=SkylineSCWallet.create(localStorage,()=>Date.now()-180000);
   const beforeSave=localStorage.getItem(SKEY),oldCoins=PREF.coins,oldSC=SkylineEarnedCash.balance();
-  window.challengeFixture=(city,id,owner=0)=>{GEN++;FAST=true;applyCity(city);newGame({cash:1600,set:{city,mode:'classic',ai:'normal',perks:false,minigames:false},players:[0,1].map(i=>({name:'QA '+i,tok:TOKENS[i],col:PCOL[i],ai:false,owner:i===owner}))});FAST=false;G.owner=owner;G.masteryId=id;G.round=8;G.over=true;G.players[owner].st={houses:3,buys:4,go:1};for(const ids of Object.values(GROUPS))for(const i of ids)G.own[i]={o:owner,h:city==='tokyo'?5:1,m:false};ledger.start(id,{city});return G.players[owner]};
-  const me=challengeFixture('lagos','qual-0');ok('qualified local completion recorded',!!SkylineChallenges.record(me));ok('duplicate match receipt rejected',!SkylineChallenges.record(me));
-  const snap=JSON.stringify(PREF),cash=G.players[0].cash;const spec=SkylineChallenges.specs.find(s=>s.city==='lagos');ok('actual Arts district objective completes',SkylineChallenges.value(spec)===3);
+  window.challengeFixture=(city,id,owner=0)=>{GEN++;FAST=true;applyCity(city);newGame({cash:1600,set:{city,mode:'classic',ai:'normal',perks:false,minigames:false},players:[0,1].map(i=>({name:'QA '+i,tok:TOKENS[i],col:PCOL[i],ai:false,owner:i===owner}))});FAST=false;G.owner=owner;G.masteryId=id;G.round=8;G.over=true;G.players[owner].st={houses:3,buys:4,go:1};for(const ids of Object.values(GROUPS))for(const i of ids)G.own[i]={o:owner,h:city==='skyline'?5:1,m:false};ledger.start(id,{city});return G.players[owner]};
+  const me=challengeFixture('skyline','qual-0');ok('qualified local completion recorded',!!SkylineChallenges.record(me));ok('duplicate match receipt rejected',!SkylineChallenges.record(me));
+  const snap=JSON.stringify(PREF),cash=G.players[0].cash;const spec=SkylineChallenges.specs.find(s=>s.city==='skyline');ok('actual Arts district objective completes',SkylineChallenges.value(spec)===3);
   ok('render does not grant rewards',PREF.coins===oldCoins&&SkylineEarnedCash.balance()===oldSC);
   const a=await SkylineChallenges.claim(spec.id);ok('city reward claimed',a.ok);ok('saved SC credited once',SkylineEarnedCash.balance()===oldSC+25);ok('Coins credited once',PREF.coins>=oldCoins+60);ok('XP and Season XP integrated',PREF.xp>=200&&season().sxp>=200);ok('cosmetic unlocked in existing inventory',itemOwned('dice','mint'));ok('match cash unchanged',G.players[0].cash===cash);
   const profile=JSON.stringify(PREF),sc=SkylineEarnedCash.balance();ok('duplicate claim rejected',!(await SkylineChallenges.claim(spec.id)).ok);ok('repeat claim changes no balances',PREF.coins===JSON.parse(profile).coins&&PREF.xp===JSON.parse(profile).xp&&SkylineEarnedCash.balance()===sc);
-  for(const mode of ['online','sim','scAssisted']){challengeFixture('lagos','denied-'+mode);G[mode]=true;ok(mode+' excluded',!SkylineChallenges.record(G.players[0]))}
-  challengeFixture('lagos','denied-fast');FAST=true;ok('FAST simulation excluded',!SkylineChallenges.record(G.players[0]));FAST=false;
-  challengeFixture('lagos','denied-short');G.round=4;ok('short matches excluded',!SkylineChallenges.record(G.players[0]));
-  challengeFixture('lagos','denied-fresh');G.masteryId='fresh-start';SkylineSCWallet.create(localStorage).start('fresh-start',{city:'lagos'});ok('under two minutes excluded',!SkylineChallenges.record(G.players[0]));
-  const friend=challengeFixture('stockholm','owner-one',1);G.players[0].st={houses:900};ok('pass-and-play owner records',!!SkylineChallenges.record(friend));const tx=SkylineEarnedCash.view().transactions.find(t=>t.id==='objective-match:owner-one');ok('friend stats not attributed',tx.houses===3);
-  for(let i=1;i<20;i++){const c=['lagos','stockholm','tokyo'][i%3];const who=challengeFixture(c,'season-'+i);SkylineChallenges.record(who)}
-  for(const id of ['season-games-v1','season-cities-v1','season-build-v1']){const s=SkylineChallenges.specs.find(s=>s.id===id);ok(id+' reaches target',SkylineChallenges.value(s)===s.target);ok(id+' claims', (await SkylineChallenges.claim(id)).ok)}
+  for(const mode of ['online','sim','scAssisted']){challengeFixture('skyline','denied-'+mode);G[mode]=true;ok(mode+' excluded',!SkylineChallenges.record(G.players[0]))}
+  challengeFixture('skyline','denied-fast');FAST=true;ok('FAST simulation excluded',!SkylineChallenges.record(G.players[0]));FAST=false;
+  challengeFixture('skyline','denied-short');G.round=4;ok('short matches excluded',!SkylineChallenges.record(G.players[0]));
+  challengeFixture('skyline','denied-fresh');G.masteryId='fresh-start';SkylineSCWallet.create(localStorage).start('fresh-start',{city:'skyline'});ok('under two minutes excluded',!SkylineChallenges.record(G.players[0]));
+  const friend=challengeFixture('skyline','owner-one',1);G.players[0].st={houses:900};ok('pass-and-play owner records',!!SkylineChallenges.record(friend));const tx=SkylineEarnedCash.view().transactions.find(t=>t.id==='objective-match:owner-one');ok('friend stats not attributed',tx.houses===3);
+  for(let i=1;i<20;i++){const c='skyline';const who=challengeFixture(c,'season-'+i);SkylineChallenges.record(who)}
+  for(const id of ['season-games-v1','season-build-v1']){const s=SkylineChallenges.specs.find(s=>s.id===id);ok(id+' reaches target',SkylineChallenges.value(s)===s.target);ok(id+' claims', (await SkylineChallenges.claim(id)).ok)}
   const now=Date.now,latest=season().n;Date.now=()=>SEASON_EPOCH-864e5;ok('clock rollback retains Season and claim flags',season().n===latest&&!!SkylineChallenges.claims()['s'+latest+':'+spec.id]);const nextEnd=seasonEnds();Date.now=()=>nextEnd+1;ok('next Season resets new objectives',season().n===latest+1&&SkylineChallenges.value(spec)===0);Date.now=now;
   ok('wallet and inventory survive Season reset',itemOwned('dice','mint')&&SkylineEarnedCash.balance()>=oldSC+25);ok('existing save key preserved',localStorage.getItem(SKEY)===beforeSave);
 
-  const who=challengeFixture('stockholm','storage-recovery');SkylineChallenges.record(who);const stock=SkylineChallenges.specs.find(s=>s.city==='stockholm');
+  const who=challengeFixture('skyline','storage-recovery');SkylineChallenges.record(who);const stock=SkylineChallenges.specs.find(s=>s.city==='skyline');
   const originalSet=Storage.prototype.setItem,cb=PREF.coins,xb=PREF.xp,sb=SkylineEarnedCash.balance();let failed=false;
   Storage.prototype.setItem=function(k,v){if(k===PKEY&&!failed){failed=true;throw Error('quota probe')}return originalSet.call(this,k,v)};
   const rejected=await SkylineChallenges.claim(stock.id);Storage.prototype.setItem=originalSet;
   ok('profile write failure rejects claim',!rejected.ok);ok('failed profile commit preserves rewards',PREF.coins===cb&&PREF.xp===xb&&SkylineEarnedCash.balance()===sb);
   ok('failed profile claim can retry safely',(await SkylineChallenges.claim(stock.id)).ok);
-  const dub=challengeFixture('dubai','wallet-recovery');SkylineChallenges.record(dub);const ds=SkylineChallenges.specs.find(s=>s.city==='dubai');let broken=false;
+  const dub=challengeFixture('skyline','wallet-recovery');SkylineChallenges.record(dub);const ds=SkylineChallenges.specs.find(s=>s.city==='skyline');let broken=false;
   Storage.prototype.setItem=function(k,v){if(k.includes('objective-reward')&&!broken){broken=true;throw Error('wallet probe')}return originalSet.call(this,k,v)};
   const interrupted=await SkylineChallenges.claim(ds.id);Storage.prototype.setItem=originalSet;const committedCoins=PREF.coins,committedXP=PREF.xp;
   ok('interrupted SC write reports pending recovery',!interrupted.ok);SkylineChallenges.repair();
@@ -63,7 +63,7 @@ const check=(n,v)=>{assert.ok(v,n);report.checks.push(n);console.log('PASS',n)};
  await p.locator('#pane>.subtabs [data-s="objectives"]').click();await p.waitForTimeout(200);
  const pane=await p.evaluate(()=>({tab:setup.tab,cards:document.querySelectorAll('.objectives-pane .obj-card').length,specs:SkylineChallenges.specs.length,open:!document.querySelector('.objectives-pane')?.closest('details:not([open])')}));
  check('Objectives tab lists every active objective, expanded',pane.tab==='objectives'&&pane.cards===pane.specs&&pane.open);
- const fx=await p.evaluate(()=>{const ledger=SkylineSCWallet.create(localStorage,()=>Date.now()-180000);const me=challengeFixture('tokyo','badge-tokyo');SkylineChallenges.record(me);G=null;homeTab('objectives');return SkylineChallenges.ready()});
+ const fx=await p.evaluate(()=>{const ledger=SkylineSCWallet.create(localStorage,()=>Date.now()-180000);const me=challengeFixture('skyline','badge-tokyo');SkylineChallenges.record(me);G=null;homeTab('objectives');return SkylineChallenges.ready()});
  await p.waitForTimeout(200);
  const badge=await p.evaluate(()=>({tab:document.querySelector('#pane>.subtabs [data-s="objectives"] .obj-count')?.textContent,dock:(document.querySelector('#title .hd-di[data-dock="progress"] .obj-count')||[...document.querySelectorAll('#title .tabs .tab')].find(b=>/Progress/i.test(b.textContent))?.querySelector('.obj-count'))?.textContent,label:document.querySelector('#pane>.subtabs [data-s="objectives"]')?.getAttribute('aria-label')}));
  check('claimable count shown on the Objectives tab',fx>0&&badge.tab===String(fx)&&/ready/.test(badge.label||''));check('same count shown on the bottom Progress button',badge.dock===String(fx));

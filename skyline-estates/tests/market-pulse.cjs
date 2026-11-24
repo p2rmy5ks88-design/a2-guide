@@ -18,7 +18,7 @@ const check=(n,ok)=>{assert.ok(ok,n);report.checks.push(n);console.log('PASS',n)
  await page.goto(url);await page.waitForFunction(()=>typeof mpChoose==='function');await page.waitForFunction(()=>!document.querySelector('#boot'));
  await page.addStyleTag({content:'*,*::before,*::after{animation:none!important;transition:none!important}.ov.bye{display:none!important}'});
  const rules=await page.evaluate(()=>{
-  const checks=[],ok=(n,v)=>{if(!v)throw Error(n);checks.push(n)},mk=(set={})=>{GEN++;FAST=true;applyCity('lagos');newGame({cash:1600,set:{ai:'normal',city:'lagos',mode:'classic',marketPulse:true,...set},players:[0,1,2].map(i=>({name:'Seat '+i,tok:TOKENS[i],col:PCOL[i],ai:true}))});G.sim=true;G.phase='pre';G.round=3;G.turn=0;G.first=0};
+  const checks=[],ok=(n,v)=>{if(!v)throw Error(n);checks.push(n)},mk=(set={})=>{GEN++;FAST=true;applyCity('skyline');newGame({cash:1600,set:{ai:'normal',city:'skyline',mode:'classic',marketPulse:true,...set},players:[0,1,2].map(i=>({name:'Seat '+i,tok:TOKENS[i],col:PCOL[i],ai:true}))});G.sim=true;G.phase='pre';G.round=3;G.turn=0;G.first=0};
   mk();ok('single event system enabled; classic events off',G.mpVersion===1&&G.set.events2&&!G.set.events&&!G.event);
   ev2Start();let e=G.ev2;ok('first pulse has exact district and bounded two-round rent rise',e.id==='pulseRise'&&e.pct===10&&e.rounds===2&&e.group==='brown');
   const i=e.targets[0],j=GROUPS.navy[0];e.targets.forEach(k=>G.own[k].o=0);G.own[j].o=1;
@@ -71,7 +71,7 @@ const check=(n,ok)=>{assert.ok(ok,n);report.checks.push(n);console.log('PASS',n)
  await page.reload();await page.waitForFunction(()=>typeof mpChoose==='function'&&!document.querySelector('#boot'));
  await page.addStyleTag({content:'*,*::before,*::after{animation:none!important;transition:none!important}.ov.bye{display:none!important}'});
  for(const vp of [{width:956,height:440},{width:844,height:390},{width:844,height:320},{width:667,height:375}]){
-  await page.setViewportSize(vp);await page.evaluate(()=>{GEN++;FAST=false;applyCity('stockholm');newGame({cash:1600,set:{ai:'normal',mode:'classic',city:'stockholm',marketPulse:true},players:[0,1].map(i=>({name:'Player '+(i+1),tok:TOKENS[i],col:PCOL[i],ai:false}))});G.players.forEach(p=>p.cash=1600);G.round=3;G.turn=0;G.phase='pre';ev2Start();G.ev2.targets.forEach(i=>G.own[i].o=0);document.querySelector('#title').hidden=true;document.querySelector('#ui').hidden=false;renderRoster();ev2Chip();window.offer=mpOffer(P(0))});
+  await page.setViewportSize(vp);await page.evaluate(()=>{GEN++;FAST=false;applyCity('skyline');newGame({cash:1600,set:{ai:'normal',mode:'classic',city:'skyline',marketPulse:true},players:[0,1].map(i=>({name:'Player '+(i+1),tok:TOKENS[i],col:PCOL[i],ai:false}))});G.players.forEach(p=>p.cash=1600);G.round=3;G.turn=0;G.phase='pre';ev2Start();G.ev2.targets.forEach(i=>G.own[i].o=0);document.querySelector('#title').hidden=true;document.querySelector('#ui').hidden=false;renderRoster();ev2Chip();window.offer=mpOffer(P(0))});
   const label=`${vp.width}x${vp.height}`;await page.locator('.ov:not(.bye) .mpmodal').waitFor();
   const geometry=await page.locator('.ov:not(.bye) .mpmodal .mbar button').evaluateAll(bs=>bs.map(b=>{const r=b.getBoundingClientRect();return{w:r.width,h:r.height,visible:r.left>=0&&r.right<=innerWidth&&r.top>=0&&r.bottom<=innerHeight,hit:b.contains(document.elementFromPoint(r.left+r.width/2,r.top+r.height/2))}}));
   await page.screenshot({path:path.join(out,`market-choice-${engine}-${label}.png`)});

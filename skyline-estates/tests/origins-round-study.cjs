@@ -9,9 +9,9 @@ const {readSources,createRuntime}=require('../online/headless-runtime.cjs');
 const ROOT=path.resolve(__dirname,'..'),FULL=process.env.ORIGINS_STUDY_FULL==='1',N=+(process.env.ORIGINS_STUDY_N||(FULL?1000:150)),SEED0=100000;
 const MATCH=`(async(seed,rounds,players,ai,human,unlimited)=>{
  let s=seed;Math.random=()=>{s=(Math.imul(s,1664525)+1013904223)>>>0;return s/4294967296};
- FAST=true;GEN++;applyCity('lagos');
+ FAST=true;GEN++;applyCity('skyline');
  // App defaults (setup.rules) except token perks off (all seats tier 1 anyway); Quick Play = timed Championship.
- const set={ai,speed:'fast',city:'lagos',...(unlimited?{mode:'classic'}:{mode:'timed',rounds,championship:1}),minigames:true,perks:false,ffa:false,events:false,speedDie:false,pot:false,goDouble:false,jailRent:false,auction:true,even:true,interest:true,maxRounds:300};
+ const set={ai,speed:'fast',city:'skyline',...(unlimited?{mode:'classic'}:{mode:'timed',rounds,championship:1}),minigames:true,perks:false,ffa:false,events:false,speedDie:false,pot:false,goDouble:false,jailRent:false,auction:true,even:true,interest:true,maxRounds:300};
  newGame({lc:true,cash:1600,set,players:[...Array(players)].map((_,i)=>({name:NAMES[i],tok:TOKENS[i],col:PCOL[i],ai:true,tl:1}))});G.sim=true;
  const M={firstSet:null,firstLevel:{1:null,2:null,3:null,5:null},firstLandmark:null,firstBankrupt:null,bankruptRounds:[],builds:0,trades:0,turns:[],buildRounds:{},lastBuildRound:0,lastOwnChangeRound:0,leaders:{}};
  globalThis.__M=M;globalThis.__human=human;

@@ -5,8 +5,8 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
 const fs=require('node:fs'),vm=require('node:vm'),path=require('node:path'),crypto=require('node:crypto'),assert=require('node:assert/strict');
 const ROOT=path.resolve(__dirname,'..'),RULE_LIBS=['lib/market-pulse.js','lib/ai-styles.js','lib/living-city-rules.js'];
 const NL=+(process.argv[2]||10),NC=+(process.argv[3]||4);
-const MATCH=`(async(seed,lc)=>{let s=seed;Math.random=()=>{s=(Math.imul(s,1664525)+1013904223)>>>0;return s/4294967296};FAST=true;GEN++;applyCity('lagos');
- newGame({lc,cash:1600,set:{ai:'normal',speed:'fast',pot:false,maxRounds:300,city:'lagos',perks:false},players:[0,1,2].map(i=>({name:NAMES[i],tok:TOKENS[i],col:PCOL[i],ai:true,tl:1}))});G.sim=true;
+const MATCH=`(async(seed,lc)=>{let s=seed;Math.random=()=>{s=(Math.imul(s,1664525)+1013904223)>>>0;return s/4294967296};FAST=true;GEN++;applyCity('skyline');
+ newGame({lc,cash:1600,set:{ai:'normal',speed:'fast',pot:false,maxRounds:300,city:'skyline',perks:false},players:[0,1,2].map(i=>({name:NAMES[i],tok:TOKENS[i],col:PCOL[i],ai:true,tl:1}))});G.sim=true;
  let err=null;const pe=window.__onErr;window.__onErr=e=>err=e;try{await run()}finally{window.__onErr=pe}
  const g=JSON.parse(JSON.stringify(G));delete g.log;delete g.logN;delete g.masteryId;delete g.lastDice;
  return JSON.stringify({err:err&&String(err),g})})`;
