@@ -53,6 +53,7 @@ const recordKey=(index=routeIndex,hard=storm)=>index+':'+Number(hard);
 const getRecord=(index,hard)=>save.records[recordKey(index,hard)]||{clear:false,marks:[false,false,false]};
 const stormOpen=index=>{const r=getRecord(index,false);return r.clear&&r.marks.filter(Boolean).length>=2;};
 const petrelOpen=()=>[0,1].every(i=>getRecord(i,false).marks[0]);
+const cannonLevels=[{damage:1,interval:.145},{damage:1.3,interval:.132},{damage:1.6,interval:.119},{damage:1.9,interval:.106}];
 const objectives=['Recover all 3 crews','Destroy all 3 marked targets','Clear without hull damage'];
 let mode='menu', run, pointer=null, keys=new Set(), audio, startTime=0, clock=0;
 function tone(freq,length=.1,type='sine',volume=.047){
@@ -105,7 +106,7 @@ function loadout(){
 function upgrades(){
   mode='menu';ui.hud.hidden=ui.coil.hidden=true;
   const costs=[35,70,120];
-  const tracks=[['cannon','Cannon','+10% base damage'],['hull','Hull','+1 point'],['salvage','Salvage range','+15% base range']];
+  const tracks=[['cannon','Cannon','+30% base damage · faster fire'],['hull','Hull','+1 point'],['salvage','Salvage range','+15% base range']];
   panel('STORMWAKE  /  HANGAR','FLIGHT DECK','Alloy '+save.alloy+' · Best score '+save.best.toLocaleString(),
     [['Back to map',hangar],...tracks.map(([key,title,effect])=>{
       const level=save.upgrades[key],cost=costs[level];
@@ -120,7 +121,7 @@ function launch(){
   pointer=null;keys.clear();
   const max=(save.aircraft==='petrel'?4:5)+save.upgrades.hull;
   run={t:0,x:210,y:625,hp:max,max,charge:save.module==='surge'?40:20,score:0,alloy:0,rescued:0,marked:0,damage:0,
-    shots:[],threats:[],enemies:[],pods:[],sparks:[],loot:[],fire:0,wave:0,inv:0,flash:0,settled:false,
+    cannon:cannonLevels[save.upgrades.cannon]||cannonLevels[0],shots:[],threats:[],enemies:[],pods:[],sparks:[],loot:[],fire:0,wave:0,inv:0,flash:0,settled:false,
     route:routes[routeIndex],hard:storm,toast:routes[routeIndex].name.toUpperCase(),banner:2};
   updateHud();
 }
@@ -161,10 +162,17 @@ function updateHud(){
 function announce(text){run.toast=text;run.banner=2;}
 function activate(){
   if(mode!=='play'||run.charge<100)return;
-  run.charge=0;run.flash=.42;run.inv=Math.max(run.inv,.65);
-  run.threats=run.threats.filter(b=>!near(run,b,W/4));
-  for(const enemy of run.enemies)if(near(run,enemy,W/4))enemy.stagger=2;
-  tone(720,.45,'sawtooth',.09);
+  run.charge=0;run.flash=.55;run.inv=Math.max(run.inv,1.15);
+  for(const bullet of run.threats.slice(0,32))burst(bullet.x,bullet.y,'#e5fff1',3);
+  run.threats.length=0;
+  for(const enemy of run.enemies){
+    if(enemy.y+enemy.r<0||enemy.y-enemy.r>H)continue;
+    enemy.hp-=enemy.type==='ark'?enemy.max*.25:18;
+    enemy.stagger=Math.max(enemy.stagger,2.5);
+    burst(enemy.x,enemy.y,'#ecfff7',9);
+  }
+  announce('STORMCOIL DISCHARGED');
+  updateHud();tone(520,.55,'triangle',.13);
 }
 ui.pause.onclick=pause;ui.coil.onclick=activate;
 window.addEventListener('keydown',e=>{
@@ -240,7 +248,7 @@ function step(dt){
       g.shots.push({x:g.x+side*9,y:g.y-17,vx:0});
 
     }
-    g.fire=.145;
+    g.fire=g.cannon.interval;
   }
   while(g.wave<g.route.waves.length&&g.t>=g.route.waves[g.wave][0]){
     const [time,type,positions,pod]=g.route.waves[g.wave++];
@@ -262,13 +270,14 @@ function step(dt){
   for(const s of g.shots){
     s.x+=s.vx*dt;s.y-=610*dt;
     const target=g.enemies.find(e=>e.hp>0&&near(s,e,e.r*.85));
-    if(target){target.hp-=1+save.upgrades.cannon*.1;s.dead=true;burst(s.x,s.y,'#b3fff2',2);}
+    if(target){target.hp-=g.cannon.damage;s.dead=true;burst(s.x,s.y,'#b3fff2',2);}
   }
   let win=false;
   g.enemies=g.enemies.filter(e=>{
     if(e.hp<=0){
       const boss=e.type==='ark';g.score+=boss?1900:Math.round(e.max*30);
-      if(e.marked){g.marked++;g.charge=Math.min(100,g.charge+5);}
+      if(e.marked)g.marked++;
+      if(!boss&&g.flash<=0)g.charge=Math.min(100,g.charge+(e.marked?10:4));
       if(!boss)g.loot.push({x:e.x,y:e.y,value:e.type==='barge'?2:1});
       burst(e.x,e.y,'#ffc16b',boss?85:18);tone(boss?120:250,.16,'triangle',.035);
       win ||= boss;return false;
@@ -484,15 +493,15 @@ function render(){
     }
   }
   for(const item of g.loot)oval(item.x,item.y,4,4,'#ffd77e');
-  for(const s of g.shots){oval(s.x,s.y,2.4,11,'#8ffff6');oval(s.x,s.y-4,1.3,5,'#eeffff');}
+  for(const s of g.shots){oval(s.x,s.y,2.4+g.cannon.damage-1,11+3*(g.cannon.damage-1),'#8ffff6');oval(s.x,s.y-4,1.3,5,'#eeffff');}
   for(const b of g.threats){oval(b.x,b.y,6,6,'#fa6d4e');oval(b.x,b.y,2.6,2.6,'#fff0bb');}
   if(g.inv<=0||Math.floor(g.inv*16)%2===0)craft(g.x,g.y,'player',t);
   for(const p of g.sparks){ctx.globalAlpha=p.life/p.max;oval(p.x,p.y,2.7,2.7,p.color);}
   ctx.globalAlpha=1;
   if(g.flash>0){
-    ctx.globalAlpha=g.flash*.62;ctx.fillStyle='#c1fffb';ctx.fillRect(0,0,W,H);ctx.globalAlpha=1;
+    ctx.globalAlpha=g.flash*.4;ctx.fillStyle='#c1fffb';ctx.fillRect(0,0,W,H);ctx.globalAlpha=1;
     ctx.strokeStyle='#d5fff5';ctx.lineWidth=4;ctx.beginPath();
-    ctx.arc(g.x,g.y,(.42-g.flash)/.42*(W/4),0,Math.PI*2);ctx.stroke();
+    ctx.arc(g.x,g.y,(.55-g.flash)/.55*Math.hypot(W,H),0,Math.PI*2);ctx.stroke();
   }
 }
 function frame(now){
