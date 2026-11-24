@@ -33,7 +33,7 @@ const check=(name,ok,detail)=>{assert.ok(ok,name+(detail?' '+JSON.stringify(deta
   // expiry: turn passes -> ended; later round -> ended
   G.turn=2;out.afterTurn=ev2State(G.ev2);out.discAfterTurn=ev2Disc(1,pink[1]);
   // rent event: rounds 3-4 only, +50% on targets, nothing elsewhere, mortgaged pays nothing
-  G.ev2={v:1,id:'film',city:'skyline',kind:'rent',pct:50,from:3,targets:pink.slice(),group:'pink',name:'Lagos Film Festival',area:'Surulere & Yaba',rounds:2};G.turn=0;
+  G.ev2={v:1,id:'fest',city:'skyline',kind:'rent',pct:50,from:3,targets:pink.slice(),group:'pink',name:CITY.festival,area:GNAME.pink,rounds:2};G.turn=0;
   const base=(()=>{const e=G.ev2;G.ev2=null;const r=rentFor(pink[0],7);G.ev2=e;return r})();out.rentBase=base;out.rentR3=rentFor(pink[0],7);G.round=4;out.rentR4=rentFor(pink[0],7);G.round=5;out.rentR5=rentFor(pink[0],7);
   G.round=4;const other=GROUPS.navy[0];G.own[other]={o:2,h:0,m:false};out.otherRent=rentFor(other,7)===(()=>{const e=G.ev2;G.ev2=null;const r=rentFor(other,7);G.ev2=e;return r})();
   G.own[pink[0]].m=true;out.mortRent=rentFor(pink[0],7);G.own[pink[0]].m=false;
