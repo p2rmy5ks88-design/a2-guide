@@ -288,9 +288,17 @@ function hdCityPane(T){const saved=loadSave(),c=CITY_DATA[setup.city],C=countryO
   card=`<button class="hd-card" id="hdSpot" type="button" aria-label="Spotlight: ${esc(R?R.name:sp.cityName)}, ${ready?'reward ready to claim':`${k} of ${SPOT_GOAL} matches`}${R?', reward '+esc(R.name):''}"><span class="th" style="${ph?`background-image:url(${ph})${lag?';background-size:430% auto;background-position:3% 86%':''}`:'background:#22325e'}"></span><span class="tx"><small>Spotlight</small><b>${esc(R?R.name:sp.cityName)}</b><span>${ready?'Reward ready':`${k} / ${SPOT_GOAL} matches`}</span>${weekLine?`<span class="hd-weekly-inline">${esc(weekLine)}</span>`:''}</span><span class="go" aria-hidden="true">${I_ARROW}</span></button>`}
  else{const sn=typeof seasonDisplay==='function'?seasonDisplay(S.n):S.n;
   card=`<button class="hd-card" id="qSeason" type="button" aria-label="Season ${sn}, ${esc(seasonName(S.n))}, tier ${t} of ${TIERS}${cl?', '+cl+' rewards ready':''}"><span class="th" style="background-image:url(${S.n===2?'art/skyline-gala.svg':'art/shop.jpg'})"></span><span class="tx"><small>Season ${sn}</small><b>${esc(seasonName(S.n))}</b><span>${cl?`${cl} reward${cl>1?'s':''} ready`:`Tier ${t} of ${TIERS}`}</span></span><span class="go" aria-hidden="true">${I_ARROW}</span></button>`}
+ /* Next goal (Career) and today's Daily missions, so there is always a clear next step (phase 3, 24 Nov 2026). */
+ let goal='';try{const v=window.SkylineCareer&&SkylineCareer.enabled&&SkylineCareer.state();const b=v&&v.find(x=>x.status!=='playable');
+  const r=b&&b.requirements.find(q=>q.have<q.need);if(r)goal=`${r.label.replace(/qualifying /i,'')} (${Math.min(r.have,r.need)}/${r.need}) → unlocks ${b.name}`;else if(v)goal='Every Career board is unlocked. Go for mastery!'}catch(e){}
+ let dTxt='',dOn=false;try{const D=daily(),dn=D.list.filter(id=>D.done[id]).length,stk=typeof streakNow==='function'?streakNow():0;dOn=dn<D.list.length;
+  dTxt=`${dn}/${D.list.length} daily missions${stk?` · ${stk}-day streak`:''}`}catch(e){}
+ const goals=(goal?`<button class="hd-goal" id="hdGoal" type="button"><i aria-hidden="true">🎯</i><span><small>Next goal</small>${esc(goal)}</span></button>`:'')+
+  (dTxt?`<button class="hd-goal${dOn?' on':''}" id="hdDaily" type="button"><i aria-hidden="true">📅</i><span><small>Daily</small>${esc(dTxt)}</span></button>`:'');
  T.innerHTML=`<div class="hd-stage v2">
   <div class="hd-city" style="--len:${len}"><small>${esc(C.name)}</small><h1>${esc(name)}</h1>
 </div>
+  ${goals?`<div class="hd-goals">${goals}</div>`:''}
   <div class="hd-actions">${main}<button class="hd-gmbtn" id="hdModes" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="hdGM">${I_LAYERS}<span>Game Modes</span></button></div>
   ${card}
   <div class="hd-gm" id="hdGM" role="dialog" aria-modal="false" aria-labelledby="hdGMh" hidden>
@@ -302,6 +310,8 @@ function hdCityPane(T){const saved=loadSave(),c=CITY_DATA[setup.city],C=countryO
   </div>
  </div>`;
  const q=s=>T.querySelector(s),gm=q('#hdGM'),gb=q('#hdModes');
+ if(q('#hdGoal'))q('#hdGoal').onclick=()=>{sfx('tap');const c=document.getElementById('hdCareer')||document.getElementById('crOpen');if(c)c.click()};
+ if(q('#hdDaily'))q('#hdDaily').onclick=()=>{sfx('tap');homeTab('daily')};
  const setGM=open=>{gm.hidden=!open;gb.setAttribute('aria-expanded',String(open));T.querySelector('.hd-stage').classList.toggle('gm-open',open);if(open){const f=gm.querySelector('.hd-gm-item');if(f)f.focus({preventScroll:true})}else gb.focus({preventScroll:true})};
  gb.onclick=()=>{sfx('tap');setGM(gm.hidden)};q('#hdGMx').onclick=()=>{sfx('tap');setGM(false)};
  gm.addEventListener('keydown',e=>{if(e.key==='Escape'){e.stopPropagation();setGM(false)}});
@@ -608,4 +618,14 @@ html.light #pane>.subtabs .stab:not(.on){color:#13284a!important}
 html.light .rf-filters button:not(.on):not([aria-pressed="true"]),html.light .rf-filters select,html.light .rf-filters input{background:#fff!important;color:#13284a!important;border:1px solid #d3dbe4!important}
 html.light .rf-collection-grid{color:#13284a!important}
 html.light .sc-awards-note{color:#526781!important}
+`;document.head.append(st)})();
+
+(()=>{const st=document.createElement('style');st.id='skyline-home-goals';st.textContent=`
+#title .hd-stage.v2 .hd-goals{position:absolute;right:calc(4*var(--hd-u));bottom:calc(100% - 36.5*var(--hd-u) - 4px);width:calc(31*var(--hd-u));min-width:250px;display:flex;flex-direction:column;gap:6px;pointer-events:auto;z-index:2}
+#title .hd-stage.v2.gm-open .hd-goals{visibility:hidden}
+#title .hd-stage.v2 .hd-goal{display:flex;align-items:center;gap:8px;min-height:44px;padding:5px 10px;border-radius:12px;border:1px solid #f2c45766;background:rgba(8,18,34,.72);color:#fff;text-align:left;font:600 12px/1.25 system-ui,-apple-system,sans-serif;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);cursor:pointer}
+#title .hd-stage.v2 .hd-goal i{font-style:normal;font-size:16px}
+#title .hd-stage.v2 .hd-goal small{display:block;font-size:9.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#f2c457}
+#title .hd-stage.v2 .hd-goal.on{border-color:#f2c457}
+#title .hd-stage.v2 .hd-goal span{white-space:normal;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}
 `;document.head.append(st)})();

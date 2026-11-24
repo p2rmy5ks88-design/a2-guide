@@ -23,7 +23,7 @@ if(['quick','standard','extended'].includes(Q.get('length')))$('length').value=Q
 const tokenCount=x=>x?.length||0;
 const money=R.cashFormat;
 const notice=(message,delay=2600)=>{const n=$('notice');n.textContent=message;n.hidden=false;clearTimeout(noticeTimer);noticeTimer=setTimeout(()=>n.hidden=true,delay)};
-async function fetchAssets(){const res=await fetch(base+'/board_data.json');if(!res.ok)throw Error(`Approved board map missing (${res.status}). Install the supplied 3D asset kit at ${base}`);source=await res.json();spaces=R.preserveRules(source,board)}
+async function fetchAssets(){const res=await fetch(base+'/board_data.json');if(!res.ok)throw Error(`Board data missing (${res.status}). Please update the app.`);source=await res.json();spaces=R.preserveRules(source,board)}
 const getSaved=()=>{try{return R.restore(localStorage.getItem(saveKey),spaces,board)}catch{return null}};
 const store=()=>{try{if(s&&s.phase!=='over')localStorage.setItem(saveKey,JSON.stringify(s))}catch(e){console.warn('Game save unavailable',e)}};
 function sendCareerResult(){if(!career||!s||s.phase!=='over'||s.endReason!=='highest-value')return;const facts=R.careerFacts(s,spaces);
@@ -58,10 +58,10 @@ function redraw(){if(!s||!three)return;three.sync(s);updateCards();detailsTile()
  if(phase==='roll')box.append(action('roll','🎲 ROLL DICE','roll',takeRoll,isTurn));
  if(phase==='decide'){
   if(isTurn&&isLanding&&R.isOwnable(landing)&&!s.properties[landing.id]){
-   box.append(action('buy','🛒 Buy '+money(landing.price_sc),'buy',()=>{R.buy(s,spaces);afterAction()},s.players[0].cash>=landing.price_sc));
-   box.append(action('auction','⚖️ Auction','secondary',async()=>{const bid=await askAmount('Bid for '+landing.name,0,s.players[0].cash,Math.min(s.players[0].cash,Math.round(landing.price_sc*.7)));if(bid!==null){R.auction(s,spaces,bid);afterAction()}}));
+   box.append(action('buy','🛒 Buy '+money(landing.price_sc),'buy',()=>{R.buy(s,spaces);SkylineFeel.play('buy');afterAction()},s.players[0].cash>=landing.price_sc));
+   box.append(action('auction','⚖️ Auction','secondary',async()=>{const bid=await askAmount('Bid for '+landing.name,0,s.players[0].cash,Math.min(s.players[0].cash,Math.round(landing.price_sc*.7)));if(bid!==null){R.auction(s,spaces,bid);SkylineFeel.play(s.properties[landing.id]?.owner===0?'buy':'tap');afterAction()}}));
   }
-  if(isTurn&&owner?.owner===0){const cost=R.buildCost(chosen,owner);box.append(action('build','🏗 Upgrade '+money(cost),'secondary',()=>{R.build(s,spaces,chosen.id);afterAction()},owner.stage<R.MAX_STAGE[board]&&s.players[0].cash>=cost))}
+  if(isTurn&&owner?.owner===0){const cost=R.buildCost(chosen,owner);box.append(action('build','🏗 Upgrade '+money(cost),'secondary',()=>{R.build(s,spaces,chosen.id);SkylineFeel.play('build');afterAction()},owner.stage<R.MAX_STAGE[board]&&s.players[0].cash>=cost))}
   if(isTurn&&owner?.owner>=1){box.append(action('trade','🤝 Offer to trade','secondary',async()=>{const min=Math.round(chosen.price_sc*(1.13+owner.stage*.28));const amt=await askAmount('Buy from '+s.players[owner.owner].name,min,s.players[0].cash,min);if(amt!==null){R.trade(s,spaces,chosen.id,amt);afterAction()}}))}
   if(isTurn){box.append(action('end','▶ End turn','end',takeEnd))}
  }
@@ -75,10 +75,10 @@ function redraw(){if(!s||!three)return;three.sync(s);updateCards();detailsTile()
 }
 function afterAction(){redraw();notice(s.log.at(-1)?.message||'Action recorded')}
 async function takeRoll(){if(busy||s.phase!=='roll')return;busy=true;try{
- const result=R.roll(s,spaces);$('turn').textContent=`🎲 Rolled ${result.dice.join(' + ')}`;
+ const cash0=s.players[0].cash,result=R.roll(s,spaces);SkylineFeel.play('dice');$('turn').textContent=`🎲 Rolled ${result.dice.join(' + ')}`;
  // Always move through the actual ordered 3D board spaces.
  if(result.steps.length)await three.move(0,result.steps,stepMs(true));
- s.selected=s.players[0].pos;three.close(s.selected);
+ s.selected=s.players[0].pos;three.close(s.selected);if(s.players[0].cash<cash0)SkylineFeel.play('bad');else if(s.players[0].cash>cash0)SkylineFeel.play('coin');
  if(s.phase==='over'){sendCareerResult();finish()}
  redraw();notice(s.log.at(-1)?.message||'Token moved',3000)
  }finally{busy=false;redraw()}}
@@ -91,6 +91,7 @@ function finish(){if(!s)return;const results=R.score(s,spaces),champ=s.players[s
  const st=me.stats||{},owned=Object.values(s.properties).filter(p=>p.owner===0),levels=owned.reduce((n,p)=>n+(p.stage||0),0);
  const mult=board==='dominion'?7:10,next=board==='dominion'?'Crown Empire':null;
  const careerLine=s.length==='quick'&&career&&full?'Quick matches earn Career mastery XP only; win a Standard or Extended match for progress.':!career?'Play this board from Career to count wins toward your Career progress.':!full?'Early finishes do not count for Career.':won?(next?`This win counts toward unlocking ${next}. Your Career updates when you return to Skyline Estates.`:'This win counts toward Crown Empire mastery. Your Career updates when you return to Skyline Estates.'):`Only wins count for Career. Win a Standard match here${next?' to work toward '+next:''}.`;
+ SkylineFeel.play(won?'win':'tap');
  const box=$('finish');box.innerHTML=`<div class="box"><h2>${won?'🏆 You win!':`🏆 ${champ.name.replace(' (CPU)','')} wins`}</h2><p>${full?`You finished ${['','1st','2nd','3rd','4th'][place]} of ${results.length} with ${money(R.worth(s,spaces,0))} total value.`:'Match ended early. Final standings:'}</p>
   <div class="sumGrid"><span>Streets owned</span><b>${owned.length}</b><span>Upgrade levels</span><b>${levels}</b><span>Streets bought</span><b>${st.buys||0}</b><span>Auctions won</span><b>${st.auctions||0}</b></div>
   <div class="sumRank">${results.map((p,i)=>`<span>${i+1}. ${p.name.replace(' (CPU)','')}</span><b>${money(p.worth)}</b>`).join('')}</div>
@@ -114,12 +115,12 @@ $('declareBankruptcy').onclick=()=>closeFromMenu(true);
 $('endMatch').onclick=()=>closeFromMenu(false);
 function tileSelected(id){if(!s||busy)return;s.selected=id;three.choose(id);redraw()}
 async function start(state){
- s=state;$('setup').hidden=true;notice('Loading approved 3D board, 3D tokens and buildings…',10000);
+ s=state;$('setup').hidden=true;notice('Loading the 3D board…',10000);
  try{three=await createBoard({canvas:$('board'),board,source,base,quality:Q.get('quality')||'high',onSelect:tileSelected});
    window.__skylineApproved={state:()=>s,renderer:()=>three,spaces,board,source,roll:takeRoll,endTurn:takeEnd,select:tileSelected};
    if(s.selected!==0)three.choose(s.selected);three.overview();redraw();notice('Tap a tile or roll the dice to begin.',3200)
    startGuide();
- }catch(error){console.error(error);$('setup').hidden=false;notice('Could not load the approved GLB board: '+error.message,14000);throw error}
+ }catch(error){console.error(error);$('setup').hidden=false;notice('Could not load the 3D board: '+error.message,14000);throw error}
 }
 function startGuide(){const N=s.maxRounds;
  SkylineBoardGuide.start({key:board,facts:()=>{if(!s||s.phase==='over')return null;const me=s.players[0],land=spaces[me.pos],mine=s.turn===0;
@@ -148,4 +149,4 @@ boardUI=SkylineBoardUI.init({key:board,sideWidth:'clamp(189px,22vw,253px)',money
  onTile:id=>tileSelected(+id)});
 try{await fetchAssets();const saved=getSaved();$('resume').hidden=!saved;if(saved)$('resume').textContent=`Resume round ${saved.round}`;
  if(Q.get('autostart')==='1')start(saved||R.createMatch(board,source,{length:$('length').value,seed:Number(Q.get('seed'))||20261121,career}));
-}catch(error){console.error(error);notice('Approved board data unavailable: '+error.message,14000);$('setupDesc').textContent=error.message;$('start').disabled=true}
+}catch(error){console.error(error);notice('Board data unavailable: '+error.message,14000);$('setupDesc').textContent=error.message;$('start').disabled=true}

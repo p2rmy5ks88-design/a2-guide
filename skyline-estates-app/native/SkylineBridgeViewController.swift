@@ -6,6 +6,7 @@ import UIKit
 class SkylineBridgeViewController: CAPBridgeViewController {
     override open func capacitorDidLoad() {
         bridge?.registerPluginInstance(SkylineAwakePlugin())
+        bridge?.registerPluginInstance(SkylineHapticsPlugin())
         if #available(iOS 15.0, *) {
             bridge?.registerPluginInstance(SkylineStoreKitPlugin())
             bridge?.registerPluginInstance(SkylineSharePlugin())
@@ -65,6 +66,28 @@ public class SkylineAwakePlugin: CAPPlugin, CAPBridgedPlugin {
         DispatchQueue.main.async {
             UIApplication.shared.isIdleTimerDisabled = on
             call.resolve(["on": on])
+        }
+    }
+}
+
+// Light taps for game moments (dice, buying, building, rent, winning). No data in or out.
+@objc(SkylineHapticsPlugin)
+public class SkylineHapticsPlugin: CAPPlugin, CAPBridgedPlugin {
+    public let identifier = "SkylineHapticsPlugin"
+    public let jsName = "SkylineHaptics"
+    public let pluginMethods: [CAPPluginMethod] = [CAPPluginMethod(name: "impact", returnType: CAPPluginReturnPromise)]
+
+    @objc func impact(_ call: CAPPluginCall) {
+        let kind = call.getString("style") ?? "light"
+        DispatchQueue.main.async {
+            switch kind {
+            case "success": UINotificationFeedbackGenerator().notificationOccurred(.success)
+            case "warning": UINotificationFeedbackGenerator().notificationOccurred(.warning)
+            case "medium": UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+            case "heavy": UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
+            default: UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            }
+            call.resolve()
         }
     }
 }

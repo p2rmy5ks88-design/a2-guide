@@ -125,7 +125,7 @@ table.res{width:100%;border-collapse:collapse;font-size:14px;margin:8px 0}table.
 body.sideoff #decision{right:calc(var(--sr) + 16px)}
 #chainCard{display:none!important}body.deciding #side{opacity:0;pointer-events:none;transform:translateX(calc(100% + 20px))}
 </style>
-<script src="lib/board-ui.js"></script><script src="lib/board-guide.js"></script>
+<script src="lib/board-ui.js"></script><script src="lib/board-daylight.js"></script><script src="lib/board-loading.js"></script><script src="lib/board-guide.js"></script><script src="lib/skyline-feel.js"></script>
 </head>
 <body>
 <canvas id="board" aria-label="Crossroads Capital classic-sized circular 3D board. Tap any property or hub to inspect it."></canvas>
@@ -147,7 +147,8 @@ body.sideoff #decision{right:calc(var(--sr) + 16px)}
 <div id="toast" class="panel" role="status"></div>
 <div id="menu" class="screen" hidden><div class="card panel"><h1>Menu</h1><p>Crossroads Capital — Landmark Chase</p>
  <div class="mlist"><button class="btn primary" id="mResume">▶ Resume</button><button class="btn" id="mPortfolio">🏘 Portfolio</button><button class="btn" id="mSpeed">⏩ Speed: normal</button><button class="btn" id="mCam">🗺 Camera: whole board</button><button class="btn" id="mRadio">📻 Radio: off</button><button class="btn" id="mRules">📖 Rules</button><button class="btn" id="mNew">↻ New match</button><button class="btn" id="mEnd">🏁 End game &amp; score</button><button class="btn" id="mBankrupt">Declare bankruptcy</button><button class="btn" id="mHome">🏠 Skyline Estates</button></div></div></div>
-<div id="rules" hidden><div class="card panel"><h1>How to play</h1><p>Build the most celebrated city: most Legacy Points after 15 turns each (Quick: 9).</p>
+<div id="rules" hidden><div class="card panel"><h1>How to play</h1><p>Build the most celebrated city: most Legacy Points (LP) after 15 turns each (Quick: 9).</p>
+ <h3>Money and points</h3><b>CC</b> (City Credits) is the money for this match only. <b>LP</b> (Legacy Points) decide the winner. Your coins and Skyline Cash (<b>SC</b>) rewards are added when you return to Skyline Estates.
  <h3>Landmark Chains</h3>You always pursue one three-stage brief. Complete the stages in order (one stamp per action), then hold a <b>Ribbon Cutting</b> in your turn for +5 Legacy Points and 200 CC — +1 more if you claim it on the Skybridge. A landmark appears in the city and you pick a new brief.
  <h3>The circular city</h3>Play on one full-size circular board with the familiar Skyline property tiles, colour districts, miniature buildings and landmarks. From <b>Start</b>, choose the Riverside (west) or Highland (east) half of the circle. Both arcs meet at <b>Skybridge Bonus</b>, then the token travels through <b>Grand Exchange</b> in the centre and returns to <b>Start / Payday</b> (+200 CC once per roll). Route choices and Landmark Chase rules are unchanged.
  <h3>Every landing matters</h3>Unowned: Acquire, Reserve (25% deposit) or Auction. Yours: Open House (+50) or Upgrade. A rival’s: pay rent, then Scout new briefs or offer a deal. Metro: Express to the other line (75) or Survey (+60). Events: choose one of two City Moments. Tax and fees trade cash for Legacy Points.
@@ -292,7 +293,7 @@ function openDeal(desk){const others=s.players.filter(p=>p.id!==0&&!p.out);if(!o
 $('mainBtn').onclick=()=>{if(!s)return;if(s.over)return showResults();const pd=CC.pending(s);if(pd.kind==='roll'&&pd.pid===0){$('decision').dataset.sheet='';doAct(0,{type:'roll'})}else if(pd.kind==='action'&&pd.pid===0){$('decision').dataset.sheet='';doAct(0,{type:'end'})}};
 async function doAct(pid,a){if(busy)return;busy=true;render();const r=CC.act(s,pid,a);if(!r.ok){busy=false;toast(r.error);render();return}
  await play(r.events);save();busy=false;r3.sync(CC.view(s));render();if(!s.over)pump();else finishMatch()}
-async function play(events){for(const e of events){
+async function play(events){for(const e of events){try{SkylineFeel.event(e,Math.max(0,s.players.findIndex(p=>!p.ai)))}catch(err){}
  if(e.type==='dice'){showDice(e.dice);await wait(380*speed)}
  else if(e.type==='move'){document.body.classList.add('moving');r3.sync(CC.view(s));await r3.moveToken(e.pid,e.path,{express:!!e.express});document.body.classList.remove('moving')}
  else if(e.type==='land'){selected=e.tile;$('tile').hidden=true;r3.focusTile(e.tile)}
