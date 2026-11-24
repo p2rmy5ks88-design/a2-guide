@@ -38,7 +38,7 @@ function apply(t,{debt=0}={}){
  P.cach=P.cach||{};for(const f of t.flags.cach||[]){const i=f.indexOf('.'),c=f.slice(0,i),id=f.slice(i+1);(P.cach[c]=P.cach[c]||{})[id]=P.cach[c][id]||now}
  P.spot=P.spot&&typeof P.spot==='object'?P.spot:{};P.spot.flags=P.spot.flags||{};for(const id of t.flags.camp||[])P.spot.flags[id]=P.spot.flags[id]||now;
  if('tok' in t.eq&&t.eq.tok)P.tok=t.eq.tok;P.eq=P.eq||{};for(const s of ['fin','dice','surr','frame','char','roof'])if(s in t.eq)P.eq[s]=t.eq[s];
- rawSave();try{refreshCoins();railProfile();if(typeof applyDiceSkin==='function')applyDiceSkin()}catch(e){}
+ try{pruneRetiredBoards()}catch(e){}rawSave();try{refreshCoins();railProfile();if(typeof applyDiceSkin==='function')applyDiceSkin()}catch(e){}
 }
 const BACKUP='skylinePrefs.backup.';
 function backups(){const out=[];for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith(BACKUP))try{const v=JSON.parse(localStorage.getItem(k));out.push({key:k,at:v.at,reason:v.reason,coins:v.prefs?.coins||0,xp:v.prefs?.xp||0})}catch(e){}}return out.sort((a,b)=>b.at-a.at)}
@@ -61,7 +61,7 @@ function activateLocalPrefs(prefs){
  engine.pause();
  try{localStorage.setItem(PKEY,JSON.stringify(next))}catch(e){if(!wasPaused)engine.resume();throw e}
  for(const k of Object.keys(PREF))if(!(k in next))delete PREF[k];
- Object.assign(PREF,next);
+ Object.assign(PREF,next);try{pruneRetiredBoards()}catch(e){}
 }
 function exportSave(){
  const data=JSON.stringify({app:'skyline-estates',exportedAt:new Date().toISOString(),prefs:PREF},null,1),name='skyline-save-'+new Date().toISOString().slice(0,10)+'.json';

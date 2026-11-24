@@ -35,9 +35,9 @@ async function home(page,label){
    await page.goto(base+'approved-career-board.html?board='+board+'&career=1&length=quick');await page.waitForSelector('#start',{state:'visible',timeout:20000});await page.click('#start');
    await page.waitForTimeout(1500);
    for(let i=0;i<20;i++){if(await page.locator('#finish').isVisible())break;
-     if(await page.locator('#detailsDrawer').isHidden())await page.click('#more');await page.waitForTimeout(300);
+     if(await page.locator('#menu').isHidden())await page.click('#menuBtn');await page.waitForTimeout(300);
      if(await page.locator('#endMatch').isEnabled()){await page.click('#endMatch');await page.waitForTimeout(800);continue}
-     await page.click('#closeDetails').catch(()=>{});await page.waitForTimeout(1500)}
+     await page.click('#mResume').catch(()=>{});await page.waitForTimeout(1500)}
    await page.waitForSelector('#finish',{state:'visible',timeout:20000});ok(true,board+': match ended, results shown');
    await page.click('#returnCareer');const ms=await home(page,board);console.log('  home in '+ms+' ms');
    ok(!errs.length,board+': no page errors '+errs.join('|'));await ctx.close()}

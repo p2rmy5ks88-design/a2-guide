@@ -1,11 +1,12 @@
 /* Shared HUD pieces for the Career board pages (owner request 24 Nov 2026): one implementation instead of a copy
-   per board, so a fix lands everywhere at once. Used by City Ventures and Crossroads Capital.
+   per board, so a fix lands everywhere at once. Used by City Ventures, Crossroads Capital, Skyline Dominion and Crown Empire.
 
    SkylineBoardUI.init({
      key:'cv',                       // remembers the side-panel choice per board
      sideWidth:'min(232px,30vw)',    // CSS width of the page's #side panel
      groups:()=>[{name,sub,color,items:[{id,name,price,stage,rent,mortgaged,owner:null|{you,name,color}}]}],
-     onTile:id=>{}                   // tap on a street in the panel or portfolio
+     onTile:id=>{},                  // tap on a street in the panel or portfolio
+     money:n=>'…'                    // optional money format (default: CC)
    }) → {refresh()}
 
    It provides: the "Your streets" panel (#holdings), the Portfolio sheet (menu item #mPortfolio and the panel
@@ -14,7 +15,7 @@
 if(window.SkylineBoardUI)return;
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const fmt=n=>(Math.round(n)||0).toLocaleString('en-US')+' CC';
+const fmtCC=n=>(Math.round(n)||0).toLocaleString('en-US')+' CC';
 const css=`
 #holdings{padding:6px 8px 7px;font-size:11px}#holdings .hh{display:flex;align-items:center;justify-content:space-between;margin-bottom:3px}
 #holdings .hh b{font-size:10.5px;letter-spacing:.08em;color:#f6d47c;text-transform:uppercase}#holdings .hh button{min-height:44px;padding:2px 10px;font-size:11.5px;border-radius:9px}
@@ -38,6 +39,7 @@ function init(o){
  document.documentElement.style.setProperty('--sideW',o.sideWidth||'min(232px,30vw)');
  const groups=()=>{try{return o.groups()||[]}catch(e){return []}};
  const tap=id=>{try{o.onTile&&o.onTile(id)}catch(e){}};
+ const fmt=o.money||fmtCC;
 
  // ---- portfolio sheet ----
  let pf=$('portfolio');

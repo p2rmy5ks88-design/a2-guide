@@ -13,6 +13,8 @@ const ok=(name,value,extra)=>{assert.ok(value,name+' '+JSON.stringify(extra||'')
  try {
  const ctx=await browser.newContext({viewport:{width:956,height:440},deviceScaleFactor:3,hasTouch:true,isMobile:true,serviceWorkers:'block',reducedMotion:'no-preference'});
  const p=await ctx.newPage();p.on('pageerror',e=>errors.push(String(e)));
+ // First-turn tips are checked by board-guide-browser.cjs; keep them off here so taps reach the board.
+ await ctx.addInitScript(()=>{for(const k of ['dominion','empire'])localStorage.setItem('skylineBoardGuide:'+k,'"off"')});
  const url=origin+'skyline-estates/approved-career-board.html?board='+board+'&autostart=1&seed='+seed+'&quality='+(browserName==='webkit'?'high':'low')+'&speed=instant';
  await p.goto(url);
  await p.waitForFunction(n=>window.__skylineApproved?.renderer()?.stats().spaces===n,expected,{timeout:120000});
@@ -40,9 +42,9 @@ const ok=(name,value,extra)=>{assert.ok(value,name+' '+JSON.stringify(extra||'')
  await p.touchscreen.tap(selected.x,selected.y);
  await p.waitForFunction(()=>__skylineApproved.state().selected===6,null,{timeout:12000});
  ok('real touch-pick raycasts tile 6 onto game selection',true);
- await p.locator('#more').click();
- ok('full details open without leaving live board',await p.locator('#detailsDrawer').isVisible());
- await p.locator('#closeDetails').click();
+ await p.locator('#menuBtn').click();
+ ok('menu opens over the live board with standings',await p.locator('#menu').isVisible()&&await p.locator('#standings span').count()===4);
+ await p.locator('#mResume').click();
  await p.locator('#whole').click();
  ok('whole board control sets overview camera',await p.evaluate(()=>__skylineApproved.renderer().stats().mode==='whole'));
  await p.locator('#close').click();
@@ -53,7 +55,7 @@ const ok=(name,value,extra)=>{assert.ok(value,name+' '+JSON.stringify(extra||'')
  await p.waitForFunction(()=>window.__skylineApproved?.renderer()?.stats().spaces>0,null,{timeout:120000});
  const stateAfter=await p.evaluate(()=>({pos:__skylineApproved.state().players[0].pos,property:__skylineApproved.state().properties[__skylineApproved.state().players[0].pos]?.stage}));
  ok('resume restores exact new-board position and built property',stateBefore.pos===stateAfter.pos&&stateBefore.property===stateAfter.property);
- const view=await p.evaluate(()=>({bodyOverflow:document.documentElement.scrollWidth>innerWidth+2,buttons:[...document.querySelectorAll('#right button')].filter(x=>!x.disabled).every(x=>x.getBoundingClientRect().height>=43.5)}));
+ const view=await p.evaluate(()=>({bodyOverflow:document.documentElement.scrollWidth>innerWidth+2,buttons:[...document.querySelectorAll('#side button')].filter(x=>!x.disabled).every(x=>x.getBoundingClientRect().height>=43.5)}));
  ok('landscape controls fit and preserve 44pt hit targets',!view.bodyOverflow&&view.buttons,view);
  await p.locator('#notice').waitFor({state:'hidden',timeout:15000});
  await p.screenshot({path:path.join(output,board+'-956x440-gameplay.png'),timeout:90000,animations:'disabled'});
@@ -61,7 +63,7 @@ const ok=(name,value,extra)=>{assert.ok(value,name+' '+JSON.stringify(extra||'')
  await p.setViewportSize({width:844,height:390});
  await p.evaluate(()=>{for(const [k,v]of Object.entries({'--safe-l':'47px','--safe-r':'47px','--safe-b':'21px'}))document.documentElement.style.setProperty(k,v)});
  await p.waitForTimeout(400);
- const fit=await p.evaluate(()=>{const ids=['boardBox','right','bottom','more'];return ids.map(id=>{const r=document.getElementById(id).getBoundingClientRect();return{id,x:r.left,right:r.right,top:r.top,bottom:r.bottom,ok:r.left>=46&&r.right<=innerWidth-46&&r.top>=0&&r.bottom<=innerHeight}})});
+ const fit=await p.evaluate(()=>{const ids=['boardBox','side','bottom','menuBtn'];return ids.map(id=>{const r=document.getElementById(id).getBoundingClientRect();return{id,x:r.left,right:r.right,top:r.top,bottom:r.bottom,ok:r.left>=46&&r.right<=innerWidth-46&&r.top>=0&&r.bottom<=innerHeight}})});
  ok('844x390 iPhone safe-area board/HUD elements remain visible',fit.every(x=>x.ok),fit);
  const tabletop=await p.evaluate(()=>{
   const board=document.getElementById('boardBox').getBoundingClientRect();
@@ -70,7 +72,7 @@ const ok=(name,value,extra)=>{assert.ok(value,name+' '+JSON.stringify(extra||'')
  });
  ok('board-first: substantial playable 3D area, four players in bottom strip, no redundant sidebar',tabletop.boardWidth>=tabletop.viewport*.58&&tabletop.rosterHidden&&tabletop.players===4,tabletop);
  await p.screenshot({path:path.join(output,board+'-844x390-safe.png'),timeout:90000,animations:'disabled'});
- await p.locator('#more').click();
+ await p.locator('#menuBtn').click();
  p.once('dialog',dialog=>dialog.dismiss());
  await p.locator('#endMatch').click();
  ok('cancelling early finish keeps the match active',await p.evaluate(()=>__skylineApproved.state().phase!=='over'));
