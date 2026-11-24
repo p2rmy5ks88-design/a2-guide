@@ -125,7 +125,7 @@ table.res{width:100%;border-collapse:collapse;font-size:14px;margin:8px 0}table.
 body.sideoff #decision{right:calc(var(--sr) + 16px)}
 #chainCard{display:none!important}body.deciding #side{opacity:0;pointer-events:none;transform:translateX(calc(100% + 20px))}
 </style>
-<script src="lib/board-ui.js"></script>
+<script src="lib/board-ui.js"></script><script src="lib/board-guide.js"></script>
 </head>
 <body>
 <canvas id="board" aria-label="Crossroads Capital classic-sized circular 3D board. Tap any property or hub to inspect it."></canvas>
@@ -179,6 +179,14 @@ const boardUI=SkylineBoardUI.init({key:'cc',sideWidth:'min(210px,28vw)',onTile:i
  groups:()=>!s?[]:Object.keys(CC.GROUPS).map(g=>{const ids=CC.GROUPS[g];return{name:CC.GROUP_NAMES[g],sub:CC.LOOP_NAMES[CC.BY[ids[0]].loop]||'',color:CC.GROUP_COLORS[g],
   items:ids.map(id=>{const t=CC.BY[id],o=s.own[id],P=o&&s.players[o.owner];return{id,name:t.name,price:t.price,stage:o?CC.STAGES[o.stage||0]:null,rent:o?CC.rent(s,id,s.turn.dice):null,mortgaged:!!(o&&o.mortgaged),owner:o?{you:o.owner===0,name:P.name,color:P.color}:null}})}})});
 window.__cc={state:()=>s,rules:CC,renderer:r3,act:(pid,a)=>doAct(pid,a),busy:()=>busy};
+SkylineBoardGuide.start({key:'cc',facts:()=>{const X=window.__cc;const s=X&&X.state();if(!s||!document.getElementById('start')?.hidden&&document.getElementById('start'))return null;const P=X.rules.pending(s);if(P.kind==='over')return null;const me=s.players.findIndex(p=>!p.ai);const pl=s.players[P.pid];return {mine:!!pl&&!pl.ai,kind:P.kind,owns:X.rules.owned(s,me<0?0:me).length}},
+ steps:[{id:'goal',when:()=>true,title:'Your goal',text:'Score the most Legacy Points by the last turn. Landmark Chains are the biggest source.'},
+  {id:'chain',when:f=>f.mine&&f.kind==='chain',until:f=>f.kind!=='chain',title:'Pick a Landmark brief',text:'Choose a three-stage brief. Finish its stages in order, then hold a Ribbon Cutting for +5 Legacy Points.'},
+  {id:'roll',when:f=>f.mine&&f.kind==='roll',until:f=>f.kind!=='roll',title:'Roll the dice',text:'Roll to move. From Start you choose the Riverside or Highland half of the city.'},
+  {id:'buy',when:f=>f.mine&&f.kind==='buy',until:f=>f.kind!=='buy',title:'Every landing matters',text:'On a free property: acquire it, reserve it with a 25% deposit, or send it to auction.'},
+  {id:'build',when:f=>f.mine&&f.owns>0,title:'Upgrade your streets',text:'Land on your own property to Upgrade it or hold an Open House for cash.'},
+  {id:'menu',when:f=>f.owns>0&&!f.mine,title:'Menu',text:'\u2630 Menu has your Portfolio, the full rules, Fast speed and the radio.'}]});
+
 
 // ---------- setup ----------
 let len=['standard','quick'].includes(Q.get('length'))?Q.get('length'):'standard',opp=3;

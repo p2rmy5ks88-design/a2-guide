@@ -110,7 +110,7 @@ table.res{width:100%;border-collapse:collapse;font-size:14px;margin:8px 0}table.
  #side .panel{flex-shrink:0}
 }
 </style>
-<script src="lib/board-ui.js"></script>
+<script src="lib/board-ui.js"></script><script src="lib/board-guide.js"></script>
 </head>
 <body>
 <canvas id="board" aria-label="City Ventures 3D board. Tap a space to see its details."></canvas>
@@ -167,6 +167,13 @@ const boardUI=SkylineBoardUI.init({key:'cv',sideWidth:'min(232px,30vw)',onTile:i
   for(const [k,ids] of Object.entries(by)){const t0=CV.TILES[ids[0]];out.push({name:t0.district?CV.DISTRICT_NAMES[k]:k==='transit'?'Transit':'Utilities',sub:t0.district?'District':'',color:t0.district?CV.DISTRICT_COLORS[k]:k==='transit'?'#5b6b80':'#9aa9b8',
    items:ids.map(i=>{const t=CV.TILES[i],o=s.own[i],P=o&&s.players[o.owner];return{id:i,name:t.name,price:t.price,stage:o?(t.type==='property'?CV.STAGES[o.stage]:t.type==='transit'?'Station':'Utility'):null,rent:o?CV.rent(s,i,s.turn.dice):null,mortgaged:!!(o&&o.mortgaged),owner:o?{you:o.owner===0,name:P.name,color:P.color||'#888'}:null}})})}return out}});
 window.__cv={state:()=>s,rules:CV,renderer:r3,act:(pid,a)=>doAct(pid,a),busy:()=>busy};
+SkylineBoardGuide.start({key:'cv',facts:()=>{const X=window.__cv;const s=X&&X.state();if(!s||!document.getElementById('start')?.hidden&&document.getElementById('start'))return null;const P=X.rules.pending(s);if(P.kind==='over')return null;const me=s.players.findIndex(p=>!p.ai);const pl=s.players[P.pid];return {mine:!!pl&&!pl.ai,kind:P.kind,owns:X.rules.owned(s,me<0?0:me).length}},
+ steps:[{id:'goal',when:()=>true,title:'Your goal',text:'Have the highest City Value when the last turn ends: cash, plus your properties, plus upgrades and district bonuses.'},
+  {id:'roll',when:f=>f.mine&&f.kind==='roll',until:f=>f.kind!=='roll',title:'Roll the dice',text:'Roll to move. Corners and stations give you choices, not just cash.'},
+  {id:'buy',when:f=>f.mine&&f.kind==='buy',until:f=>f.kind!=='buy',title:'Buy or auction',text:'Buy the property you landed on, or send it to auction. Rivals who land on it pay you rent.'},
+  {id:'build',when:f=>f.mine&&f.owns>0,title:'Build in districts',text:'Own 2 of a district\u2019s 3 properties to build Low-rise and Mid-rise. Own all 3 for a Landmark.'},
+  {id:'menu',when:f=>f.owns>0&&!f.mine,title:'Menu',text:'\u2630 Menu has your Portfolio, the full rules, Fast speed and the radio.'}]});
+
 
 // ---------- setup ----------
 let len=['standard','quick'].includes(Q.get('length'))?Q.get('length'):'standard',opp=3;

@@ -3,6 +3,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#08172d"><title>Skyline Estates — Dominion & Crown Empire</title>
 <link rel="stylesheet" href="presentation/approved-board.css">
+<script src="lib/board-ui.js"></script><script src="lib/board-guide.js"></script>
 </head><body>
 <main id="shell" aria-label="Interactive 3D Skyline Estates board game">
 <div id="bg"></div>
@@ -10,13 +11,22 @@
 <header id="heading"><h1 id="gameName">SKYLINE ESTATES<small id="subtitle"></small></h1><p class="blurb" id="description"></p></header>
 <div id="hudTop"><span id="round" class="pill">Round 1</span><span id="turn" class="pill">🎲 Your turn</span></div>
 <div id="roster" aria-label="Players"></div>
-<button id="more" type="button" aria-controls="detailsDrawer" aria-expanded="false">☰ Game details</button>
-<aside id="detailsDrawer" hidden><h3>Game details</h3><div id="advancedInfo"></div><button id="declareBankruptcy">Declare bankruptcy</button><button id="endMatch">End game &amp; score</button><button id="closeDetails">▣ Back to board</button></aside>
-<aside id="right" aria-label="Selected space and game actions">
+<button id="menuBtn" type="button" aria-haspopup="dialog" aria-controls="menu">☰ Menu</button>
+<aside id="side" aria-label="Selected space and game actions">
  <section id="property" aria-live="polite"><div class="tile-line"></div><h2 id="propertyName">Select a space</h2><img id="propertyImage" class="mini" src="" alt="Property tile art" hidden><div id="propertyMeta"></div></section>
  <div id="actionbox" aria-label="Turn actions"></div>
+ <section id="holdings" aria-label="Your streets"></section>
 </aside>
 <div id="bottom"><div id="seatSummary" style="display:contents"></div><nav id="cameraButtons" aria-label="3D board camera"><button id="whole" class="active">◈ Whole board</button><button id="close">⌕ Close view</button></nav></div>
+<div id="menu" class="screen" hidden><div class="card panel"><h1>Menu</h1><p id="menuSub"></p><div id="standings"></div>
+ <div class="mlist"><button class="btn primary" id="mResume">▶ Resume</button><button class="btn" id="mPortfolio">🏘 Portfolio</button><button class="btn" id="mRules">📖 Rules</button><button class="btn" id="mSpeed">⏩ Speed: normal</button><button class="btn" id="mRadio">📻 Radio: off</button><button class="btn" id="mNew">↻ New match</button><button class="btn" id="endMatch">🏁 End game &amp; score</button><button class="btn" id="declareBankruptcy">Declare bankruptcy</button><button class="btn" id="mHome">🏠 Skyline Estates</button></div></div></div>
+<div id="rules" class="screen" hidden><div class="card panel"><h1>How to play</h1><p id="rulesLead"></p>
+ <h3>Your turn</h3>Roll and move. Land on a free street to buy it, or send it to auction. On streets you own, tap the street and upgrade it to raise its rent.
+ <h3>Rent and spaces</h3>Landing on a rival's street costs rent; more upgrades mean higher rent. Passing GO pays your salary. Event spaces add or take cash, tax spaces take cash, and Civic Review skips your next turn.
+ <h3>Deals</h3>Tap a rival's street to offer to buy it.
+ <h3>Winning</h3>When the last round ends, the highest total value wins: cash plus streets plus what you spent on upgrades. Run out of cash and you're out.
+ <h3>Rewards</h3><span id="rulesRewards"></span>
+ <div class="row"><button class="btn primary" id="rulesClose">Got it</button></div></div></div>
 <div id="notice" role="status" hidden></div><div id="finish" hidden></div>
 <section id="setup"><div class="setupCard"><h1 id="setupTitle">Skyline Estates</h1><p id="setupDesc">Buy streets, build towers and out-earn your rivals on this 3D board.</p><label for="length">Match length</label> <select id="length"><option value="quick">Quick</option><option value="standard" selected>Standard</option><option value="extended">Extended</option></select><div class="setupActions"><button id="start">🎲 Start match</button><button id="resume" hidden>Resume match</button></div><p class="muted">Win against Normal or Hard computer players to earn Career progress and bonus rewards.</p></div></section>
 </main>

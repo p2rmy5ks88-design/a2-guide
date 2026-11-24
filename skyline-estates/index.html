@@ -3877,7 +3877,7 @@ async function speedResolve(p,d){const s=d.s,w=d[0]+d[1];
 
 /* ================= WORLD: COUNTRIES AND CITIES (generated) ================= */
 const COUNTRIES=[{"key": "INT", "name": "World Tour", "flag": "🌍", "cur": {"pre": "$", "post": "K", "big": "M", "bigPre": "$", "m": 1}, "lvl": 1, "cols": ["#0f2a52", "#e2b25a"], "cities": ["skyline"]}];
-const CITY_RAW={"skyline": {"key": "skyline", "country": "INT", "name": "International", "blurb": "One board, the world's best streets", "logo": "SKYLINE", "free": "Skyline Plaza", "traffic": "the Ring Road", "festival": "World Expo", "props": [["Moi Avenue", "Nairobi"], ["Kenyatta Avenue", "Nairobi"], ["Allen Avenue", "Lagos"], ["Admiralty Way", "Lagos"], ["Awolowo Road", "Lagos"], ["Linking Road", "Mumbai"], ["Colaba Causeway", "Mumbai"], ["Marine Drive", "Mumbai"], ["Avenida Atlântica", "Rio de Janeiro"], ["Rua Oscar Freire", "São Paulo"], ["Avenida Paulista", "São Paulo"], ["Oxford Street", "London"], ["Regent Street", "London"], ["Bond Street", "London"], ["Rue de Rivoli", "Paris"], ["Avenue Montaigne", "Paris"], ["Champs-Élysées", "Paris"], ["Omotesando", "Tokyo"], ["Shibuya", "Tokyo"], ["Ginza", "Tokyo"], ["Park Avenue", "New York"], ["Fifth Avenue", "New York"]], "gname": {"brown": "Nairobi", "sky": "Lagos", "pink": "Mumbai", "orange": "Brazil", "red": "London", "yellow": "Paris", "green": "Tokyo", "navy": "New York"}, "rails": [["Grand Central", "New York", "🚆"], ["World Port", "Harbour Front", "⚓"], ["Skyline International Airport", "Terminal 1", "✈️"], ["Metro Express", "City Centre", "🚌"]], "env": ["palms"], "motif": "adire", "recipe": "eko:beach"}};
+const CITY_RAW={"skyline": {"key": "skyline", "country": "INT", "name": "Skyline International", "blurb": "One board, the world's best streets", "logo": "SKYLINE", "free": "Skyline Plaza", "traffic": "the Ring Road", "festival": "World Expo", "props": [["Moi Avenue", "Nairobi"], ["Kenyatta Avenue", "Nairobi"], ["Allen Avenue", "Lagos"], ["Admiralty Way", "Lagos"], ["Awolowo Road", "Lagos"], ["Linking Road", "Mumbai"], ["Colaba Causeway", "Mumbai"], ["Marine Drive", "Mumbai"], ["Avenida Atlântica", "Rio de Janeiro"], ["Rua Oscar Freire", "São Paulo"], ["Avenida Paulista", "São Paulo"], ["Oxford Street", "London"], ["Regent Street", "London"], ["Bond Street", "London"], ["Rue de Rivoli", "Paris"], ["Avenue Montaigne", "Paris"], ["Champs-Élysées", "Paris"], ["Omotesando", "Tokyo"], ["Shibuya", "Tokyo"], ["Ginza", "Tokyo"], ["Park Avenue", "New York"], ["Fifth Avenue", "New York"]], "gname": {"brown": "Nairobi", "sky": "Lagos", "pink": "Mumbai", "orange": "Brazil", "red": "London", "yellow": "Paris", "green": "Tokyo", "navy": "New York"}, "rails": [["Grand Central", "New York", "🚆"], ["World Port", "Harbour Front", "⚓"], ["Skyline International Airport", "Terminal 1", "✈️"], ["Metro Express", "City Centre", "🚌"]], "env": ["palms"], "motif": "adire", "recipe": "eko:beach"}};
 /* ================= WORLD RUNTIME ================= */
 const CITY_DATA={},CITY_ORDER=[],CITY_COUNTRY={};
 const GENERIC_UTILS=[['City Power Grid','⚡'],['Lagoon Water Board','💧']];
@@ -4066,6 +4066,21 @@ const countryPlays=C=>C.cities.reduce((a,c)=>a+((PREF.cstat||{})[c]?PREF.cstat[c
 /* One classic board (owner decision 24 Nov 2026): Skyline International is the only classic board. */
 const ONE_CITY='skyline',PLAY_CITIES=[ONE_CITY];
 function cityUnlocked(k){return k===ONE_CITY}
+/* Profiles saved before the one-board change can still hold data for the retired city boards. Removed on load
+   and after a cloud or backup restore, so screens never meet a city that no longer exists. */
+function pruneRetiredBoards(){const ok=k=>Object.prototype.hasOwnProperty.call(CITY_DATA,k),obj=o=>o&&typeof o==='object'&&!Array.isArray(o);let changed=false;
+ const prune=o=>{if(obj(o))for(const k of Object.keys(o))if(!ok(k)){delete o[k];changed=true}};
+ ['cstat','champ','cach','estateOwned','estateRarity','estateFavourites'].forEach(k=>prune(PREF[k]));if(PREF.inv)prune(PREF.inv.city);
+ if(PREF.inv&&obj(PREF.inv.country))for(const k of Object.keys(PREF.inv.country))if(!COUNTRIES.some(C=>C.key===k)){delete PREF.inv.country[k];changed=true}
+ const J=PREF.estateJournal;if(obj(J)){if(J.last&&!ok(J.last.city)){J.last=null;changed=true}
+  if(Array.isArray(J.history)){const h=J.history.filter(x=>x&&ok(x.city));if(h.length!==J.history.length){J.history=h;changed=true}}}
+ const deadFrame=f=>typeof f==='string'&&(f==='prism'||f.startsWith('c:')&&!ok(f.slice(2)));
+ if(PREF.eq&&deadFrame(PREF.eq.frame)){PREF.eq.frame='';changed=true}
+ if(Array.isArray(PREF.frameNew)){const f=PREF.frameNew.filter(x=>!deadFrame(x));if(f.length!==PREF.frameNew.length){PREF.frameNew=f;changed=true}}
+ if(obj(PREF.champM)&&'prism' in PREF.champM){delete PREF.champM.prism;changed=true}
+ if(PREF.city!=null&&!ok(PREF.city)){PREF.city=ONE_CITY;changed=true}
+ if(changed)savePref();return changed}
+pruneRetiredBoards();
 const cityCost=k=>250;
 function cityLockText(k){const C=countryOf(k);if(!countryUnlocked(C))return `Reach level ${C.lvl} or unlock ${C.name} for ${fmtC(countryCost(C))}`;const i=C.cities.indexOf(k),n=countryPlays(C);return `Finish ${i} game${i>1?'s':''} in ${C.name} (${n}/${i}) or unlock for ${fmtC(cityCost(k))}`}
 

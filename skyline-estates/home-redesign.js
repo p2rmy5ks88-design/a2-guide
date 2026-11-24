@@ -285,7 +285,7 @@ function hdCityPane(T){const saved=loadSave(),c=CITY_DATA[setup.city],C=countryO
   :`<button class="hd-main" id="qAI" type="button"><span class="dice" aria-hidden="true"></span><span class="lbl"><b>Play Solo</b></span>${I_ARROW}</button>`;
  let card='';
  if(sp){const k=Math.min(SPOT_GOAL,spotCount(sp.id)),R=roofDef(sp.reward),lag=sp.city==='skyline'&&hdLagosArt,ph=lag?hdLagosArt:cityPhoto(sp.city),ready=spotClaimable();
-  card=`<button class="hd-card" id="hdSpot" type="button" aria-label="City Spotlight: ${esc(sp.cityName)}, ${ready?'reward ready to claim':`${k} of ${SPOT_GOAL} matches`}${R?', reward '+esc(R.name):''}"><span class="th" style="${ph?`background-image:url(${ph})${lag?';background-size:430% auto;background-position:3% 86%':''}`:'background:#22325e'}"></span><span class="tx"><small>City Spotlight</small><b>${esc(sp.cityName)}</b><span>${ready?'Reward ready':`${k} / ${SPOT_GOAL} matches`}</span>${weekLine?`<span class="hd-weekly-inline">${esc(weekLine)}</span>`:''}</span><span class="go" aria-hidden="true">${I_ARROW}</span></button>`}
+  card=`<button class="hd-card" id="hdSpot" type="button" aria-label="Spotlight: ${esc(R?R.name:sp.cityName)}, ${ready?'reward ready to claim':`${k} of ${SPOT_GOAL} matches`}${R?', reward '+esc(R.name):''}"><span class="th" style="${ph?`background-image:url(${ph})${lag?';background-size:430% auto;background-position:3% 86%':''}`:'background:#22325e'}"></span><span class="tx"><small>Spotlight</small><b>${esc(R?R.name:sp.cityName)}</b><span>${ready?'Reward ready':`${k} / ${SPOT_GOAL} matches`}</span>${weekLine?`<span class="hd-weekly-inline">${esc(weekLine)}</span>`:''}</span><span class="go" aria-hidden="true">${I_ARROW}</span></button>`}
  else{const sn=typeof seasonDisplay==='function'?seasonDisplay(S.n):S.n;
   card=`<button class="hd-card" id="qSeason" type="button" aria-label="Season ${sn}, ${esc(seasonName(S.n))}, tier ${t} of ${TIERS}${cl?', '+cl+' rewards ready':''}"><span class="th" style="background-image:url(${S.n===2?'art/skyline-gala.svg':'art/shop.jpg'})"></span><span class="tx"><small>Season ${sn}</small><b>${esc(seasonName(S.n))}</b><span>${cl?`${cl} reward${cl>1?'s':''} ready`:`Tier ${t} of ${TIERS}`}</span></span><span class="go" aria-hidden="true">${I_ARROW}</span></button>`}
  T.innerHTML=`<div class="hd-stage v2">
@@ -595,4 +595,17 @@ try{if(document.querySelector('#title .home'))homeTab(setup.tab||'play')}catch(e
 #title .rf-roofs-panel .rooflist{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
 #title .rf-roofs-panel .roofh h2{font-size:18px;margin:0}
 html.light #title .rf-token-detail .rf-roofs-panel{background:#fff;border-color:#d3dbe4}
+`;document.head.append(st)})();
+
+/* Daylight pass (owner request 24 Nov 2026): screens that stayed navy or had faint text in the light theme. */
+(()=>{const st=document.createElement('style');st.id='skyline-daylight-pass';st.textContent=`
+html.light #title .home,html.light #title{background:linear-gradient(180deg,#f6f8fb,#e9eef4)!important}
+html.light #title .home.hd-dock #pane.sec-portfolio{background:transparent!important}
+html.light .showcase-history{background:#fff!important;color:#13284a!important;border-color:#d3dbe4!important}
+html.light .showcase-history *{color:inherit}html.light .showcase-history small,html.light .showcase-history p{color:#526781!important}
+html.light #pane>.subtabs{background:#fff!important;border:1px solid #d3dbe4!important}
+html.light #pane>.subtabs .stab:not(.on){color:#13284a!important}
+html.light .rf-filters button:not(.on):not([aria-pressed="true"]),html.light .rf-filters select,html.light .rf-filters input{background:#fff!important;color:#13284a!important;border:1px solid #d3dbe4!important}
+html.light .rf-collection-grid{color:#13284a!important}
+html.light .sc-awards-note{color:#526781!important}
 `;document.head.append(st)})();

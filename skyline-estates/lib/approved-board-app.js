@@ -10,9 +10,15 @@ const career=Q.get('career')==='1',name=board==='dominion'?'SKYLINE DOMINION':'C
 const tag=board==='dominion'?'THE HEX RING BOARD':'CROWN PLAZA PROPERTY BOARD';
 const about=board==='dominion'?'Six royal districts around the central Dominion Tower. Roll, own, upgrade and trade.':'Gold-framed royal estates around Crown Plaza. Buy, build, collect rent and rule the empire.';
 const seatColors=['#f2c457','#43a4ff','#53d884','#c16ef5'],emblems=['🦁','🦅','🐎','⛵'];
-let source=null,spaces=null,s=null,three=null,busy=false,noticeTimer=null;
+let source=null,spaces=null,s=null,three=null,busy=false,noticeTimer=null,boardUI=null;
+let fast=(()=>{try{return localStorage.getItem('skylineBoardFast')==='1'}catch{return false}})();
+window.__boardSetSpeed=f=>{fast=!!f};
+const stepMs=you=>Q.get('speed')==='instant'?30:(you?(fast?55:115):(fast?20:45));
 $('gameName').firstChild.textContent=name;$('setupTitle').textContent=name;$('subtitle').textContent=tag;$('description').textContent=about;
-$('setupDesc').textContent='Play the approved '+(board==='dominion'?'hexagonal 48-space':'royal crown-shaped 32-space')+' 3D property board.';
+$('setupDesc').textContent='Buy streets, build towers and out-earn your rivals on this '+(board==='dominion'?'hexagonal 48-space':'crown-shaped 32-space')+' board.';
+$('menuSub').textContent=(board==='dominion'?'Skyline Dominion':'Crown Empire')+' — '+tag.toLowerCase().replace(/^./,c=>c.toUpperCase());
+$('rulesLead').textContent=`Have the highest total value when the last round ends (Quick ${board==='dominion'?12:12}, Standard ${board==='dominion'?18:20}, Extended ${board==='dominion'?24:28} rounds).`;
+$('rulesRewards').textContent=board==='dominion'?'A Career win on Standard or Extended pays 7× the usual win coins and Skyline Cash when you return to Skyline Estates, and counts toward unlocking Crown Empire. Quick matches earn Career mastery XP only.':'A Career win on Standard or Extended pays 10× the usual win coins and Skyline Cash when you return to Skyline Estates. Quick matches earn Career mastery XP only. Crown Empire is the last Career board.';
 if(['quick','standard','extended'].includes(Q.get('length')))$('length').value=Q.get('length');
 const tokenCount=x=>x?.length||0;
 const money=R.cashFormat;
@@ -62,9 +68,8 @@ function redraw(){if(!s||!three)return;three.sync(s);updateCards();detailsTile()
  const info=document.createElement('div');info.className='message';
  info.textContent=isTurn?(phase==='roll'?'Roll to move your 3D token around the board.':`You landed on ${landing.name}. Tap a space to inspect or upgrade owned properties.`):'Opponents are taking their turns';box.appendChild(info);
  $('declareBankruptcy').disabled=$('endMatch').disabled=!isTurn||busy;
- const advanced=R.score(s,spaces);$('advancedInfo').innerHTML=`<div class="info">Board: ${source.title}</div><div class="info">Turn: ${s.round} of ${s.maxRounds}</div><div class="info">Rules: ${R.ID}</div>`+
- advanced.map((p,i)=>`<div class="info">${i+1}. ${p.name}: ${money(p.worth)} total value</div>`).join('')+
- '<h3>Latest decisions</h3>'+s.log.slice(-6).reverse().map(v=>`<div class="info">${v.message}</div>`).join('');
+ $('standings').innerHTML=R.score(s,spaces).map((p,i)=>`<span>${i+1}. ${p.name.replace(' (CPU)','')}</span><b>${money(p.worth)}</b>`).join('');
+ boardUI&&boardUI.refresh();
  $('whole').classList.toggle('active',three.stats().mode==='whole');$('close').classList.toggle('active',three.stats().mode==='close');
  store();
 }
@@ -72,18 +77,25 @@ function afterAction(){redraw();notice(s.log.at(-1)?.message||'Action recorded')
 async function takeRoll(){if(busy||s.phase!=='roll')return;busy=true;try{
  const result=R.roll(s,spaces);$('turn').textContent=`🎲 Rolled ${result.dice.join(' + ')}`;
  // Always move through the actual ordered 3D board spaces.
- if(result.steps.length)await three.move(0,result.steps,Q.get('speed')==='instant'?30:115);
+ if(result.steps.length)await three.move(0,result.steps,stepMs(true));
  s.selected=s.players[0].pos;three.close(s.selected);
  if(s.phase==='over'){sendCareerResult();finish()}
  redraw();notice(s.log.at(-1)?.message||'Token moved',3000)
  }finally{busy=false;redraw()}}
 async function takeEnd(){if(busy||s.phase!=='decide')return;busy=true;
  try{three.overview();$('turn').textContent='⏳ Other players';const movements=R.endTurn(s,spaces);
- if(Q.get('speed')!=='instant')for(const event of movements)if(event?.steps?.length)await three.move(event.player,event.steps,45);
+ if(Q.get('speed')!=='instant')for(const event of movements)if(event?.steps?.length)await three.move(event.player,event.steps,stepMs(false));
  if(s.phase==='over'){sendCareerResult();finish()}else{s.selected=s.players[0].pos;three.overview();redraw()}
  }finally{busy=false;if(s.phase!=='over')redraw()}}
-function finish(){if(!s)return;const results=R.score(s,spaces),champ=s.players[s.winner];
- const box=$('finish');box.innerHTML=`<div class="box"><h2>🏆 ${champ.name} Wins!</h2><p>${s.endReason==='highest-value'?'Final property and cash ranking':'Match ended early. Final standings are shown below.'}</p>${results.map((p,i)=>`<p>${i+1}. ${p.name}: ${money(p.worth)}</p>`).join('')}<button id="newMatch">Start another match</button> <button id="returnCareer">Return to Skyline Estates</button> <button id="exitResults">Close</button></div>`;
+function finish(){if(!s)return;const results=R.score(s,spaces),champ=s.players[s.winner],me=s.players[0],place=results.findIndex(p=>p.id===0)+1,won=s.winner===0,full=s.endReason==='highest-value';
+ const st=me.stats||{},owned=Object.values(s.properties).filter(p=>p.owner===0),levels=owned.reduce((n,p)=>n+(p.stage||0),0);
+ const mult=board==='dominion'?7:10,next=board==='dominion'?'Crown Empire':null;
+ const careerLine=s.length==='quick'&&career&&full?'Quick matches earn Career mastery XP only; win a Standard or Extended match for progress.':!career?'Play this board from Career to count wins toward your Career progress.':!full?'Early finishes do not count for Career.':won?(next?`This win counts toward unlocking ${next}. Your Career updates when you return to Skyline Estates.`:'This win counts toward Crown Empire mastery. Your Career updates when you return to Skyline Estates.'):`Only wins count for Career. Win a Standard match here${next?' to work toward '+next:''}.`;
+ const box=$('finish');box.innerHTML=`<div class="box"><h2>${won?'🏆 You win!':`🏆 ${champ.name.replace(' (CPU)','')} wins`}</h2><p>${full?`You finished ${['','1st','2nd','3rd','4th'][place]} of ${results.length} with ${money(R.worth(s,spaces,0))} total value.`:'Match ended early. Final standings:'}</p>
+  <div class="sumGrid"><span>Streets owned</span><b>${owned.length}</b><span>Upgrade levels</span><b>${levels}</b><span>Streets bought</span><b>${st.buys||0}</b><span>Auctions won</span><b>${st.auctions||0}</b></div>
+  <div class="sumRank">${results.map((p,i)=>`<span>${i+1}. ${p.name.replace(' (CPU)','')}</span><b>${money(p.worth)}</b>`).join('')}</div>
+  <p class="sumNote"><b>Rewards:</b> ${career&&full&&won&&s.length!=='quick'?`${mult}× the usual win coins and Skyline Cash, added when you return to Skyline Estates.`:`Only Career wins on Standard or Extended pay ${mult}× win rewards.`}<br><b>Career:</b> ${careerLine}</p>
+  <div class="sumBtns"><button id="returnCareer">🏠 Return to Skyline Estates</button><button id="newMatch">↻ Play again</button><button id="exitResults">View board</button></div></div>`;
  box.hidden=false;box.querySelector('#newMatch').onclick=()=>{localStorage.removeItem(saveKey);location.reload()};box.querySelector('#exitResults').onclick=()=>box.hidden=true;
  sendCareerResult();
  const returnButton=box.querySelector('#returnCareer');
@@ -95,8 +107,7 @@ function closeFromMenu(bankruptcy){
  if(!window.confirm(question+' Early finishes on this board do not award Career progress.'))return;
  if(!R.closeMatch(s,spaces,bankruptcy))return;
  localStorage.removeItem(saveKey);
- $('detailsDrawer').hidden=true;
- $('more').setAttribute('aria-expanded','false');
+ $('menu').hidden=true;
  three.overview();redraw();finish();
 }
 $('declareBankruptcy').onclick=()=>closeFromMenu(true);
@@ -107,14 +118,34 @@ async function start(state){
  try{three=await createBoard({canvas:$('board'),board,source,base,quality:Q.get('quality')||'high',onSelect:tileSelected});
    window.__skylineApproved={state:()=>s,renderer:()=>three,spaces,board,source,roll:takeRoll,endTurn:takeEnd,select:tileSelected};
    if(s.selected!==0)three.choose(s.selected);three.overview();redraw();notice('Tap a tile or roll the dice to begin.',3200)
+   startGuide();
  }catch(error){console.error(error);$('setup').hidden=false;notice('Could not load the approved GLB board: '+error.message,14000);throw error}
 }
+function startGuide(){const N=s.maxRounds;
+ SkylineBoardGuide.start({key:board,facts:()=>{if(!s||s.phase==='over')return null;const me=s.players[0],land=spaces[me.pos],mine=s.turn===0;
+   const kind=mine&&s.phase==='roll'?'roll':mine&&s.phase==='decide'&&R.isOwnable(land)&&!s.properties[land.id]?'buy':'other';
+   return {mine,kind,owns:Object.values(s.properties).filter(p=>p.owner===0).length}},
+  steps:[{id:'goal',when:()=>true,title:'Your goal',text:`Have the highest total value when round ${N} ends: cash, plus your streets, plus what you spent upgrading them.`},
+   {id:'roll',when:f=>f.kind==='roll',until:f=>f.kind!=='roll',title:'Roll the dice',text:'Tap ROLL DICE. Your token moves around the board.'},
+   {id:'buy',when:f=>f.kind==='buy',until:f=>f.kind!=='buy',title:'Buy or auction',text:'This street is free. Buy it, or send it to auction. Rivals who land on your streets pay you rent.'},
+   {id:'build',when:f=>f.mine&&f.owns>0,title:'Upgrade for more rent',text:'Tap a street you own, then Upgrade. Each level raises the rent rivals pay.'},
+   {id:'menu',when:f=>f.owns>0&&!f.mine,title:'Menu',text:'☰ Menu has your Portfolio, the full rules, Fast speed and the radio.'}]})}
 $('start').onclick=()=>start(R.createMatch(board,source,{length:$('length').value,seed:Number(Q.get('seed'))||Date.now()%1e9,career}));
 $('resume').onclick=()=>{const st=getSaved();if(st)start(st);else notice('No compatible saved match')};
 $('whole').onclick=()=>{if(three){three.overview();redraw()}};
 $('close').onclick=()=>{if(three){three.close(s.selected);redraw()}};
-$('more').onclick=()=>{const open=$('detailsDrawer').hidden;$('detailsDrawer').hidden=!open;$('more').setAttribute('aria-expanded',String(open))};
-$('closeDetails').onclick=()=>{$('detailsDrawer').hidden=true;$('more').setAttribute('aria-expanded','false')};
+$('menuBtn').onclick=()=>{if(s)redraw();$('menu').hidden=false};
+$('mResume').onclick=()=>{$('menu').hidden=true};
+$('mRules').onclick=()=>{$('menu').hidden=true;$('rules').hidden=false};
+$('rulesClose').onclick=()=>{$('rules').hidden=true};
+$('mNew').onclick=()=>{if(!window.confirm('Start a new match? This match will not count.'))return;localStorage.removeItem(saveKey);location.reload()};
+$('mHome').onclick=()=>{store();location.assign('./index.html?return=1')};
+const PAL={gold:'#f6d06a',purple:'#a66cfc',blue:'#4b9fff',red:'#fd6373',green:'#49c888',cream:'#f9e7c5',pink:'#fe80b1',rose:'#fe80b1',orange:'#f69b55',emerald:'#2fb67c'};
+const PAL_NAME={gold:'Gold',purple:'Royal Purple',blue:'Harbour Blue',red:'Crimson',green:'Garden Green',cream:'Ivory',pink:'Rose',rose:'Rose',orange:'Amber',emerald:'Emerald'};
+boardUI=SkylineBoardUI.init({key:board,sideWidth:'clamp(189px,22vw,253px)',money,
+ groups:()=>{if(!s||!spaces)return [];const g=new Map();for(const t of spaces){if(!R.isOwnable(t))continue;const k=t.palette||'gold';if(!g.has(k))g.set(k,{name:PAL_NAME[k]||k,color:PAL[k]||'#f2c457',items:[]});
+  const p=s.properties[t.id],o=p?s.players[p.owner]:null;g.get(k).items.push({id:t.id,name:t.name,price:t.price_sc,stage:p?p.stage+'/'+R.MAX_STAGE[board]:null,rent:p?R.rent(t,p):null,owner:o?{you:o.id===0,name:o.name.replace(' (CPU)',''),color:seatColors[o.id]}:null})}return [...g.values()]},
+ onTile:id=>tileSelected(+id)});
 try{await fetchAssets();const saved=getSaved();$('resume').hidden=!saved;if(saved)$('resume').textContent=`Resume round ${saved.round}`;
  if(Q.get('autostart')==='1')start(saved||R.createMatch(board,source,{length:$('length').value,seed:Number(Q.get('seed'))||20261121,career}));
 }catch(error){console.error(error);notice('Approved board data unavailable: '+error.message,14000);$('setupDesc').textContent=error.message;$('start').disabled=true}

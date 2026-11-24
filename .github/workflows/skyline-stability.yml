@@ -335,6 +335,10 @@ jobs:
         if: (matrix.engine != 'webkit' || steps.wk.outcome == 'success')
         timeout-minutes: 10
         run: node skyline-estates/tests/board-return-home.cjs
+      - name: "Visual: board-guide-browser"
+        if: (matrix.engine != 'webkit' || steps.wk.outcome == 'success')
+        timeout-minutes: 8
+        run: node skyline-estates/tests/board-guide-browser.cjs
       - name: "Visual: cloud-restore"
         if: (matrix.engine != 'webkit' || steps.wk.outcome == 'success')
         timeout-minutes: 5

@@ -9,7 +9,7 @@ let n=0;const ok=m=>{n++;console.log('PASS',m)};
 (async()=>{const server=http.createServer((q,r)=>{const f=path.join(root,decodeURIComponent(q.url.split('?')[0]));fs.readFile(f,(e,d)=>{if(e){r.writeHead(404);r.end();return}r.writeHead(200,{'content-type':mime[path.extname(f)]||'application/octet-stream'});r.end(d)})});
  await new Promise(r=>server.listen(0,'127.0.0.1',r));const base=`http://127.0.0.1:${server.address().port}/skyline-estates/`;
  const browser=await({chromium,webkit}[engine]).launch(engine==='chromium'?{executablePath:process.env.CHROME_PATH||undefined,args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist']}:{});
- try{const context=await browser.newContext({viewport:retinaOnly?{width:956,height:440}:{width:844,height:390},deviceScaleFactor:retinaOnly?3:1,hasTouch:true});/* 1x full-match gameplay; separate 3x Retina smoke is visual and GPU only */const p=await context.newPage();const errors=[];p.on('pageerror',e=>errors.push(String(e)));
+ try{const context=await browser.newContext({viewport:retinaOnly?{width:956,height:440}:{width:844,height:390},deviceScaleFactor:retinaOnly?3:1,hasTouch:true});await context.addInitScript(()=>localStorage.setItem('skylineBoardGuide:cc','"off"'));/* tips: board-guide-browser.cjs *//* 1x full-match gameplay; separate 3x Retina smoke is visual and GPU only */const p=await context.newPage();const errors=[];p.on('pageerror',e=>errors.push(String(e)));
   if(retinaOnly){
    await p.goto(base+'crossroads-capital.html?length=quick&speed=fast&seed=11');
    await p.locator('#startBtn').waitFor({timeout:60000});await p.click('#startBtn');
