@@ -60,7 +60,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.querySelec
 const RP={tab:'portfolio',group:null,square:null,filter:'all',mobilePage:'districts',mobileGrowth:false};
 function estateSource(){const live=G&&!G.sim&&G.players?.find(p=>!p.ai&&(!G.online||p.uid===NET.me));if(live)return captureEstate(G,live);const saved=loadSave();if(saved){const p=saved.players.find(p=>!p.ai);if(p)return captureEstate(saved,p)}return PREF.estateJournal?.last||null}
 function estateMoney(e,n){const c=countryOf(e?.city||setup.city).cur,neg=n<0,v=Math.abs(n)*c.m,num=x=>String(+x.toFixed(2));return(neg?'−':'')+(v>=1000?(c.bigPre??c.pre)+num(v/1000)+c.big:c.pre+num(v)+c.post)}
-function blankEstate(){const city=setup.city||'lagos',g={set:{city,perks:true},players:[{id:0,name:myName()||'Player',tok:setup.slots[0].tok,cash:0}],own:SQ.map(()=>({o:-1,h:0,m:false})),round:0,over:false};const e=captureEstate(g,g.players[0]);e.empty=true;return e}
+function blankEstate(){const city=setup.city||'skyline',g={set:{city,perks:true},players:[{id:0,name:myName()||'Player',tok:setup.slots[0].tok,cash:0}],own:SQ.map(()=>({o:-1,h:0,m:false})),round:0,over:false};const e=captureEstate(g,g.players[0]);e.empty=true;return e}
 panePortfolio=function(T){clearPreview();peekOver(null);T.classList.add('reference-surface');const e=estateSource()||blankEstate(),money=n=>estateMoney(e,n),owned=e.rows.filter(r=>r.owned),groups=Object.entries(GROUPS).map(([g,ids])=>({g,rows:e.rows.filter(r=>r.group===g),name:CITY_DATA[e.city].gname[g],colour:GC[g]})),complete=groups.filter(g=>g.rows.every(r=>r.owned)).length;
  if(!RP.group||!groups.some(g=>g.g===RP.group))RP.group=groups.find(g=>g.rows.some(r=>r.owned))?.g||groups[0].g;
  const group=groups.find(g=>g.g===RP.group),rows=group.rows;
@@ -118,7 +118,7 @@ window.SkylineEstateSnapshot=()=>{
   rows:e.rows.filter(r=>r.group===id).map(r=>({i:r.i,owned:!!r.owned,h:r.h||0}))
  })).filter(g=>g.rows.length);
  return{city:e.city,cityName:e.cityName||CITY_DATA[e.city]?.name||'',
-  photo:cityPhoto(e.city)||'photos/lagos.jpg',groups,
+  photo:cityPhoto(e.city)||'photos/skyline.jpg',groups,
   ownedCount:e.rows.filter(r=>r.owned).length,
   complete:groups.filter(g=>g.rows.every(r=>r.owned)).length,
   hasSavedMatch:!!saved&&!saved.over,

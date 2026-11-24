@@ -33,7 +33,7 @@ const TYPES={'.html':'text/html','.js':'text/javascript','.mjs':'text/javascript
   assert.ok(boot<BUDGET.bootMs,`boot ${boot} ms > ${BUDGET.bootMs} ms`);ok('home screen ready',`${boot} ms (limit ${BUDGET.bootMs})`);
   // Start a solo match and time until the board is ready for the player's first roll.
   await p.evaluate(()=>{window.__lt=[];new PerformanceObserver(l=>{for(const e of l.getEntries())__lt.push(e.duration)}).observe({type:'longtask',buffered:false})});
-  const m0=Date.now();await p.evaluate(()=>{applyCity('lagos');newGame({lc:true,cash:1600,set:{ai:'normal',speed:'fast',pot:false,maxRounds:300,city:'lagos',perks:false},players:[{name:'Ada',tok:TOKENS[0],col:PCOL[0],ai:true,tl:1},{name:'Kofi',tok:TOKENS[1],col:PCOL[1],ai:true,tl:1},{name:'Mei',tok:TOKENS[2],col:PCOL[2],ai:true,tl:1}]});startWith(G)});
+  const m0=Date.now();await p.evaluate(()=>{applyCity('skyline');newGame({lc:true,cash:1600,set:{ai:'normal',speed:'fast',pot:false,maxRounds:300,city:'skyline',perks:false},players:[{name:'Ada',tok:TOKENS[0],col:PCOL[0],ai:true,tl:1},{name:'Kofi',tok:TOKENS[1],col:PCOL[1],ai:true,tl:1},{name:'Mei',tok:TOKENS[2],col:PCOL[2],ai:true,tl:1}]});startWith(G)});
   await p.waitForFunction(()=>{try{return G&&G.players&&document.querySelectorAll('#board .sq,#board .cell,#board [data-i]').length>=40||($('#title').hidden&&!$('#ui').hidden)}catch(e){return false}},null,{timeout:30000});const match=Date.now()-m0;out.matchMs=match;
   assert.ok(match<BUDGET.matchMs,`match start ${match} ms > ${BUDGET.matchMs} ms`);ok('solo match ready',`${match} ms (limit ${BUDGET.matchMs})`);
   // Let the computer players take turns for a while and record the longest main-thread stall (jank).

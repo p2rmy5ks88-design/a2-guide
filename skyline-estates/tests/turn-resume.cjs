@@ -14,7 +14,7 @@ function fixture(phase='post',ai=false,dice=[[2,3]]){
   players.forEach(p=>Object.assign(p,{tok:'T',col:'#fff',jailTurns:0,goojf:[],declined:{},lastOffer:-9}));
   const g={v:1,players,turn:0,round:2,first:0,phase,over:false,own:Array.from({length:40},(_,i)=>({o:i===0?0:-1,h:i===0?1:0,m:false})),houses:35,hotels:12,pot:0,set:{},log:[],chance:Array.from({length:16},(_,i)=>i),esusu:Array.from({length:16},(_,i)=>i)};
   const ctx={G:g,FAST:true,GEN:1,window:{},localStorage:{setItem:(k,v)=>storage.set(k,v),getItem:k=>storage.get(k)||null,removeItem:k=>storage.delete(k)},
-    console:{warn(){}},SQ:Array.from({length:40},()=>({t:'prop'})),CITY_DATA:{lagos:{}},CHANCE:Array.from({length:16},()=>({})),ESUSU:Array.from({length:16},()=>({})),$:()=>null,P:i=>ctx.G.players[i],esc:x=>x,renderRoster(){},updateTools(){},setPrompt(){},camOverview(){},banner:async()=>{},
+    console:{warn(){}},SQ:Array.from({length:40},()=>({t:'prop'})),CITY_DATA:{skyline:{}},CHANCE:Array.from({length:16},()=>({})),ESUSU:Array.from({length:16},()=>({})),$:()=>null,P:i=>ctx.G.players[i],esc:x=>x,renderRoster(){},updateTools(){},setPrompt(){},camOverview(){},banner:async()=>{},
     actions:async(text,buttons)=>{events.push(['action',buttons[0].k])},sleep:async()=>{},toast(){},
     rollDice:async()=>{events.push(['roll']);return dice[roll++]||[2,3]},offerReroll:async()=>{},
     moveSteps:async(p,n)=>{events.push(['move',n]);p.pos=(p.pos+n)%40},land:async p=>{events.push(['land']);p.cash-=50},

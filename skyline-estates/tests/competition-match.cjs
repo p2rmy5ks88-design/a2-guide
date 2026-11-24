@@ -4,7 +4,7 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const {composeCompetition}=require('../competition/compose.cjs'),{settings}=require('../competition/service.cjs');
 const copy=x=>JSON.parse(JSON.stringify(x)),report={production:false,matches:[]};
-(async()=>{for(const city of ['lagos','stockholm','tokyo','dubai']){
+(async()=>{for(const city of ['skyline']){
  let root={},tail=Promise.resolve(),now=Date.UTC(2026,10,3,12),id=0;
  const db={ref:()=>({transaction:fn=>{const r=tail.then(()=>{let v;for(let i=0;i<3;i++)v=fn(copy(root));root=copy(v);return {committed:true,snapshot:{val:()=>copy(v)}}});tail=r.catch(()=>{});return r}})};
  const svc=composeCompetition({db,clock:()=>now,operationLimit:10000,verifyIdToken:async t=>{if(!['host','guest'].includes(t))throw Error();return {uid:t}}});

@@ -148,7 +148,7 @@ function occlusion(){
 let tone=null;
 function restoreTone(){if(!tone)return;for(const [material,color] of tone.colors)material.c=color;tone=null}
 function boardTone(){
- const on=!!(G&&S3&&CUR_THEME==='lagos'&&document.querySelector('#title').hidden&&!html.classList.contains('light')&&!equippedSurround());
+ const on=!!(G&&S3&&CUR_THEME==='skyline'&&document.querySelector('#title').hidden&&!html.classList.contains('light')&&!equippedSurround());
  if(tone&&(!on||tone.scene!==S3))restoreTone();
  if(!on||tone)return;
  const colors=[];for(const [key,color] of [['waterMat','#12334e'],['islandMat','#22394c'],['rimMat','#29465a'],['slabMat','#b18b42'],['trimMat','#e3bd5c']]){

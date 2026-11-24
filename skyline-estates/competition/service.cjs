@@ -6,7 +6,7 @@ const {ServiceError,identityVerifier}=require('../security/service/admission.cjs
 const {sourceHash,section,line,cityRaw}=require('../security/service/audited-rules.cjs');
 const hash=s=>crypto.createHash('sha256').update(s).digest('hex'),copy=x=>JSON.parse(JSON.stringify(x));
 const fail=(n,c)=>{throw new ServiceError(n,c)},BASE=1000,EPOCH=Date.UTC(2026,10,3),SEASON=45*864e5,WEEK=7*864e5;
-const CITIES=['lagos','stockholm','tokyo','dubai'],CATEGORIES=['season','city','worth','developers','weekly'];
+const CITIES=['skyline'],CATEGORIES=['season','city','worth','developers','weekly'];
 const rules=Object.freeze({mode:'timed',rounds:10,cash:1600,ai:'normal',speed:'fast',timer:0,minigames:false,perks:false,ffa:false,events:false,speedDie:false,pot:false,goDouble:false,jailRent:false,auction:true,even:true,interest:true});
 const seasons=at=>BASE+Math.max(1,Math.floor((at-EPOCH)/SEASON)+1),weeks=at=>Math.floor((at-EPOCH)/WEEK);
 const leagues=vm.runInNewContext(line('const LEAGUES=')+'\nLEAGUES',{},{timeout:100});

@@ -11,7 +11,7 @@ function cases(){const out=[],add=(name,replacement,change=()=>{},old=dice(3,4),
  add('replacement third doubles use Lucky Pass',dice(2,2),g=>{g.doubles=2;g.players[0].tl=4;g.players[0].tok='🦅'});
  add('replacement rent retains shield',dice(3,4),g=>{g.players[0].tl=5;g.players[0].tok='🛶';g.own[7].o=1});
  add('replacement debt retains saved dice',dice(3,4),g=>{g.players[0].cash=0;g.own[7].o=1});
- for(const city of ['stockholm','nyc','tokyo','london','paris'])add('localized replacement '+city,dice(3,4),g=>g.set.city=city);
+ for(const city of ['skyline'])add('localized replacement '+city,dice(3,4),g=>g.set.city=city);
  add('replacement star waits after purchase',dice(1,2,5),g=>{g.players[0].pos=38;g.players[0].lapped=true;g.set.speedDie=true;g.own[1].o=-1},dice(3,4,6),['buy']);
  add('replacement taxi needs two purchases',dice(1,2,6),g=>{g.players[0].pos=38;g.players[0].lapped=true;g.set.speedDie=true;g.own[1].o=-1},dice(3,4,5),['buy','buy']);
  return out}

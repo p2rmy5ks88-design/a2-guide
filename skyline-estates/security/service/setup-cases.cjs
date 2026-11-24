@@ -1,7 +1,7 @@
 // Reproducible fixtures only; production randomness never uses this seeded generator.
 const vm=require('node:vm'),{source,line}=require('./audited-rules.cjs');
 const tokens=vm.runInNewContext(line('const TOKENS=')+'\n'+line('const NEW_TOKENS=')+'\nTOKENS.concat(NEW_TOKENS)'),colors=vm.runInNewContext(line('const PCOL=')+'\nPCOL');
-const defaults={mode:'classic',city:'lagos',theme:'lagos',cash:1600,rounds:20,ai:'normal',speed:'normal',timer:0,minigames:true,perks:true,ffa:false,events:false,speedDie:false,pot:false,goDouble:false,jailRent:false,auction:true,even:true,interest:true};
+const defaults={mode:'classic',city:'skyline',theme:'skyline',cash:1600,rounds:20,ai:'normal',speed:'normal',timer:0,minigames:true,perks:true,ffa:false,events:false,speedDie:false,pot:false,goDouble:false,jailRent:false,auction:true,even:true,interest:true};
 function config(n=2,settings={}){return{code:'ABCDE',settings:{...defaults,...settings},players:Array.from({length:n},(_,i)=>({uid:'seat-'+i,name:'Player '+i,tok:tokens[i],col:colors[i],ai:false,tl:1,fin:null,ch:null}))}}
 function seededDraw(seed){let state=seed>>>0;const calls=[];function draw(max){state^=state<<13;state^=state>>>17;state^=state<<5;const value=(state>>>0)%max;calls.push({max,value});return value}return{draw,calls}}
 function cases(){const out=[];let seed=8081;const add=(name,c)=>out.push({name,config:c,seed:seed++});

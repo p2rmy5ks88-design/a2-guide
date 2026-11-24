@@ -16,11 +16,11 @@ const check=(name,ok,detail)=>{assert.ok(ok,name+(detail?' '+JSON.stringify(deta
   await page.route('https://**/*',r=>r.abort());await page.goto(u);await page.waitForFunction(()=>typeof window.__sim==='function'&&typeof homeTab==='function');await page.waitForFunction(()=>!document.getElementById('boot'),null,{timeout:12000});return{ctx,page}}
  const {ctx,page}=await open();
  // ---------- 1. strategic event rules (direct, deterministic) ----------
- const rules=await page.evaluate(()=>{FAST=true;const out={};const mk=(set={})=>{GEN++;newGame({cash:1600,set:{ai:'normal',speed:'fast',city:'lagos',events2:true,...set},players:[0,1,2].map(i=>({name:NAMES[i],tok:TOKENS[i],col:PCOL[i],ai:true}))});G.sim=true;G.phase='post'};
+ const rules=await page.evaluate(()=>{FAST=true;const out={};const mk=(set={})=>{GEN++;newGame({cash:1600,set:{ai:'normal',speed:'fast',city:'skyline',events2:true,...set},players:[0,1,2].map(i=>({name:NAMES[i],tok:TOKENS[i],col:PCOL[i],ai:true}))});G.sim=true;G.phase='post'};
   mk();out.snapshot={events2:G.set.events2,classic:G.set.events,next:G.ev2Next};
   // dev event in pink, turn-scoped for player 1, during round 3
   const pink=GROUPS.pink;pink.forEach(i=>G.own[i]={o:1,h:0,m:false});G.round=3;G.turn=0;G.first=0;
-  G.ev2={v:1,id:'infra',city:'lagos',kind:'dev',pct:50,from:3,targets:pink.slice(),group:'pink',name:'Infrastructure Upgrade',area:'Pink',turnPid:1};
+  G.ev2={v:1,id:'infra',city:'skyline',kind:'dev',pct:50,from:3,targets:pink.slice(),group:'pink',name:'Infrastructure Upgrade',area:'Pink',turnPid:1};
   const h=SQ[pink[0]].h;out.h=h;out.upcoming=ev2State(G.ev2);out.discBefore=ev2Disc(1,pink[0]);
   G.turn=1;out.active=ev2State(G.ev2);P(1).cash=h-1;out.canFullFail=(()=>{const e=G.ev2;G.ev2=null;const r=canBuild(1,pink[0]);G.ev2=e;return r})();out.canDiscounted=canBuild(1,pink[0]);
   out.otherPlayerDisc=ev2Disc(2,pink[0]);out.devCost=devCost(1,pink[0]);const c0=P(1).cash,hb=G.houses;build(1,pink[0]);out.debit=c0-P(1).cash;out.houseTaken=hb-G.houses;
@@ -33,7 +33,7 @@ const check=(name,ok,detail)=>{assert.ok(ok,name+(detail?' '+JSON.stringify(deta
   // expiry: turn passes -> ended; later round -> ended
   G.turn=2;out.afterTurn=ev2State(G.ev2);out.discAfterTurn=ev2Disc(1,pink[1]);
   // rent event: rounds 3-4 only, +50% on targets, nothing elsewhere, mortgaged pays nothing
-  G.ev2={v:1,id:'film',city:'lagos',kind:'rent',pct:50,from:3,targets:pink.slice(),group:'pink',name:'Lagos Film Festival',area:'Surulere & Yaba',rounds:2};G.turn=0;
+  G.ev2={v:1,id:'fest',city:'skyline',kind:'rent',pct:50,from:3,targets:pink.slice(),group:'pink',name:CITY.festival,area:GNAME.pink,rounds:2};G.turn=0;
   const base=(()=>{const e=G.ev2;G.ev2=null;const r=rentFor(pink[0],7);G.ev2=e;return r})();out.rentBase=base;out.rentR3=rentFor(pink[0],7);G.round=4;out.rentR4=rentFor(pink[0],7);G.round=5;out.rentR5=rentFor(pink[0],7);
   G.round=4;const other=GROUPS.navy[0];G.own[other]={o:2,h:0,m:false};out.otherRent=rentFor(other,7)===(()=>{const e=G.ev2;G.ev2=null;const r=rentFor(other,7);G.ev2=e;return r})();
   G.own[pink[0]].m=true;out.mortRent=rentFor(pink[0],7);G.own[pink[0]].m=false;
@@ -44,7 +44,7 @@ const check=(name,ok,detail)=>{assert.ok(ok,name+(detail?' '+JSON.stringify(deta
   mk();G.round=2;G.turn=2;G.first=0;const n0=G.ev2n;advanceTurn();out.round3Started=G.round===3&&!!G.ev2&&G.ev2.from===3&&G.ev2n===n0+1&&G.ev2Next===6;
   const ev=JSON.stringify(G.ev2);advanceTurn();out.notRestarted=JSON.stringify(G.ev2)===ev&&G.ev2Next===6;
   // spotlight event comes first in its city when opted in
-  mk();G.spot={id:'s0-lagos',city:'lagos',event:'boom',ends:Date.now()+1e6};G.round=2;G.turn=2;G.first=0;advanceTurn();out.spotFirst=!!G.ev2&&G.ev2.id==='boom'&&G.ev2.targets.length===PROP_IDX.length;
+  mk();G.spot={id:'s0-skyline',city:'skyline',event:'boom',ends:Date.now()+1e6};G.round=2;G.turn=2;G.first=0;advanceTurn();out.spotFirst=!!G.ev2&&G.ev2.id==='boom'&&G.ev2.targets.length===PROP_IDX.length;
   // events off: no event, no discount, unchanged costs even with a stale ev2 object
   mk({events2:false});G.ev2={v:1,id:'boom',kind:'dev',pct:25,from:1,rounds:1,targets:PROP_IDX.slice(),name:'x',area:'y'};out.offNoDisc=ev2Disc(0,PROP_IDX[0])===0&&devCost(0,PROP_IDX[0])===SQ[PROP_IDX[0]].h&&ev2RentPct(PROP_IDX[0])===0;
   // online settings strip the local-only rule
@@ -64,7 +64,7 @@ const check=(name,ok,detail)=>{assert.ok(ok,name+(detail?' '+JSON.stringify(deta
  check('online rooms never carry the local-only rule',rules.onlineStripped,rules);
  // ---------- 2. seeded simulations with strategic events on ----------
  const sims=await page.evaluate(async({runs,seed})=>{let started=0,discounts=0;const s0=ev2Start;ev2Start=function(){started++;return s0()};const b0=build;build=function(pid,i){if(ev2Disc(pid,i))discounts++;return b0(pid,i)};
-  try{const res=await window.__sim(runs,4,{seed,set:{events2:true,city:'lagos'}});return{res,started,discounts}}finally{ev2Start=s0;build=b0}},{runs:RUNS,seed:SEED});
+  try{const res=await window.__sim(runs,4,{seed,set:{events2:true,city:'skyline'}});return{res,started,discounts}}finally{ev2Start=s0;build=b0}},{runs:RUNS,seed:SEED});
  const R=sims.res,errs=R.filter(r=>r.err),bad=R.filter(r=>!r.cashOk||!r.houseBank||!r.hotelBank);
  report.sims={runs:R.length,seed:SEED,rounds:[Math.min(...R.map(r=>r.rounds)),Math.max(...R.map(r=>r.rounds))],outcomes:R.reduce((a,r)=>(a[r.outcome]=(a[r.outcome]||0)+1,a),{}),eventsStarted:sims.started,discountedBuilds:sims.discounts,errors:errs.length,invariantFailures:bad.length};
  check(`${R.length} seeded games with strategic events: no errors, cash and house/tower banks conserved`,!errs.length&&!bad.length,report.sims);

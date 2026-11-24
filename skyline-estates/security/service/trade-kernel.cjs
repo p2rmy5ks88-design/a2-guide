@@ -7,7 +7,7 @@ const sync=s=>s.replaceAll('async function','function').replaceAll('await ','');
 const source=sync(section('function validTrade(t){','/* ================= AI ================= */')).replace('const f=P(t.from),r=P(t.to);let ok,counter=null;','const f=P(t.from),r=P(t.to);let ok,counter=null;atTrade(t,depth);');
 const rules=[section('const W=1100','/* ================= SOUND ================= */'),section('function validateSave(g){','function decodeRemoteGame(code,d){'),section('const COUNTRIES=','/* ---- city looks ---- */'),line('const tradable='),line('const st=p=>'),line('function log(t)'),source,line('const _executeTrade=executeTrade;')].join('\n');
 const script=new vm.Script(rules+`
-G=JSON.parse(input);FAST=true;applyCity(G.set.city||'lagos');Math.random=()=>{throw Error('Unaudited trade randomness')};
+G=JSON.parse(input);FAST=true;applyCity(G.set.city||'skyline');Math.random=()=>{throw Error('Unaudited trade randomness')};
 function valid(){return G.online&&!G.sim&&!G.over&&validateSave({...G,online:false})&&validIdentities(G.players)&&G.players.every(p=>Number.isSafeInteger(p.cash)&&(!p.st||Object.values(p.st).every(n=>Number.isFinite(n)&&n>=0)))}
 if(!valid()||!['pre','post'].includes(G.phase))throw Error('Invalid trade state');
 function pushState(){}function renderRoster(){}function updateCell(){}function float(){}function sfx(){}function toast(){}function tradeSummary(){return ''}function trackable(){return false}const mine=()=>false,isRemote=()=>false;

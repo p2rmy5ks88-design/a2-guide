@@ -18,9 +18,9 @@ const PREFS={nick:'Career QA',nickSet:true,welcomed:1,tutDone:1,coach:{pre:1,pos
   await p.goto(base+(query||''));await p.waitForFunction(()=>window.SkylineCareer&&!document.querySelector('#boot'));await p.waitForTimeout(400);return{context,p}}
  // One finished Origins career match, identical for every call with the same id/won/level.
  const fixture=(p,id,won,ai='normal')=>p.evaluate(([id,won,ai])=>{const ledger=SkylineSCWallet.create(localStorage,()=>Date.now()-180000);
-  GEN++;FAST=true;applyCity('lagos');newGame({cash:1600,set:{city:'lagos',mode:'timed',rounds:30,championship:1,ai,career:'origins',careerLength:'standard'},
+  GEN++;FAST=true;applyCity('skyline');newGame({cash:1600,set:{city:'skyline',mode:'timed',rounds:30,championship:1,ai,career:'origins',careerLength:'standard'},
    players:[0,1,2,3].map(i=>({name:'QA '+i,tok:TOKENS[i],col:PCOL[i],ai:i>0,owner:i===0}))});FAST=false;
-  G.masteryId=id;G.round=12;G.over=true;G.players[0].st={houses:3,buys:4,go:1};ledger.start(id,{city:'lagos'});
+  G.masteryId=id;G.round=12;G.over=true;G.players[0].st={houses:3,buys:4,go:1};ledger.start(id,{city:'skyline'});
   const w=won?G.players[0]:G.players[1];G.progDone=false;progressGameEnd(w);const r=SkylineCareer.last();G=null;return r},[id,won,ai]);
  const snapshot=p=>p.evaluate(()=>{const P=JSON.parse(localStorage.getItem(PKEY));return JSON.stringify({cach:P.cach,champ:P.champ,spot:P.spot,challengeClaims:P.challengeClaims,coins:P.coins,xp:P.xp,trophies:P.trophies,stats:P.stats,tokLv:P.tokLv,inv:P.inv}).replace(/1[0-9]{12}/g,'T')});// timestamps masked
 
@@ -80,7 +80,7 @@ const PREFS={nick:'Career QA',nickSet:true,welcomed:1,tutDone:1,coach:{pre:1,pos
  const loss=await fixture(p,'match-on-loss',false);assert.ok(loss.ok&&!loss.won);ok('duplicates rejected; Easy-only wins and losses earn mastery but not unlocks');
  const r2=await fixture(p,'match-on-2',true);assert.deepEqual(r2.unlocked,['circuit']);
  assert.equal(await p.evaluate(()=>SkylineCareer.state()[1].status),'playable');ok('two qualifying wins (tutorial already done) unlock Circuit, playable now');
- const short=await p.evaluate(()=>{GEN++;FAST=true;newGame({cash:1600,set:{city:'lagos',mode:'timed',rounds:30,career:'origins'},players:[0,1].map(i=>({name:'S'+i,tok:TOKENS[i],col:PCOL[i],ai:i>0,owner:i===0}))});FAST=false;G.masteryId='too-short';G.round=12;G.over=true;G.players[0].st={buys:5};SkylineSCWallet.create(localStorage).start('too-short',{});G.progDone=false;progressGameEnd(G.players[0]);const r=SkylineCareer.last();G=null;return r});
+ const short=await p.evaluate(()=>{GEN++;FAST=true;newGame({cash:1600,set:{city:'skyline',mode:'timed',rounds:30,career:'origins'},players:[0,1].map(i=>({name:'S'+i,tok:TOKENS[i],col:PCOL[i],ai:i>0,owner:i===0}))});FAST=false;G.masteryId='too-short';G.round=12;G.over=true;G.players[0].st={buys:5};SkylineSCWallet.create(localStorage).start('too-short',{});G.progDone=false;progressGameEnd(G.players[0]);const r=SkylineCareer.last();G=null;return r});
  assert.equal(short.reason,'too-short');ok('a match finished under two minutes does not count');
  await p.reload();await p.waitForFunction(()=>window.SkylineCareer&&!document.querySelector('#boot'));
  const after=await p.evaluate(()=>SkylineCareer.state().map(b=>[b.id,b.status,b.mastery.qualifiedWins,b.mastery.matches]));

@@ -1,7 +1,7 @@
 const assert=require('node:assert/strict'),{fixture}=require('./asset-fixture.cjs');
 module.exports=async function({main,api,apiPeer,account,id,test,denied}){
  const host=await account(),guest=await account(),outsider=await account(),hc=api.client(host),gc=apiPeer.client(guest),other=api.client(outsider);
- const room=await hc.createRoom({requestId:id(),name:'Assets',settings:{mode:'classic',city:'lagos',cash:1600}});await gc.joinRoom({requestId:id(),name:'Guest',code:room.code,invite:room.invite});
+ const room=await hc.createRoom({requestId:id(),name:'Assets',settings:{mode:'classic',city:'skyline',cash:1600}});await gc.joinRoom({requestId:id(),name:'Guest',code:room.code,invite:room.invite});
  const ref=main.db.ref('skylineV2/rooms/'+room.code),snapshot=()=>ref.once('value').then(s=>s.val()),body=(revision,kind='build',square=1,requestId=id())=>({requestId,code:room.code,revision,command:{kind,square}});
  // Privileged fixture setup only. The public start endpoint remains disabled.
  await ref.child('meta/status').set('playing');await ref.child('state').set({revision:2,phase:'pre',gameJson:JSON.stringify(fixture([host.uid,guest.uid]))});

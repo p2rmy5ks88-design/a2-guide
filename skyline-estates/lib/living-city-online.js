@@ -39,7 +39,7 @@ function adopt(view){const g=view.G;g.lcNet={code:S.code};g.lcMe=view.me;g.onlin
 async function show(view,first){
   const old=G,g=adopt(view);
   if(first||!old||!old.lcNet||old.players.length!==g.players.length||!tok3.length){
-    GEN++;netStop();G=g;applyTheme(G.set.city||G.set.theme||'lagos');try{applyDiceSkin()}catch(e){}$('#title').hidden=true;$('#ui').hidden=false;$('#modals').innerHTML='';
+    GEN++;netStop();G=g;applyTheme(G.set.city||G.set.theme||'skyline');try{applyDiceSkin()}catch(e){}$('#title').hidden=true;$('#ui').hidden=false;$('#modals').innerHTML='';
     buildBoard();renderRoster();$('#log').textContent=(G.log&&G.log[0])||'';camOverview(P(G.turn).pos,0);checkRotate();try{window.SkylineLivingCity3D.all()}catch(e){}updateTools();return}
   G=g;renderRoster();
   try{if(g.lastDice&&(!old.lastDice||g.lastDice.n!==old.lastDice.n)){const dd=[g.lastDice.a,g.lastDice.b];if(g.lastDice.sv){dd.sv=g.lastDice.sv;dd.s=SPEED_FACE(dd.sv)}await throwDice(dd)}

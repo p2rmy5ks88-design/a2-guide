@@ -3,7 +3,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
 const assert=require('node:assert/strict'),path=require('node:path');
 const url='file://'+path.resolve(__dirname,'../index.html');
 const prefs=x=>JSON.stringify({nick:'Ada',nickSet:true,welcomed:1,tutDone:1,flat2d:true,...x});
-const start=()=>{GEN++;newGame({cash:1500,set:{ai:'normal',speed:'fast',city:'lagos'},players:[{name:'Ada',tok:TOKENS[0],col:PCOL[0],ai:false},{name:'Kofi',tok:TOKENS[1],col:PCOL[1],ai:true}]});
+const start=()=>{GEN++;newGame({cash:1500,set:{ai:'normal',speed:'fast',city:'skyline'},players:[{name:'Ada',tok:TOKENS[0],col:PCOL[0],ai:false},{name:'Kofi',tok:TOKENS[1],col:PCOL[1],ai:true}]});
  const t=document.querySelector('#title');if(t)t.hidden=true;document.querySelector('#ui').hidden=false;G.turn=0;G.phase='pre';setPrompt('Your turn')};
 (async()=>{
  const browser=await chromium.launch({headless:true,args:['--disable-webgl'],...(process.env.CHROME_PATH?{executablePath:process.env.CHROME_PATH}:{})});

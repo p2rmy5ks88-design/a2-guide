@@ -17,7 +17,7 @@ const root=path.resolve(__dirname,'../..'),types={'.html':'text/html','.js':'tex
  p=await open({width:844,height:390},true);
  assert.equal(await p.evaluate(()=>SkylineRotMedia.count()),0,'landscape screens keep stylesheets untouched');
  assert.deepEqual(await cards(p),[true,true],'landscape home shows the Play cards');
- await p.evaluate(()=>{GEN++;newGame({cash:1500,set:{ai:'normal',speed:'fast',city:'lagos'},players:[{name:'Ada',tok:TOKENS[0],col:PCOL[0],ai:false},{name:'Kofi',tok:TOKENS[1],col:PCOL[1],ai:true}]});document.querySelector('#title').hidden=true;document.querySelector('#ui').hidden=false});
+ await p.evaluate(()=>{GEN++;newGame({cash:1500,set:{ai:'normal',speed:'fast',city:'skyline'},players:[{name:'Ada',tok:TOKENS[0],col:PCOL[0],ai:false},{name:'Kofi',tok:TOKENS[1],col:PCOL[1],ai:true}]});document.querySelector('#title').hidden=true;document.querySelector('#ui').hidden=false});
  await p.waitForTimeout(400);
  assert.equal(await p.locator('#bAssets').getAttribute('aria-label'),'Portfolio','Portfolio button name matches its label');
  await p.locator('#bAssets').focus();await p.keyboard.press('Enter');await p.waitForTimeout(600);

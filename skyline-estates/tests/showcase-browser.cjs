@@ -17,7 +17,7 @@ const check=(n,v)=>{assert.ok(v,n);report.checks.push(n);console.log('PASS',n)};
  async function ready(){await p.waitForFunction(()=>!!window.SkylineShowcase&&!document.querySelector('#boot'));await p.waitForTimeout(500);await p.addStyleTag({content:'*,*::before,*::after{animation:none!important;transition:none!important}.ov.bye{display:none!important}'})}
  await p.goto(url);await ready();
  await p.evaluate(()=>{
-  window.showFixture=(kind='win')=>{GEN++;FAST=true;applyCity('lagos');newGame({cash:1600,set:{city:'lagos',mode:kind==='timed'||kind==='draw'?'timed':'classic',rounds:10,ai:'normal',speed:'fast',perks:false,minigames:false,events2:false},players:[0,1,2].map(i=>({name:i===0?'Ava <&> "雪" 🏗️':'Private opponent '+i,tok:TOKENS[i],col:PCOL[i],ai:kind==='pass'?false:i!==0,uid:kind==='online'?'private-uid-'+i:null,owner:i===0}))});
+  window.showFixture=(kind='win')=>{GEN++;FAST=true;applyCity('skyline');newGame({cash:1600,set:{city:'skyline',mode:kind==='timed'||kind==='draw'?'timed':'classic',rounds:10,ai:'normal',speed:'fast',perks:false,minigames:false,events2:false},players:[0,1,2].map(i=>({name:i===0?'Ava <&> "雪" 🏗️':'Private opponent '+i,tok:TOKENS[i],col:PCOL[i],ai:kind==='pass'?false:i!==0,uid:kind==='online'?'private-uid-'+i:null,owner:i===0}))});
    G.first=0;G.turn=0;G.round=kind==='timed'||kind==='draw'?11:23;G.phase='post';G.masteryId='showcase-fixture-'+kind;G.players.forEach(q=>q.cash=500);G.players[0].cash=2450;
    if(kind!=='loss')GROUPS.brown.forEach((i,n)=>{G.own[i]={o:0,h:n?2:5,m:false}});
    G.houses=36-G.own.reduce((s,o)=>s+(o.h===5?0:o.h),0);G.hotels=12-G.own.filter(o=>o.h===5).length;
@@ -61,7 +61,7 @@ const check=(n,v)=>{assert.ok(v,n);report.checks.push(n);console.log('PASS',n)};
  const corrupt=await p.evaluate(()=>{const k='skyline-showcases-v1',old=localStorage.getItem(k);localStorage.setItem(k,'{broken');const r=JSON.parse(localStorage.getItem('showcase-expected')),result=SkylineShowcase.save(r),kept=localStorage.getItem(k)==='{broken';localStorage.setItem(k,old);return{rejected:!result.ok,kept}});check('corrupt history is preserved without overwriting other storage',corrupt.rejected&&corrupt.kept);
  // Exercise the real finish/reward/results flow, not a replacement results UI.
  await p.evaluate(()=>{
-  GEN++;FAST=true;applyCity('lagos');newGame({cash:1600,set:{city:'lagos',mode:'classic',ai:'normal',speed:'fast',perks:false,minigames:false},players:[{name:'Result <&> QA',tok:TOKENS[0],col:PCOL[0],ai:false,owner:true},{name:'AI rival',tok:TOKENS[1],col:PCOL[1],ai:true}]});G.first=G.turn=0;G.round=25;G.phase='post';G.players[0].cash=2450;G.players[1].cash=0;G.players[1].bankrupt=true;G.keysShown=true;save();FAST=false;
+  GEN++;FAST=true;applyCity('skyline');newGame({cash:1600,set:{city:'skyline',mode:'classic',ai:'normal',speed:'fast',perks:false,minigames:false},players:[{name:'Result <&> QA',tok:TOKENS[0],col:PCOL[0],ai:false,owner:true},{name:'AI rival',tok:TOKENS[1],col:PCOL[1],ai:true}]});G.first=G.turn=0;G.round=25;G.phase='post';G.players[0].cash=2450;G.players[1].cash=0;G.players[1].bankrupt=true;G.keysShown=true;save();FAST=false;
   document.querySelector('#title').hidden=true;document.querySelector('#ui').hidden=false;window.showCompletionCalls=0;const old=progressGameEnd;progressGameEnd=function(...a){showCompletionCalls++;return old.apply(this,a)};window.realFinish=finish();
  });
  await p.locator('.endgrid').waitFor();await p.getByRole('button',{name:'View My Skyline',exact:true}).waitFor();

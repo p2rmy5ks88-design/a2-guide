@@ -37,7 +37,7 @@ const check=(name,ok)=>{assert.ok(ok,name);report.checks.push(name);console.log(
     check('first online visit installs all declared local game assets',installed.count===manifest.files.length&&installed.names.length===1);check('first activation preserves unrelated app storage',installed.other);
     await page.waitForFunction(()=>document.querySelector('#toast')?.textContent==='Ready to play offline');check('complete installation shows the offline-ready message',true);
     await page.evaluate(()=>{
-      newGame({cash:1600,set:{mode:'classic',city:'lagos',speed:'fast',ai:'normal',minigames:false,perks:false,auction:true,ffa:true,even:true,interest:true},players:[0,1].map(i=>({name:'Offline '+i,tok:TOKENS[i],col:PCOL[i],ai:false}))});
+      newGame({cash:1600,set:{mode:'classic',city:'skyline',speed:'fast',ai:'normal',minigames:false,perks:false,auction:true,ffa:true,even:true,interest:true},players:[0,1].map(i=>({name:'Offline '+i,tok:TOKENS[i],col:PCOL[i],ai:false}))});
       G.first=G.turn=0;G.keysShown=true;G.phase='post';G.own[1]={o:0,h:1,m:false};G.houses=35;G.players[0].cash=1500;startWith(G)
     });await end(page).waitFor({state:'visible',timeout:20000});let expected=await snapshot(page);await exit(page);
     await page.evaluate(()=>fetch('./room-state.json').then(r=>r.json()));

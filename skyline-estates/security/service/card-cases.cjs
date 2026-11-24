@@ -2,7 +2,7 @@ const {game,dice}=require('./turn-cases.cjs'),{stock}=require('./asset-cases.cjs
 function top(g,deck,idx){g[deck]=[idx,...g[deck].filter(x=>x!==idx)]}
 function cases(){const out=[],add=(name,deck,idx,change=()=>{},opts={})=>{const g=game();stock(g);g.set.minigames=false;change(g);g.players[0].rrUsed=6;top(g,deck,idx);out.push({name,game:g,dice:deck==='chance'?dice(1,2):dice(6,6),deck,idx,...opts})};
  for(const deck of ['chance','esusu'])for(let idx=0;idx<16;idx++)add(deck+' card '+idx,deck,idx);
- for(const city of ['stockholm','nyc','tokyo','london','paris'])for(const deck of ['chance','esusu'])for(const idx of [0,7,10,15])add(city+' '+deck+' '+idx,deck,idx,g=>g.set.city=city);
+ for(const city of ['skyline'])for(const deck of ['chance','esusu'])for(const idx of [0,7,10,15])add(city+' '+deck+' '+idx,deck,idx,g=>g.set.city=city);
  add('fee to jackpot','chance',13,g=>g.set.pot=true);
  add('unaffordable fee retains card debt','chance',13,g=>g.players[0].cash=0);
  add('repair houses and hotel','chance',15,g=>{g.own[1]={o:0,h:2,m:false};g.own[7]={o:0,h:5,m:false};g.houses-=2;g.hotels--});

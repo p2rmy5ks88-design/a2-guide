@@ -6,7 +6,7 @@ function cases(){const out=[],add=(name,kind,change=()=>{},roll=null,choices=[])
  add('pay after two failed attempts resets attempts','payBail',g=>g.players[0].jailTurns=2);
  add('chance Bail Pass returns to its deck','useBailPass',g=>hold(g,'chance',9));add('City Hall Bail Pass returns to its deck','useBailPass',g=>hold(g,'esusu',6));
  add('two passes use the last held card','useBailPass',g=>{hold(g,'chance',9);hold(g,'esusu',6)});
- for(const city of ['lagos','stockholm','nyc','tokyo','london','paris'])add('localized bail '+city,'payBail',g=>g.set.city=city);
+ for(const city of ['skyline'])add('localized bail '+city,'payBail',g=>g.set.city=city);
  for(let tier=1;tier<=6;tier++)add('bail ignores unrelated upgrade perks '+tier,'payBail',g=>g.players[0].tl=tier);
  for(let attempts=0;attempts<=2;attempts++)for(let a=1;a<=6;a++)for(let b=1;b<=6;b++)add('attempt '+(attempts+1)+' dice '+a+'/'+b,'roll',g=>g.players[0].jailTurns=attempts,dice(a,b));
  add('third failed roll preserves an unpaid bail obligation','roll',g=>{g.players[0].jailTurns=2;g.players[0].cash=0},dice(2,3));

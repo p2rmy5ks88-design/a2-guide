@@ -1,7 +1,7 @@
 const fs=require('node:fs'),path=require('node:path'),http=require('node:http'),assert=require('node:assert/strict'),crypto=require('node:crypto');
 const {createEmulatorRuntime}=require('./emulator-runtime.cjs'),{createAdmissionService}=require('./admission.cjs'),{createHttpHandler}=require('./http.cjs');
 const report={projectId:'demo-skyline-phase1',checks:[],failure:null},servers=[],runtimes=[];let clientModule;
-const id=()=>crypto.randomUUID(),settings={mode:'classic',city:'lagos',cash:1600,ffa:true,even:false,auction:true};
+const id=()=>crypto.randomUUID(),settings={mode:'classic',city:'skyline',cash:1600,ffa:true,even:false,auction:true};
 async function test(name,fn,timeoutMs=15000){let timer;try{await Promise.race([fn(),new Promise((_,reject)=>timer=setTimeout(()=>reject(Error('Case timeout: '+name)),timeoutMs))]);report.checks.push({name,passed:true});console.log('PASS service',name)}finally{clearTimeout(timer)}}
 const denied=(fn,status,code)=>assert.rejects(fn,e=>e.status===status&&(!code||e.code===code));
 async function account(){const r=await fetch(`http://${process.env.FIREBASE_AUTH_EMULATOR_HOST}/identitytoolkit.googleapis.com/v1/accounts:signUp?key=demo-key`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({returnSecureToken:true})});assert.equal(r.status,200,'local auth signup');const b=await r.json();return{uid:b.localId,token:b.idToken}}

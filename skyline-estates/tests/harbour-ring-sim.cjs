@@ -4,8 +4,7 @@
 'use strict';
 const fs=require('fs'),path=require('path'),assert=require('node:assert/strict');
 const HR=require('../lib/harbour-ring-rules.js');
-const src=fs.readFileSync(path.join(__dirname,'..','game.html'),'utf8');const i=src.indexOf('const CITY_RAW=')+15;
-const RAW=JSON.parse(src.slice(i,src.indexOf(';\n',i)));const cities=Object.values(RAW).map(c=>({key:c.key,name:c.name,country:c.country,props:c.props}));
+const cities=require('../lib/harbour-ring-cities.js');
 const N=+process.argv[2]||4000,ov=process.env.HR_CFG?JSON.parse(process.env.HR_CFG):null;if(ov)Object.assign(HR.CFG,{});
 function play(seed,first){const s=HR.newMatch({seed,first,cities,players:[{name:'A',ai:true},{name:'B',ai:true}]});let guard=0,lead=null,swaps=0;
   while(!s.over&&guard++<5000){const D=HR.pending(s);if(D.type==='bid'){HR.act(s,0,HR.ai(s,0));if(!s.over&&HR.pending(s)===D)HR.act(s,1,HR.ai(s,1))}else HR.act(s,D.p,HR.ai(s,D.p));

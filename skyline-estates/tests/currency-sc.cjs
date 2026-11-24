@@ -28,7 +28,7 @@ const sandbox = {
   TIERS: 40,
   G: null,
   fmt: n => '$' + n,
-  CUR: {}, CUR_CITY: 'lagos',
+  CUR: {}, CUR_CITY: 'skyline',
   applyCity() {},
   countryOf() { return {cur:{pre:'$',post:'K',bigPre:'$',big:'M',m:1}}; },
   modal() {}, toast() {},
@@ -56,7 +56,7 @@ assert.equal(sandbox.fmt(1890), 'SC 1.89B');
 assert.equal(sandbox.fmt(50), 'SC 50M');
 assert.equal(sandbox.fmt(-12), '−SC 12M');
 assert.equal(PREF.coins, 250, 'Shop coin balance must not change');
-sandbox.G={online:true,set:{city:'lagos'}};
+sandbox.G={online:true,set:{city:'skyline'}};
 assert.equal(sandbox.fmt(30),'$30','online wire format stays intact');
 sandbox.drawBoard();assert.equal(sandbox.paintCash,'SC 30M');assert.equal(sandbox.fmt(30),'$30');
 const root=path.join(__dirname,'..');

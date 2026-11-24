@@ -6,7 +6,7 @@ if(bidSource.split('Math.floor(Math.random()*5)').length!==2)throw Error('Audit 
 bidSource=bidSource.replace('Math.floor(Math.random()*5)','draw(5)');
 const rules=[section('const W=1100','/* ================= SOUND ================= */'),section('function validateSave(g){','function decodeRemoteGame(code,d){'),section('const COUNTRIES=','/* ---- city looks ---- */'),section('function aiReserve(p){','function aiWantsBuy(p,i){'),bidSource].join('\n');
 const script=new vm.Script(rules+`
-G=JSON.parse(input);FAST=true;applyCity(G.set.city||'lagos');Math.random=()=>{throw Error('Unaudited AI randomness')};
+G=JSON.parse(input);FAST=true;applyCity(G.set.city||'skyline');Math.random=()=>{throw Error('Unaudited AI randomness')};
 if(!G.online||G.over||!validateSave({...G,online:false})||!validIdentities(G.players)||G.players.some(p=>!Number.isSafeInteger(p.cash)))throw Error('Invalid AI game');
 const q=P(seat);if(!q?.ai||q.uid!==null||q.bankrupt||!buyable(square)||G.own[square].o!==-1)throw Error('Invalid AI participant');
 const amount=aiBid(q,square,bid);

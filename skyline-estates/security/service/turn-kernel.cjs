@@ -15,7 +15,7 @@ function updateTools(){} function setPrompt(){} function pushState(){} function 
 const mine=()=>false,isLocalHuman=p=>p&&!p.ai&&p.uid===actor,isRemote=()=>false;
 class Stop extends Error{constructor(kind,details={}){super(kind);this.boundary={kind,...details}}}
 let G0=JSON.parse(input),flow=JSON.parse(frame),mode=choice;
-G=G0;if(!validateSave({...G,online:false})||!G.online||!validIdentities(G.players)||G.players.some(w=>!Number.isSafeInteger(w.cash)))throw Error('Invalid game');FAST=true;applyCity(G.set.city||'lagos');Math.random=()=>{throw Error('Unaudited randomness in turn transition')};
+G=G0;if(!validateSave({...G,online:false})||!G.online||!validIdentities(G.players)||G.players.some(w=>!Number.isSafeInteger(w.cash)))throw Error('Invalid game');FAST=true;applyCity(G.set.city||'skyline');Math.random=()=>{throw Error('Unaudited randomness in turn transition')};
 const p=P(G.turn),d=flow.dice?[flow.dice.a,flow.dice.b]:[];if(flow.dice?.sv){d.sv=flow.dice.sv;d.s=flow.dice.face}
 let boundary=null,paymentKind=null,answerUsed=false;
 function modal(){if(!answerUsed&&mode==='buy'){if(p.cash<SQ[p.pos].p)throw Error('Cannot afford property');answerUsed=true;return 'buy'}if(!answerUsed&&mode==='decline'){answerUsed=true;return 'auction'}throw new Stop('purchase',{square:p.pos,price:SQ[p.pos].p,canBuy:p.cash>=SQ[p.pos].p})}

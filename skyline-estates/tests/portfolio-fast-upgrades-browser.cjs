@@ -15,8 +15,8 @@ const mime={'.html':'text/html','.js':'text/javascript','.svg':'image/svg+xml','
   await page.goto('http://127.0.0.1:'+server.address().port+'/skyline-estates/index.html');
   await page.locator('#boot').waitFor({state:'detached',timeout:20000});
   const data=await page.evaluate(()=>{
-   const sq=PROP_IDX[0];PREF.coins=24000;SkylineSCWallet.create(localStorage).record("upgrade-test",24000,"test","Test SC");PREF.tokWins[TOKENS[0]]=16;PREF.estateOwned=PREF.estateOwned||{};PREF.estateOwned.lagos=[sq];setup.city='lagos';savePref();homeTab('portfolio');
-   return{square:sq,coins:PREF.coins,sc:SkylineEarnedCash.balance(),rarity:propertyRarity('lagos',sq),wins:careerWins()};
+   const sq=PROP_IDX[0];PREF.coins=24000;SkylineSCWallet.create(localStorage).record("upgrade-test",24000,"test","Test SC");PREF.tokWins[TOKENS[0]]=16;PREF.estateOwned=PREF.estateOwned||{};PREF.estateOwned.skyline=[sq];setup.city='skyline';savePref();homeTab('portfolio');
+   return{square:sq,coins:PREF.coins,sc:SkylineEarnedCash.balance(),rarity:propertyRarity('skyline',sq),wins:careerWins()};
   });
   const bar=page.locator('.rf-fastbar');
   await bar.waitFor();
@@ -28,13 +28,13 @@ const mime={'.html':'text/html','.js':'text/javascript','.svg':'image/svg+xml','
   if(vp.width===1920||vp.width===844)await page.screenshot({path:path.join(process.env.RUNNER_TEMP||'/tmp','skyline-portfolio-center-'+vp.width+'.png')});
   await page.locator('.rf-fast-upgrade').click();
   await page.getByRole('button',{name:'Cancel',exact:true}).click();
-  check('cancel does not spend currency or rarity',await page.evaluate(d=>PREF.coins===d.coins&&propertyRarity('lagos',d.square)===d.rarity,data));
+  check('cancel does not spend currency or rarity',await page.evaluate(d=>PREF.coins===d.coins&&propertyRarity('skyline',d.square)===d.rarity,data));
   await page.locator('.rf-fast-upgrade').click();
   await page.getByRole('button',{name:'Confirm upgrade',exact:true}).click();
-  await page.waitForFunction(d=>propertyRarity('lagos',d.square)===d.rarity+1,data,{timeout:12000});
+  await page.waitForFunction(d=>propertyRarity('skyline',d.square)===d.rarity+1,data,{timeout:12000});
   check('confirmed upgrade uses original economy',await page.evaluate(d=>PREF.coins===d.coins&&SkylineEarnedCash.balance()===d.sc-ESTATE_UPGRADE[d.rarity+1].sc,data));
   await page.locator('.rf-fast-detail').click();
-  const detail=await page.evaluate(d=>({tab:document.querySelector('.rf-mobile-view-select select')?.value,propertyName:document.querySelector('.rf-property h2')?.textContent,expected:CITY_DATA.lagos.props[PROP_IDX.indexOf(d.square)][0],button:!!document.querySelector('[data-estate-upgrade]'),mobileGrowth:document.querySelector('.rf-mobile-growth')?.open}),data);
+  const detail=await page.evaluate(d=>({tab:document.querySelector('.rf-mobile-view-select select')?.value,propertyName:document.querySelector('.rf-property h2')?.textContent,expected:CITY_DATA.skyline.props[PROP_IDX.indexOf(d.square)][0],button:!!document.querySelector('[data-estate-upgrade]'),mobileGrowth:document.querySelector('.rf-mobile-growth')?.open}),data);
   check('one-step Details opens correct property growth',detail.tab==='growth'&&detail.propertyName===detail.expected&&detail.button&& (vp.width>850||detail.mobileGrowth===true),detail);
   await page.evaluate(()=>homeTab('portfolio'));
   await page.locator('.rf-fast-open').click();

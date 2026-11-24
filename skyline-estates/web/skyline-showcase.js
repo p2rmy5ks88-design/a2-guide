@@ -28,7 +28,7 @@
  function capture(pid){
   if(!eligible().some(p=>p.id===pid))return null;
   let byPlayer=copies.get(G);if(!byPlayer){byPlayer=new Map();copies.set(G,byPlayer)}if(byPlayer.has(pid))return clone(byPlayer.get(pid));
-  const p=G.players[pid],city=G.set.city||'lagos';if(!CITY_DATA[city])return null;
+  const p=G.players[pid],city=G.set.city||'skyline';if(!CITY_DATA[city])return null;
   const order=standings(),forced=Number.isInteger(G.forceWin)?G.forceWin:null;
   const score=q=>q.bankrupt?0:netWorth(q),better=q=>q.id!==p.id&&(q.id===forced||(p.id!==forced&&(Number(q.bankrupt)<Number(p.bankrupt)||q.bankrupt===p.bankrupt&&score(q)>score(p))));
   const rank=1+G.players.filter(better).length,same=forced===pid?1:G.players.filter(q=>q.id!==forced&&q.bankrupt===p.bankrupt&&score(q)===score(p)).length;

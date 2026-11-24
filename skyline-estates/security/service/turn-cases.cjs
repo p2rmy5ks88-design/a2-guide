@@ -24,7 +24,7 @@ function cases(){const out=[],add=(name,roll,change=()=>{},choices=[])=>{const g
  add('holiday and surge stack with exact Start payday',dice(1,1),g=>{g.players[0].pos=38;g.players[0].tok='🚀';g.players[0].tl=6;g.set.goDouble=true;g.event={id:'holiday',round:1}});
  add('used surge does not pay twice',dice(1,1),g=>{g.players[0].pos=38;g.players[0].tok='🚀';g.players[0].tl=6;g.players[0].surgeUsed=1});
  add('expired holiday has no bonus',dice(1,1),g=>{g.players[0].pos=38;g.event={id:'holiday',round:0}});
- for(const city of ['lagos','stockholm','nyc','tokyo','london','paris'])add('localized passing Start '+city,dice(1,2),g=>{g.set.city=city;g.players[0].pos=38});
+ for(const city of ['skyline'])add('localized passing Start '+city,dice(1,2),g=>{g.set.city=city;g.players[0].pos=38});
  for(let sv=1;sv<=4;sv++)add('numeric turbo '+sv,dice(1,2,sv),g=>{g.set.speedDie=true;g.players[0].lapped=true},sv===4?['buy']:[]);
  add('turbo star pauses after base purchase',dice(1,3,5),g=>{g.set.speedDie=true;g.players[0].lapped=true;g.own[4].o=-1},['buy']);
  add('turbo taxi requires separate consent for each property',dice(1,2,6),g=>{g.set.speedDie=true;g.players[0].lapped=true;g.players[0].pos=38;g.own[1].o=-1},['buy','buy']);

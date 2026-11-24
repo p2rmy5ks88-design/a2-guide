@@ -22,7 +22,7 @@ const check=(name,condition)=>{assert.ok(condition,name);report.checks.push(name
     await page.goto(url);await page.waitForFunction(()=>typeof window.__sim==='function');return{context,page};
   }
   async function startPostTurn(page){await page.evaluate(()=>{
-    newGame({cash:1600,set:{mode:'classic',speed:'fast',ai:'normal',city:'lagos',minigames:false,perks:false,ffa:true,auction:true,even:true,interest:true},players:[0,1].map(i=>({name:'Test '+i,tok:TOKENS[i],col:PCOL[i],ai:false}))});
+    newGame({cash:1600,set:{mode:'classic',speed:'fast',ai:'normal',city:'skyline',minigames:false,perks:false,ffa:true,auction:true,even:true,interest:true},players:[0,1].map(i=>({name:'Test '+i,tok:TOKENS[i],col:PCOL[i],ai:false}))});
     G.first=G.turn=0;G.keysShown=true;G.phase='post';G.players[0].pos=5;G.players[0].cash=1500;G.own[1].o=0;startWith(G)
   });await page.getByRole('button',{name:/END.*TURN/i}).waitFor({state:'visible',timeout:20000})}
   const snapshot=page=>page.evaluate(()=>JSON.stringify({players:G.players.map(p=>({id:p.id,cash:p.cash,pos:p.pos,bankrupt:p.bankrupt})),own:G.own,turn:G.turn,round:G.round,houses:G.houses,hotels:G.hotels,set:G.set}));
@@ -62,7 +62,7 @@ const check=(name,condition)=>{assert.ok(condition,name);report.checks.push(name
       await normal.page.waitForFunction(()=>document.documentElement.classList.contains('flat'),null,{timeout:20000});await normal.page.locator('#tCont').click();await normal.page.getByRole('button',{name:/END.*TURN/i}).waitFor({state:'visible',timeout:20000});
       check('switching 3D to 2D retains saved game state',await snapshot(normal.page)===state3d);
       await exit(normal.page);await normal.page.locator('#hdGear').click();await normal.page.locator('#sView [data-v="3d"]').click();
-      await normal.page.waitForFunction(()=>!!GL&&!!S3&&!FLAT,null,{timeout:20000});await normal.page.locator('#tCont').click();await normal.page.getByRole('button',{name:/END.*TURN/i}).waitFor({state:'visible',timeout:20000});
+      await normal.page.waitForFunction(()=>typeof GL!=='undefined'&&typeof S3!=='undefined'&&!!GL&&!!S3&&!FLAT,null,{timeout:20000});await normal.page.locator('#tCont').click();await normal.page.getByRole('button',{name:/END.*TURN/i}).waitFor({state:'visible',timeout:20000});
       check('switching 2D back to 3D retains saved game state',await snapshot(normal.page)===state3d)
     }else{report.limits.push('Runner WebGL unavailable; genuine 3D/map switching could not be verified.');await normal.page.locator('#re2d').waitFor({state:'visible'})}
     await normal.context.close();console.log('Browser diagnostics: '+JSON.stringify({pageErrors:report.pageErrors,capabilities:report.capabilities,limits:report.limits}));check('startup/view/offline-session tests have no page exceptions',report.pageErrors.length===0);

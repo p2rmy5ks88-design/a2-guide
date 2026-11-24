@@ -10,7 +10,7 @@ const root=path.resolve(__dirname,'../../..'),report={sourceHash,checks:[],brows
   finish=async()=>{const on=NET.on;NET.on=false;try{return await original.finish()}finally{NET.on=on}};
   const out=[];
   try{console.error=e=>{throw e};
-   for(const c of inputs){FAST=true;GEN++;G=JSON.parse(JSON.stringify(c.game));if(G.phase==='post')G.phase='busy';NET.on=true;NET.host=true;NET.me=P(G.turn).uid;NET.driving=false;NET.applying=false;NET.applyRun=false;NET.reclaim={};applyCity(G.set.city||'lagos');let queued=false,index=0;const random=Math.random;
+   for(const c of inputs){FAST=true;GEN++;G=JSON.parse(JSON.stringify(c.game));if(G.phase==='post')G.phase='busy';NET.on=true;NET.host=true;NET.me=P(G.turn).uid;NET.driving=false;NET.applying=false;NET.applyRun=false;NET.reclaim={};applyCity(G.set.city||'skyline');let queued=false,index=0;const random=Math.random;
     window.setTimeout=(fn,ms)=>{if(ms===60)queued=true;return 0};Math.random=()=>{const x=c.tape[index++];if(!x)throw Error('Unexpected city-event random draw');return(x.value+.5)/x.max};
     try{await original.driver()}finally{Math.random=random}
     if(index!==c.tape.length)throw Error('Unused event draw '+c.name);

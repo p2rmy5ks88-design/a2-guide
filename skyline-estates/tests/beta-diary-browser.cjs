@@ -8,7 +8,7 @@ const base='file://'+path.resolve(__dirname,'../index.html');
  await ctx.addInitScript(()=>{if(!localStorage.getItem('skylinePrefs'))localStorage.setItem('skylinePrefs',JSON.stringify({nick:'Ada',nickSet:true,welcomed:1,tutDone:1,flat2d:true,stats:{games:5}}))});
  const p=await ctx.newPage();await p.route('https://**/*',r=>r.abort());
  const go=async q=>{await p.goto(base+q);await p.locator('#boot').waitFor({state:'detached',timeout:25000})};
- const play=()=>p.evaluate(()=>{GEN++;newGame({cash:1500,set:{ai:'normal',speed:'fast',city:'lagos'},players:[{name:'Ada',tok:TOKENS[0],col:PCOL[0],ai:false},{name:'Kofi',tok:TOKENS[1],col:PCOL[1],ai:true}]})});
+ const play=()=>p.evaluate(()=>{GEN++;newGame({cash:1500,set:{ai:'normal',speed:'fast',city:'skyline'},players:[{name:'Ada',tok:TOKENS[0],col:PCOL[0],ai:false},{name:'Kofi',tok:TOKENS[1],col:PCOL[1],ai:true}]})});
  await go('');await play();
  assert.equal(await p.evaluate(()=>localStorage.getItem('skylineBetaDiary')),null,'nothing recorded without consent');
  await go('?beta=1');await p.getByRole('button',{name:'Join the diary'}).click({timeout:8000});

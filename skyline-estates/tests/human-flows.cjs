@@ -15,7 +15,7 @@ const check=(name,ok)=>{assert.ok(ok,name);report.checks.push(name);console.log(
     await page.goto(origin+'/skyline-estates/index.html');await page.addStyleTag({content:'.bigb{animation:none!important}'});await page.waitForFunction(()=>typeof window.__sim==='function');
     const meta=await page.evaluate(scenario=>{
       const mode=scenario==='quick-finish'?'quick':scenario==='timed-finish'?'timed':'classic',n=mode==='quick'?3:2;
-      newGame({cash:1600,set:{mode,rounds:1,city:'lagos',ai:'normal',speed:'fast',auction:scenario!=='decline',minigames:false,perks:false,ffa:true,even:true,interest:true},players:Array.from({length:n},(_,i)=>({name:'Flow '+i,tok:TOKENS[i],col:PCOL[i],ai:false}))});
+      newGame({cash:1600,set:{mode,rounds:1,city:'skyline',ai:'normal',speed:'fast',auction:scenario!=='decline',minigames:false,perks:false,ffa:true,even:true,interest:true},players:Array.from({length:n},(_,i)=>({name:'Flow '+i,tok:TOKENS[i],col:PCOL[i],ai:false}))});
       const quickDeal=mode!=='quick'||G.players.every(p=>propsOf(p.id).length===2);
       G.own.forEach(o=>Object.assign(o,{o:-1,h:0,m:false}));G.first=G.turn=0;G.keysShown=true;G.phase='pre';G.players.forEach(p=>{p.cash=1600;p.pos=0});
       if(scenario==='poor-auction')G.players.forEach(p=>p.cash=5);

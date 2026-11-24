@@ -16,7 +16,7 @@ function asset(relative){const f=path.resolve(root,relative);if(!f.startsWith(ro
   if(!publicAssets)await context.route('**/web/verified-config.js',r=>r.fulfill({contentType:'text/javascript',body:'window.SKYLINE_COMPETITION=Object.freeze('+JSON.stringify({enabled:true,service:BASE,version:1})+');'}));
   if(!production)await context.route(BASE+'/**',async r=>{const route=new URL(r.request().url()).pathname.split('/').at(-1),body=r.request().postDataJSON();let v;
    if(offline)return r.fulfill({status:503,contentType:'application/json',headers:{'Access-Control-Allow-Origin':'*'},body:'{"error":"unavailable"}'});
-   if(route==='capabilities')v={protocol:1,version:1,verified:true,categories:['season','city','worth','developers','weekly'],cities:['lagos','stockholm','tokyo','dubai']};
+   if(route==='capabilities')v={protocol:1,version:1,verified:true,categories:['season','city','worth','developers','weekly'],cities:['skyline']};
    else if(route==='me')v=mockProfile;else if(route==='profile'){writes.push(body);mockProfile={...mockProfile,...body};v=mockProfile}
    else if(route==='rankings')v={protocol:1,verified:true,mode:'timed-10-two-human-v1',rows:[],myPosition:null,ends:Date.UTC(2026,11,9)};
    else if(route==='community')v={protocol:1,verified:true,title:'Skyline Bridge',total:0,goal:1000,contributed:0,claimed:false,ends:Date.UTC(2026,11,9)};else throw Error('Unexpected mock route');

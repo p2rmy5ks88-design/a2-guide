@@ -33,8 +33,8 @@ const STUB=()=>{const log=window.__speech=[];let cur=null;
   await p.locator('.coachbox [data-prev]').click();await p.waitForTimeout(2500);
   const np=await p.evaluate(()=>({last:SkylineCoach._state.NAT.last,plays:SkylineCoach._state.NAT.plays,sys:__speech.filter(x=>x.text).length,ac:AC&&AC.state}));
   assert.deepEqual(np.last,['preview']);assert.equal(np.sys,0);ok('Natural voice is the default: Preview plays the recorded clip, no system speech ('+packTxt.replace(/\s+/g,' ')+')');
-  const nm=await p.evaluate(async()=>{const man=await fetch('coach/natural-en-f/manifest.json').then(r=>r.json());window.G=window.G||{players:[],own:[]};return{buy:man.index.buy['Eko Atlantic City'],ev:man.index.ev['Eyo Festival'],n:Object.keys(man.files).length}});
-  assert.ok(nm.buy&&nm.ev&&nm.n>700);
+  const nm=await p.evaluate(async()=>{const man=await fetch('coach/natural-en-f/manifest.json').then(r=>r.json());window.G=window.G||{players:[],own:[]};return{buy:man.index.buy['Allen Avenue'],n:Object.keys(man.files).length}});
+  assert.ok(nm.buy&&nm.n>100);
   await p.locator('.coachbox [data-dl]').click();await p.waitForFunction(()=>/Downloaded/.test(document.querySelector('.coachbox [data-pack]')?.textContent||''),null,{timeout:120000});
   const cached=await p.evaluate(async()=>(await (await caches.open('skyline-coach-natural-en-f-v1')).keys()).length);assert.ok(cached>=nm.n);ok(`voice pack download: ${nm.n} clips saved for offline play (${cached} cache entries)`);
   await p.locator('.coachbox [data-rm]').click();await p.locator('.coachbox [data-dl]').waitFor();ok('voice pack can be removed again');
@@ -71,7 +71,7 @@ const STUB=()=>{const log=window.__speech=[];let cur=null;
   await p.locator('.coachbox select').selectOption('us-m');ok('voice choice survives reload; switching back to Automatic works');
   // 2. play a short Living City game: 1 human + 2 AI, auto-answering every prompt
   await p.evaluate(()=>{sleep=ms=>new Promise(r=>setTimeout(r,Math.min(ms||0,40)));initAudio();PREF.audio.radio=true;syncAudio()});
-  await p.evaluate(()=>{applyCity('lagos');newGame({lc:true,cash:1600,set:{ai:'normal',speed:'fast',pot:false,maxRounds:300,city:'lagos',perks:false,mode:'timed',rounds:8},players:[{name:'Kelvin',tok:TOKENS[0],col:PCOL[0],ai:false,tl:1},{name:'Kofi',tok:TOKENS[1],col:PCOL[1],ai:true,tl:1},{name:'Mei',tok:TOKENS[2],col:PCOL[2],ai:true,tl:1}]});
+  await p.evaluate(()=>{applyCity('skyline');newGame({lc:true,cash:1600,set:{ai:'normal',speed:'fast',pot:false,maxRounds:300,city:'skyline',perks:false,mode:'timed',rounds:8},players:[{name:'Kelvin',tok:TOKENS[0],col:PCOL[0],ai:false,tl:1},{name:'Kofi',tok:TOKENS[1],col:PCOL[1],ai:true,tl:1},{name:'Mei',tok:TOKENS[2],col:PCOL[2],ai:true,tl:1}]});
     const g=G;GROUPS.sky.forEach(i=>{g.own[i].o=0});g.players[0].cash=4000;startWith(g)});
   const drive=()=>p.evaluate(()=>{if(!G)return'none';if(G.over)return'over';const ovs=[...document.querySelectorAll('#modals .ov:not(.bye)')],ov=ovs[ovs.length-1];
     if(ov){if(/landlord of/.test(ov.textContent))return'over';const bs=[...ov.querySelectorAll('button')].filter(b=>!b.disabled&&b.offsetParent!==null);const bb=ov.querySelector('.lc-lmm')?bs[0]:bs.find(b=>/\bpri\b/.test(b.className))||bs[bs.length-1];if(bb){bb.click();return'modal'}return'wait'}
@@ -113,7 +113,7 @@ const STUB=()=>{const log=window.__speech=[];let cur=null;
   await p.evaluate(()=>{homeTab&&0});const off=await p.evaluate(async()=>{__speech.length=0;SkylineCoach.say('Long announcement that gets switched off.',2);PREF.coach.on=false;SkylineCoach.stop();SkylineCoach.say('Should not speak.',1);return{cancel:__speech.some(x=>x.cancel),spoke:__speech.some(x=>x.text==='Should not speak.'),ducked:SkylineCoach._state.D.ducked}});
   assert.deepEqual(off,{cancel:true,spoke:false,ducked:false});ok('turning Coach off stops speech immediately and restores audio');
   // 8b. Declare bankruptcy from the in-game menu (local game)
-  const bk=await p.evaluate(async()=>{applyCity('lagos');newGame({lc:true,cash:1600,set:{ai:'normal',speed:'fast',pot:false,maxRounds:300,city:'lagos',perks:false},players:[{name:'Kelvin',tok:TOKENS[0],col:PCOL[0],ai:false,tl:1},{name:'Kofi',tok:TOKENS[1],col:PCOL[1],ai:true,tl:1},{name:'Mei',tok:TOKENS[2],col:PCOL[2],ai:true,tl:1}]});G.own[1].o=0;startWith(G);
+  const bk=await p.evaluate(async()=>{applyCity('skyline');newGame({lc:true,cash:1600,set:{ai:'normal',speed:'fast',pot:false,maxRounds:300,city:'skyline',perks:false},players:[{name:'Kelvin',tok:TOKENS[0],col:PCOL[0],ai:false,tl:1},{name:'Kofi',tok:TOKENS[1],col:PCOL[1],ai:true,tl:1},{name:'Mei',tok:TOKENS[2],col:PCOL[2],ai:true,tl:1}]});G.own[1].o=0;startWith(G);
     await new Promise(r=>setTimeout(r,1500));document.querySelectorAll('#modals .ov').forEach(x=>x.remove());G.turn=0;const w=openMenu();await new Promise(r=>setTimeout(r,300));
     const b=[...document.querySelectorAll('#modals button')].find(x=>x.textContent==='Declare bankruptcy');if(!b)return'no button';b.click();await new Promise(r=>setTimeout(r,400));
     const y=[...document.querySelectorAll('#modals button')].find(x=>x.textContent==='Declare bankruptcy');y.click();await new Promise(r=>setTimeout(r,800));
@@ -122,19 +122,19 @@ const STUB=()=>{const log=window.__speech=[];let cur=null;
   const onl=await p.evaluate(()=>{const o=G.online;G.online=true;const a=SkylineDeclareBankruptcy.allowed();G.online=o;return a});assert.equal(onl,false);ok('Declare bankruptcy is not offered in online rooms');
   // 9. natural voice in game: recorded clips for known lines (incl. property and festival names); nothing else is voiced
   const nat=await p.evaluate(async()=>{GEN++;document.querySelectorAll('#modals .ov').forEach(x=>x.remove());await new Promise(r=>setTimeout(r,2500));PREF.coach.on=true;PREF.coach.voice='natural';SkylineCoach.stop();SkylineCoach._state.Q.recent.clear();__speech.length=0;G.over=false;
-    const N=SkylineCoach._state.NAT;SkylineCoach.say('Do you want to acquire Eko Atlantic City?',1);await new Promise(r=>setTimeout(r,3500));const a=N.last.slice();
-    SkylineCoach.say('Eyo Festival is live! Lagos Island rents are up 50 percent.',2);await new Promise(r=>setTimeout(r,6000));const b=N.last.slice();
+    const N=SkylineCoach._state.NAT;SkylineCoach.say('Do you want to acquire Allen Avenue?',1);await new Promise(r=>setTimeout(r,3500));const a=N.last.slice();
+    SkylineCoach.say('Rents are rising in the spotlight district.',2);await new Promise(r=>setTimeout(r,6000));const b=N.last.slice();
     const before=N.plays;SkylineCoach.say('Bail Pass: clears one Civic Review at once.',3);SkylineCoach.say('Kofi pays you 11 million Skyline Cash.',3);await new Promise(r=>setTimeout(r,2500));
     return{a,b,extra:N.plays-before,last:N.last,sys:__speech.filter(x=>x.text).length}});
-  assert.match(nat.a[0],/^buy_eko-atlantic-city-/);assert.match(nat.b[0],/^ev_eyo-festival-/);assert.equal(nat.b[1],'ev_rent_up');assert.equal(nat.extra,1);assert.deepEqual(nat.last,['recv_rent']);assert.equal(nat.sys,0);
-  ok('natural voice in game: "Do you want to acquire Eko Atlantic City?", "Eyo Festival is here!" + rents rising; card text without a recording is skipped; never mixed with system speech');
+  assert.match(nat.a[0],/^buy_allen-avenue-/);assert.equal(nat.b[0],'ev_rent_up');assert.equal(nat.extra,1);assert.deepEqual(nat.last,['recv_rent']);assert.equal(nat.sys,0);
+  ok('natural voice in game: "Do you want to acquire Allen Avenue?", rents rising; card text without a recording is skipped; never mixed with system speech');
   const cards=await p.evaluate(async()=>{const N=SkylineCoach._state.NAT;SkylineCoach._state.Q.recent.clear();G.players[0].ai=false;
-    const i=LC_CHANCE.findIndex(c=>c&&c.id==='sponsor');const c=lcCard('chance',i);LCUI.decide('card',G.players[0],{deck:'chance',c,ch:c.ask(G.players[0])}).catch(()=>{});await new Promise(r=>setTimeout(r,4500));const a=N.last.slice();
+    const i=LC_CHANCE.findIndex(c=>c&&c.id==='corridor');const c=lcCard('chance',i);LCUI.decide('card',G.players[0],{deck:'chance',c,ch:c.ask(G.players[0])}).catch(()=>{});await new Promise(r=>setTimeout(r,4500));const a=N.last.slice();
     document.querySelectorAll('#modals .ov').forEach(x=>x.remove());
     LCUI.decide('corner',G.players[0],{icon:'investment',title:'Investment Forum',text:'',choices:[{k:'net',label:'Network'}]}).catch(()=>{});await new Promise(r=>setTimeout(r,4000));const b=N.last.slice();
     document.querySelectorAll('#modals .ov').forEach(x=>x.remove());const man=await fetch('coach/natural-en-f/manifest.json').then(r=>r.json());
     return{a,b,ta:Object.entries(man.index.text).find(([t,id])=>id===a[0]),tb:Object.entries(man.index.text).find(([t,id])=>id===b[0])}});
-  assert.ok(cards.ta&&/^Lucky Break! Sponsor Eyo Festival\. Make your choice\.$/.test(cards.ta[0]),JSON.stringify(cards));assert.equal(cards.b[0],'corner_if');
+  assert.ok(cards.ta&&/^Lucky Break! Transit corridor\. Make your choice\.$/.test(cards.ta[0]),JSON.stringify(cards));assert.equal(cards.b[0],'corner_if');
   ok('popup cards and corners: "'+cards.ta[0]+'" and "'+cards.tb[0]+'"');
   await p.evaluate(()=>{PREF.coach.on=false;SkylineCoach.stop()});
   // 8. no visible UI during play

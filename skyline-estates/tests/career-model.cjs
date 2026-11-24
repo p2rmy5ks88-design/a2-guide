@@ -74,7 +74,7 @@ const newer=C.normalize({v:2,unlocked:{origins:1},future:true});assert.ok(newer.
 ok('a record from a newer version is left untouched');
 
 // Property manifest (prepared for Phase B)
-const m={v:1,seed:42,ruleset:'classic-lc',slots:[{slot:1,name:'Allen Avenue',city:'lagos',country:'ng',category:'market-streets',tier:2},{slot:3,name:'Brick Lane',city:'london',country:'gb',category:'cultural-streets',tier:2}]};
+const m={v:1,seed:42,ruleset:'classic-lc',slots:[{slot:1,name:'Allen Avenue',city:'skyline',country:'ng',category:'market-streets',tier:2},{slot:3,name:'Brick Lane',city:'london',country:'gb',category:'cultural-streets',tier:2}]};
 assert.deepEqual(C.validateManifest(m),[]);
 assert.ok(C.validateManifest({...m,slots:[...m.slots,{...m.slots[0],slot:5}]}).includes('duplicate-or-empty-name'));
 assert.ok(C.validateManifest({...m,slots:[{...m.slots[0],category:'nope'}]}).includes('category'));assert.ok(C.validateManifest({...m,seed:-1}).includes('seed'));

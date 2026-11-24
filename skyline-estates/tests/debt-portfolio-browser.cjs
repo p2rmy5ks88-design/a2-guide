@@ -16,7 +16,7 @@ const check=(name,ok,detail)=>{assert.ok(ok,name+(detail!==undefined?' '+JSON.st
   await page.route('https://**/*',r=>r.abort());await page.goto(url);await page.waitForFunction(()=>typeof window.__sim==='function'&&typeof openAssets==='function');await page.waitForFunction(()=>!document.getElementById('boot'),null,{timeout:12000});return{ctx,page}}
  // A human player owing money with: a full built district (mortgage blocked until buildings are sold),
  // plain streets, a mortgaged street, a transit hub and a utility.
- const setup=()=>{FAST=true;GEN++;newGame({cash:1500,set:{ai:'normal',speed:'fast',city:'lagos'},players:[{name:'MasterLi',tok:TOKENS[0],col:PCOL[0],ai:false},{name:'Kofi',tok:TOKENS[1],col:PCOL[1],ai:true}]});G.phase='post';
+ const setup=()=>{FAST=true;GEN++;newGame({cash:1500,set:{ai:'normal',speed:'fast',city:'skyline'},players:[{name:'MasterLi',tok:TOKENS[0],col:PCOL[0],ai:false},{name:'Kofi',tok:TOKENS[1],col:PCOL[1],ai:true}]});G.phase='post';
   const built=GROUPS.pink,plain=[...GROUPS.orange,...GROUPS.red.slice(0,1)],mort=GROUPS.red[1];
   built.forEach(i=>G.own[i]={o:0,h:2,m:false});plain.forEach(i=>G.own[i]={o:0,h:0,m:false});G.own[mort]={o:0,h:0,m:true};G.own[RAILS[0]]={o:0,h:0,m:false};G.own[UTILS[0]]={o:0,h:0,m:false};
   G.houses-=2*built.length;P(0).cash=18;window.__debt={built,plain,mort,rail:RAILS[0],util:UTILS[0],debt:20+SQ[plain[0]].p/2+1};

@@ -24,7 +24,7 @@ function cases(){const out=[],add=(name,change=()=>{},commands=[{kind:'bankrupt'
  add('jail third bail can be funded then moves once',g=>{g.phase='jail';Object.assign(g.players[0],{inJail:true,pos:10,jailTurns:2,cash:0})},[{kind:'mortgage',square:1},{kind:'mortgage',square:2},{kind:'mortgage',square:4},{kind:'pay'}],dice(2,3));out.at(-1).jail=true;
  add('jail bail bankruptcy does not move',g=>{Object.assign(g,game(3));g.phase='jail';Object.assign(g.players[0],{inJail:true,pos:10,jailTurns:2,cash:0})},[{kind:'bankrupt'}],dice(2,3));out.at(-1).jail=true;
  add('rent after mandatory bail is not charged bail twice',g=>{g.phase='jail';Object.assign(g.players[0],{inJail:true,pos:10,jailTurns:2,cash:60});g.own[15].o=1},[{kind:'mortgage',square:1},{kind:'pay'}],dice(2,3));out.at(-1).jail=true;
- for(const city of ['stockholm','nyc','tokyo','london','paris'])add('localized rent debt '+city,g=>{rent(g);g.set.city=city},[{kind:'mortgage',square:1},{kind:'pay'}]);
+ for(const city of ['skyline'])add('localized rent debt '+city,g=>{rent(g);g.set.city=city},[{kind:'mortgage',square:1},{kind:'pay'}]);
  for(let n=3;n<=6;n++)add('current debtor bankruptcy with '+n+' players',g=>{Object.assign(g,game(n));rent(g)});
  add('hotel sale returns four houses before paying rent',g=>{rent(g);g.set.even=false;g.own[1].h=5},[{kind:'sell',square:1},{kind:'pay'}]);
  add('house sale then mortgage before bank bankruptcy',g=>{g.players[0].cash=0;g.own[1].h=1},[{kind:'sell',square:1},{kind:'mortgage',square:1},{kind:'bankrupt'}],dice(3,3));

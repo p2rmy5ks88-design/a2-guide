@@ -16,6 +16,6 @@ function cases(){const out=[],add=(name,g,offer,responses)=>{stock(g);out.push({
  {const g=game();hold(g,1,'esusu',6);add('one Bail Pass from recipient',g,terms(1,{rcard:1}),[{decision:'accept'}])}
  {const g=game();hold(g,0,'chance',9);hold(g,1,'esusu',6);add('both Bail Pass flags preserve source order',g,terms(1,{gcard:1,rcard:1}),[{decision:'accept'}])}
  {const g=game();Object.assign(g.players[1],{inJail:true,pos:10,jailTurns:1});add('jailed recipient may consent',g,terms(1),[{decision:'accept'}])}
- for(const city of ['stockholm','nyc','tokyo','london','paris']){const g=game();g.set.city=city;add('localized trade '+city,g,terms(1),[{decision:'accept'}])}
+ for(const city of ['skyline']){const g=game();g.set.city=city;add('localized trade '+city,g,terms(1),[{decision:'accept'}])}
  return out}
 module.exports={cases,game,terms,counter,hold};
