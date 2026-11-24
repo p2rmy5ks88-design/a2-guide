@@ -93,3 +93,4 @@
 #finish .sumNote{font-size:12px;text-align:left;color:#dfe8f2;line-height:1.45}
 #finish .sumBtns{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:6px}#finish .sumBtns button{min-height:44px}
 #finish .sumBtns #returnCareer{background:linear-gradient(#f9d87e,#c4902d)}#finish .sumBtns button:not(#returnCareer){background:#1d3a5e;color:#fff;border:1px solid #e4af41}
+#heading .blurb{display:none}
