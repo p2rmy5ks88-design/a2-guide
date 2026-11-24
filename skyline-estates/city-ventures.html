@@ -110,7 +110,7 @@ table.res{width:100%;border-collapse:collapse;font-size:14px;margin:8px 0}table.
  #side .panel{flex-shrink:0}
 }
 </style>
-<script src="lib/board-ui.js"></script><script src="lib/board-guide.js"></script>
+<script src="lib/board-ui.js"></script><script src="lib/board-daylight.js"></script><script src="lib/board-loading.js"></script><script src="lib/board-guide.js"></script><script src="lib/skyline-feel.js"></script>
 </head>
 <body>
 <canvas id="board" aria-label="City Ventures 3D board. Tap a space to see its details."></canvas>
@@ -133,6 +133,7 @@ table.res{width:100%;border-collapse:collapse;font-size:14px;margin:8px 0}table.
 <div id="menu" class="screen" hidden><div class="card panel"><h1>Menu</h1><p>City Ventures — The Living Market</p>
  <div class="mlist"><button class="btn primary" id="mResume">▶ Resume</button><button class="btn" id="mPortfolio">🏘 Portfolio</button><button class="btn" id="mRules">📖 Rules</button><button class="btn" id="mSpeed">⏩ Speed: normal</button><button class="btn" id="mCam">🗺 Camera: whole board</button><button class="btn" id="mRadio">📻 Radio: off</button><button class="btn" id="mNew">↻ New match</button><button class="btn" id="mEnd">🏁 End game &amp; score</button><button class="btn" id="mBankrupt">Declare bankruptcy</button><button class="btn" id="mHome">🏠 Skyline Estates</button></div></div></div>
 <div id="rules" hidden><div class="card panel"><h1>How to play</h1><p>Build the most valuable City Value in 18 turns (Quick: 10).</p>
+ <h3>Money</h3><b>CC</b> (City Credits) is the money for this match only. Your coins and Skyline Cash (<b>SC</b>) rewards are added when you return to Skyline Estates.
  <h3>Your turn</h3>Roll, move, then buy the space you land on or send it to auction. Own 2 of a district’s 3 properties to build Low-rise and Mid-rise; own all 3 for a Landmark (+25% district rent).
  <h3>The six power corners</h3><b>Start</b> — pass for 200 CC; land exactly to pick a Charter. <b>Free Lounge</b> — Rent Shield or keep a card. <b>Civic Review</b> — Development Drive (−20% upgrades) or Tenant Protection (−30% rent) for a round. <b>Market Boom</b> — one district’s rent +50% or −40% for a round. <b>Skyline Exchange</b> — open an auction or a Deal Desk trade. <b>Transit Hub</b> — Express Route to any station or a Transit Dividend.
  <h3>Winning</h3>City Value = cash + property values + 80% of upgrades + 200 per full district + 150 per Landmark.
@@ -268,7 +269,7 @@ function openDeal(desk){const others=s.players.filter(p=>p.id!==0&&!p.out);if(!o
 $('mainBtn').onclick=()=>{if(!s)return;if(s.over)return showResults();const pd=CV.pending(s);if(pd.kind==='roll'&&pd.pid===0)doAct(0,{type:'roll'});else if(pd.kind==='action'&&pd.pid===0){$('decision').dataset.sheet='';doAct(0,{type:'end'})}};
 async function doAct(pid,a){if(busy)return;busy=true;render();const r=CV.act(s,pid,a);if(!r.ok){busy=false;toast(r.error);render();return}
  await play(r.events);save();busy=false;r3.sync(CV.view(s));render();if(!s.over)pump();else finishMatch()}
-async function play(events){for(const e of events){
+async function play(events){for(const e of events){try{SkylineFeel.event(e,Math.max(0,s.players.findIndex(p=>!p.ai)))}catch(err){}
  if(e.type==='dice'){showDice(e.dice);await wait(380*speed)}
  else if(e.type==='move'){document.body.classList.add('moving');r3.sync(CV.view(s));await r3.moveToken(e.pid,e.path,{express:!!e.express});document.body.classList.remove('moving')}
  else if(e.type==='land'){selected=e.tile;showTile(e.tile,true);r3.focusTile(e.tile)}

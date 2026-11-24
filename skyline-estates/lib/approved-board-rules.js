@@ -4,7 +4,8 @@
    Game balance here is review-only until the owner approves play-testing. */
 export const ID='skyline-approved-board-v1';
 const lengths={dominion:{quick:12,standard:18,extended:24},empire:{quick:12,standard:20,extended:28}};
-export const cashFormat=n=>(n<0?'-$':'$')+Math.abs(Math.round(n)).toLocaleString('en-US');
+// Same money style as the classic game: SC with K/M/B (owner request 24 Nov 2026).
+export const cashFormat=n=>{const v=Math.abs(Math.round(n)),t=(x,d)=>String(+(v/x).toFixed(d));return (n<0?'-':'')+'SC '+(v>=1e9?t(1e9,2)+'B':v>=1e6?t(1e6,2)+'M':v>=1e4?t(1e3,0)+'K':v.toLocaleString('en-US'))};
 export const propertyKinds=new Set(['property','palace','tower','market','garden','transit','utility']);
 const ownable=t=>t.kind==='property'||(t.board==='empire'&&propertyKinds.has(t.kind)&&t.price_sc>0);
 const rand=s=>{let v=s.rng|0;v^=v<<13;v^=v>>>17;v^=v<<5;s.rng=v>>>0;return s.rng/4294967296};

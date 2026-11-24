@@ -23,6 +23,9 @@ function lcCardHTML(deck,c,p,choices){const art=c.art?`<img class="lc-art" src="
   return `<div class="lc-card ${deck}">${art}<div class="lc-cbody"><small>${deck==='chance'?'LUCKY BREAK':'CITY HALL'}</small><b>${c.icon?LC_ICON(c.icon,22):''}${esc(lcVal(c.title)||'')}</b><p>${esc(loc(lcVal(c.t)))}</p>
    ${choices?`<ul class="lc-ch">${choices.map(x=>`<li class="${x.ok===false?'off':''}"><b>${esc(x.label)}</b>${x.info?`<span>${esc(x.info)}</span>`:''}</li>`).join('')}</ul>`:''}${p.ai&&choices?`<em>${esc(p.name)} is deciding…</em>`:''}</div></div>`}
 async function _cardShow(p,deck,c,ch,aiPick){
+  /* Quick turns: a card with nothing to decide (or another player's card) shows as a short notice, not a pop-up. */
+  if((!ch||p.ai)&&typeof quickTurns==='function'&&quickTurns()&&!(G&&G.online)){const head=deck==='chance'?'Lucky Break':'City Hall',t=c.classic?c.t:lcVal(c.t);
+   const pick=aiPick&&ch?ch.find(x=>x.k===aiPick):null;toast(`${head} · ${p.ai?p.name+': ':''}${loc(t||'')}${pick?' → '+pick.label:''}`);try{sfx('card')}catch(e){}await sleep(FAST?0:1100*spd());return 'ok'}
   if(!ch||p.ai)return modal({cls:'lc-cardm',html:lcCardHTML(deck,c.classic?{title:deck==='chance'?'Lucky Break':'City Hall',t:c.t}:c,p,ch),btns:[{k:'ok',label:p.ai?(aiPick?`${esc(p.name)}: ${esc(ch.find(x=>x.k===aiPick).label)}`:`${esc(p.name)} reads the card…`):'OK',primary:!p.ai,disabled:p.ai}],auto:p.ai?2600:0,tdef:p.ai?undefined:'ok'});
   const ok=ch.filter(x=>x.ok!==false);
   return modal({cls:'lc-cardm',html:lcCardHTML(deck,c,p,ch),btns:ch.map((x,j)=>({k:x.k,label:esc(x.label),primary:j===0&&x.ok!==false,disabled:x.ok===false})),tdef:ok[ok.length-1].k})}

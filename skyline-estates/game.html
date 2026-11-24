@@ -2057,7 +2057,7 @@ html.light .tbtn.ghost{background:rgba(19,40,74,.06);border-color:rgba(19,40,74,
 .pf3quickcard button:hover,.pf3more:hover{filter:brightness(1.08)}.pf3quickcard button:focus-visible,.pf3more:focus-visible{outline:3px solid #fff2bf;outline-offset:2px}
 .pf3more{flex:none;align-self:stretch;padding:10px;background:#172d3e;color:#f4d58a;border-color:#aa8b54}
 .tchip .hint{font-style:normal;line-height:1.35;white-space:normal;overflow-wrap:anywhere}
-.tchip .hint.bad{color:#ffe1d9;background:#672b29;border:1px solid #ce7566}.tchip .hint.good{color:#d9ffea;background:#1d5b42;border:1px solid #55b88a}
+.tchip .hint.bad{color:#ffe1d9;background:#672b29;border:1px solid #ce7566}.mtxt.buywhy{font-size:12.5px;line-height:1.35;margin-bottom:6px;padding:6px 8px;border-radius:9px;background:#f2c45722;border:1px solid #f2c45755}.tchip .hint.good{color:#d9ffea;background:#1d5b42;border:1px solid #55b88a}
 /* Opaque, high contrast Daylight notices over bright board scenery */
 html.light #ui #prompt,html.light #ui #log,html.light #ui #round,html.light #ui #radio,html.light #ui #ev2chip{background:#10283b!important;color:#f9f6ee!important;border:1px solid #e5c47d!important;box-shadow:0 5px 16px #07152380!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
 html.light #ui #prompt .sub,html.light #ui #prompt small,html.light #ui #log small{color:#d1e1e8!important}
@@ -2259,7 +2259,7 @@ let SILENT=null;function audioSession(){try{if(navigator.audioSession)navigator.
 function initAudio(){audioSession();if(AC){if(AC.state==='suspended'&&!document.hidden)AC.resume().catch(()=>{});return}try{AC=new (window.AudioContext||window.webkitAudioContext)()}catch(e){AC=null}if(AC)setTimeout(syncAudio,0)}
 function tone(f,d,type='sine',v=.08,when=0){if(!AC)return;const t=AC.currentTime+when,o=AC.createOscillator(),g=AC.createGain();o.type=type;o.frequency.setValueAtTime(f,t);g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g).connect(sfxBus());o.start(t);o.stop(t+d+.02)}
 function noise(d,v=.1,when=0){if(!AC)return;const n=AC.sampleRate*d,b=AC.createBuffer(1,n,AC.sampleRate),a=b.getChannelData(0);for(let i=0;i<n;i++)a[i]=(Math.random()*2-1)*(1-i/n);const s=AC.createBufferSource(),g=AC.createGain(),f=AC.createBiquadFilter();f.type='bandpass';f.frequency.value=1800;s.buffer=b;g.gain.value=v;s.connect(f).connect(g).connect(sfxBus());s.start(AC.currentTime+when)}
-function sfx(k){if(!AC||FAST||!PREF.audio.sfx)return;try{
+function sfx(k){if(!FAST)try{SkylineFeel.haptic(k)}catch(e){}if(!AC||FAST||!PREF.audio.sfx)return;try{
   if(k==='dice')for(let i=0;i<6;i++)noise(.05,.18,i*.07+Math.random()*.03);
   else if(k==='hop')tone(520+Math.random()*80,.07,'triangle',.05);
   else if(k==='coin'){tone(988,.09,'square',.04);tone(1319,.18,'square',.04,.08)}
@@ -2812,33 +2812,42 @@ async function offerBuy(p,i){
   const s=SQ[i];
   if(p.ai){await sleep(500);if(aiWantsBuy(p,i))buyProp(p,i,s.p);else if(G.set.auction!==false){toast(`${p.name} passes. Auction!`);await auction(i)}else toast(`${p.name} passes`);return}
   while(true){
-    const can=p.cash>=s.p;
-    const k=await modal({html:`<div class="mh">For sale</div><div class="row2"><div>${deedHTML(i)}</div><div class="slotbar sidecol"><div class="mtxt">You have <b>${fmt(p.cash)}</b>.<br>${can?'Buy it now, or send it to auction where everyone can bid.':'You can’t afford it. Raise cash from your properties, or put it up for auction.'}</div></div></div>`,
+    const can=p.cash>=s.p,why=buyWhy(p,i);
+    const k=await modal({html:`<div class="mh">For sale</div><div class="row2"><div>${deedHTML(i)}</div><div class="slotbar sidecol">${why?`<div class="mtxt buywhy"><b>Why it matters:</b> ${why}</div>`:''}<div class="mtxt">You have <b>${fmt(p.cash)}</b>.<br>${can?'Buy it now, or send it to auction where everyone can bid.':'You can’t afford it. Raise cash from your properties, or put it up for auction.'}</div></div></div>`,
       cls:'wide',tdef:'auction',btns:[{k:'auction',label:G.set.auction===false?'Don’t buy':'Auction'},...(can?[]:[{k:'raise',label:'Raise cash'}]),{k:'buy',label:`Buy for ${fmt(s.p)}`,primary:true,disabled:!can}]});
     if(k==='raise'){await openAssets(p);continue}
     if(k==='buy'){buyProp(p,i,s.p);return}
     if(G.set.auction!==false)await auction(i);return;
   }
 }
+/* "Why it matters" on the buy screen (phase 3): set progress for streets, and whether buying blocks a rival. */
+function buyWhy(p,i){try{const sq=SQ[i];if(sq.t==='rail'){const n=RAILS.filter(j=>G.own[j].o===p.id).length;return `You own ${n} of ${RAILS.length} transit lines. Each one you add raises the fare on all of them.`}
+  if(sq.t==='util'){const n=UTILS.filter(j=>G.own[j].o===p.id).length;return n?'Owning both utilities multiplies what visitors pay.':'Utilities charge by the dice roll; owning both pays more.'}
+  const g=GROUPS[sq.g];if(!g)return '';if(FFA())return 'Free-for-all building is on: you can build here as soon as you own it. A full set still doubles the rent.';const mine=g.filter(j=>G.own[j].o===p.id).length,others=g.filter(j=>G.own[j].o>=0&&G.own[j].o!==p.id),name=esc(GNAME[sq.g]||'this colour');
+  if(others.length&&others.every(j=>G.own[j].o===others[0]&&G.own[j].o===G.own[others[0]].o)&&others.length===g.length-1)return `${esc(P(G.own[others[0]].o).name)} owns the rest of ${name}. Buying this blocks their full set.`;
+  if(mine===g.length-1)return `This completes your ${name} set: rent doubles and you can start building.`;
+  if(others.length)return `${name} is split between players, so nobody can build there yet.`;
+  return mine?`You own ${mine} of ${g.length} in ${name}. A full set lets you build.`:`Own all ${g.length} streets of ${name} to double the rent and build.`}catch(e){return ''}}
 function buyProp(p,i,price){p.cash-=price;float(p.id,-price);G.own[i].o=p.id;updateCell(i);sfx('buy');log(`${p.name} bought ${SQ[i].n} for ${fmt(price)}`);toast(`${p.name} bought ${SQ[i].n}`);renderRoster()}
 
 /* ================= AUCTION ================= */
 async function auction(i){
   const s=SQ[i],n=G.players.length,order=[];for(let k=0;k<n;k++){const q=P((G.turn+k)%n);if(!q.bankrupt)order.push(q.id)}
   const active=new Set(order);let bid=0,leader=-1,idx=0,ui=null,guardN=0;
-  if(!FAST)ui=auctionUI(i,order);
+  if(!FAST)ui=auctionUI(i,order);const humanIn=()=>[...active].some(id=>!P(id).ai);
   const upd=m=>ui&&ui.update(bid,leader,active,m);upd('Bidding opens at '+fmt(10));
   while(active.size>0&&guardN++<600){
     if(active.size===1&&leader>=0&&active.has(leader))break;
     const pid=order[idx%order.length];idx++;
     if(!active.has(pid)||pid===leader)continue;
+    if(ui&&quickTurns()&&!humanIn()){ui.close();ui=null}/* Quick turns: no need to watch the computer players finish */
     const q=P(pid);
     if(q.cash<bid+10){active.delete(pid);upd(`${q.name} can’t go higher`);continue}
     let amt;
-    if(q.ai){if(ui)ui.turn(q,null);await sleep(550);amt=aiBid(q,i,bid)}else if(isRemote(q)){if(ui)ui.turn(q,null);const a=await askRemote(q,'bid',{i,bid,leader});amt=a&&+a.v<=q.cash?+a.v:0}else amt=await ui.turn(q,bid);
+    if(q.ai){if(ui){ui.turn(q,null);await sleep(550)}amt=aiBid(q,i,bid)}else if(isRemote(q)){if(ui)ui.turn(q,null);const a=await askRemote(q,'bid',{i,bid,leader});amt=a&&+a.v<=q.cash?+a.v:0}else amt=await ui.turn(q,bid);
     if(amt>bid){bid=amt;leader=pid;sfx('tap');upd(`${q.name} bids ${fmt(bid)}`)}else{active.delete(pid);upd(`${q.name} drops out`)}
   }
-  await sleep(700);if(ui)ui.close();
+  if(ui){await sleep(700);ui.close()}
   if(leader>=0){const w=P(leader);w.cash-=bid;float(w.id,-bid);G.own[i].o=w.id;updateCell(i);onAuctionWin(w,i,bid);sfx('buy');log(`${w.name} won ${s.n} at auction for ${fmt(bid)}`);toast(`${w.name} wins ${s.n} for ${fmt(bid)}`)}
   else{log(`No bids for ${s.n}`);toast('No bids. It stays with the bank.')}
   renderRoster();
@@ -3772,7 +3781,7 @@ function applyTheme(k){
 }
 
 /* ================= STREET SOUND + RADIO ================= */
-PREF.audio=Object.assign({sfx:true,amb:true,radio:false,vol:.8},PREF.audio||{});delete PREF.audio.voices;
+PREF.audio=Object.assign({sfx:true,haptics:true,amb:true,radio:false,vol:.8},PREF.audio||{});delete PREF.audio.voices;
 const AUD={buses:null,ambOn:false,radioOn:false,timers:[],talk:[],radioT:0,djT:0,voice:null};
 function buses(){if(!AC)return null;if(AUD.buses)return AUD.buses;const m=AC.createGain();m.gain.value=PREF.audio.vol;m.connect(AC.destination);
   const sfx=AC.createGain();sfx.connect(m);const amb=AC.createGain();amb.gain.value=.0;amb.connect(m);
@@ -3844,7 +3853,7 @@ function syncAudio(){if(!AC)return;const b=buses();b.m.gain.setTargetAtTime(PREF
   PREF.audio.amb?startAmb():stopAmb();PREF.audio.radio?startRadio():stopRadio();renderRadioPill()}
 document.addEventListener('visibilitychange',()=>{if(!AC)return;try{document.hidden?AC.suspend():AC.resume()}catch(e){}});
 async function openSound(){
-  const rows=[['sfx','Game sounds','Dice, coins, footsteps on the board.'],['amb','Street ambience','Crowd chatter, traffic, birds or rain to match the city.'],['radio','Skyline FM','One station on every board: a shuffled, DJ-blended mix of 13 Kenstylez tracks.']];
+  const rows=[['sfx','Game sounds','Dice, coins, footsteps on the board.'],['amb','Street ambience','Crowd chatter, traffic, birds or rain to match the city.'],['radio','Skyline FM','One station on every board: a shuffled, DJ-blended mix of 13 Kenstylez tracks.'],['haptics','Vibration','Light taps on iPhone for dice, buying, building, rent and winning.']];
   initAudio();
   await modal({cls:'wide',html:`<div class="mh">Sound</div><div class="rchips" id="sndChips"></div><label class="vol"><span>Volume</span><input type="range" id="sndVol" min="0" max="1" step="0.05"></label><div class="olrow"><button class="btn" id="sndSkip">Next track</button><span class="mtxt muted">On iPhone, flip the silent switch off and turn the volume up.</span></div>`,btns:[{k:'x',label:'Done',primary:true}],onMount:(pn)=>{
     const draw=()=>{const E=pn.querySelector('#sndChips');E.innerHTML='';rows.forEach(([k,l,d])=>{const b=el('button','rchip'+(PREF.audio[k]?' on':''),`<b>${l}</b><small>${d}</small>`);b.setAttribute('aria-pressed',PREF.audio[k]?'true':'false');b.onclick=()=>{PREF.audio[k]=!PREF.audio[k];savePref();syncAudio();draw()};E.append(b)})};draw();
@@ -4066,6 +4075,8 @@ const countryPlays=C=>C.cities.reduce((a,c)=>a+((PREF.cstat||{})[c]?PREF.cstat[c
 /* One classic board (owner decision 24 Nov 2026): Skyline International is the only classic board. */
 const ONE_CITY='skyline',PLAY_CITIES=[ONE_CITY];
 function cityUnlocked(k){return k===ONE_CITY}
+/* Quick turns (default on): routine cards and other players' cards show as short notices; auctions you have left finish without a pop-up. */
+const quickTurns=()=>PREF.quickTurns!==false;
 /* Profiles saved before the one-board change can still hold data for the retired city boards. Removed on load
    and after a cloud or backup restore, so screens never meet a city that no longer exists. */
 function pruneRetiredBoards(){const ok=k=>Object.prototype.hasOwnProperty.call(CITY_DATA,k),obj=o=>o&&typeof o==='object'&&!Array.isArray(o);let changed=false;
@@ -5185,7 +5196,7 @@ function paneLearn(T){
     <div class="lcard"><i>🎨</i><div><b>Collection and cosmetics</b><p>Characters, tokens, frames, board styles, dice and finishes change how you look, never the rules. Finishes recolour your token, board styles change the scenery round the board, and dice sets change the dice you roll.</p></div></div>
     <div class="lcard"><i>🎁</i><div><b>New players</b><p>Your first launch includes a 500-coin welcome gift, this tutorial and a few tips during your first game. Replay the tutorial any time from the button at the top of this page.</p></div></div></div>`;
   const lt=T.querySelector('#lTut');if(lt)lt.onclick=()=>openTutorial(false)}
-function paneSettings(T){const rows=[['riders','Riders on tokens','Show each player’s character riding their token. Switch off on slower phones.'],['rig','Realistic riders','Lifelike characters with motion-captured gestures. Each one downloads once (about 2 MB). Switch off to save data.'],['sfx','Game sounds','Dice, coins and token movement.'],['amb','Street ambience','Crowd chatter, traffic, birds or rain to match the city.'],['radio','Skyline FM','One station on every board, playing a shuffled mix of 13 Kenstylez tracks.']];
+function paneSettings(T){const rows=[['riders','Riders on tokens','Show each player’s character riding their token. Switch off on slower phones.'],['rig','Realistic riders','Lifelike characters with motion-captured gestures. Each one downloads once (about 2 MB). Switch off to save data.'],['sfx','Game sounds','Dice, coins and token movement.'],['amb','Street ambience','Crowd chatter, traffic, birds or rain to match the city.'],['radio','Skyline FM','One station on every board, playing a shuffled mix of 13 Kenstylez tracks.'],['haptics','Vibration','Light taps on iPhone for dice, buying, building, rent and winning.']];
   const blocked=PREF.blocked||[];
   T.innerHTML=`<div class="phead"><h2>Settings</h2></div>
     <div class="card"><div class="ch">Sound</div><div class="rchips" id="sChips"></div><label class="vol"><span>Volume</span><input type="range" id="sVol" min="0" max="1" step="0.05"></label></div>
@@ -6422,14 +6433,15 @@ const stSw=(id,on,label)=>`<button class="stsw${on?' on':''}" id="${id}" role="s
     segIn(B,'#stCam',[['follow','Follow token'],['board','Whole board']],()=>PREF.cam||'follow',x=>{PREF.cam=x;camMode=x;savePref()});
     sw('stIll',()=>PREF.illTok,v=>{PREF.illTok=v;savePref()});sw('stRid',()=>PREF.riders,v=>{PREF.riders=v;savePref()});sw('stRig',()=>PREF.rig,v=>{PREF.rig=v;savePref();if(typeof rigToggle==='function')rigToggle()});
     carry(['Board view'],B.querySelector('.stp'))}
-  else if(cat==='audio'){B.innerHTML=panel('Audio',[['sfx','Game sounds','Dice, coins and token movement.'],['amb','Street ambience','City traffic, birds and weather.'],['radio','Skyline FM','Kenstylez music while you build.']].map(([k,l,d])=>stRow(l,d,stSw('stA'+k,PREF.audio[k],l))).join('')+
+  else if(cat==='audio'){B.innerHTML=panel('Audio',[['sfx','Game sounds','Dice, coins and token movement.'],['amb','Street ambience','City traffic, birds and weather.'],['radio','Skyline FM','Kenstylez music while you build.'],['haptics','Vibration','Light taps on iPhone for dice, buying, building, rent and winning.']].map(([k,l,d])=>stRow(l,d,stSw('stA'+k,PREF.audio[k],l))).join('')+
       stRow('Volume','',`<input type="range" id="stVol" min="0" max="1" step="0.05" value="${PREF.audio.vol}" aria-label="Volume">`));
-    ['sfx','amb','radio'].forEach(k=>sw('stA'+k,()=>PREF.audio[k],v=>{initAudio();PREF.audio[k]=v;savePref();syncAudio()}));
+    ['sfx','amb','radio','haptics'].forEach(k=>sw('stA'+k,()=>PREF.audio[k],v=>{initAudio();PREF.audio[k]=v;savePref();syncAudio()}));
     B.querySelector('#stVol').oninput=e=>{initAudio();PREF.audio.vol=+e.target.value;savePref();syncAudio()}}
-  else if(cat==='gameplay'){B.innerHTML=panel('Game defaults',stRow('AI skill','','<div class="seg" id="stAi"></div>')+stRow('Speed','','<div class="seg" id="stSpd"></div>')+stRow('Language','More languages are on the way.','<span class="stchip">English</span>')+
+  else if(cat==='gameplay'){B.innerHTML=panel('Game defaults',stRow('AI skill','','<div class="seg" id="stAi"></div>')+stRow('Speed','','<div class="seg" id="stSpd"></div>')+stRow('Quick turns','Routine cards and other players\u2019 cards show as short notices instead of pop-ups.',stSw('stQuick',quickTurns(),'Quick turns'))+stRow('Language','More languages are on the way.','<span class="stchip">English</span>')+
       '<p class="stnote">Rules for a single match are chosen when you set up the game.</p>');
     segIn(B,'#stAi',[['easy','Easy'],['normal','Normal'],['hard','Hard']],()=>setup.ai,x=>{setup.ai=x;PREF.ai=x;savePref()});
     segIn(B,'#stSpd',[['normal','Normal'],['fast','Fast']],()=>setup.speed,x=>{setup.speed=x;PREF.speed=x;savePref()});
+    sw('stQuick',()=>quickTurns(),v=>{PREF.quickTurns=v;savePref()});
     const pc=document.createElement('section');pc.className='stp';pc.innerHTML='<h3>Promo code</h3>';B.append(pc);carry(['Promo code'],pc)}
   else if(cat==='access'){B.innerHTML=panel('Accessibility',stRow('Larger text','Bigger labels, controls and descriptions.',stSw('stBig',PREF.a11y.text==='large','Larger text'))+
       stRow('Reduce motion','Turn off interface animations and movement.',stSw('stCalm',!!PREF.a11y.motion,'Reduce motion'))+
@@ -7246,7 +7258,7 @@ function boot(data){
   if(data&&data.G){try{const g=JSON.parse(data.G);startWith(g);return}catch(e){}}
   showTitle();
 }
-</script><script src="./lib/skyline-sc-wallet.js"></script><script src="./lib/skyline-currency.js"></script><script src="./lib/skyline-earned-cash.js"></script><script src="./lib/market-pulse.js"></script><script src="./lib/city-event-advice.js"></script><script src="./lib/ai-styles.js"></script><script src="./lib/first-session.js"></script><script src="./lib/rot-media.js"></script><script src="./lib/a11y-dialogs.js"></script><script src="./lib/native-lifecycle.js"></script><script src="./lib/beta-diary.js"></script><script src="./lib/avatars.js"></script><script src="./lib/estate-sc.js"></script><script src="./lib/portfolio-manage.js"></script><script src="./lib/results-trophies.js"></script><script src="./lib/season-rewards.js"></script><script src="./lib/living-city-rules.js"></script><script src="./lib/living-city.js"></script><script src="./lib/living-city-online.js"></script><script src="./lib/menu-bankruptcy.js"></script><script src="./lib/skyline-coach.js"></script><script src="./lib/skyline-duel.js"></script><script src="./lib/keep-awake.js"></script><script src="./lib/harbour-ring-cities.js"></script><script src="./lib/harbour-ring-rules.js"></script><script src="./lib/harbour-ring.js"></script><script src="./lib/tutorial-v2.js"></script><script src="./lib/living-board-look.js"></script><script src="./web/challenges.js"></script><script src="./web/social.js"></script><script src="./web/verified-config.js"></script><script src="./web/verified.js"></script><script>
+</script><script src="./lib/skyline-sc-wallet.js"></script><script src="./lib/skyline-currency.js"></script><script src="./lib/skyline-earned-cash.js"></script><script src="./lib/market-pulse.js"></script><script src="./lib/city-event-advice.js"></script><script src="./lib/ai-styles.js"></script><script src="./lib/first-session.js"></script><script src="./lib/rot-media.js"></script><script src="./lib/a11y-dialogs.js"></script><script src="./lib/native-lifecycle.js"></script><script src="./lib/beta-diary.js"></script><script src="./lib/avatars.js"></script><script src="./lib/estate-sc.js"></script><script src="./lib/portfolio-manage.js"></script><script src="./lib/results-trophies.js"></script><script src="./lib/season-rewards.js"></script><script src="./lib/living-city-rules.js"></script><script src="./lib/living-city.js"></script><script src="./lib/living-city-online.js"></script><script src="./lib/menu-bankruptcy.js"></script><script src="./lib/skyline-coach.js"></script><script src="./lib/skyline-duel.js"></script><script src="./lib/keep-awake.js"></script><script src="./lib/skyline-feel.js"></script><script src="./lib/harbour-ring-cities.js"></script><script src="./lib/harbour-ring-rules.js"></script><script src="./lib/harbour-ring.js"></script><script src="./lib/tutorial-v2.js"></script><script src="./lib/living-board-look.js"></script><script src="./web/challenges.js"></script><script src="./web/social.js"></script><script src="./web/verified-config.js"></script><script src="./web/verified.js"></script><script>
 try{const h=window.claude?.hot;if(h&&h.ready)h.ready(boot);else boot(h?.data??{})}catch(e){boot({})}
 setTimeout(()=>{try{const c=(new URLSearchParams(location.search).get('join')||'').toUpperCase();if(!/^[A-Z0-9]{5}$/.test(c)||!FIRE)return;history.replaceState(null,'',location.pathname);if(!G||G.over)openOnline(c)}catch(e){}},1200);
 </script>
