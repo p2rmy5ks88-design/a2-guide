@@ -627,5 +627,6 @@ html.light .sc-awards-note{color:#526781!important}
 #title .hd-stage.v2 .hd-goal i{font-style:normal;font-size:16px}
 #title .hd-stage.v2 .hd-goal small{display:block;font-size:9.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#f2c457}
 #title .hd-stage.v2 .hd-goal.on{border-color:#f2c457}
+#title .hd-stage.v2 .hd-gmbtn,#title .hd-stage.v2 .hd-gmbtn span,#title .hd-stage.v2 .hd-career small{white-space:nowrap}
 #title .hd-stage.v2 .hd-goal span{white-space:normal;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}
 `;document.head.append(st)})();

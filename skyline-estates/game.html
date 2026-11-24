@@ -2813,6 +2813,7 @@ function buyWhy(p,i){try{const sq=SQ[i];if(sq.t==='rail'){const n=RAILS.filter(j
   if(sq.t==='util'){const n=UTILS.filter(j=>G.own[j].o===p.id).length;return n?'Owning both utilities multiplies what visitors pay.':'Utilities charge by the dice roll; owning both pays more.'}
   const g=GROUPS[sq.g];if(!g)return '';if(FFA())return 'Free-for-all building is on: you can build here as soon as you own it. A full set still doubles the rent.';const mine=g.filter(j=>G.own[j].o===p.id).length,others=g.filter(j=>G.own[j].o>=0&&G.own[j].o!==p.id),name=esc(GNAME[sq.g]||'this colour');
   if(others.length&&others.every(j=>G.own[j].o===others[0]&&G.own[j].o===G.own[others[0]].o)&&others.length===g.length-1)return `${esc(P(G.own[others[0]].o).name)} owns the rest of ${name}. Buying this blocks their full set.`;
+  if(mine>=g.length)return '';
   if(mine===g.length-1)return `This completes your ${name} set: rent doubles and you can start building.`;
   if(others.length)return `${name} is split between players, so nobody can build there yet.`;
   return mine?`You own ${mine} of ${g.length} in ${name}. A full set lets you build.`:`Own all ${g.length} streets of ${name} to double the rent and build.`}catch(e){return ''}}
