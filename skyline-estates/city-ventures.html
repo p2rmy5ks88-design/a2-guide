@@ -46,14 +46,6 @@ body.moving #side{transform:translateX(calc(100% + 20px));opacity:0}
 #tile .tb{padding:8px 10px 10px}
 #tile h3{margin:0 0 2px;font-size:15px}#tile .k{font-size:11.5px;color:var(--muted)}
 #tile dl{display:grid;grid-template-columns:1fr auto;gap:2px 8px;margin:6px 0 0;font-size:12.5px}#tile dt{color:var(--muted)}#tile dd{margin:0;font-weight:750;text-align:right}
-#holdings{padding:6px 8px 8px;font-size:12px;color:#dbe6f2}
-#holdings .tabs{display:flex;gap:4px;margin-bottom:5px}#holdings .tabs button{flex:1;min-height:44px;border:1px solid #c79a3e88;border-radius:9px;background:#0b1e36;font-weight:800;font-size:11.5px;color:#cfe0f2;padding:3px 4px}
-#holdings .tabs button[aria-selected=true]{background:linear-gradient(#f6d47c,#d9a63e);color:#1b1205;border-color:#f6d47c}
-#holdings ul{list-style:none;margin:0;padding:0;max-height:min(128px,calc(100vh - var(--st) - var(--sb,0px) - 330px));overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}
-#holdings li .row{display:flex;align-items:center;gap:6px;width:100%;min-height:32px;padding:2px 3px;border-radius:7px;cursor:pointer}
-#holdings li .row:active{background:#ffffff14}#holdings .dot{width:9px;height:9px;border-radius:3px;flex:none;box-shadow:0 0 0 1px #0006}
-#holdings .nm{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:700;color:#fff}
-#holdings .vv{font-weight:800;color:#f6d47c;white-space:nowrap}#holdings .vv.no{color:#93a6bd}#holdings .empty{color:#93a6bd;padding:4px 2px}
 
 /* dock */
 #dock{position:fixed;right:calc(var(--sr) + 8px);bottom:calc(var(--sb) + 8px);display:flex;gap:6px;align-items:flex-end;z-index:6}
@@ -89,7 +81,7 @@ body.moving #side{transform:translateX(calc(100% + 20px));opacity:0}
 table.res{width:100%;border-collapse:collapse;font-size:14px;margin:8px 0}table.res td{padding:6px 4px;border-bottom:1px solid #ffffff1f}table.res td:last-child{text-align:right;font-weight:800}
 #rules{position:fixed;inset:0;z-index:25;display:grid;place-items:center;background:#000a;padding:12px}
 #rules .card{max-height:calc(100dvh - 24px);overflow:auto;font-size:13.5px;line-height:1.45}#rules h3{margin:10px 0 2px;font-size:14px;color:var(--gold-300)}
-@media (max-height:430px){#players .pl{padding:3px 8px 3px 5px}.pl .av{width:26px;height:26px;font-size:14px}#side{width:min(210px,28vw)}#holdings ul{max-height:84px}#decision{max-height:calc(100dvh - 70px)}}
+@media (max-height:430px){#players .pl{padding:3px 8px 3px 5px}.pl .av{width:26px;height:26px;font-size:14px}#side{width:min(210px,28vw)}#decision{max-height:calc(100dvh - 70px)}}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
 
 /* Readable disabled controls: fully opaque against animated 3D scenery.
@@ -117,8 +109,8 @@ table.res{width:100%;border-collapse:collapse;font-size:14px;margin:8px 0}table.
  }
  #side .panel{flex-shrink:0}
 }
-#menu .card{width:min(620px,88vw);box-sizing:border-box}.mlist{display:grid;grid-template-columns:1fr 1fr;gap:7px;width:100%}.mlist #mResume{grid-column:1/-1}.mlist .btn{width:100%;justify-content:flex-start;min-height:44px}
 </style>
+<script src="lib/board-ui.js"></script>
 </head>
 <body>
 <canvas id="board" aria-label="City Ventures 3D board. Tap a space to see its details."></canvas>
@@ -139,7 +131,7 @@ table.res{width:100%;border-collapse:collapse;font-size:14px;margin:8px 0}table.
 <section id="decision" class="panel" hidden role="dialog" aria-live="polite"></section>
 <div id="toast" class="panel" role="status"></div>
 <div id="menu" class="screen" hidden><div class="card panel"><h1>Menu</h1><p>City Ventures — The Living Market</p>
- <div class="mlist"><button class="btn primary" id="mResume">▶ Resume</button><button class="btn" id="mRules">📖 Rules</button><button class="btn" id="mSpeed">⏩ Speed: normal</button><button class="btn" id="mCam">🗺 Camera: whole board</button><button class="btn" id="mRadio">📻 Radio: off</button><button class="btn" id="mNew">↻ New match</button><button class="btn" id="mEnd">🏁 End game &amp; score</button><button class="btn" id="mBankrupt">Declare bankruptcy</button><button class="btn" id="mHome">🏠 Skyline Estates</button></div></div></div>
+ <div class="mlist"><button class="btn primary" id="mResume">▶ Resume</button><button class="btn" id="mPortfolio">🏘 Portfolio</button><button class="btn" id="mRules">📖 Rules</button><button class="btn" id="mSpeed">⏩ Speed: normal</button><button class="btn" id="mCam">🗺 Camera: whole board</button><button class="btn" id="mRadio">📻 Radio: off</button><button class="btn" id="mNew">↻ New match</button><button class="btn" id="mEnd">🏁 End game &amp; score</button><button class="btn" id="mBankrupt">Declare bankruptcy</button><button class="btn" id="mHome">🏠 Skyline Estates</button></div></div></div>
 <div id="rules" hidden><div class="card panel"><h1>How to play</h1><p>Build the most valuable City Value in 18 turns (Quick: 10).</p>
  <h3>Your turn</h3>Roll, move, then buy the space you land on or send it to auction. Own 2 of a district’s 3 properties to build Low-rise and Mid-rise; own all 3 for a Landmark (+25% district rent).
  <h3>The six power corners</h3><b>Start</b> — pass for 200 CC; land exactly to pick a Charter. <b>Free Lounge</b> — Rent Shield or keep a card. <b>Civic Review</b> — Development Drive (−20% upgrades) or Tenant Protection (−30% rent) for a round. <b>Market Boom</b> — one district’s rent +50% or −40% for a round. <b>Skyline Exchange</b> — open an auction or a Deal Desk trade. <b>Transit Hub</b> — Express Route to any station or a Transit Dividend.
@@ -169,6 +161,11 @@ function syncSpeed(){const f=speed<1;const b=$('speedBtn');if(b){b.textContent=f
 $('speedBtn').onclick=()=>{speed=speed<1?1:.45;try{localStorage.setItem('skylineBoardFast',speed<1?'1':'0');localStorage.setItem('skylineCVFast',speed<1?'1':'0')}catch(e){}syncSpeed()};
 window.__boardSetSpeed=f=>{speed=f?.45:1;syncSpeed()};
 setTimeout(syncSpeed,0);
+// Shared side panel, portfolio, side toggle and menu options (lib/board-ui.js).
+const boardUI=SkylineBoardUI.init({key:'cv',sideWidth:'min(232px,30vw)',onTile:i=>{i=+i;selected=i;showTile(i);try{r3.focusTile(i)}catch(e){}},
+ groups:()=>{if(!s)return[];const out=[];const by={};CV.TILES.forEach((t,i)=>{if(!t.price)return;const k=t.district||t.type;(by[k]=by[k]||[]).push(i)});
+  for(const [k,ids] of Object.entries(by)){const t0=CV.TILES[ids[0]];out.push({name:t0.district?CV.DISTRICT_NAMES[k]:k==='transit'?'Transit':'Utilities',sub:t0.district?'District':'',color:t0.district?CV.DISTRICT_COLORS[k]:k==='transit'?'#5b6b80':'#9aa9b8',
+   items:ids.map(i=>{const t=CV.TILES[i],o=s.own[i],P=o&&s.players[o.owner];return{id:i,name:t.name,price:t.price,stage:o?(t.type==='property'?CV.STAGES[o.stage]:t.type==='transit'?'Station':'Utility'):null,rent:o?CV.rent(s,i,s.turn.dice):null,mortgaged:!!(o&&o.mortgaged),owner:o?{you:o.owner===0,name:P.name,color:P.color||'#888'}:null}})})}return out}});
 window.__cv={state:()=>s,rules:CV,renderer:r3,act:(pid,a)=>doAct(pid,a),busy:()=>busy};
 
 // ---------- setup ----------
@@ -193,7 +190,7 @@ function render(){if(!s)return;const v=CV.view(s),me=s.players[0],pd=CV.pending(
  if(s.civic)fx.push(`<span class="chip civic">🏛 ${s.civic.type==='drive'?'Development Drive −20% builds':'Tenant Protection −30% rent'}</span>`);
  if(me.charter)fx.push(`<span class="chip">📜 ${me.charter[0].toUpperCase()+me.charter.slice(1)} Charter</span>`);if(me.shield)fx.push(`<span class="chip">🛡 Rent Shield</span>`);
  $('effects').innerHTML=fx.join('');
- holdings();
+ boardUI.refresh();
  const myTurn=s.turn.pid===0&&!s.over,mb=$('mainBtn');
  if(s.over){mb.textContent='🏁 Results';mb.disabled=false;mb.className='btn primary main'}
  else if(pd.kind==='roll'&&myTurn){mb.textContent='🎲 Roll Dice';mb.disabled=busy;mb.className='btn primary main'}
@@ -204,20 +201,6 @@ function render(){if(!s)return;const v=CV.view(s),me=s.players[0],pd=CV.pending(
  $('dealBtn').disabled=!act;$('cardsBtn').disabled=!act||!me.cards.length;$('cardsBtn').textContent='🃏 Cards'+(me.cards.length?' ('+me.cards.length+')':'');
  if(selected!=null)showTile(selected,true);decision()}
 function isMine(pd){return pd&&((pd.kind==='trade'&&pd.to===0)||(pd.kind!=='trade'&&pd.pid===0))}
-// Right panel (owner request 21 Nov 2026): what you own and what is still for sale, replacing the activity log.
-let holdTab='mine';
-function holdings(){const el=$('holdings');if(!el||!s)return;const me=s.players[0];
- const mine=[],sale=[];CV.TILES.forEach((t,i)=>{if(!t.price)return;const o=s.own[i];if(o&&o.owner===0)mine.push(i);else if(!o)sale.push(i)});
- const col=t=>t.district?CV.DISTRICT_COLORS[t.district]:t.type==='transit'?'#5b6b80':'#9aa9b8';
- const kind=(t,o)=>t.type==='property'?CV.STAGES[o.stage]:t.type==='transit'?'Transit':'Utility';
- const list=holdTab==='mine'?mine:sale.sort((a,b)=>CV.TILES[a].price-CV.TILES[b].price);
- const html=`<div class="tabs" role="tablist"><button role="tab" data-t="mine" aria-selected="${holdTab==='mine'}">🏠 Mine · ${mine.length}</button><button role="tab" data-t="sale" aria-selected="${holdTab==='sale'}">🪧 For sale · ${sale.length}</button></div>`+
-  (list.length?`<ul>${list.map(i=>{const t=CV.TILES[i],o=s.own[i];const v=holdTab==='mine'?esc(kind(t,o))+(o.mortgaged?' · mortgaged':''):fmt(t.price);
-   return `<li><div class="row" role="button" tabindex="0" data-i="${i}"><span class="dot" style="background:${col(t)}"></span><span class="nm">${esc(t.name)}</span><span class="vv${holdTab==='sale'&&t.price>me.cash?' no':''}">${v}</span></div></li>`}).join('')}</ul>`
-  :`<div class="empty">${holdTab==='mine'?'You don’t own any streets yet. Land on one that’s for sale to buy it.':'Every street has an owner. Use Deal to trade for one.'}</div>`);
- if(el.dataset.h===html)return;el.dataset.h=html;const sc=el.querySelector('ul')?el.querySelector('ul').scrollTop:0;el.innerHTML=html;if(el.querySelector('ul'))el.querySelector('ul').scrollTop=sc;
- el.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{holdTab=b.dataset.t;holdings()});
- el.querySelectorAll('[data-i]').forEach(b=>{const go=()=>{const i=+b.dataset.i;showTile(i);try{r3.focusTile(i)}catch(e){}};b.onclick=go;b.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go()}}})}
 function showTile(i,quiet){const t=CV.TILES[i],o=s&&s.own[i],el=$('tile');el.hidden=false;
  const color=t.district?CV.DISTRICT_COLORS[t.district]:t.type==='corner'?'#e1b451':'#cbbf9f';const rows=[];
  if(t.price)rows.push(['Price',fmt(t.price)]);
@@ -286,7 +269,7 @@ async function play(events){for(const e of events){
  else if(e.type==='card'){toast('🃏 '+CV.CARDS.find(c=>c.id===e.card).name);await wait(700*speed)}
  else if(e.type==='market'||e.type==='corner'||e.type==='bought'||e.type==='built'||e.type==='trade'||e.type==='auction'){r3.sync(CV.view(s));if(e.type==='built')r3.focusTile(e.tile);await wait(250*speed)}
  else if(e.type==='turn'){r3.sync(CV.view(s));r3.follow(e.pid)}
- else if(e.type==='log'){holdings()}}}
+ else if(e.type==='log'){boardUI.refresh()}}}
 let pumping=false;
 async function pump(){if(pumping)return;pumping=true;try{for(;;){if(!s||s.over)break;const pd=CV.pending(s),who=pd.kind==='trade'?pd.to:pd.pid;if(who==null||!s.players[who].ai)break;
   await wait((pd.kind==='roll'?650:520)*speed);const a=CV.ai(s,who);if(!a)break;const r=CV.act(s,who,a);if(!r.ok){console.warn('AI action rejected',a,r.error);break}
@@ -318,19 +301,5 @@ let overview=false;$('viewBtn').onclick=()=>{overview=!overview;r3.overview(over
 const saved=load();if(saved){s=saved;r3.sync(CV.view(s));r3.follow(s.turn.pid);render();toast('Match resumed');pump()}else startScreen();
 </script>
 <script src="lib/board-radio.js"></script><script>try{SkylineBoardRadio.mount(document.getElementById('top'),document.getElementById('viewBtn'))}catch(e){}</script>
-<script>
-/* Classic-style menu options on the Career board pages (owner request 22 Nov 2026): Speed, Camera and Radio,
-   as in the classic game menu. Speed is shared by all board pages. */
-(function(){const $=id=>document.getElementById(id);
- const fast=()=>{try{return localStorage.getItem('skylineBoardFast')==='1'}catch(e){return false}};
- function label(){if($('mSpeed'))$('mSpeed').textContent='⏩ Speed: '+(fast()?'fast':'normal');
-  if($('mCam')){const ov=($('viewBtn')&&$('viewBtn').getAttribute('aria-label')||'').startsWith('Return');$('mCam').textContent=ov?'🎯 Camera: follow token':'🗺 Camera: whole board'}
-  if($('mRadio')){const on=window.SkylineBoardRadio&&SkylineBoardRadio.state().on;$('mRadio').textContent='📻 Radio: '+(on?'on':'off')}}
- window.SkylineBoardMenu={label,fast};
- if($('mSpeed'))$('mSpeed').onclick=()=>{const f=!fast();try{localStorage.setItem('skylineBoardFast',f?'1':'0')}catch(e){}if(window.__boardSetSpeed)window.__boardSetSpeed(f);label()};
- if($('mCam'))$('mCam').onclick=()=>{$('viewBtn')&&$('viewBtn').click();$('menu').hidden=true;label()};
- if($('mRadio'))$('mRadio').onclick=()=>{window.SkylineBoardRadio&&SkylineBoardRadio.toggle();setTimeout(label,50)};
- if($('menuBtn'))$('menuBtn').addEventListener('click',()=>setTimeout(label,0));label()})();
-</script>
 </body>
 </html>
