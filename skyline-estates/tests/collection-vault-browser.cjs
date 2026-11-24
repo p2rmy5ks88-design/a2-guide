@@ -23,11 +23,11 @@ let browser;
  await p.screenshot({path:path.join(out,'collection-after-desktop.png')});
  for(const vp of [{width:1420,height:900},{width:956,height:440},{width:844,height:390},{width:667,height:320},{width:390,height:844}]){
   await p.setViewportSize(vp);await p.evaluate(()=>homeTab('tokens'));await images();
-  const g=await p.evaluate(()=>{const rect=s=>document.querySelector(s).getBoundingClientRect().toJSON();return{grid:rect('.rf-token-grid'),detail:rect('.rf-token-detail'),nav:rect('.collection-nav-handle'),overflow:document.documentElement.scrollWidth>innerWidth+1,rail:document.querySelector('.rail').hidden}});
-  check('token row above details, no overflow, collapsed dock '+vp.width,!g.overflow&&g.rail&&g.grid.height>65&&g.grid.bottom<=g.detail.y+1);
+  const g=await p.evaluate(()=>{const rect=s=>document.querySelector(s).getBoundingClientRect().toJSON();return{grid:rect('.rf-token-grid'),detail:rect('.rf-token-detail'),nav:rect('#title .rail'),overflow:document.documentElement.scrollWidth>innerWidth+1,rail:document.querySelector('.rail').hidden}});
+  check('token row above details, no overflow, normal dock '+vp.width,!g.overflow&&!g.rail&&g.grid.height>65&&g.grid.bottom<=g.detail.y+1);
   await p.waitForTimeout(400);await p.locator('[data-token-upgrade]').scrollIntoViewIfNeeded();const box=await p.locator('[data-token-upgrade]').boundingBox();check('48px upgrade reachable above navigation '+vp.width,box.height>=48&&box.y>=0&&box.y+box.height<=g.nav.y+1);
   if(vp.width===844){await p.screenshot({path:path.join(out,'collection-after-iphone-upgrade.png')});await p.locator('.rf-token-progress').scrollIntoViewIfNeeded();await p.screenshot({path:path.join(out,'collection-after-iphone.png')})}
-  await p.getByRole('button',{name:'Open profile menu',exact:true}).click();await p.keyboard.press('Escape');await p.locator('.collection-nav-handle').tap();check('navigation can be revealed '+vp.width,await p.locator('.rail').isVisible());await p.keyboard.press('Escape');check('Escape collapses navigation and restores focus '+vp.width,await p.locator('.rail').isHidden()&&await p.locator('.collection-nav-handle').evaluate(e=>e===document.activeElement));
+  check('bottom dock stays visible in Collection, no floating Menu handle '+vp.width,await p.locator('.rail').isVisible()&&await p.locator('.collection-nav-handle:visible').count()===0);
  }
  await p.setViewportSize({width:1420,height:900});await p.evaluate(()=>homeTab('tokens'));
  await p.locator('[data-filter=lock]').click();check('locked filter uses real ownership',await p.locator('.rf-token-card').count()===await p.evaluate(()=>TOKENS.concat(NEW_TOKENS).filter(t=>!tokenUnlocked(t)).length));
@@ -44,7 +44,7 @@ let browser;
  const duplicate=await p.evaluate(async()=>{const n=SkylineCollectionSC.balance();try{await upgradeCollection('token','🚌',3);return false}catch{return SkylineCollectionSC.balance()===n}});check('stale second click cannot charge',duplicate);
  await p.reload();await ready();check('paid progression and wallet survive reload',await p.evaluate(m=>tokLv('🚌')===4&&SkylineCollectionSC.balance()===m.sc-360&&PREF.coins===m.coins,money));
  await p.evaluate(()=>{delete PREF.tokLv['🚌'];savePref()});await p.reload();await ready();check('receipt repairs restored old profile without another charge',await p.evaluate(m=>tokLv('🚌')===4&&SkylineCollectionSC.balance()===m.sc-360,money));
- await p.evaluate(()=>homeTab('tokens'));await p.locator('.collection-nav-handle').click();await p.getByRole('tab',{name:'Shop',exact:true}).click();check('leaving Collection restores regular dock',await p.locator('.rail').isVisible()&&await p.locator('.collection-nav-handle').count()===0);
+ await p.evaluate(()=>homeTab('tokens'));await p.getByRole('tab',{name:'Shop',exact:true}).click();check('leaving Collection restores regular dock',await p.locator('.rail').isVisible()&&await p.locator('.collection-nav-handle:visible').count()===0);
  await p.evaluate(()=>{homeTab('tokens');document.documentElement.classList.add('rot')});check('Collection portrait override is restricted to the visible menu',await p.evaluate(()=>{const title=document.querySelector('#title'),shown=getComputedStyle(document.body).transform;title.hidden=true;const playing=getComputedStyle(document.body).transform;title.hidden=false;document.documentElement.classList.remove('rot');return shown==='none'&&playing!=='none'}));
  check('no browser exceptions',report.errors.length===0);await c.close();
 })().catch(e=>{report.failure=String(e.stack||e);console.error(e);process.exitCode=1}).finally(async()=>{fs.writeFileSync(path.join(out,'collection-'+engine+'.json'),JSON.stringify(report,null,2));await browser?.close();console.log('COLLECTION',report.checks.length,'checks')});

@@ -158,8 +158,8 @@ html.light .lmk2{color:#13284a}html.light .lmk-card,html.light .lmk-setp{backgro
 html.light .lmk-filters button,html.light .lmk-country select,html.light .lmk-plinth select{background:#fff;color:#13284a;border-color:#cfd8e2}html.light .lmk-filters button.active{background:linear-gradient(180deg,#f3d27e,#d9a845);color:#1a1406}html.light .lmk-pill{color:#13284a}
 /* Collection: Buildings tab removed (Tokens | Landmarks). */
 #pane>.subtabs [data-s="buildings"]{display:none!important}
-/* No reserved strip for the Menu handle: content runs to the bottom and scrolls clear of it. */
-#title .home:has(#pane.sec-collection){padding-bottom:0!important}
+/* Collection keeps the normal dock and its bottom space (24 Nov 2026). */
+#title .home:has(#pane.sec-collection){padding-bottom:60px!important}
 #title .collection-nav-handle{min-height:40px;padding:6px 18px;font-size:12px}
 
 `;

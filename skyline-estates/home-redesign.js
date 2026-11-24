@@ -169,22 +169,18 @@ const css=`
 
 /* ---------- Home v2: Cinematic Lagos ---------- */
 #title .home.hd-on .hd-deco,#title .home.hd-on #tbLeague,#title .home.hd-on #rprof .xpbar,#title .home.hd-on #tbWho .xprow,#title .home.hd-on .hd-badge,#title .home.hd-on .hd-logo,#title .home.hd-on .rf-profile-chevron{display:none!important}
-#title .home.hd-on .skyline-sc-header-amount:before{content:'SC ';font-weight:700}
+#title .skyline-sc-header-amount:before{content:'SC ';font-weight:700}
 #title .home.hd-on #rprof .tpill b,#title .home.hd-on #rprof .tpill .skyline-coin-label{color:#fff!important;opacity:1!important}
 #title .home.hd-on #rprof .tpill{border:1.5px solid rgba(242,196,87,.55)!important;background:linear-gradient(180deg,rgba(16,27,60,.9),rgba(8,14,34,.92))!important;color:#fff!important;box-shadow:0 4px 14px rgba(0,0,0,.35)!important}
 #title .home.hd-on #rprof #tbWho .ri>b{max-width:calc(22*var(--hd-u));overflow:hidden!important;text-overflow:ellipsis}
 #title .hd-stage.v2 .hd-city{left:calc(8*var(--hd-u));top:calc(10.5*var(--hd-u));max-width:calc(34*var(--hd-u));width:auto;pointer-events:auto;display:flex;flex-direction:column;align-items:flex-start}
 #title .hd-stage.v2 .hd-city small{font:700 max(10px,calc(1.25*var(--hd-u)))/1 var(--body,'Manrope',system-ui,sans-serif);letter-spacing:.32em;text-transform:uppercase;color:#f3f5fb;text-shadow:0 1px 6px rgba(0,0,0,.8)}
 #title .hd-stage.v2 .hd-city h1{margin:calc(.6*var(--hd-u)) 0 0;font:700 calc(min(6.6,36/var(--len))*var(--hd-u))/1 'Cinzel','Trajan Pro',Georgia,'Times New Roman',serif;letter-spacing:.01em;text-transform:uppercase;color:#fff;white-space:nowrap;text-shadow:0 2px 0 rgba(0,0,0,.25),0 4px 18px rgba(0,0,0,.65)}
-#title .hd-stage.v2 .hd-chg{display:inline-flex;align-items:center;gap:6px;min-height:44px;margin:calc(.2*var(--hd-u)) 0 0 calc(-.3*var(--hd-u));padding:0 calc(.6*var(--hd-u));border:0;background:none;color:#fff;font:600 max(13px,calc(1.45*var(--hd-u)))/1 var(--body,'Manrope',system-ui,sans-serif);cursor:pointer;text-shadow:0 1px 6px rgba(0,0,0,.85)}
-#title .hd-stage.v2 .hd-chg svg{width:max(16px,calc(1.7*var(--hd-u)));height:max(16px,calc(1.7*var(--hd-u)));color:#f2c457;filter:drop-shadow(0 1px 3px rgba(0,0,0,.7))}
-#title .hd-stage.v2 .hd-chg span{border-bottom:1.5px solid rgba(242,196,87,.85);padding-bottom:3px}
 #title .hd-stage.v2 .hd-actions{left:calc(6.5*var(--hd-u));top:calc(26.5*var(--hd-u));width:calc(29*var(--hd-u));min-width:272px;display:flex;flex-direction:column;align-items:center;gap:calc(1.4*var(--hd-u))}
 #title .hd-stage.v2 .hd-main{position:relative;width:100%;display:flex;align-items:center;gap:calc(.9*var(--hd-u));height:max(48px,calc(6*var(--hd-u)));padding:0 calc(1.5*var(--hd-u)) 0 calc(1*var(--hd-u));border-radius:99px;border:1.5px solid #fff1b8;cursor:pointer;color:#241703;
  background:linear-gradient(180deg,#fff2bf 0%,#f6d27a 30%,#e3ad3f 62%,#b98123 100%);box-shadow:inset 0 2px 0 rgba(255,255,255,.65),inset 0 -3px 0 rgba(120,70,10,.35),0 6px 20px rgba(0,0,0,.45),0 0 0 1px rgba(90,55,8,.45);transition:transform .15s,filter .15s}
 #title .hd-stage.v2 .hd-main:hover{filter:brightness(1.05)}#title .hd-stage.v2 .hd-main:active{transform:scale(.985)}
-#title .hd-stage.v2 .hd-main:focus-visible,#title .hd-stage.v2 .hd-gmbtn:focus-visible,#title .hd-stage.v2 .hd-card:focus-visible,#title .hd-stage.v2 .hd-gm button:focus-visible,#title .hd-stage.v2 .hd-chg:focus-visible{outline:3px solid #fff3c4;outline-offset:3px}
-#title .hd-stage.v2 .hd-main .dice{flex:none;width:max(36px,calc(4.6*var(--hd-u)));height:max(32px,calc(4*var(--hd-u)));background:url(art/hd-dice.png) center/contain no-repeat;filter:drop-shadow(0 2px 3px rgba(0,0,0,.35))}
+#title .hd-stage.v2 .hd-main:focus-visible,#title .hd-stage.v2 .hd-gmbtn:focus-visible,#title .hd-stage.v2 .hd-card:focus-visible,#title .hd-stage.v2 .hd-gm button:focus-visible,#title .hd-stage.v2 .hd-main .dice{flex:none;width:max(36px,calc(4.6*var(--hd-u)));height:max(32px,calc(4*var(--hd-u)));background:url(art/hd-dice.png) center/contain no-repeat;filter:drop-shadow(0 2px 3px rgba(0,0,0,.35))}
 #title .hd-stage.v2 .hd-main .lbl{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding-left:calc(.9*var(--hd-u));border-left:1.5px solid rgba(90,55,8,.35);text-align:left}
 #title .hd-stage.v2 .hd-main b{font:800 max(17px,calc(2.2*var(--hd-u)))/1.05 var(--display,'Outfit',system-ui,sans-serif);white-space:nowrap}
 #title .hd-stage.v2 .hd-main small{max-width:100%;font:700 max(10px,calc(.9*var(--hd-u)))/1.15 var(--body,'Manrope',system-ui,sans-serif);color:#4a3208;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -213,6 +209,11 @@ const css=`
 #title .hd-stage.v2 .hd-gm-x{flex:none;display:grid;place-items:center;width:44px;height:44px;margin:-6px -6px -6px 0;border:0;border-radius:50%;background:none;color:#dfe5f3;cursor:pointer}
 #title .hd-stage.v2 .hd-gm-x svg{width:20px;height:20px}#title .hd-stage.v2 .hd-gm-x:hover{background:rgba(255,255,255,.08)}
 #title .hd-stage.v2 .hd-gm-list{display:grid;grid-template-columns:1fr 1fr;gap:calc(.8*var(--hd-u))}
+/* Game Modes (24 Nov 2026): the main ways to play first; Duel and Harbour Ring under "More ways to play".
+   Career has its own button on the home screen, so it is not added to this list. */
+#title .hd-stage.v2 .hd-gm-list>*{order:1}
+#title .hd-stage.v2 .hd-gm-list>#qDuel,#title .hd-stage.v2 .hd-gm-list>#qRing{order:3;min-height:44px;opacity:.92}
+#title .hd-stage.v2 .hd-gm-list:has(#qDuel,#qRing)::after{content:'More ways to play';order:2;grid-column:1/-1;font:700 11px system-ui;letter-spacing:.08em;text-transform:uppercase;color:#c9b17a;margin-top:4px}
 #title .hd-stage.v2 .hd-gm-item{display:flex;align-items:center;gap:calc(1*var(--hd-u));min-height:max(52px,calc(6.6*var(--hd-u)));min-width:0;padding:calc(.6*var(--hd-u)) calc(1*var(--hd-u));border-radius:calc(1.2*var(--hd-u));border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.05);color:#fff;text-align:left;cursor:pointer;transition:background .15s,border-color .15s}
 #title .hd-stage.v2 .hd-gm-item:hover{background:rgba(255,255,255,.1);border-color:rgba(242,196,87,.6)}
 #title .hd-stage.v2 .hd-gm-item .ic{flex:none;display:grid;place-items:center;width:max(34px,calc(4.2*var(--hd-u)));height:max(34px,calc(4.2*var(--hd-u)));border-radius:calc(1*var(--hd-u));background:rgba(242,196,87,.14);color:#f2c457}
@@ -289,7 +290,7 @@ function hdCityPane(T){const saved=loadSave(),c=CITY_DATA[setup.city],C=countryO
   card=`<button class="hd-card" id="qSeason" type="button" aria-label="Season ${sn}, ${esc(seasonName(S.n))}, tier ${t} of ${TIERS}${cl?', '+cl+' rewards ready':''}"><span class="th" style="background-image:url(${S.n===2?'art/skyline-gala.svg':'art/shop.jpg'})"></span><span class="tx"><small>Season ${sn}</small><b>${esc(seasonName(S.n))}</b><span>${cl?`${cl} reward${cl>1?'s':''} ready`:`Tier ${t} of ${TIERS}`}</span></span><span class="go" aria-hidden="true">${I_ARROW}</span></button>`}
  T.innerHTML=`<div class="hd-stage v2">
   <div class="hd-city" style="--len:${len}"><small>${esc(C.name)}</small><h1>${esc(name)}</h1>
-   <button class="hd-chg" id="pCity" type="button">${I_PIN}<span>Change City</span></button></div>
+</div>
   <div class="hd-actions">${main}<button class="hd-gmbtn" id="hdModes" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="hdGM">${I_LAYERS}<span>Game Modes</span></button></div>
   ${card}
   <div class="hd-gm" id="hdGM" role="dialog" aria-modal="false" aria-labelledby="hdGMh" hidden>
@@ -305,7 +306,6 @@ function hdCityPane(T){const saved=loadSave(),c=CITY_DATA[setup.city],C=countryO
  gb.onclick=()=>{sfx('tap');setGM(gm.hidden)};q('#hdGMx').onclick=()=>{sfx('tap');setGM(false)};
  gm.addEventListener('keydown',e=>{if(e.key==='Escape'){e.stopPropagation();setGM(false)}});
  const outside=e=>{if(!gm.isConnected){document.removeEventListener('pointerdown',outside,true);return}if(!gm.hidden&&!gm.contains(e.target)&&!gb.contains(e.target))setGM(false)};document.addEventListener('pointerdown',outside,true);
- q('#pCity').onclick=()=>{sfx('tap');homeTab('world')};
  if(saved)q('#tCont').onclick=()=>{initAudio();startWith(saved)};
  if(q('#tOnline'))q('#tOnline').onclick=()=>{initAudio();openOnline()};
  // Play Solo is the 30-round Championship (as approved with the Championship work); Custom Game keeps its own settings.
@@ -455,13 +455,14 @@ let navigationOpen=false;
 function collectionNavigation(){
  const home=document.querySelector('#title .home');if(!home)return;
  const active=['cast','tokens','frames','buildings'].includes(setup.tab);
- home.classList.toggle('collection-mode',active);home.classList.toggle('collection-nav-open',active&&navigationOpen);
+ // Collection keeps the normal bottom dock like every other tab (24 Nov 2026): the old floating "Menu" handle covered cards.
+ navigationOpen=true;home.classList.toggle('collection-mode',active);home.classList.toggle('collection-nav-open',active&&navigationOpen);
  const rail=home.querySelector(':scope>.rail');if(!rail)return;rail.id='collection-main-navigation';rail.hidden=active&&!navigationOpen;rail.inert=active&&!navigationOpen;
  let handle=home.querySelector('.collection-nav-handle');
  if(!active){handle?.remove();navigationOpen=false;return}
  home.classList.remove('peek-r','peek-t');
  if(!handle){handle=document.createElement('button');handle.type='button';handle.className='collection-nav-handle';handle.setAttribute('aria-controls',rail.id);home.append(handle);handle.onclick=()=>{navigationOpen=!navigationOpen;collectionNavigation();handle.focus()}}
- handle.textContent=navigationOpen?'⌄ Hide navigation':'⌃ Menu';handle.setAttribute('aria-expanded',String(navigationOpen));
+ handle.hidden=true;handle.textContent=navigationOpen?'⌄ Hide navigation':'⌃ Menu';handle.setAttribute('aria-expanded',String(navigationOpen));
  const nav=home.querySelector('#pane>.subtabs');if(nav){nav.setAttribute('aria-label','Collection categories');nav.querySelectorAll('[data-s]').forEach(b=>{if(b.dataset.s==='cast'){b.remove();return}const labels={cast:['people','Characters'],tokens:['collection','Tokens'],frames:['collectionFrame','Frames'],buildings:['city','Buildings']},x=labels[b.dataset.s];if(x)b.innerHTML=svgI(x[0],20)+'<span>'+x[1]+'</span>'})}
 }
 homeTab=function(k){const prev=setup.tab;const r=originalTab.call(this,k==='collection'?'tokens':k);if(!['cast','tokens','frames','buildings'].includes(prev))navigationOpen=false;collectionNavigation();return r};
@@ -494,7 +495,7 @@ html.rot:has(#title:not([hidden]) .collection-mode) body{transform:none!importan
 #title .home.collection-mode{padding-bottom:calc(44px + env(safe-area-inset-bottom,0px))!important;background:radial-gradient(ellipse at 65% 15%,#0b3045,#001321 75%)!important;grid-template-columns:minmax(0,1fr)!important}
 #title .home.collection-mode.collection-nav-open{padding-bottom:calc(var(--hd-dockh) + 54px + env(safe-area-inset-bottom,0px))!important}
 #title .home.collection-mode>.rail[hidden]{display:none!important}
-#title .home.collection-mode>.rail{bottom:calc(46px + env(safe-area-inset-bottom,0px))!important}
+#title .home.collection-mode>.rail{bottom:8px!important}
 .collection-nav-handle{position:absolute;z-index:7;bottom:env(safe-area-inset-bottom,0px);left:50%;transform:translateX(-50%);min-height:44px;min-width:112px;padding:8px 20px;border:1px solid #a58b50;border-radius:20px 20px 0 0;background:#0b2639;color:#f4d88a;font:700 12px system-ui;cursor:pointer}
 .collection-nav-handle:focus-visible{outline:3px solid #ffe39a;outline-offset:-4px}
 #title .collection-mode #rprof{position:relative!important;inset:auto!important;display:flex!important;align-items:center!important;height:64px!important;min-height:64px!important;max-height:64px!important;padding:6px max(12px,env(safe-area-inset-right,0px)) 6px max(12px,env(safe-area-inset-left,0px))!important;gap:8px!important;overflow:visible!important;background:transparent!important}
