@@ -29,7 +29,8 @@ const GRADE={beach:1};
   ctx.globalCompositeOperation='multiply';ctx.globalAlpha=.32;ctx.fillStyle='#f0c79a';ctx.fillRect(252,252,596,596);
   ctx.restore()}}catch(e){}return r}}
 // Lagos has its own theme key but shares the Lekki beach board art, so both resolve to the beach surfaces.
-const surfKey=k=>{try{return BOARDS[k]===BOARDS.beach?'beach':k}catch(e){return k}};
+// Skyline International (24 Nov 2026) is a copy of the beach board with its own edition tag, so it grades the same way.
+const surfKey=k=>{try{return BOARDS[k]===BOARDS.beach||(BOARDS[k]&&BOARDS[k].center===BOARDS.beach.center)?'beach':k}catch(e){return k}};
 function norm(v){const l=Math.hypot(...v)||1;return v.map(x=>x/l)}
 function goldenFor(key){const T=THEMES[key]||THEMES.beach;return !T.night&&lookMode()==='golden'}
 {const _at=applyTheme;applyTheme=function(k){const r=_at.apply(this,arguments);try{

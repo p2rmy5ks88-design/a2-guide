@@ -45,7 +45,8 @@ const types={'.html':'text/html','.js':'text/javascript','.jpg':'image/jpeg','.p
  await page.keyboard.press('Escape');check('Escape closes the panel and returns focus to Game Modes',await page.evaluate(()=>document.querySelector('#hdGM').hidden&&document.activeElement?.id==='hdModes'));
  await modes();await page.click('#hdGMx');check('the close control closes the panel',await page.evaluate(()=>document.querySelector('#hdGM').hidden));
  await modes();await page.mouse.click(5,200);check('tapping outside closes the panel',await page.evaluate(()=>document.querySelector('#hdGM').hidden));
- for(const [sel,want,inPanel] of [['#pCity','world'],['#qCustom','custom',1],['#hdGear','settings'],...(st.spotWant?[]:[['#qSeason','season']])]){
+ await home(page);check('one classic board: no Change City button',await page.evaluate(()=>{const b=document.querySelector('#pCity');return !b||!b.offsetParent}));
+ for(const [sel,want,inPanel] of [['#qCustom','custom',1],['#hdGear','settings'],...(st.spotWant?[]:[['#qSeason','season']])]){
   await home(page);if(inPanel)await modes();await page.click(sel);await page.waitForTimeout(150);check(`${sel} opens ${want}`,await tab(page)===want)}
  if(st.spotWant){await home(page);await page.click('#hdSpot');check('City Spotlight opens the spotlight screen',await tab(page)==='spotlight')}
  await home(page);await modes();await page.click('#qPP');const pp=await page.evaluate(()=>({t:setup.tab,h:setup.slots.filter(s=>s.type==='human').length}));check('Pass & Play opens custom setup with two human seats',pp.t==='custom'&&pp.h>=2,pp);
@@ -77,7 +78,7 @@ const types={'.html':'text/html','.js':'text/javascript','.jpg':'image/jpeg','.p
    const boxes=['#tbWho','#tbSkylineCash','#tbCoins','#hdGear','.hd-city','.hd-main','#hdModes','.hd-card','#title .rail'].map(R).filter(Boolean);
    const hit=(a,b)=>a.x<b.r-1&&b.x<a.r-1&&a.y<b.b-1&&b.y<a.b-1,over=[];for(let i=0;i<boxes.length;i++)for(let j=i+1;j<boxes.length;j++)if(hit(boxes[i],boxes[j]))over.push(boxes[i].s+' × '+boxes[j].s);
    const out=boxes.filter(b=>b.x<-1||b.y<-1||b.r>innerWidth+1||b.b>innerHeight+1).map(b=>b.s);
-   const small=[...document.querySelectorAll('.hd-main,#hdModes,#pCity,.hd-card,#hdGear')].map(e=>e.getBoundingClientRect()).filter(r=>r.height<44||r.width<44).length+[...document.querySelectorAll('.hd-di')].map(e=>e.getBoundingClientRect()).filter(r=>r.height<40||r.width<40).length;
+   const small=[...document.querySelectorAll('.hd-main,#hdModes,.hd-card,#hdGear')].map(e=>e.getBoundingClientRect()).filter(r=>r.height<44||r.width<44).length+[...document.querySelectorAll('.hd-di')].map(e=>e.getBoundingClientRect()).filter(r=>r.height<40||r.width<40).length;
    const clip=[...document.querySelectorAll('.hd-main b,.hd-main small,.hd-gmbtn span,.hd-city h1')].filter(e=>e.scrollWidth>e.clientWidth+1).map(e=>e.textContent);
    return{over,out,small,clip}});
   check(`layout ${vp.width}×${vp.height} (${variant}): no overlaps, inside the screen, labels not clipped, touch targets`,!L.over.length&&!L.out.length&&!L.small&&!L.clip.length,L);
