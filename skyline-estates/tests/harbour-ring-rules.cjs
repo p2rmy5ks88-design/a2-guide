@@ -3,8 +3,7 @@
 'use strict';
 const assert=require('node:assert/strict'),fs=require('fs'),path=require('path');
 const HR=require('../lib/harbour-ring-rules.js');
-const src=fs.readFileSync(path.join(__dirname,'..','game.html'),'utf8');const i=src.indexOf('const CITY_RAW=')+15;
-const cities=Object.values(JSON.parse(src.slice(i,src.indexOf(';\n',i)))).map(c=>({key:c.key,name:c.name,country:c.country,props:c.props}));
+const cities=require('../lib/harbour-ring-cities.js');
 let n=0;const ok=m=>{n++;console.log('PASS',m)};
 const fresh=(seed=1,first=0)=>HR.newMatch({seed,first,cities,players:[{name:'Ada'},{name:'Bot',ai:true}]});
 const playOut=s=>{let g=0;while(!s.over&&g++<5000){const D=HR.pending(s);if(D.type==='bid'){HR.act(s,0,HR.ai(s,0));if(!s.over&&HR.pending(s)===D)HR.act(s,1,HR.ai(s,1))}else HR.act(s,D.p,HR.ai(s,D.p))}return s};

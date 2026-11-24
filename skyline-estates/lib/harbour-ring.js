@@ -430,7 +430,7 @@ function onClick(e){const b=e.target.closest('button,[data-a]');if(!b||!s)return
     case 'exlist':view.sheet={k:'exchange'};return render();case 'skip':return go(d.type==='exchange'?{}:d.type==='permit'?{}:d.type==='ferry'?{}:{yes:false})}}
 function onKey(e){if(e.key==='Escape'&&view.sheet&&view.sheet.k!=='end'){view.sheet=null;render()}}
 
-function cities(){return CITY_ORDER.map(k=>({key:k,name:CITY_DATA[k].name,country:(countryOf(k)||{}).name||'',props:CITY_DATA[k].props}))}
+function cities(){return HARBOUR_RING_CITIES}
 function myAvatar(){const i=document.querySelector('#tbWho .rav img');return i&&i.getAttribute('src')||'avatars/small/skyline_avatar_02_96.png'}
 function start(opts={}){clearTimeout(timer);if(opts.resume){s=opts.resume;plotClaims=new Map();buildingRises=new Map();plotOwners=new Map(s.tiles.filter(t=>t.k==='prop').map(t=>[t.i,t.o===me?'a':t.o===ai?'b':'neutral']));built=new Set(s.tiles.filter(t=>t.k==='prop'&&t.lv>0&&(t.o===me||t.o===ai)).map(t=>t.i+':'+t.lv+':'+t.o));view={tok:null,sheet:null,tab:'feed',seen:s.log.length,auto:!!opts.auto,speed:opts.speed!=null?opts.speed:1};mount();after();return s}
   const seed=opts.seed||((Date.now()^Math.floor(Math.random()*1e9))>>>0);built=new Set();plotOwners=new Map();plotClaims=new Map();buildingRises=new Map();
