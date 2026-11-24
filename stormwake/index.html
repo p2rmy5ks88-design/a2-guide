@@ -3,7 +3,7 @@
 <title>Stormwake</title>
 <style>
 *{box-sizing:border-box} body{margin:0;background:#070e16;color:#f5fbff;font:15px system-ui;display:grid;place-items:center;min-height:100dvh}
-button{color:inherit;font:inherit;cursor:pointer;border:1px solid #618393;background:#102633;padding:10px 15px;border-radius:7px;touch-action:manipulation}
+button{min-height:44px;color:inherit;font:inherit;cursor:pointer;border:1px solid #618393;background:#102633;padding:10px 15px;border-radius:7px;touch-action:manipulation}
 button:hover,button:focus-visible{border-color:#90f9ff}button:disabled{opacity:.5;cursor:default}
 main{width:min(100vw,61dvh,520px);height:min(100dvh,854px);position:relative;overflow:hidden;background:#134257;box-shadow:0 0 90px #15506465}
 @media(max-width:600px) and (orientation:portrait){main{width:100vw;height:min(100dvh,180vw)}}
@@ -30,12 +30,29 @@ const ui = Object.fromEntries(['field','hud','hull','score','rescue','pause','to
 const ctx=ui.field.getContext('2d'), W=420,H=750;
 const clamp=(v,a,b)=>Math.max(a,Math.min(v,b));
 const near=(a,b,r)=>Math.hypot(a.x-b.x,a.y-b.y)<r;
-let save={alloy:0,best:0,wing:0,armor:0,sound:true};
+const SAVE_KEY='stormwake-campaign-1';
+const emptySave=()=>({alloy:0,best:0,sound:true,upgrades:{cannon:0,hull:0,salvage:0},records:{},aircraft:'kestrel',module:'lens',left:false});
+let save=emptySave();
 try {
-  const local=JSON.parse(localStorage.getItem('stormwake-1'));
-  if(local) Object.assign(save,local);
+  const current=JSON.parse(localStorage.getItem(SAVE_KEY));
+  const legacy=JSON.parse(localStorage.getItem('stormwake-1'));
+  if(current) save={...save,...current};
+  else if(legacy){
+    save.alloy=legacy.alloy||0;
+    save.best=legacy.best||0;
+    save.sound=legacy.sound!==false;
+    save.upgrades.cannon=legacy.wing?1:0;
+    save.upgrades.hull=legacy.armor?2:0;
+    localStorage.setItem(SAVE_KEY,JSON.stringify(save));
+  }
 } catch {}
-function persist(){try{localStorage.setItem('stormwake-1',JSON.stringify(save));}catch{}}
+function persist(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(save));}catch{}}
+let routeIndex=0, storm=false;
+const recordKey=(index=routeIndex,hard=storm)=>index+':'+Number(hard);
+const getRecord=(index,hard)=>save.records[recordKey(index,hard)]||{clear:false,marks:[false,false,false]};
+const stormOpen=index=>{const r=getRecord(index,false);return r.clear&&r.marks.filter(Boolean).length>=2;};
+const petrelOpen=()=>[0,1].every(i=>getRecord(i,false).marks[0]);
+const objectives=['Recover all 3 crews','Destroy all 3 marked targets','Clear without hull damage'];
 let mode='menu', run, pointer=null, keys=new Set(), audio, startTime=0, clock=0;
 function tone(freq,length=.1,type='sine',volume=.047){
   if(!audio||!save.sound||audio.state!=='running')return;
@@ -65,40 +82,74 @@ function panel(kicker,title,body,actions,foot=''){
 }
 function hangar(){
   mode='menu';ui.hud.hidden=ui.coil.hidden=true;ui.toast.textContent='';
-  panel('ARCADE FLIGHT  /  MISSION 01','STORMWAKE',
-    'A rogue weather rig has sealed the island chain. Fly the Kestrel through Glasswater Strait, recover three rescue pods, and take down the Tempest Ark.',
-    [['Launch mission',launch],['Hangar · '+save.alloy+' alloy',upgrades],['Sound '+(save.sound?'on':'off'),()=>{save.sound=!save.sound;persist();initAudio();hangar();}]],
-    'Drag anywhere to steer, or use WASD / arrows. Weapons fire automatically. Tap Stormcoil or press Space when charged.');
+  panel('STORMWAKE  /  CAMPAIGN','ROUTE MAP','Choose a route through the storm. Saved objectives stay earned across flights.',
+    [...routes.map((route,i)=>{
+      const locked=i===1&&!getRecord(0,false).clear;
+      const count=getRecord(i,false).marks.filter(Boolean).length;
+      return [route.name+' · '+(locked?'Clear Glasswater to unlock':count+'/3 Normal objectives'),()=>{routeIndex=i;storm=false;loadout();},locked];
+    }),['Hangar · '+save.alloy+' alloy',upgrades],['Sound '+(save.sound?'on':'off'),()=>{save.sound=!save.sound;persist();initAudio();hangar();}]],
+    'Drag to steer, or use WASD / arrows. Weapons fire automatically. Tap Stormcoil or press Space when charged.');
+}
+function loadout(){
+  mode='menu';ui.hud.hidden=ui.coil.hidden=true;
+  const route=routes[routeIndex], open=stormOpen(routeIndex), marks=getRecord(routeIndex,storm).marks;
+  panel(storm?'STORM DIFFICULTY':'NORMAL DIFFICULTY',route.name,
+    objectives.map((label,i)=>(marks[i]?'✓ ':'○ ')+label).join('<br>'),
+    [['Launch mission',launch],['Difficulty · '+(storm?'Storm':'Normal'),()=>{storm=!storm;loadout();},!open],
+     ['Aircraft · '+(save.aircraft==='petrel'?'Petrel':'Kestrel'),()=>{save.aircraft=save.aircraft==='petrel'?'kestrel':'petrel';persist();loadout();},!petrelOpen()],
+     ['Module · '+(save.module==='surge'?'Surge Cell':'Recovery Lens'),()=>{save.module=save.module==='surge'?'lens':'surge';persist();loadout();},!getRecord(0,false).clear],
+     ['Back to map',hangar]],
+    (open?'Storm unlocked.':'Complete two Normal objectives to unlock Storm.')+' '+(petrelOpen()?'Petrel unlocked.':'Complete both Normal rescue objectives to unlock Petrel.'));
 }
 function upgrades(){
-  panel('KESTREL  /  HANGAR','FLIGHT DECK','Alloy '+save.alloy+' · Best score '+save.best.toLocaleString(),
-    [['Back to launch',hangar],...[
-      ['wing','Wing cannons',45],
-      ['armor','Hull reinforcement',35]
-    ].map(([key,title,cost])=>[title+' · '+(save[key]?'Fitted':cost+' alloy'),()=>{save[key]=1;save.alloy-=cost;persist();upgrades();},save[key]||save.alloy<cost])],
-    'Wing cannons add two angled shots. Hull reinforcement adds two hull points.');
+  mode='menu';ui.hud.hidden=ui.coil.hidden=true;
+  const costs=[35,70,120];
+  const tracks=[['cannon','Cannon','+10% base damage'],['hull','Hull','+1 point'],['salvage','Salvage range','+15% base range']];
+  panel('STORMWAKE  /  HANGAR','FLIGHT DECK','Alloy '+save.alloy+' · Best score '+save.best.toLocaleString(),
+    [['Back to map',hangar],...tracks.map(([key,title,effect])=>{
+      const level=save.upgrades[key],cost=costs[level];
+      return [title+' '+level+'/3 · '+(cost?effect+' · '+cost+' alloy':'Max'),
+        ()=>{save.upgrades[key]++;save.alloy-=cost;persist();upgrades();},!cost||save.alloy<cost];
+    }),['Stormcoil button · '+(save.left?'Left':'Right'),()=>{save.left=!save.left;persist();upgrades();}]],
+    'Upgrade effects apply on the next launch.');
 }
 function launch(){
   initAudio();mode='play';ui.overlay.hidden=true;ui.hud.hidden=ui.coil.hidden=false;ui.pause.focus({preventScroll:true});
+  ui.coil.style.left=save.left?'12px':'auto';ui.coil.style.right=save.left?'auto':'12px';
   pointer=null;keys.clear();
-  run={t:0,x:210,y:625,hp:5+2*save.armor,max:5+2*save.armor,charge:35,score:0,alloy:0,rescued:0,shots:[],threats:[],enemies:[],pods:[],sparks:[],fire:0,wave:0,inv:0,flash:0,toast:'GLASSWATER STRAIT',banner:2};
+  const max=(save.aircraft==='petrel'?4:5)+save.upgrades.hull;
+  run={t:0,x:210,y:625,hp:max,max,charge:save.module==='surge'?40:20,score:0,alloy:0,rescued:0,marked:0,damage:0,
+    shots:[],threats:[],enemies:[],pods:[],sparks:[],loot:[],fire:0,wave:0,inv:0,flash:0,settled:false,
+    route:routes[routeIndex],hard:storm,toast:routes[routeIndex].name.toUpperCase(),banner:2};
   updateHud();
 }
 function pause(){
   if(mode==='play'){
     mode='pause';pointer=null;keys.clear();
-    panel('FLIGHT SUSPENDED','PAUSED','Glasswater Strait',[['Resume',()=>{mode='play';ui.overlay.hidden=true;ui.pause.focus();}],['Restart mission',launch],['Return to hangar',hangar]]);
+    panel('FLIGHT SUSPENDED','PAUSED',run.route.name,[['Resume',()=>{mode='play';ui.overlay.hidden=true;ui.pause.focus();}],['Abandon mission',confirmAbandon]]);
   }
 }
+function confirmAbandon(){
+  panel('FLIGHT SUSPENDED','ABANDON FLIGHT?','Collected alloy from this flight will be left behind.',
+    [['Keep flying',()=>{mode='play';ui.overlay.hidden=true;ui.pause.focus();}],['Abandon and return to map',hangar]]);
+}
 function end(win){
-  mode='result';pointer=null;keys.clear();
-  const bonus=win?25:0;
-  save.alloy+=run.alloy+bonus;save.best=Math.max(save.best,run.score);persist();
+  if(run.settled)return;
+  run.settled=true;mode='result';pointer=null;keys.clear();
+  const record=getRecord(routeIndex,storm);
+  const completed=[run.rescued===3,run.marked===3,run.damage===0].map(mark=>win&&mark);
+  const earned=completed.map((mark,i)=>mark&&!record.marks[i]);
+  save.records[recordKey()]={clear:win||record.clear,marks:record.marks.map((mark,i)=>mark||completed[i])};
+  const rescued=run.rescued*4, bonus=win?20:0, awards=earned.filter(Boolean).length*8;
+  const gain=Math.floor((run.alloy+rescued+bonus)*(storm?1.5:1))+awards;
+  save.alloy+=gain;save.best=Math.max(save.best,run.score);persist();
   ui.coil.hidden=true;ui.toast.textContent='';
-  panel('GLASSWATER STRAIT',win?'ARK DOWN':'KESTREL LOST',
-    'Score '+run.score.toLocaleString()+' · Rescue '+run.rescued+'/3 · Alloy earned '+(run.alloy+bonus),
-    [['Fly again',launch],['Open hangar',upgrades],['Mission briefing',hangar]],
-    win&&run.rescued===3?'All crews recovered.':'Recover all three crews and defeat the Ark for a clean sweep.');
+  panel(run.route.name.toUpperCase(),win?'MISSION CLEAR':'AIRCRAFT LOST',
+    'Score '+run.score.toLocaleString()+' · Alloy +'+gain+'<br>Salvage '+run.alloy+' · Rescue '+rescued+' · Clear '+bonus+' · New objectives '+awards+
+    (storm?'<br>Storm multiplies salvage, rescue and clear rewards by 1.5.':'')+
+    '<br><br>'+objectives.map((label,i)=>(earned[i]?'★ ':completed[i]?'✓ ':'○ ')+label).join('<br>'),
+    [['Retry',launch],['Open hangar',upgrades],['Route map',hangar]],
+    win&&routeIndex===0?'Breaker’s Reach is available on the route map.':'');
   tone(win?650:150,.65,'triangle');
 }
 function updateHud(){
@@ -110,7 +161,8 @@ function announce(text){run.toast=text;run.banner=2;}
 function activate(){
   if(mode!=='play'||run.charge<100)return;
   run.charge=0;run.flash=.42;run.inv=Math.max(run.inv,.65);
-  run.threats=[];run.enemies.forEach(e=>e.hp-=e.type==='ark'?18:7);
+  run.threats=run.threats.filter(b=>!near(run,b,W/4));
+  for(const enemy of run.enemies)if(near(run,enemy,W/4))enemy.stagger=2;
   tone(720,.45,'sawtooth',.09);
 }
 ui.pause.onclick=pause;ui.coil.onclick=activate;
@@ -143,9 +195,19 @@ const waves=[
  [24,'barge',[210]],[27,'dart',[74,160,260,346]],[31,'kite',[75,150,270,345],235],
  [35,'barge',[95,325]],[39,'dart',[95,210,325]],[44,'ark',[210]]
 ];
+const routes=[
+ {name:'Glasswater Strait',boss:'Tempest Ark',waves,sea:['#0b293e','#18556b','#0a3549']},
+ {name:'Breaker’s Reach',boss:'Breakwater Engine',waves:[
+  [1,'dart',[55,141,279,365]],[5,'barge',[78]],[9,'kite',[85,160,240,330],88],
+  [13,'dart',[95,210,325]],[17,'barge',[346]],[21,'kite',[130,210,290],214],
+  [25,'dart',[60,165,255,360]],[29,'barge',[190]],[33,'kite',[72,144,276,348],323],
+  [38,'barge',[85,329]],[43,'dart',[80,210,340]],[48,'ark',[210]]
+ ],sea:['#1b2435','#354657','#172835']}
+];
 const stats={kite:[3,17,92,2.1],dart:[5,20,107,1.58],barge:[14,30,47,1.4],ark:[108,80,54,.68]};
 function spawn(type,x,i){
-  const [hp,r,s,interval]=stats[type];run.enemies.push({type,x,base:x,y:-r-10,hp,max:hp,r,s,interval,phase:i*.8,fire:1+i*.25,age:0});
+  const [hp,r,s,interval]=stats[type];const health=hp*(run.hard?1.12:1);
+  run.enemies.push({type,x,base:x,y:-r-10,hp:health,max:health,r,s,interval:interval*(run.hard?1:1.55),phase:i*.8,fire:(run.hard?1:1.6)+i*.25,age:0,stagger:0,marked:false});
 }
 function burst(x,y,color,count){
   for(let i=0;i<count;i++){
@@ -155,16 +217,19 @@ function burst(x,y,color,count){
 }
 function hit(){
   if(run.inv>0)return;
-  run.hp--;run.inv=.95;burst(run.x,run.y,'#ffb18e',15);tone(120,.23,'triangle',.10);
+  run.hp--;run.damage++;run.inv=.95;burst(run.x,run.y,'#ffb18e',15);tone(120,.23,'triangle',.10);
 }
 function shoot(e){
-  const angle=Math.atan2(run.y-e.y,run.x-e.x), fans=e.type==='ark'?[-.65,-.33,0,.33,.65]:e.type==='barge'?[-.2,0,.2]:[0];
+  const angle=Math.atan2(run.y-e.y,run.x-e.x);
+  const fans=e.type==='ark'
+    ? (routeIndex===1?[-.82,-.51,-.22,.22,.51,.82]:[-.65,-.33,0,.33,.65])
+    : e.type==='barge'?[-.2,0,.2]:[0];
   for(const spread of fans){const a=angle+spread,s=e.type==='ark'?178:136;run.threats.push({x:e.x,y:e.y+12,vx:Math.cos(a)*s,vy:Math.sin(a)*s});}
 }
 function step(dt){
   const g=run;
   g.t+=dt;g.banner-=dt;g.fire-=dt;g.inv-=dt;g.flash-=dt;
-  g.charge=Math.min(100,g.charge+3.1*dt);
+  
   const x=Number(keys.has('d')||keys.has('arrowright'))-Number(keys.has('a')||keys.has('arrowleft'));
   const y=Number(keys.has('s')||keys.has('arrowdown'))-Number(keys.has('w')||keys.has('arrowup'));
   if(pointer){g.x+=(pointer.tx-g.x)*Math.min(1,dt*19);g.y+=(pointer.ty-g.y)*Math.min(1,dt*19);}
@@ -172,41 +237,61 @@ function step(dt){
   if(g.fire<=0){
     for(const side of [-1,1]){
       g.shots.push({x:g.x+side*9,y:g.y-17,vx:0});
-      if(save.wing)g.shots.push({x:g.x+side*23,y:g.y-4,vx:side*64});
+
     }
     g.fire=.145;
   }
-  while(g.wave<waves.length&&g.t>=waves[g.wave][0]){
-    const [,type,positions,pod]=waves[g.wave++];
-    positions.forEach((p,i)=>spawn(type,p,i));
-    if(pod!==undefined){g.pods.push({x:pod,y:-25});announce('RESCUE POD INBOUND');}
-    if(type==='ark'){announce('TEMPEST ARK INBOUND');tone(192,.55,'triangle',.11);}
+  while(g.wave<g.route.waves.length&&g.t>=g.route.waves[g.wave][0]){
+    const [time,type,positions,pod]=g.route.waves[g.wave++];
+    positions.forEach((p,i)=>{
+      spawn(type,g.hard?W-p:p,i);
+      if(type==='barge'&&(routeIndex===0?time<=35:time<38)&&i===0)g.enemies.at(-1).marked=true;
+    });
+    if(pod!==undefined){g.pods.push({x:g.hard?W-pod:pod,y:-25,hold:0});announce('RESCUE POD INBOUND');}
+    if(type==='ark'){announce(g.route.boss.toUpperCase()+' INBOUND');tone(192,.55,'triangle',.11);}
   }
   for(const e of g.enemies){
     if(e.hp<=0)continue;
-    e.age+=dt;e.fire-=dt;
+    e.age+=dt;e.fire-=dt;e.stagger-=dt;
     if(e.type==='ark'){e.y=Math.min(158,e.y+e.s*dt);e.x=e.base+Math.sin(e.age*.8)*83;}
     else{e.y+=e.s*dt;e.x=clamp(e.base+Math.sin(e.age*(e.type==='dart'?2.45:1.25)+e.phase)*(e.type==='dart'?63:32),24,396);}
-    if(e.fire<=0&&e.y>30&&e.y<g.y-25){shoot(e);e.fire=e.interval;}
+    if(e.stagger<=0&&e.fire<=0&&e.y>30&&e.y<g.y-25){shoot(e);e.fire=e.interval;}
     if(near(e,g,e.r*.64+13))hit();
   }
   for(const s of g.shots){
     s.x+=s.vx*dt;s.y-=610*dt;
     const target=g.enemies.find(e=>e.hp>0&&near(s,e,e.r*.85));
-    if(target){target.hp--;s.dead=true;burst(s.x,s.y,'#b3fff2',2);}
+    if(target){target.hp-=1+save.upgrades.cannon*.1;s.dead=true;burst(s.x,s.y,'#b3fff2',2);}
   }
   let win=false;
   g.enemies=g.enemies.filter(e=>{
     if(e.hp<=0){
-      const boss=e.type==='ark';g.score+=boss?1900:e.max*30;
-      g.alloy+=boss?20:e.type==='barge'?5:2;g.charge=Math.min(100,g.charge+(boss?0:4));
+      const boss=e.type==='ark';g.score+=boss?1900:Math.round(e.max*30);
+      if(e.marked){g.marked++;g.charge=Math.min(100,g.charge+5);}
+      if(!boss)g.loot.push({x:e.x,y:e.y,value:e.type==='barge'?2:1});
       burst(e.x,e.y,'#ffc16b',boss?85:18);tone(boss?120:250,.16,'triangle',.035);
       win ||= boss;return false;
     }
     return e.y<H+100;
   });
   g.threats=g.threats.filter(b=>{b.x+=b.vx*dt;b.y+=b.vy*dt;if(near(g,b,13)){hit();return false;}return b.x>-30&&b.x<W+30&&b.y>-30&&b.y<H+30;});
-  g.pods=g.pods.filter(p=>{p.y+=86*dt;if(near(g,p,30)){g.rescued++;g.alloy+=8;g.score+=360;g.charge=Math.min(100,g.charge+22);announce('CREW RESCUED');tone(940,.22,'sine',.10);burst(p.x,p.y,'#a9ffe6',18);return false;}return p.y<H+25;});
+  const rescueRadius=save.aircraft==='petrel'?39:30;
+  g.pods=g.pods.filter(p=>{
+    p.y+=72*dt;
+    p.hold=near(g,p,rescueRadius)?p.hold+dt:Math.max(0,p.hold-dt*.65/.4);
+    if(p.hold<.65)return p.y<H+25;
+    g.rescued++;g.score+=360;g.charge=Math.min(100,g.charge+30);
+    announce('CREW RESCUED');tone(940,.22,'sine',.10);burst(p.x,p.y,'#a9ffe6',18);
+    return false;
+  });
+  const attraction=50*(1+save.upgrades.salvage*.15)*(save.module==='lens'?1.25:1);
+  g.loot=g.loot.filter(item=>{
+    item.y+=48*dt;
+    const distance=Math.hypot(g.x-item.x,g.y-item.y);
+    if(distance<14){g.alloy+=item.value;return false;}
+    if(distance<attraction){item.x+=(g.x-item.x)*dt*10;item.y+=(g.y-item.y)*dt*10;}
+    return item.y<H+20;
+  });
   g.shots=g.shots.filter(s=>!s.dead&&s.y>-25&&s.x>-25&&s.x<W+25);
   g.sparks=g.sparks.filter(p=>(p.life-=dt)>0);
   for(const p of g.sparks){p.x+=p.vx*dt;p.y+=p.vy*dt;}
@@ -244,7 +329,7 @@ function island(x,y,w,h,seed){
   ctx.restore();ctx.restore();
 }
 function scenery(t){
-  ctx.fillStyle=gradient(0,H,'#0b293e','#18556b','#0a3549');ctx.fillRect(0,0,W,H);
+  ctx.fillStyle=gradient(0,H,...(run?.route.sea||routes[0].sea));ctx.fillRect(0,0,W,H);
   for(let i=0;i<145;i++){
     const x=(i*173.37)%W,y=(i*67.51+t*(30+i%3*8))%(H+20)-10;
     ctx.fillStyle=i%4?'#a1edee27':'#90e9ed57';ctx.fillRect(x,y,5+i%17,1);
@@ -293,16 +378,19 @@ function render(){
   scenery(t);
   if(!g){craft(210,486,'player',t);return;}
   for(const p of g.pods){
-    ctx.strokeStyle='#a3ffec';ctx.lineWidth=2;ctx.beginPath();ctx.arc(p.x,p.y,16+3*Math.sin(t*7),0,Math.PI*2);ctx.stroke();
+    ctx.strokeStyle='#a3ffec';ctx.lineWidth=2;ctx.beginPath();ctx.arc(p.x,p.y,save.aircraft==='petrel'?39:30,0,Math.PI*2);ctx.stroke();
+    if(p.hold>0){ctx.lineWidth=4;ctx.beginPath();ctx.arc(p.x,p.y,20,-Math.PI/2,-Math.PI/2+Math.PI*2*p.hold/.65);ctx.stroke();}
     poly([[p.x,p.y-10],[p.x+8,p.y],[p.x,p.y+10],[p.x-8,p.y]],'#b3fff0');
   }
   for(const e of g.enemies){
     craft(e.x,e.y,e.type,t);
+    if(e.marked){ctx.strokeStyle='#ffdd8a';ctx.strokeRect(e.x-31,e.y-25,62,50);}
     if(e.type==='ark'){
       ctx.fillStyle='#061724';ctx.fillRect(75,73,270,7);
       ctx.fillStyle='#ff996c';ctx.fillRect(75,73,270*e.hp/e.max,7);
     }
   }
+  for(const item of g.loot)oval(item.x,item.y,4,4,'#ffd77e');
   for(const s of g.shots){oval(s.x,s.y,2.4,11,'#8ffff6');oval(s.x,s.y-4,1.3,5,'#eeffff');}
   for(const b of g.threats){oval(b.x,b.y,6,6,'#fa6d4e');oval(b.x,b.y,2.6,2.6,'#fff0bb');}
   if(g.inv<=0||Math.floor(g.inv*16)%2===0)craft(g.x,g.y,'player',t);
@@ -311,7 +399,7 @@ function render(){
   if(g.flash>0){
     ctx.globalAlpha=g.flash*.62;ctx.fillStyle='#c1fffb';ctx.fillRect(0,0,W,H);ctx.globalAlpha=1;
     ctx.strokeStyle='#d5fff5';ctx.lineWidth=4;ctx.beginPath();
-    ctx.arc(g.x,g.y,(.44-g.flash)*1000,0,Math.PI*2);ctx.stroke();
+    ctx.arc(g.x,g.y,(.42-g.flash)/.42*(W/4),0,Math.PI*2);ctx.stroke();
   }
 }
 function frame(now){
