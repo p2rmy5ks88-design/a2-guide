@@ -25,8 +25,8 @@
  const SETS_KEY='lmSets';
  function checkSets(){let won=null;PREF[SETS_KEY]=PREF[SETS_KEY]||{};
   for(const C of COUNTRIES){if(PREF[SETS_KEY][C.key])continue;if(C.cities.every(c=>wins(c)>=1)){PREF[SETS_KEY][C.key]=Date.now();
-   if(!(PREF.inv.fin&&PREF.inv.fin.gold))grantItem('fin','gold');addCoins(500,`${C.name} landmark set`);won=C}}
-  if(won){savePref();try{toast(`${won.flag||''} ${won.name} landmark set complete! +500 Coins`)}catch{}}}
+   if(!(PREF.inv.fin&&PREF.inv.fin.gold))grantItem('fin','gold');addCoins(500,`${COUNTRIES.length>1?C.name:'Skyline International'} landmark set`);won=C}}
+  if(won){savePref();try{toast(COUNTRIES.length>1?`${won.flag||''} ${won.name} landmark set complete! +500 Coins`:'Skyline International landmark set complete! +500 Coins')}catch{}}}
  // Champion frame reveals become a short landmark toast.
  frameReveal=function(){if(!PREF.frameNew||!PREF.frameNew.length)return;const ids=PREF.frameNew.splice(0);savePref();
   const c=ids.map(i=>String(i)).find(i=>i.startsWith('c:'));try{toast(c?`New Gold landmark: ${marks(c.slice(2))[2].name}`:'New Wonder landmark unlocked')}catch{}};
@@ -83,18 +83,18 @@
    ${on&&m.city?`<span class="lmk-go" data-lm-play="${esc(m.city)}" role="button" tabindex="0">Play in ${esc(cn)}</span>`:''}</button>`};
   const owned=Object.keys((PREF.inv&&PREF.inv.roof)||{}).filter(id=>PLINTH[id]);
   T.innerHTML=`<div class="lmk2">
-   <div class="lmk-filters"><label class="lmk-country"><span>Country</span><select aria-label="Country">${COUNTRIES.map(x=>`<option value="${x.key}"${x.key===C.key?' selected':''}>${esc(x.name)}</option>`).join('')}</select></label>
+   <div class="lmk-filters">${COUNTRIES.length>1?`<label class="lmk-country"><span>Country</span><select aria-label="Country">${COUNTRIES.map(x=>`<option value="${x.key}"${x.key===C.key?' selected':''}>${esc(x.name)}</option>`).join('')}</select></label>`:''}
     ${[['all','All ('+all.length+')'],['own','Earned ('+earned+')'],['lock','Locked ('+(all.length-earned)+')']].map(([id,l])=>`<button data-lmf="${id}" class="${LS.filter===id?'active':''}">${l}</button>`).join('')}</div>
    <div class="lmk-grid">${list.map(card).join('')||'<p class="lmk-empty">Nothing here yet.</p>'}</div>
-   <section class="lmk-setp"><header><b>${esc(C.name)} landmark set</b><b>${bronze} / ${cities.length}</b></header>
+   <section class="lmk-setp"><header><b>${esc(COUNTRIES.length>1?C.name:'Skyline International')} landmark set</b><b>${bronze} / ${cities.length}</b></header>
     <span class="lmk-bar big"><i style="width:${Math.round(bronze/cities.length*100)}%"></i></span>
-    <p>${setDone?'Set complete ✓ Reward collected.':`Earn every Bronze landmark in ${esc(C.name)} (1 win in each city) → <b>+500 Coins</b> and the Gold token finish.`}</p>
+    <p>${setDone?'Set complete ✓ Reward collected.':(COUNTRIES.length>1?`Earn every Bronze landmark in ${esc(C.name)} (1 win in each city)`:'Earn the Bronze landmark (1 win on the International board)')+' → <b>+500 Coins</b> and the Gold token finish.'}</p>
     <label class="lmk-plinth">Display plinth <select aria-label="Display plinth"><option value="">Stone</option>${owned.map(id=>`<option value="${id}"${plinthId()===id?' selected':''}>${esc(PLINTH[id].name.replace(' Plinth',''))}</option>`).join('')}</select></label></section>
   </div>`;
   T.querySelectorAll('[data-lm]').forEach(b=>b.onclick=e=>{if(e.target.closest('[data-lm-play]'))return;const[c,n]=b.dataset.lm.split('|');S.sel={city:c,name:n};const sc=T.querySelector('.lmk2').scrollTop;pane(T);T.querySelector('.lmk2').scrollTop=sc});
   T.querySelectorAll('[data-lm-play]').forEach(x=>{const go=e=>{e.stopPropagation();playIn(x.dataset.lmPlay)};x.onclick=go;x.onkeydown=e=>{if(e.key==='Enter'||e.key===' ')go(e)}});
   T.querySelectorAll('[data-lmf]').forEach(b=>b.onclick=()=>{LS.filter=b.dataset.lmf;pane(T)});
-  T.querySelector('.lmk-country select').onchange=e=>{S.country=e.target.value;S.sel=null;pane(T)};
+  const lmkSel=T.querySelector('.lmk-country select');if(lmkSel)lmkSel.onchange=e=>{S.country=e.target.value;S.sel=null;pane(T)};
   T.querySelector('.lmk-plinth select').onchange=e=>{PREF.eq.roof=e.target.value||null;savePref();pane(T)};
   clearNav(T)}
  // Landscape Collection floats its tab bar over the content: start below it.

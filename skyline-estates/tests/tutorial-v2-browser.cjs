@@ -60,7 +60,11 @@ const TYPES={'.html':'text/html','.js':'text/javascript','.css':'text/css','.jso
   assert.match(await p.locator('.tv2-body').textContent(),/Skyline Duel/);ok('Skyline Duel intro: Full rules opens the Duel page of How to play');
   // Rules hub.
   const hub=await p.evaluate(()=>[...document.querySelectorAll('.tv2-nav [role=tab]')].map(x=>x.textContent));
-  assert.deepEqual(hub,['Standard match','Skyline Duel','Harbour Ring','Online and classic rules','Coach and tips']);
+  assert.deepEqual(hub,['Standard match','Skyline Career','Skyline Duel','Harbour Ring','Online and classic rules','Coach and tips']);
+  // Skyline Career: one page per board, picked with chips (26 Nov 2026).
+  await p.click('.tv2-nav [data-lt="career"]');assert.equal(await p.locator('.tv2-chips [data-cb]').count(),5);assert.match(await p.locator('.tv2-body').textContent(),/Skyline Origins/);
+  await p.click('.tv2-chips [data-cb="crossroads"]');assert.match(await p.locator('.tv2-body').textContent(),/Legacy Points/);
+  await p.click('.tv2-chips [data-cb="empire"]');assert.match(await p.locator('.tv2-body').textContent(),/Hotel/);
   await p.click('.tv2-nav [data-lt="standard"]');assert.match(await p.locator('.tv2-body').textContent(),/Championship Score/);if(OUT)await p.screenshot({path:path.join(OUT,'rules-hub.png')});
   await p.click('.tv2-nav [data-lt="ring"]');assert.match(await p.locator('.tv2-body').textContent(),/1\.5× its price/);
   const small=await p.evaluate(()=>[...document.querySelectorAll('.tv2-nav button')].filter(x=>x.getBoundingClientRect().height<44).length);assert.equal(small,0);

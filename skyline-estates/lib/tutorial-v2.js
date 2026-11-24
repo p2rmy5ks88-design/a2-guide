@@ -4,7 +4,7 @@
      Classic-rules players (Living City off) get the classic wording for slides 3 and 4.
    - A one-time Home walkthrough (3 tips) after the welcome tour, for new players only.
    - A first-time intro for Skyline Duel and Harbour Ring, with "Don't show this again".
-   - How to play becomes a rules hub: Standard match, Skyline Duel, Harbour Ring, Online and classic rules, Coach and tips.
+   - How to play becomes a rules hub: Standard match, Skyline Career (one page per board), Skyline Duel, Harbour Ring, Online and classic rules, Coach and tips.
    Presentation only: no rules, saves, prices or rewards change. Real game art, no emoji. */
 (()=>{'use strict';
 if(window.SkylineTutorialV2)return;
@@ -114,12 +114,50 @@ function rulesFor(tab){const lc=LCON();switch(tab){
     ['Full colour sets','Own every street of one colour and the rent doubles. Build houses evenly, then a tower after four houses.'],
     ['Cards and Lockup','Lucky Break and City Hall draw cards. Police Check sends you to the Lockup: pay bail or roll doubles.'],
     ['Short of cash','Trade, mortgage a street for half its price, or sell buildings for half back.']]]}}
-const TABS=[['standard','Standard match'],['duel','Skyline Duel'],['ring','Harbour Ring'],['classic','Online and classic rules'],['coach','Coach and tips']];
-paneLearn=function(T){const tab=TABS.some(t=>t[0]===setup.learnTab)?setup.learnTab:'standard';const [h,sub,rows]=rulesFor(tab);
+/* Skyline Career rules, one page per board (26 Nov 2026 update). Unlock lines read the live Career state when it is available. */
+const CAREER_RULES=[
+ ['origins','Skyline Origins','Board 1 · Easy · the International board with Living City rules',[
+  ['The board','The classic 40-space International board. Everything in Standard match applies: districts, Low-rise to Skyscraper, City Events and the Final Bell.'],
+  ['Match length','Quick 20 rounds, Standard 30, Extended 40, or Unlimited until one player is left. The highest Championship Score wins.'],
+  ['Counting wins','A win counts for the Career when the match lasts at least 5 rounds and 2 minutes, you make at least 3 buys, builds or trades, and the computer is on Normal or Hard.'],
+  ['Unlock next','Finish the Origins tutorial and earn 2 qualifying Origins wins to open City Ventures.']]],
+ ['circuit','City Ventures','Board 2 · Normal · 37-space hexagon with six power corners',[
+  ['Goal','The highest City Value after 18 turns (Quick: 10). City Value = cash + property values + 80% of upgrades + 200 CC per full district + 150 CC per Landmark.'],
+  ['Money','City Ventures uses its own match money, City Credits (CC). It starts fresh every match.'],
+  ['Your turn','Roll, move round the hexagon, then buy the space or send it to auction. Own 2 of a district’s 3 properties to build Low-rise and Mid-rise; all 3 for a Landmark (+25% district rent).'],
+  ['Power corners','Start (200 CC, land exactly for a Charter), Free Lounge, Civic Review, Market Boom, Skyline Exchange and Transit Hub. Each one changes the market for a round or gives you a choice.'],
+  ['Rewards','A qualifying Standard win pays 5× the usual match coins and SC.'],
+  ['Unlock next','2 qualifying City Ventures wins and 3 district challenges (own a whole district at the end) open Crossroads Capital.']]],
+ ['crossroads','Crossroads Capital','Board 3 · Intermediate · 33-space double loop',[
+  ['Goal','The most Legacy Points (LP) after 15 turns (Quick: 9).'],
+  ['The double loop','At Start choose the Riverside or Highland loop. Both meet at the Skybridge Bonus, the Grand Exchange and Start / Payday (200 CC).'],
+  ['Landmark Chains','Follow a three-stage brief; stamps come in order, one per action. A Ribbon Cutting pays +5 LP and 200 CC and unveils a landmark in the city.'],
+  ['Every landing','Acquire, reserve or auction; Open House or upgrade your own; Scout or deal after paying rent. Each chapter has a public City Headline worth bonus points.'],
+  ['Score','Legacy Points + 2 per colour group + 1 per House 3+ building + 1 per 500 CC net worth.'],
+  ['Rewards','A qualifying Standard win pays 6× the usual match coins and SC.'],
+  ['Unlock next','2 qualifying Crossroads wins and 3 claimed Landmarks open Skyline Dominion.']]],
+ ['dominion','Skyline Dominion','Board 4 · Advanced · 48-space Hex Ring',[
+  ['Goal','The highest combined value of match cash, properties and upgrades. Quick 12 rounds, Standard 18, Extended 24.'],
+  ['Your turn','Roll two dice and move clockwise. Passing GO pays 220,000 in match cash. Buy or auction unowned properties, pay rent and make trade offers.'],
+  ['Building','An owned property starts as a Plot and can be upgraded through Low-rise, Mid-rise and High-rise to Skyscraper. District gateways pay 50,000.'],
+  ['Rewards','A qualifying Standard or Extended win pays 7× the usual win rewards in coins and SC.'],
+  ['Unlock next','2 qualifying Dominion wins and one negotiation challenge (trade during a counted match) open Crown Empire.']]],
+ ['empire','Crown Empire','Board 5 · Expert · 32-space Crown Plaza',[
+  ['Goal','The highest combined value of match cash, properties and upgrades. Quick 12 rounds, Standard 20, Extended 28.'],
+  ['Your turn','Roll two dice and move clockwise. Passing START pays 350,000 in match cash. Buy, auction or trade property.'],
+  ['Building','Upgrade owned plots up to a Hotel for higher rent. Taxes and events can change your balance; Civic Review skips your next turn.'],
+  ['Rewards','A qualifying Standard or Extended win pays 10× the usual win rewards in coins and SC.']]]];
+function careerRows(id){const r=CAREER_RULES.find(x=>x[0]===id)||CAREER_RULES[0];let rows=r[3];
+  try{const st=window.SkylineCareer&&SkylineCareer.state();const i=CAREER_RULES.indexOf(r),next=st&&CAREER_RULES[i+1]&&st.find(b=>b.id===CAREER_RULES[i+1][0]);
+    if(next){const prog=next.unlocked?'Unlocked.':'Your progress: '+next.requirements.map(q=>`${q.label} ${Math.min(q.have,q.need)}/${q.need}`).join(' · ');rows=rows.map(x=>x[0]==='Unlock next'?[x[0],x[1]+' '+prog]:x)}}catch(e){}
+  return[r[1],r[2],rows]}
+const TABS=[['standard','Standard match'],['career','Skyline Career'],['duel','Skyline Duel'],['ring','Harbour Ring'],['classic','Online and classic rules'],['coach','Coach and tips']];
+paneLearn=function(T){const tab=TABS.some(t=>t[0]===setup.learnTab)?setup.learnTab:'standard';const cb=CAREER_RULES.some(c=>c[0]===setup.learnBoard)?setup.learnBoard:'origins';const [h,sub,rows]=tab==='career'?careerRows(cb):rulesFor(tab);
   T.innerHTML=`<div class="tv2-hub"><nav class="tv2-nav" aria-label="Rules" role="tablist">${TABS.map(([k,l])=>`<button type="button" role="tab" aria-selected="${k===tab}" class="${k===tab?'on':''}" data-lt="${k}">${l}</button>`).join('')}
       <div class="tv2-sp"></div><button type="button" class="tv2-b g" id="lTut">Replay the tour</button><button type="button" class="tv2-b" id="lTips">Replay tips</button></nav>
-    <section class="tv2-body" role="tabpanel" aria-label="${E(h)}"><div class="tv2-bh"><h2>${E(h)}</h2><span>${E(sub)}</span></div>${rows.map(([b,p])=>`<div class="tv2-sec"><b>${E(b)}</b><p>${E(p)}</p></div>`).join('')}</section></div>`;
+    <section class="tv2-body" role="tabpanel" aria-label="${E(h)}">${tab==='career'?`<div class="tv2-chips" role="group" aria-label="Career boards">${CAREER_RULES.map((c,i)=>`<button type="button" class="${c[0]===cb?'on':''}" aria-pressed="${c[0]===cb}" data-cb="${c[0]}">${i+1}. ${E(c[1])}</button>`).join('')}</div>`:''}<div class="tv2-bh"><h2>${E(h)}</h2><span>${E(sub)}</span></div>${rows.map(([b,p])=>`<div class="tv2-sec"><b>${E(b)}</b><p>${E(p)}</p></div>`).join('')}</section></div>`;
   T.querySelectorAll('[data-lt]').forEach(b=>b.onclick=()=>{tap();setup.learnTab=b.dataset.lt;paneLearn(T)});
+  T.querySelectorAll('[data-cb]').forEach(b=>b.onclick=()=>{tap();setup.learnBoard=b.dataset.cb;paneLearn(T)});
   T.querySelector('#lTut').onclick=()=>{tap();openTutorial(false)};
   T.querySelector('#lTips').onclick=e=>{PREF.coach={};PREF.coachOff=0;PREF.coachReplay=1;try{savePref()}catch(x){}e.target.textContent='Tips are back on';e.target.disabled=true}};
 
@@ -165,6 +203,7 @@ const css=`
 html.light .tv2-nav .tv2-b:not(.g){color:#13284a;border-color:rgba(19,40,74,.25)}
 .tv2-body{min-width:0;padding-left:16px;border-left:1px solid rgba(127,140,170,.25)}
 .tv2-bh{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;padding:4px 0 8px}.tv2-bh h2{margin:0;font:800 20px var(--display,'Outfit',sans-serif)}.tv2-bh span{font:600 11.5px var(--body,'Manrope',sans-serif);opacity:.75}
+.tv2-chips{display:flex;flex-wrap:wrap;gap:6px;padding:2px 0 8px}.tv2-chips button{min-height:36px;padding:0 12px;border-radius:18px;border:1px solid rgba(127,140,170,.35);background:none;color:inherit;font:700 12px var(--display,'Outfit',sans-serif);cursor:pointer}.tv2-chips button.on{background:rgba(242,196,87,.2);border-color:#c9a64e}
 .tv2-sec{display:grid;grid-template-columns:120px minmax(0,1fr);gap:12px;padding:9px 0;border-top:1px solid rgba(127,140,170,.2)}
 .tv2-sec b{font:800 12.5px/1.3 var(--display,'Outfit',sans-serif);color:#c9a64e}.tv2-sec p{margin:0;font:600 12.5px/1.5 var(--body,'Manrope',sans-serif)}
 @media (max-width:560px){.tv2-hub{grid-template-columns:1fr}.tv2-body{padding-left:0;border-left:0}.tv2-sec{grid-template-columns:1fr;gap:2px}}
