@@ -11,9 +11,35 @@ const material=(color,roughness=.74,metalness=0)=>new T.MeshStandardMaterial({co
 const deck=material(0x858477), runway=material(0x4c4d48), white=material(0xe1d7b6);
 const roof=material(0x526050), walls=material(0x696759), rust=material(0x9b6244);
 const bluff=new T.MeshStandardMaterial({vertexColors:true,roughness:1,side:T.DoubleSide});
+bluff.onBeforeCompile=shader=>{
+  shader.vertexShader='varying vec3 coastPoint;\n'+shader.vertexShader.replace(
+    '#include <begin_vertex>',
+    '#include <begin_vertex>\n coastPoint=(modelMatrix*vec4(position,1.0)).xyz;'
+  );
+  shader.fragmentShader=`
+    varying vec3 coastPoint;
+    float landHash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+    float landNoise(vec2 p){
+      vec2 i=floor(p),f=fract(p); f=f*f*(3.0-2.0*f);
+      return mix(mix(landHash(i),landHash(i+vec2(1,0)),f.x),
+                 mix(landHash(i+vec2(0,1)),landHash(i+vec2(1,1)),f.x),f.y);
+    }
+  `+shader.fragmentShader.replace('#include <color_fragment>',`
+    #include <color_fragment>
+    vec2 p=coastPoint.xz;
+    float patches=landNoise(p*.057);
+    float mineral=landNoise(p*vec2(.19,.42));
+    float grains=landNoise(p*.89);
+    float rocky=1.0-smoothstep(12.0,22.0,coastPoint.y);
+    float relief=patches*.28+mineral*.18+grains*.12+.72;
+    vec3 rockTint=mix(vec3(.69,.66,.59),vec3(1.19,1.08,.88),mineral);
+    vec3 grassTint=mix(vec3(.62,.77,.52),vec3(1.03,1.06,.81),patches);
+    diffuseColor.rgb*=relief*mix(grassTint,rockTint,rocky);
+  `);
+};
 const canopy=material(0x203c43,.25,.35), body=material(0xb9bdb1,.4,.32);
 const dark=material(0x394244,.55,.31), hostile=material(0x947056,.58,.21);
-const rescue=material(0x84904b), stripe=material(0xe6b34f);
+const rescue=material(0xb6b8a5), stripe=material(0xe6b34f);
 const plume=new T.MeshBasicMaterial({color:0xffcb83});
 const contact=new T.MeshBasicMaterial({color:0x151b13,transparent:true,opacity:.27,depthWrite:false});
 
@@ -48,7 +74,7 @@ function aircraft(kind){
     if(isPetrel)mesh(jet,sphereGeo,white,side*16,-.7,5,3.2,2.7,10);
   }
   if(enemy){jet.rotation.y=Math.PI;root.scale.setScalar(kind==='kite'?.53:.69);}
-  else root.scale.setScalar(.85);
+  else root.scale.setScalar(.98);
   return root;
 }
 async function loadKestrel(root){
@@ -63,7 +89,7 @@ async function loadKestrel(root){
     const glass=length>-.275&&length<-.098&&span<.046&&height>.014;
     const tail=length>.31&&height>.043;
     const marking=positions.getZ(i)<-.22&&length>.019&&length<.107;
-    tint.setHex(glass?0x284858:tail?0x42474a:marking?0xd4a451:0xb1b5b1);
+    tint.setHex(glass?0x284858:tail?0x42474a:marking?0xffc477:0xc6cbc8);
     tint.multiplyScalar(.94+.05*Math.sin(length*63+span*32));
     colors.push(tint.r,tint.g,tint.b);
   }
@@ -107,13 +133,13 @@ function bank(z,side,port){
 function bankMesh(side,port){
   const xyz=[],rgb=[],indices=[],color=new T.Color(), n=96;
   const heights=[-.65,1.6,9,20,24];
-  const colors=port?[0x646953,0x93917d,0x68675a,0x575a47,0x515843]:[0x718272,0xa5987e,0x9c8b6c,0x70694f,0x576246];
+  const colors=port?[0x646953,0x93917d,0x68675a,0x575a47,0x515843]:[0x718272,0xa5987e,0x9c8b6c,0x70694f,0x46523a];
   const offsets=[9,2,-6,-22,-148];
   for(let i=0;i<=n;i++){
     const z=i*LENGTH/n, edge=bank(z,side,port);
     offsets.forEach((offset,j)=>{
       const x=edge+offset;
-      xyz.push(side?W-x:x,heights[j]+Math.sin(i*2*Math.PI/n*11+j)*j*.68,z);
+      xyz.push(side?W-x:x,heights[j]+Math.sin(i*2*Math.PI/n*11+j)*j*.81+Math.cos(i*2*Math.PI/n*19+j)*j*.44,z);
       color.setHex(colors[j]).multiplyScalar(.92+.09*Math.sin(i*2*Math.PI/n*13+j*3));
       rgb.push(color.r,color.g,color.b);
       if(i<n&&j<offsets.length-1){
@@ -132,7 +158,7 @@ function bankMesh(side,port){
 function field(port){
   const tile=new T.Group(), random=rng(port?7402:2957), tmp=new T.Object3D();
   const forestMat=material(0xffffff), rockMat=material(0xffffff);
-  const forest=new T.InstancedMesh(treeGeo,forestMat,150);
+  const forest=new T.InstancedMesh(treeGeo,forestMat,260);
   const rocks=new T.InstancedMesh(rockGeo,rockMat,120);
   const foam=new T.InstancedMesh(boxGeo,new T.MeshBasicMaterial({color:0xc2bfa2,transparent:true,opacity:.44,depthWrite:false}),180);
   const color=new T.Color();
@@ -141,17 +167,17 @@ function field(port){
     object.setMatrixAt(i,tmp.matrix);
   }
   for(const side of [0,1])tile.add(bankMesh(side,port));
-  for(let i=0;i<180;i++){
+  for(let i=0;i<260;i++){
     const side=i%2,z=random()*LENGTH,b=bank(z,side,port);
     const line=b+4+random()*11;
-    place(foam,i,side?W-line:line,.17,z,1+random()*3,.12,2+random()*13,random()*.7-.35);
+    if(i<180)place(foam,i,side?W-line:line,.17,z,1+random()*3,.12,2+random()*13,random()*.7-.35);
     if(i<120){
       const rock=b-8-random()*10,h=3+random()*8;
       place(rocks,i,side?W-rock:rock,7+random()*5,z,h*1.1,h,h*1.5,random()*7);
       rocks.setColorAt(i,color.setHex([0x8e836c,0xa49982,0x62685d,0x80775f][i%4]));
     }
-    if(i<150){
-      const land=b-24-random()*60,h=6+random()*14;
+    {
+      const land=b-22-random()*65,h=6+random()*15;
       place(forest,i,side?W-land:land,19+h*.47,z,2.4+h*.19,h,2.4+h*.19,random()*7);
       forest.setColorAt(i,color.setHex([0x535f3d,0x465640,0x6a7046,0x394b3e][i%4]));
     }
@@ -192,9 +218,11 @@ function waterMaterial(){
         float a=sin(dot(p,vec2(.047,.031))+time*2.0);
         float b=sin(dot(p,vec2(.125,-.075))-time*2.9+a);
         float c=sin(dot(p,vec2(.23,.095))+time*3.1+b*.5);
-        float spec=pow(max(0.0,a*.48+b*.35+c*.17),7.0);
+        float ripples=sin(dot(p,vec2(.63,-.31))+a*2.7+b+time*3.4);
+        float micro=sin(dot(p,vec2(1.1,.38))+b*2.0);
+        float spec=pow(max(0.0,a*.38+b*.31+c*.18+ripples*.13),5.0);
         vec3 base=mix(vec3(.115,.19,.153),vec3(.11,.145,.135),storm);
-        vec3 col=base+(a*.013+b*.012+c*.004)+spec*vec3(.17,.18,.12);
+        vec3 col=base+(a*.011+b*.018+c*.012+ripples*.007+micro*.004)+spec*vec3(.29,.30,.22);
         gl_FragColor=vec4(col,1.0);
       }
     `
@@ -237,11 +265,14 @@ export function createFlightRenderer(canvas){
         active.set(e,object);scene.add(object);
       }
       object.visible=true;
-      object.position.set(e.x,e.type==='barge'||e.type==='ark'?6:29,e.y);
+      object.position.set(e.x,57,e.y);
     }
   }
   function resize(width,height,dpr){
-    renderer.setPixelRatio(Math.min(1.75,dpr||1));renderer.setSize(width,height,false);
+    if(width<=0||height<=0)return;
+    const maxPixels=3200000;
+    renderer.setPixelRatio(Math.min(3,dpr||1,Math.sqrt(maxPixels/(width*height))));
+    renderer.setSize(width,height,false);
   }
   function draw(run,time,route,selected){
     const offset=(time*65)%LENGTH;
@@ -256,7 +287,7 @@ export function createFlightRenderer(canvas){
     const shipVisible=!run||run.inv<=0||Math.floor(run.inv*16)%2===0;
     for(const [key,model] of Object.entries(craft)){
       model.visible=key===selected&&shipVisible;
-      model.position.set(x,39,z);
+      model.position.set(x,72,z);
       model.userData.jet.rotation.z=T.MathUtils.lerp(model.userData.jet.rotation.z,T.MathUtils.clamp((lastX-x)*.075,-.34,.34),.22);
     }
     shadow.position.set(x+12,.35,z+17);shadow.visible=shipVisible;
