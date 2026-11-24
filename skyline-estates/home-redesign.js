@@ -227,12 +227,35 @@ const css=`
 #title .hd-stage.v2.gm-open .hd-card{visibility:hidden}
 #title .home.hd-dock>.rail .tabs .hd-di{height:calc(var(--hd-dockh) - 4px)!important;min-height:44px!important;max-height:none!important}
 @media (prefers-reduced-motion:reduce){#title .hd-stage.v2 .hd-gm{animation:none}#title .hd-stage.v2 .hd-main{transition:none}}
+
+/* ---------- Daylight home: bright background, light glass cards, dark text (26 Nov 2026) ---------- */
+html.light #title .hd-bg.day .hd-grade,html.light #title .hd-bg.day .hd-glow,html.light #title .hd-bg.day .hd-lights,html.light #title .hd-bg.day .hd-deco{display:none}
+html.light #title .home.hd-on .hd-bg.day{background:#dff0fb}
+html.light #title .home.hd-on .hd-bg.day .hd-photo{filter:none!important;transform:none!important;animation:none!important;background-size:cover!important;background-position:center 62%!important}
+html.light #title .home.hd-on #tbWho{color:#13284a!important;text-shadow:none!important}
+html.light #title .home.hd-on #tbWho *{text-shadow:none!important}
+html.light #title .home.hd-on #tbWho .ri>b small{color:#4a5874!important}
+html.light #title .hd-spot small,html.light #title .hd-spot small.rw{color:#4a5874!important}
+html.light #title .home.hd-on #rprof #tbWho .ri>b,html.light #title .home.hd-on #rprof #tbWho .ri>b *{color:#13284a!important;-webkit-text-fill-color:#13284a!important;text-shadow:none!important}
+html.light #title .home.hd-on #rprof #tbWho .ri>b small{color:#4a5874!important;-webkit-text-fill-color:#4a5874!important}
+html.light #title #hdSpot .tx span,html.light #title #hdSpot .tx span *{color:#4a5874!important;text-shadow:none!important}
+html.light #title #hdSpot .tx b{color:#13284a!important}
+html.light #title .hd-stage .hd-city h1{color:#13284a!important;-webkit-text-fill-color:#13284a;background:none!important;text-shadow:0 1px 0 #ffffffaa!important}
+html.light #title .hd-stage .hd-city i{background:linear-gradient(90deg,#c9a24a,transparent)!important}
+html.light #title .hd-goal,html.light #title .hd-card{background:rgba(255,255,255,.86)!important;border-color:rgba(19,40,74,.14)!important;color:#13284a!important;box-shadow:0 6px 18px rgba(19,40,74,.12)!important;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+html.light #title .hd-goal *,html.light #title .hd-card *{color:inherit;text-shadow:none!important}
+html.light #title .hd-goal small,html.light #title .hd-card small,html.light #title .hd-goal .th,html.light #title .hd-card .th{color:#9a7424!important}
+html.light #title .hd-gmbtn{background:rgba(255,255,255,.9)!important;color:#13284a!important;border-color:rgba(19,40,74,.18)!important;box-shadow:0 4px 14px rgba(19,40,74,.12)!important;text-shadow:none!important}
+html.light #title .hd-gmbtn *{color:inherit}html.light #title .hd-gmbtn svg{color:#13284a;fill:currentColor}
 `;
 const st=document.createElement('style');st.id='hd-style';st.textContent=css;document.head.append(st);
 
 /* ---------- background ---------- */
-function hdPaintBg(B){const key=hdCityKey(),art=key==='skyline'&&hdLagosArt?hdLagosArt:null,photo=art||cityPhoto(setup.city)||cityPhoto(key);B.classList.toggle('art',!!art);
+// Daylight has its own bright daytime skyline (26 Nov 2026); the night photo stays for the dark theme.
+const HD_BG_DAY='art/home-day.svg';
+function hdPaintBg(B){const day=document.documentElement.classList.contains('light'),key=hdCityKey(),art=day?HD_BG_DAY:key==='skyline'&&hdLagosArt?hdLagosArt:null,photo=art||cityPhoto(setup.city)||cityPhoto(key);B.classList.toggle('art',!!art);B.classList.toggle('day',day);
  B.innerHTML=`<i class="hd-photo" style="${photo?`background-image:url(${photo})`:`background:${CITY_DATA[setup.city]?.sky||'#0a1230'}`}"></i><i class="hd-grade"></i><i class="hd-glow"></i><i class="hd-lights"></i><span class="hd-deco d1"></span><span class="hd-deco d2"></span>`}
+if(typeof applyUI==='function'){const _au=applyUI;applyUI=function(){const r=_au.apply(this,arguments);try{const B=document.querySelector('#title .home>.hd-bg');if(B)hdPaintBg(B)}catch(e){}return r}}
 function hdBackground(on){const home=document.querySelector('#title .home');if(!home)return;let B=home.querySelector(':scope>.hd-bg');
  if(!on){if(B)B.remove();return}if(!B){B=document.createElement('div');B.className='hd-bg';B.setAttribute('aria-hidden','true');home.prepend(B)}hdPaintBg(B)}
 
@@ -296,7 +319,7 @@ function hdCityPane(T){const saved=loadSave(),c=CITY_DATA[setup.city],C=countryO
  const goals=(goal?`<button class="hd-goal" id="hdGoal" type="button"><i aria-hidden="true">🎯</i><span><small>Next goal</small>${esc(goal)}</span></button>`:'')+
   (dTxt?`<button class="hd-goal${dOn?' on':''}" id="hdDaily" type="button"><i aria-hidden="true">📅</i><span><small>Daily</small>${esc(dTxt)}</span></button>`:'');
  T.innerHTML=`<div class="hd-stage v2">
-  <div class="hd-city" style="--len:${len}"><small>${esc(C.name)}</small><h1>${esc(name)}</h1>
+  <div class="hd-city" style="--len:${len}">${COUNTRIES.length>1?`<small>${esc(C.name)}</small>`:''}<h1>${esc(name)}</h1>
 </div>
   ${goals?`<div class="hd-goals">${goals}</div>`:''}
   <div class="hd-actions">${main}<button class="hd-gmbtn" id="hdModes" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="hdGM">${I_LAYERS}<span>Game Modes</span></button></div>

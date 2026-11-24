@@ -16,14 +16,17 @@ const GOLD={sun:['#ffb877',1.2],L:[-.55,.45,.4],skyL:'#6f80a8',gnd:'#6a4c34',fog
   sky:'linear-gradient(180deg,#2b3f6e 0%,#7d6f8e 38%,#c77e5c 62%,#f4c08a 100%)'};
 // Per-theme water/sand for Golden Hour; other daytime cities only get the light.
 const GOLD_SURF={beach:{water:'#2a6f92',island:'#dcb882',rim:'#ecd3a4',cloud:'#ffd9b8'}};
-const lookMode=()=>{try{return PREF.ui==='light'?'day':'golden'}catch(e){return 'golden'}};
+// The equipped premium surround (if any). It keeps its own ground, edge and water colours in every light,
+// and full board skins (golden:1) keep Golden Hour light in Daylight too.
+const premSurr=()=>{try{const id=typeof equippedSurround==='function'&&equippedSurround();return id?SURROUND_PREMIUM.find(s=>s.id===id)||null:null}catch(e){return null}};
+const lookMode=()=>{try{const P=premSurr();if(P&&P.golden)return 'golden';return PREF.ui==='light'?'day':'golden'}catch(e){return 'golden'}};
 let applied=null,goldNow=false;
 // Warm lit windows at Golden Hour on the shared building materials (instant, no geometry change).
 function litWindows(){try{if(!S3)return;const F=FM();F.lit.c=hex(goldNow?'#ffcf7a':'#f2d9a0');F.lit.em=goldNow?.55:.18;F.win.c=hex(goldNow?'#1f3a45':'#173a40');F.win.spec=goldNow?.95:.8}catch(e){}}
 // Golden Hour grade for the painted centre of the board: calmer, warmer greens and a deeper lagoon.
 // Painted after the original board, over the inner square only, so tiles, names and prices are untouched.
 const GRADE={beach:1};
-{const _db=drawBoard;drawBoard=function(ctx){const r=_db.apply(this,arguments);try{if(goldNow&&GRADE[surfKey(CUR_THEME)]){const S=ctx.canvas.width/1100;ctx.save();ctx.setTransform(S,0,0,S,0,0);
+{const _db=drawBoard;drawBoard=function(ctx){const r=_db.apply(this,arguments);try{if(goldNow&&GRADE[surfKey(CUR_THEME)]&&!(typeof boardSkin==='function'&&boardSkin())){const S=ctx.canvas.width/1100;ctx.save();ctx.setTransform(S,0,0,S,0,0);
   ctx.beginPath();ctx.rect(252,252,596,596);ctx.clip();
   ctx.globalCompositeOperation='saturation';ctx.globalAlpha=.28;ctx.fillStyle='#808080';ctx.fillRect(252,252,596,596);
   ctx.globalCompositeOperation='multiply';ctx.globalAlpha=.32;ctx.fillStyle='#f0c79a';ctx.fillRect(252,252,596,596);
@@ -36,10 +39,10 @@ function goldenFor(key){const T=THEMES[key]||THEMES.beach;return !T.night&&lookM
 {const _at=applyTheme;applyTheme=function(k){const r=_at.apply(this,arguments);try{
   const key=CUR_THEME,gold=goldenFor(key);
   if(gold&&S3){env.sun=hex(GOLD.sun[0]).map(v=>v*GOLD.sun[1]);env.L=norm(GOLD.L);env.sky=hex(GOLD.skyL);env.gnd=hex(GOLD.gnd);env.fogC=hex(GOLD.fogC);env.fog=GOLD.fog;
-    const s=GOLD_SURF[surfKey(key)];if(s){S3.waterMat.c=hex(s.water);S3.islandMat.c=hex(s.island);S3.rimMat.c=hex(s.rim);if(S3.M&&S3.M.cloud)S3.M.cloud.c=hex(s.cloud)}}
+    const s=premSurr()?null:GOLD_SURF[surfKey(key)];if(s){S3.waterMat.c=hex(s.water);S3.islandMat.c=hex(s.island);S3.rimMat.c=hex(s.rim);if(S3.M&&S3.M.cloud)S3.M.cloud.c=hex(s.cloud)}}
   if(gold)document.body.style.background=GOLD.sky;
   document.documentElement.dataset.boardLight=gold?'golden':'day';
-  const now=(gold?'g':'d')+key;if(applied!==now){applied=now;goldNow=gold;litWindows();refreshShadows();
+  const P=premSurr(),now=(gold?'g':'d')+key+(P?'|'+P.id:'');if(applied!==now){applied=now;goldNow=gold;litWindows();refreshShadows();
     // Repaint the board texture so the park/lake grade matches the light (only when the mode actually changes).
     if(S3&&S3.boardCanvas){drawBoard(S3.boardCanvas.getContext('2d'));texUpdate(S3.boardTex)}}
  }catch(e){console.warn('Living Board look:',e)}return r}}

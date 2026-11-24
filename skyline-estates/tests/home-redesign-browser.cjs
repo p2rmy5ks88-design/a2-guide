@@ -16,12 +16,12 @@ const types={'.html':'text/html','.js':'text/javascript','.jpg':'image/jpeg','.p
 
  let {ctx,page}=await open({width:1920,height:1080});
  const st=await page.evaluate(()=>({name:document.querySelector('#tbWho .ri b')?.childNodes[0]?.textContent.trim(),lvl:document.querySelector('#tbWho .ri b small')?.textContent,want:`Level ${lvlOf(PREF.xp)}`,coins:document.querySelector('#tbCoins')?.textContent.replace(/\D/g,''),pc:String(Math.round(PREF.coins)),leagueShown:!!document.querySelector('#tbLeague')?.offsetParent,
-  city:document.querySelector('.hd-city h1')?.textContent,eyebrow:document.querySelector('.hd-city small')?.textContent,countryWant:countryOf(setup.city).name,cityWant:CITY_DATA[setup.city].name,main:document.querySelector('.hd-main b')?.textContent,saved:!!loadSave(),
+  city:document.querySelector('.hd-city h1')?.textContent,eyebrow:document.querySelector('.hd-city small')?.textContent,countryWant:countryOf(setup.city).name,countryN:COUNTRIES.length,cityWant:CITY_DATA[setup.city].name,main:document.querySelector('.hd-main b')?.textContent,saved:!!loadSave(),
   season:document.querySelector('#qSeason b')?.textContent,seasonWant:seasonName(season().n),spot:!!document.querySelector('#hdSpot'),spotWant:!!spotNow(),cards:document.querySelectorAll('.hd-card').length,awardsOnHome:!!document.querySelector('#hdAwards'),gmHidden:document.querySelector('#hdGM')?.hidden,
   dock:[...document.querySelectorAll('.hd-di')].map(b=>b.textContent.trim()),on:document.querySelector('.hd-di.on')?.textContent.trim(),rail:getComputedStyle(document.querySelector('#title .rail')).position,gems:/gem|💎/i.test(document.querySelector('#rprof').innerHTML)}));
  check('header shows the saved player name and level (rank lives in the profile)',st.name==='PowerLi'&&st.lvl===st.want,st);
  check('coin pill shows the real balance, league pill stays off the City screen (no invented currency)',st.coins===st.pc&&!st.leagueShown&&!st.gems,st);
- check('city block comes from game state: country above the city name',st.city===st.cityWant&&st.eyebrow===st.countryWant,st);
+ check('city block comes from game state; no country line while there is one board',st.city===st.cityWant&&(st.countryN>1?st.eyebrow===st.countryWant:st.eyebrow==null),st);
  check('one gold main action: Play Solo, or Continue Match when a match is saved',st.main===(st.saved?'Continue Match':'Play Solo'),st);
  check('one card in the lower right: the live Spotlight, otherwise the season',st.cards===1&&st.spot===st.spotWant&&(st.spot||st.season===st.seasonWant)&&!st.awardsOnHome,st);
  check('Game Modes panel starts closed',st.gmHidden===true,st);
