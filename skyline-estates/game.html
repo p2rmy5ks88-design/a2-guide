@@ -2057,7 +2057,7 @@ html.light .tbtn.ghost{background:rgba(19,40,74,.06);border-color:rgba(19,40,74,
 .pf3quickcard button:hover,.pf3more:hover{filter:brightness(1.08)}.pf3quickcard button:focus-visible,.pf3more:focus-visible{outline:3px solid #fff2bf;outline-offset:2px}
 .pf3more{flex:none;align-self:stretch;padding:10px;background:#172d3e;color:#f4d58a;border-color:#aa8b54}
 .tchip .hint{font-style:normal;line-height:1.35;white-space:normal;overflow-wrap:anywhere}
-.tchip .hint.bad{color:#ffe1d9;background:#672b29;border:1px solid #ce7566}.mtxt.buywhy{font-size:12.5px;line-height:1.35;margin-bottom:6px;padding:6px 8px;border-radius:9px;background:#f2c45722;border:1px solid #f2c45755}.tchip .hint.good{color:#d9ffea;background:#1d5b42;border:1px solid #55b88a}
+.tchip .hint.bad{color:#ffe1d9;background:#672b29;border:1px solid #ce7566}.ov.quiet{opacity:0;pointer-events:none;transition:opacity .25s}.mtxt.buywhy{font-size:12.5px;line-height:1.35;margin-bottom:6px;padding:6px 8px;border-radius:9px;background:#f2c45722;border:1px solid #f2c45755}.tchip .hint.good{color:#d9ffea;background:#1d5b42;border:1px solid #55b88a}
 /* Opaque, high contrast Daylight notices over bright board scenery */
 html.light #ui #prompt,html.light #ui #log,html.light #ui #round,html.light #ui #radio,html.light #ui #ev2chip{background:#10283b!important;color:#f9f6ee!important;border:1px solid #e5c47d!important;box-shadow:0 5px 16px #07152380!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
 html.light #ui #prompt .sub,html.light #ui #prompt small,html.light #ui #log small{color:#d1e1e8!important}
@@ -2808,18 +2808,6 @@ async function drawCard(p,deck,d){
       onMount:pn=>setTimeout(()=>pn.querySelector('.gflip').classList.add('go'),250)})}
   if(!card.goojf)await card.f(p,d);
 }
-async function offerBuy(p,i){
-  const s=SQ[i];
-  if(p.ai){await sleep(500);if(aiWantsBuy(p,i))buyProp(p,i,s.p);else if(G.set.auction!==false){toast(`${p.name} passes. Auction!`);await auction(i)}else toast(`${p.name} passes`);return}
-  while(true){
-    const can=p.cash>=s.p,why=buyWhy(p,i);
-    const k=await modal({html:`<div class="mh">For sale</div><div class="row2"><div>${deedHTML(i)}</div><div class="slotbar sidecol">${why?`<div class="mtxt buywhy"><b>Why it matters:</b> ${why}</div>`:''}<div class="mtxt">You have <b>${fmt(p.cash)}</b>.<br>${can?'Buy it now, or send it to auction where everyone can bid.':'You can’t afford it. Raise cash from your properties, or put it up for auction.'}</div></div></div>`,
-      cls:'wide',tdef:'auction',btns:[{k:'auction',label:G.set.auction===false?'Don’t buy':'Auction'},...(can?[]:[{k:'raise',label:'Raise cash'}]),{k:'buy',label:`Buy for ${fmt(s.p)}`,primary:true,disabled:!can}]});
-    if(k==='raise'){await openAssets(p);continue}
-    if(k==='buy'){buyProp(p,i,s.p);return}
-    if(G.set.auction!==false)await auction(i);return;
-  }
-}
 /* "Why it matters" on the buy screen (phase 3): set progress for streets, and whether buying blocks a rival. */
 function buyWhy(p,i){try{const sq=SQ[i];if(sq.t==='rail'){const n=RAILS.filter(j=>G.own[j].o===p.id).length;return `You own ${n} of ${RAILS.length} transit lines. Each one you add raises the fare on all of them.`}
   if(sq.t==='util'){const n=UTILS.filter(j=>G.own[j].o===p.id).length;return n?'Owning both utilities multiplies what visitors pay.':'Utilities charge by the dice roll; owning both pays more.'}
@@ -2828,26 +2816,37 @@ function buyWhy(p,i){try{const sq=SQ[i];if(sq.t==='rail'){const n=RAILS.filter(j
   if(mine===g.length-1)return `This completes your ${name} set: rent doubles and you can start building.`;
   if(others.length)return `${name} is split between players, so nobody can build there yet.`;
   return mine?`You own ${mine} of ${g.length} in ${name}. A full set lets you build.`:`Own all ${g.length} streets of ${name} to double the rent and build.`}catch(e){return ''}}
+async function offerBuy(p,i){
+  const s=SQ[i];
+  if(p.ai){await sleep(500);if(aiWantsBuy(p,i))buyProp(p,i,s.p);else if(G.set.auction!==false){toast(`${p.name} passes. Auction!`);await auction(i)}else toast(`${p.name} passes`);return}
+  while(true){
+    const can=p.cash>=s.p,why=typeof buyWhy==='function'?buyWhy(p,i):'';
+    const k=await modal({html:`<div class="mh">For sale</div><div class="row2"><div>${deedHTML(i)}</div><div class="slotbar sidecol">${why?`<div class="mtxt buywhy"><b>Why it matters:</b> ${why}</div>`:''}<div class="mtxt">You have <b>${fmt(p.cash)}</b>.<br>${can?'Buy it now, or send it to auction where everyone can bid.':'You can’t afford it. Raise cash from your properties, or put it up for auction.'}</div></div></div>`,
+      cls:'wide',tdef:'auction',btns:[{k:'auction',label:G.set.auction===false?'Don’t buy':'Auction'},...(can?[]:[{k:'raise',label:'Raise cash'}]),{k:'buy',label:`Buy for ${fmt(s.p)}`,primary:true,disabled:!can}]});
+    if(k==='raise'){await openAssets(p);continue}
+    if(k==='buy'){buyProp(p,i,s.p);return}
+    if(G.set.auction!==false)await auction(i);return;
+  }
+}
 function buyProp(p,i,price){p.cash-=price;float(p.id,-price);G.own[i].o=p.id;updateCell(i);sfx('buy');log(`${p.name} bought ${SQ[i].n} for ${fmt(price)}`);toast(`${p.name} bought ${SQ[i].n}`);renderRoster()}
 
 /* ================= AUCTION ================= */
 async function auction(i){
   const s=SQ[i],n=G.players.length,order=[];for(let k=0;k<n;k++){const q=P((G.turn+k)%n);if(!q.bankrupt)order.push(q.id)}
   const active=new Set(order);let bid=0,leader=-1,idx=0,ui=null,guardN=0;
-  if(!FAST)ui=auctionUI(i,order);const humanIn=()=>[...active].some(id=>!P(id).ai);
+  if(!FAST)ui=auctionUI(i,order);
   const upd=m=>ui&&ui.update(bid,leader,active,m);upd('Bidding opens at '+fmt(10));
   while(active.size>0&&guardN++<600){
     if(active.size===1&&leader>=0&&active.has(leader))break;
     const pid=order[idx%order.length];idx++;
     if(!active.has(pid)||pid===leader)continue;
-    if(ui&&quickTurns()&&!humanIn()){ui.close();ui=null}/* Quick turns: no need to watch the computer players finish */
     const q=P(pid);
     if(q.cash<bid+10){active.delete(pid);upd(`${q.name} can’t go higher`);continue}
     let amt;
-    if(q.ai){if(ui){ui.turn(q,null);await sleep(550)}amt=aiBid(q,i,bid)}else if(isRemote(q)){if(ui)ui.turn(q,null);const a=await askRemote(q,'bid',{i,bid,leader});amt=a&&+a.v<=q.cash?+a.v:0}else amt=await ui.turn(q,bid);
+    if(q.ai){if(ui)ui.turn(q,null);await sleep(550);amt=aiBid(q,i,bid)}else if(isRemote(q)){if(ui)ui.turn(q,null);const a=await askRemote(q,'bid',{i,bid,leader});amt=a&&+a.v<=q.cash?+a.v:0}else amt=await ui.turn(q,bid);
     if(amt>bid){bid=amt;leader=pid;sfx('tap');upd(`${q.name} bids ${fmt(bid)}`)}else{active.delete(pid);upd(`${q.name} drops out`)}
   }
-  if(ui){await sleep(700);ui.close()}
+  await sleep(700);if(ui)ui.close();
   if(leader>=0){const w=P(leader);w.cash-=bid;float(w.id,-bid);G.own[i].o=w.id;updateCell(i);onAuctionWin(w,i,bid);sfx('buy');log(`${w.name} won ${s.n} at auction for ${fmt(bid)}`);toast(`${w.name} wins ${s.n} for ${fmt(bid)}`)}
   else{log(`No bids for ${s.n}`);toast('No bids. It stays with the bank.')}
   renderRoster();
@@ -2858,7 +2857,9 @@ function auctionUI(i,order){
   ov.append(pn);$('#modals').append(ov);
   const bar=pn.querySelector('.abar');
   return{
-    update(bid,leader,active,m){pn.querySelector('.now').textContent=bid?fmt(bid):'—';pn.querySelector('.who-lead').textContent=leader>=0?'Leader: '+P(leader).name:'No bids yet';
+    update(bid,leader,active,m){/* Quick turns: once no human is still bidding, step aside and let the computer players finish */
+      if(quickTurns()&&!ov.classList.contains('quiet')&&![...active].some(id=>!P(id).ai)){ov.classList.add('quiet');toast('Auction: the computer players are finishing the bidding…')}
+      pn.querySelector('.now').textContent=bid?fmt(bid):'—';pn.querySelector('.who-lead').textContent=leader>=0?'Leader: '+P(leader).name:'No bids yet';
       pn.querySelectorAll('.bidders span').forEach(sp=>sp.classList.toggle('out',!active.has(+sp.dataset.id)));pn.querySelector('.msg').textContent=m||''},
     turn(q,bid){bar.innerHTML='';
       if(bid===null){bar.innerHTML=`<div class="mtxt muted">${esc(q.name)} is deciding…</div>`;return}
