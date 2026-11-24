@@ -56,16 +56,72 @@ const petrelOpen=()=>[0,1].every(i=>getRecord(i,false).marks[0]);
 const cannonLevels=[{damage:1,interval:.145},{damage:1.3,interval:.132},{damage:1.6,interval:.119},{damage:1.9,interval:.106}];
 const objectives=['Recover all 3 crews','Destroy all 3 marked targets','Clear without hull damage'];
 let mode='menu', run, pointer=null, keys=new Set(), audio, startTime=0, clock=0;
-function tone(freq,length=.1,type='sine',volume=.047){
-  if(!audio||!save.sound||audio.state!=='running')return;
-  const osc=audio.createOscillator(), gain=audio.createGain(), now=audio.currentTime;
-  osc.type=type;osc.frequency.setValueAtTime(freq,now);
-  osc.frequency.exponentialRampToValueAtTime(freq*.55,now+length);
-  gain.gain.setValueAtTime(volume,now);gain.gain.exponentialRampToValueAtTime(.001,now+length);
-  osc.connect(gain);gain.connect(audio.destination);osc.start();osc.stop(now+length);
+const effects={
+  launch:[[150,360,.24,'triangle',.11],[420,710,.18,'sine',.065,.13]],
+  cannon:[[190,85,.065,'triangle',.07],[950,320,.046,'noise',.11]],
+  enemy:[[580,165,.13,'sawtooth',.034],[720,290,.08,'noise',.058]],
+  heavy:[[210,54,.30,'triangle',.11],[700,145,.24,'noise',.17]],
+  hit:[[157,48,.21,'triangle',.19],[1500,240,.12,'noise',.2]],
+  kill:[[140,52,.16,'triangle',.105],[980,170,.15,'noise',.14]],
+  bossDown:[[84,30,.63,'triangle',.24],[900,85,.59,'noise',.24],[570,140,.34,'noise',.11,.16]],
+  rescue:[[494,502,.14,'sine',.13],[659,670,.18,'triangle',.09,.09],[880,890,.23,'sine',.105,.18]],
+  alloy:[[1150,660,.055,'sine',.06]],
+  ready:[[330,360,.11,'triangle',.11],[660,720,.16,'sine',.11,.105]],
+  coil:[[140,41,.63,'sine',.24],[1750,110,.48,'noise',.23],[540,116,.27,'triangle',.12,.04]],
+  boss:[[98,102,.46,'triangle',.16],[145,140,.46,'triangle',.11,.29]],
+  win:[[392,398,.22,'triangle',.11],[494,500,.24,'triangle',.1,.12],[659,666,.54,'sine',.13,.25]],
+  loss:[[262,175,.35,'triangle',.11],[175,88,.43,'sine',.1,.2]]
+};
+let audioBus, noiseBuffer;
+const lastEffect=new Map();
+function effect(name,gap=0){
+  if(!audio||!audioBus||!save.sound||audio.state!=='running')return;
+  const now=audio.currentTime;
+  if(now-(lastEffect.get(name)??-Infinity)<gap)return;
+  lastEffect.set(name,now);
+  for(const [from,to,length,type,volume,delay=0] of effects[name]){
+    const at=now+delay,gain=audio.createGain();
+    let source;
+    if(type==='noise'){
+      source=audio.createBufferSource();source.buffer=noiseBuffer;
+      const filter=audio.createBiquadFilter();filter.type='lowpass';filter.Q.value=.7;
+      filter.frequency.setValueAtTime(from,at);
+      filter.frequency.exponentialRampToValueAtTime(to,at+length);
+      source.connect(filter);filter.connect(gain);
+    }else{
+      source=audio.createOscillator();source.type=type;
+      source.frequency.setValueAtTime(from,at);
+      source.frequency.exponentialRampToValueAtTime(to,at+length);
+      source.connect(gain);
+    }
+    gain.gain.setValueAtTime(.001,at);
+    gain.gain.linearRampToValueAtTime(volume,at+.008);
+    gain.gain.exponentialRampToValueAtTime(.001,at+length);
+    gain.connect(audioBus);source.start(at);source.stop(at+length);
+  }
 }
 function initAudio(){
-  try{const Audio=window.AudioContext||window.webkitAudioContext;if(Audio){audio ||= new Audio();audio.resume().catch(()=>{});}}catch{}
+  if(!save.sound)return;
+  try{
+    const Audio=window.AudioContext||window.webkitAudioContext;
+    if(!Audio)return;
+    if(!audio){
+      audio=new Audio();
+      noiseBuffer=audio.createBuffer(1,audio.sampleRate,audio.sampleRate);
+      const data=noiseBuffer.getChannelData(0);
+      for(let i=0;i<data.length;i++)data[i]=Math.random()*2-1;
+      audioBus=audio.createGain();audioBus.gain.value=.62;
+      const compressor=audio.createDynamicsCompressor();
+      audioBus.connect(compressor);compressor.connect(audio.destination);
+    }
+    audio.resume().catch(()=>{});
+  }catch{}
+}
+function suspendAudio(){
+  if(audio)audio.suspend().catch(()=>{});
+}
+function resumeFlight(){
+  initAudio();mode='play';ui.overlay.hidden=true;ui.pause.focus();
 }
 function resize(){
   const r=ui.field.getBoundingClientRect(), dpr=Math.min(3,devicePixelRatio||1);
@@ -89,7 +145,7 @@ function hangar(){
       const locked=i===1&&!getRecord(0,false).clear;
       const count=getRecord(i,false).marks.filter(Boolean).length;
       return [route.name+' · '+(locked?'Clear Glasswater to unlock':count+'/3 Normal objectives'),()=>{routeIndex=i;storm=false;loadout();},locked];
-    }),['Hangar · '+save.alloy+' alloy',upgrades],['Sound '+(save.sound?'on':'off'),()=>{save.sound=!save.sound;persist();initAudio();hangar();}]],
+    }),['Hangar · '+save.alloy+' alloy',upgrades],['Sound '+(save.sound?'on':'off'),()=>{save.sound=!save.sound;persist();if(save.sound)initAudio();else suspendAudio();hangar();}]],
     'Drag to steer, or use WASD / arrows. Weapons fire automatically. Tap Stormcoil or press Space when charged.');
 }
 function loadout(){
@@ -123,17 +179,17 @@ function launch(){
   run={t:0,x:210,y:625,hp:max,max,charge:save.module==='surge'?40:20,score:0,alloy:0,rescued:0,marked:0,damage:0,
     cannon:cannonLevels[save.upgrades.cannon]||cannonLevels[0],shots:[],threats:[],enemies:[],pods:[],sparks:[],loot:[],fire:0,wave:0,inv:0,flash:0,settled:false,
     route:routes[routeIndex],hard:storm,toast:routes[routeIndex].name.toUpperCase(),banner:2};
-  updateHud();
+  updateHud();effect('launch');
 }
 function pause(){
   if(mode==='play'){
-    mode='pause';pointer=null;keys.clear();
-    panel('FLIGHT SUSPENDED','PAUSED',run.route.name,[['Resume',()=>{mode='play';ui.overlay.hidden=true;ui.pause.focus();}],['Abandon mission',confirmAbandon]]);
+    mode='pause';pointer=null;keys.clear();suspendAudio();
+    panel('FLIGHT SUSPENDED','PAUSED',run.route.name,[['Resume',resumeFlight],['Abandon mission',confirmAbandon]]);
   }
 }
 function confirmAbandon(){
   panel('FLIGHT SUSPENDED','ABANDON FLIGHT?','Collected alloy from this flight will be left behind.',
-    [['Keep flying',()=>{mode='play';ui.overlay.hidden=true;ui.pause.focus();}],['Abandon and return to map',hangar]]);
+    [['Keep flying',resumeFlight],['Abandon and return to map',hangar]]);
 }
 function end(win){
   if(run.settled)return;
@@ -152,7 +208,7 @@ function end(win){
     '<br><br>'+objectives.map((label,i)=>(earned[i]?'★ ':completed[i]?'✓ ':'○ ')+label).join('<br>'),
     [['Retry',launch],['Open hangar',upgrades],['Route map',hangar]],
     win&&routeIndex===0?'Breaker’s Reach is available on the route map.':'');
-  tone(win?650:150,.65,'triangle');
+  effect(win?'win':'loss');
 }
 function updateHud(){
   ui.hull.textContent=run.hp+' / '+run.max;ui.score.textContent=run.score.toLocaleString();
@@ -172,7 +228,7 @@ function activate(){
     burst(enemy.x,enemy.y,'#ecfff7',9);
   }
   announce('STORMCOIL DISCHARGED');
-  updateHud();tone(520,.55,'triangle',.13);
+  updateHud();effect('coil');
 }
 ui.pause.onclick=pause;ui.coil.onclick=activate;
 window.addEventListener('keydown',e=>{
@@ -226,9 +282,10 @@ function burst(x,y,color,count){
 }
 function hit(){
   if(run.inv>0)return;
-  run.hp--;run.damage++;run.inv=.95;burst(run.x,run.y,'#ffb18e',15);tone(120,.23,'triangle',.10);
+  run.hp--;run.damage++;run.inv=.95;burst(run.x,run.y,'#ffb18e',15);effect('hit');
 }
 function shoot(e){
+  effect(e.type==='ark'||e.type==='barge'?'heavy':'enemy',.16);
   const angle=Math.atan2(run.y-e.y,run.x-e.x);
   const fans=e.type==='ark'
     ? (routeIndex===1?[-.82,-.51,-.22,.22,.51,.82]:[-.65,-.33,0,.33,.65])
@@ -236,7 +293,7 @@ function shoot(e){
   for(const spread of fans){const a=angle+spread,s=e.type==='ark'?178:136;run.threats.push({x:e.x,y:e.y+12,vx:Math.cos(a)*s,vy:Math.sin(a)*s});}
 }
 function step(dt){
-  const g=run;
+  const g=run, wasCharged=g.charge>=100;
   g.t+=dt;g.banner-=dt;g.fire-=dt;g.inv-=dt;g.flash-=dt;
   
   const x=Number(keys.has('d')||keys.has('arrowright'))-Number(keys.has('a')||keys.has('arrowleft'));
@@ -248,6 +305,7 @@ function step(dt){
       g.shots.push({x:g.x+side*9,y:g.y-17,vx:0});
 
     }
+    effect('cannon',.095);
     g.fire=g.cannon.interval;
   }
   while(g.wave<g.route.waves.length&&g.t>=g.route.waves[g.wave][0]){
@@ -257,7 +315,7 @@ function step(dt){
       if(type==='barge'&&(routeIndex===0?time<=35:time<38)&&i===0)g.enemies.at(-1).marked=true;
     });
     if(pod!==undefined){g.pods.push({x:g.hard?W-pod:pod,y:-25,hold:0});announce('RESCUE POD INBOUND');}
-    if(type==='ark'){announce(g.route.boss.toUpperCase()+' INBOUND');tone(192,.55,'triangle',.11);}
+    if(type==='ark'){announce(g.route.boss.toUpperCase()+' INBOUND');effect('boss');}
   }
   for(const e of g.enemies){
     if(e.hp<=0)continue;
@@ -279,7 +337,7 @@ function step(dt){
       if(e.marked)g.marked++;
       if(!boss&&g.flash<=0)g.charge=Math.min(100,g.charge+(e.marked?10:4));
       if(!boss)g.loot.push({x:e.x,y:e.y,value:e.type==='barge'?2:1});
-      burst(e.x,e.y,'#ffc16b',boss?85:18);tone(boss?120:250,.16,'triangle',.035);
+      burst(e.x,e.y,'#ffc16b',boss?85:18);effect(boss?'bossDown':'kill',.065);
       win ||= boss;return false;
     }
     return e.y<H+100;
@@ -291,20 +349,21 @@ function step(dt){
     p.hold=near(g,p,rescueRadius)?p.hold+dt:Math.max(0,p.hold-dt*.65/.4);
     if(p.hold<.65)return p.y<H+25;
     g.rescued++;g.score+=360;g.charge=Math.min(100,g.charge+30);
-    announce('CREW RESCUED');tone(940,.22,'sine',.10);burst(p.x,p.y,'#a9ffe6',18);
+    announce('CREW RESCUED');effect('rescue');burst(p.x,p.y,'#a9ffe6',18);
     return false;
   });
   const attraction=50*(1+save.upgrades.salvage*.15)*(save.module==='lens'?1.25:1);
   g.loot=g.loot.filter(item=>{
     item.y+=48*dt;
     const distance=Math.hypot(g.x-item.x,g.y-item.y);
-    if(distance<14){g.alloy+=item.value;return false;}
+    if(distance<14){g.alloy+=item.value;effect('alloy',.11);return false;}
     if(distance<attraction){item.x+=(g.x-item.x)*dt*10;item.y+=(g.y-item.y)*dt*10;}
     return item.y<H+20;
   });
   g.shots=g.shots.filter(s=>!s.dead&&s.y>-25&&s.x>-25&&s.x<W+25);
   g.sparks=g.sparks.filter(p=>(p.life-=dt)>0);
   for(const p of g.sparks){p.x+=p.vx*dt;p.y+=p.vy*dt;}
+  if(!wasCharged&&g.charge>=100)effect('ready');
   updateHud();
   if(g.hp<=0)end(false);else if(win)end(true);
 }
