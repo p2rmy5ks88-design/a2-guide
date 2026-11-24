@@ -159,6 +159,7 @@ jobs:
           test -d "$PRODUCT"
           test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$PRODUCT/Info.plist")" = 'com.kenstylez.skylineestates'
           test -f "$PRODUCT/GoogleService-Info.plist"
+          test -f "$PRODUCT/PrivacyInfo.xcprivacy"
           test "$(/usr/libexec/PlistBuddy -c 'Print :BUNDLE_ID' "$PRODUCT/GoogleService-Info.plist")" = 'com.kenstylez.skylineestates'
           test "$(/usr/libexec/PlistBuddy -c 'Print :GOOGLE_APP_ID' "$PRODUCT/GoogleService-Info.plist")" = '1:668368365590:ios:03e33bfa0fd85930a32d37'
           test "$(/usr/libexec/PlistBuddy -c 'Print :com.apple.developer.applesignin:0' App/App.entitlements)" = 'Default'

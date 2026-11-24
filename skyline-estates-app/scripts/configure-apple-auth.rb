@@ -21,6 +21,10 @@ caps['com.apple.SignInWithApple'] = {'enabled' => 1}
   source_ref = group.files.find { |f| f.path == name } || group.new_file(name)
   target.source_build_phase.add_file_reference(source_ref, true)
 end
+# App privacy manifest (no tracking; account ID, email and game progress for app functionality only).
+FileUtils.cp('native/PrivacyInfo.xcprivacy', 'ios/App/App/PrivacyInfo.xcprivacy')
+privacy_ref = group.files.find { |f| f.path == 'PrivacyInfo.xcprivacy' } || group.new_file('PrivacyInfo.xcprivacy')
+target.resources_build_phase.add_file_reference(privacy_ref, true)
 target.build_configurations.each { |c| c.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0' }
 storyboard = 'ios/App/App/Base.lproj/Main.storyboard'
 text = File.read(storyboard)
