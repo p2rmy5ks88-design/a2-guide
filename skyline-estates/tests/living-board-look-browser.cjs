@@ -21,7 +21,7 @@ let n=0;const ok=m=>{n++;console.log('PASS',m)};
   await p.goto(`http://127.0.0.1:${server.address().port}/skyline-estates/index.html`);
   await p.locator('#boot').waitFor({state:'detached',timeout:60000});
   assert.equal(await p.evaluate(()=>typeof window.SkylineBoardLook),'object','look module loaded');
-  const setup=await p.evaluate(()=>{FAST=true;GEN++;newGame({lc:true,cash:1600,set:{city:'lagos',mode:'timed',rounds:30,championship:1,ai:'normal'},players:['QA','Kofi','Mei','Lucas'].map((x,k)=>({name:x,tok:TOKENS[k],col:PCOL[k],ai:k>0}))});
+  const setup=await p.evaluate(()=>{FAST=true;GEN++;newGame({lc:true,cash:1600,set:{city:'skyline',mode:'timed',rounds:30,championship:1,ai:'normal'},players:['QA','Kofi','Mei','Lucas'].map((x,k)=>({name:x,tok:TOKENS[k],col:PCOL[k],ai:k>0}))});
     const gs=Object.keys(GROUPS);gs.forEach((g,k)=>GROUPS[g].forEach(i=>G.own[i]={o:k%4,h:[1,2,3,4,0,1,2,3][k],m:false}));G.own[GROUPS[gs[4]][0]].m=true;
     FAST=false;document.querySelector('#title').hidden=true;document.querySelector('#ui').hidden=false;buildBoard();for(let i=0;i<40;i++)updateCell(i);renderRoster();camOverview(0,0);
     return JSON.stringify({own:G.own,players:G.players.map(q=>[q.cash,q.pos]),round:G.round})});
