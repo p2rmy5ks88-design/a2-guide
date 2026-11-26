@@ -49,7 +49,7 @@ async function start(){try{await libs();const w=wallet(),status=w.status();if(!s
   pn.addEventListener('click',e=>{const c=e.target.closest('.cfe-chip');if(!c)return;const g=c.dataset.g;sel[g]=g==='mode'||g==='length'?c.dataset.v:Number(c.dataset.v);try{sfx('tap')}catch{}paint()});paint()}});
  if(k!=='go')return;const o=entryOptions.sel||sel;
  if(!o.level){location.href='./city-forge.html?practice=1&mode='+o.mode+'&count='+(o.mode==='pass'?o.humans:o.ai)+'&length='+o.length;return}
- const id='forge-'+crypto.randomUUID(),seed=crypto.getRandomValues(new Uint32Array(1))[0];const r=await guarded(()=>wallet().enter({id,seed,length:o.length,level:o.level,mode:o.mode,ai:o.ai,humans:o.humans,names:[typeof myName==='function'?myName()||'You':'You']}));if(!r)return;if(!r.ok){toast(r.error);return}location.href='./city-forge.html?entry='+encodeURIComponent(r.receipt.id);
+ const id='forge-'+crypto.randomUUID(),seed=crypto.getRandomValues(new Uint32Array(1))[0];const r=await guarded(()=>wallet().enter({id,seed,features:2,length:o.length,level:o.level,mode:o.mode,ai:o.ai,humans:o.humans,names:[typeof myName==='function'?myName()||'You':'You']}));if(!r)return;if(!r.ok){toast(r.error);return}location.href='./city-forge.html?entry='+encodeURIComponent(r.receipt.id);
  }catch(e){toast(e.message||'City Forge is unavailable.')}}
 window.SkylineForgeHome={start,settle};
 
