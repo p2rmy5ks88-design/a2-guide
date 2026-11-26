@@ -4,7 +4,7 @@ const PALETTES={
  classic:{night:'#2b3f6e',day:'#8fd0f7',sea:'#2aa3d6',island:'#ecd49b',frame:'#5a4a2c',rim:'#c9a24a',cell:'#f3e7c6',ink:'#1b150c',park:'#86cc5c',park2:'#6dbb4a',road:'#5f646b',lane:'#f4f0e2',quay:'#d6ad58',pier:'#8a5a32'},
  sapphire:{night:'#1d2c52',day:'#9fd0f0',sea:'#1f6fa8',island:'#b9c9dc',frame:'#16305a',rim:'#c9d6e6',cell:'#eef4fb',ink:'#0f2240',park:'#d9e3ec',park2:'#c9d7e6',road:'#34465c',lane:'#eef4fb',quay:'#c9d6e6',pier:'#6f7f94'},
  emerald:{night:'#1f3a3a',day:'#9fd8ea',sea:'#2a8fb0',island:'#3f8650',frame:'#0f4a38',rim:'#d4ab3c',cell:'#e3f3e8',ink:'#0b2a1f',park:'#7cc46a',park2:'#5fae55',road:'#40514a',lane:'#f2f7f0',quay:'#d4ab3c',pier:'#5a4a2c'}};
-export const SEAT_COLORS=['#ecc875','#5db8ee','#fa8474','#b599f4'];
+const SEAT_COLORS=['#ecc875','#5db8ee','#fa8474','#b599f4'];
 export function createRenderer(canvas,{rules:F,onPlot=()=>{},onFailure=()=>{},palette='classic'}={}){
  const P=PALETTES[palette]||PALETTES.classic;
  const renderer=new T.WebGLRenderer({canvas,antialias:true,alpha:false,powerPreference:'high-performance'});
