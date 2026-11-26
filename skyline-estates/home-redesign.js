@@ -322,7 +322,7 @@ function hdCityPane(T){const saved=loadSave(),c=CITY_DATA[setup.city],C=countryO
   <div class="hd-city" style="--len:${len}">${COUNTRIES.length>1?`<small>${esc(C.name)}</small>`:''}<h1>${esc(name)}</h1>
 </div>
   ${goals?`<div class="hd-goals">${goals}</div>`:''}
-  <div class="hd-actions">${main}<button class="hd-gmbtn" id="hdModes" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="hdGM">${I_LAYERS}<span>Game Modes</span></button><button class="hd-gmbtn" id="hdCityForge" type="button"><span aria-hidden="true">▥</span><span>City Forge · Builder</span></button></div>
+  <div class="hd-actions">${main}<button class="hd-gmbtn" id="hdModes" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="hdGM">${I_LAYERS}<span>Game Modes</span></button><button class="hd-gmbtn" id="hdCityForge" type="button"><span>City Forge</span></button></div>
   ${card}
   <div class="hd-gm" id="hdGM" role="dialog" aria-modal="false" aria-labelledby="hdGMh" hidden>
    <div class="hd-gm-head"><b id="hdGMh">Game Modes</b><button class="hd-gm-x" id="hdGMx" type="button" aria-label="Close game modes">${I_X}</button></div>
@@ -652,6 +652,9 @@ html.light .sc-awards-note{color:#526781!important}
 #title .hd-stage.v2 .hd-goal i{font-style:normal;font-size:16px}
 #title .hd-stage.v2 .hd-goal small{display:block;font-size:9.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#f2c457}
 #title .hd-stage.v2 .hd-goal.on{border-color:#f2c457}
+#title .hd-stage.v2 .hd-actions.has-career{width:calc(36*var(--hd-u));min-width:320px}
+#title .hd-stage.v2 .hd-actions.has-career #hdCareer{grid-column:1/-1;justify-self:center;width:64%!important}
+#title .hd-stage.v2 #hdCityForge,#title .hd-stage.v2 #hdModes{padding-inline:8px;gap:6px;font-size:clamp(14px,1.6vw,18px)}
 #title .hd-stage.v2 .hd-gmbtn,#title .hd-stage.v2 .hd-gmbtn span,#title .hd-stage.v2 .hd-career small{white-space:nowrap}
 #title .hd-stage.v2 .hd-goal span{white-space:normal;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}
 `;document.head.append(st)})();
