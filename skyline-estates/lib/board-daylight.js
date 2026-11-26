@@ -29,6 +29,19 @@ html.light #holdings .g .nm,html.light #players .pl b{color:#13284a!important}
 html.light #players .pl span{color:#8a6414!important}html.light #players .pl small,html.light #players .pl .val{color:#526781!important}
 html.light .opt:not(.pri){background:#fff!important;color:#13284a!important;border-color:#c9a24a!important}html.light .opt:not(.pri) small{color:#526781!important}
 html.light .opt.pri small{color:#3a2a08!important}
+html.light .seg button.on{background:linear-gradient(#f9e08e,#d79a2b)!important;color:#182337!important;border-color:#9a6c12!important;box-shadow:inset 0 0 0 1px #9a6c12}
+/* Nested decision surfaces must follow their light panel, not retain navy backgrounds. */
+html.light .panel .tilebtn,html.light .panel .stepper button,html.light .panel .mcard{
+ background:#fff!important;color:#13284a!important;border-color:#c9a24a!important}
+html.light .panel .tilebtn.on{background:#fff4d5!important;border-color:#9a6c12!important;box-shadow:inset 0 0 0 1px #9a6c12}
+/* Dominion/Empire use seat rows and native deal dialogs rather than .pl/.opt. */
+html.light #roster .seat,html.light #detailsDrawer{
+ background:#fff!important;color:#13284a!important;border-color:#c9a24a!important}
+html.light #roster .seat.active{background:#fff4d5!important;box-shadow:0 0 0 2px #9a6c12}
+html.light #detailsDrawer button,html.light dialog input,html.light dialog button{
+ background:#f3f6fa!important;color:#13284a!important;border-color:#9a6c12!important}
+html.light #detailsDrawer h3,html.light dialog h2{color:#8a6414!important}
+html.light .pill span{color:inherit!important}
 html.light #decision .tag,html.light .panel .tag{color:#526781!important}
 html.light body,html.light #shell,html.light #bg{background:linear-gradient(180deg,#f6f8fb,#e3e9f1)!important}
 html.light #gameName,html.light #heading h1{color:#13284a!important}html.light #subtitle,html.light #heading small{color:#9a6c12!important}

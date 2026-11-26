@@ -191,9 +191,13 @@ function load(){try{const raw=localStorage.getItem(CV.SAVE_KEY);if(!raw)return n
 // ---------- HUD ----------
 function toast(t){const e=$('toast');e.textContent=t;e.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('show'),2200)}
 function showDice(d){if(!d)return;[$('d1'),$('d2')].forEach((el,k)=>{const v=d[k],pips={1:[5],2:[1,9],3:[1,5,9],4:[1,3,7,9],5:[1,3,5,7,9],6:[1,3,4,6,7,9]}[v];el.innerHTML=Array.from({length:9},(_,j)=>`<i style="visibility:${pips.includes(j+1)?'visible':'hidden'}"></i>`).join('');el.classList.remove('roll');void el.offsetWidth;el.classList.add('roll')})}
+// Display City Value standings without changing seats, ownership or turn order.
+function rankedPlayers(state){
+ return state.players.map(p=>({...p,...CV.cityValue(state,p.id)})).sort((a,b)=>(a.out-b.out)||(b.total-a.total)||(b.sets-a.sets)||(b.cash-a.cash)||(a.id-b.id));
+}
 function render(){if(!s)return;const v=CV.view(s),me=s.players[0],pd=CV.pending(s);
  $('turnpill').textContent=`Turn ${Math.min(s.round,s.cfg.turns)} / ${s.cfg.turns}`;
- $('players').innerHTML=v.players.map(p=>`<div class="pl${p.id===s.turn.pid?' on':''}${p.out?' out':''}" style="--c:${p.color}"><span class="av" style="background:${p.color}33">${TOKEN_EMOJI[p.token]||'●'}</span><b>${esc(p.name)}</b><span>${fmt(p.cash)}<span class="val" style="color:#b9c8d8;font-weight:600"> · worth ${Math.round(p.value).toLocaleString('en-US')}</span></span></div>`).join('');
+ $('players').innerHTML=rankedPlayers(s).map(p=>`<div class="pl${p.id===s.turn.pid?' on':''}${p.out?' out':''}" style="--c:${p.color}"><span class="av" style="background:${p.color}33">${TOKEN_EMOJI[p.token]||'●'}</span><b>${esc(p.name)}</b><span>${fmt(p.cash)}<span class="val" style="color:#b9c8d8;font-weight:600"> · worth ${Math.round(p.total).toLocaleString('en-US')}</span></span></div>`).join('');
  const fx=[];if(s.market)fx.push(`<span class="chip ${s.market.type}">📈 ${s.market.type==='boom'?'Boom':'Correction'} · ${CV.DISTRICT_NAMES[s.market.district]} ${s.market.type==='boom'?'+50%':'−40%'}</span>`);
  if(s.civic)fx.push(`<span class="chip civic">🏛 ${s.civic.type==='drive'?'Development Drive −20% builds':'Tenant Protection −30% rent'}</span>`);
  if(me.charter)fx.push(`<span class="chip">📜 ${me.charter[0].toUpperCase()+me.charter.slice(1)} Charter</span>`);if(me.shield)fx.push(`<span class="chip">🛡 Rent Shield</span>`);

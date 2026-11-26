@@ -24,7 +24,7 @@ for(const d of ['lib','photos','art','items','avatars','living','coach'].filter(
 // Include the approved new 3D replacements. Old prototype board renderers and their 100MB+ GLBs are retired.
 for(const f of ['approved-career-board.html','dominion-production-lab.html','empire-production-lab.html',
  'origins-career.html','origins-production-adapter.js','origins-production.css','origins-production-renderer.js',
- 'city-ventures.html','city-ventures-renderer.js','crossroads-capital.html','crossroads-renderer.js'])fs.copyFileSync(path.join(src,f),path.join(www,f));
+ 'city-forge.html','city-ventures.html','city-ventures-renderer.js','crossroads-capital.html','crossroads-renderer.js'])fs.copyFileSync(path.join(src,f),path.join(www,f));
 for(const d of ['presentation','assets/approved-v5','assets/approved-replacements','assets/city-ventures','assets/crossroads','assets/meshy'])fs.cpSync(path.join(src,d),path.join(www,d),{recursive:true});
 // Feature UI only: retain the native board/camera and account/purchase bridges.
 fs.mkdirSync(path.join(www,'web'),{recursive:true});
@@ -39,4 +39,5 @@ if(!['off','private-testing','private-progress','ios-release'].includes(channel)
 if(channel!=='off')fs.copyFileSync(path.join(app,'cloud',channel+'.js'),path.join(www,'lib','cloud-config.js'));
 console.log('cloud channel:',channel);
 console.log('www built:',fs.readdirSync(www).join(', '),'| fonts:',faces.length);
+
 

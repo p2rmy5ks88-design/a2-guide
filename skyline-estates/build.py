@@ -18,7 +18,7 @@ head = '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="v
 head = head.replace('</head>', '<link rel="stylesheet" href="./lib/menu-presentation.css"><link rel="stylesheet" href="./lib/market-pulse.css"><link rel="stylesheet" href="./web/skyline-showcase.css"><link rel="stylesheet" href="./web/challenges.css"><link rel="stylesheet" href="./web/social.css"></head>')
 # Shared menu-only layer; original game.html retains all board/camera behavior.
 index = head + body + '<script src="./lib/menu-presentation.js"></script><script src="./web/skyline-showcase.js"></script></body></html>'
-core = ['index.html', 'web-play.html', 'web-correction.html', 'web-follow.html', 'web-board.html', 'web-menus.html', 'reference-redesign.js', 'home-redesign.js', 'manifest.webmanifest', 'privacy.html', 'approved-career-board.html', 'presentation/approved-board.css', 'presentation/production-miniatures.js', 'city-ventures.html', 'city-ventures-renderer.js', 'crossroads-capital.html', 'crossroads-renderer.js', 'icon-180.png', 'icon-192.png', 'icon-512.png']
+core = ['index.html', 'web-play.html', 'web-correction.html', 'web-follow.html', 'web-board.html', 'web-menus.html', 'reference-redesign.js', 'home-redesign.js', 'manifest.webmanifest', 'privacy.html', 'approved-career-board.html', 'presentation/approved-board.css', 'presentation/production-miniatures.js', 'city-forge.html', 'city-ventures.html', 'city-ventures-renderer.js', 'crossroads-capital.html', 'crossroads-renderer.js', 'icon-180.png', 'icon-192.png', 'icon-512.png']
 assets = sorted(p.relative_to(here).as_posix() for folder in ['art','items','photos','lib','web','avatars','living','assets/approved-replacements'] for p in (here/folder).rglob('*') if p.is_file())
 files = core + assets
 texts = {'.html','.js','.mjs','.cjs','.json','.webmanifest','.txt','.css','.svg'}
@@ -50,3 +50,4 @@ else:
         (here/name).write_text(content, encoding='utf-8', newline='\n')
     total = sum(len(index.encode('utf-8')) if name in ('index.html','web-play.html','web-correction.html','web-follow.html','web-board.html','web-menus.html') else (here/name).stat().st_size for name in files)
     print(f'Wrote standalone page and offline manifest: {len(files)} files, {total/1024/1024:.1f} MiB')
+

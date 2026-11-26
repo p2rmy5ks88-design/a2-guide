@@ -76,6 +76,13 @@ const STUB=()=>{const log=window.__speech=[];let cur=null;
   const drive=()=>p.evaluate(()=>{if(!G)return'none';if(G.over)return'over';const ovs=[...document.querySelectorAll('#modals .ov:not(.bye)')],ov=ovs[ovs.length-1];
     if(ov){if(/landlord of/.test(ov.textContent))return'over';const bs=[...ov.querySelectorAll('button')].filter(b=>!b.disabled&&b.offsetParent!==null);const bb=ov.querySelector('.lc-lmm')?bs[0]:bs.find(b=>/\bpri\b/.test(b.className))||bs[bs.length-1];if(bb){bb.click();return'modal'}return'wait'}
     const a=[...document.querySelectorAll('#acts button')].filter(b=>!b.disabled);if(a.length){if(a.some(b=>/END/i.test(b.textContent))&&!window.__built){const me=G.players[0],i=G.own.findIndex((o,i)=>o.o===0&&canBuild(0,i));if(i>=0){build(0,i);renderRoster();window.__built=1}}a[0].click();return'act'}return'wait'});
+  // Exercise a real affordable purchase offer explicitly. Random dice and priority speech
+  // may otherwise complete the short match without ever speaking this particular prompt.
+  await p.waitForTimeout(1800);
+  await p.evaluate(()=>{SkylineCoach.stop();SkylineCoach._state.Q.recent.clear();const i=G.own.findIndex((o,i)=>SQ[i].t==='prop'&&o.o<0&&SQ[i].p<=G.players[0].cash);if(i<0)throw Error('Purchase fixture needs an affordable unowned plot');window.__coachPurchase=offerBuy(G.players[0],i)});
+  await p.waitForFunction(()=>__speech.some(x=>/^Do you want to acquire [A-Z]/.test(x.text||'')),null,{timeout:10000});
+  await p.locator('#modals button').filter({hasText:/^Buy for /}).click();
+  await p.evaluate(()=>window.__coachPurchase);
   let duckSeen=false,radMin=1;const t0=Date.now();
   while(Date.now()-t0<70000){const r=await drive();if(r==='over')break;const st=await p.evaluate(()=>({sp:!!SkylineCoach._state.Q.cur,ducked:SkylineCoach._state.D.ducked,rad:AUD.buses?AUD.buses.rad.gain.value:1}));if(st.sp&&st.ducked){duckSeen=true;radMin=Math.min(radMin,st.rad)}await p.waitForTimeout(40)}
   await p.waitForTimeout(2500);

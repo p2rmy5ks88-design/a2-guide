@@ -192,8 +192,8 @@ SkylineBoardGuide.start({key:'cc',facts:()=>{const X=window.__cc;const s=X&&X.st
 // ---------- setup ----------
 let len=['standard','quick'].includes(Q.get('length'))?Q.get('length'):'standard',opp=3;
 function startScreen(){$('start').hidden=false;$('careerNote').hidden=!CAREER;
- document.querySelectorAll('#lenSeg button').forEach(b=>{b.classList.toggle('on',b.dataset.len===len);b.onclick=()=>{len=b.dataset.len;startScreen()}});
- document.querySelectorAll('#oppSeg button').forEach(b=>{b.classList.toggle('on',+b.dataset.n===opp);b.onclick=()=>{opp=+b.dataset.n;startScreen()}})}
+ document.querySelectorAll('#lenSeg button').forEach(b=>{const selected=b.dataset.len===len;b.classList.toggle('on',selected);b.setAttribute('aria-pressed',String(selected));b.onclick=()=>{len=b.dataset.len;startScreen()}});
+ document.querySelectorAll('#oppSeg button').forEach(b=>{const selected=+b.dataset.n===opp;b.classList.toggle('on',selected);b.setAttribute('aria-pressed',String(selected));b.setAttribute('aria-label',b.dataset.n+' AI player'+(+b.dataset.n===1?'':'s'));b.onclick=()=>{opp=+b.dataset.n;startScreen()}})}
 function newMatch(){const seed=+(Q.get('seed')||(Date.now()%1e9));const names=['You','Mia','Noah','Eva'];
  s=CC.newMatch({seed,length:len,players:names.slice(0,opp+1).map((name,i)=>({name,ai:i>0,color:PLAYER_COLORS[i]})),meta:CAREER?{career:true,matchId:'crossroads-'+seed.toString(36)+'-'+Date.now().toString(36),startedAt:Date.now()}:null});
  reported=null;$('start').hidden=true;$('results').hidden=true;save();r3.sync(CC.view(s));r3.follow(s.turn.pid);render();toast(s.players[s.turn.pid].name+' rolled highest and goes first');pump()}
@@ -205,9 +205,13 @@ function load(){try{const raw=localStorage.getItem(CC.SAVE_KEY);if(!raw)return n
 function toast(t){const e=$('toast');e.textContent=t;e.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('show'),2300)}
 function showDice(d){if(!d)return;[$('d1'),$('d2')].forEach((el,k)=>{const v=d[k],pips={1:[5],2:[1,9],3:[1,5,9],4:[1,3,7,9],5:[1,3,5,7,9],6:[1,3,4,6,7,9]}[v];el.innerHTML=Array.from({length:9},(_,j)=>`<i style="visibility:${pips.includes(j+1)?'visible':'hidden'}"></i>`).join('');el.classList.remove('roll');void el.offsetWidth;el.classList.add('roll')})}
 const chainOf=p=>p.chain?CC.CHAINS[p.chain.card]:null;
+// Display standings without reordering the seats used by turns, ownership and saves.
+function rankedPlayers(state){
+ return state.players.map(p=>({...p,...CC.score(state,p.id)})).sort((a,b)=>(a.out-b.out)||(b.total-a.total)||(b.chains-a.chains)||(b.netWorth-a.netWorth)||(b.cash-a.cash)||(a.id-b.id));
+}
 function render(){if(!s)return;const v=CC.view(s),me=s.players[0],pd=CC.pending(s);
  $('turnpill').textContent=`Chapter ${s.chapter} · Turn ${Math.min(s.cfg.turns,me.turns+1)} / ${s.cfg.turns}`;
- $('players').innerHTML=v.players.map(p=>`<div class="pl${p.id===s.turn.pid?' on':''}${p.out?' out':''}" style="--c:${p.color}"><span class="av" style="background:${p.color}33">${TOKEN_EMOJI[p.token]||'●'}</span><b>${esc(p.name)}</b><span>${fmt(p.cash)}<span class="val"> · <span class="lp">${p.lp} LP</span></span></span></div>`).join('');
+ $('players').innerHTML=rankedPlayers(s).map(p=>`<div class="pl${p.id===s.turn.pid?' on':''}${p.out?' out':''}" style="--c:${p.color}"><span class="av" style="background:${p.color}33">${TOKEN_EMOJI[p.token]||'●'}</span><b>${esc(p.name)}</b><span>${fmt(p.cash)}<span class="val"> · <span class="lp">${p.lp} LP</span></span></span></div>`).join('');
  const fx=[];if(me.voucher)fx.push(`<span class="chip">🧾 ${me.voucher.amount} CC voucher</span>`);if(me.reservation)fx.push(`<span class="chip">📌 ${esc(CC.BY[me.reservation.tile].name)} reserved</span>`);if(me.route)fx.push(`<span class="chip">➜ ${CC.LOOP_NAMES[me.route]} route next</span>`);
 
  const c=chainOf(me);
