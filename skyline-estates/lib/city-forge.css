@@ -60,3 +60,16 @@ html.light{color-scheme:light;--bg:#e6f0f1;--surface:#fffffff7;--raised:#edf3f5;
 @media(max-height:470px){#forgeTools{top:calc(var(--safe-t) + 66px);gap:7px}#forgeTools .tb{width:46px;height:46px}}
 .inspector{right:calc(var(--safe-r) + 76px)!important}
 .seat.active{margin-top:7px}
+
+/* Coins display (26 Nov 2026) */
+.coinpill{position:fixed;left:calc(var(--safe-l) + 12px);top:calc(var(--safe-t) + 74px);z-index:4;width:155px;min-height:0;display:grid;gap:3px;padding:8px 10px;text-align:left;border-radius:14px;border:2px solid #efc85f;background:linear-gradient(160deg,#173a55,#0c2236);color:#fff2d1;box-shadow:0 6px 18px #020e1980}
+.coinpill .cl{font-size:9px;letter-spacing:.12em;font-weight:800;color:#efc85f}.coinpill b{font-size:19px;line-height:1.05}
+.coinpill .cbar{height:5px;border-radius:3px;background:#ffffff22;overflow:hidden}.coinpill .cbar i{display:block;height:100%;background:linear-gradient(90deg,#efc85f,#ffe9a6)}
+.coinpill .cs{font-size:10.5px;font-weight:700}.coinpill .up{color:#7fd8a0}.coinpill .down{color:#ff9d8f}
+.coinpill .cpop{position:absolute;right:8px;top:-10px;font-style:normal;font-weight:900;font-size:14px;padding:2px 8px;border-radius:8px;background:#10283f;border:1px solid currentColor;animation:cpop 1.6s ease-out forwards}
+@keyframes cpop{0%{transform:translateY(6px);opacity:0}15%{transform:none;opacity:1}80%{opacity:1}100%{transform:translateY(-12px);opacity:0}}
+#roster{top:calc(var(--safe-t) + 168px)!important}
+@media(max-height:470px){.coinpill{top:calc(var(--safe-t) + 62px);width:137px;padding:6px 9px}.coinpill b{font-size:16px}#roster{top:calc(var(--safe-t) + 146px)!important}}
+.coinsheet{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:8px 0}.coinsheet div{padding:8px 10px;border-radius:12px;border:1px solid #bc975366;background:#ffffff08}.coinsheet small{display:block;font-size:10px;letter-spacing:.1em;opacity:.75}.coinsheet b{font-size:18px}.coinsheet .gold{color:#efc85f}
+.dock .playerbar #credits{display:none}
+@media(max-height:470px){#roster .seat{padding:5px 8px}#roster .seat small{display:none}#roster .seat strong{font-size:14px}#roster .seat b{font-size:13px}.seat.active{margin-top:8px}.dock .playerbar>div:first-child{display:none!important}}
