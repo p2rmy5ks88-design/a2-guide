@@ -22,3 +22,41 @@ html.light{color-scheme:light;--bg:#e6f0f1;--surface:#fffffff7;--raised:#edf3f5;
 
 /* Keep the main construction action easy to find beside Supplies. */
 .commandbar #build{border-color:var(--gold);color:var(--gold)}
+
+/* Whose turn it is (26 Nov 2026): seat colours on the roster, a PLAYING badge, a turn pill and the player bar name. */
+.whoturn{display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;background:#10283ff5;border:2px solid var(--seat,#efc85f);color:#fff2d1;font-weight:800;font-size:13px;white-space:nowrap;box-shadow:0 6px 18px #020e1980}
+.whoturn i{flex:none;width:14px;height:14px;border-radius:50%;background:var(--seat,#efc85f);box-shadow:0 0 0 3px #ffffff30}
+.whoturn.mine{animation:forgeTurn 1.6s ease-in-out infinite}@keyframes forgeTurn{50%{box-shadow:0 0 0 5px color-mix(in srgb,var(--seat) 45%,transparent)}}
+.seat b .dot{display:inline-block;width:11px;height:11px;border-radius:50%;background:var(--seat);margin-right:6px;vertical-align:1px;box-shadow:0 0 0 2px #ffffff40}
+.seat{position:relative}.seat .now{position:absolute;top:-9px;left:14px;font-style:normal;font-size:9px;font-weight:800;letter-spacing:.08em;line-height:1;background:var(--seat);color:#10283f;border-radius:6px;padding:3px 7px;box-shadow:0 2px 6px #020e1980}.seat b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.seat.active{border-color:var(--seat)!important;box-shadow:0 0 0 2px var(--seat),0 8px 20px #020e1980}
+.dock .playerbar #activeName{color:var(--seat,#efc85f);font-weight:800}
+@media(min-aspect-ratio:3/2){.dock .playerbar>div:first-child{display:flex!important;flex-direction:column;margin-bottom:4px}.dock .playerbar>div:first-child strong{font-size:13px}}
+#plots{display:none}@media(max-width:1100px){.topbuttons #speed{display:none}}
+.inspector{overflow-y:auto;overscroll-behavior:contain}
+.inspector #plotActions{display:grid;gap:6px}.inspector #plotActions button{display:flex;flex-direction:column;align-items:flex-start;text-align:left;gap:3px}
+/* Build & upgrade guide */
+.costs,.bcard small,.legend{font-weight:600}.ok{color:#7fd8a0}.miss{color:#ff8f8f}.costs span,.bcard small span{white-space:nowrap;margin-right:4px}
+.buildsteps{list-style:none;display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0;padding:0}
+.buildsteps li{display:grid;grid-template-columns:auto 1fr;column-gap:8px;padding:8px 10px;border-radius:12px;border:1px solid #bc975366;background:#ffffff0a}
+.buildsteps li i{grid-row:span 2;display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:#ffffff1a;font-style:normal;font-weight:800}
+.buildsteps li b{font-size:13px}.buildsteps li small{font-size:11px;opacity:.8}
+.buildsteps li.on{border-color:#efc85f;background:#efc85f22}.buildsteps li.on i{background:#efc85f;color:#10283f}.buildsteps li.done i{background:#3f9a5e;color:#fff}
+.buildnow{margin:4px 0 8px;font-weight:700}
+.catalog{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.bcard{display:flex;flex-direction:column;gap:4px;padding:9px;border-radius:12px;border:1px solid #bc975355;background:#ffffff08}.bcard b{font-size:13px}.bcard small{font-size:11px;line-height:1.35}
+.legend{font-size:11px;opacity:.85;margin:6px 0}
+#dialog h3{margin:12px 0 6px;font-size:14px}.muted{opacity:.75;font-size:12px}
+.plotlist{display:grid;gap:6px}.plotrow{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:8px 10px;border-radius:12px;border-left:5px solid var(--district);background:#ffffff0a}.plotrow>b{font-size:13px;margin-right:4px}.plotrow>small{flex:1 1 140px;font-size:11px;opacity:.8}.plotrow button{min-height:40px;padding:6px 10px;font-size:12px}
+.freeplots{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.district{display:flex;flex-direction:column;gap:4px;padding:7px;border-radius:12px;border-top:4px solid var(--district);background:#ffffff08}.district b{font-size:12px}.district button{min-height:38px;padding:5px 8px;font-size:12px}
+@media(max-width:760px){.buildsteps,.catalog,.freeplots{grid-template-columns:repeat(2,1fr)}}
+.light .ok{color:#1f7a42}.light .miss{color:#b3261e}.light .buildsteps li,.light .bcard,.light .plotrow,.light .district{background:#13284a08}
+
+/* Classic board tools column (26 Nov 2026) */
+.topbuttons #view,.topbuttons #theme,.topbuttons #help,.topbuttons #speed,.topbuttons #menu{display:none!important}
+#forgeTools{position:fixed;right:calc(var(--safe-r) + 14px);top:calc(var(--safe-t) + 78px);display:flex;flex-direction:column;gap:10px;z-index:4}
+#forgeTools .tb{width:52px;height:52px;min-height:0;padding:0;border-radius:14px;border:1px solid #bc9753;background:#10283ff5;color:#fff2d1;display:grid;place-items:center;box-shadow:0 6px 16px #020e1980}
+#forgeTools .tb svg{width:24px;height:24px}
+.light #forgeTools .tb{background:#ffffffee;color:#13284a;border-color:#13284a26}
+@media(max-height:470px){#forgeTools{top:calc(var(--safe-t) + 66px);gap:7px}#forgeTools .tb{width:46px;height:46px}}
+.inspector{right:calc(var(--safe-r) + 76px)!important}
+.seat.active{margin-top:7px}
