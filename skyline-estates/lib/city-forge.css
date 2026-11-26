@@ -73,3 +73,12 @@ html.light{color-scheme:light;--bg:#e6f0f1;--surface:#fffffff7;--raised:#edf3f5;
 .coinsheet{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:8px 0}.coinsheet div{padding:8px 10px;border-radius:12px;border:1px solid #bc975366;background:#ffffff08}.coinsheet small{display:block;font-size:10px;letter-spacing:.1em;opacity:.75}.coinsheet b{font-size:18px}.coinsheet .gold{color:#efc85f}
 .dock .playerbar #credits{display:none}
 @media(max-height:470px){#roster .seat{padding:5px 8px}#roster .seat small{display:none}#roster .seat strong{font-size:14px}#roster .seat b{font-size:13px}.seat.active{margin-top:8px}.dock .playerbar>div:first-child{display:none!important}}
+
+/* Assist, City Pulse, Landmark and coach (26 Nov 2026) */
+#assistBtn{border-color:#7fb6e0!important;color:#cfe7ff!important}#assistBtn.on{background:#1f5f8a!important;color:#fff!important}
+.turnNote .hint{display:block;margin-top:2px;color:#ffe08a;font-weight:800}
+.pulsechip{min-height:0;padding:7px 12px;border-radius:999px;border:2px solid #b388ff;background:#2a1f4fee;color:#eadcff;font-size:12px;font-weight:800;white-space:nowrap;box-shadow:0 6px 18px #020e1980}.pulsechip.soon{border-style:dashed;opacity:.85;font-weight:700}
+.lmcard{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:10px 0;padding:10px 12px;border-radius:14px;border:2px solid #efc85f;background:linear-gradient(120deg,#efc85f22,#ffffff05)}.lmcard b{font-size:14px}.lmcard small{display:block;font-size:11.5px;opacity:.9;margin-top:2px}.lmcard.done{opacity:.85;border-style:dashed}.lmcard button{flex:none}
+.forgeflash{position:fixed;left:50%;top:36%;transform:translate(-50%,-50%);z-index:20;display:grid;gap:4px;text-align:center;padding:16px 28px;border-radius:18px;border:2px solid #efc85f;background:linear-gradient(160deg,#173a55f2,#0c2236f2);color:#fff2d1;box-shadow:0 18px 50px #020e19b0;pointer-events:none;animation:forgeFlash 2.6s ease forwards}.forgeflash b{font:900 26px Georgia,serif;color:#efc85f}.forgeflash small{font-size:13px}
+@keyframes forgeFlash{0%{opacity:0;transform:translate(-50%,-40%) scale(.9)}12%{opacity:1;transform:translate(-50%,-50%) scale(1)}80%{opacity:1}100%{opacity:0}}
+@media(max-width:1000px){.pulsechip{font-size:11px;padding:6px 9px}}
