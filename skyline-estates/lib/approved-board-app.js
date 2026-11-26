@@ -31,7 +31,8 @@ function sendCareerResult(){if(!career||!s||s.phase!=='over'||s.endReason!=='hig
 function seatHtml(p,compact=false){return compact?
  `<div class="player-chip ${p.id===s.turn&&s.phase!=='over'?'active':''}" style="--seat:${seatColors[p.id]}"><span class="icon">${emblems[p.id]}</span><div class="details">${p.id===0?'You':p.name.replace(' (CPU)','')}<small>${money(p.cash)}</small></div></div>`:
  `<div class="seat ${p.id===s.turn&&s.phase!=='over'?'active':''}" style="--seat:${seatColors[p.id]}"><span class="emblem">${emblems[p.id]}</span><span class="who">${p.name}</span><span class="money">${money(p.cash)}</span></div>`}
-function updateCards(){const players=s.players;$('roster').innerHTML=players.map(x=>seatHtml(x)).join('');$('seatSummary').innerHTML=players.map(x=>seatHtml(x,true)).join('');
+function rankedSeats(){return R.score(s,spaces).map(p=>s.players[p.id])}
+function updateCards(){const players=rankedSeats();$('roster').innerHTML=players.map(x=>seatHtml(x)).join('');$('seatSummary').innerHTML=players.map(x=>seatHtml(x,true)).join('');
  $('round').textContent=`🎲 Round ${s.round} / ${s.maxRounds}`;
  $('turn').textContent=s.phase==='over'?'🏆 Match finished':s.turn===0?'👑 Your turn':'⏳ '+s.players[s.turn].name;
 }

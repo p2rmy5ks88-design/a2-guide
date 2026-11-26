@@ -1,0 +1,45 @@
+name: City Forge gameplay and interface
+on:
+  pull_request:
+    paths: ['skyline-estates/**', '.github/workflows/city-forge-qa.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  city-forge:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        engine: [chromium, webkit]
+    env:
+      BROWSER: ${{ matrix.engine }}
+      LIBGL_ALWAYS_SOFTWARE: '1'
+      WEBKIT_DISABLE_DMABUF_RENDERER: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: 22}
+      - run: npm install --prefix skyline-estates/tests --no-audit --no-fund
+      - run: npx --prefix skyline-estates/tests playwright install --with-deps ${{ matrix.engine }}
+      - name: Rules, wallets and existing leader panels
+        run: |
+          node skyline-estates/tests/city-forge-rules.cjs
+          node skyline-estates/tests/city-forge-wallet.cjs
+          node skyline-estates/tests/city-forge-profile.cjs
+          node skyline-estates/tests/all-mode-leader-panels.cjs
+          node skyline-estates/tests/city-ventures-rules.cjs
+          node skyline-estates/tests/crossroads-rules.cjs
+      - name: Actual gameplay, menu, radio integration and funded entry
+        run: |
+          node skyline-estates/tests/city-forge-browser.cjs
+          node skyline-estates/tests/city-forge-funded-browser.cjs
+          node skyline-estates/tests/build-city-forge-offline.cjs "$RUNNER_TEMP/CityForge.html"
+          node skyline-estates/tests/city-forge-recovery-browser.cjs "$RUNNER_TEMP/CityForge.html"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: city-forge-${{ matrix.engine }}
+          path: skyline-estates/test-results/city-forge/
+

@@ -3249,7 +3249,7 @@ function tradeSummary(t){const f=P(t.from);
 /* ================= UI OVERRIDES ================= */
 function renderRoster(){
   if(FAST)return;const R=$('#roster');R.innerHTML='';
-  G.players.forEach(p=>{
+  standings().forEach(p=>{
     const cur=p.id===G.turn&&!G.over;const lh=isLocalHuman(p);const d=el('button','pcard'+(cur?' cur':'')+(p.bankrupt?' out':'')+(lh&&hasLvl(3)?' gold':''));d.id='pc'+p.id;d.style.setProperty('--pc',p.col);
     const props=propsOf(p.id).map(i=>{const o=G.own[i];return `<i class="pp${o.h===5?' hot':''}${o.m?' mo':''}" style="--g:${SQ[i].g?GC[SQ[i].g]:'#9aa6b4'}">${o.h===5?'H':o.h||''}</i>`}).join('');
     const me=G.online&&p.uid&&p.uid===NET.me;
@@ -3573,7 +3573,8 @@ function startOnlineFromDoc(code,ref,d){
 /* ================= TITLE / SETUP ================= */
 const PKEY='skylinePrefs';
 const PREF=(()=>{try{return JSON.parse(localStorage.getItem(PKEY)||'{}')||{}}catch(e){return{}}})();
-function savePref(){try{localStorage.setItem(PKEY,JSON.stringify(PREF))}catch(e){}}
+let forgeWalletSeenCoins=PREF.coins;
+function savePref(){try{const disk=JSON.parse(localStorage.getItem(PKEY)||'{}');if(disk.cloudOwner===PREF.cloudOwner&&disk.cityForgeWallet&&JSON.stringify(disk.cityForgeWallet)!==JSON.stringify(PREF.cityForgeWallet)){const delta=Number.isSafeInteger(PREF.coins)&&Number.isSafeInteger(forgeWalletSeenCoins)?PREF.coins-forgeWalletSeenCoins:0;PREF.coins=Math.max(0,disk.coins+delta);PREF.cityForgeWallet=disk.cityForgeWallet}localStorage.setItem(PKEY,JSON.stringify(PREF));forgeWalletSeenCoins=PREF.coins}catch(e){}}
 const RULE_INFO=[['minigames','Mini-games','A quiz about the country you’re playing in, its board and the world on Lucky Break and City Hall squares, and Catch the Cash in the local currency when you land on Start or the Rest Stop.'],['perks','Collection perks','Earned token powers and property rarity bonuses. Mythic properties add one shared re-roll (maximum 3) and first-rent protection; only owned, unmortgaged streets count. Switch off for a level playing field.'],['ffa','Free-for-all building','Build houses and towers on any street you own. No full colour set needed.'],['events','City events','Every two rounds something happens in the city you’re playing: its own weather, local happenings like power cuts or rail strikes only where they really occur, building booms, lucky draws and the city’s own festival.'],['speedDie','Turbo die','After your first lap, roll a third die: add 1–4, the star draws a Lucky Break card, the taxi rides to the next transit hub.'],['pot','Rest Stop jackpot','Taxes and fees pile up at the Rest Stop. Land there to scoop them.'],['goDouble','Double payday','Land exactly on Start to collect a double payday.'],['jailRent','No rent from the Lockup','Owners sitting in the Lockup can’t collect rent.'],['auction','Auctions','Property nobody buys goes to auction.'],['even','Even building','Build and sell evenly across a colour set.'],['interest','Mortgage interest','Redeeming costs the mortgage plus 10%.']];
 const CASH_OPTS=[1200,1600,2000];
 const SUPPORT_EMAIL=(window.SKYLINE_CONFIG&&window.SKYLINE_CONFIG.supportEmail)||'';
@@ -7347,4 +7348,5 @@ setTimeout(()=>{try{const c=(new URLSearchParams(location.search).get('join')||'
       .mp.pf2:not(.pf2dm) .pf2b{min-height:130px;grid-template-columns:minmax(0,1fr) minmax(0,1fr);overflow:hidden}.mp.pf2 .pf2pic{max-height:110px}
       .mp.pf2 .pf2g{scrollbar-width:auto;scrollbar-color:#e9c36f #152c3a}
     }
-    </style><script src="./lib/menu-presentation.js"></script><script src="./web/skyline-showcase.js"></script></body></html>
+    </style>
+<script src="./lib/menu-presentation.js"></script><script src="./web/skyline-showcase.js"></script></body></html>

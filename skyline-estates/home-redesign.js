@@ -322,17 +322,19 @@ function hdCityPane(T){const saved=loadSave(),c=CITY_DATA[setup.city],C=countryO
   <div class="hd-city" style="--len:${len}">${COUNTRIES.length>1?`<small>${esc(C.name)}</small>`:''}<h1>${esc(name)}</h1>
 </div>
   ${goals?`<div class="hd-goals">${goals}</div>`:''}
-  <div class="hd-actions">${main}<button class="hd-gmbtn" id="hdModes" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="hdGM">${I_LAYERS}<span>Game Modes</span></button></div>
+  <div class="hd-actions">${main}<button class="hd-gmbtn" id="hdModes" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="hdGM">${I_LAYERS}<span>Game Modes</span></button><button class="hd-gmbtn" id="hdCityForge" type="button"><span aria-hidden="true">▥</span><span>City Forge · Builder</span></button></div>
   ${card}
   <div class="hd-gm" id="hdGM" role="dialog" aria-modal="false" aria-labelledby="hdGMh" hidden>
    <div class="hd-gm-head"><b id="hdGMh">Game Modes</b><button class="hd-gm-x" id="hdGMx" type="button" aria-label="Close game modes">${I_X}</button></div>
    <div class="hd-gm-list">${saved?gmItem('qAI',ICO('<rect x="3.5" y="3.5" width="17" height="17" rx="3"/><circle cx="8.5" cy="8.5" r="1.2" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.2" fill="currentColor"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/>'),'New Solo Game','You against the computer'):''}
     ${gmItem('qPP',I_PASS,'Pass &amp; Play','2–6 players on this device')}
     ${showOnline?gmItem('tOnline',I_ONLINE,'Play Online','Friends on their own devices'):''}
-    ${gmItem('qCustom',I_CUSTOM,'Custom Game','Players, rules and length')}</div>
+    ${gmItem('qCustom',I_CUSTOM,'Custom Game','Players, rules and length')}
+    ${gmItem('qCityForge','▥','City Forge','Build a shared waterfront city')}</div>
   </div>
  </div>`;
  const q=s=>T.querySelector(s),gm=q('#hdGM'),gb=q('#hdModes');
+ q('#hdCityForge').onclick=q('#qCityForge').onclick=async()=>{sfx('tap');try{if(!window.SkylineForgeHome){if(!window.skylineForgeLoading)window.skylineForgeLoading=new Promise((resolve,reject)=>{const script=document.createElement('script');script.src='./lib/city-forge-home.js';script.onload=resolve;script.onerror=()=>{window.skylineForgeLoading=null;reject(Error('City Forge could not load. Your coins are unchanged.'))};document.head.append(script)});await window.skylineForgeLoading}if((new URLSearchParams(location.search).get('forgeReturn')==='1'||new URLSearchParams(location.search).get('forgeAbandon')==='1')){const url=new URL(location.href);const abandon=url.searchParams.get('forgeAbandon')==='1';url.searchParams.delete('forgeReturn');url.searchParams.delete('forgeAbandon');history.replaceState(null,'',url);return SkylineForgeHome.settle(abandon)}return SkylineForgeHome.start()}catch(e){toast(e.message)}};if((new URLSearchParams(location.search).get('forgeReturn')==='1'||new URLSearchParams(location.search).get('forgeAbandon')==='1'))setTimeout(()=>q('#hdCityForge')?.click(),300);
  if(q('#hdGoal'))q('#hdGoal').onclick=()=>{sfx('tap');const c=document.getElementById('hdCareer')||document.getElementById('crOpen');if(c)c.click()};
  if(q('#hdDaily'))q('#hdDaily').onclick=()=>{sfx('tap');homeTab('daily')};
  const setGM=open=>{gm.hidden=!open;gb.setAttribute('aria-expanded',String(open));T.querySelector('.hd-stage').classList.toggle('gm-open',open);if(open){const f=gm.querySelector('.hd-gm-item');if(f)f.focus({preventScroll:true})}else gb.focus({preventScroll:true})};

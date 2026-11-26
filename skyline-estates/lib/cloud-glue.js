@@ -158,6 +158,7 @@ function showStoreError(e){if(storeNotice)return;try{window.SkylineAccounts?.clo
 async function verifyFirst(){const go=await modal({html:'<div class="mh">Verify your email first</div><div class="mtxt">Purchases and cloud save need a verified email. Open Account &amp; recovery, tap <b>Send verification email</b>, open the link, then tap <b>I have verified my email</b>.</div>',btns:[{k:true,label:'Open account',primary:true},{k:false,label:'Not now'}]});if(go)window.SkylineAccounts.open()}
 window.SkylineCloud={
  status:()=>({...engine.status(),last:status.last,state:status.state}),sync:()=>run({refresh:true}),
+ capture:()=>engine.capture(), // Persist a local wallet delta before navigating into a separate board page.
  // Do not fall back to a USD example when Apple's localized catalog is not loaded.
  purchasesReady:()=>!!store,price:id=>prices.get(id)||(store?'View price':null),
  async buyPack(productId){
@@ -233,3 +234,4 @@ async function restore(key){
  }catch(e){toast('That backup could not be restored. Your current progress and backup are unchanged.')}
 }
 })();
+
