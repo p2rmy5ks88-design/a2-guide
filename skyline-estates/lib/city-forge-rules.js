@@ -1,5 +1,7 @@
 /* Skyline Estates: City Forge. Original local construction rules; no profile economy writes. */
 (function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;else root.CityForge=api})(typeof window!=='undefined'?window:globalThis,function(){'use strict';
+// Match lengths (26 Nov 2026: Long added, 20 rounds).
+const LENGTHS={quick:8,standard:12,long:20},roundsFor=l=>LENGTHS[l]||12,lengthOf=r=>Object.keys(LENGTHS).find(k=>LENGTHS[k]===r)||'standard';
 const VERSION=1,SAVE_KEY='skylineCityForge:v1',CAP=40;
 const MATERIALS=['Timber','Steel','Glass','Energy'],ICONS=['▥','⚙','◇','ϟ'];
 // Same ordered district palette as the classic board's GC; names and layout are original.
@@ -15,11 +17,15 @@ const note=(s,t)=>{s.log.push(t);if(s.log.length>50)s.log.shift()};
 const gain=(p,mat)=>{if(mat)mat.forEach((v,i)=>p.mat[i]=Math.min(CAP,p.mat[i]+v))};
 const has=(p,mat,cash=0)=>p.cash>=cash&&mat.every((v,i)=>p.mat[i]>=v);
 const pay=(p,mat,cash=0)=>{mat.forEach((v,i)=>p.mat[i]-=v);p.cash-=cash};
-function quote(length='standard'){const rounds=length==='quick'?8:12,creditsPerAction=Math.max(...Object.values(BUILDINGS).map(b=>b.cash+4),8,4),credits=rounds*2*creditsPerAction;return{rounds,creditsPerAction,credits,coinsPerCredit:100,reserve:credits*100,winnerBonus:credits*200}}
+// Investment levels (26 Nov 2026): a higher level reserves more saved coins per match credit and pays a larger win bonus.
+// More AI rivals make the win harder, so the bonus grows with them; Pass & Play keeps the base bonus.
+const LEVELS=[{id:1,name:'Starter'},{id:2,name:'Developer'},{id:3,name:'Tycoon'}],RIVAL_BONUS={1:.75,2:1,3:1.5};
+function quote(length='standard',{level=1,mode='solo',ai=2}={}){const rounds=roundsFor(length),creditsPerAction=Math.max(...Object.values(BUILDINGS).map(b=>b.cash+4),8,4),credits=rounds*2*creditsPerAction,lv=[1,2,3].includes(level)?level:1,rivals=mode==='pass'?1:(RIVAL_BONUS[ai]||1),coinsPerCredit=100*lv;
+ return{rounds,creditsPerAction,credits,level:lv,coinsPerCredit,reserve:credits*coinsPerCredit,winnerBonus:Math.round(credits*200*lv*rivals)}}
 function create({seed=12345,ai=2,humans=2,mode='solo',length='standard',names=[],funded=false}={}){
  mode=mode==='pass'?'pass':'solo';const count=mode==='pass'?Math.max(2,Math.min(4,Number(humans)||2)):Math.max(2,Math.min(4,(Number(ai)||1)+1));
  const n=Number.isInteger(seed)?seed>>>0:12345;
- const s={version:VERSION,ruleset:'skyline-city-forge',id:'forge-'+n,seed:n,rng:n||1,mode,funded:!!funded,history:[],round:1,maxRounds:length==='quick'?8:12,turn:0,turnNo:0,phase:'roll',actions:0,players:Array.from({length:count},(_,id)=>({id,name:String(names[id]||(id===0?'You':['Mia','Noah','Zara'][id-1])).replace(/[<>]/g,'').slice(0,18),ai:mode==='solo'&&id>0,cash:funded?quote(length).credits:16,mat:[3,2,1,1],pos:0,prestige:0,turns:0})),plots:PLOTS.map(p=>({...p,owner:null,kind:null,level:0})),market:[10,10,10,10],contracts:[],deck:[],claimed:[],civic:[],pending:null,lastRoll:null,winner:null,log:['Welcome to City Forge. Build a city worth sharing.']};
+ const s={version:VERSION,ruleset:'skyline-city-forge',id:'forge-'+n,seed:n,rng:n||1,mode,funded:!!funded,history:[],round:1,maxRounds:roundsFor(length),turn:0,turnNo:0,phase:'roll',actions:0,players:Array.from({length:count},(_,id)=>({id,name:String(names[id]||(id===0?'You':['Mia','Noah','Zara'][id-1])).replace(/[<>]/g,'').slice(0,18),ai:mode==='solo'&&id>0,cash:funded?quote(length).credits:16,mat:[3,2,1,1],pos:0,prestige:0,turns:0})),plots:PLOTS.map(p=>({...p,owner:null,kind:null,level:0})),market:[10,10,10,10],contracts:[],deck:[],claimed:[],civic:[],pending:null,lastRoll:null,winner:null,log:['Welcome to City Forge. Build a city worth sharing.']};
  s.deck=CONTRACTS.map(c=>c.id);for(let i=s.deck.length-1;i>0;i--){const j=Math.floor(rng(s)*(i+1));[s.deck[i],s.deck[j]]=[s.deck[j],s.deck[i]]}s.contracts=s.deck.splice(0,3);return s;
 }
 const buildings=(s,pid)=>s.plots.filter(p=>p.owner===pid&&p.level>0);
@@ -80,9 +86,9 @@ function ai(s,pid){const L=legal(s,pid);if(!L.length)return null;const p=s.playe
  return best||L[0];
 }
 function restore(raw){try{if(typeof raw!=='string'||raw.length>100000)return{ok:false};const s=JSON.parse(raw),fail=()=>({ok:false,error:'Incompatible or damaged City Forge save.'});
- if(!s||s.version!==VERSION||s.ruleset!=='skyline-city-forge'||!['solo','pass'].includes(s.mode)||!integer(s.rng,0,4294967295)||!integer(s.seed,0,4294967295)||!Array.isArray(s.players)||s.players.length<2||s.players.length>4||!integer(s.turn,0,s.players.length-1)||![8,12].includes(s.maxRounds)||!integer(s.round,1,s.maxRounds)||!integer(s.turnNo,0,100)||!integer(s.actions,0,2)||!['roll','act','trade','event','over'].includes(s.phase))return fail();
+ if(!s||s.version!==VERSION||s.ruleset!=='skyline-city-forge'||!['solo','pass'].includes(s.mode)||!integer(s.rng,0,4294967295)||!integer(s.seed,0,4294967295)||!Array.isArray(s.players)||s.players.length<2||s.players.length>4||!integer(s.turn,0,s.players.length-1)||!Object.values(LENGTHS).includes(s.maxRounds)||!integer(s.round,1,s.maxRounds)||!integer(s.turnNo,0,200)||!integer(s.actions,0,2)||!['roll','act','trade','event','over'].includes(s.phase))return fail();
  for(const [i,p]of s.players.entries())if(p.id!==i||typeof p.name!=='string'||p.name.length>18||typeof p.ai!=='boolean'||!integer(p.cash)||!integer(p.prestige)||!integer(p.turns,0,s.maxRounds)||!integer(p.pos,0,23)||!Array.isArray(p.mat)||p.mat.length!==4||!p.mat.every(n=>integer(n,0,CAP)))return fail();
- if(!Array.isArray(s.history)||s.history.length>600||typeof s.funded!=='boolean'||typeof s.id!=='string'||s.id.length>100)return fail();
+ if(!Array.isArray(s.history)||s.history.length>1500||typeof s.funded!=='boolean'||typeof s.id!=='string'||s.id.length>100)return fail();
  const expectedTurns=s.players.map(p=>s.phase==='over'?s.maxRounds:s.round-1+(p.id<s.turn?1:0));if(s.players.some((p,i)=>p.turns!==expectedTurns[i])||s.turnNo!==(s.phase==='over'?s.maxRounds*s.players.length:(s.round-1)*s.players.length+s.turn))return fail();
  if(!Array.isArray(s.plots)||s.plots.length!==PLOTS.length||!s.plots.every((p,i)=>p.id===i&&p.district===PLOTS[i].district&&p.name===PLOTS[i].name&&(p.owner===null||integer(p.owner,0,s.players.length-1))&&integer(p.level,0,3)&&(p.level===0?p.kind===null:p.owner!==null&&Object.hasOwn(BUILDINGS,p.kind))))return fail();
  if(!Array.isArray(s.market)||s.market.length!==4||!s.market.every(n=>integer(n,0,14))||!Array.isArray(s.contracts)||s.contracts.length>3||!Array.isArray(s.deck)||!Array.isArray(s.claimed)||!Array.isArray(s.civic)||s.civic.length>8||!s.civic.every(n=>integer(n,0,s.players.length-1))||!Array.isArray(s.log)||s.log.length>50||!s.log.every(t=>typeof t==='string'&&t.length<250))return fail();
@@ -91,6 +97,6 @@ function restore(raw){try{if(typeof raw!=='string'||raw.length>100000)return{ok:
  if(s.phase==='trade'){const d=s.pending;if(!d||d.from!==s.turn||!tradeOK(s,d.from,d.to,d.give,d.get))return fail()}else if(s.phase==='event'){if(!s.pending||!integer(s.pending.card,0,CARDS.length-1))return fail()}else if(s.pending!==null)return fail();
  if(s.phase==='over'&&(s.winner!==ranking(s)[0].id||s.players.some(p=>p.turns!==s.maxRounds)))return fail();
  return{ok:true,state:s};}catch{return{ok:false,error:'Cannot read this City Forge save.'}}}
-function verify(s,config){try{if(!restore(JSON.stringify(s)).ok)return false;const fresh=create(config||{seed:s.seed,mode:s.mode,ai:s.players.length-1,humans:s.players.length,length:s.maxRounds===8?'quick':'standard',names:s.players.map(p=>p.name),funded:s.funded});fresh.id=s.id;for(const h of s.history)if(!act(fresh,h.pid,h.action).ok)return false;return JSON.stringify(fresh)===JSON.stringify(s)}catch{return false}}
-return Object.freeze({VERSION,SAVE_KEY,CAP,MATERIALS,ICONS,DISTRICTS,PLOTS,STOPS,BUILDINGS,CONTRACTS,CARDS,create,legal,act,ai,score,ranking,price,cost,contractReady,quote,verify,serialize:s=>JSON.stringify(s),restore});
+function verify(s,config){try{if(!restore(JSON.stringify(s)).ok)return false;const fresh=create(config||{seed:s.seed,mode:s.mode,ai:s.players.length-1,humans:s.players.length,length:lengthOf(s.maxRounds),names:s.players.map(p=>p.name),funded:s.funded});fresh.id=s.id;for(const h of s.history)if(!act(fresh,h.pid,h.action).ok)return false;return JSON.stringify(fresh)===JSON.stringify(s)}catch{return false}}
+return Object.freeze({VERSION,SAVE_KEY,CAP,MATERIALS,ICONS,DISTRICTS,PLOTS,STOPS,BUILDINGS,CONTRACTS,CARDS,LEVELS,LENGTHS,lengthOf,create,legal,act,ai,score,ranking,price,cost,contractReady,quote,verify,serialize:s=>JSON.stringify(s),restore});
 });
