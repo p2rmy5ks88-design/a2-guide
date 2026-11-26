@@ -206,7 +206,7 @@ const css=`
 @keyframes hdgm{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 #title .hd-stage.v2 .hd-gm-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:calc(.6*var(--hd-u))}
 #title .hd-stage.v2 .hd-gm-head b{padding-left:calc(.4*var(--hd-u));font:800 max(15px,calc(1.9*var(--hd-u)))/1 var(--display,'Outfit',system-ui,sans-serif)}
-#title .hd-stage.v2 .hd-gm-x{flex:none;display:grid;place-items:center;width:44px;height:44px;margin:-6px -6px -6px 0;border:0;border-radius:50%;background:none;color:#dfe5f3;cursor:pointer}
+#title .hd-stage.v2 .hd-gm-x{flex:none;display:grid;place-items:center;width:45px;height:45px;margin:-6px -6px -6px 0;border:0;border-radius:50%;background:none;color:#dfe5f3;cursor:pointer}
 #title .hd-stage.v2 .hd-gm-x svg{width:20px;height:20px}#title .hd-stage.v2 .hd-gm-x:hover{background:rgba(255,255,255,.08)}
 #title .hd-stage.v2 .hd-gm-list{display:grid;grid-template-columns:1fr 1fr;gap:calc(.8*var(--hd-u))}
 /* Game Modes (24 Nov 2026): the main ways to play first; Duel and Harbour Ring under "More ways to play".
@@ -653,7 +653,9 @@ html.light .sc-awards-note{color:#526781!important}
 #title .hd-stage.v2 .hd-goal small{display:block;font-size:9.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#f2c457}
 #title .hd-stage.v2 .hd-goal.on{border-color:#f2c457}
 #title .hd-stage.v2 .hd-actions.has-career{width:calc(36*var(--hd-u));min-width:320px}
+#title .hd-stage.v2:has(.hd-actions.has-career) .hd-gm{--gl:calc(8.5*var(--hd-u) + max(320px,calc(36*var(--hd-u))))}
 #title .hd-stage.v2 .hd-actions.has-career #hdCareer{grid-column:1/-1;justify-self:center;width:64%!important}
+@media(max-height:400px){#title .hd-stage.v2 .hd-actions.has-career{top:calc(22*var(--hd-u))}}
 #title .hd-stage.v2 #hdCityForge,#title .hd-stage.v2 #hdModes{padding-inline:8px;gap:6px;font-size:clamp(14px,1.6vw,18px)}
 #title .hd-stage.v2 .hd-gmbtn,#title .hd-stage.v2 .hd-gmbtn span,#title .hd-stage.v2 .hd-career small{white-space:nowrap}
 #title .hd-stage.v2 .hd-goal span{white-space:normal;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}
