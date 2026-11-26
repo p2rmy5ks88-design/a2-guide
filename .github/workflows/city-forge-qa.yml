@@ -33,6 +33,8 @@ jobs:
           node skyline-estates/tests/crossroads-rules.cjs
       - name: Actual gameplay, menu, radio integration and funded entry
         run: |
+          node skyline-estates/tests/city-forge-home-layout.cjs
+          node skyline-estates/tests/city-forge-camera.cjs
           node skyline-estates/tests/city-forge-browser.cjs
           node skyline-estates/tests/city-forge-funded-browser.cjs
           node skyline-estates/tests/build-city-forge-offline.cjs "$RUNNER_TEMP/CityForge.html"

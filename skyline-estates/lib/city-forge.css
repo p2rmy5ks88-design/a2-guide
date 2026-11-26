@@ -19,3 +19,6 @@ html.light{color-scheme:light;--bg:#e6f0f1;--surface:#fffffff7;--raised:#edf3f5;
 #dialog.classic-menu{max-width:780px;border:2px solid #d6af55;background:linear-gradient(140deg,#123859,#081a2e);color:#fff1d0}#dialog.classic-menu h2{font:800 30px Georgia,serif;color:#edcb78}#dialog.classic-menu p{color:#c4d3de}#dialog.classic-menu #dialogFooter{display:flex;flex-wrap:wrap;justify-content:flex-start;gap:9px}#dialog.classic-menu button{border:1px solid #d6af55;color:#fff1d0;background:linear-gradient(#23577b,#102842);min-height:44px}#dialog.classic-menu button.primary{border:2px solid #edcb78}#boardRadio{flex:none}
 
 #dialog.classic-menu #dialogFooter button{flex:0 0 auto;min-width:0;min-height:44px;padding:9px 14px;font-size:14px;white-space:nowrap}
+
+/* Keep the main construction action easy to find beside Supplies. */
+.commandbar #build{border-color:var(--gold);color:var(--gold)}
