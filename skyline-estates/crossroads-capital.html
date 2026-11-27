@@ -309,11 +309,19 @@ async function play(events){for(const e of events){try{SkylineFeel.event(e,Math.
  else if(e.type==='bought'||e.type==='built'||e.type==='trade'||e.type==='auction'||e.type==='reserved'){r3.sync(CC.view(s));if(e.type==='built'&&e.tile)r3.focusTile(e.tile);await wait(250*speed)}
  else if(e.type==='turn'){r3.sync(CC.view(s));r3.follow(e.pid)}}}
 let pumping=false;
-async function pump(){if(pumping)return;pumping=true;try{for(;;){if(!s||s.over)break;const pd=CC.pending(s),who=pd.kind==='trade'?pd.to:pd.pid;if(who==null||!s.players[who].ai)break;
+async function pump(){if(pumping)return;pumping=true;try{for(;;){if(!s||s.over)break;const pd=CC.pending(s),who=pd.kind==='trade'?pd.to:pd.pid;if(who==null||!(s.players[who].ai||window.SkylineAssist&&SkylineAssist.on(who)))break;
   await wait((pd.kind==='roll'?650:520)*speed);const a=CC.ai(s,who);if(!a)break;const r=CC.act(s,who,a);if(!r.ok){console.warn('AI action rejected',a,r.error);break}
   if(pd.kind==='trade'&&pd.to===who)toast(`${s.players[who].name} ${a.type==='accept'?'accepted':'declined'} your offer`);
   busy=true;render();await play(r.events);busy=false;save();r3.sync(CC.view(s));render()}}finally{pumping=false}
  if(s&&s.over)finishMatch();else render()}
+// Auto-assist (27 Nov 2026): the same Assist / Hints / Auto controls as City Forge.
+const NS=CC,assistName=t=>{const x=NS.TILES&&NS.TILES[t];return x?(x.name||x.n||'this space'):'this space'};
+function assistHint(a){if(!a)return '';const n=a.tile!=null?assistName(a.tile):'';return({roll:'Roll the dice',buy:'Buy this property',decline:'Skip it and let it go to auction',auction:'Send it to auction',bid:'Bid '+(a.amount!=null?a.amount.toLocaleString('en-US'):''),pass:'Pass on this bid',end:'End your turn',build:'Upgrade '+n,upgrade:'Upgrade this property',redeem:'Redeem '+n,keep:'Keep this card',accept:'Accept the offer',reject:'Decline the offer',choose:'Choose “'+String(a.option||'').replace(/[A-Z]/g,c=>' '+c.toLowerCase()).trim()+'”',pickTile:'Pick '+n,district:'Pick the '+a.district+' district',useCard:'Play a card',claim:'Claim your landmark',route:'Take the '+(a.route||'')+' loop',pickChain:'Pick a Landmark Chain',keepChain:'Keep your chain',reserve:'Reserve this property',openHouse:'Hold an Open House',scout:'Scout a property',skip:'Skip',contribute:'Contribute',pay:'Pay',express:'Take the Metro Express',survey:'Survey',completeReservation:'Complete your reservation',waiveReservation:'Waive the reservation',sell:'Sell a building',mortgage:'Mortgage a property'})[a.type]||''}
+window.SkylineAssist&&SkylineAssist.connect({seat:0,mount:{parent:$('top'),before:document.getElementById('boardRadio')||$('viewBtn')},
+ myTurn:()=>{if(!s||s.over||busy)return false;const pd=NS.pending(s);return (pd.kind==='trade'?pd.to:pd.pid)===0},
+ turnKey:()=>s?s.turn.pid+':'+s.players[s.turn.pid].turns:'',over:()=>!s||s.over,
+ run:()=>pump(),hint:()=>{try{return assistHint(NS.ai(s,0))}catch(e){return ''}}});
+{const _r=render;render=function(){const r=_r.apply(this,arguments);try{SkylineAssist.turnEnded();if(SkylineAssist.on(0)&&!pumping&&!busy)setTimeout(pump,0)}catch(e){}return r}}
 function finishMatch(){r3.sync(CC.view(s));reportCareer();setTimeout(showResults,900)}
 function showResults(){const res=s.results||[];$('results').hidden=false;$('resTitle').textContent=s.winner===0?'🏆 You win!':`${s.players[s.winner].name} wins`;
  $('resSub').textContent=s.closedFromMenu?'Match ended early. Final standings are shown below.':CAREER?(s.cfg.length==='quick'?'Quick matches earn mastery XP only. Rewards ×6 are paid in Skyline Estates.':'Rewards ×6 are paid when you return to Skyline Estates.'):'Legacy Points + colour groups + tall buildings + net worth.';
@@ -336,6 +344,6 @@ $('mNew').onclick=()=>{$('menu').hidden=true;try{localStorage.removeItem(CC.SAVE
 let overview=false;$('viewBtn').onclick=()=>{overview=!overview;r3.overview(overview);$('viewBtn').textContent=overview?'🎯':'🗺';$('viewBtn').setAttribute('aria-label',overview?'Return to your token':'Show the whole board')};
 const saved=load();if(saved){s=saved;r3.sync(CC.view(s));r3.follow(s.turn.pid);render();toast('Match resumed');pump()}else startScreen();
 </script>
-<script src="lib/board-radio.js"></script><script>try{SkylineBoardRadio.mount(document.getElementById('top'),document.getElementById('viewBtn'))}catch(e){}</script>
+<script src="lib/board-assist.js"></script><script src="lib/board-radio.js"></script><script>try{SkylineBoardRadio.mount(document.getElementById('top'),document.getElementById('viewBtn'))}catch(e){}</script>
 </body>
 </html>
