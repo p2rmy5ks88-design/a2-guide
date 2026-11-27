@@ -118,7 +118,21 @@ function tileSelected(id){if(!s||busy)return;s.selected=id;three.choose(id);redr
 async function start(state){
  s=state;$('setup').hidden=true;notice('Loading the 3D board…',10000);
  try{three=await createBoard({canvas:$('board'),board,source,base,quality:Q.get('quality')||'high',onSelect:tileSelected});
-   window.__skylineApproved={state:()=>s,renderer:()=>three,spaces,board,source,roll:takeRoll,endTurn:takeEnd,select:tileSelected};
+   // Auto-assist (27 Nov 2026): plays your turn the way the computer players do: roll, buy what you can comfortably
+// afford, upgrade your cheapest property when there is spare cash, then end the turn.
+function assistPlan(){if(!s||s.turn!==0||s.phase==='over')return null;if(s.phase==='roll')return{type:'roll'};if(s.phase!=='decide')return null;
+ const me=s.players[0],land=spaces[me.pos];if(R.isOwnable(land)&&!s.properties[land.id]&&me.cash>land.price_sc*1.2)return{type:'buy',name:land.name};
+ const up=Object.keys(s.properties).map(Number).filter(id=>s.properties[id].owner===0&&s.properties[id].stage<R.MAX_STAGE[board]).map(id=>({id,cost:R.buildCost(spaces[id],s.properties[id])})).filter(x=>me.cash>x.cost+150000).sort((a,b)=>a.cost-b.cost)[0];
+ if(up&&!assistBuilt)return{type:'build',id:up.id,name:spaces[up.id].name};return{type:'end'}}
+let assistBuilt=false,assisting=false;
+async function assistRun(){if(assisting)return;assisting=true;try{while(s&&s.turn===0&&s.phase!=='over'&&window.SkylineAssist&&SkylineAssist.on(0)){if(busy){await new Promise(r=>setTimeout(r,200));continue}
+  await new Promise(r=>setTimeout(r,450));const a=assistPlan();if(!a)break;
+  if(a.type==='roll'){assistBuilt=false;await takeRoll()}else if(a.type==='buy'){R.buy(s,spaces);SkylineFeel.play('buy');afterAction()}else if(a.type==='build'){R.build(s,spaces,a.id);assistBuilt=true;SkylineFeel.play('build');afterAction()}else{assistBuilt=false;await takeEnd()}}}
+ catch(e){notice(e.message||String(e),3000)}finally{assisting=false;try{SkylineAssist.refresh()}catch(e){}}}
+window.SkylineAssist&&SkylineAssist.connect({seat:0,mount:{parent:$('hudTop'),before:document.getElementById('boardRadio')||$('menuBtn')},myTurn:()=>!!s&&s.turn===0&&s.phase!=='over'&&!busy,turnKey:()=>s?s.round+':'+s.turn:'',over:()=>!s||s.phase==='over',run:assistRun,
+ hint:()=>{const a=assistPlan();return a?({roll:'Roll the dice',buy:'Buy '+a.name,build:'Upgrade '+a.name,end:'End your turn'})[a.type]:''}});
+{const _rd=redraw;redraw=function(){const r=_rd.apply(this,arguments);try{SkylineAssist.turnEnded();if(SkylineAssist.on(0)&&!assisting)setTimeout(assistRun,0)}catch(e){}return r}}
+window.__skylineApproved={state:()=>s,renderer:()=>three,spaces,board,source,roll:takeRoll,endTurn:takeEnd,select:tileSelected};
    if(s.selected!==0)three.choose(s.selected);three.overview();redraw();notice('Tap a tile or roll the dice to begin.',3200)
    startGuide();
  }catch(error){console.error(error);$('setup').hidden=false;notice('Could not load the 3D board: '+error.message,14000);throw error}
